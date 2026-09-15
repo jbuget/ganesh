@@ -11,7 +11,24 @@ from src.core.config import get_settings
 from src.core.database import Base
 
 # Importer ici tous les modeles pour qu'Alembic les voie lors de l'autogenerate.
-# from src.modules.users.infrastructure.database.models import user_model  # noqa
+from src.modules.audit_logs.infrastructure.database.models import (  # noqa: F401, E402
+    audit_log_model,
+)
+from src.modules.calendar.infrastructure.database.models import (  # noqa: F401, E402
+    holiday_model,
+)
+from src.modules.entries.infrastructure.database.models import (  # noqa: F401, E402
+    entry_model,
+)
+from src.modules.months.infrastructure.database.models import (  # noqa: F401, E402
+    month_model,
+)
+from src.modules.projects.infrastructure.database.models import (  # noqa: F401, E402
+    project_model,
+)
+from src.modules.users.infrastructure.database.models import (  # noqa: F401, E402
+    user_model,
+)
 
 config = context.config
 config.set_main_option("sqlalchemy.url", get_settings().database_url)
