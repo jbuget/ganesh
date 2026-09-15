@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  server:
+    name: Serveur — lint, architecture, tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: server/requirements-dev.txt
+
+      - name: Installer les dépendances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Format et lint
+        run: |
+          isort --check-only src/ tests/
+          black --check src/ tests/
+          ruff check src/ tests/
+          flake8 src/ tests/
+
+      - name: Contrats d'architecture (Clean Architecture)
+        run: lint-imports --config .importlinter
+
+      - name: Tests
+        run: pytest
+
+  client:
+    name: Client — lint, types, tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: client/pnpm-lock.yaml
+
+      - name: Installer les dépendances
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (dont Atomic Design)
+        run: pnpm lint
+
+      - name: Format
+        run: pnpm format:check
+
+      - name: Types
+        run: pnpm type-check
+
+      - name: Tests
+        run: pnpm test

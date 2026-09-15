@@ -1,0 +1,59 @@
+[importlinter]
+root_packages =
+    src
+include_external_packages = True
+
+# --- Pureté du domaine -------------------------------------------------------
+# Le domaine ne connait ni SQLAlchemy, ni FastAPI, ni aucun framework.
+[importlinter:contract:domain-purity]
+name = Le domaine ne depend d'aucun framework
+type = forbidden
+source_modules =
+    src.modules.*.domain
+forbidden_modules =
+    sqlalchemy
+    fastapi
+    alembic
+    pydantic
+    httpx
+    starlette
+
+# --- Sens des dependances entre couches -------------------------------------
+# domain/ -> interdit d'importer infrastructure/ ou presentation/
+[importlinter:contract:domain-isolation]
+name = Le domaine n'importe ni infrastructure ni presentation
+type = forbidden
+source_modules =
+    src.modules.*.domain
+forbidden_modules =
+    src.modules.*.infrastructure
+    src.modules.*.presentation
+
+# application/ -> interdit d'importer infrastructure/ ou presentation/
+[importlinter:contract:application-isolation]
+name = L'application n'importe ni infrastructure ni presentation
+type = forbidden
+source_modules =
+    src.modules.*.application
+forbidden_modules =
+    src.modules.*.infrastructure
+    src.modules.*.presentation
+
+# infrastructure/ -> interdit d'importer presentation/
+[importlinter:contract:infrastructure-isolation]
+name = L'infrastructure n'importe pas presentation
+type = forbidden
+source_modules =
+    src.modules.*.infrastructure
+forbidden_modules =
+    src.modules.*.presentation
+
+# --- Code partage ------------------------------------------------------------
+# shared/ est un noyau : il ne connait aucun module metier.
+[importlinter:contract:shared-purity]
+name = shared/ ne depend d'aucun module metier
+type = forbidden
+source_modules =
+    src.shared
+forbidden_modules =
+    src.modules.*

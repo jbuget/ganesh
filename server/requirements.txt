@@ -1,0 +1,23 @@
+# FastAPI and dependencies
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.0
+email-validator==2.2.0
+
+# Database
+sqlalchemy==2.0.36
+asyncpg==0.30.0
+alembic==1.14.0
+greenlet==3.1.1
+
+# Authentication & Security (Microsoft Entra ID)
+python-jose[cryptography]==3.3.0
+
+# HTTP client
+httpx==0.28.1
+
+# Utilities
+python-dotenv==1.0.1
+python-dateutil==2.9.0.post0
+holidays==0.64
