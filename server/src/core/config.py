@@ -20,11 +20,11 @@ class Settings(BaseSettings):
     debug: bool = False
 
     api_prefix: str = "/api/v1"
-    api_url: str = "http://localhost:8004"
-    allowed_origins: list[str] = ["http://localhost:3004"]
+    api_url: str = "http://localhost:8000"
+    allowed_origins: list[str] = ["http://localhost:3000"]
 
     database_url: str = (
-        "postgresql+asyncpg://timesheet:timesheet@localhost:54324/timesheet"
+        "postgresql+asyncpg://timesheet:timesheet@localhost:5432/timesheet"
     )
 
     # Microsoft Entra ID (nommage AZURE_AD_*, identique a WAATcher)

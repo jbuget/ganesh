@@ -1,0 +1,77 @@
+"""Projet, lot et activite hors projet : le referentiel des missions."""
+
+from dataclasses import dataclass
+from enum import StrEnum
+
+from src.shared.exceptions.domain_exceptions import ValidationError
+
+
+class ProjectKind(StrEnum):
+    """Nature d'une mission."""
+
+    PROJET = "projet"
+    LOT = "lot"
+    HORS_PROJET = "hors_projet"
+
+
+class ProjectStatus(StrEnum):
+    """Phase de vie d'un projet ou d'un lot.
+
+    L'ordre declare ici est l'ordre nominal, mais un projet peut revenir en
+    arriere : aucune transition n'est interdite.
+    """
+
+    EXPLORATION = "exploration"
+    CADRAGE = "cadrage"
+    REALISATION = "realisation"
+    VALIDATION = "validation"
+    EXPLOITATION = "exploitation"
+
+
+@dataclass
+class Project:
+    """Une mission sur laquelle du temps peut etre impute."""
+
+    id: int | None
+    label: str
+    kind: ProjectKind
+    statut: ProjectStatus | None = ProjectStatus.EXPLORATION
+    parent_id: int | None = None
+    actif: bool = True
+    estime_j: float | None = None
+    monday_item_id: str | None = None
+    monday_subitem_id: str | None = None
+
+    def __post_init__(self) -> None:
+        self.label = self.label.strip()
+        if not self.label:
+            raise ValidationError("Le libelle d'une mission ne peut pas etre vide.")
+
+        if self.kind is ProjectKind.HORS_PROJET and self.statut is not None:
+            raise ValidationError(
+                "Une activite hors projet ne porte pas de statut de phase."
+            )
+        if self.kind is not ProjectKind.HORS_PROJET and self.statut is None:
+            raise ValidationError("Un projet ou un lot doit porter un statut de phase.")
+
+        if self.kind is ProjectKind.LOT and self.parent_id is None:
+            raise ValidationError("Un lot doit etre rattache a un projet parent.")
+
+    @property
+    def is_off_project(self) -> bool:
+        return self.kind is ProjectKind.HORS_PROJET
+
+    @property
+    def is_syncable_to_monday(self) -> bool:
+        """Seules les missions rattachees a Monday remontent vers Monday."""
+        if self.is_off_project:
+            return False
+        return bool(self.monday_item_id or self.monday_subitem_id)
+
+    def change_status(self, new_status: ProjectStatus) -> None:
+        """Change la phase du projet. Toute transition est permise."""
+        if self.is_off_project:
+            raise ValidationError(
+                "Une activite hors projet ne porte pas de statut de phase."
+            )
+        self.statut = new_status

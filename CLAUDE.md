@@ -98,14 +98,16 @@ Le code partagé (exceptions, types génériques) vit dans `server/src/shared/`.
 
 ## Ports et URLs
 
-Alignés sur la numérotation WAATcher (`a1`=1, `a2`=2, `a3`=3, Timesheet=4) pour
-que les quatre projets tournent simultanément en local.
+Ports par défaut. WAATcher occupe `3001-3003` / `8001-8003` / `54321-54323`,
+il n'y a donc pas de collision, mais tout autre service local écoutant sur `3000`
+ou `5432` doit être arrêté au préalable. Les ports sont surchargeables via
+`WEB_PORT`, `API_PORT` et `POSTGRES_PORT` dans le `.env` racine.
 
 | | Port | URL |
 |---|---|---|
-| Client Next.js | `3004` | http://localhost:3004 |
-| API FastAPI | `8004` | http://localhost:8004 |
-| PostgreSQL | `54324` | — |
+| Client Next.js | `3000` | http://localhost:3000 |
+| API FastAPI | `8000` | http://localhost:8000 |
+| PostgreSQL | `5432` | — |
 
 Conventions identiques à WAATcher : `API_PREFIX=/api/v1`, variables `AZURE_AD_*`,
 callback `/api/auth/callback/azure-ad`.
@@ -118,7 +120,7 @@ Un seul vocabulaire d'URL dans tout le projet.
 
 Timesheet réutilise **l'enregistrement d'application Entra de WAATcher**
 (même `AZURE_AD_TENANT_ID` et `AZURE_AD_CLIENT_ID`). L'URI de redirection
-`http://localhost:3004/api/auth/callback/azure-ad` doit donc être déclarée sur
+`http://localhost:3000/api/auth/callback/azure-ad` doit donc être déclarée sur
 cette app registration dans le portail Azure.
 
 Le `AZURE_AD_CLIENT_SECRET` vit uniquement dans `client/.env.local` : c'est le BFF
