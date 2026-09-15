@@ -9,11 +9,11 @@ sur chaque projet ou sous-projet, sous forme d'une matrice `jours du mois × mis
 
 ```bash
 make install     # venv Python + dépendances pnpm
-make db-up       # PostgreSQL sur le port 5433
+make db-up       # PostgreSQL sur le port 54324
 make migrate     # applique les migrations Alembic
 
-make dev-server  # API FastAPI  -> http://localhost:8000
-make dev-client  # Next.js      -> http://localhost:3000
+make dev-server  # API FastAPI  -> http://localhost:8004
+make dev-client  # Next.js      -> http://localhost:3004
 ```
 
 ## Qualité

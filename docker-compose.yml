@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: timesheet
       POSTGRES_DB: timesheet
     ports:
-      - "5433:5432"
+      - "${POSTGRES_PORT:-54324}:5432"
     volumes:
       - timesheet-db-data:/var/lib/postgresql/data
     healthcheck:

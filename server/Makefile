@@ -38,4 +38,4 @@ migrate:
 	$(VENV)/bin/alembic upgrade head
 
 run:
-	$(VENV)/bin/uvicorn src.main:app --reload --port 8000
+	$(VENV)/bin/uvicorn src.main:app --reload --port $${API_PORT:-8004}

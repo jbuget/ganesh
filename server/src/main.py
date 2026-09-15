@@ -10,19 +10,20 @@ settings = get_settings()
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
-    docs_url="/docs" if settings.debug else None,
+    openapi_url=f"{settings.api_prefix}/openapi.json",
+    docs_url=f"{settings.api_prefix}/docs" if settings.debug else None,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-@app.get("/health", tags=["health"])
+@app.get(f"{settings.api_prefix}/health", tags=["health"])
 async def health() -> dict[str, str]:
     """Verifie que l'API repond."""
     return {"status": "ok", "environment": settings.environment}

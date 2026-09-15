@@ -3,6 +3,7 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from src.core.config import get_settings
 from src.main import app
 
 
@@ -10,7 +11,7 @@ from src.main import app
 async def test_health_returns_ok_status() -> None:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/health")
+        response = await client.get(f"{get_settings().api_prefix}/health")
 
     assert response.status_code == 200
     assert response.json()["status"] == "ok"

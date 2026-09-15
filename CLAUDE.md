@@ -96,11 +96,48 @@ Le code partagé (exceptions, types génériques) vit dans `server/src/shared/`.
 
 ---
 
+## Ports et URLs
+
+Alignés sur la numérotation WAATcher (`a1`=1, `a2`=2, `a3`=3, Timesheet=4) pour
+que les quatre projets tournent simultanément en local.
+
+| | Port | URL |
+|---|---|---|
+| Client Next.js | `3004` | http://localhost:3004 |
+| API FastAPI | `8004` | http://localhost:8004 |
+| PostgreSQL | `54324` | — |
+
+Conventions identiques à WAATcher : `API_PREFIX=/api/v1`, variables `AZURE_AD_*`,
+callback `/api/auth/callback/azure-ad`.
+
+**Le BFF expose exactement les mêmes chemins que l'API** : le navigateur appelle
+`/api/v1/<ressource>`, le Route Handler relaie vers `${API_URL}/api/v1/<ressource>`.
+Un seul vocabulaire d'URL dans tout le projet.
+
+### Identifiants Entra
+
+Timesheet réutilise **l'enregistrement d'application Entra de WAATcher**
+(même `AZURE_AD_TENANT_ID` et `AZURE_AD_CLIENT_ID`). L'URI de redirection
+`http://localhost:3004/api/auth/callback/azure-ad` doit donc être déclarée sur
+cette app registration dans le portail Azure.
+
+Le `AZURE_AD_CLIENT_SECRET` vit uniquement dans `client/.env.local` : c'est le BFF
+qui porte le flow OAuth. Le serveur ne fait que valider les jetons et n'a besoin
+que du tenant et du client id.
+
+---
+
 ## Architecture client
 
 - **BFF obligatoire** : le navigateur n'appelle jamais FastAPI directement. Il appelle les Route Handlers de `client/src/app/api/`, qui relaient vers l'API en injectant le token Entra. Le token reste côté serveur, dans une session `httpOnly`.
 - **Hooks Orval uniquement** : les hooks de données viennent exclusivement du client généré (`client/src/lib/api/generated/`), dont la `baseUrl` pointe vers le BFF. Ne jamais créer d'instance fetch/axios custom pour appeler l'API.
 - **Aucun type d'API écrit à la main** : ils sont générés depuis l'OpenAPI de FastAPI (`pnpm api:generate`).
+> **Divergence assumée avec WAATcher.** WAATcher n'a pas de BFF : son navigateur
+> appelle FastAPI directement via `NEXT_PUBLIC_API_URL`. Timesheet introduit
+> délibérément un BFF, pour que le jeton Entra ne quitte jamais le serveur et que
+> l'API ne soit pas exposée publiquement. C'est le seul écart structurel ; tout le
+> reste suit WAATcher.
+
 - **Atomic Design** : voir `AGENTS.md`. Les règles de composition sont vérifiées par `eslint-plugin-boundaries`. Une violation casse le lint.
 
 ---

@@ -1,4 +1,7 @@
-"""Configuration applicative, chargee depuis l'environnement."""
+"""Configuration applicative, chargee depuis l'environnement.
+
+Les noms de variables et les conventions d'URL sont alignes sur WAATcher.
+"""
 
 from functools import lru_cache
 
@@ -16,17 +19,18 @@ class Settings(BaseSettings):
     environment: str = "development"
     debug: bool = False
 
+    api_prefix: str = "/api/v1"
+    api_url: str = "http://localhost:8004"
+    allowed_origins: list[str] = ["http://localhost:3004"]
+
     database_url: str = (
-        "postgresql+asyncpg://timesheet:timesheet@localhost:5433/timesheet"
+        "postgresql+asyncpg://timesheet:timesheet@localhost:54324/timesheet"
     )
 
-    # Microsoft Entra ID
-    entra_tenant_id: str = ""
-    entra_client_id: str = ""
-    entra_audience: str = ""
-
-    # Origines autorisees pour le BFF Next.js
-    cors_origins: list[str] = ["http://localhost:3000"]
+    # Microsoft Entra ID (nommage AZURE_AD_*, identique a WAATcher)
+    azure_ad_tenant_id: str = ""
+    azure_ad_client_id: str = ""
+    require_auth: bool = True
 
 
 @lru_cache
