@@ -31,7 +31,7 @@ from src.modules.users.domain.entities.user import User
 router = APIRouter(prefix="/entries", tags=["entries"])
 
 
-@router.get("/grid", response_model=MonthGridResponse)
+@router.get("/grid", response_model=MonthGridResponse, operation_id="getMonthGrid")
 async def get_month_grid(
     mois: date = Query(description="N'importe quel jour du mois demande"),
     user_id: int | None = Query(
@@ -48,7 +48,7 @@ async def get_month_grid(
     return to_month_grid_response(grid)
 
 
-@router.put("", response_model=EntryResponse)
+@router.put("", response_model=EntryResponse, operation_id="setEntry")
 async def set_entry(
     payload: SetEntryRequest,
     user_id: int | None = Query(

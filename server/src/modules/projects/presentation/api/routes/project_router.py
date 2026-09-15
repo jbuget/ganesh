@@ -38,7 +38,7 @@ from src.modules.users.domain.entities.user import User
 router = APIRouter(prefix="/projects", tags=["projects"])
 
 
-@router.get("", response_model=list[ProjectResponse])
+@router.get("", response_model=list[ProjectResponse], operation_id="listProjects")
 async def list_projects(
     include_inactive: bool = Query(default=False),
     _: User = Depends(get_current_user),
@@ -49,7 +49,9 @@ async def list_projects(
     return [to_project_response(project) for project in projects]
 
 
-@router.post("", response_model=ProjectResponse, status_code=201)
+@router.post(
+    "", response_model=ProjectResponse, status_code=201, operation_id="createProject"
+)
 async def create_project(
     payload: CreateProjectRequest,
     current_user: User = Depends(get_current_user),
@@ -72,7 +74,11 @@ async def create_project(
     return to_project_response(project)
 
 
-@router.patch("/{project_id}/status", response_model=ProjectResponse)
+@router.patch(
+    "/{project_id}/status",
+    response_model=ProjectResponse,
+    operation_id="changeProjectStatus",
+)
 async def change_status(
     project_id: int,
     payload: ChangeStatusRequest,

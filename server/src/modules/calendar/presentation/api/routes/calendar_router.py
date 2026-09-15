@@ -15,7 +15,11 @@ from src.modules.users.domain.entities.user import User
 router = APIRouter(prefix="/calendar", tags=["calendar"])
 
 
-@router.get("/{year}/{month}", response_model=MonthCalendarResponse)
+@router.get(
+    "/{year}/{month}",
+    response_model=MonthCalendarResponse,
+    operation_id="getMonthCalendar",
+)
 async def get_month_calendar(
     year: int,
     month: int = Path(ge=1, le=12),

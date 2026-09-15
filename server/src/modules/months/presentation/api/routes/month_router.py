@@ -27,7 +27,9 @@ from src.modules.users.domain.entities.user import User
 router = APIRouter(prefix="/months", tags=["months"])
 
 
-@router.post("/{mois}/validate", response_model=MonthResponse)
+@router.post(
+    "/{mois}/validate", response_model=MonthResponse, operation_id="validateMonth"
+)
 async def validate_month(
     mois: date,
     current_user: User = Depends(get_current_user),
@@ -45,7 +47,7 @@ async def validate_month(
     return to_month_response(month)
 
 
-@router.post("/{mois}/reopen", response_model=MonthResponse)
+@router.post("/{mois}/reopen", response_model=MonthResponse, operation_id="reopenMonth")
 async def reopen_month(
     mois: date,
     user_id: int,

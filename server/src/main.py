@@ -48,7 +48,7 @@ for module_router in (
     app.include_router(module_router, prefix=settings.api_prefix)
 
 
-@app.get(f"{settings.api_prefix}/health", tags=["health"])
+@app.get(f"{settings.api_prefix}/health", tags=["health"], operation_id="health")
 async def health() -> dict[str, str]:
     """Verifie que l'API repond."""
     return {"status": "ok", "environment": settings.environment}

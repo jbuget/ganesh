@@ -12,10 +12,10 @@ const eslintConfig = defineConfig([
     plugins: { boundaries },
     settings: {
       "boundaries/elements": [
-        { type: "ui", pattern: "src/components/ui/*", mode: "file" },
-        { type: "atoms", pattern: "src/components/atoms/*", mode: "file" },
-        { type: "molecules", pattern: "src/components/molecules/*", mode: "file" },
-        { type: "organisms", pattern: "src/components/organisms/*", mode: "file" },
+        { type: "ui", pattern: "src/components/ui", partialMatch: true },
+        { type: "atoms", pattern: "src/components/atoms", partialMatch: true },
+        { type: "molecules", pattern: "src/components/molecules", partialMatch: true },
+        { type: "organisms", pattern: "src/components/organisms", partialMatch: true },
         { type: "app", pattern: "src/app/**" },
         { type: "lib", pattern: "src/lib/**" },
       ],

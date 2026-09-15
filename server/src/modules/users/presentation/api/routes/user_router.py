@@ -27,13 +27,13 @@ from src.modules.users.presentation.dependencies import (
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=UserResponse, operation_id="getMe")
 async def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
     """L'utilisateur courant, tel que provisionne depuis Entra."""
     return to_user_response(current_user)
 
 
-@router.get("", response_model=list[UserResponse])
+@router.get("", response_model=list[UserResponse], operation_id="listUsers")
 async def list_users(
     include_inactive: bool = Query(default=False),
     _: User = Depends(get_current_user),
@@ -44,7 +44,9 @@ async def list_users(
     return [to_user_response(user) for user in users]
 
 
-@router.patch("/{user_id}/role", response_model=UserResponse)
+@router.patch(
+    "/{user_id}/role", response_model=UserResponse, operation_id="changeUserRole"
+)
 async def change_role(
     user_id: int,
     payload: ChangeRoleRequest,
