@@ -14,6 +14,7 @@ lint:
 	$(PY) -m black --check src/ tests/
 	$(VENV)/bin/ruff check src/ tests/
 	$(PY) -m flake8 src/ tests/
+	$(PY) -m mypy src/
 	$(MAKE) archi
 
 format:

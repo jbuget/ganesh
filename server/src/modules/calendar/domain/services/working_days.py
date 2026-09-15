@@ -39,7 +39,7 @@ class CalendarDay:
 
 @lru_cache(maxsize=16)
 def _french_holidays(year: int) -> dict[date, str]:
-    return dict(holidays.France(years=year))
+    return dict(holidays.country_holidays("FR", years=year))
 
 
 def holiday_label(jour: date) -> str | None:
