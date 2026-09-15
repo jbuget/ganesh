@@ -6,8 +6,8 @@
  */
 
 export type SetEntryParams = {
-/**
- * Collaborateur dont le mois est modifie.
- */
-user_id?: number | null;
+  /**
+   * Collaborateur dont le mois est modifie.
+   */
+  user_id?: number | null;
 };

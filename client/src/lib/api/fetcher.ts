@@ -18,10 +18,7 @@ export class ApiError extends Error {
   }
 }
 
-export const bffFetcher = async <T>(
-  url: string,
-  options?: RequestInit,
-): Promise<T> => {
+export const bffFetcher = async <T>(url: string, options?: RequestInit): Promise<T> => {
   const response = await fetch(url, { ...options, cache: "no-store" });
   const body = await response.text();
   const data = body ? JSON.parse(body) : undefined;

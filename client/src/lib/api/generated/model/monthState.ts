@@ -8,10 +8,9 @@
 /**
  * Etat de saisie d'un mois.
  */
-export type MonthState = typeof MonthState[keyof typeof MonthState];
-
+export type MonthState = (typeof MonthState)[keyof typeof MonthState];
 
 export const MonthState = {
-  ouvert: 'ouvert',
-  valide: 'valide',
+  ouvert: "ouvert",
+  valide: "valide",
 } as const;

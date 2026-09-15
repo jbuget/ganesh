@@ -6,5 +6,5 @@
  */
 
 export type ReopenMonthApiV1MonthsMoisReopenPostParams = {
-user_id: number;
+  user_id: number;
 };

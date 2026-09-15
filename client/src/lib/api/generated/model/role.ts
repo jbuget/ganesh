@@ -8,10 +8,9 @@
 /**
  * Role fonctionnel d'un utilisateur.
  */
-export type Role = typeof Role[keyof typeof Role];
-
+export type Role = (typeof Role)[keyof typeof Role];
 
 export const Role = {
-  TEAMMATE: 'TEAMMATE',
-  MANAGER: 'MANAGER',
+  TEAMMATE: "TEAMMATE",
+  MANAGER: "MANAGER",
 } as const;

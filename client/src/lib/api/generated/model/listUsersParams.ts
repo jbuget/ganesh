@@ -6,5 +6,5 @@
  */
 
 export type ListUsersParams = {
-include_inactive?: boolean;
+  include_inactive?: boolean;
 };

@@ -4,219 +4,243 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
-import {
-  useMutation
-} from '@tanstack/react-query';
+import { useMutation } from "@tanstack/react-query";
 import type {
   MutationFunction,
   QueryClient,
   UseMutationOptions,
-  UseMutationResult
-} from '@tanstack/react-query';
+  UseMutationResult,
+} from "@tanstack/react-query";
 
-import type {
-  HTTPValidationError,
-  MonthResponse,
-  ReopenMonthParams
-} from '../model';
+import type { HTTPValidationError, MonthResponse, ReopenMonthParams } from "../model";
 
-import { bffFetcher } from '../../fetcher';
+import { bffFetcher } from "../../fetcher";
 
-
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 export type validateMonthResponse200 = {
-  data: MonthResponse
-  status: 200
-}
+  data: MonthResponse;
+  status: 200;
+};
 
 export type validateMonthResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type validateMonthResponseSuccess = (validateMonthResponse200) & {
-  headers: Headers;
-};
-export type validateMonthResponseError = (validateMonthResponse422) & {
-  headers: Headers;
+  data: HTTPValidationError;
+  status: 422;
 };
 
-export type validateMonthResponse = (validateMonthResponseSuccess | validateMonthResponseError)
+export type validateMonthResponseSuccess = validateMonthResponse200 & {
+  headers: Headers;
+};
+export type validateMonthResponseError = validateMonthResponse422 & {
+  headers: Headers;
+};
 
-export const getValidateMonthUrl = (mois: string,) => {
+export type validateMonthResponse =
+  validateMonthResponseSuccess | validateMonthResponseError;
 
-
-
-
-  return `/api/v1/api/v1/months/${mois}/validate`
-}
+export const getValidateMonthUrl = (mois: string) => {
+  return `/api/v1/months/${mois}/validate`;
+};
 
 /**
  * Verrouille son propre mois. La validation n'est pas delegable.
  * @summary Validate Month
  */
-export const validateMonth = async (mois: string, options?: RequestInit): Promise<validateMonthResponse> => {
-
-  return bffFetcher<validateMonthResponse>(getValidateMonthUrl(mois),
-  {
+export const validateMonth = async (
+  mois: string,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<validateMonthResponse> => {
+  return bffFetcher<validateMonthResponse>(getValidateMonthUrl(mois), {
     ...options,
-    method: 'POST'
+    method: "POST",
+  });
+};
 
+export const getValidateMonthMutationKey = () => ["validateMonth"] as const;
 
-  }
-);}
+export const getValidateMonthMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof validateMonth>>,
+    TError,
+    ValidateMonthMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof validateMonth>>,
+  TError,
+  ValidateMonthMutationVariables,
+  TContext
+> => {
+  const mutationKey = getValidateMonthMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof validateMonth>>,
+    ValidateMonthMutationVariables
+  > = (props) => {
+    const { mois } = props ?? {};
 
+    return validateMonth(mois, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type ValidateMonthMutationResult = NonNullable<
+  Awaited<ReturnType<typeof validateMonth>>
+>;
 
-export const getValidateMonthMutationKey = () => ['validateMonth'] as const;
+export type ValidateMonthMutationError = HTTPValidationError;
+export type ValidateMonthMutationVariables = { mois: string };
 
-export const getValidateMonthMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof validateMonth>>, TError,ValidateMonthMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof validateMonth>>, TError,ValidateMonthMutationVariables, TContext> => {
-
-const mutationKey = getValidateMonthMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof validateMonth>>, ValidateMonthMutationVariables> = (props) => {
-          const {mois} = props ?? {};
-
-          return  validateMonth(mois,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ValidateMonthMutationResult = NonNullable<Awaited<ReturnType<typeof validateMonth>>>
-
-    export type ValidateMonthMutationError = HTTPValidationError
-    export type ValidateMonthMutationVariables = {mois: string}
-
-    /**
+/**
  * @summary Validate Month
  */
-export const useValidateMonth = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof validateMonth>>, TError,ValidateMonthMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof validateMonth>>,
-        TError,
-        ValidateMonthMutationVariables,
-        TContext
-      > => {
-      return useMutation(getValidateMonthMutationOptions(options), queryClient);
-    }
-    export type reopenMonthResponse200 = {
-  data: MonthResponse
-  status: 200
-}
+export const useValidateMonth = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof validateMonth>>,
+      TError,
+      ValidateMonthMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof validateMonth>>,
+  TError,
+  ValidateMonthMutationVariables,
+  TContext
+> => {
+  return useMutation(getValidateMonthMutationOptions(options), queryClient);
+};
+export type reopenMonthResponse200 = {
+  data: MonthResponse;
+  status: 200;
+};
 
 export type reopenMonthResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type reopenMonthResponseSuccess = (reopenMonthResponse200) & {
-  headers: Headers;
-};
-export type reopenMonthResponseError = (reopenMonthResponse422) & {
-  headers: Headers;
+  data: HTTPValidationError;
+  status: 422;
 };
 
-export type reopenMonthResponse = (reopenMonthResponseSuccess | reopenMonthResponseError)
+export type reopenMonthResponseSuccess = reopenMonthResponse200 & {
+  headers: Headers;
+};
+export type reopenMonthResponseError = reopenMonthResponse422 & {
+  headers: Headers;
+};
 
-export const getReopenMonthUrl = (mois: string,
-    params: ReopenMonthParams,) => {
+export type reopenMonthResponse = reopenMonthResponseSuccess | reopenMonthResponseError;
+
+export const getReopenMonthUrl = (mois: string, params: ReopenMonthParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
+      normalizedParams.append(key, value === null ? "null" : String(value));
     }
   });
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/v1/api/v1/months/${mois}/reopen?${stringifiedParams}` : `/api/v1/api/v1/months/${mois}/reopen`
-}
+  return stringifiedParams.length > 0
+    ? `/api/v1/months/${mois}/reopen?${stringifiedParams}`
+    : `/api/v1/months/${mois}/reopen`;
+};
 
 /**
  * Rouvre le mois valide d'un collaborateur. Reserve aux managers.
  * @summary Reopen Month
  */
-export const reopenMonth = async (mois: string,
-    params: ReopenMonthParams, options?: RequestInit): Promise<reopenMonthResponse> => {
-
-  return bffFetcher<reopenMonthResponse>(getReopenMonthUrl(mois,params),
-  {
+export const reopenMonth = async (
+  mois: string,
+  params: ReopenMonthParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<reopenMonthResponse> => {
+  return bffFetcher<reopenMonthResponse>(getReopenMonthUrl(mois, params), {
     ...options,
-    method: 'POST'
+    method: "POST",
+  });
+};
 
+export const getReopenMonthMutationKey = () => ["reopenMonth"] as const;
 
-  }
-);}
+export const getReopenMonthMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reopenMonth>>,
+    TError,
+    ReopenMonthMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reopenMonth>>,
+  TError,
+  ReopenMonthMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReopenMonthMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reopenMonth>>,
+    ReopenMonthMutationVariables
+  > = (props) => {
+    const { mois, params } = props ?? {};
 
+    return reopenMonth(mois, params, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type ReopenMonthMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reopenMonth>>
+>;
 
-export const getReopenMonthMutationKey = () => ['reopenMonth'] as const;
+export type ReopenMonthMutationError = HTTPValidationError;
+export type ReopenMonthMutationVariables = { mois: string; params: ReopenMonthParams };
 
-export const getReopenMonthMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reopenMonth>>, TError,ReopenMonthMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof reopenMonth>>, TError,ReopenMonthMutationVariables, TContext> => {
-
-const mutationKey = getReopenMonthMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reopenMonth>>, ReopenMonthMutationVariables> = (props) => {
-          const {mois,params} = props ?? {};
-
-          return  reopenMonth(mois,params,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ReopenMonthMutationResult = NonNullable<Awaited<ReturnType<typeof reopenMonth>>>
-
-    export type ReopenMonthMutationError = HTTPValidationError
-    export type ReopenMonthMutationVariables = {mois: string;params: ReopenMonthParams}
-
-    /**
+/**
  * @summary Reopen Month
  */
-export const useReopenMonth = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reopenMonth>>, TError,ReopenMonthMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof reopenMonth>>,
-        TError,
-        ReopenMonthMutationVariables,
-        TContext
-      > => {
-      return useMutation(getReopenMonthMutationOptions(options), queryClient);
-    }
+export const useReopenMonth = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reopenMonth>>,
+      TError,
+      ReopenMonthMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reopenMonth>>,
+  TError,
+  ReopenMonthMutationVariables,
+  TContext
+> => {
+  return useMutation(getReopenMonthMutationOptions(options), queryClient);
+};

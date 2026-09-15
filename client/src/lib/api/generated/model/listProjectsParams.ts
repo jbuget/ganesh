@@ -6,5 +6,5 @@
  */
 
 export type ListProjectsParams = {
-include_inactive?: boolean;
+  include_inactive?: boolean;
 };

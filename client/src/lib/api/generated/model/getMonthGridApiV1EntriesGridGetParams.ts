@@ -6,12 +6,12 @@
  */
 
 export type GetMonthGridApiV1EntriesGridGetParams = {
-/**
- * N'importe quel jour du mois demande
- */
-mois: string;
-/**
- * Collaborateur consulte. Par defaut, l'utilisateur courant.
- */
-user_id?: number | null;
+  /**
+   * N'importe quel jour du mois demande
+   */
+  mois: string;
+  /**
+   * Collaborateur consulte. Par defaut, l'utilisateur courant.
+   */
+  user_id?: number | null;
 };

@@ -1,5 +1,7 @@
 "use client";
 
+import { formatDays } from "@/lib/dates";
+
 /** Valeur saisissable pour une demi-journee ou une journee complete. */
 export type DayValue = 0 | 0.5 | 1;
 
@@ -10,30 +12,57 @@ export function cycleDayValue(current: DayValue): DayValue {
   return NEXT_VALUE[current];
 }
 
-const LABELS: Record<DayValue, string> = { 0: "", 0.5: "½", 1: "1" };
-
 interface DayCellProps {
   value: DayValue;
   isOffDay: boolean;
+  isFuture: boolean;
+  isToday: boolean;
   isReadOnly: boolean;
+  label: string;
   onChange: (next: DayValue) => void;
 }
 
-/** Cellule unitaire de la matrice de saisie. */
-export function DayCell({ value, isOffDay, isReadOnly, onChange }: DayCellProps) {
+/**
+ * Cellule unitaire de la matrice.
+ *
+ * Les jours non ouvres et les jours a venir sont visuellement distincts : les
+ * premiers pour eviter les saisies par erreur, les seconds parce qu'ils
+ * relevent du previsionnel et non du realise.
+ */
+export function DayCell({
+  value,
+  isOffDay,
+  isFuture,
+  isToday,
+  isReadOnly,
+  label,
+  onChange,
+}: DayCellProps) {
+  const background =
+    value > 0
+      ? "bg-sky-100 font-medium text-sky-900"
+      : isOffDay
+        ? "bg-slate-100"
+        : "bg-white";
+
   return (
-    <button
-      type="button"
-      aria-label={`Saisie : ${LABELS[value] || "vide"}`}
-      disabled={isReadOnly}
-      onClick={() => onChange(cycleDayValue(value))}
-      className={[
-        "h-8 w-8 border text-sm",
-        isOffDay ? "bg-slate-100 text-slate-400" : "bg-white",
-        isReadOnly ? "cursor-not-allowed opacity-60" : "cursor-pointer",
-      ].join(" ")}
-    >
-      {LABELS[value]}
-    </button>
+    <td className="p-0">
+      <button
+        type="button"
+        aria-label={label}
+        title={label}
+        disabled={isReadOnly}
+        onClick={() => onChange(cycleDayValue(value))}
+        className={[
+          "h-9 w-9 border-r border-b border-slate-200 text-sm transition-colors",
+          background,
+          isFuture && value > 0 ? "opacity-55" : "",
+          isToday ? "ring-1 ring-inset ring-sky-500" : "",
+          isReadOnly ? "cursor-not-allowed" : "cursor-pointer hover:bg-sky-50",
+        ].join(" ")}
+      >
+        {formatDays(value)}
+      </button>
+    </td>
   );
 }

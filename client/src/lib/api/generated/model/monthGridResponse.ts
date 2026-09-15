@@ -4,9 +4,9 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
-import type { CalendarDayResponse } from './calendarDayResponse';
-import type { DayTotalResponse } from './dayTotalResponse';
-import type { GridRowResponse } from './gridRowResponse';
+import type { CalendarDayResponse } from "./calendarDayResponse";
+import type { DayTotalResponse } from "./dayTotalResponse";
+import type { GridRowResponse } from "./gridRowResponse";
 
 /**
  * La matrice complete d'un mois.

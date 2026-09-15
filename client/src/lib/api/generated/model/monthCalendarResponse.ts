@@ -4,7 +4,7 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
-import type { CalendarDaySchema } from './calendarDaySchema';
+import type { CalendarDaySchema } from "./calendarDaySchema";
 
 /**
  * Le calendrier d'un mois.

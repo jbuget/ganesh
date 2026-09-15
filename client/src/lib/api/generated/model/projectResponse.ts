@@ -4,8 +4,8 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
-import type { ProjectKind } from './projectKind';
-import type { ProjectStatus } from './projectStatus';
+import type { ProjectKind } from "./projectKind";
+import type { ProjectStatus } from "./projectStatus";
 
 /**
  * Une mission du referentiel.

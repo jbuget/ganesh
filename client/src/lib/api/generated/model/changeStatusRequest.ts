@@ -4,7 +4,7 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
-import type { ProjectStatus } from './projectStatus';
+import type { ProjectStatus } from "./projectStatus";
 
 /**
  * Changement de phase d'une mission.

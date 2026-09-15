@@ -4,8 +4,8 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
-import type { GridRowResponseValues } from './gridRowResponseValues';
-import type { ProjectKind } from './projectKind';
+import type { GridRowResponseValues } from "./gridRowResponseValues";
+import type { ProjectKind } from "./projectKind";
 
 /**
  * Une ligne de la matrice : une mission et ses saisies.

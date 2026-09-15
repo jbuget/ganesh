@@ -4,10 +4,7 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -20,8 +17,8 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query";
 
 import type {
   EntryResponse,
@@ -29,20 +26,22 @@ import type {
   HTTPValidationError,
   MonthGridResponse,
   SetEntryParams,
-  SetEntryRequest
-} from '../model';
+  SetEntryRequest,
+} from "../model";
 
-import { bffFetcher } from '../../fetcher';
+import { bffFetcher } from "../../fetcher";
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-
-const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
+const withQueryKey = <T extends object, K>(
+  query: T,
+  queryKey: K,
+): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -53,244 +52,314 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 export type getMonthGridResponse200 = {
-  data: MonthGridResponse
-  status: 200
-}
+  data: MonthGridResponse;
+  status: 200;
+};
 
 export type getMonthGridResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type getMonthGridResponseSuccess = (getMonthGridResponse200) & {
-  headers: Headers;
-};
-export type getMonthGridResponseError = (getMonthGridResponse422) & {
-  headers: Headers;
+  data: HTTPValidationError;
+  status: 422;
 };
 
-export type getMonthGridResponse = (getMonthGridResponseSuccess | getMonthGridResponseError)
+export type getMonthGridResponseSuccess = getMonthGridResponse200 & {
+  headers: Headers;
+};
+export type getMonthGridResponseError = getMonthGridResponse422 & {
+  headers: Headers;
+};
 
-export const getGetMonthGridUrl = (params: GetMonthGridParams,) => {
+export type getMonthGridResponse =
+  getMonthGridResponseSuccess | getMonthGridResponseError;
+
+export const getGetMonthGridUrl = (params: GetMonthGridParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
+      normalizedParams.append(key, value === null ? "null" : String(value));
     }
   });
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/v1/api/v1/entries/grid?${stringifiedParams}` : `/api/v1/api/v1/entries/grid`
-}
+  return stringifiedParams.length > 0
+    ? `/api/v1/entries/grid?${stringifiedParams}`
+    : `/api/v1/entries/grid`;
+};
 
 /**
  * Retourne la matrice d'un mois. Chacun peut consulter le mois de chacun.
  * @summary Get Month Grid
  */
-export const getMonthGrid = async (params: GetMonthGridParams, options?: RequestInit): Promise<getMonthGridResponse> => {
-
-  return bffFetcher<getMonthGridResponse>(getGetMonthGridUrl(params),
-  {
+export const getMonthGrid = async (
+  params: GetMonthGridParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<getMonthGridResponse> => {
+  return bffFetcher<getMonthGridResponse>(getGetMonthGridUrl(params), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getGetMonthGridQueryKey = (params?: GetMonthGridParams) => {
+  return [`/api/v1/entries/grid`, ...(params ? [params] : [])] as const;
+};
 
-  }
-);}
-
-
-
-
-
-export const getGetMonthGridQueryKey = (params?: GetMonthGridParams,) => {
-    return [
-    `/api/v1/api/v1/entries/grid`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getGetMonthGridQueryOptions = <TData = Awaited<ReturnType<typeof getMonthGrid>>, TError = HTTPValidationError>(params: GetMonthGridParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMonthGrid>>, TError, TData>>, }
+export const getGetMonthGridQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMonthGrid>>,
+  TError = HTTPValidationError,
+>(
+  params: GetMonthGridParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getMonthGrid>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetMonthGridQueryKey(params);
 
-  const queryKey =  queryOptions?.queryKey ?? getGetMonthGridQueryKey(params);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMonthGrid>>> = ({
+    signal,
+  }) => getMonthGrid(params, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMonthGrid>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type GetMonthGridQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMonthGrid>>
+>;
+export type GetMonthGridQueryError = HTTPValidationError;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMonthGrid>>> = ({ signal }) => getMonthGrid(params, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMonthGrid>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetMonthGridQueryResult = NonNullable<Awaited<ReturnType<typeof getMonthGrid>>>
-export type GetMonthGridQueryError = HTTPValidationError
-
-
-export function useGetMonthGrid<TData = Awaited<ReturnType<typeof getMonthGrid>>, TError = HTTPValidationError>(
- params: GetMonthGridParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMonthGrid>>, TError, TData>> & Pick<
+export function useGetMonthGrid<
+  TData = Awaited<ReturnType<typeof getMonthGrid>>,
+  TError = HTTPValidationError,
+>(
+  params: GetMonthGridParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getMonthGrid>>, TError, TData>
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getMonthGrid>>,
           TError,
           Awaited<ReturnType<typeof getMonthGrid>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetMonthGrid<TData = Awaited<ReturnType<typeof getMonthGrid>>, TError = HTTPValidationError>(
- params: GetMonthGridParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMonthGrid>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetMonthGrid<
+  TData = Awaited<ReturnType<typeof getMonthGrid>>,
+  TError = HTTPValidationError,
+>(
+  params: GetMonthGridParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getMonthGrid>>, TError, TData>
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getMonthGrid>>,
           TError,
           Awaited<ReturnType<typeof getMonthGrid>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetMonthGrid<TData = Awaited<ReturnType<typeof getMonthGrid>>, TError = HTTPValidationError>(
- params: GetMonthGridParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMonthGrid>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMonthGrid<
+  TData = Awaited<ReturnType<typeof getMonthGrid>>,
+  TError = HTTPValidationError,
+>(
+  params: GetMonthGridParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getMonthGrid>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
  * @summary Get Month Grid
  */
 
-export function useGetMonthGrid<TData = Awaited<ReturnType<typeof getMonthGrid>>, TError = HTTPValidationError>(
- params: GetMonthGridParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMonthGrid>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useGetMonthGrid<
+  TData = Awaited<ReturnType<typeof getMonthGrid>>,
+  TError = HTTPValidationError,
+>(
+  params: GetMonthGridParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getMonthGrid>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetMonthGridQueryOptions(params, options);
 
-  const queryOptions = getGetMonthGridQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
 export type setEntryResponse200 = {
-  data: EntryResponse
-  status: 200
-}
+  data: EntryResponse;
+  status: 200;
+};
 
 export type setEntryResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type setEntryResponseSuccess = (setEntryResponse200) & {
-  headers: Headers;
-};
-export type setEntryResponseError = (setEntryResponse422) & {
-  headers: Headers;
+  data: HTTPValidationError;
+  status: 422;
 };
 
-export type setEntryResponse = (setEntryResponseSuccess | setEntryResponseError)
+export type setEntryResponseSuccess = setEntryResponse200 & {
+  headers: Headers;
+};
+export type setEntryResponseError = setEntryResponse422 & {
+  headers: Headers;
+};
 
-export const getSetEntryUrl = (params?: SetEntryParams,) => {
+export type setEntryResponse = setEntryResponseSuccess | setEntryResponseError;
+
+export const getSetEntryUrl = (params?: SetEntryParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
+      normalizedParams.append(key, value === null ? "null" : String(value));
     }
   });
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/v1/api/v1/entries?${stringifiedParams}` : `/api/v1/api/v1/entries`
-}
+  return stringifiedParams.length > 0
+    ? `/api/v1/entries?${stringifiedParams}`
+    : `/api/v1/entries`;
+};
 
 /**
  * Enregistre une saisie, pour soi ou pour un collegue.
  * @summary Set Entry
  */
-export const setEntry = async (setEntryRequest: SetEntryRequest,
-    params?: SetEntryParams, options?: RequestInit): Promise<setEntryResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+export const setEntry = async (
+  setEntryRequest: SetEntryRequest,
+  params?: SetEntryParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<setEntryResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
     if (!h) return {};
     if (h instanceof Headers) return Object.fromEntries(h.entries());
     if (Symbol.iterator in h) {
       return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
       );
     }
     const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
       if (value !== undefined) headers[name] = value;
     }
     return headers;
   };
-return bffFetcher<setEntryResponse>(getSetEntryUrl(params),
-  {
+  return bffFetcher<setEntryResponse>(getSetEntryUrl(params), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(setEntryRequest)
-  }
-);}
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(setEntryRequest),
+  });
+};
 
+export const getSetEntryMutationKey = () => ["setEntry"] as const;
 
+export const getSetEntryMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setEntry>>,
+    TError,
+    SetEntryMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setEntry>>,
+  TError,
+  SetEntryMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetEntryMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setEntry>>,
+    SetEntryMutationVariables
+  > = (props) => {
+    const { data, params } = props ?? {};
 
+    return setEntry(data, params, requestOptions);
+  };
 
-export const getSetEntryMutationKey = () => ['setEntry'] as const;
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getSetEntryMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setEntry>>, TError,SetEntryMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof setEntry>>, TError,SetEntryMutationVariables, TContext> => {
+export type SetEntryMutationResult = NonNullable<Awaited<ReturnType<typeof setEntry>>>;
+export type SetEntryMutationBody = SetEntryRequest;
+export type SetEntryMutationError = HTTPValidationError;
+export type SetEntryMutationVariables = {
+  data: SetEntryRequest;
+  params?: SetEntryParams;
+};
 
-const mutationKey = getSetEntryMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setEntry>>, SetEntryMutationVariables> = (props) => {
-          const {data,params} = props ?? {};
-
-          return  setEntry(data,params,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SetEntryMutationResult = NonNullable<Awaited<ReturnType<typeof setEntry>>>
-    export type SetEntryMutationBody = SetEntryRequest
-    export type SetEntryMutationError = HTTPValidationError
-    export type SetEntryMutationVariables = {data: SetEntryRequest;params?: SetEntryParams}
-
-    /**
+/**
  * @summary Set Entry
  */
-export const useSetEntry = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setEntry>>, TError,SetEntryMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof setEntry>>,
-        TError,
-        SetEntryMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSetEntryMutationOptions(options), queryClient);
-    }
+export const useSetEntry = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setEntry>>,
+      TError,
+      SetEntryMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setEntry>>,
+  TError,
+  SetEntryMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetEntryMutationOptions(options), queryClient);
+};

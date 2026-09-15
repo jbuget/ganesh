@@ -6,5 +6,5 @@
  */
 
 export type ListUsersApiV1UsersGetParams = {
-include_inactive?: boolean;
+  include_inactive?: boolean;
 };

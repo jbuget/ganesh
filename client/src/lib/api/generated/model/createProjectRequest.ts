@@ -4,17 +4,17 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
-import type { ProjectKind } from './projectKind';
-import type { ProjectStatus } from './projectStatus';
+import type { ProjectKind } from "./projectKind";
+import type { ProjectStatus } from "./projectStatus";
 
 /**
  * Creation d'une mission.
  */
 export interface CreateProjectRequest {
   /**
-     * @minLength 1
-     * @maxLength 255
-     */
+   * @minLength 1
+   * @maxLength 255
+   */
   label: string;
   kind: ProjectKind;
   statut?: ProjectStatus | null;

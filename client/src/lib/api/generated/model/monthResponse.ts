@@ -4,7 +4,7 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
-import type { MonthState } from './monthState';
+import type { MonthState } from "./monthState";
 
 /**
  * Etat de saisie d'un mois.

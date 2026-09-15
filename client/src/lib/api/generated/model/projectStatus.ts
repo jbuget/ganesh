@@ -11,13 +11,12 @@
  * L'ordre declare ici est l'ordre nominal, mais un projet peut revenir en
  * arriere : aucune transition n'est interdite.
  */
-export type ProjectStatus = typeof ProjectStatus[keyof typeof ProjectStatus];
-
+export type ProjectStatus = (typeof ProjectStatus)[keyof typeof ProjectStatus];
 
 export const ProjectStatus = {
-  exploration: 'exploration',
-  cadrage: 'cadrage',
-  realisation: 'realisation',
-  validation: 'validation',
-  exploitation: 'exploitation',
+  exploration: "exploration",
+  cadrage: "cadrage",
+  realisation: "realisation",
+  validation: "validation",
+  exploitation: "exploitation",
 } as const;

@@ -6,5 +6,5 @@
  */
 
 export type ListProjectsApiV1ProjectsGetParams = {
-include_inactive?: boolean;
+  include_inactive?: boolean;
 };

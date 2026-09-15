@@ -4,9 +4,7 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
-import {
-  useQuery
-} from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -16,25 +14,24 @@ import type {
   QueryKey,
   UndefinedInitialDataOptions,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+} from "@tanstack/react-query";
 
-import type {
-  HTTPValidationError,
-  MonthCalendarResponse
-} from '../model';
+import type { HTTPValidationError, MonthCalendarResponse } from "../model";
 
-import { bffFetcher } from '../../fetcher';
+import { bffFetcher } from "../../fetcher";
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-
-const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
+const withQueryKey = <T extends object, K>(
+  query: T,
+  queryKey: K,
+): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -45,130 +42,168 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 export type getMonthCalendarResponse200 = {
-  data: MonthCalendarResponse
-  status: 200
-}
+  data: MonthCalendarResponse;
+  status: 200;
+};
 
 export type getMonthCalendarResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-
-export type getMonthCalendarResponseSuccess = (getMonthCalendarResponse200) & {
-  headers: Headers;
-};
-export type getMonthCalendarResponseError = (getMonthCalendarResponse422) & {
-  headers: Headers;
+  data: HTTPValidationError;
+  status: 422;
 };
 
-export type getMonthCalendarResponse = (getMonthCalendarResponseSuccess | getMonthCalendarResponseError)
+export type getMonthCalendarResponseSuccess = getMonthCalendarResponse200 & {
+  headers: Headers;
+};
+export type getMonthCalendarResponseError = getMonthCalendarResponse422 & {
+  headers: Headers;
+};
 
-export const getGetMonthCalendarUrl = (year: number,
-    month: number,) => {
+export type getMonthCalendarResponse =
+  getMonthCalendarResponseSuccess | getMonthCalendarResponseError;
 
-
-
-
-  return `/api/v1/api/v1/calendar/${year}/${month}`
-}
+export const getGetMonthCalendarUrl = (year: number, month: number) => {
+  return `/api/v1/calendar/${year}/${month}`;
+};
 
 /**
  * Les jours du mois et leur nature.
  * @summary Get Month Calendar
  */
-export const getMonthCalendar = async (year: number,
-    month: number, options?: RequestInit): Promise<getMonthCalendarResponse> => {
-
-  return bffFetcher<getMonthCalendarResponse>(getGetMonthCalendarUrl(year,month),
-  {
+export const getMonthCalendar = async (
+  year: number,
+  month: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<getMonthCalendarResponse> => {
+  return bffFetcher<getMonthCalendarResponse>(getGetMonthCalendarUrl(year, month), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getGetMonthCalendarQueryKey = (year: number, month: number) => {
+  return [`/api/v1/calendar/${year}/${month}`] as const;
+};
 
-  }
-);}
-
-
-
-
-
-export const getGetMonthCalendarQueryKey = (year: number,
-    month: number,) => {
-    return [
-    `/api/v1/api/v1/calendar/${year}/${month}`
-    ] as const;
-    }
-
-
-export const getGetMonthCalendarQueryOptions = <TData = Awaited<ReturnType<typeof getMonthCalendar>>, TError = HTTPValidationError>(year: number,
-    month: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMonthCalendar>>, TError, TData>>, }
+export const getGetMonthCalendarQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMonthCalendar>>,
+  TError = HTTPValidationError,
+>(
+  year: number,
+  month: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getMonthCalendar>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetMonthCalendarQueryKey(year, month);
 
-  const queryKey =  queryOptions?.queryKey ?? getGetMonthCalendarQueryKey(year,month);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMonthCalendar>>> = ({
+    signal,
+  }) => getMonthCalendar(year, month, { signal, ...requestOptions });
 
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      year !== null && year !== undefined && month !== null && month !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getMonthCalendar>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
 
+export type GetMonthCalendarQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMonthCalendar>>
+>;
+export type GetMonthCalendarQueryError = HTTPValidationError;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMonthCalendar>>> = ({ signal }) => getMonthCalendar(year,month, { signal });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: year !== null && year !== undefined && month !== null && month !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMonthCalendar>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetMonthCalendarQueryResult = NonNullable<Awaited<ReturnType<typeof getMonthCalendar>>>
-export type GetMonthCalendarQueryError = HTTPValidationError
-
-
-export function useGetMonthCalendar<TData = Awaited<ReturnType<typeof getMonthCalendar>>, TError = HTTPValidationError>(
- year: number,
-    month: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMonthCalendar>>, TError, TData>> & Pick<
+export function useGetMonthCalendar<
+  TData = Awaited<ReturnType<typeof getMonthCalendar>>,
+  TError = HTTPValidationError,
+>(
+  year: number,
+  month: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getMonthCalendar>>, TError, TData>
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getMonthCalendar>>,
           TError,
           Awaited<ReturnType<typeof getMonthCalendar>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetMonthCalendar<TData = Awaited<ReturnType<typeof getMonthCalendar>>, TError = HTTPValidationError>(
- year: number,
-    month: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMonthCalendar>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetMonthCalendar<
+  TData = Awaited<ReturnType<typeof getMonthCalendar>>,
+  TError = HTTPValidationError,
+>(
+  year: number,
+  month: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getMonthCalendar>>, TError, TData>
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getMonthCalendar>>,
           TError,
           Awaited<ReturnType<typeof getMonthCalendar>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetMonthCalendar<TData = Awaited<ReturnType<typeof getMonthCalendar>>, TError = HTTPValidationError>(
- year: number,
-    month: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMonthCalendar>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMonthCalendar<
+  TData = Awaited<ReturnType<typeof getMonthCalendar>>,
+  TError = HTTPValidationError,
+>(
+  year: number,
+  month: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getMonthCalendar>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
  * @summary Get Month Calendar
  */
 
-export function useGetMonthCalendar<TData = Awaited<ReturnType<typeof getMonthCalendar>>, TError = HTTPValidationError>(
- year: number,
-    month: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMonthCalendar>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useGetMonthCalendar<
+  TData = Awaited<ReturnType<typeof getMonthCalendar>>,
+  TError = HTTPValidationError,
+>(
+  year: number,
+  month: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getMonthCalendar>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetMonthCalendarQueryOptions(year, month, options);
 
-  const queryOptions = getGetMonthCalendarQueryOptions(year,month,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
-
-
-
-
-
-

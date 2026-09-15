@@ -6,5 +6,5 @@
  */
 
 export type ReopenMonthParams = {
-user_id: number;
+  user_id: number;
 };
