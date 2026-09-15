@@ -57,3 +57,14 @@ source_modules =
     src.shared
 forbidden_modules =
     src.modules.*
+
+# --- Frontieres du code transverse -------------------------------------------
+# common/ porte le code technique transverse (handlers, middlewares) : il ne
+# connait aucun module metier.
+[importlinter:contract:common-purity]
+name = common/ ne depend d'aucun module metier
+type = forbidden
+source_modules =
+    src.common
+forbidden_modules =
+    src.modules.*

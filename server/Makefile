@@ -1,4 +1,4 @@
-.PHONY: install lint format test test-cov archi migration migrate run
+.PHONY: install lint format test test-cov archi migration migrate seed run
 
 VENV := .venv
 PY := $(VENV)/bin/python
@@ -37,6 +37,9 @@ migration:
 
 migrate:
 	$(VENV)/bin/alembic upgrade head
+
+seed:
+	$(PY) -m scripts.seed
 
 run:
 	$(VENV)/bin/uvicorn src.main:app --reload --port $${API_PORT:-8004}
