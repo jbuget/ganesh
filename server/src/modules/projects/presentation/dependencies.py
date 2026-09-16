@@ -21,10 +21,12 @@ from src.modules.projects.application.use_cases.create_project import (
 from src.modules.projects.application.use_cases.delete_project import (
     DeleteProjectUseCase,
 )
+from src.modules.projects.application.use_cases.get_board import GetBoardUseCase
 from src.modules.projects.application.use_cases.import_projects import (
     ImportProjectsUseCase,
 )
 from src.modules.projects.application.use_cases.list_projects import ListProjectsUseCase
+from src.modules.projects.application.use_cases.move_project import MoveProjectUseCase
 from src.modules.projects.application.use_cases.update_project import (
     UpdateProjectUseCase,
 )
@@ -84,3 +86,19 @@ def get_import_projects_use_case(
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> ImportProjectsUseCase:
     return ImportProjectsUseCase(users=users, projects=projects, audit_logs=audit_logs)
+
+
+def get_board_use_case(
+    projects: ProjectRepository = Depends(get_project_repository),
+    entries: EntryRepository = Depends(get_entry_repository),
+    users: UserRepository = Depends(get_user_repository),
+) -> GetBoardUseCase:
+    return GetBoardUseCase(projects=projects, entries=entries, users=users)
+
+
+def get_move_project_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> MoveProjectUseCase:
+    return MoveProjectUseCase(users=users, projects=projects, audit_logs=audit_logs)

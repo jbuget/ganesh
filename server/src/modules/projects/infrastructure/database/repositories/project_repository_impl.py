@@ -21,6 +21,9 @@ def to_entity(model: ProjectModel) -> Project:
         parent_id=model.parent_id,
         actif=model.actif,
         estime_j=model.estime_j,
+        categorie=model.categorie,
+        date_mise_en_service=model.date_mise_en_service,
+        position=model.position,
         monday_item_id=model.monday_item_id,
         monday_subitem_id=model.monday_subitem_id,
     )
@@ -59,6 +62,9 @@ class SqlProjectRepository(ProjectRepository):
             parent_id=project.parent_id,
             actif=project.actif,
             estime_j=project.estime_j,
+            categorie=project.categorie,
+            date_mise_en_service=project.date_mise_en_service,
+            position=project.position,
             monday_item_id=project.monday_item_id,
             monday_subitem_id=project.monday_subitem_id,
         )
@@ -79,6 +85,9 @@ class SqlProjectRepository(ProjectRepository):
         model.parent_id = project.parent_id
         model.actif = project.actif
         model.estime_j = project.estime_j
+        model.categorie = project.categorie
+        model.date_mise_en_service = project.date_mise_en_service
+        model.position = project.position
         model.monday_item_id = project.monday_item_id
         model.monday_subitem_id = project.monday_subitem_id
         await self._session.flush()

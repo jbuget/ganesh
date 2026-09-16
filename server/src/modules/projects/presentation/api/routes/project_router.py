@@ -14,6 +14,7 @@ from src.modules.projects.application.dtos.project_dto import (
     CreateProjectCommand,
     DeleteProjectCommand,
     ImportProjectsCommand,
+    MoveProjectCommand,
     ProjectImportLine,
     UpdateProjectCommand,
 )
@@ -26,31 +27,38 @@ from src.modules.projects.application.use_cases.create_project import (
 from src.modules.projects.application.use_cases.delete_project import (
     DeleteProjectUseCase,
 )
+from src.modules.projects.application.use_cases.get_board import GetBoardUseCase
 from src.modules.projects.application.use_cases.import_projects import (
     ImportProjectsUseCase,
 )
 from src.modules.projects.application.use_cases.list_projects import ListProjectsUseCase
+from src.modules.projects.application.use_cases.move_project import MoveProjectUseCase
 from src.modules.projects.application.use_cases.update_project import (
     UpdateProjectUseCase,
 )
 from src.modules.projects.presentation.api.mappers.project_mapper import (
+    to_board_response,
     to_listed_project_response,
     to_project_response,
 )
 from src.modules.projects.presentation.api.schemas.project_schemas import (
+    BoardResponse,
     ChangeStatusRequest,
     CreateProjectRequest,
     ImportProjectsRequest,
     ImportReportResponse,
+    MoveProjectRequest,
     ProjectResponse,
     UpdateProjectRequest,
 )
 from src.modules.projects.presentation.dependencies import (
+    get_board_use_case,
     get_change_status_use_case,
     get_create_project_use_case,
     get_delete_project_use_case,
     get_import_projects_use_case,
     get_list_projects_use_case,
+    get_move_project_use_case,
     get_update_project_use_case,
 )
 from src.modules.users.domain.entities.user import User
@@ -182,3 +190,38 @@ async def delete_project(
     )
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/board", response_model=BoardResponse, operation_id="getBoard")
+async def get_board(
+    _: User = Depends(get_current_user),
+    use_case: GetBoardUseCase = Depends(get_board_use_case),
+) -> BoardResponse:
+    """Tableau de bord des projets, une colonne par phase."""
+    return to_board_response(await use_case.execute())
+
+
+@router.patch(
+    "/{project_id}/move",
+    response_model=ProjectResponse,
+    operation_id="moveProject",
+)
+async def move_project(
+    project_id: int,
+    payload: MoveProjectRequest,
+    current_user: User = Depends(get_current_user),
+    use_case: MoveProjectUseCase = Depends(get_move_project_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> ProjectResponse:
+    """Depose une carte dans une colonne, a un rang donne."""
+    assert current_user.id is not None
+    mission = await use_case.execute(
+        MoveProjectCommand(
+            actor_id=current_user.id,
+            project_id=project_id,
+            statut=payload.statut,
+            position=payload.position,
+        )
+    )
+    await session.commit()
+    return to_project_response(mission)

@@ -1,10 +1,16 @@
 """Modele SQLAlchemy du referentiel des missions."""
 
-from sqlalchemy import Boolean, Enum, Float, ForeignKey, Integer, String
+from datetime import date
+
+from sqlalchemy import Boolean, Date, Enum, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
-from src.modules.projects.domain.entities.project import ProjectKind, ProjectStatus
+from src.modules.projects.domain.entities.project import (
+    ProjectCategory,
+    ProjectKind,
+    ProjectStatus,
+)
 
 
 class ProjectModel(Base):
@@ -27,6 +33,13 @@ class ProjectModel(Base):
     )
     actif: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     estime_j: Mapped[float | None] = mapped_column(Float, nullable=True)
+    categorie: Mapped[ProjectCategory | None] = mapped_column(
+        Enum(ProjectCategory, name="project_category", native_enum=False, length=32),
+        nullable=True,
+    )
+    date_mise_en_service: Mapped[date | None] = mapped_column(Date, nullable=True)
+    #: Rang dans sa colonne du tableau de bord.
+    position: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
     # Rattachement Monday : inutilise en V1, alimente en V1.1.
     monday_item_id: Mapped[str | None] = mapped_column(String(32), nullable=True)

@@ -1,8 +1,14 @@
 """Schemas du referentiel des missions."""
 
+from datetime import date
+
 from pydantic import BaseModel, Field
 
-from src.modules.projects.domain.entities.project import ProjectKind, ProjectStatus
+from src.modules.projects.domain.entities.project import (
+    ProjectCategory,
+    ProjectKind,
+    ProjectStatus,
+)
 
 
 class CreateProjectRequest(BaseModel):
@@ -31,6 +37,9 @@ class ProjectResponse(BaseModel):
     parent_id: int | None
     actif: bool
     estime_j: float | None
+    categorie: ProjectCategory | None
+    date_mise_en_service: date | None
+    position: int
     monday_item_id: str | None
     monday_subitem_id: str | None
     is_syncable_to_monday: bool
@@ -43,6 +52,8 @@ class UpdateProjectRequest(BaseModel):
     label: str | None = Field(default=None, min_length=1, max_length=255)
     statut: ProjectStatus | None = None
     estime_j: float | None = None
+    categorie: ProjectCategory | None = None
+    date_mise_en_service: date | None = None
     actif: bool | None = None
     parent_id: int | None = None
     monday_item_id: str | None = None
@@ -73,3 +84,39 @@ class ImportReportResponse(BaseModel):
     crees: int
     ignores: int
     erreurs: list[str]
+
+
+class MoveProjectRequest(BaseModel):
+    """Depot d'une carte : colonne d'arrivee et rang voulu."""
+
+    statut: ProjectStatus
+    position: int = Field(ge=0)
+
+
+class BoardMemberResponse(BaseModel):
+    """Un intervenant, tel qu'affiche en pastille sur une carte."""
+
+    id: int
+    display_name: str
+    initiales: str
+
+
+class BoardCardResponse(BaseModel):
+    """Une carte du tableau de bord."""
+
+    project: ProjectResponse
+    consomme_j: float
+    collaborateurs: list[BoardMemberResponse]
+
+
+class BoardColumnResponse(BaseModel):
+    """Une phase et ses cartes."""
+
+    statut: ProjectStatus
+    cartes: list[BoardCardResponse]
+
+
+class BoardResponse(BaseModel):
+    """Le tableau complet, toutes phases confondues."""
+
+    colonnes: list[BoardColumnResponse]

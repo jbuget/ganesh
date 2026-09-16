@@ -1,6 +1,7 @@
 """Projet, lot et activite hors projet : le referentiel des missions."""
 
 from dataclasses import dataclass
+from datetime import date
 from enum import StrEnum
 
 from src.shared.exceptions.domain_exceptions import ValidationError
@@ -17,15 +18,25 @@ class ProjectKind(StrEnum):
 class ProjectStatus(StrEnum):
     """Phase de vie d'un projet ou d'un lot.
 
-    L'ordre declare ici est l'ordre nominal, mais un projet peut revenir en
-    arriere : aucune transition n'est interdite.
+    L'ordre declare ici est l'ordre nominal, et celui des colonnes du tableau de
+    bord. Un projet peut revenir en arriere : aucune transition n'est interdite.
     """
 
     EXPLORATION = "exploration"
     CADRAGE = "cadrage"
     REALISATION = "realisation"
     VALIDATION = "validation"
+    DEPLOIEMENT = "deploiement"
     EXPLOITATION = "exploitation"
+
+
+class ProjectCategory(StrEnum):
+    """Axe strategique auquel un projet se rattache."""
+
+    AUTOMATISER = "automatiser_fluidifier"
+    PERENNISER = "perenniser_croissance"
+    INNOVER = "innover_differencier"
+    STRUCTURER = "structurer_plateforme"
 
 
 @dataclass
@@ -39,6 +50,10 @@ class Project:
     parent_id: int | None = None
     actif: bool = True
     estime_j: float | None = None
+    categorie: ProjectCategory | None = None
+    date_mise_en_service: date | None = None
+    #: Rang dans sa colonne du tableau de bord, choisi par l'equipe.
+    position: int = 0
     monday_item_id: str | None = None
     monday_subitem_id: str | None = None
 
@@ -57,9 +72,17 @@ class Project:
         if self.kind is ProjectKind.LOT and self.parent_id is None:
             raise ValidationError("Un lot doit etre rattache a un projet parent.")
 
+        if self.position < 0:
+            raise ValidationError("Le rang d'une mission ne peut pas etre negatif.")
+
     @property
     def is_off_project(self) -> bool:
         return self.kind is ProjectKind.HORS_PROJET
+
+    @property
+    def appears_on_board(self) -> bool:
+        """Seul ce qui porte une phase se pilote sur le tableau de bord."""
+        return not self.is_off_project
 
     @property
     def is_syncable_to_monday(self) -> bool:

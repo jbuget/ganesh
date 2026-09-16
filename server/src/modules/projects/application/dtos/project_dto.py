@@ -1,9 +1,14 @@
 """Commandes portant sur le referentiel des missions."""
 
 from dataclasses import dataclass, field
+from datetime import date
 from typing import Any
 
-from src.modules.projects.domain.entities.project import ProjectKind, ProjectStatus
+from src.modules.projects.domain.entities.project import (
+    ProjectCategory,
+    ProjectKind,
+    ProjectStatus,
+)
 
 
 @dataclass(frozen=True)
@@ -41,6 +46,8 @@ class UpdateProjectCommand:
     label: str | Any = ABSENT
     statut: ProjectStatus | None | Any = ABSENT
     estime_j: float | None | Any = ABSENT
+    categorie: ProjectCategory | None | Any = ABSENT
+    date_mise_en_service: date | None | Any = ABSENT
     actif: bool | Any = ABSENT
     parent_id: int | None | Any = ABSENT
     monday_item_id: str | None | Any = ABSENT
@@ -87,3 +94,13 @@ class DeleteProjectCommand:
 
     actor_id: int
     project_id: int
+
+
+@dataclass(frozen=True)
+class MoveProjectCommand:
+    """Deplacement d'une carte sur le tableau de bord."""
+
+    actor_id: int
+    project_id: int
+    statut: ProjectStatus
+    position: int
