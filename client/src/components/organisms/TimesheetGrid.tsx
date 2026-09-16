@@ -129,7 +129,8 @@ export function TimesheetGrid({
             <tr>
               <td
                 colSpan={grid.days.length + 2}
-                className="border-b border-slate-300 bg-white px-3 py-6 text-center text-sm text-slate-500"
+                // Seule ligne du corps : elle ferme le tableau en bas et a droite.
+                className="border-r border-b border-r-slate-500 border-b-slate-500 bg-white px-3 py-6 text-center text-sm text-slate-500"
               >
                 Aucune mission pour ce mois. Ajoutez-en une pour commencer à saisir.
               </td>

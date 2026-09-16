@@ -120,10 +120,24 @@ describe("TimesheetGrid", () => {
     expect(cells.every((cell) => cell.hasAttribute("disabled"))).toBe(true);
   });
 
-  it("retire le sélecteur de mission quand le mois est validé", () => {
-    render(<TimesheetGrid {...baseProps} grid={makeGrid({ is_writable: false })} />);
+  it("affiche un message quand le mois ne contient aucune mission", () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid({ rows: [] })} />);
 
-    expect(screen.queryByRole("combobox")).toBeNull();
+    expect(screen.getByText(/Aucune mission pour ce mois/)).toBeInTheDocument();
+  });
+
+  it("n'affiche pas ce message dès qu'une mission est présente", () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    expect(screen.queryByText(/Aucune mission pour ce mois/)).toBeNull();
+  });
+
+  it("ferme le tableau d'un trait fort même sans aucune mission", () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid({ rows: [] })} />);
+
+    const cellule = screen.getByText(/Aucune mission pour ce mois/);
+    expect(cellule.className).toContain("border-b-slate-500");
+    expect(cellule.className).toContain("border-r-slate-500");
   });
 
   it("affiche un total par jour", () => {
