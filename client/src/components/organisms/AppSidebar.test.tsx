@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import { AppSidebar } from "./AppSidebar";
 
@@ -15,6 +16,28 @@ vi.mock("@/lib/api/queries", () => ({
 }));
 
 describe("AppSidebar", () => {
+  it("propose de replier la barre", () => {
+    render(<AppSidebar />);
+
+    expect(
+      screen.getByRole("button", { name: "Replier la barre latérale" }),
+    ).toBeInTheDocument();
+  });
+
+  it("garde les libellés lisibles aux lecteurs d'écran une fois repliée", async () => {
+    render(<AppSidebar />);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Replier la barre latérale" }),
+    );
+
+    // Les intitulés disparaissent à l'œil, jamais de l'arbre d'accessibilité.
+    expect(screen.getByRole("link", { name: /Activité/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Déplier la barre latérale" }),
+    ).toHaveAttribute("aria-pressed", "true");
+  });
+
   it("propose les deux écrans", () => {
     render(<AppSidebar />);
 
