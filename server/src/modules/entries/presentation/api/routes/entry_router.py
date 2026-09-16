@@ -2,12 +2,16 @@
 
 from datetime import date
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
 from src.modules.auth.presentation.dependencies import get_current_user
-from src.modules.entries.application.dtos.set_entry_dto import SetEntryCommand
+from src.modules.entries.application.dtos.set_entry_dto import (
+    ClearEntryCommand,
+    SetEntryCommand,
+)
+from src.modules.entries.application.use_cases.clear_entry import ClearEntryUseCase
 from src.modules.entries.application.use_cases.get_month_grid import (
     GetMonthGridQuery,
     GetMonthGridUseCase,
@@ -23,6 +27,7 @@ from src.modules.entries.presentation.api.schemas.entry_schemas import (
     SetEntryRequest,
 )
 from src.modules.entries.presentation.dependencies import (
+    get_clear_entry_use_case,
     get_month_grid_use_case,
     get_set_entry_use_case,
 )
@@ -72,3 +77,32 @@ async def set_entry(
     )
     await session.commit()
     return to_entry_response(entry)
+
+
+@router.delete(
+    "",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="clearEntry",
+)
+async def clear_entry(
+    project_id: int,
+    jour: date,
+    user_id: int | None = Query(
+        default=None, description="Collaborateur dont le mois est modifie."
+    ),
+    current_user: User = Depends(get_current_user),
+    use_case: ClearEntryUseCase = Depends(get_clear_entry_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Retire une saisie, pour soi ou pour un collegue."""
+    assert current_user.id is not None
+    await use_case.execute(
+        ClearEntryCommand(
+            actor_id=current_user.id,
+            target_user_id=user_id or current_user.id,
+            project_id=project_id,
+            jour=jour,
+        )
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

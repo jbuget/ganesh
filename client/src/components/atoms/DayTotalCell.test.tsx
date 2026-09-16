@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 
 import { DayTotalCell } from "./DayTotalCell";
 
-const base = { isOffDay: false, isToday: false };
+const base = { isOffDay: false };
 
 function renderCell(props: Partial<React.ComponentProps<typeof DayTotalCell>>) {
   render(
@@ -42,16 +42,6 @@ describe("DayTotalCell", () => {
   it("grise un jour non ouvré sans saisie", () => {
     expect(renderCell({ value: 0, isOffDay: true }).className).toContain(
       "bg-slate-100",
-    );
-  });
-
-  it("met la colonne du jour en jaune quand elle est vide", () => {
-    expect(renderCell({ value: 0, isToday: true }).className).toContain("bg-amber-100");
-  });
-
-  it("la valeur prime sur le repère du jour courant", () => {
-    expect(renderCell({ value: 1, isToday: true }).className).toContain(
-      "bg-emerald-100",
     );
   });
 

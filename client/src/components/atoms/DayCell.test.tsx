@@ -7,7 +7,6 @@ import { cycleDayValue, DayCell } from "./DayCell";
 const baseProps = {
   isOffDay: false,
   isFuture: false,
-  isToday: false,
   isReadOnly: false,
   label: "15 septembre",
 };
@@ -95,18 +94,6 @@ describe("DayCell", () => {
     await userEvent.click(screen.getByRole("button"));
 
     expect(onChange).not.toHaveBeenCalled();
-  });
-
-  it("marque le jour courant sans liseré de focus", () => {
-    renderInRow(<DayCell {...baseProps} value={0} isToday onChange={vi.fn()} />);
-
-    expect(screen.getByRole("button").className).not.toContain("outline");
-  });
-
-  it("marque la colonne du jour courant quand la case est vide", () => {
-    renderInRow(<DayCell {...baseProps} value={0} isToday onChange={vi.fn()} />);
-
-    expect(screen.getByRole("button").className).toContain("bg-amber-100");
   });
 
   it("porte un libellé accessible", () => {

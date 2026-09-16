@@ -16,8 +16,6 @@ interface DayCellProps {
   value: DayValue;
   isOffDay: boolean;
   isFuture: boolean;
-  /** Marque la colonne du jour courant, par un simple fond. */
-  isToday: boolean;
   isReadOnly: boolean;
   /** La derniere ligne ferme le tableau : son trait bas est le trait fort. */
   isLastRow?: boolean;
@@ -33,14 +31,13 @@ interface DayCellProps {
  *
  * Les jours non ouvres sont grises et verrouilles, les jours a venir attenues :
  * les premiers pour eviter les saisies par erreur, les seconds parce qu'ils
- * relevent du previsionnel et non du realise. La colonne du jour courant est
- * marquee en jaune.
+ * relevent du previsionnel et non du realise. Le jour courant n'est signale que
+ * dans l'en-tete de colonne, pour ne pas charger la grille.
  */
 export function DayCell({
   value,
   isOffDay,
   isFuture,
-  isToday,
   isReadOnly,
   isLastRow = false,
   label,
@@ -55,9 +52,7 @@ export function DayCell({
       ? "bg-sky-100 font-medium text-sky-900"
       : isOffDay
         ? "bg-slate-100"
-        : isToday
-          ? "bg-amber-100"
-          : "bg-white";
+        : "bg-white";
 
   return (
     <td

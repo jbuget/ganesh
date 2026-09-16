@@ -6,7 +6,7 @@ import { useState } from "react";
 import type { DayValue } from "@/components/atoms/DayCell";
 import { MissionSelector } from "@/components/molecules/MissionSelector";
 import { TimesheetGrid } from "@/components/organisms/TimesheetGrid";
-import { setEntry } from "@/lib/api/generated/entries/entries";
+import { clearEntry, setEntry } from "@/lib/api/generated/entries/entries";
 import type { ProjectResponse } from "@/lib/api/generated/model";
 import { useValidateMonth } from "@/lib/api/generated/months/months";
 import { useCreateProject } from "@/lib/api/generated/projects/projects";
@@ -67,11 +67,13 @@ export function TimesheetPage() {
   }
 
   async function handleSetValue(projectId: number, jour: string, value: DayValue) {
-    if (value === 0) return; // La suppression arrive avec l'endpoint DELETE.
-    await setEntry(
-      { project_id: projectId, jour, valeur: value },
-      viewedUserId ? { user_id: viewedUserId } : undefined,
-    );
+    const target = viewedUserId ? { user_id: viewedUserId } : undefined;
+
+    if (value === 0) {
+      await clearEntry({ project_id: projectId, jour, ...target });
+    } else {
+      await setEntry({ project_id: projectId, jour, valeur: value }, target);
+    }
     await refresh();
   }
 

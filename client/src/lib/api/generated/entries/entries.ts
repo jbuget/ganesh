@@ -21,6 +21,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  ClearEntryParams,
   EntryResponse,
   GetMonthGridParams,
   HTTPValidationError,
@@ -362,4 +363,122 @@ export const useSetEntry = <TError = HTTPValidationError, TContext = unknown>(
   TContext
 > => {
   return useMutation(getSetEntryMutationOptions(options), queryClient);
+};
+export type clearEntryResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type clearEntryResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type clearEntryResponseSuccess = clearEntryResponse204 & {
+  headers: Headers;
+};
+export type clearEntryResponseError = clearEntryResponse422 & {
+  headers: Headers;
+};
+
+export type clearEntryResponse = clearEntryResponseSuccess | clearEntryResponseError;
+
+export const getClearEntryUrl = (params: ClearEntryParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/entries?${stringifiedParams}`
+    : `/api/v1/entries`;
+};
+
+/**
+ * Retire une saisie, pour soi ou pour un collegue.
+ * @summary Clear Entry
+ */
+export const clearEntry = async (
+  params: ClearEntryParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<clearEntryResponse> => {
+  return bffFetcher<clearEntryResponse>(getClearEntryUrl(params), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getClearEntryMutationKey = () => ["clearEntry"] as const;
+
+export const getClearEntryMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clearEntry>>,
+    TError,
+    ClearEntryMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof clearEntry>>,
+  TError,
+  ClearEntryMutationVariables,
+  TContext
+> => {
+  const mutationKey = getClearEntryMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof clearEntry>>,
+    ClearEntryMutationVariables
+  > = (props) => {
+    const { params } = props ?? {};
+
+    return clearEntry(params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClearEntryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof clearEntry>>
+>;
+
+export type ClearEntryMutationError = HTTPValidationError;
+export type ClearEntryMutationVariables = { params: ClearEntryParams };
+
+/**
+ * @summary Clear Entry
+ */
+export const useClearEntry = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof clearEntry>>,
+      TError,
+      ClearEntryMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof clearEntry>>,
+  TError,
+  ClearEntryMutationVariables,
+  TContext
+> => {
+  return useMutation(getClearEntryMutationOptions(options), queryClient);
 };

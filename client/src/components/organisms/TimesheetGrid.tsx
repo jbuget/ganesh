@@ -106,7 +106,6 @@ export function TimesheetGrid({
                 key={day.jour}
                 value={totalByDate.get(day.jour)?.total ?? 0}
                 isOffDay={day.is_off_day}
-                isToday={day.jour === today}
                 strongSides={["bottom"]}
               />
             ))}
@@ -154,7 +153,6 @@ export function TimesheetGrid({
                   value={(row.values[day.jour] ?? 0) as DayValue}
                   isOffDay={day.is_off_day}
                   isFuture={day.jour > today}
-                  isToday={day.jour === today}
                   isReadOnly={readOnly}
                   isLastRow={rowIndex === rows.length - 1}
                   label={`${row.label} — ${day.jour}`}

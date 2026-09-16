@@ -10,6 +10,7 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 from src.modules.audit_logs.infrastructure.database.repositories.audit_log_repository_impl import (
     SqlAuditLogRepository,
 )
+from src.modules.entries.application.use_cases.clear_entry import ClearEntryUseCase
 from src.modules.entries.application.use_cases.get_month_grid import GetMonthGridUseCase
 from src.modules.entries.application.use_cases.set_entry import SetEntryUseCase
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
@@ -80,4 +81,15 @@ def get_month_grid_use_case(
 ) -> GetMonthGridUseCase:
     return GetMonthGridUseCase(
         users=users, projects=projects, entries=entries, months=months
+    )
+
+
+def get_clear_entry_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    entries: EntryRepository = Depends(get_entry_repository),
+    months: MonthRepository = Depends(get_month_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> ClearEntryUseCase:
+    return ClearEntryUseCase(
+        users=users, entries=entries, months=months, audit_logs=audit_logs
     )
