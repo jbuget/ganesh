@@ -18,8 +18,8 @@ export function TotalCell({
     <td
       data-alert={isAlert ? "true" : undefined}
       className={[
-        "h-9 w-9 border-r border-b border-slate-400/70 text-center text-sm",
-        isAlert ? "bg-red-100 text-red-800 font-semibold" : "bg-slate-100",
+        "h-9 w-9 border-r border-b border-slate-300 text-center text-sm",
+        isAlert ? "bg-red-100 text-red-800 font-semibold" : "bg-slate-50",
         isStrong ? "font-semibold" : "",
         className,
       ].join(" ")}

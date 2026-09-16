@@ -70,14 +70,14 @@ export function TimesheetGrid({
   const totalByDate = new Map(grid.day_totals.map((total) => [total.jour, total]));
 
   return (
-    <div className="w-fit max-w-full overflow-x-auto rounded-lg border border-slate-400">
-      <table className="border-collapse text-slate-800">
+    <div className="max-w-full overflow-x-auto">
+      <table className="w-max border-collapse border border-slate-400 text-slate-800">
         <caption className="sr-only">Temps saisi par mission et par jour</caption>
         <thead>
           <tr>
             <th
               scope="col"
-              className="sticky left-0 z-10 h-12 w-64 border-r-2 border-b-2 border-r-slate-400 border-b-slate-400 bg-white px-3 text-left text-xs font-medium text-slate-600"
+              className="sticky left-0 z-10 h-11 w-64 border-r border-b border-r-slate-500 border-b-slate-500 bg-white px-3 text-left text-xs font-medium text-slate-600"
             >
               Mission
             </th>
@@ -92,7 +92,7 @@ export function TimesheetGrid({
             ))}
             <th
               scope="col"
-              className="h-12 w-16 border-b-2 border-l-2 border-slate-400 bg-white px-2 text-xs font-medium text-slate-600"
+              className="h-11 w-16 border-b border-l border-b-slate-500 border-l-slate-500 bg-white px-2 text-xs font-medium text-slate-600"
             >
               Total
             </th>
@@ -104,7 +104,7 @@ export function TimesheetGrid({
             <tr key={row.project_id}>
               <th
                 scope="row"
-                className="sticky left-0 z-10 max-w-64 truncate border-r-2 border-b border-slate-300 border-r-slate-400 bg-white px-3 py-1.5 text-left text-sm font-normal"
+                className="sticky left-0 z-10 max-w-64 truncate border-r border-b border-slate-300 border-r-slate-500 bg-white px-3 py-1.5 text-left text-sm font-normal"
                 title={row.label}
               >
                 {row.label}
@@ -129,7 +129,7 @@ export function TimesheetGrid({
               <TotalCell
                 value={row.total}
                 isStrong
-                className="border-l-2 border-l-slate-400"
+                className="border-l border-l-slate-500"
               />
             </tr>
           ))}
@@ -138,7 +138,7 @@ export function TimesheetGrid({
             <tr>
               <th
                 scope="row"
-                className="sticky left-0 z-10 border-r-2 border-b border-slate-300 border-r-slate-400 bg-white px-2 py-1.5 text-left font-normal"
+                className="sticky left-0 z-10 border-r border-b border-slate-300 border-r-slate-500 bg-white px-2 py-1.5 text-left font-normal"
               >
                 <MissionSelector
                   projects={projects}
@@ -156,11 +156,11 @@ export function TimesheetGrid({
           )}
         </tbody>
 
-        <tfoot className="border-t-2 border-slate-400">
+        <tfoot className="border-t border-t-slate-500">
           <tr>
             <th
               scope="row"
-              className="sticky left-0 z-10 border-t-2 border-r-2 border-slate-400 bg-slate-100 px-3 py-1.5 text-left text-sm font-medium"
+              className="sticky left-0 z-10 border-t border-r border-t-slate-500 border-r-slate-500 bg-slate-50 px-3 py-1.5 text-left text-sm font-medium"
             >
               Total par jour
             </th>
@@ -180,7 +180,7 @@ export function TimesheetGrid({
             <TotalCell
               value={grid.total_realise + grid.total_prevu}
               isStrong
-              className="border-l-2 border-l-slate-400"
+              className="border-l border-l-slate-500"
             />
           </tr>
         </tfoot>

@@ -25,6 +25,10 @@ interface DayCellProps {
 /**
  * Cellule unitaire de la matrice.
  *
+ * Les bordures sont portees par le `<td>`, jamais par le bouton : avec
+ * `border-collapse`, seules les bordures de cellules fusionnent entre elles.
+ * Les poser sur un element interne laisse des traits qui depassent.
+ *
  * Les jours non ouvres et les jours a venir sont visuellement distincts : les
  * premiers pour eviter les saisies par erreur, les seconds parce qu'ils
  * relevent du previsionnel et non du realise.
@@ -46,7 +50,7 @@ export function DayCell({
         : "bg-white";
 
   return (
-    <td className="p-0">
+    <td className="border-r border-b border-slate-300 p-0">
       <button
         type="button"
         aria-label={label}
@@ -54,10 +58,10 @@ export function DayCell({
         disabled={isReadOnly}
         onClick={() => onChange(cycleDayValue(value))}
         className={[
-          "h-9 w-9 border-r border-b border-slate-400/70 text-sm transition-colors",
+          "block h-9 w-9 text-sm transition-colors",
           background,
-          isFuture && value > 0 ? "opacity-55" : "",
-          isToday ? "ring-1 ring-inset ring-sky-500" : "",
+          isFuture && value > 0 ? "opacity-60" : "",
+          isToday ? "outline outline-1 -outline-offset-1 outline-sky-500" : "",
           isReadOnly ? "cursor-not-allowed" : "cursor-pointer hover:bg-sky-50",
         ].join(" ")}
       >
