@@ -193,33 +193,12 @@ export function TimesheetPage() {
       {gridQuery.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
       {grid && (
-        <>
-          <TimesheetGrid
-            grid={grid}
-            extraRows={extraRows}
-            today={today}
-            onSetValue={handleSetValue}
-          />
-
-          <dl className="mt-4 flex flex-wrap gap-8 text-sm">
-            <div>
-              <dt className="text-slate-500">Réalisé</dt>
-              <dd className="text-lg font-semibold">
-                {formatTotal(grid.total_realise)} j
-              </dd>
-            </div>
-            <div>
-              <dt className="text-slate-500">Prévisionnel</dt>
-              <dd className="text-lg font-semibold">
-                {formatTotal(grid.total_prevu)} j
-              </dd>
-            </div>
-            <div>
-              <dt className="text-slate-500">Jours ouvrés du mois</dt>
-              <dd className="text-lg font-semibold">{grid.working_days} j</dd>
-            </div>
-          </dl>
-        </>
+        <TimesheetGrid
+          grid={grid}
+          extraRows={extraRows}
+          today={today}
+          onSetValue={handleSetValue}
+        />
       )}
     </main>
   );

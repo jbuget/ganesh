@@ -72,7 +72,7 @@ export function TimesheetGrid({
               scope="col"
               className="sticky left-0 z-10 h-11 w-64 border-r border-b border-r-slate-500 border-b-slate-300 bg-white px-3 text-left text-xs font-medium text-slate-600"
             >
-              Mission
+              <span className="sr-only">Mission</span>
             </th>
             {grid.days.map((day) => (
               <DayHeader
@@ -87,7 +87,7 @@ export function TimesheetGrid({
               scope="col"
               className="h-11 w-16 border-r border-b border-l border-r-slate-500 border-b-slate-300 border-l-slate-500 bg-white px-2 text-xs font-medium text-slate-600"
             >
-              Total
+              <span className="sr-only">Total du mois</span>
             </th>
           </tr>
 
