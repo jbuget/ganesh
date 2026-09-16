@@ -1,7 +1,7 @@
 import { formatDays } from "@/lib/dates";
 
 /** Cote d'une cellule portant un trait fort plutot que le trait de grille. */
-export type StrongSide = "left" | "right" | "bottom";
+export type StrongSide = "right" | "bottom";
 
 interface DayTotalCellProps {
   value: number;
@@ -35,7 +35,6 @@ export function DayTotalCell({ value, isOffDay, strongSides = [] }: DayTotalCell
         "h-9 w-9 border-r border-b text-center text-sm font-medium",
         strong.has("right") ? "border-r-slate-500" : "border-r-slate-300",
         strong.has("bottom") ? "border-b-slate-500" : "border-b-slate-300",
-        strong.has("left") ? "border-l border-l-slate-500" : "",
         backgroundFor(value, isOffDay),
       ].join(" ")}
     >

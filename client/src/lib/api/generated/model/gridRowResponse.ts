@@ -19,4 +19,5 @@ export interface GridRowResponse {
   total_realise: number;
   total_prevu: number;
   total: number;
+  consomme_total_j: number;
 }

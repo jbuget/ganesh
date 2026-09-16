@@ -141,6 +141,48 @@ async def test_a_validated_month_is_read_only() -> None:
     assert grid.is_writable is False
 
 
+async def test_a_row_reports_the_whole_project_consumption() -> None:
+    """L'estime porte sur tout le projet : le consomme doit porter dessus aussi.
+
+    Comparer le realise du mois a un estime global induirait en erreur.
+    """
+    entries = [
+        entry(10, 15, 1.0),  # ce mois-ci
+        Entry(
+            id=None,
+            user_id=1,
+            project_id=10,
+            jour=date(2026, 8, 3),
+            valeur=DayValue(1.0),
+            statut_at_entry=ProjectStatus.REALISATION,
+        ),  # un mois anterieur
+        Entry(
+            id=None,
+            user_id=2,
+            project_id=10,
+            jour=date(2026, 9, 1),
+            valeur=DayValue(0.5),
+            statut_at_entry=ProjectStatus.REALISATION,
+        ),  # un autre developpeur
+    ]
+    grid = await build(entries).execute(
+        GetMonthGridQuery(user_id=1, mois=date(2026, 9, 1), today=TODAY)
+    )
+
+    row = grid.rows[0]
+    assert row.total_realise == 1.0
+    assert row.consomme_total_j == 2.5
+
+
+async def test_project_consumption_excludes_forecast() -> None:
+    """Le previsionnel n'est pas du consomme."""
+    grid = await build([entry(10, 15, 1.0), entry(10, 25, 1.0)]).execute(
+        GetMonthGridQuery(user_id=1, mois=date(2026, 9, 1), today=TODAY)
+    )
+
+    assert grid.rows[0].consomme_total_j == 1.0
+
+
 async def test_the_grid_carries_the_mission_labels() -> None:
     grid = await build([entry(11, 15, 1.0)]).execute(
         GetMonthGridQuery(user_id=1, mois=date(2026, 9, 1))

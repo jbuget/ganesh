@@ -5,9 +5,13 @@ import { formatDays } from "@/lib/dates";
 /** Valeur saisissable pour une demi-journee ou une journee complete. */
 export type DayValue = 0 | 0.5 | 1;
 
-const NEXT_VALUE: Record<DayValue, DayValue> = { 0: 0.5, 0.5: 1, 1: 0 };
+const NEXT_VALUE: Record<DayValue, DayValue> = { 0: 1, 1: 0.5, 0.5: 0 };
 
-/** Fait tourner la valeur d'une cellule : vide -> demi -> pleine -> vide. */
+/** Fait tourner la valeur d'une cellule : vide -> pleine -> demi -> vide.
+ *
+ * La journee complete vient en premier : c'est le cas courant, il doit coûter
+ * un seul clic.
+ */
 export function cycleDayValue(current: DayValue): DayValue {
   return NEXT_VALUE[current];
 }
@@ -19,6 +23,8 @@ interface DayCellProps {
   isReadOnly: boolean;
   /** La derniere ligne ferme le tableau : son trait bas est le trait fort. */
   isLastRow?: boolean;
+  /** La derniere colonne de jours porte le trait qui la separe des totaux. */
+  isLastDay?: boolean;
   label: string;
   onChange: (next: DayValue) => void;
 }
@@ -40,6 +46,7 @@ export function DayCell({
   isFuture,
   isReadOnly,
   isLastRow = false,
+  isLastDay = false,
   label,
   onChange,
 }: DayCellProps) {
@@ -57,7 +64,8 @@ export function DayCell({
   return (
     <td
       className={[
-        "border-r border-b border-r-slate-300 p-0",
+        "border-r border-b p-0",
+        isLastDay ? "border-r-slate-500" : "border-r-slate-300",
         isLastRow ? "border-b-slate-500" : "border-b-slate-300",
       ].join(" ")}
     >

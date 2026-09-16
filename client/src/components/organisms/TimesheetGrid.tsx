@@ -22,6 +22,7 @@ interface DisplayRow {
   total_realise: number;
   total_prevu: number;
   total: number;
+  consomme_total_j: number;
 }
 
 /**
@@ -45,6 +46,7 @@ export function TimesheetGrid({
       total_realise: row.total_realise,
       total_prevu: row.total_prevu,
       total: row.total,
+      consomme_total_j: row.consomme_total_j,
     })),
     ...extraRows
       .filter((p) => !grid.rows.some((row) => row.project_id === p.id))
@@ -56,6 +58,7 @@ export function TimesheetGrid({
         total_realise: 0,
         total_prevu: 0,
         total: 0,
+        consomme_total_j: 0,
       })),
   ].sort((a, b) => a.label.localeCompare(b.label, "fr"));
 
@@ -74,10 +77,11 @@ export function TimesheetGrid({
             >
               <span className="sr-only">Mission</span>
             </th>
-            {grid.days.map((day) => (
+            {grid.days.map((day, dayIndex) => (
               <DayHeader
                 key={day.jour}
                 jour={day.jour}
+                isLastDay={dayIndex === grid.days.length - 1}
                 isOffDay={day.is_off_day}
                 isToday={day.jour === today}
                 label={day.label ?? null}
@@ -85,7 +89,7 @@ export function TimesheetGrid({
             ))}
             <th
               scope="col"
-              className="h-11 w-16 border-r border-b border-l border-r-slate-500 border-b-slate-300 border-l-slate-500 bg-white px-2 text-xs font-medium text-slate-600"
+              className="h-11 w-16 border-r border-b border-r-slate-500 border-b-slate-300 bg-white px-2 text-xs font-medium text-slate-600"
             >
               <span className="sr-only">Total du mois</span>
             </th>
@@ -101,18 +105,20 @@ export function TimesheetGrid({
                 {grid.working_days} jours ouvrés
               </span>
             </th>
-            {grid.days.map((day) => (
+            {grid.days.map((day, dayIndex) => (
               <DayTotalCell
                 key={day.jour}
                 value={totalByDate.get(day.jour)?.total ?? 0}
                 isOffDay={day.is_off_day}
-                strongSides={["bottom"]}
+                strongSides={
+                  dayIndex === grid.days.length - 1 ? ["right", "bottom"] : ["bottom"]
+                }
               />
             ))}
             <TotalCell
               value={grid.total_realise + grid.total_prevu}
               isStrong
-              strongSides={["left", "right", "bottom"]}
+              strongSides={["right", "bottom"]}
             />
           </tr>
         </thead>
@@ -142,14 +148,18 @@ export function TimesheetGrid({
               >
                 {row.label}
                 {row.estime_j !== null && (
-                  <span className="ml-2 text-xs text-slate-400">
-                    {formatTotal(row.total_realise)}/{row.estime_j} j
+                  <span
+                    className="ml-2 text-xs text-slate-500"
+                    title={`${formatTotal(row.consomme_total_j)} jour(s) consommé(s) sur ce projet, pour ${row.estime_j} estimé(s)`}
+                  >
+                    {formatTotal(row.consomme_total_j)}/{row.estime_j} j
                   </span>
                 )}
               </th>
-              {grid.days.map((day) => (
+              {grid.days.map((day, dayIndex) => (
                 <DayCell
                   key={day.jour}
+                  isLastDay={dayIndex === grid.days.length - 1}
                   value={(row.values[day.jour] ?? 0) as DayValue}
                   isOffDay={day.is_off_day}
                   isFuture={day.jour > today}
@@ -163,9 +173,7 @@ export function TimesheetGrid({
                 value={row.total}
                 isStrong
                 strongSides={
-                  rowIndex === rows.length - 1
-                    ? ["left", "right", "bottom"]
-                    : ["left", "right"]
+                  rowIndex === rows.length - 1 ? ["right", "bottom"] : ["right"]
                 }
               />
             </tr>

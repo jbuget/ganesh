@@ -39,6 +39,9 @@ class GridRow:
     values: dict[date, float] = field(default_factory=dict)
     total_realise: float = 0.0
     total_prevu: float = 0.0
+    #: Consomme du projet entier, tous mois et tous developpeurs confondus.
+    #: C'est la seule grandeur comparable a `estime_j`, qui porte sur le projet.
+    consomme_total_j: float = 0.0
 
     @property
     def total(self) -> float:
@@ -91,6 +94,13 @@ class GetMonthGridUseCase:
         self._entries = entries
         self._months = months
 
+    async def _project_consumption(self, project_id: int, today: date) -> float:
+        """Temps deja consomme sur un projet, previsionnel exclu."""
+        entries = await self._entries.list_for_project(project_id)
+        return round(
+            sum(float(e.valeur) for e in entries if not e.is_forecast(today)), 2
+        )
+
     async def execute(self, query: GetMonthGridQuery) -> MonthGrid:
         if await self._users.get_by_id(query.user_id) is None:
             raise EntityNotFoundError("Utilisateur inconnu.")
@@ -121,6 +131,11 @@ class GetMonthGridUseCase:
                 row.total_prevu = round(row.total_prevu + float(entry.valeur), 2)
             else:
                 row.total_realise = round(row.total_realise + float(entry.valeur), 2)
+
+        for row in rows.values():
+            row.consomme_total_j = await self._project_consumption(
+                row.project_id, today
+            )
 
         day_totals = [
             DayTotal(

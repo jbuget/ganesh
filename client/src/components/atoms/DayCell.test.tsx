@@ -12,16 +12,20 @@ const baseProps = {
 };
 
 describe("cycleDayValue", () => {
-  it("passe de vide à une demi-journée", () => {
-    expect(cycleDayValue(0)).toBe(0.5);
+  it("passe de vide à une journée complète", () => {
+    expect(cycleDayValue(0)).toBe(1);
   });
 
-  it("passe d'une demi-journée à une journée complète", () => {
-    expect(cycleDayValue(0.5)).toBe(1);
+  it("passe d'une journée complète à une demi-journée", () => {
+    expect(cycleDayValue(1)).toBe(0.5);
   });
 
-  it("revient à vide après une journée complète", () => {
-    expect(cycleDayValue(1)).toBe(0);
+  it("revient à vide après une demi-journée", () => {
+    expect(cycleDayValue(0.5)).toBe(0);
+  });
+
+  it("boucle en trois clics", () => {
+    expect(cycleDayValue(cycleDayValue(cycleDayValue(0)))).toBe(0);
   });
 });
 
@@ -54,7 +58,7 @@ describe("DayCell", () => {
 
     await userEvent.click(screen.getByRole("button"));
 
-    expect(onChange).toHaveBeenCalledWith(0.5);
+    expect(onChange).toHaveBeenCalledWith(1);
   });
 
   it("affiche une demi-journée de façon lisible", () => {

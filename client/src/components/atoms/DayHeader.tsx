@@ -4,6 +4,8 @@ interface DayHeaderProps {
   jour: string;
   isOffDay: boolean;
   isToday: boolean;
+  /** La derniere colonne de jours porte le trait qui la separe des totaux. */
+  isLastDay?: boolean;
   label: string | null;
 }
 
@@ -13,13 +15,20 @@ interface DayHeaderProps {
  * Les jours non ouvres sont grises : c'est l'information que l'on doit lire au
  * premier coup d'oeil pour ne pas saisir un samedi par erreur.
  */
-export function DayHeader({ jour, isOffDay, isToday, label }: DayHeaderProps) {
+export function DayHeader({
+  jour,
+  isOffDay,
+  isToday,
+  isLastDay = false,
+  label,
+}: DayHeaderProps) {
   return (
     <th
       scope="col"
       title={label ?? undefined}
       className={[
-        "h-11 w-9 border-r border-b border-r-slate-300 border-b-slate-300",
+        "h-11 w-9 border-r border-b border-b-slate-300",
+        isLastDay ? "border-r-slate-500" : "border-r-slate-300",
         "text-xs font-normal",
         isOffDay
           ? "bg-slate-100 text-slate-500"

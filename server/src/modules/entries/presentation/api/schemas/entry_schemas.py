@@ -43,6 +43,7 @@ class GridRowResponse(BaseModel):
     total_realise: float
     total_prevu: float
     total: float
+    consomme_total_j: float
 
 
 class DayTotalResponse(BaseModel):

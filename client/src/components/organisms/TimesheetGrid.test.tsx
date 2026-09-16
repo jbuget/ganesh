@@ -29,6 +29,7 @@ function makeGrid(overrides: Partial<MonthGridResponse> = {}): MonthGridResponse
         total_realise: 1,
         total_prevu: 1,
         total: 2,
+        consomme_total_j: 7,
       },
     ],
     day_totals: days.map((day) => ({
@@ -72,12 +73,12 @@ describe("TimesheetGrid", () => {
     ).toBeInTheDocument();
   });
 
-  it("affiche le consommé face à l'estimé", () => {
+  it("compare le consommé du projet à son estimé, pas le réalisé du mois", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     expect(
       screen.getByRole("rowheader", { name: /Portail bailleurs/ }),
-    ).toHaveTextContent("1/20 j");
+    ).toHaveTextContent("7/20 j");
   });
 
   it("notifie la valeur suivante quand on clique une cellule vide", async () => {
@@ -88,10 +89,10 @@ describe("TimesheetGrid", () => {
       screen.getByRole("button", { name: "Portail bailleurs — 2026-09-14" }),
     );
 
-    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-14", 0.5);
+    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-14", 1);
   });
 
-  it("fait tourner une journée pleine vers vide", async () => {
+  it("fait tourner une journée pleine vers une demi-journée", async () => {
     const onSetValue = vi.fn();
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} onSetValue={onSetValue} />);
 
@@ -99,7 +100,7 @@ describe("TimesheetGrid", () => {
       screen.getByRole("button", { name: "Portail bailleurs — 2026-09-15" }),
     );
 
-    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-15", 0);
+    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-15", 0.5);
   });
 
   it("garde une ligne ajoutée mais encore vide", () => {

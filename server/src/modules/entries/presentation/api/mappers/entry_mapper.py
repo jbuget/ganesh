@@ -40,6 +40,7 @@ def to_month_grid_response(grid: MonthGrid) -> MonthGridResponse:
                 total_realise=row.total_realise,
                 total_prevu=row.total_prevu,
                 total=row.total,
+                consomme_total_j=row.consomme_total_j,
             )
             for row in grid.rows
         ],
