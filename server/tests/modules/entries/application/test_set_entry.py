@@ -121,6 +121,56 @@ async def test_writing_to_a_validated_month_is_rejected() -> None:
     assert await entries.get(1, 10, JOUR) is None
 
 
+async def test_a_saturday_is_rejected() -> None:
+    """La regle vit dans le domaine : l'API refuse, quel que soit l'appelant."""
+    use_case, entries, _, _ = build()
+
+    with pytest.raises(ValidationError):
+        await use_case.execute(
+            SetEntryCommand(
+                actor_id=1,
+                target_user_id=1,
+                project_id=10,
+                jour=date(2026, 9, 12),
+                valeur=1.0,
+            )
+        )
+
+    assert await entries.get(1, 10, date(2026, 9, 12)) is None
+
+
+async def test_a_public_holiday_is_rejected() -> None:
+    use_case, _, _, _ = build()
+
+    with pytest.raises(ValidationError):
+        await use_case.execute(
+            SetEntryCommand(
+                actor_id=1,
+                target_user_id=1,
+                project_id=10,
+                jour=date(2026, 5, 1),
+                valeur=1.0,
+            )
+        )
+
+
+async def test_a_rejected_day_leaves_no_trace_in_the_audit_log() -> None:
+    use_case, _, audit, _ = build()
+
+    with pytest.raises(ValidationError):
+        await use_case.execute(
+            SetEntryCommand(
+                actor_id=1,
+                target_user_id=1,
+                project_id=10,
+                jour=date(2026, 9, 13),
+                valeur=1.0,
+            )
+        )
+
+    assert audit.logs == []
+
+
 async def test_an_invalid_value_is_rejected() -> None:
     use_case, _, _, _ = build()
 

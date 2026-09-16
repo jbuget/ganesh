@@ -9,6 +9,7 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 from src.modules.entries.application.dtos.set_entry_dto import SetEntryCommand
 from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
+from src.modules.entries.domain.services.entry_rules import ensure_day_is_workable
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.domain.repositories.month_repository import MonthRepository
 from src.modules.projects.domain.repositories.project_repository import (
@@ -54,7 +55,8 @@ class SetEntryUseCase:
         if project is None:
             raise EntityNotFoundError("Mission inconnue.")
 
-        # Valide la valeur avant toute ecriture : DayValue porte l'invariant.
+        # Invariants du domaine, verifies avant toute ecriture.
+        ensure_day_is_workable(command.jour)
         valeur = DayValue(command.valeur)
 
         month = await self._ensure_open_month(command.target_user_id, command.jour)

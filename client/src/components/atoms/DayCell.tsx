@@ -16,6 +16,7 @@ interface DayCellProps {
   value: DayValue;
   isOffDay: boolean;
   isFuture: boolean;
+  /** Marque la colonne du jour courant, par un simple fond. */
   isToday: boolean;
   isReadOnly: boolean;
   /** La derniere ligne ferme le tableau : son trait bas est le trait fort. */
@@ -46,10 +47,9 @@ export function DayCell({
   label,
   onChange,
 }: DayCellProps) {
-  // Un jour non ouvre ne se saisit pas. Il reste cliquable s'il porte deja une
-  // valeur, sans quoi une saisie posee par erreur un samedi serait impossible a
-  // retirer.
-  const isLocked = isReadOnly || (isOffDay && value === 0);
+  // Un jour non ouvre ne se saisit jamais. La regle est portee par le domaine,
+  // le verrouillage de la cellule n'en est que le reflet.
+  const isLocked = isReadOnly || isOffDay;
 
   const background =
     value > 0
@@ -77,7 +77,6 @@ export function DayCell({
           "block h-9 w-9 text-sm transition-colors",
           background,
           isFuture && value > 0 ? "opacity-60" : "",
-          isToday ? "outline outline-1 -outline-offset-1 outline-sky-500" : "",
           isLocked ? "cursor-not-allowed" : "cursor-pointer hover:bg-sky-50",
         ].join(" ")}
       >

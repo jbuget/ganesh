@@ -88,13 +88,19 @@ describe("DayCell", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it("laisse corriger une saisie posée par erreur un jour non ouvré", async () => {
+  it("verrouille un jour non ouvré même s'il porte une valeur", async () => {
     const onChange = vi.fn();
     renderInRow(<DayCell {...baseProps} value={1} isOffDay onChange={onChange} />);
 
     await userEvent.click(screen.getByRole("button"));
 
-    expect(onChange).toHaveBeenCalledWith(0);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("marque le jour courant sans liseré de focus", () => {
+    renderInRow(<DayCell {...baseProps} value={0} isToday onChange={vi.fn()} />);
+
+    expect(screen.getByRole("button").className).not.toContain("outline");
   });
 
   it("marque la colonne du jour courant quand la case est vide", () => {

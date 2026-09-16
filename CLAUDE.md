@@ -32,6 +32,9 @@ Timesheet permet à chaque développeur de déclarer, en journées ou demi-journ
 Ces règles sont testées **au niveau du domaine**, indépendamment de l'API et de l'UI :
 
 - Une saisie vaut `0.5` ou `1.0`, jamais autre chose.
+- **Aucune saisie n'est possible sur un jour non ouvré** (week-end ou jour férié
+  français). La règle est portée par le domaine et refusée par l'API : le
+  verrouillage de la cellule côté client n'en est que le reflet.
 - La somme des saisies d'un utilisateur pour un jour donné ne doit pas dépasser `1` (alerte, pas blocage).
 - Un mois validé est **immuable** : aucune écriture possible tant qu'un manager ne l'a pas rouvert.
 - Chaque saisie mémorise le statut du projet au moment où elle est écrite (`statut_at_entry`), ce qui permet de mesurer le temps passé par phase.
