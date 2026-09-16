@@ -114,6 +114,26 @@ async def test_a_lot_whose_parent_is_missing_is_reported() -> None:
     assert await repo.list_all() == []
 
 
+async def test_a_lot_under_a_lot_is_reported() -> None:
+    """Un export mal forme ne doit pas creer de troisieme niveau."""
+    use_case, repo = build()
+
+    rapport = await use_case.execute(
+        ImportProjectsCommand(
+            actor_id=1,
+            lignes=[
+                ligne("Portail"),
+                ligne("Lot 1", kind=ProjectKind.LOT, parent_label="Portail"),
+                ligne("Lot 1.1", kind=ProjectKind.LOT, parent_label="Lot 1"),
+            ],
+        )
+    )
+
+    assert rapport.crees == 2
+    assert len(rapport.erreurs) == 1
+    assert "deux niveaux" in rapport.erreurs[0]
+
+
 async def test_an_empty_label_is_reported_not_crashed() -> None:
     use_case, _ = build()
 

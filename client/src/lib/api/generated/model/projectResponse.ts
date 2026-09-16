@@ -18,5 +18,7 @@ export interface ProjectResponse {
   parent_id: number | null;
   actif: boolean;
   estime_j: number | null;
+  monday_item_id: string | null;
+  monday_subitem_id: string | null;
   is_syncable_to_monday: boolean;
 }

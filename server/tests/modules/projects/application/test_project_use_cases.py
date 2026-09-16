@@ -122,6 +122,48 @@ async def test_a_lot_is_attached_to_its_parent() -> None:
     assert [p.id for p in await repo.list_children(10)] == [lot.id]
 
 
+async def test_a_lot_cannot_be_attached_to_another_lot() -> None:
+    """La hierarchie s'arrete a deux niveaux."""
+    parent = make_portail()
+    lot = Project(
+        id=20,
+        label="Lot existant",
+        kind=ProjectKind.LOT,
+        statut=ProjectStatus.CADRAGE,
+        parent_id=10,
+    )
+    create, _, _, _, _ = build(projects=[parent, lot])
+
+    with pytest.raises(ValidationError):
+        await create.execute(
+            CreateProjectCommand(
+                actor_id=1,
+                label="Sous-sous-projet",
+                kind=ProjectKind.LOT,
+                statut=ProjectStatus.CADRAGE,
+                parent_id=20,
+            )
+        )
+
+
+async def test_a_lot_cannot_hang_under_an_off_project_activity() -> None:
+    activite = Project(
+        id=30, label="Absences", kind=ProjectKind.HORS_PROJET, statut=None
+    )
+    create, _, _, _, _ = build(projects=[activite])
+
+    with pytest.raises(ValidationError):
+        await create.execute(
+            CreateProjectCommand(
+                actor_id=1,
+                label="Lot",
+                kind=ProjectKind.LOT,
+                statut=ProjectStatus.CADRAGE,
+                parent_id=30,
+            )
+        )
+
+
 async def test_an_off_project_activity_carries_no_status() -> None:
     create, _, _, _, _ = build(projects=[])
 

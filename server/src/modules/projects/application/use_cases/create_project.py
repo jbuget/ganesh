@@ -9,6 +9,7 @@ from src.modules.projects.domain.entities.project import Project, ProjectKind
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.projects.domain.services.hierarchy import ensure_can_be_parent
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
@@ -43,6 +44,7 @@ class CreateProjectUseCase:
             )
             if parent is None:
                 raise EntityNotFoundError("Le projet parent du lot est introuvable.")
+            ensure_can_be_parent(parent)
 
         project = await self._projects.add(
             Project(

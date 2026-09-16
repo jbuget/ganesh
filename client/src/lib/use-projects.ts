@@ -43,8 +43,11 @@ export function useProjectsScreen() {
       await refresh();
     },
 
-    async rename(projectId: number, label: string) {
-      await updateProject(projectId, { label });
+    async edit(
+      projectId: number,
+      edits: { label: string; estime_j: number | null; monday_item_id: string | null },
+    ) {
+      await updateProject(projectId, edits);
       await refresh();
     },
 

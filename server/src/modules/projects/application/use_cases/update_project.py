@@ -12,6 +12,7 @@ from src.modules.projects.domain.entities.project import Project
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.projects.domain.services.hierarchy import ensure_can_be_parent
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
@@ -54,8 +55,11 @@ class UpdateProjectUseCase:
 
         # `isinstance` ecarte a la fois ABSENT et un detachement volontaire (None).
         parent_id = command.parent_id
-        if isinstance(parent_id, int) and not await self._projects.get_by_id(parent_id):
-            raise EntityNotFoundError("Le projet parent est introuvable.")
+        if isinstance(parent_id, int):
+            parent = await self._projects.get_by_id(parent_id)
+            if parent is None:
+                raise EntityNotFoundError("Le projet parent est introuvable.")
+            ensure_can_be_parent(parent)
 
         changements: list[tuple[str, object, object]] = []
         for champ in CHAMPS:

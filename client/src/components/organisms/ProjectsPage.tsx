@@ -1,9 +1,13 @@
 "use client";
 
-import { Plus, Upload } from "lucide-react";
+import { Pencil, Plus, Upload } from "lucide-react";
 import { Fragment, useState } from "react";
 
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
+import {
+  EditProjectDialog,
+  type ProjectEdits,
+} from "@/components/atoms/EditProjectDialog";
 import { ImportProjectsDialog } from "@/components/atoms/ImportProjectsDialog";
 import { MondayLink } from "@/components/atoms/MondayLink";
 import { ProjectStatusSelect } from "@/components/atoms/ProjectStatusSelect";
@@ -25,12 +29,16 @@ function MissionRow({
   estLot,
   onChangeStatus,
   onChangeEstimate,
+  onEdit,
+  onAddLot,
   onArchive,
 }: {
   project: ProjectResponse;
   estLot: boolean;
   onChangeStatus: (statut: ProjectStatus) => void;
   onChangeEstimate: (estime: number | null) => void;
+  onEdit: () => void;
+  onAddLot?: () => void;
   onArchive: () => void;
 }) {
   return (
@@ -66,7 +74,28 @@ function MissionRow({
         <MondayLink project={project} />
       </TableCell>
 
-      <TableCell className="text-right">
+      <TableCell className="text-right whitespace-nowrap">
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={`Modifier ${project.label}`}
+          onClick={onEdit}
+        >
+          <Pencil />
+        </Button>
+
+        {/* Un sous-projet ne peut pas en porter un autre : deux niveaux suffisent. */}
+        {onAddLot && (
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label={`Ajouter un sous-projet à ${project.label}`}
+            onClick={onAddLot}
+          >
+            <Plus />
+          </Button>
+        )}
+
         <Button variant="ghost" size="sm" onClick={onArchive}>
           Archiver
         </Button>
@@ -80,6 +109,9 @@ export function ProjectsPage() {
   const ecran = useProjectsScreen();
   const [declaration, setDeclaration] = useState(false);
   const [importation, setImportation] = useState(false);
+  const [enEdition, setEnEdition] = useState<ProjectResponse | null>(null);
+  /** Projet auquel rattacher le sous-projet en cours de creation. */
+  const [parentDuLot, setParentDuLot] = useState<ProjectResponse | null>(null);
 
   return (
     <main className="mx-auto max-w-[1600px] p-6">
@@ -134,6 +166,10 @@ export function ProjectsPage() {
                 estLot={project.kind === "lot"}
                 onChangeStatus={(statut) => ecran.changeStatus(project.id, statut)}
                 onChangeEstimate={(estime) => ecran.setEstimate(project.id, estime)}
+                onEdit={() => setEnEdition(project)}
+                onAddLot={
+                  project.kind === "projet" ? () => setParentDuLot(project) : undefined
+                }
                 onArchive={() => ecran.archive(project.id, false)}
               />
               {lots.map((lot) => (
@@ -143,6 +179,7 @@ export function ProjectsPage() {
                   estLot
                   onChangeStatus={(statut) => ecran.changeStatus(lot.id, statut)}
                   onChangeEstimate={(estime) => ecran.setEstimate(lot.id, estime)}
+                  onEdit={() => setEnEdition(lot)}
                   onArchive={() => ecran.archive(lot.id, false)}
                 />
               ))}
@@ -178,6 +215,26 @@ export function ProjectsPage() {
         onOpenChange={setDeclaration}
         onConfirm={async (label) => {
           await ecran.declare(label, "projet");
+        }}
+      />
+
+      <DeclareProjectDialog
+        open={parentDuLot !== null}
+        onOpenChange={(ouvert) => !ouvert && setParentDuLot(null)}
+        titre={`Ajouter un sous-projet à « ${parentDuLot?.label ?? ""} »`}
+        onConfirm={async (label) => {
+          if (parentDuLot) await ecran.declare(label, "lot", parentDuLot.id);
+          setParentDuLot(null);
+        }}
+      />
+
+      <EditProjectDialog
+        key={enEdition?.id ?? "aucune"}
+        project={enEdition}
+        onOpenChange={(ouvert) => !ouvert && setEnEdition(null)}
+        onConfirm={async (edits: ProjectEdits) => {
+          if (enEdition) await ecran.edit(enEdition.id, edits);
+          setEnEdition(null);
         }}
       />
 

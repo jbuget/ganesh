@@ -16,5 +16,7 @@ def to_project_response(project: Project) -> ProjectResponse:
         parent_id=project.parent_id,
         actif=project.actif,
         estime_j=project.estime_j,
+        monday_item_id=project.monday_item_id,
+        monday_subitem_id=project.monday_subitem_id,
         is_syncable_to_monday=project.is_syncable_to_monday,
     )

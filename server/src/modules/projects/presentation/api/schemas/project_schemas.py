@@ -31,6 +31,8 @@ class ProjectResponse(BaseModel):
     parent_id: int | None
     actif: bool
     estime_j: float | None
+    monday_item_id: str | None
+    monday_subitem_id: str | None
     is_syncable_to_monday: bool
 
 

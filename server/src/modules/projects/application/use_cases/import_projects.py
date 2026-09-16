@@ -13,6 +13,7 @@ from src.modules.projects.domain.entities.project import Project, ProjectKind
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.projects.domain.services.hierarchy import ensure_can_be_parent
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import (
     DomainError,
@@ -81,6 +82,7 @@ class ImportProjectsUseCase:
                 raise EntityNotFoundError(
                     f"projet parent « {ligne.parent_label} » introuvable."
                 )
+            ensure_can_be_parent(parent)
             parent_id = parent.id
 
         return await self._projects.add(

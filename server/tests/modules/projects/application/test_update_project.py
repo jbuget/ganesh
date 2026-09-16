@@ -108,6 +108,23 @@ async def test_a_project_can_be_linked_to_monday() -> None:
     assert project.is_syncable_to_monday is True
 
 
+async def test_a_project_cannot_be_moved_under_a_lot() -> None:
+    """Deplacer une mission ne doit pas creer un troisieme niveau."""
+    lot = Project(
+        id=20,
+        label="Lot API",
+        kind=ProjectKind.LOT,
+        statut=ProjectStatus.CADRAGE,
+        parent_id=10,
+    )
+    use_case, _, _ = build([make_project(), lot])
+
+    with pytest.raises(ValidationError):
+        await use_case.execute(
+            UpdateProjectCommand(actor_id=1, project_id=10, parent_id=20)
+        )
+
+
 async def test_a_blank_label_is_rejected() -> None:
     use_case, _, _ = build()
 
