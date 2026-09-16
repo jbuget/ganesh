@@ -16,7 +16,13 @@ from src.modules.projects.application.use_cases.change_project_status import (
 from src.modules.projects.application.use_cases.create_project import (
     CreateProjectUseCase,
 )
+from src.modules.projects.application.use_cases.import_projects import (
+    ImportProjectsUseCase,
+)
 from src.modules.projects.application.use_cases.list_projects import ListProjectsUseCase
+from src.modules.projects.application.use_cases.update_project import (
+    UpdateProjectUseCase,
+)
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
@@ -45,3 +51,19 @@ def get_list_projects_use_case(
     projects: ProjectRepository = Depends(get_project_repository),
 ) -> ListProjectsUseCase:
     return ListProjectsUseCase(projects=projects)
+
+
+def get_update_project_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> UpdateProjectUseCase:
+    return UpdateProjectUseCase(users=users, projects=projects, audit_logs=audit_logs)
+
+
+def get_import_projects_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> ImportProjectsUseCase:
+    return ImportProjectsUseCase(users=users, projects=projects, audit_logs=audit_logs)

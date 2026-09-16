@@ -12,6 +12,9 @@ from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.projects.application.dtos.project_dto import (
     ChangeProjectStatusCommand,
     CreateProjectCommand,
+    ImportProjectsCommand,
+    ProjectImportLine,
+    UpdateProjectCommand,
 )
 from src.modules.projects.application.use_cases.change_project_status import (
     ChangeProjectStatusUseCase,
@@ -19,19 +22,30 @@ from src.modules.projects.application.use_cases.change_project_status import (
 from src.modules.projects.application.use_cases.create_project import (
     CreateProjectUseCase,
 )
+from src.modules.projects.application.use_cases.import_projects import (
+    ImportProjectsUseCase,
+)
 from src.modules.projects.application.use_cases.list_projects import ListProjectsUseCase
+from src.modules.projects.application.use_cases.update_project import (
+    UpdateProjectUseCase,
+)
 from src.modules.projects.presentation.api.mappers.project_mapper import (
     to_project_response,
 )
 from src.modules.projects.presentation.api.schemas.project_schemas import (
     ChangeStatusRequest,
     CreateProjectRequest,
+    ImportProjectsRequest,
+    ImportReportResponse,
     ProjectResponse,
+    UpdateProjectRequest,
 )
 from src.modules.projects.presentation.dependencies import (
     get_change_status_use_case,
     get_create_project_use_case,
+    get_import_projects_use_case,
     get_list_projects_use_case,
+    get_update_project_use_case,
 )
 from src.modules.users.domain.entities.user import User
 
@@ -95,3 +109,50 @@ async def change_status(
     )
     await session.commit()
     return to_project_response(project)
+
+
+@router.patch(
+    "/{project_id}", response_model=ProjectResponse, operation_id="updateProject"
+)
+async def update_project(
+    project_id: int,
+    payload: UpdateProjectRequest,
+    current_user: User = Depends(get_current_user),
+    use_case: UpdateProjectUseCase = Depends(get_update_project_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> ProjectResponse:
+    """Modifie une mission. Seuls les champs fournis sont appliques."""
+    assert current_user.id is not None
+    fournis = payload.model_dump(exclude_unset=True)
+    project = await use_case.execute(
+        UpdateProjectCommand(actor_id=current_user.id, project_id=project_id, **fournis)
+    )
+    await session.commit()
+    return to_project_response(project)
+
+
+@router.post(
+    "/import",
+    response_model=ImportReportResponse,
+    operation_id="importProjects",
+)
+async def import_projects(
+    payload: ImportProjectsRequest,
+    current_user: User = Depends(get_current_user),
+    use_case: ImportProjectsUseCase = Depends(get_import_projects_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> ImportReportResponse:
+    """Importe un referentiel de missions. Reserve aux managers."""
+    assert current_user.id is not None
+    rapport = await use_case.execute(
+        ImportProjectsCommand(
+            actor_id=current_user.id,
+            lignes=[
+                ProjectImportLine(**ligne.model_dump()) for ligne in payload.lignes
+            ],
+        )
+    )
+    await session.commit()
+    return ImportReportResponse(
+        crees=rapport.crees, ignores=rapport.ignores, erreurs=rapport.erreurs
+    )
