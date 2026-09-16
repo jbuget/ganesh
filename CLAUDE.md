@@ -258,6 +258,10 @@ Tests Vitest colocalisés avec le source (`*.test.ts` / `*.test.tsx`).
 
 ## Migrations de base de données
 
+- Les colonnes `Enum` sont déclarées `native_enum=False` : SQLAlchemy y stocke le
+  **nom** du membre Python, pas sa valeur. En base on lit donc `LOT`, `HORS_PROJET`
+  ou `CADRAGE`, jamais `lot` ni `cadrage`. L'ORM traduit dans les deux sens, mais
+  toute requête SQL écrite à la main doit employer les noms en majuscules.
 - Les migrations Alembic sont **immuables** une fois appliquées en production.
 - Ne jamais modifier une migration existante sans accord explicite : créer une nouvelle migration.
 - Nommage automatique : `YYYY_MM_DD_<rev>_<slug>.py`

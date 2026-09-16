@@ -24,8 +24,11 @@ import type {
   ChangeStatusRequest,
   CreateProjectRequest,
   HTTPValidationError,
+  ImportProjectsRequest,
+  ImportReportResponse,
   ListProjectsParams,
   ProjectResponse,
+  UpdateProjectRequest,
 } from "../model";
 
 import { bffFetcher } from "../../fetcher";
@@ -485,4 +488,268 @@ export const useChangeProjectStatus = <
   TContext
 > => {
   return useMutation(getChangeProjectStatusMutationOptions(options), queryClient);
+};
+export type updateProjectResponse200 = {
+  data: ProjectResponse;
+  status: 200;
+};
+
+export type updateProjectResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type updateProjectResponseSuccess = updateProjectResponse200 & {
+  headers: Headers;
+};
+export type updateProjectResponseError = updateProjectResponse422 & {
+  headers: Headers;
+};
+
+export type updateProjectResponse =
+  updateProjectResponseSuccess | updateProjectResponseError;
+
+export const getUpdateProjectUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}`;
+};
+
+/**
+ * Modifie une mission. Seuls les champs fournis sont appliques.
+ * @summary Update Project
+ */
+export const updateProject = async (
+  projectId: number,
+  updateProjectRequest: UpdateProjectRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<updateProjectResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<updateProjectResponse>(getUpdateProjectUrl(projectId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateProjectRequest),
+  });
+};
+
+export const getUpdateProjectMutationKey = () => ["updateProject"] as const;
+
+export const getUpdateProjectMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateProject>>,
+    TError,
+    UpdateProjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateProject>>,
+  TError,
+  UpdateProjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateProject>>,
+    UpdateProjectMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return updateProject(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateProjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateProject>>
+>;
+export type UpdateProjectMutationBody = UpdateProjectRequest;
+export type UpdateProjectMutationError = HTTPValidationError;
+export type UpdateProjectMutationVariables = {
+  projectId: number;
+  data: UpdateProjectRequest;
+};
+
+/**
+ * @summary Update Project
+ */
+export const useUpdateProject = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateProject>>,
+      TError,
+      UpdateProjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateProject>>,
+  TError,
+  UpdateProjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateProjectMutationOptions(options), queryClient);
+};
+export type importProjectsResponse200 = {
+  data: ImportReportResponse;
+  status: 200;
+};
+
+export type importProjectsResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type importProjectsResponseSuccess = importProjectsResponse200 & {
+  headers: Headers;
+};
+export type importProjectsResponseError = importProjectsResponse422 & {
+  headers: Headers;
+};
+
+export type importProjectsResponse =
+  importProjectsResponseSuccess | importProjectsResponseError;
+
+export const getImportProjectsUrl = () => {
+  return `/api/v1/projects/import`;
+};
+
+/**
+ * Importe un referentiel de missions. Reserve aux managers.
+ * @summary Import Projects
+ */
+export const importProjects = async (
+  importProjectsRequest: ImportProjectsRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<importProjectsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<importProjectsResponse>(getImportProjectsUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(importProjectsRequest),
+  });
+};
+
+export const getImportProjectsMutationKey = () => ["importProjects"] as const;
+
+export const getImportProjectsMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof importProjects>>,
+    TError,
+    ImportProjectsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof importProjects>>,
+  TError,
+  ImportProjectsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getImportProjectsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof importProjects>>,
+    ImportProjectsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return importProjects(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ImportProjectsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof importProjects>>
+>;
+export type ImportProjectsMutationBody = ImportProjectsRequest;
+export type ImportProjectsMutationError = HTTPValidationError;
+export type ImportProjectsMutationVariables = { data: ImportProjectsRequest };
+
+/**
+ * @summary Import Projects
+ */
+export const useImportProjects = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof importProjects>>,
+      TError,
+      ImportProjectsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof importProjects>>,
+  TError,
+  ImportProjectsMutationVariables,
+  TContext
+> => {
+  return useMutation(getImportProjectsMutationOptions(options), queryClient);
 };

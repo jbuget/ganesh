@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { AppNav } from "@/components/organisms/AppNav";
 import { QueryProvider } from "@/lib/query-provider";
 
 import "./globals.css";
@@ -19,7 +20,10 @@ export default function RootLayout({
   return (
     <html lang="fr" className={cn("font-sans", geist.variable)}>
       <body className="bg-slate-50 text-slate-900 antialiased">
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <AppNav />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );
