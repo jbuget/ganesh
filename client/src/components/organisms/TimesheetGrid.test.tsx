@@ -78,7 +78,7 @@ describe("TimesheetGrid", () => {
 
     expect(
       screen.getByRole("rowheader", { name: /Portail bailleurs/ }),
-    ).toHaveTextContent("7/20 j");
+    ).toHaveTextContent("7/20 jrs. estimés");
   });
 
   it("notifie la valeur suivante quand on clique une cellule vide", async () => {

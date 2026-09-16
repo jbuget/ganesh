@@ -100,9 +100,9 @@ export function TimesheetGrid({
               scope="row"
               className="sticky left-0 z-10 border-r border-b border-r-slate-500 border-b-slate-500 bg-slate-50 px-3 py-1.5 text-left text-sm font-medium"
             >
-              Total par jour
+              Total par jour ouvrés
               <span className="ml-2 text-xs font-normal text-slate-500">
-                {grid.working_days} jours ouvrés
+                ({grid.working_days} jrs.)
               </span>
             </th>
             {grid.days.map((day, dayIndex) => (
@@ -152,7 +152,7 @@ export function TimesheetGrid({
                     className="ml-2 text-xs text-slate-500"
                     title={`${formatTotal(row.consomme_total_j)} jour(s) consommé(s) sur ce projet, pour ${row.estime_j} estimé(s)`}
                   >
-                    {formatTotal(row.consomme_total_j)}/{row.estime_j} j
+                    {formatTotal(row.consomme_total_j)}/{row.estime_j} jrs. estimés
                   </span>
                 )}
               </th>
