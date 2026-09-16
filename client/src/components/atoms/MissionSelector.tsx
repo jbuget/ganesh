@@ -1,13 +1,23 @@
 "use client";
 
 import type { ProjectResponse } from "@/lib/api/generated/model";
+import { availableMissions } from "@/lib/missions";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface MissionSelectorProps {
   projects: ProjectResponse[];
   excludedIds: number[];
   onSelect: (projectId: number) => void;
   onDeclareNew: () => void;
-  disabled: boolean;
+  disabled?: boolean;
 }
 
 const NEW_PROJECT = "__new__";
@@ -23,47 +33,51 @@ export function MissionSelector({
   excludedIds,
   onSelect,
   onDeclareNew,
-  disabled,
+  disabled = false,
 }: MissionSelectorProps) {
-  const available = projects.filter((p) => !excludedIds.includes(p.id));
-  const activities = available.filter((p) => p.kind === "hors_projet");
-  const missions = available.filter((p) => p.kind !== "hors_projet");
+  const { projets, horsProjet } = availableMissions(projects, excludedIds);
 
   return (
-    <select
+    <Select
       value=""
       disabled={disabled}
-      aria-label="Ajouter une mission"
-      className="cursor-pointer rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-      onChange={(event) => {
-        const { value } = event.target;
-        if (!value) return;
+      onValueChange={(value) => {
         if (value === NEW_PROJECT) onDeclareNew();
         else onSelect(Number(value));
       }}
     >
-      <option value="">+ Ajouter une mission…</option>
-      {missions.length > 0 && (
-        <optgroup label="Projets et lots">
-          {missions.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.label}
-            </option>
-          ))}
-        </optgroup>
-      )}
-      {activities.length > 0 && (
-        <optgroup label="Hors projet">
-          {activities.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.label}
-            </option>
-          ))}
-        </optgroup>
-      )}
-      <optgroup label="Autre">
-        <option value={NEW_PROJECT}>Déclarer un nouveau projet…</option>
-      </optgroup>
-    </select>
+      <SelectTrigger className="w-56" aria-label="Ajouter une mission">
+        <SelectValue placeholder="+ Ajouter une mission…" />
+      </SelectTrigger>
+
+      <SelectContent>
+        {projets.length > 0 && (
+          <SelectGroup>
+            <SelectLabel>Projets et lots</SelectLabel>
+            {projets.map((project) => (
+              <SelectItem key={project.id} value={String(project.id)}>
+                {project.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        )}
+
+        {horsProjet.length > 0 && (
+          <SelectGroup>
+            <SelectLabel>Hors projet</SelectLabel>
+            {horsProjet.map((project) => (
+              <SelectItem key={project.id} value={String(project.id)}>
+                {project.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        )}
+
+        <SelectGroup>
+          <SelectLabel>Autre</SelectLabel>
+          <SelectItem value={NEW_PROJECT}>Déclarer un nouveau projet…</SelectItem>
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }

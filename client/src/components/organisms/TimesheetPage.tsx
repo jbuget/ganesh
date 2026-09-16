@@ -1,8 +1,15 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
+
+import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { MissionSelector } from "@/components/atoms/MissionSelector";
+import { TeammateSelector } from "@/components/atoms/TeammateSelector";
+import { ValidateMonthDialog } from "@/components/atoms/ValidateMonthDialog";
 import { TimesheetGrid } from "@/components/organisms/TimesheetGrid";
-import { formatMonth, formatTotal } from "@/lib/dates";
+import { Button } from "@/components/ui/button";
+import { formatMonth } from "@/lib/dates";
 import { useTimesheetMonth } from "@/lib/use-timesheet-month";
 
 /** Ecran de saisie : la matrice du mois et sa navigation. */
@@ -10,103 +17,71 @@ export function TimesheetPage() {
   const mois = useTimesheetMonth();
   const { grid, cursor } = mois;
 
-  async function declareProject() {
-    const label = window.prompt("Nom du nouveau projet ?");
-    if (!label?.trim()) return;
-    await mois.declareProject(label.trim());
-  }
-
-  async function validate() {
-    const total = (grid?.total_realise ?? 0) + (grid?.total_prevu ?? 0);
-    const confirme = window.confirm(
-      `Valider ${formatMonth(cursor.year, cursor.month)} ?\n\n` +
-        `Total saisi : ${formatTotal(total)} jour(s)\n` +
-        `Jours ouvrés : ${grid?.working_days ?? 0}\n\n` +
-        "Après validation, vous ne pourrez plus modifier ce mois.\n" +
-        "Seul un manager pourra le rouvrir.",
-    );
-    if (confirme) await mois.validate();
-  }
+  const [declarationOuverte, setDeclarationOuverte] = useState(false);
+  const [validationOuverte, setValidationOuverte] = useState(false);
 
   return (
     <main className="mx-auto max-w-[1600px] p-6">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="icon"
             aria-label="Mois précédent"
-            className="cursor-pointer rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
             onClick={mois.goToPreviousMonth}
           >
-            ←
-          </button>
+            <ChevronLeft />
+          </Button>
           <h1 className="min-w-48 text-center text-lg font-semibold capitalize">
             {formatMonth(cursor.year, cursor.month)}
           </h1>
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="icon"
             aria-label="Mois suivant"
-            className="cursor-pointer rounded border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50"
             onClick={mois.goToNextMonth}
           >
-            →
-          </button>
+            <ChevronRight />
+          </Button>
         </div>
 
         <div className="flex items-center gap-3">
-          <label className="text-sm text-slate-500" htmlFor="teammate">
-            Collaborateur
-          </label>
-          <select
-            id="teammate"
-            className="cursor-pointer rounded border border-slate-300 bg-white px-2 py-1.5 text-sm"
-            value={mois.targetUserId ?? ""}
-            onChange={(event) => mois.viewTeammate(Number(event.target.value))}
-          >
-            {mois.teammates.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.display_name}
-              </option>
-            ))}
-          </select>
+          <TeammateSelector
+            teammates={mois.teammates}
+            selectedId={mois.targetUserId}
+            onSelect={mois.viewTeammate}
+          />
 
           {grid?.is_writable && (
             <MissionSelector
               projects={mois.projects}
               excludedIds={mois.displayedProjectIds}
               onSelect={mois.addMission}
-              onDeclareNew={declareProject}
-              disabled={false}
+              onDeclareNew={() => setDeclarationOuverte(true)}
             />
           )}
 
           {grid?.is_writable && mois.isOwnMonth && (
-            <button
-              type="button"
-              className="cursor-pointer rounded bg-slate-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
-              onClick={validate}
-            >
-              Valider le mois
-            </button>
+            <Button onClick={() => setValidationOuverte(true)}>Valider le mois</Button>
           )}
         </div>
       </header>
 
       {!mois.isOwnMonth && (
-        <p className="mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        <p className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
           Vous consultez le mois d&apos;un collègue. Toute modification sera enregistrée
           à votre nom.
         </p>
       )}
 
       {grid && !grid.is_writable && (
-        <p className="mb-4 rounded border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-700">
+        <p className="mb-4 rounded-md border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-700">
           Ce mois est validé et ne peut plus être modifié. Seul un manager peut le
           rouvrir.
         </p>
       )}
 
-      {mois.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
+      {mois.isLoading && <p className="text-muted-foreground text-sm">Chargement…</p>}
 
       {grid && (
         <TimesheetGrid
@@ -114,6 +89,23 @@ export function TimesheetPage() {
           extraRows={mois.extraRows}
           today={mois.today}
           onSetValue={mois.setDayValue}
+        />
+      )}
+
+      <DeclareProjectDialog
+        open={declarationOuverte}
+        onOpenChange={setDeclarationOuverte}
+        onConfirm={mois.declareProject}
+      />
+
+      {grid && (
+        <ValidateMonthDialog
+          open={validationOuverte}
+          onOpenChange={setValidationOuverte}
+          mois={formatMonth(cursor.year, cursor.month)}
+          totalSaisi={grid.total_realise + grid.total_prevu}
+          joursOuvres={grid.working_days}
+          onConfirm={mois.validate}
         />
       )}
     </main>
