@@ -52,9 +52,10 @@ class UpdateProjectUseCase:
         if project is None:
             raise EntityNotFoundError("Mission inconnue.")
 
-        if command.parent_id is not ABSENT and command.parent_id:
-            if await self._projects.get_by_id(command.parent_id) is None:
-                raise EntityNotFoundError("Le projet parent est introuvable.")
+        # `isinstance` ecarte a la fois ABSENT et un detachement volontaire (None).
+        parent_id = command.parent_id
+        if isinstance(parent_id, int) and not await self._projects.get_by_id(parent_id):
+            raise EntityNotFoundError("Le projet parent est introuvable.")
 
         changements: list[tuple[str, object, object]] = []
         for champ in CHAMPS:
