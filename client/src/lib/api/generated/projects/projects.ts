@@ -623,6 +623,113 @@ export const useUpdateProject = <TError = HTTPValidationError, TContext = unknow
 > => {
   return useMutation(getUpdateProjectMutationOptions(options), queryClient);
 };
+export type deleteProjectResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteProjectResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type deleteProjectResponseSuccess = deleteProjectResponse204 & {
+  headers: Headers;
+};
+export type deleteProjectResponseError = deleteProjectResponse422 & {
+  headers: Headers;
+};
+
+export type deleteProjectResponse =
+  deleteProjectResponseSuccess | deleteProjectResponseError;
+
+export const getDeleteProjectUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}`;
+};
+
+/**
+ * Supprime une mission jamais utilisee. Sinon, il faut l'archiver.
+ * @summary Delete Project
+ */
+export const deleteProject = async (
+  projectId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<deleteProjectResponse> => {
+  return bffFetcher<deleteProjectResponse>(getDeleteProjectUrl(projectId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteProjectMutationKey = () => ["deleteProject"] as const;
+
+export const getDeleteProjectMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteProject>>,
+    TError,
+    DeleteProjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteProject>>,
+  TError,
+  DeleteProjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteProject>>,
+    DeleteProjectMutationVariables
+  > = (props) => {
+    const { projectId } = props ?? {};
+
+    return deleteProject(projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteProjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteProject>>
+>;
+
+export type DeleteProjectMutationError = HTTPValidationError;
+export type DeleteProjectMutationVariables = { projectId: number };
+
+/**
+ * @summary Delete Project
+ */
+export const useDeleteProject = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteProject>>,
+      TError,
+      DeleteProjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteProject>>,
+  TError,
+  DeleteProjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteProjectMutationOptions(options), queryClient);
+};
 export type importProjectsResponse200 = {
   data: ImportReportResponse;
   status: 200;

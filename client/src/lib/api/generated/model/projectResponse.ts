@@ -21,4 +21,5 @@ export interface ProjectResponse {
   monday_item_id: string | null;
   monday_subitem_id: string | null;
   is_syncable_to_monday: boolean;
+  is_deletable: boolean;
 }

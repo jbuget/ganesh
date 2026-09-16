@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from sqlalchemy import and_, extract, select
+from sqlalchemy import and_, extract, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.entries.domain.entities.entry import DayValue, Entry
@@ -74,6 +74,12 @@ class SqlEntryRepository(EntryRepository):
             .order_by(EntryModel.jour)
         )
         return [to_entity(model) for model in result.scalars().all()]
+
+    async def count_by_project(self) -> dict[int, int]:
+        result = await self._session.execute(
+            select(EntryModel.project_id, func.count()).group_by(EntryModel.project_id)
+        )
+        return dict(result.all())  # type: ignore[arg-type]
 
     async def upsert(self, entry: Entry) -> Entry:
         model = await self._get_model(entry.user_id, entry.project_id, entry.jour)

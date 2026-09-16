@@ -22,3 +22,6 @@ class ProjectRepository(ABC):
 
     @abstractmethod
     async def update(self, project: Project) -> Project: ...
+
+    @abstractmethod
+    async def delete(self, project_id: int) -> None: ...

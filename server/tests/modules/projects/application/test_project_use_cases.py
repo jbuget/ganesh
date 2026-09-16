@@ -22,6 +22,7 @@ from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError, ValidationError
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
+    InMemoryEntryRepository,
     InMemoryProjectRepository,
     InMemoryUserRepository,
 )
@@ -51,7 +52,7 @@ def build(projects: list[Project] | None = None):
     return (
         CreateProjectUseCase(users=users, projects=repo, audit_logs=audit),
         ChangeProjectStatusUseCase(users=users, projects=repo, audit_logs=audit),
-        ListProjectsUseCase(projects=repo),
+        ListProjectsUseCase(projects=repo, entries=InMemoryEntryRepository()),
         repo,
         audit,
     )
@@ -236,4 +237,12 @@ async def test_a_status_change_records_the_transition() -> None:
 async def test_listing_returns_active_projects() -> None:
     _, _, list_projects, _, _ = build()
 
-    assert len(await list_projects.execute()) == 1
+    missions = await list_projects.execute()
+    assert len(missions) == 1
+    assert missions[0].project.label == "Portail"
+
+
+async def test_a_mission_never_used_is_reported_as_deletable() -> None:
+    _, _, list_projects, _, _ = build()
+
+    assert (await list_projects.execute())[0].is_deletable is True

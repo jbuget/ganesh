@@ -19,6 +19,7 @@ class AuditAction(StrEnum):
     MONTH_REOPEN = "month.reopen"
     PROJECT_CREATE = "project.create"
     PROJECT_UPDATE = "project.update"
+    PROJECT_DELETE = "project.delete"
     PROJECT_STATUS_CHANGE = "project.status_change"
     USER_ROLE_CHANGE = "user.role_change"
     USER_DEACTIVATE = "user.deactivate"

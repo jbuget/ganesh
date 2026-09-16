@@ -1,9 +1,10 @@
 "use client";
 
-import { Pencil, Plus, Upload } from "lucide-react";
+import { Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { Fragment, useState } from "react";
 
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
+import { DeleteProjectDialog } from "@/components/atoms/DeleteProjectDialog";
 import {
   EditProjectDialog,
   type ProjectEdits,
@@ -21,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { ProjectResponse, ProjectStatus } from "@/lib/api/generated/model";
+import { useLastNonNull } from "@/lib/use-last-non-null";
 import { useProjectsScreen } from "@/lib/use-projects";
 
 /** Une mission dans le tableau, un lot etant decale sous son projet. */
@@ -32,6 +34,7 @@ function MissionRow({
   onEdit,
   onAddLot,
   onArchive,
+  onDelete,
 }: {
   project: ProjectResponse;
   estLot: boolean;
@@ -40,6 +43,7 @@ function MissionRow({
   onEdit: () => void;
   onAddLot?: () => void;
   onArchive: () => void;
+  onDelete: () => void;
 }) {
   return (
     <TableRow>
@@ -96,9 +100,27 @@ function MissionRow({
           </Button>
         )}
 
-        <Button variant="ghost" size="sm" onClick={onArchive}>
-          Archiver
-        </Button>
+        {/* Supprimer n'a de sens que tant que la mission n'a jamais servi ;
+            au-dela, on archive pour ne perdre aucune declaration. */}
+        {project.is_deletable ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label={`Supprimer ${project.label}`}
+            onClick={onDelete}
+          >
+            <Trash2 />
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            title="Cette mission porte du temps : elle ne peut plus être supprimée."
+            onClick={onArchive}
+          >
+            Archiver
+          </Button>
+        )}
       </TableCell>
     </TableRow>
   );
@@ -112,6 +134,8 @@ export function ProjectsPage() {
   const [enEdition, setEnEdition] = useState<ProjectResponse | null>(null);
   /** Projet auquel rattacher le sous-projet en cours de creation. */
   const [parentDuLot, setParentDuLot] = useState<ProjectResponse | null>(null);
+  const [aSupprimer, setASupprimer] = useState<ProjectResponse | null>(null);
+  const parentAffiche = useLastNonNull(parentDuLot);
 
   return (
     <main className="mx-auto max-w-[1600px] p-6">
@@ -171,6 +195,7 @@ export function ProjectsPage() {
                   project.kind === "projet" ? () => setParentDuLot(project) : undefined
                 }
                 onArchive={() => ecran.archive(project.id, false)}
+                onDelete={() => setASupprimer(project)}
               />
               {lots.map((lot) => (
                 <MissionRow
@@ -181,6 +206,7 @@ export function ProjectsPage() {
                   onChangeEstimate={(estime) => ecran.setEstimate(lot.id, estime)}
                   onEdit={() => setEnEdition(lot)}
                   onArchive={() => ecran.archive(lot.id, false)}
+                  onDelete={() => setASupprimer(lot)}
                 />
               ))}
             </Fragment>
@@ -221,7 +247,7 @@ export function ProjectsPage() {
       <DeclareProjectDialog
         open={parentDuLot !== null}
         onOpenChange={(ouvert) => !ouvert && setParentDuLot(null)}
-        titre={`Ajouter un sous-projet à « ${parentDuLot?.label ?? ""} »`}
+        titre={`Ajouter un sous-projet à « ${parentAffiche?.label ?? ""} »`}
         onConfirm={async (label) => {
           if (parentDuLot) await ecran.declare(label, "lot", parentDuLot.id);
           setParentDuLot(null);
@@ -235,6 +261,15 @@ export function ProjectsPage() {
         onConfirm={async (edits: ProjectEdits) => {
           if (enEdition) await ecran.edit(enEdition.id, edits);
           setEnEdition(null);
+        }}
+      />
+
+      <DeleteProjectDialog
+        project={aSupprimer}
+        onOpenChange={(ouvert) => !ouvert && setASupprimer(null)}
+        onConfirm={async () => {
+          if (aSupprimer) await ecran.remove(aSupprimer.id);
+          setASupprimer(null);
         }}
       />
 

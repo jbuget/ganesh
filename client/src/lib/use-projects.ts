@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   changeProjectStatus,
   createProject,
+  deleteProject,
   importProjects,
   updateProject,
 } from "@/lib/api/generated/projects/projects";
@@ -53,6 +54,11 @@ export function useProjectsScreen() {
 
     async setEstimate(projectId: number, estime_j: number | null) {
       await updateProject(projectId, { estime_j });
+      await refresh();
+    },
+
+    async remove(projectId: number) {
+      await deleteProject(projectId);
       await refresh();
     },
 

@@ -22,6 +22,11 @@ class EntryRepository(ABC):
     async def list_for_project(self, project_id: int) -> list[Entry]: ...
 
     @abstractmethod
+    async def count_by_project(self) -> dict[int, int]:
+        """Nombre de saisies par mission, pour savoir lesquelles ont servi."""
+        ...
+
+    @abstractmethod
     async def upsert(self, entry: Entry) -> Entry: ...
 
     @abstractmethod

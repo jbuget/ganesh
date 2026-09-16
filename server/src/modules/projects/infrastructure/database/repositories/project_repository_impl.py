@@ -83,3 +83,9 @@ class SqlProjectRepository(ProjectRepository):
         model.monday_subitem_id = project.monday_subitem_id
         await self._session.flush()
         return project
+
+    async def delete(self, project_id: int) -> None:
+        model = await self._session.get(ProjectModel, project_id)
+        if model is not None:
+            await self._session.delete(model)
+            await self._session.flush()

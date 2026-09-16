@@ -83,6 +83,9 @@ class InMemoryProjectRepository(ProjectRepository):
             self._projects[project.id] = project
         return project
 
+    async def delete(self, project_id: int) -> None:
+        self._projects.pop(project_id, None)
+
 
 class InMemoryEntryRepository(EntryRepository):
     def __init__(self, entries: list[Entry] | None = None) -> None:
@@ -115,6 +118,12 @@ class InMemoryEntryRepository(EntryRepository):
 
     async def list_for_project(self, project_id: int) -> list[Entry]:
         return [e for e in self._entries if e.project_id == project_id]
+
+    async def count_by_project(self) -> dict[int, int]:
+        comptes: dict[int, int] = {}
+        for entry in self._entries:
+            comptes[entry.project_id] = comptes.get(entry.project_id, 0) + 1
+        return comptes
 
     async def upsert(self, entry: Entry) -> Entry:
         existing = await self.get(entry.user_id, entry.project_id, entry.jour)

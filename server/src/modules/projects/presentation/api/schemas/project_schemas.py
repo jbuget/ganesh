@@ -34,6 +34,7 @@ class ProjectResponse(BaseModel):
     monday_item_id: str | None
     monday_subitem_id: str | None
     is_syncable_to_monday: bool
+    is_deletable: bool
 
 
 class UpdateProjectRequest(BaseModel):

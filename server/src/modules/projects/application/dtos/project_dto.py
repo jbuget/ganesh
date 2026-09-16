@@ -79,3 +79,11 @@ class ImportReport:
     crees: int = 0
     ignores: int = 0
     erreurs: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class DeleteProjectCommand:
+    """Suppression d'une mission jamais utilisee."""
+
+    actor_id: int
+    project_id: int

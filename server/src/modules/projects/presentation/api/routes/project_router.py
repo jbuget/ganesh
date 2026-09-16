@@ -4,7 +4,7 @@ La creation et le changement de statut sont ouverts a toute l'equipe : le parti
 pris est la confiance, la tracabilite est le garde-fou.
 """
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
@@ -12,6 +12,7 @@ from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.projects.application.dtos.project_dto import (
     ChangeProjectStatusCommand,
     CreateProjectCommand,
+    DeleteProjectCommand,
     ImportProjectsCommand,
     ProjectImportLine,
     UpdateProjectCommand,
@@ -22,6 +23,9 @@ from src.modules.projects.application.use_cases.change_project_status import (
 from src.modules.projects.application.use_cases.create_project import (
     CreateProjectUseCase,
 )
+from src.modules.projects.application.use_cases.delete_project import (
+    DeleteProjectUseCase,
+)
 from src.modules.projects.application.use_cases.import_projects import (
     ImportProjectsUseCase,
 )
@@ -30,6 +34,7 @@ from src.modules.projects.application.use_cases.update_project import (
     UpdateProjectUseCase,
 )
 from src.modules.projects.presentation.api.mappers.project_mapper import (
+    to_listed_project_response,
     to_project_response,
 )
 from src.modules.projects.presentation.api.schemas.project_schemas import (
@@ -43,6 +48,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
 from src.modules.projects.presentation.dependencies import (
     get_change_status_use_case,
     get_create_project_use_case,
+    get_delete_project_use_case,
     get_import_projects_use_case,
     get_list_projects_use_case,
     get_update_project_use_case,
@@ -59,8 +65,8 @@ async def list_projects(
     use_case: ListProjectsUseCase = Depends(get_list_projects_use_case),
 ) -> list[ProjectResponse]:
     """Liste les missions du referentiel."""
-    projects = await use_case.execute(include_inactive=include_inactive)
-    return [to_project_response(project) for project in projects]
+    missions = await use_case.execute(include_inactive=include_inactive)
+    return [to_listed_project_response(mission) for mission in missions]
 
 
 @router.post(
@@ -156,3 +162,23 @@ async def import_projects(
     return ImportReportResponse(
         crees=rapport.crees, ignores=rapport.ignores, erreurs=rapport.erreurs
     )
+
+
+@router.delete(
+    "/{project_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="deleteProject",
+)
+async def delete_project(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    use_case: DeleteProjectUseCase = Depends(get_delete_project_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Supprime une mission jamais utilisee. Sinon, il faut l'archiver."""
+    assert current_user.id is not None
+    await use_case.execute(
+        DeleteProjectCommand(actor_id=current_user.id, project_id=project_id)
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
