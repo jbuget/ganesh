@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { cycleDayValue, DayCell } from "./DayCell";
+import { DayCell } from "./DayCell";
 
 const baseProps = {
   isOffDay: false,
@@ -10,24 +10,6 @@ const baseProps = {
   isReadOnly: false,
   label: "15 septembre",
 };
-
-describe("cycleDayValue", () => {
-  it("passe de vide à une journée complète", () => {
-    expect(cycleDayValue(0)).toBe(1);
-  });
-
-  it("passe d'une journée complète à une demi-journée", () => {
-    expect(cycleDayValue(1)).toBe(0.5);
-  });
-
-  it("revient à vide après une demi-journée", () => {
-    expect(cycleDayValue(0.5)).toBe(0);
-  });
-
-  it("boucle en trois clics", () => {
-    expect(cycleDayValue(cycleDayValue(cycleDayValue(0)))).toBe(0);
-  });
-});
 
 /**
  * DayCell vit dans une ligne de tableau. Le rendre hors de ce contexte masquerait

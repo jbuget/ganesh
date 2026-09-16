@@ -63,13 +63,16 @@ const eslintConfig = defineConfig([
                 to: { element: { types: { anyOf: ["atoms", "ui", "lib"] } } },
               },
             },
-            // Un organism peut importer des atoms et des molecules.
+            // Un organism peut importer des atoms et des molecules, et composer
+            // un autre organism : une page assemble des sections.
             {
               from: { element: { type: "organisms" } },
               allow: {
                 to: {
                   element: {
-                    types: { anyOf: ["atoms", "molecules", "ui", "lib"] },
+                    types: {
+                      anyOf: ["atoms", "molecules", "organisms", "ui", "lib"],
+                    },
                   },
                 },
               },

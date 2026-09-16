@@ -14,19 +14,24 @@ Les composants front sont organisés en niveaux stricts dans `client/src/compone
 ui/          Primitives externes (shadcn/ui). Traitées comme des dépendances,
              non modifiées à la main.
 atoms/       Blocs de base, aucune dépendance vers un autre composant local.
-             Ex : DayCell, Badge, Button, StatusDot
+             Ex : DayCell, DayHeader, DayTotalCell, TotalCell, MissionLabel,
+             MissionSelector
 molecules/   Assemblage d'atoms formant une unité fonctionnelle.
-             Ex : MissionSelector, DayColumnHeader, MonthTotals
-organisms/   Sections complexes composées de molecules et d'atoms.
-             Ex : TimesheetGrid, ProjectTable, TeammateManager
+             (vide pour l'instant : aucun composant n'assemble encore d'atoms)
+organisms/   Sections complexes composées de molecules et d'atoms. Un organism
+             peut en composer un autre : une page assemble des sections.
+             Ex : TimesheetGrid, TimesheetPage
              (templates = layout.tsx Next.js / pages = app/)
 ```
 
 **Règles :**
 - Un atom n'importe jamais un autre composant local (hors `ui/` et `lib/`).
+  C'est la dépendance qui classe un composant, pas sa complexité apparente.
 - Une molecule n'importe que des atoms.
-- Un organism peut importer des atoms et des molecules.
+- Un organism peut importer des atoms, des molecules et d'autres organisms.
 - Les pages (`app/`) n'importent que des organisms.
+- La logique d'un écran (état, données, écritures) vit dans un hook de
+  `src/lib/`, pas dans le composant : celui-ci ne porte que le rendu.
 - Tout nouveau composant doit être placé au bon niveau avant d'être utilisé.
 - Ne jamais créer de dossier `shared/`, `common/`, `features/` ou autre hors de cette structure.
 

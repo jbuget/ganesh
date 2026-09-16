@@ -1,20 +1,7 @@
 "use client";
 
+import { cycleDayValue, type DayValue } from "@/lib/day-value";
 import { formatDays } from "@/lib/dates";
-
-/** Valeur saisissable pour une demi-journee ou une journee complete. */
-export type DayValue = 0 | 0.5 | 1;
-
-const NEXT_VALUE: Record<DayValue, DayValue> = { 0: 1, 1: 0.5, 0.5: 0 };
-
-/** Fait tourner la valeur d'une cellule : vide -> pleine -> demi -> vide.
- *
- * La journee complete vient en premier : c'est le cas courant, il doit coûter
- * un seul clic.
- */
-export function cycleDayValue(current: DayValue): DayValue {
-  return NEXT_VALUE[current];
-}
 
 interface DayCellProps {
   value: DayValue;

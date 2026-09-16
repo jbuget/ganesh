@@ -1,9 +1,10 @@
 "use client";
 
-import { DayCell, type DayValue } from "@/components/atoms/DayCell";
+import { DayCell } from "@/components/atoms/DayCell";
+import type { DayValue } from "@/lib/day-value";
 import { DayHeader } from "@/components/atoms/DayHeader";
 import { DayTotalCell } from "@/components/atoms/DayTotalCell";
-import { MissionLabel } from "@/components/molecules/MissionLabel";
+import { MissionLabel } from "@/components/atoms/MissionLabel";
 import { TotalCell } from "@/components/atoms/TotalCell";
 import type { MonthGridResponse, ProjectResponse } from "@/lib/api/generated/model";
 
