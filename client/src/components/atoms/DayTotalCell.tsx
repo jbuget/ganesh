@@ -6,6 +6,8 @@ export type StrongSide = "right" | "bottom";
 interface DayTotalCellProps {
   value: number;
   isOffDay: boolean;
+  /** Un jour non ouvre se reduit a une bande, sauf s'il porte une saisie. */
+  isNarrow?: boolean;
   strongSides?: StrongSide[];
 }
 
@@ -24,7 +26,12 @@ function backgroundFor(value: number, isOffDay: boolean) {
   return "bg-white";
 }
 
-export function DayTotalCell({ value, isOffDay, strongSides = [] }: DayTotalCellProps) {
+export function DayTotalCell({
+  value,
+  isOffDay,
+  isNarrow = false,
+  strongSides = [],
+}: DayTotalCellProps) {
   const strong = new Set(strongSides);
   const isIncomplete = value > 0 && value !== 1;
 
@@ -32,7 +39,8 @@ export function DayTotalCell({ value, isOffDay, strongSides = [] }: DayTotalCell
     <td
       data-alert={isIncomplete ? "true" : undefined}
       className={[
-        "h-9 w-9 border-r border-b text-center text-sm font-medium",
+        "h-9 border-r border-b text-center text-sm font-medium",
+        isNarrow ? "w-2.5" : "w-9",
         strong.has("right") ? "border-r-slate-500" : "border-r-slate-300",
         strong.has("bottom") ? "border-b-slate-500" : "border-b-slate-300",
         backgroundFor(value, isOffDay),

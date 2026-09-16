@@ -4,6 +4,8 @@ interface DayHeaderProps {
   jour: string;
   isOffDay: boolean;
   isToday: boolean;
+  /** Un jour non ouvre se reduit a une bande, sauf s'il porte une saisie. */
+  isNarrow?: boolean;
   /** La derniere colonne de jours porte le trait qui la separe des totaux. */
   isLastDay?: boolean;
   label: string | null;
@@ -12,24 +14,28 @@ interface DayHeaderProps {
 /**
  * En-tete d'une colonne de jour.
  *
- * Les jours non ouvres sont grises : c'est l'information que l'on doit lire au
- * premier coup d'oeil pour ne pas saisir un samedi par erreur.
+ * Les jours non ouvres sont grises et reduits a une bande : on ne peut pas y
+ * saisir, et leur rendre toute une colonne coutait un cinquieme de la largeur
+ * du tableau. Le rythme des semaines reste lisible.
  */
 export function DayHeader({
   jour,
   isOffDay,
   isToday,
+  isNarrow = false,
   isLastDay = false,
   label,
 }: DayHeaderProps) {
+  const intitule = `${weekdayInitial(jour)} ${dayNumber(jour)}`;
+
   return (
     <th
       scope="col"
-      title={label ?? undefined}
+      title={label ?? intitule}
       className={[
-        "h-11 w-9 border-r border-b border-b-slate-300",
+        "h-11 border-r border-b border-b-slate-300 text-xs font-normal",
+        isNarrow ? "w-2.5" : "w-9",
         isLastDay ? "border-r-slate-500" : "border-r-slate-300",
-        "text-xs font-normal",
         isOffDay
           ? "bg-slate-100 text-slate-500"
           : isToday
@@ -38,8 +44,16 @@ export function DayHeader({
         isToday ? "font-semibold" : "",
       ].join(" ")}
     >
-      <div className="leading-tight">{weekdayInitial(jour)}</div>
-      <div className="leading-tight">{dayNumber(jour)}</div>
+      {isNarrow ? (
+        // Reduite a une bande, la colonne garde son intitule pour la lecture
+        // d'ecran : une colonne anonyme rendrait le tableau incomprehensible.
+        <span className="sr-only">{intitule}</span>
+      ) : (
+        <>
+          <div className="leading-tight">{weekdayInitial(jour)}</div>
+          <div className="leading-tight">{dayNumber(jour)}</div>
+        </>
+      )}
     </th>
   );
 }

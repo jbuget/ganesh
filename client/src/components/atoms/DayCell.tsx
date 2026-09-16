@@ -12,6 +12,8 @@ interface DayCellProps {
   isLastRow?: boolean;
   /** La derniere colonne de jours porte le trait qui la separe des totaux. */
   isLastDay?: boolean;
+  /** Un jour non ouvre se reduit a une bande, sauf s'il porte une saisie. */
+  isNarrow?: boolean;
   label: string;
   onChange: (next: DayValue) => void;
 }
@@ -34,6 +36,7 @@ export function DayCell({
   isReadOnly,
   isLastRow = false,
   isLastDay = false,
+  isNarrow = false,
   label,
   onChange,
 }: DayCellProps) {
@@ -63,7 +66,8 @@ export function DayCell({
         disabled={isLocked}
         onClick={() => onChange(cycleDayValue(value))}
         className={[
-          "block h-9 w-9 text-sm transition-colors",
+          "block h-9 text-sm transition-colors",
+          isNarrow ? "w-2.5" : "w-9",
           background,
           isFuture && value > 0 ? "opacity-60" : "",
           isLocked ? "cursor-not-allowed" : "cursor-pointer hover:bg-sky-50",

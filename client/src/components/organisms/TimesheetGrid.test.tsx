@@ -140,6 +140,34 @@ describe("TimesheetGrid", () => {
     expect(cellule.className).toContain("border-r-slate-500");
   });
 
+  it("réduit un week-end sans saisie à une simple bande", () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    const entete = screen.getByRole("columnheader", { name: /S 19/ });
+    expect(entete.className).toContain("w-2.5");
+  });
+
+  it("garde sa largeur à un jour ouvré", () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    const entete = screen.getByRole("columnheader", { name: /M 15/ });
+    expect(entete.className).toContain("w-9");
+  });
+
+  it("garde sa largeur à un week-end portant une saisie héritée", () => {
+    // Une donnee posee avant l'interdiction doit rester visible et corrigeable.
+    const grid = makeGrid({
+      days: [{ jour: "2026-09-19", kind: "weekend", label: null, is_off_day: true }],
+      day_totals: [{ jour: "2026-09-19", total: 1, exceeds_capacity: false }],
+      rows: [],
+    } as Partial<MonthGridResponse>);
+    render(<TimesheetGrid {...baseProps} grid={grid} />);
+
+    const entete = screen.getByRole("columnheader", { name: /S 19/ });
+    expect(entete.className).toContain("w-9");
+    expect(entete.className).not.toContain("w-2.5");
+  });
+
   it("affiche un total par jour", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 

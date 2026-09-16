@@ -29,7 +29,7 @@ export function TotalCell({
     <td
       data-alert={isAlert ? "true" : undefined}
       className={[
-        "h-9 w-9 border-r border-b text-center text-sm",
+        "h-9 w-14 border-r border-b text-center text-sm",
         strong.has("right") ? "border-r-slate-500" : "border-r-slate-300",
         strong.has("bottom") ? "border-b-slate-500" : "border-b-slate-300",
         isAlert ? "bg-red-100 text-red-800 font-semibold" : "bg-slate-50",
