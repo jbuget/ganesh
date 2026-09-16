@@ -18,6 +18,8 @@ interface DayCellProps {
   isFuture: boolean;
   isToday: boolean;
   isReadOnly: boolean;
+  /** La derniere ligne ferme le tableau : son trait bas est le trait fort. */
+  isLastRow?: boolean;
   label: string;
   onChange: (next: DayValue) => void;
 }
@@ -29,9 +31,10 @@ interface DayCellProps {
  * `border-collapse`, seules les bordures de cellules fusionnent entre elles.
  * Les poser sur un element interne laisse des traits qui depassent.
  *
- * Les jours non ouvres et les jours a venir sont visuellement distincts : les
- * premiers pour eviter les saisies par erreur, les seconds parce qu'ils
- * relevent du previsionnel et non du realise.
+ * Les jours non ouvres sont grises et verrouilles, les jours a venir attenues :
+ * les premiers pour eviter les saisies par erreur, les seconds parce qu'ils
+ * relevent du previsionnel et non du realise. La colonne du jour courant est
+ * marquee en jaune.
  */
 export function DayCell({
   value,
@@ -39,30 +42,43 @@ export function DayCell({
   isFuture,
   isToday,
   isReadOnly,
+  isLastRow = false,
   label,
   onChange,
 }: DayCellProps) {
+  // Un jour non ouvre ne se saisit pas. Il reste cliquable s'il porte deja une
+  // valeur, sans quoi une saisie posee par erreur un samedi serait impossible a
+  // retirer.
+  const isLocked = isReadOnly || (isOffDay && value === 0);
+
   const background =
     value > 0
       ? "bg-sky-100 font-medium text-sky-900"
       : isOffDay
         ? "bg-slate-100"
-        : "bg-white";
+        : isToday
+          ? "bg-amber-100"
+          : "bg-white";
 
   return (
-    <td className="border-r border-b border-r-slate-300 border-b-slate-300 p-0">
+    <td
+      className={[
+        "border-r border-b border-r-slate-300 p-0",
+        isLastRow ? "border-b-slate-500" : "border-b-slate-300",
+      ].join(" ")}
+    >
       <button
         type="button"
         aria-label={label}
         title={label}
-        disabled={isReadOnly}
+        disabled={isLocked}
         onClick={() => onChange(cycleDayValue(value))}
         className={[
           "block h-9 w-9 text-sm transition-colors",
           background,
           isFuture && value > 0 ? "opacity-60" : "",
           isToday ? "outline outline-1 -outline-offset-1 outline-sky-500" : "",
-          isReadOnly ? "cursor-not-allowed" : "cursor-pointer hover:bg-sky-50",
+          isLocked ? "cursor-not-allowed" : "cursor-pointer hover:bg-sky-50",
         ].join(" ")}
       >
         {formatDays(value)}

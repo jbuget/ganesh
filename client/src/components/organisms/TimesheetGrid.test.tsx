@@ -128,16 +128,41 @@ describe("TimesheetGrid", () => {
     expect(within(footer).getAllByRole("cell").at(-1)).toHaveTextContent("2");
   });
 
-  it("signale une saisie posée sur un jour non ouvré", () => {
+  it("place la ligne des totaux juste sous l'en-tête des jours", () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    const rows = screen.getAllByRole("row");
+    expect(rows[0]).toHaveTextContent("Mission");
+    expect(rows[1]).toHaveTextContent("Total par jour");
+    expect(rows[2]).toHaveTextContent("Portail bailleurs");
+  });
+
+  it("colore en vert une journée complète", () => {
     const grid = makeGrid({
-      day_totals: [{ jour: "2026-09-19", total: 1, exceeds_capacity: false }],
-      days: [{ jour: "2026-09-19", kind: "weekend", label: null, is_off_day: true }],
+      day_totals: [{ jour: "2026-09-15", total: 1, exceeds_capacity: false }],
+      days: [{ jour: "2026-09-15", kind: "ouvre", label: null, is_off_day: false }],
       rows: [],
     } as Partial<MonthGridResponse>);
     render(<TimesheetGrid {...baseProps} grid={grid} />);
 
-    const footer = screen.getByRole("row", { name: /Total par jour/ });
-    const weekendCell = within(footer).getAllByRole("cell")[0];
-    expect(weekendCell).toHaveAttribute("data-alert", "true");
+    const totalRow = screen.getByRole("row", { name: /Total par jour/ });
+    expect(within(totalRow).getAllByRole("cell")[0].className).toContain(
+      "bg-emerald-100",
+    );
+  });
+
+  it("signale une journée incomplète dans la ligne des totaux", () => {
+    const grid = makeGrid({
+      day_totals: [{ jour: "2026-09-15", total: 0.5, exceeds_capacity: false }],
+      days: [{ jour: "2026-09-15", kind: "ouvre", label: null, is_off_day: false }],
+      rows: [],
+    } as Partial<MonthGridResponse>);
+    render(<TimesheetGrid {...baseProps} grid={grid} />);
+
+    const totalRow = screen.getByRole("row", { name: /Total par jour/ });
+    expect(within(totalRow).getAllByRole("cell")[0]).toHaveAttribute(
+      "data-alert",
+      "true",
+    );
   });
 });

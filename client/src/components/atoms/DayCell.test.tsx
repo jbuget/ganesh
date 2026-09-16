@@ -79,6 +79,30 @@ describe("DayCell", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it("verrouille un jour non ouvré resté vide", async () => {
+    const onChange = vi.fn();
+    renderInRow(<DayCell {...baseProps} value={0} isOffDay onChange={onChange} />);
+
+    await userEvent.click(screen.getByRole("button"));
+
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("laisse corriger une saisie posée par erreur un jour non ouvré", async () => {
+    const onChange = vi.fn();
+    renderInRow(<DayCell {...baseProps} value={1} isOffDay onChange={onChange} />);
+
+    await userEvent.click(screen.getByRole("button"));
+
+    expect(onChange).toHaveBeenCalledWith(0);
+  });
+
+  it("marque la colonne du jour courant quand la case est vide", () => {
+    renderInRow(<DayCell {...baseProps} value={0} isToday onChange={vi.fn()} />);
+
+    expect(screen.getByRole("button").className).toContain("bg-amber-100");
+  });
+
   it("porte un libellé accessible", () => {
     renderInRow(<DayCell {...baseProps} value={1} onChange={vi.fn()} />);
 

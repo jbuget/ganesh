@@ -2,6 +2,7 @@
 
 import { DayCell, type DayValue } from "@/components/atoms/DayCell";
 import { DayHeader } from "@/components/atoms/DayHeader";
+import { DayTotalCell } from "@/components/atoms/DayTotalCell";
 import { TotalCell } from "@/components/atoms/TotalCell";
 import type { MonthGridResponse, ProjectResponse } from "@/lib/api/generated/model";
 import { formatTotal } from "@/lib/dates";
@@ -59,7 +60,6 @@ export function TimesheetGrid({
   ].sort((a, b) => a.label.localeCompare(b.label, "fr"));
 
   const readOnly = !grid.is_writable;
-  const dayByDate = new Map(grid.days.map((day) => [day.jour, day]));
   const totalByDate = new Map(grid.day_totals.map((total) => [total.jour, total]));
 
   return (
@@ -90,6 +90,29 @@ export function TimesheetGrid({
               Total
             </th>
           </tr>
+
+          <tr>
+            <th
+              scope="row"
+              className="sticky left-0 z-10 border-b border-b-slate-500 bg-slate-50 px-3 py-1.5 text-left text-sm font-medium shadow-[inset_-1px_0_0_0_var(--color-slate-500)]"
+            >
+              Total par jour
+            </th>
+            {grid.days.map((day) => (
+              <DayTotalCell
+                key={day.jour}
+                value={totalByDate.get(day.jour)?.total ?? 0}
+                isOffDay={day.is_off_day}
+                isToday={day.jour === today}
+                strongSides={["bottom"]}
+              />
+            ))}
+            <TotalCell
+              value={grid.total_realise + grid.total_prevu}
+              isStrong
+              strongSides={["left", "right", "bottom"]}
+            />
+          </tr>
         </thead>
 
         <tbody>
@@ -103,7 +126,7 @@ export function TimesheetGrid({
               </td>
             </tr>
           )}
-          {rows.map((row) => (
+          {rows.map((row, rowIndex) => (
             <tr key={row.project_id}>
               <th
                 scope="row"
@@ -125,6 +148,7 @@ export function TimesheetGrid({
                   isFuture={day.jour > today}
                   isToday={day.jour === today}
                   isReadOnly={readOnly}
+                  isLastRow={rowIndex === rows.length - 1}
                   label={`${row.label} — ${day.jour}`}
                   onChange={(next) => onSetValue(row.project_id, day.jour, next)}
                 />
@@ -133,36 +157,6 @@ export function TimesheetGrid({
             </tr>
           ))}
         </tbody>
-
-        <tfoot className="border-t border-t-slate-500">
-          <tr>
-            <th
-              scope="row"
-              className="sticky left-0 z-10 border-t border-t-slate-500 bg-slate-50 px-3 py-1.5 text-left text-sm font-medium shadow-[inset_-1px_0_0_0_var(--color-slate-500)]"
-            >
-              Total par jour
-            </th>
-            {grid.days.map((day) => {
-              const total = totalByDate.get(day.jour);
-              const isOffDay = dayByDate.get(day.jour)?.is_off_day ?? false;
-              return (
-                <TotalCell
-                  key={day.jour}
-                  value={total?.total ?? 0}
-                  isAlert={
-                    total?.exceeds_capacity || (isOffDay && (total?.total ?? 0) > 0)
-                  }
-                  strongSides={["bottom"]}
-                />
-              );
-            })}
-            <TotalCell
-              value={grid.total_realise + grid.total_prevu}
-              isStrong
-              strongSides={["left", "right", "bottom"]}
-            />
-          </tr>
-        </tfoot>
       </table>
     </div>
   );
