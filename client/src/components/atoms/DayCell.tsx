@@ -28,9 +28,8 @@ interface DayCellProps {
 /**
  * Cellule unitaire de la matrice.
  *
- * Les bordures sont portees par le `<td>`, jamais par le bouton : avec
- * `border-collapse`, seules les bordures de cellules fusionnent entre elles.
- * Les poser sur un element interne laisse des traits qui depassent.
+ * Les bordures sont portees par le `<td>`, jamais par le bouton : le bouton se
+ * dessinerait par-dessus le trait.
  *
  * Les jours non ouvres sont grises et verrouilles, les jours a venir attenues :
  * les premiers pour eviter les saisies par erreur, les seconds parce qu'ils
