@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { TimesheetGrid } from "./TimesheetGrid";
@@ -76,9 +76,13 @@ describe("TimesheetGrid", () => {
   it("compare le consommé du projet à son estimé, pas le réalisé du mois", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
-    expect(
-      screen.getByRole("rowheader", { name: /Portail bailleurs/ }),
-    ).toHaveTextContent("7/20 jrs. estimés");
+    // Le ratio vit dans l'infobulle de la mission, qui suit le curseur.
+    fireEvent.mouseMove(screen.getByText("Portail bailleurs"), {
+      clientX: 50,
+      clientY: 80,
+    });
+
+    expect(screen.getByRole("tooltip")).toHaveTextContent("7/20 jrs. estimés");
   });
 
   it("notifie la valeur suivante quand on clique une cellule vide", async () => {
