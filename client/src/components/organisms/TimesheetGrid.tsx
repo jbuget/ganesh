@@ -64,7 +64,7 @@ export function TimesheetGrid({
 
   return (
     <div className="max-w-full overflow-x-auto">
-      <table className="w-max border-collapse border border-slate-400 text-slate-800">
+      <table className="w-max border-collapse border border-slate-500 text-slate-800">
         <caption className="sr-only">Temps saisi par mission et par jour</caption>
         <thead>
           <tr>
@@ -129,11 +129,7 @@ export function TimesheetGrid({
                   onChange={(next) => onSetValue(row.project_id, day.jour, next)}
                 />
               ))}
-              <TotalCell
-                value={row.total}
-                isStrong
-                className="border-l border-l-slate-500"
-              />
+              <TotalCell value={row.total} isStrong strongSides={["left", "right"]} />
             </tr>
           ))}
         </tbody>
@@ -156,13 +152,14 @@ export function TimesheetGrid({
                   isAlert={
                     total?.exceeds_capacity || (isOffDay && (total?.total ?? 0) > 0)
                   }
+                  strongSides={["bottom"]}
                 />
               );
             })}
             <TotalCell
               value={grid.total_realise + grid.total_prevu}
               isStrong
-              className="border-l border-l-slate-500"
+              strongSides={["left", "right", "bottom"]}
             />
           </tr>
         </tfoot>

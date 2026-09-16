@@ -50,7 +50,7 @@ export function DayCell({
         : "bg-white";
 
   return (
-    <td className="border-r border-b border-slate-300 p-0">
+    <td className="border-r border-b border-r-slate-300 border-b-slate-300 p-0">
       <button
         type="button"
         aria-label={label}
