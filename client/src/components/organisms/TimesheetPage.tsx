@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import type { DayValue } from "@/components/atoms/DayCell";
+import { MissionSelector } from "@/components/molecules/MissionSelector";
 import { TimesheetGrid } from "@/components/organisms/TimesheetGrid";
 import { setEntry } from "@/lib/api/generated/entries/entries";
 import type { ProjectResponse } from "@/lib/api/generated/model";
@@ -55,6 +56,11 @@ export function TimesheetPage() {
   const gridQuery = useMonthGrid(mois, viewedUserId, Boolean(me?.id));
   const grid = gridQuery.grid;
   const isOwnMonth = viewedUserId === null || viewedUserId === me?.id;
+
+  const displayedProjectIds = [
+    ...(grid?.rows.map((row) => row.project_id) ?? []),
+    ...extraRows.map((project) => project.id),
+  ];
 
   async function refresh() {
     await queryClient.invalidateQueries();
@@ -145,6 +151,19 @@ export function TimesheetPage() {
             ))}
           </select>
 
+          {grid?.is_writable && (
+            <MissionSelector
+              projects={projects}
+              excludedIds={displayedProjectIds}
+              onSelect={(projectId) => {
+                const project = projects.find((p) => p.id === projectId);
+                if (project) setExtraRows((rows) => [...rows, project]);
+              }}
+              onDeclareNew={handleDeclareNew}
+              disabled={false}
+            />
+          )}
+
           {grid?.is_writable && isOwnMonth && (
             <button
               type="button"
@@ -177,15 +196,9 @@ export function TimesheetPage() {
         <>
           <TimesheetGrid
             grid={grid}
-            projects={projects}
             extraRows={extraRows}
             today={today}
             onSetValue={handleSetValue}
-            onAddMission={(projectId) => {
-              const project = projects.find((p) => p.id === projectId);
-              if (project) setExtraRows((rows) => [...rows, project]);
-            }}
-            onDeclareNew={handleDeclareNew}
           />
 
           <dl className="mt-4 flex flex-wrap gap-8 text-sm">

@@ -58,12 +58,9 @@ const PROJECTS: ProjectResponse[] = [
 ];
 
 const baseProps = {
-  projects: PROJECTS,
   extraRows: [],
   today: TODAY,
   onSetValue: vi.fn(),
-  onAddMission: vi.fn(),
-  onDeclareNew: vi.fn(),
 };
 
 describe("TimesheetGrid", () => {

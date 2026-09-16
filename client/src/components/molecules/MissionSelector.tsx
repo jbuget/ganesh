@@ -13,10 +13,10 @@ interface MissionSelectorProps {
 const NEW_PROJECT = "__new__";
 
 /**
- * Selecteur place sur la premiere cellule d'une nouvelle ligne.
+ * Ajout d'une mission a la matrice, depuis la barre d'outils.
  *
- * Les missions deja presentes dans la matrice sont retirees de la liste : on ne
- * peut pas creer deux lignes pour la meme mission.
+ * Les missions deja presentes sont retirees de la liste : on ne peut pas creer
+ * deux lignes pour la meme mission.
  */
 export function MissionSelector({
   projects,
@@ -34,7 +34,7 @@ export function MissionSelector({
       value=""
       disabled={disabled}
       aria-label="Ajouter une mission"
-      className="w-full cursor-pointer rounded border border-dashed border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-500 disabled:cursor-not-allowed"
+      className="cursor-pointer rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
       onChange={(event) => {
         const { value } = event.target;
         if (!value) return;

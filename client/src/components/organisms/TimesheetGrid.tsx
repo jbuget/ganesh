@@ -3,18 +3,14 @@
 import { DayCell, type DayValue } from "@/components/atoms/DayCell";
 import { DayHeader } from "@/components/atoms/DayHeader";
 import { TotalCell } from "@/components/atoms/TotalCell";
-import { MissionSelector } from "@/components/molecules/MissionSelector";
 import type { MonthGridResponse, ProjectResponse } from "@/lib/api/generated/model";
 import { formatTotal } from "@/lib/dates";
 
 interface TimesheetGridProps {
   grid: MonthGridResponse;
-  projects: ProjectResponse[];
   extraRows: ProjectResponse[];
   today: string;
   onSetValue: (projectId: number, jour: string, value: DayValue) => void;
-  onAddMission: (projectId: number) => void;
-  onDeclareNew: () => void;
 }
 
 interface DisplayRow {
@@ -35,12 +31,9 @@ interface DisplayRow {
  */
 export function TimesheetGrid({
   grid,
-  projects,
   extraRows,
   today,
   onSetValue,
-  onAddMission,
-  onDeclareNew,
 }: TimesheetGridProps) {
   const rows: DisplayRow[] = [
     ...grid.rows.map((row) => ({
@@ -77,7 +70,7 @@ export function TimesheetGrid({
           <tr>
             <th
               scope="col"
-              className="sticky left-0 z-10 h-11 w-64 border-r border-b border-r-slate-500 border-b-slate-500 bg-white px-3 text-left text-xs font-medium text-slate-600"
+              className="sticky left-0 z-10 h-11 w-64 border-b border-b-slate-500 bg-white px-3 text-left text-xs font-medium text-slate-600 shadow-[inset_-1px_0_0_0_var(--color-slate-500)]"
             >
               Mission
             </th>
@@ -100,11 +93,21 @@ export function TimesheetGrid({
         </thead>
 
         <tbody>
+          {rows.length === 0 && (
+            <tr>
+              <td
+                colSpan={grid.days.length + 2}
+                className="border-b border-slate-300 bg-white px-3 py-6 text-center text-sm text-slate-500"
+              >
+                Aucune mission pour ce mois. Ajoutez-en une pour commencer à saisir.
+              </td>
+            </tr>
+          )}
           {rows.map((row) => (
             <tr key={row.project_id}>
               <th
                 scope="row"
-                className="sticky left-0 z-10 max-w-64 truncate border-r border-b border-slate-300 border-r-slate-500 bg-white px-3 py-1.5 text-left text-sm font-normal"
+                className="sticky left-0 z-10 max-w-64 truncate border-b border-slate-300 bg-white px-3 py-1.5 text-left text-sm font-normal shadow-[inset_-1px_0_0_0_var(--color-slate-500)]"
                 title={row.label}
               >
                 {row.label}
@@ -133,34 +136,13 @@ export function TimesheetGrid({
               />
             </tr>
           ))}
-
-          {!readOnly && (
-            <tr>
-              <th
-                scope="row"
-                className="sticky left-0 z-10 border-r border-b border-slate-300 border-r-slate-500 bg-white px-2 py-1.5 text-left font-normal"
-              >
-                <MissionSelector
-                  projects={projects}
-                  excludedIds={rows.map((row) => row.project_id)}
-                  onSelect={onAddMission}
-                  onDeclareNew={onDeclareNew}
-                  disabled={readOnly}
-                />
-              </th>
-              <td
-                colSpan={grid.days.length + 1}
-                className="border-b border-slate-300 bg-white"
-              />
-            </tr>
-          )}
         </tbody>
 
         <tfoot className="border-t border-t-slate-500">
           <tr>
             <th
               scope="row"
-              className="sticky left-0 z-10 border-t border-r border-t-slate-500 border-r-slate-500 bg-slate-50 px-3 py-1.5 text-left text-sm font-medium"
+              className="sticky left-0 z-10 border-t border-t-slate-500 bg-slate-50 px-3 py-1.5 text-left text-sm font-medium shadow-[inset_-1px_0_0_0_var(--color-slate-500)]"
             >
               Total par jour
             </th>
