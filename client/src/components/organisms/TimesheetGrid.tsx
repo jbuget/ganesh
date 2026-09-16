@@ -100,9 +100,9 @@ export function TimesheetGrid({
               scope="row"
               className="sticky left-0 z-10 border-r border-b border-r-slate-500 border-b-slate-500 bg-slate-50 px-3 py-1.5 text-left text-sm font-medium"
             >
-              Total par jour ouvrés
+              Total
               <span className="ml-2 text-xs font-normal text-slate-500">
-                ({grid.working_days} jrs.)
+                ({grid.working_days} jrs. ouvrés)
               </span>
             </th>
             {grid.days.map((day, dayIndex) => (
