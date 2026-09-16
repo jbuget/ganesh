@@ -4,6 +4,7 @@ import {
   dayNumber,
   firstDayOfMonth,
   formatDays,
+  formatTotal,
   formatMonth,
   nextMonth,
   previousMonth,
@@ -79,5 +80,19 @@ describe("formatDays", () => {
 
   it("affiche un total avec demi-journée", () => {
     expect(formatDays(3.5)).toBe("3½");
+  });
+});
+
+describe("formatTotal", () => {
+  it("affiche zéro plutôt qu'un blanc", () => {
+    expect(formatTotal(0)).toBe("0");
+  });
+
+  it("affiche une demi-journée comme une cellule", () => {
+    expect(formatTotal(0.5)).toBe("½");
+  });
+
+  it("affiche un total avec demi-journée", () => {
+    expect(formatTotal(2.5)).toBe("2½");
   });
 });

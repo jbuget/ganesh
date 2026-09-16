@@ -54,7 +54,7 @@ export function DayCell({
         disabled={isReadOnly}
         onClick={() => onChange(cycleDayValue(value))}
         className={[
-          "h-9 w-9 border-r border-b border-slate-200 text-sm transition-colors",
+          "h-9 w-9 border-r border-b border-slate-400/70 text-sm transition-colors",
           background,
           isFuture && value > 0 ? "opacity-55" : "",
           isToday ? "ring-1 ring-inset ring-sky-500" : "",

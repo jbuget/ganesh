@@ -141,6 +141,6 @@ describe("TimesheetGrid", () => {
 
     const footer = screen.getByRole("row", { name: /Total par jour/ });
     const weekendCell = within(footer).getAllByRole("cell")[0];
-    expect(weekendCell.className).toContain("text-red-700");
+    expect(weekendCell).toHaveAttribute("data-alert", "true");
   });
 });

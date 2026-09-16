@@ -14,6 +14,12 @@ function renderInTable(ui: React.ReactElement) {
 }
 
 describe("TotalCell", () => {
+  it("ne signale rien pour un total normal", () => {
+    renderInTable(<TotalCell value={1} />);
+
+    expect(screen.getByRole("cell")).not.toHaveAttribute("data-alert");
+  });
+
   it("affiche un total entier", () => {
     renderInTable(<TotalCell value={3} />);
 
@@ -35,6 +41,6 @@ describe("TotalCell", () => {
   it("signale visuellement un dépassement", () => {
     renderInTable(<TotalCell value={1.5} isAlert />);
 
-    expect(screen.getByRole("cell").className).toContain("text-red-700");
+    expect(screen.getByRole("cell")).toHaveAttribute("data-alert", "true");
   });
 });

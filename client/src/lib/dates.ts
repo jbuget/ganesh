@@ -48,11 +48,26 @@ export function weekdayInitial(isoDate: string): string {
   return WEEKDAY_INITIALS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
 }
 
-/** Formate un nombre de jours : 1 → « 1 », 0.5 → « ½ ». */
+/**
+ * Formate un nombre de jours dans une cellule : 1 → « 1 », 0.5 → « ½ ».
+ *
+ * Une valeur nulle ne s'affiche pas : dans la matrice, une cellule vide signifie
+ * « rien de saisi », et la remplir de zéros rendrait la grille illisible.
+ */
 export function formatDays(value: number): string {
   if (value === 0) return "";
   const full = Math.floor(value);
   const hasHalf = value % 1 !== 0;
   if (full === 0) return "½";
   return hasHalf ? `${full}½` : String(full);
+}
+
+/**
+ * Formate un nombre de jours dans un total : 0 → « 0 ».
+ *
+ * Contrairement à une cellule, un total nul est une information : « 0 j réalisé »
+ * ne doit pas s'afficher comme un blanc.
+ */
+export function formatTotal(value: number): string {
+  return value === 0 ? "0" : formatDays(value);
 }

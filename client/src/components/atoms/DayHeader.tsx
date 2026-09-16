@@ -19,8 +19,9 @@ export function DayHeader({ jour, isOffDay, isToday, label }: DayHeaderProps) {
       scope="col"
       title={label ?? undefined}
       className={[
-        "h-12 w-9 border-r border-b border-slate-200 text-xs font-normal",
-        isOffDay ? "bg-slate-100 text-slate-400" : "bg-white text-slate-600",
+        "h-12 w-9 border-r border-b-2 border-slate-400/70 border-b-slate-400",
+        "text-xs font-normal",
+        isOffDay ? "bg-slate-200/70 text-slate-500" : "bg-white text-slate-700",
         isToday ? "text-sky-700 font-semibold" : "",
       ].join(" ")}
     >

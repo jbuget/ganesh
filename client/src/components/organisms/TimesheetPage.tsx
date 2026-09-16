@@ -18,8 +18,8 @@ import {
 } from "@/lib/api/queries";
 import {
   firstDayOfMonth,
-  formatDays,
   formatMonth,
+  formatTotal,
   nextMonth,
   previousMonth,
 } from "@/lib/dates";
@@ -83,7 +83,7 @@ export function TimesheetPage() {
   async function handleValidate() {
     const confirmed = window.confirm(
       `Valider ${formatMonth(cursor.year, cursor.month)} ?\n\n` +
-        `Total saisi : ${formatDays(
+        `Total saisi : ${formatTotal(
           (grid?.total_realise ?? 0) + (grid?.total_prevu ?? 0),
         )} jour(s)\n` +
         `Jours ouvrés : ${grid?.working_days ?? 0}\n\n` +
@@ -192,13 +192,13 @@ export function TimesheetPage() {
             <div>
               <dt className="text-slate-500">Réalisé</dt>
               <dd className="text-lg font-semibold">
-                {formatDays(grid.total_realise)} j
+                {formatTotal(grid.total_realise)} j
               </dd>
             </div>
             <div>
               <dt className="text-slate-500">Prévisionnel</dt>
               <dd className="text-lg font-semibold">
-                {formatDays(grid.total_prevu)} j
+                {formatTotal(grid.total_prevu)} j
               </dd>
             </div>
             <div>
