@@ -58,7 +58,7 @@ export function IntervenantsPicker({
         className="flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 -mx-1 transition-colors hover:bg-slate-100"
       >
         {intervenants.length === 0 ? (
-          <span className="flex items-center gap-1 text-xs text-slate-400">
+          <span className="flex items-center gap-1 text-sm text-slate-400">
             <Plus className="size-3.5" aria-hidden />
             {invite}
           </span>

@@ -119,6 +119,7 @@ def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
             )
             for contribution in detail.contributions
         ],
+        sous_projets=[to_project_response(lot) for lot in detail.sous_projets],
     )
 
 

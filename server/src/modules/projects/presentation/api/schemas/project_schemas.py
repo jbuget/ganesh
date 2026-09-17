@@ -174,6 +174,7 @@ class ProjectDetailResponse(BaseModel):
     intervenants: list[BoardMemberResponse]
     consomme_j: float
     contributions: list[ProjectContributionResponse]
+    sous_projets: list[ProjectResponse]
 
 
 class UpdateProjectDetailRequest(BaseModel):
