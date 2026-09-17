@@ -40,7 +40,7 @@ export function TimesheetPage() {
   }
 
   return (
-    <main className="mx-auto max-w-[1600px] p-6">
+    <main className="max-w-[1600px] p-6">
       <header className="mb-6">
         <h1 className="text-lg font-semibold">Activité</h1>
         <p className="text-sm text-slate-500">

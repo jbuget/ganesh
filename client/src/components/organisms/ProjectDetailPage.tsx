@@ -24,7 +24,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
 
   if (fiche.introuvable) {
     return (
-      <main className="mx-auto max-w-[900px] p-6">
+      <main className="max-w-[900px] p-6">
         <p className="text-sm text-slate-500">Cette mission n&apos;existe pas.</p>
       </main>
     );
@@ -32,7 +32,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
 
   if (!detail) {
     return (
-      <main className="mx-auto max-w-[900px] p-6">
+      <main className="max-w-[900px] p-6">
         <p className="text-sm text-slate-500">Chargement…</p>
       </main>
     );
@@ -41,7 +41,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
   const { project } = detail;
 
   return (
-    <main className="mx-auto max-w-[900px] p-6">
+    <main className="max-w-[900px] p-6">
       <Link
         href="/kanban"
         className="mb-4 inline-flex cursor-pointer items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-800"

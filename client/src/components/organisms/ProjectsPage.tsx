@@ -26,7 +26,7 @@ export function ProjectsPage() {
   const [importation, setImportation] = useState(false);
 
   return (
-    <main className="mx-auto max-w-[900px] p-6">
+    <main className="max-w-[900px] p-6">
       <header className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-lg font-semibold">Référentiel des missions</h1>
