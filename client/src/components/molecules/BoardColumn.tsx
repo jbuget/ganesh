@@ -17,7 +17,13 @@ export function BoardColumn({ statut, cartes }: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: statut });
 
   return (
-    <section aria-label={libellePhase(statut)} className="flex w-64 shrink-0 flex-col">
+    <section
+      aria-label={libellePhase(statut)}
+      // Les six phases se partagent la largeur disponible plutot que d'imposer
+      // un defilement des qu'un ecran n'atteint pas 1600 px. En deca de la
+      // largeur minimale, le conteneur reprend le defilement horizontal.
+      className="flex min-w-52 max-w-64 flex-1 flex-col"
+    >
       <header className="mb-2 flex items-baseline justify-between px-1">
         <h2 className="text-sm font-medium text-slate-700">{libellePhase(statut)}</h2>
         <span className="text-xs tabular-nums text-slate-400">{cartes.length}</span>
