@@ -1,6 +1,6 @@
 """Schemas du referentiel des missions."""
 
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
@@ -187,3 +187,22 @@ class UpdateDescriptionRequest(BaseModel):
     """Fiche de service, en markdown."""
 
     description: str | None = None
+
+
+class ProjectUpdateResponse(BaseModel):
+    """Une mise a jour du fil de suivi."""
+
+    id: int
+    author: BoardMemberResponse
+    texte: str
+    publiee_le: datetime
+    modifiee_le: datetime | None
+    est_supprimee: bool
+    #: Vrai si le lecteur courant peut la corriger ou la retirer.
+    est_la_mienne: bool
+
+
+class PostUpdateRequest(BaseModel):
+    """Publication ou correction d'une mise a jour."""
+
+    texte: str = Field(min_length=1)

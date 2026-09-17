@@ -21,6 +21,7 @@ from src.modules.projects.domain.entities.project import (
 )
 from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -29,6 +30,9 @@ from src.modules.projects.domain.repositories.project_detail_repository import (
 )
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
+)
+from src.modules.projects.domain.repositories.project_update_repository import (
+    ProjectUpdateRepository,
 )
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
@@ -264,3 +268,25 @@ class InMemoryProjectDetailRepository(ProjectDetailRepository):
         self, project_id: int, statut: ProjectStatus, reached_at: date
     ) -> None:
         self._phases.setdefault(project_id, {}).setdefault(statut, reached_at)
+
+
+class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
+    def __init__(self) -> None:
+        self._updates: list[ProjectUpdate] = []
+        self._next_id = 1
+
+    async def get(self, update_id: int) -> ProjectUpdate | None:
+        return next((u for u in self._updates if u.id == update_id), None)
+
+    async def list_for_project(self, project_id: int) -> list[ProjectUpdate]:
+        fil = [u for u in self._updates if u.project_id == project_id]
+        return sorted(fil, key=lambda u: (u.publiee_le, u.id or 0), reverse=True)
+
+    async def add(self, update: ProjectUpdate) -> ProjectUpdate:
+        update.id = self._next_id
+        self._next_id += 1
+        self._updates.append(update)
+        return update
+
+    async def update(self, update: ProjectUpdate) -> ProjectUpdate:
+        return update

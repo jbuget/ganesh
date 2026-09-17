@@ -2,6 +2,9 @@
 
 import { ProjectPilotageTab } from "@/components/organisms/ProjectPilotageTab";
 import { ProjectSheetTab } from "@/components/organisms/ProjectSheetTab";
+import { ProjectUpdatesTab } from "@/components/organisms/ProjectUpdatesTab";
+import { useState } from "react";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Department, ProjectDetailResponse } from "@/lib/api/generated/model";
 
@@ -32,6 +35,11 @@ export function ProjectTabs({
   enregistrerFiche,
   enregistrerDescription,
 }: ProjectTabsProps) {
+  // Fige l'heure de reference le temps de la consultation : « il y a 3 min »
+  // ne doit pas se recalculer a chaque rendu, et le fil n'est de toute facon
+  // charge qu'apres le montage — rien n'est rendu cote serveur.
+  const [maintenant] = useState(() => new Date());
+
   return (
     <Tabs defaultValue="pilotage" className="gap-4">
       <TabsList>
@@ -50,7 +58,7 @@ export function ProjectTabs({
       </TabsContent>
 
       <TabsContent value="updates">
-        <Chantier quoi="Les mises à jour arrivent." />
+        <ProjectUpdatesTab projectId={detail.project.id} maintenant={maintenant} />
       </TabsContent>
 
       <TabsContent value="fiche">

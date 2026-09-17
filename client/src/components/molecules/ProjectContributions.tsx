@@ -23,7 +23,17 @@ export function ProjectContributions({
   contributions,
   total,
 }: ProjectContributionsProps) {
-  const [deplie, setDeplie] = useState<number | null>(null);
+  // Plusieurs lignes restent ouvertes a la fois : on deplie deux intervenants
+  // justement pour confronter leurs mois.
+  const [deplies, setDeplies] = useState<ReadonlySet<number>>(new Set());
+
+  function basculer(memberId: number) {
+    setDeplies((ouverts) => {
+      const suivants = new Set(ouverts);
+      if (!suivants.delete(memberId)) suivants.add(memberId);
+      return suivants;
+    });
+  }
 
   if (contributions.length === 0) {
     return <p className="text-sm text-slate-400">Aucun temps déclaré</p>;
@@ -32,7 +42,7 @@ export function ProjectContributions({
   return (
     <ul className="space-y-0.5">
       {contributions.map((contribution) => {
-        const ouvert = deplie === contribution.member.id;
+        const ouvert = deplies.has(contribution.member.id);
         const part = total > 0 ? (contribution.jours / total) * 100 : 0;
 
         return (
@@ -40,7 +50,7 @@ export function ProjectContributions({
             <button
               type="button"
               aria-expanded={ouvert}
-              onClick={() => setDeplie(ouvert ? null : contribution.member.id)}
+              onClick={() => basculer(contribution.member.id)}
               className="flex w-full cursor-pointer items-center gap-2 rounded px-1 py-1.5 text-left transition-colors hover:bg-slate-50"
             >
               <ChevronRight

@@ -3,6 +3,7 @@
 from src.modules.projects.application.use_cases.get_board import Board
 from src.modules.projects.application.use_cases.get_project_detail import ProjectDetail
 from src.modules.projects.application.use_cases.list_projects import ListedProject
+from src.modules.projects.application.use_cases.project_updates import SignedUpdate
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.services.phase_history import libelle_de_passage
 from src.modules.projects.presentation.api.schemas.project_schemas import (
@@ -16,6 +17,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     ProjectDetailResponse,
     ProjectLinkResponse,
     ProjectResponse,
+    ProjectUpdateResponse,
 )
 from src.modules.users.domain.entities.user import User
 from src.shared.utils.initials import initiales
@@ -117,4 +119,23 @@ def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
             )
             for contribution in detail.contributions
         ],
+    )
+
+
+def to_project_update_response(
+    signee: SignedUpdate, lecteur_id: int
+) -> ProjectUpdateResponse:
+    assert signee.update.id is not None and signee.author.id is not None
+    return ProjectUpdateResponse(
+        id=signee.update.id,
+        author=BoardMemberResponse(
+            id=signee.author.id,
+            display_name=signee.author.display_name,
+            initiales=initiales(signee.author.display_name),
+        ),
+        texte=signee.update.texte,
+        publiee_le=signee.update.publiee_le,
+        modifiee_le=signee.update.modifiee_le,
+        est_supprimee=signee.update.est_supprimee,
+        est_la_mienne=signee.update.author_id == lecteur_id,
     )

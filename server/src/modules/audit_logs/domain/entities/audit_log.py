@@ -23,6 +23,9 @@ class AuditAction(StrEnum):
     PROJECT_STATUS_CHANGE = "project.status_change"
     PROJECT_ASSIGN = "project.assign"
     PROJECT_UNASSIGN = "project.unassign"
+    UPDATE_POST = "update.post"
+    UPDATE_EDIT = "update.edit"
+    UPDATE_REMOVE = "update.remove"
     USER_ROLE_CHANGE = "user.role_change"
     USER_DEACTIVATE = "user.deactivate"
 

@@ -36,6 +36,12 @@ from src.modules.projects.application.use_cases.import_projects import (
 )
 from src.modules.projects.application.use_cases.list_projects import ListProjectsUseCase
 from src.modules.projects.application.use_cases.move_project import MoveProjectUseCase
+from src.modules.projects.application.use_cases.project_updates import (
+    EditProjectUpdateUseCase,
+    ListProjectUpdatesUseCase,
+    PostProjectUpdateUseCase,
+    RemoveProjectUpdateUseCase,
+)
 from src.modules.projects.application.use_cases.update_project import (
     UpdateProjectUseCase,
 )
@@ -54,11 +60,17 @@ from src.modules.projects.domain.repositories.project_detail_repository import (
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.projects.domain.repositories.project_update_repository import (
+    ProjectUpdateRepository,
+)
 from src.modules.projects.infrastructure.database.repositories.project_assignee_repository_impl import (
     SqlProjectAssigneeRepository,
 )
 from src.modules.projects.infrastructure.database.repositories.project_detail_repository_impl import (
     SqlProjectDetailRepository,
+)
+from src.modules.projects.infrastructure.database.repositories.project_update_repository_impl import (
+    SqlProjectUpdateRepository,
 )
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
@@ -216,3 +228,49 @@ def get_update_description_use_case(
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> UpdateDescriptionUseCase:
     return UpdateDescriptionUseCase(projects=projects, audit_logs=audit_logs)
+
+
+def get_project_update_repository(
+    session: AsyncSession = Depends(get_db),
+) -> ProjectUpdateRepository:
+    return SqlProjectUpdateRepository(session)
+
+
+def _ecriture_du_fil(
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    updates: ProjectUpdateRepository = Depends(get_project_update_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> dict[str, object]:
+    """Les quatre depots que partagent les ecritures du fil."""
+    return {
+        "users": users,
+        "projects": projects,
+        "updates": updates,
+        "audit_logs": audit_logs,
+    }
+
+
+def get_post_update_use_case(
+    depots: dict[str, object] = Depends(_ecriture_du_fil),
+) -> PostProjectUpdateUseCase:
+    return PostProjectUpdateUseCase(**depots)  # type: ignore[arg-type]
+
+
+def get_edit_update_use_case(
+    depots: dict[str, object] = Depends(_ecriture_du_fil),
+) -> EditProjectUpdateUseCase:
+    return EditProjectUpdateUseCase(**depots)  # type: ignore[arg-type]
+
+
+def get_remove_update_use_case(
+    depots: dict[str, object] = Depends(_ecriture_du_fil),
+) -> RemoveProjectUpdateUseCase:
+    return RemoveProjectUpdateUseCase(**depots)  # type: ignore[arg-type]
+
+
+def get_list_updates_use_case(
+    updates: ProjectUpdateRepository = Depends(get_project_update_repository),
+    users: UserRepository = Depends(get_user_repository),
+) -> ListProjectUpdatesUseCase:
+    return ListProjectUpdatesUseCase(updates=updates, users=users)

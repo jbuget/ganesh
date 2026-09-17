@@ -31,9 +31,11 @@ import type {
   ImportReportResponse,
   ListProjectsParams,
   MoveProjectRequest,
+  PostUpdateRequest,
   ProjectDetailResponse,
   ProjectLinkResponse,
   ProjectResponse,
+  ProjectUpdateResponse,
   UnassignMemberParams,
   UpdateDescriptionRequest,
   UpdateProjectDetailRequest,
@@ -2093,4 +2095,556 @@ export const useUpdateProjectDescription = <
   TContext
 > => {
   return useMutation(getUpdateProjectDescriptionMutationOptions(options), queryClient);
+};
+export type listProjectUpdatesResponse200 = {
+  data: ProjectUpdateResponse[];
+  status: 200;
+};
+
+export type listProjectUpdatesResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listProjectUpdatesResponseSuccess = listProjectUpdatesResponse200 & {
+  headers: Headers;
+};
+export type listProjectUpdatesResponseError = listProjectUpdatesResponse422 & {
+  headers: Headers;
+};
+
+export type listProjectUpdatesResponse =
+  listProjectUpdatesResponseSuccess | listProjectUpdatesResponseError;
+
+export const getListProjectUpdatesUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/updates`;
+};
+
+/**
+ * Le fil de suivi d'une mission, de la plus recente a la plus ancienne.
+ * @summary List Project Updates
+ */
+export const listProjectUpdates = async (
+  projectId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listProjectUpdatesResponse> => {
+  return bffFetcher<listProjectUpdatesResponse>(getListProjectUpdatesUrl(projectId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListProjectUpdatesQueryKey = (projectId: number) => {
+  return [`/api/v1/projects/${projectId}/updates`] as const;
+};
+
+export const getListProjectUpdatesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listProjectUpdates>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectUpdates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListProjectUpdatesQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectUpdates>>> = ({
+    signal,
+  }) => listProjectUpdates(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listProjectUpdates>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListProjectUpdatesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listProjectUpdates>>
+>;
+export type ListProjectUpdatesQueryError = HTTPValidationError;
+
+export function useListProjectUpdates<
+  TData = Awaited<ReturnType<typeof listProjectUpdates>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectUpdates>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectUpdates>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectUpdates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListProjectUpdates<
+  TData = Awaited<ReturnType<typeof listProjectUpdates>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectUpdates>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectUpdates>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectUpdates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjectUpdates<
+  TData = Awaited<ReturnType<typeof listProjectUpdates>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectUpdates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Project Updates
+ */
+
+export function useListProjectUpdates<
+  TData = Awaited<ReturnType<typeof listProjectUpdates>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectUpdates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListProjectUpdatesQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type postProjectUpdateResponse201 = {
+  data: ProjectUpdateResponse;
+  status: 201;
+};
+
+export type postProjectUpdateResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type postProjectUpdateResponseSuccess = postProjectUpdateResponse201 & {
+  headers: Headers;
+};
+export type postProjectUpdateResponseError = postProjectUpdateResponse422 & {
+  headers: Headers;
+};
+
+export type postProjectUpdateResponse =
+  postProjectUpdateResponseSuccess | postProjectUpdateResponseError;
+
+export const getPostProjectUpdateUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/updates`;
+};
+
+/**
+ * Publie une mise a jour sur la mission.
+ * @summary Post Project Update
+ */
+export const postProjectUpdate = async (
+  projectId: number,
+  postUpdateRequest: PostUpdateRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<postProjectUpdateResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<postProjectUpdateResponse>(getPostProjectUpdateUrl(projectId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(postUpdateRequest),
+  });
+};
+
+export const getPostProjectUpdateMutationKey = () => ["postProjectUpdate"] as const;
+
+export const getPostProjectUpdateMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postProjectUpdate>>,
+    TError,
+    PostProjectUpdateMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postProjectUpdate>>,
+  TError,
+  PostProjectUpdateMutationVariables,
+  TContext
+> => {
+  const mutationKey = getPostProjectUpdateMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postProjectUpdate>>,
+    PostProjectUpdateMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return postProjectUpdate(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PostProjectUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postProjectUpdate>>
+>;
+export type PostProjectUpdateMutationBody = PostUpdateRequest;
+export type PostProjectUpdateMutationError = HTTPValidationError;
+export type PostProjectUpdateMutationVariables = {
+  projectId: number;
+  data: PostUpdateRequest;
+};
+
+/**
+ * @summary Post Project Update
+ */
+export const usePostProjectUpdate = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof postProjectUpdate>>,
+      TError,
+      PostProjectUpdateMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof postProjectUpdate>>,
+  TError,
+  PostProjectUpdateMutationVariables,
+  TContext
+> => {
+  return useMutation(getPostProjectUpdateMutationOptions(options), queryClient);
+};
+export type editProjectUpdateResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type editProjectUpdateResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type editProjectUpdateResponseSuccess = editProjectUpdateResponse204 & {
+  headers: Headers;
+};
+export type editProjectUpdateResponseError = editProjectUpdateResponse422 & {
+  headers: Headers;
+};
+
+export type editProjectUpdateResponse =
+  editProjectUpdateResponseSuccess | editProjectUpdateResponseError;
+
+export const getEditProjectUpdateUrl = (projectId: number, updateId: number) => {
+  return `/api/v1/projects/${projectId}/updates/${updateId}`;
+};
+
+/**
+ * Corrige une mise a jour. Seul son auteur le peut.
+ * @summary Edit Project Update
+ */
+export const editProjectUpdate = async (
+  projectId: number,
+  updateId: number,
+  postUpdateRequest: PostUpdateRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<editProjectUpdateResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<editProjectUpdateResponse>(
+    getEditProjectUpdateUrl(projectId, updateId),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(postUpdateRequest),
+    },
+  );
+};
+
+export const getEditProjectUpdateMutationKey = () => ["editProjectUpdate"] as const;
+
+export const getEditProjectUpdateMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof editProjectUpdate>>,
+    TError,
+    EditProjectUpdateMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof editProjectUpdate>>,
+  TError,
+  EditProjectUpdateMutationVariables,
+  TContext
+> => {
+  const mutationKey = getEditProjectUpdateMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof editProjectUpdate>>,
+    EditProjectUpdateMutationVariables
+  > = (props) => {
+    const { projectId, updateId, data } = props ?? {};
+
+    return editProjectUpdate(projectId, updateId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type EditProjectUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof editProjectUpdate>>
+>;
+export type EditProjectUpdateMutationBody = PostUpdateRequest;
+export type EditProjectUpdateMutationError = HTTPValidationError;
+export type EditProjectUpdateMutationVariables = {
+  projectId: number;
+  updateId: number;
+  data: PostUpdateRequest;
+};
+
+/**
+ * @summary Edit Project Update
+ */
+export const useEditProjectUpdate = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof editProjectUpdate>>,
+      TError,
+      EditProjectUpdateMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof editProjectUpdate>>,
+  TError,
+  EditProjectUpdateMutationVariables,
+  TContext
+> => {
+  return useMutation(getEditProjectUpdateMutationOptions(options), queryClient);
+};
+export type removeProjectUpdateResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type removeProjectUpdateResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type removeProjectUpdateResponseSuccess = removeProjectUpdateResponse204 & {
+  headers: Headers;
+};
+export type removeProjectUpdateResponseError = removeProjectUpdateResponse422 & {
+  headers: Headers;
+};
+
+export type removeProjectUpdateResponse =
+  removeProjectUpdateResponseSuccess | removeProjectUpdateResponseError;
+
+export const getRemoveProjectUpdateUrl = (projectId: number, updateId: number) => {
+  return `/api/v1/projects/${projectId}/updates/${updateId}`;
+};
+
+/**
+ * Retire une mise a jour. Elle garde sa place dans le fil.
+ * @summary Remove Project Update
+ */
+export const removeProjectUpdate = async (
+  projectId: number,
+  updateId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<removeProjectUpdateResponse> => {
+  return bffFetcher<removeProjectUpdateResponse>(
+    getRemoveProjectUpdateUrl(projectId, updateId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getRemoveProjectUpdateMutationKey = () => ["removeProjectUpdate"] as const;
+
+export const getRemoveProjectUpdateMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeProjectUpdate>>,
+    TError,
+    RemoveProjectUpdateMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof removeProjectUpdate>>,
+  TError,
+  RemoveProjectUpdateMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRemoveProjectUpdateMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof removeProjectUpdate>>,
+    RemoveProjectUpdateMutationVariables
+  > = (props) => {
+    const { projectId, updateId } = props ?? {};
+
+    return removeProjectUpdate(projectId, updateId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemoveProjectUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof removeProjectUpdate>>
+>;
+
+export type RemoveProjectUpdateMutationError = HTTPValidationError;
+export type RemoveProjectUpdateMutationVariables = {
+  projectId: number;
+  updateId: number;
+};
+
+/**
+ * @summary Remove Project Update
+ */
+export const useRemoveProjectUpdate = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof removeProjectUpdate>>,
+      TError,
+      RemoveProjectUpdateMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof removeProjectUpdate>>,
+  TError,
+  RemoveProjectUpdateMutationVariables,
+  TContext
+> => {
+  return useMutation(getRemoveProjectUpdateMutationOptions(options), queryClient);
 };
