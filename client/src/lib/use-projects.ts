@@ -17,7 +17,7 @@ import { buildProjectTree, offProjectActivities } from "@/lib/project-tree";
 export function useProjectsScreen() {
   const queryClient = useQueryClient();
   const { user: me } = useCurrentUser();
-  const { projects, isLoading } = useProjects();
+  const { missions, isLoading } = useProjects();
 
   async function refresh() {
     await queryClient.invalidateQueries();
@@ -26,8 +26,8 @@ export function useProjectsScreen() {
   return {
     isLoading,
     isManager: me?.role === "MANAGER",
-    arbre: buildProjectTree(projects),
-    activites: offProjectActivities(projects),
+    arbre: buildProjectTree(missions),
+    activites: offProjectActivities(missions),
 
     /** Relit le referentiel apres une modification faite dans le panneau. */
     refresh,

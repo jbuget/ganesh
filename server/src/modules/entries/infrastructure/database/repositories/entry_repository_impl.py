@@ -81,6 +81,14 @@ class SqlEntryRepository(EntryRepository):
         )
         return dict(result.all())  # type: ignore[arg-type]
 
+    async def sum_realised_by_project(self, today: date) -> dict[int, float]:
+        result = await self._session.execute(
+            select(EntryModel.project_id, func.sum(EntryModel.valeur))
+            .where(EntryModel.jour <= today)
+            .group_by(EntryModel.project_id)
+        )
+        return {project_id: float(total) for project_id, total in result.all()}
+
     async def upsert(self, entry: Entry) -> Entry:
         model = await self._get_model(entry.user_id, entry.project_id, entry.jour)
         if model is None:

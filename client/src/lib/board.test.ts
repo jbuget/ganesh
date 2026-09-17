@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { avancement, categorie, libellePhase, PHASES } from "./board";
+import { avancement, categorie, libellePhase, PHASES, rangPhase } from "./board";
 
 describe("PHASES", () => {
   it("suit le cycle de vie d'un projet", () => {
@@ -16,6 +16,17 @@ describe("PHASES", () => {
 
   it("nomme chaque phase en français", () => {
     expect(libellePhase("deploiement")).toBe("Déploiement");
+  });
+});
+
+describe("rangPhase", () => {
+  it("classe les phases dans l'ordre des colonnes du kanban", () => {
+    expect(rangPhase("cadrage")).toBeLessThan(rangPhase("realisation"));
+    expect(rangPhase("realisation")).toBeLessThan(rangPhase("exploitation"));
+  });
+
+  it("renvoie en fin de liste ce qui ne porte pas de phase", () => {
+    expect(rangPhase(null)).toBeGreaterThan(rangPhase("exploitation"));
   });
 });
 

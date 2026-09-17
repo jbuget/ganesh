@@ -23,6 +23,7 @@ from src.shared.exceptions.domain_exceptions import EntityNotFoundError, Validat
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryEntryRepository,
+    InMemoryProjectAssigneeRepository,
     InMemoryProjectDetailRepository,
     InMemoryProjectRepository,
     InMemoryUserRepository,
@@ -58,7 +59,12 @@ def build(projects: list[Project] | None = None):
             details=InMemoryProjectDetailRepository(),
             audit_logs=audit,
         ),
-        ListProjectsUseCase(projects=repo, entries=InMemoryEntryRepository()),
+        ListProjectsUseCase(
+            projects=repo,
+            entries=InMemoryEntryRepository(),
+            assignees=InMemoryProjectAssigneeRepository(),
+            users=users,
+        ),
         repo,
         audit,
     )

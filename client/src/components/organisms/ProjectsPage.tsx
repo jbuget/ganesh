@@ -5,20 +5,29 @@ import { Fragment, useState } from "react";
 
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { ImportProjectsDialog } from "@/components/atoms/ImportProjectsDialog";
-import { MissionListItem } from "@/components/atoms/MissionListItem";
 import { PageHeader } from "@/components/atoms/PageHeader";
+import { MissionRow } from "@/components/molecules/MissionRow";
+import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useMissionOuverte } from "@/lib/mission-ouverte";
 import { useProjectsScreen } from "@/lib/use-projects";
 
 /**
  * Le referentiel des missions.
  *
- * La liste ne montre que des noms et n'ouvre qu'une chose : le panneau de la
- * mission, celui-la meme que le kanban. Tout ce qui se modifie s'y fait, d'un
- * seul endroit — une liste qui edite en place multiplierait les chemins vers la
- * meme donnee, et les ferait diverger.
+ * Les colonnes disent d'un coup d'oeil ou en est chaque mission, ce qu'elle
+ * pese et qui s'en occupe — ce qu'on vient comparer ici. Elles ne s'editent
+ * pas : la ligne n'ouvre toujours qu'une chose, le panneau de la mission,
+ * celui-la meme que le kanban. Une liste qui editerait en place multiplierait
+ * les chemins vers la meme donnee, et les ferait diverger.
  */
 export function ProjectsPage() {
   const ecran = useProjectsScreen();
@@ -27,28 +36,30 @@ export function ProjectsPage() {
   const [importation, setImportation] = useState(false);
 
   return (
-    <main className="p-6">
-      <PageHeader
-        titre="Référentiel des missions"
-        soustitre="Ouvert à toute l'équipe. Chaque modification est tracée."
-        actions={
-          <>
-            {ecran.isManager && (
-              <Button variant="outline" onClick={() => setImportation(true)}>
-                <Upload />
-                Importer
+    <PageLayout
+      entete={
+        <PageHeader
+          titre="Référentiel des missions"
+          soustitre="Ouvert à toute l'équipe. Chaque modification est tracée."
+          actions={
+            <>
+              {ecran.isManager && (
+                <Button variant="outline" onClick={() => setImportation(true)}>
+                  <Upload />
+                  Importer
+                </Button>
+              )}
+              <Button onClick={() => setDeclaration(true)}>
+                <Plus />
+                Déclarer un projet
               </Button>
-            )}
-            <Button onClick={() => setDeclaration(true)}>
-              <Plus />
-              Déclarer un projet
-            </Button>
-          </>
-        }
-      />
-
-      {/* La liste reste etroite : un nom qui court sur 2000 px ne se lit plus. */}
-      <div className="max-w-[900px]">
+            </>
+          }
+        />
+      }
+    >
+      {/* Assez large pour sept colonnes, pas au point d'etirer les noms. */}
+      <div className="max-w-[1200px]">
         {ecran.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
         {ecran.arbre.length === 0 && !ecran.isLoading && (
@@ -57,25 +68,50 @@ export function ProjectsPage() {
           </p>
         )}
 
-        <ul className="divide-y divide-slate-100">
-          {ecran.arbre.map(({ project, lots }) => (
-            <Fragment key={project.id}>
-              <MissionListItem
-                label={project.label}
-                estLot={project.kind === "lot"}
-                onOpen={() => panneau.ouvrir(project.id)}
-              />
-              {lots.map((lot) => (
-                <MissionListItem
-                  key={lot.id}
-                  label={lot.label}
-                  estLot
-                  onOpen={() => panneau.ouvrir(lot.id)}
-                />
-              ))}
-            </Fragment>
-          ))}
-        </ul>
+        {ecran.arbre.length > 0 && (
+          // Le conteneur de shadcn ouvre un contexte de defilement qui
+          // retiendrait l'en-tete a l'interieur du tableau : on le neutralise
+          // pour que le `sticky` se cale sur la zone defilante de la page.
+          <div className="[&_[data-slot=table-container]]:overflow-visible">
+            <Table>
+              {/* Soixante lignes passent sous l'en-tete : sans lui, on ne sait
+                  plus quelle colonne on lit arrive en bas. Le fond se pose sur
+                  les cellules et non sur la rangee : dans un tableau, celui de
+                  la rangee se peint sous les lignes qui defilent. */}
+              <TableHeader className="sticky top-0 z-10 [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50">
+                <TableRow>
+                  <TableHead>Mission</TableHead>
+                  <TableHead>Phase</TableHead>
+                  <TableHead>Catégorie</TableHead>
+                  <TableHead className="text-right">Estimé</TableHead>
+                  <TableHead className="text-right">Réalisé</TableHead>
+                  <TableHead>Référents</TableHead>
+                  <TableHead>Intervenants</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {ecran.arbre.map(({ mission, lots }) => (
+                  <Fragment key={mission.project.id}>
+                    <MissionRow
+                      mission={mission}
+                      estLot={mission.project.kind === "lot"}
+                      onOpen={() => panneau.ouvrir(mission.project.id)}
+                    />
+                    {lots.map((lot) => (
+                      <MissionRow
+                        key={lot.project.id}
+                        mission={lot}
+                        estLot
+                        onOpen={() => panneau.ouvrir(lot.project.id)}
+                      />
+                    ))}
+                  </Fragment>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
 
         {ecran.activites.length > 0 && (
           <section className="mt-8">
@@ -89,10 +125,10 @@ export function ProjectsPage() {
             <ul className="flex flex-wrap gap-2">
               {ecran.activites.map((activite) => (
                 <li
-                  key={activite.id}
+                  key={activite.project.id}
                   className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm"
                 >
-                  {activite.label}
+                  {activite.project.label}
                 </li>
               ))}
             </ul>
@@ -122,6 +158,6 @@ export function ProjectsPage() {
           onMissionChanged={ecran.refresh}
         />
       )}
-    </main>
+    </PageLayout>
   );
 }

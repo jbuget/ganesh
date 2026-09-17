@@ -83,6 +83,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     PostUpdateRequest,
     ProjectDetailResponse,
     ProjectLinkResponse,
+    ProjectListItemResponse,
     ProjectResponse,
     ProjectUpdateResponse,
     UpdateDescriptionRequest,
@@ -115,12 +116,14 @@ from src.modules.users.domain.entities.user import User
 router = APIRouter(prefix="/projects", tags=["projects"])
 
 
-@router.get("", response_model=list[ProjectResponse], operation_id="listProjects")
+@router.get(
+    "", response_model=list[ProjectListItemResponse], operation_id="listProjects"
+)
 async def list_projects(
     include_inactive: bool = Query(default=False),
     _: User = Depends(get_current_user),
     use_case: ListProjectsUseCase = Depends(get_list_projects_use_case),
-) -> list[ProjectResponse]:
+) -> list[ProjectListItemResponse]:
     """Liste les missions du referentiel."""
     missions = await use_case.execute(include_inactive=include_inactive)
     return [to_listed_project_response(mission) for mission in missions]

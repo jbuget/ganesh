@@ -48,6 +48,7 @@ export * from "./projectContributionResponse";
 export * from "./projectDetailResponse";
 export * from "./projectKind";
 export * from "./projectLinkResponse";
+export * from "./projectListItemResponse";
 export * from "./projectResponse";
 export * from "./projectRole";
 export * from "./projectStatus";

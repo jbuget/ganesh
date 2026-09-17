@@ -10,7 +10,7 @@
 import { useGetMonthGrid } from "@/lib/api/generated/entries/entries";
 import type {
   MonthGridResponse,
-  ProjectResponse,
+  ProjectListItemResponse,
   UserResponse,
 } from "@/lib/api/generated/model";
 import { useListProjects } from "@/lib/api/generated/projects/projects";
@@ -42,10 +42,22 @@ export function useTeammates(includeInactive = false) {
   return { ...query, teammates: successOf<UserResponse[]>(query.data) ?? [] };
 }
 
-/** Le referentiel des missions. */
+/**
+ * Le referentiel des missions, chacune avec qui s'en occupe.
+ *
+ * Les affectations viennent de la meme requete que les missions : le
+ * referentiel les aligne en colonnes, et une requete par ligne les ferait
+ * arriver les unes apres les autres sous les yeux du lecteur.
+ */
 export function useProjects() {
   const query = useListProjects();
-  return { ...query, projects: successOf<ProjectResponse[]>(query.data) ?? [] };
+  const missions = successOf<ProjectListItemResponse[]>(query.data) ?? [];
+  return {
+    ...query,
+    missions,
+    /** Les seules missions, pour les ecrans qui ignorent les affectations. */
+    projects: missions.map((mission) => mission.project),
+  };
 }
 
 /** La matrice d'un mois, pour un collaborateur donne. */

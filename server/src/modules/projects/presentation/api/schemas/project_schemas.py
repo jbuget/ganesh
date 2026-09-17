@@ -49,6 +49,16 @@ class ProjectResponse(BaseModel):
     is_deletable: bool
 
 
+class ProjectListItemResponse(BaseModel):
+    """Une mission du referentiel, avec qui s'en occupe."""
+
+    project: ProjectResponse
+    referents: list["BoardMemberResponse"]
+    intervenants: list["BoardMemberResponse"]
+    #: Jours declares, previsionnel exclu.
+    realise_j: float
+
+
 class UpdateProjectRequest(BaseModel):
     """Modification partielle : seuls les champs fournis sont appliques."""
 

@@ -73,6 +73,17 @@ describe("BoardColumn", () => {
     expect(pastille).toHaveAttribute("aria-hidden");
   });
 
+  it("garde son intitulé hors de la liste qui défile", () => {
+    // Chaque colonne defile pour elle-meme : son titre doit rester en
+    // vis-a-vis de celui des autres, quelle que soit sa pile de cartes.
+    afficher([carte(1, "Portail bailleurs")]);
+
+    const defilante = screen.getByRole("list");
+
+    expect(defilante).toHaveClass("overflow-y-auto");
+    expect(defilante).not.toContainElement(screen.getByRole("heading", { level: 2 }));
+  });
+
   it("n'affiche l'invite que sur une phase vide", () => {
     afficher([carte(1, "Portail bailleurs")]);
 
