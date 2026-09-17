@@ -93,6 +93,8 @@ export function ProjectPanel({
               enregistrerDescription={fiche.enregistrerDescription}
               changerPhase={fiche.changerPhase}
               changerCaracteristiques={fiche.changerCaracteristiques}
+              ajouterLien={fiche.ajouterLien}
+              retirerLien={fiche.retirerLien}
             />
           )}
         </div>

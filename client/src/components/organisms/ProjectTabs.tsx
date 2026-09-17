@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
   Department,
+  LinkIcon,
   ProjectCategory,
   ProjectDetailResponse,
   ProjectStatus,
@@ -28,6 +29,8 @@ interface ProjectTabsProps {
     categorie?: ProjectCategory | null;
     estime_j?: number | null;
   }) => Promise<void>;
+  ajouterLien: (label: string, url: string, icone: LinkIcon | null) => Promise<void>;
+  retirerLien: (linkId: number) => Promise<void>;
 }
 
 /** Ce qui reste a construire, annonce plutot que laisse vide. */
@@ -49,6 +52,8 @@ export function ProjectTabs({
   enregistrerDescription,
   changerPhase,
   changerCaracteristiques,
+  ajouterLien,
+  retirerLien,
 }: ProjectTabsProps) {
   // Fige l'heure de reference le temps de la consultation : « il y a 3 min »
   // ne doit pas se recalculer a chaque rendu, et le fil n'est de toute facon
@@ -74,6 +79,8 @@ export function ProjectTabs({
           enregistrerFiche={enregistrerFiche}
           changerPhase={changerPhase}
           changerCaracteristiques={changerCaracteristiques}
+          ajouterLien={ajouterLien}
+          retirerLien={retirerLien}
         />
       </TabsContent>
 

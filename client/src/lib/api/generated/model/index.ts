@@ -33,6 +33,7 @@ export * from "./importLineRequest";
 export * from "./importProjectsRequest";
 export * from "./importReportResponse";
 export * from "./lastUpdateResponse";
+export * from "./linkIcon";
 export * from "./listProjectsApiV1ProjectsGetParams";
 export * from "./listProjectsParams";
 export * from "./listUsersApiV1UsersGetParams";

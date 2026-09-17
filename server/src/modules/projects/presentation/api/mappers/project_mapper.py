@@ -120,7 +120,9 @@ def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
         project=to_project_response(detail.project),
         departements=detail.departements,
         liens=[
-            ProjectLinkResponse(id=lien.id, label=lien.label, url=lien.url)
+            ProjectLinkResponse(
+                id=lien.id, label=lien.label, url=lien.url, icone=lien.icone
+            )
             for lien in detail.liens
             if lien.id is not None
         ],

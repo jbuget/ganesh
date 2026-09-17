@@ -399,11 +399,14 @@ async def add_project_link(
             project_id=project_id,
             label=payload.label,
             url=payload.url,
+            icone=payload.icone,
         )
     )
     await session.commit()
     assert lien.id is not None
-    return ProjectLinkResponse(id=lien.id, label=lien.label, url=lien.url)
+    return ProjectLinkResponse(
+        id=lien.id, label=lien.label, url=lien.url, icone=lien.icone
+    )
 
 
 @router.delete(

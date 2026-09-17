@@ -55,14 +55,21 @@ class SqlProjectDetailRepository(ProjectDetailRepository):
         )
         return [
             ProjectLink(
-                id=row.id, project_id=row.project_id, label=row.label, url=row.url
+                id=row.id,
+                project_id=row.project_id,
+                label=row.label,
+                url=row.url,
+                icone=row.icone,
             )
             for row in result.scalars().all()
         ]
 
     async def add_link(self, link: ProjectLink) -> ProjectLink:
         model = ProjectLinkModel(
-            project_id=link.project_id, label=link.label, url=link.url
+            project_id=link.project_id,
+            label=link.label,
+            url=link.url,
+            icone=link.icone,
         )
         self._session.add(model)
         await self._session.flush()

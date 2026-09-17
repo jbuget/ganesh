@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
 from src.modules.projects.domain.entities.project import Department, ProjectStatus
+from src.modules.projects.domain.entities.project_link import LinkIcon
 
 
 class ProjectDepartmentModel(Base):
@@ -34,6 +35,10 @@ class ProjectLinkModel(Base):
     )
     label: Mapped[str] = mapped_column(String(255))
     url: Mapped[str] = mapped_column(String(2048))
+    icone: Mapped[LinkIcon] = mapped_column(
+        Enum(LinkIcon, name="link_icon", native_enum=False, length=32),
+        server_default=LinkIcon.LIEN.name,
+    )
 
 
 class ProjectPhaseReachedModel(Base):

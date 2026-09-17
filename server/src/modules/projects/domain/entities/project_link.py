@@ -1,6 +1,7 @@
 """Lien utile attache a une mission."""
 
 from dataclasses import dataclass
+from enum import StrEnum
 
 from src.shared.exceptions.domain_exceptions import ValidationError
 
@@ -9,14 +10,34 @@ from src.shared.exceptions.domain_exceptions import ValidationError
 SCHEMAS_AUTORISES = ("http://", "https://")
 
 
+class LinkIcon(StrEnum):
+    """Famille de lien, annoncee par une icone.
+
+    Le catalogue est ferme et nomme des usages, non des outils : le jour ou
+    l'equipe quitte Figma pour autre chose, `MAQUETTE` reste juste.
+    """
+
+    LIEN = "lien"
+    DEPOT = "depot"
+    MAQUETTE = "maquette"
+    DOCUMENT = "document"
+    TABLEUR = "tableur"
+    PRESENTATION = "presentation"
+    DOSSIER = "dossier"
+    DISCUSSION = "discussion"
+    TICKET = "ticket"
+    VIDEO = "video"
+
+
 @dataclass
 class ProjectLink:
-    """Une adresse utile et son intitule."""
+    """Une adresse utile, son intitule et l'icone qui l'annonce."""
 
     id: int | None
     project_id: int
     label: str
     url: str
+    icone: LinkIcon = LinkIcon.LIEN
 
     def __post_init__(self) -> None:
         self.url = self.url.strip()
@@ -27,3 +48,10 @@ class ProjectLink:
 
         # Coller une adresse suffit : la nommer reste facultatif.
         self.label = self.label.strip() or self.url
+
+        # L'ecran doit savoir dessiner ce qu'il recoit : hors du catalogue,
+        # l'icone est refusee plutot que remplacee en silence.
+        try:
+            self.icone = LinkIcon(self.icone)
+        except ValueError as erreur:
+            raise ValidationError(f"Icone inconnue : {self.icone}.") from erreur
