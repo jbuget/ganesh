@@ -34,6 +34,7 @@ import type {
   PostUpdateRequest,
   ProjectDetailResponse,
   ProjectLinkResponse,
+  ProjectListItemResponse,
   ProjectResponse,
   ProjectUpdateResponse,
   UnassignMemberParams,
@@ -65,7 +66,7 @@ const withQueryKey = <T extends object, K>(
 };
 
 export type listProjectsResponse200 = {
-  data: ProjectResponse[];
+  data: ProjectListItemResponse[];
   status: 200;
 };
 

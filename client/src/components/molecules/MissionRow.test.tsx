@@ -1,0 +1,121 @@
+import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+
+import { MissionRow } from "./MissionRow";
+import type { ProjectListItemResponse } from "@/lib/api/generated/model";
+
+const membre = (id: number, nom: string) => ({
+  id,
+  display_name: nom,
+  initiales: nom.slice(0, 2).toUpperCase(),
+});
+
+const mission = (champs: Record<string, unknown> = {}): ProjectListItemResponse =>
+  ({
+    project: {
+      id: 1,
+      label: "Portail",
+      kind: "projet",
+      statut: "realisation",
+      categorie: "automatiser_fluidifier",
+      estime_j: 12,
+      parent_id: null,
+      actif: true,
+      ...champs,
+    },
+    referents: [],
+    intervenants: [],
+    realise_j: 0,
+  }) as unknown as ProjectListItemResponse;
+
+function ligne(contenu: React.ReactNode) {
+  return render(
+    <table>
+      <tbody>{contenu}</tbody>
+    </table>,
+  );
+}
+
+describe("MissionRow", () => {
+  it("affiche la phase, la catégorie et l'estimé", () => {
+    ligne(<MissionRow mission={mission()} onOpen={() => {}} />);
+
+    expect(screen.getByText("Réalisation")).toBeInTheDocument();
+    expect(screen.getByText("Automatiser & fluidifier")).toBeInTheDocument();
+    expect(screen.getByText("12 jrs.")).toBeInTheDocument();
+  });
+
+  it("montre le réalisé à côté de l'estimé", () => {
+    const consommee = {
+      ...mission(),
+      realise_j: 4.5,
+    } as ProjectListItemResponse;
+
+    ligne(<MissionRow mission={consommee} onOpen={() => {}} />);
+
+    expect(screen.getByText("4.5 jrs.")).toBeInTheDocument();
+  });
+
+  it("laisse le réalisé vide tant que rien n'est déclaré", () => {
+    ligne(<MissionRow mission={mission()} onOpen={() => {}} />);
+
+    expect(screen.getAllByText(/jrs\./)).toHaveLength(1);
+  });
+
+  it("ouvre la mission au clic sur son nom", () => {
+    const ouvrir = vi.fn();
+    ligne(<MissionRow mission={mission()} onOpen={ouvrir} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Portail" }));
+
+    expect(ouvrir).toHaveBeenCalledTimes(1);
+  });
+
+  it("distingue les référents des intervenants", () => {
+    const avecMonde = {
+      ...mission(),
+      referents: [membre(1, "Léa Chen")],
+      intervenants: [membre(2, "Nino Garo")],
+    } as ProjectListItemResponse;
+
+    ligne(<MissionRow mission={avecMonde} onOpen={() => {}} />);
+
+    expect(screen.getByText("LÉ")).toBeInTheDocument();
+    expect(screen.getByText("NI")).toBeInTheDocument();
+  });
+
+  it("laisse les colonnes vides plutôt que d'inventer une valeur", () => {
+    ligne(
+      <MissionRow
+        mission={mission({ categorie: null, estime_j: null })}
+        onOpen={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText(/jrs\./)).not.toBeInTheDocument();
+    expect(screen.getByText("Réalisation")).toBeInTheDocument();
+  });
+
+  it("rattache visuellement un sous-projet à son parent", () => {
+    ligne(<MissionRow mission={mission()} estLot onOpen={() => {}} />);
+
+    expect(screen.getByText("\u2514")).toBeInTheDocument();
+  });
+
+  it("ne marque pas un projet de premier niveau", () => {
+    ligne(<MissionRow mission={mission()} onOpen={() => {}} />);
+
+    expect(screen.queryByText("\u2514")).not.toBeInTheDocument();
+  });
+
+  it("annonce une activité hors projet, qui n'a pas de phase", () => {
+    ligne(
+      <MissionRow
+        mission={mission({ kind: "hors_projet", statut: null, estime_j: null })}
+        onOpen={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText("Réalisation")).not.toBeInTheDocument();
+  });
+});

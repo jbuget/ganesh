@@ -145,6 +145,16 @@ class InMemoryEntryRepository(EntryRepository):
             comptes[entry.project_id] = comptes.get(entry.project_id, 0) + 1
         return comptes
 
+    async def sum_realised_by_project(self, today: date) -> dict[int, float]:
+        totaux: dict[int, float] = {}
+        for entry in self._entries:
+            if entry.is_forecast(today):
+                continue
+            totaux[entry.project_id] = round(
+                totaux.get(entry.project_id, 0.0) + float(entry.valeur), 2
+            )
+        return totaux
+
     async def upsert(self, entry: Entry) -> Entry:
         existing = await self.get(entry.user_id, entry.project_id, entry.jour)
         if existing is not None:

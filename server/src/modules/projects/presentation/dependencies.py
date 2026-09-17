@@ -115,8 +115,12 @@ def get_change_status_use_case(
 def get_list_projects_use_case(
     projects: ProjectRepository = Depends(get_project_repository),
     entries: EntryRepository = Depends(get_entry_repository),
+    assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
+    users: UserRepository = Depends(get_user_repository),
 ) -> ListProjectsUseCase:
-    return ListProjectsUseCase(projects=projects, entries=entries)
+    return ListProjectsUseCase(
+        projects=projects, entries=entries, assignees=assignees, users=users
+    )
 
 
 def get_delete_project_use_case(

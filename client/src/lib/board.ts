@@ -22,6 +22,19 @@ export function pastillePhase(statut: ProjectStatus): string {
   return PHASES_PAR_STATUT.get(statut)?.pastille ?? "bg-slate-300";
 }
 
+const RANGS_PHASES = new Map(PHASES.map((phase, rang) => [phase.statut, rang]));
+
+/**
+ * Rang d'une phase dans le cycle de vie.
+ *
+ * Donne aux listes le meme ordre que les colonnes du kanban : on retrouve une
+ * mission au meme endroit relatif, quel que soit l'ecran. Ce qui ne porte pas
+ * de phase ferme la marche plutot que d'ouvrir le bal.
+ */
+export function rangPhase(statut: ProjectStatus | null | undefined): number {
+  return statut ? (RANGS_PHASES.get(statut) ?? PHASES.length) : PHASES.length;
+}
+
 const LIBELLES_PHASES = new Map(PHASES.map((p) => [p.statut, p.libelle]));
 
 export function libellePhase(statut: ProjectStatus): string {

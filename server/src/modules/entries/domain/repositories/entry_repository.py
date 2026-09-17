@@ -27,6 +27,15 @@ class EntryRepository(ABC):
         ...
 
     @abstractmethod
+    async def sum_realised_by_project(self, today: date) -> dict[int, float]:
+        """Jours realises par mission : le previsionnel n'y entre pas.
+
+        Somme lue en une fois : le referentiel aligne des dizaines de missions,
+        et une requete par ligne les ferait arriver l'une apres l'autre.
+        """
+        ...
+
+    @abstractmethod
     async def upsert(self, entry: Entry) -> Entry: ...
 
     @abstractmethod

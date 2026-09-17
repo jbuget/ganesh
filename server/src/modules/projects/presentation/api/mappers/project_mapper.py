@@ -17,6 +17,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     ProjectContributionResponse,
     ProjectDetailResponse,
     ProjectLinkResponse,
+    ProjectListItemResponse,
     ProjectResponse,
     ProjectUpdateResponse,
 )
@@ -48,8 +49,23 @@ def to_project_response(
     )
 
 
-def to_listed_project_response(listed: ListedProject) -> ProjectResponse:
-    return to_project_response(listed.project, is_deletable=listed.is_deletable)
+def en_pastille(user: User) -> BoardMemberResponse:
+    """Un collaborateur reduit a ce qu'une pastille affiche."""
+    assert user.id is not None
+    return BoardMemberResponse(
+        id=user.id,
+        display_name=user.display_name,
+        initiales=initiales(user.display_name),
+    )
+
+
+def to_listed_project_response(listed: ListedProject) -> ProjectListItemResponse:
+    return ProjectListItemResponse(
+        project=to_project_response(listed.project, is_deletable=listed.is_deletable),
+        referents=[en_pastille(u) for u in listed.referents],
+        intervenants=[en_pastille(u) for u in listed.intervenants],
+        realise_j=listed.realise_j,
+    )
 
 
 def to_board_response(board: Board) -> BoardResponse:
@@ -88,14 +104,6 @@ def to_board_response(board: Board) -> BoardResponse:
 
 
 def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
-    def en_pastille(user: User) -> BoardMemberResponse:
-        assert user.id is not None
-        return BoardMemberResponse(
-            id=user.id,
-            display_name=user.display_name,
-            initiales=initiales(user.display_name),
-        )
-
     return ProjectDetailResponse(
         project=to_project_response(detail.project),
         departements=detail.departements,
