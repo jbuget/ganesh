@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import { ProjectCard } from "./ProjectCard";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
@@ -91,5 +91,52 @@ describe("ProjectCard", () => {
     expect(screen.getByText("3/20 jrs. estimés").className).not.toContain(
       "text-red-700",
     );
+  });
+});
+
+describe("ouverture de la mission", () => {
+  it("ouvre la mission au clic n'importe où sur la carte", () => {
+    const onOpen = vi.fn();
+    render(<ProjectCard carte={carte()} onOpen={onOpen} />);
+
+    fireEvent.click(screen.getByText("5/20 jrs. estimés"));
+
+    expect(onOpen).toHaveBeenCalledWith(1);
+  });
+
+  it("ouvre aussi depuis le titre, atteignable au clavier", () => {
+    const onOpen = vi.fn();
+    render(<ProjectCard carte={carte()} onOpen={onOpen} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Portail bailleurs" }));
+
+    expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it("laisse leur clic aux contrôles que la carte porte", () => {
+    // La poignee de glissement et les pastilles d'intervenants ne doivent pas
+    // ouvrir la mission sous le doigt de celui qui les visait.
+    const onOpen = vi.fn();
+    render(
+      <ProjectCard
+        carte={carte()}
+        onOpen={onOpen}
+        poignee={<button aria-label="Déplacer">glisser</button>}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Déplacer" }));
+
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it("n'ouvre rien quand la carte suit le curseur", () => {
+    // La copie qui suit la souris represente un geste en cours, pas une cible.
+    const onOpen = vi.fn();
+    render(<ProjectCard carte={carte()} onOpen={onOpen} enDeplacement />);
+
+    fireEvent.click(screen.getByText("5/20 jrs. estimés"));
+
+    expect(onOpen).not.toHaveBeenCalled();
   });
 });

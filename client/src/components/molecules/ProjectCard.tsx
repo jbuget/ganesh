@@ -41,8 +41,17 @@ export function ProjectCard({
 
   return (
     <article
+      // Toute la carte ouvre la mission, et non son seul titre : c'est la carte
+      // qu'on vise du regard. Les controles qu'elle porte — poignee, pastilles
+      // d'intervenants — gardent leur clic, d'ou le filtre sur les boutons.
+      onClick={(event) => {
+        if (!onOpen || enDeplacement) return;
+        if ((event.target as HTMLElement).closest("button")) return;
+        onOpen(project.id);
+      }}
       className={[
         "group rounded-lg border bg-white p-3 shadow-xs transition-shadow",
+        onOpen && !enDeplacement ? "cursor-pointer" : "",
         enDeplacement
           ? "border-sky-400 shadow-lg"
           : "border-slate-300 hover:border-slate-500 hover:shadow-sm",
