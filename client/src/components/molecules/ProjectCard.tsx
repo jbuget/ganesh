@@ -8,10 +8,8 @@ import {
 } from "lucide-react";
 
 import { CardCounter } from "@/components/atoms/CardCounter";
-import { CategoryMark } from "@/components/atoms/CategoryMark";
 import { IntervenantsPicker } from "@/components/atoms/IntervenantsPicker";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
-import { PriorityMark } from "@/components/atoms/PriorityMark";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 import { avancement } from "@/lib/board";
 import { formatJoursDecimal } from "@/lib/dates";
@@ -130,13 +128,6 @@ export function ProjectCard({
           Archivée
         </span>
       )}
-
-      {/* Urgence et axe se lisent l'un sous l'autre, en texte ordinaire : le
-          titre de la mission reste ce que la carte dit en premier. */}
-      <div className="mt-2 space-y-1 text-xs">
-        <PriorityMark valeur={project.priorite} />
-        <CategoryMark valeur={project.categorie} />
-      </div>
 
       <p className={`mt-2.5 text-xs tabular-nums ${TEINTES[etat]}`}>
         {project.estime_j

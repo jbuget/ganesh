@@ -101,16 +101,10 @@ export function MissionFilters({
 
       <FilterSelect
         libelle="Priorité"
-        options={PRIORITES.map(({ valeur, libelle, icone: Icone, couleur, trait }) => ({
+        options={PRIORITES.map(({ valeur, libelle, icone: Icone, couleur }) => ({
           valeur,
           libelle,
-          vignette: (
-            <Icone
-              className={`size-4 shrink-0 ${couleur}`}
-              strokeWidth={trait}
-              aria-hidden
-            />
-          ),
+          vignette: <Icone className={`size-4 shrink-0 ${couleur}`} aria-hidden />,
         }))}
         valeurs={filtres.priorites}
         onChange={(valeurs) => onChange({ priorites: valeurs as ProjectPriority[] })}

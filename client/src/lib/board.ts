@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronsUp, Minus, OctagonAlert } from "lucide-react";
+import { Signal, SignalHigh, SignalLow, SignalMedium } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import type {
@@ -96,30 +96,27 @@ export function categorie(valeur: ProjectCategory | null | undefined) {
  * par phase, une par urgence, une par axe — faisaient crier les deux colonnes
  * les moins structurantes plus fort que le nom de la mission.
  *
- * Chaque niveau porte une forme distincte, et pas seulement une teinte :
- * l'echelle reste lisible sans la couleur, pour qui ne la distingue pas ou
- * n'en dispose pas.
+ * L'echelle se lit au remplissage — quatre barres, puis trois, deux, une —
+ * et pas seulement a la teinte : elle reste donc lisible pour qui ne distingue
+ * pas les couleurs, ou n'en dispose pas.
  */
 export const PRIORITES: {
   valeur: ProjectPriority;
   libelle: string;
   icone: LucideIcon;
   couleur: string;
-  /** Epaisseur du trait, quand le dessin doit peser plus que sa teinte. */
-  trait?: number;
 }[] = [
+  { valeur: "critique", libelle: "Critique", icone: Signal, couleur: "text-red-600" },
+  { valeur: "haute", libelle: "Haute", icone: SignalHigh, couleur: "text-orange-500" },
   {
-    valeur: "critique",
-    libelle: "Critique",
-    icone: OctagonAlert,
-    couleur: "text-slate-900",
-    // Le noir se fait plus discret que le rouge a trait egal : sans ce
-    // renfort, le niveau le plus fort pesait moins que celui d'en dessous.
-    trait: 2.5,
+    valeur: "normale",
+    libelle: "Normale",
+    icone: SignalMedium,
+    couleur: "text-amber-500",
   },
-  { valeur: "haute", libelle: "Haute", icone: ChevronsUp, couleur: "text-red-600" },
-  { valeur: "normale", libelle: "Normale", icone: Minus, couleur: "text-orange-500" },
-  { valeur: "basse", libelle: "Basse", icone: ChevronDown, couleur: "text-amber-500" },
+  // Une priorite basse n'a pas a attirer le regard : le gris la fait reculer,
+  // et l'oeil ne retient que ce qui demande une decision.
+  { valeur: "basse", libelle: "Basse", icone: SignalLow, couleur: "text-slate-400" },
 ];
 
 const PRIORITES_PAR_VALEUR = new Map(PRIORITES.map((p) => [p.valeur, p]));

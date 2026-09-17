@@ -38,12 +38,6 @@ describe("ProjectCard", () => {
     expect(screen.getByRole("heading")).toHaveTextContent("Portail bailleurs");
   });
 
-  it("affiche l'axe stratégique", () => {
-    render(<ProjectCard carte={carte()} />);
-
-    expect(screen.getByText("Innover & différencier")).toBeInTheDocument();
-  });
-
   it("compare le consommé à l'estimé", () => {
     render(<ProjectCard carte={carte()} />);
 
@@ -97,19 +91,15 @@ describe("ProjectCard", () => {
   });
 });
 
-describe("priorité", () => {
-  it("porte l'urgence déclarée, en toutes lettres", () => {
+describe("ce que la carte ne dit pas", () => {
+  // Le tableau sert a piloter : ou en est une mission, ce qu'elle a coute, qui
+  // s'en occupe. L'urgence et l'axe strategique se lisent dans la fiche et
+  // dans le referentiel, qui sont faits pour comparer.
+  it("laisse l'urgence et l'axe hors de la carte", () => {
     render(<ProjectCard carte={carte({ project: { priorite: "critique" } })} />);
 
-    expect(screen.getByText("Critique")).toBeInTheDocument();
-  });
-
-  it("ne montre rien quand la mission n'est pas située", () => {
-    render(<ProjectCard carte={carte({ project: { priorite: null } })} />);
-
-    ["Critique", "Haute", "Normale", "Basse"].forEach((urgence) => {
-      expect(screen.queryByText(urgence)).toBeNull();
-    });
+    expect(screen.queryByText("Critique")).toBeNull();
+    expect(screen.queryByText("Innover & différencier")).toBeNull();
   });
 });
 

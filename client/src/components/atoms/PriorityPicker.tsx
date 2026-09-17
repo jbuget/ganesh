@@ -27,7 +27,6 @@ export function PriorityPicker({ valeur, onChange }: PriorityPickerProps) {
           <span className="flex items-center gap-1.5 text-sm text-slate-700">
             <urgence.icone
               className={`size-4 shrink-0 ${urgence.couleur}`}
-              strokeWidth={urgence.trait}
               aria-hidden
             />
             {urgence.libelle}
@@ -57,7 +56,6 @@ export function PriorityPicker({ valeur, onChange }: PriorityPickerProps) {
               >
                 <choix.icone
                   className={`size-4 shrink-0 ${choix.couleur}`}
-                  strokeWidth={choix.trait}
                   aria-hidden
                 />
                 <span className="min-w-0 flex-1 truncate">{choix.libelle}</span>
