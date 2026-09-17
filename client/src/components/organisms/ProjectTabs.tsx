@@ -6,7 +6,12 @@ import { ProjectUpdatesTab } from "@/components/organisms/ProjectUpdatesTab";
 import { useState } from "react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Department, ProjectDetailResponse } from "@/lib/api/generated/model";
+import type {
+  Department,
+  ProjectCategory,
+  ProjectDetailResponse,
+  ProjectStatus,
+} from "@/lib/api/generated/model";
 
 interface ProjectTabsProps {
   detail: ProjectDetailResponse;
@@ -16,6 +21,11 @@ interface ProjectTabsProps {
     contactsMetier: string | null,
   ) => Promise<void>;
   enregistrerDescription: (texte: string) => Promise<void>;
+  changerPhase: (statut: ProjectStatus) => Promise<void>;
+  changerCaracteristiques: (champs: {
+    categorie?: ProjectCategory | null;
+    estime_j?: number | null;
+  }) => Promise<void>;
 }
 
 /** Ce qui reste a construire, annonce plutot que laisse vide. */
@@ -34,6 +44,8 @@ export function ProjectTabs({
   onChange,
   enregistrerFiche,
   enregistrerDescription,
+  changerPhase,
+  changerCaracteristiques,
 }: ProjectTabsProps) {
   // Fige l'heure de reference le temps de la consultation : « il y a 3 min »
   // ne doit pas se recalculer a chaque rendu, et le fil n'est de toute facon
@@ -54,6 +66,8 @@ export function ProjectTabs({
           detail={detail}
           onChange={onChange}
           enregistrerFiche={enregistrerFiche}
+          changerPhase={changerPhase}
+          changerCaracteristiques={changerCaracteristiques}
         />
       </TabsContent>
 

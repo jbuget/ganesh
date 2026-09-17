@@ -129,6 +129,7 @@ export function BoardPage() {
           key={panneau.missionOuverte}
           projectId={panneau.missionOuverte}
           onClose={panneau.fermer}
+          onMissionChanged={board.recharger}
         />
       )}
     </main>

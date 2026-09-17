@@ -75,6 +75,8 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
         onChange={fiche.recharger}
         enregistrerFiche={fiche.enregistrerFiche}
         enregistrerDescription={fiche.enregistrerDescription}
+        changerPhase={fiche.changerPhase}
+        changerCaracteristiques={fiche.changerCaracteristiques}
       />
     </main>
   );

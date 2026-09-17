@@ -10,6 +10,8 @@ import { useProjectDetail } from "@/lib/use-project-detail";
 interface ProjectPanelProps {
   projectId: number;
   onClose: () => void;
+  /** Previent le tableau : une phase changee ici y deplace une carte. */
+  onMissionChanged: () => void | Promise<void>;
 }
 
 /**
@@ -19,8 +21,12 @@ interface ProjectPanelProps {
  * perdre de vue la colonne d'ou elle vient, ni l'endroit ou on comptait la
  * deposer ensuite.
  */
-export function ProjectPanel({ projectId, onClose }: ProjectPanelProps) {
-  const fiche = useProjectDetail(projectId);
+export function ProjectPanel({
+  projectId,
+  onClose,
+  onMissionChanged,
+}: ProjectPanelProps) {
+  const fiche = useProjectDetail(projectId, onMissionChanged);
   const detail = fiche.detail;
 
   useEffect(() => {
@@ -81,6 +87,8 @@ export function ProjectPanel({ projectId, onClose }: ProjectPanelProps) {
               onChange={fiche.recharger}
               enregistrerFiche={fiche.enregistrerFiche}
               enregistrerDescription={fiche.enregistrerDescription}
+              changerPhase={fiche.changerPhase}
+              changerCaracteristiques={fiche.changerCaracteristiques}
             />
           )}
         </div>

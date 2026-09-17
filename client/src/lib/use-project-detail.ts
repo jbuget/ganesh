@@ -2,11 +2,18 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import type { Department, ProjectDetailResponse } from "@/lib/api/generated/model";
+import type {
+  Department,
+  ProjectCategory,
+  ProjectDetailResponse,
+  ProjectStatus,
+} from "@/lib/api/generated/model";
 import {
   addProjectLink,
+  changeProjectStatus,
   getProjectDetail,
   removeProjectLink,
+  updateProject,
   updateProjectDescription,
   updateProjectDetail,
 } from "@/lib/api/generated/projects/projects";
@@ -18,7 +25,11 @@ import {
  * s'edite champ par champ, sans bouton « Enregistrer », et l'ecran ne doit
  * jamais montrer autre chose que ce qui est en base.
  */
-export function useProjectDetail(projectId: number) {
+export function useProjectDetail(
+  projectId: number,
+  /** Appele apres chaque ecriture : l'ecran d'ou l'on vient peut en dependre. */
+  onEcriture?: () => void | Promise<void>,
+) {
   const [detail, setDetail] = useState<ProjectDetailResponse | null>(null);
   const [introuvable, setIntrouvable] = useState(false);
 
@@ -29,7 +40,8 @@ export function useProjectDetail(projectId: number) {
     } catch {
       setIntrouvable(true);
     }
-  }, [projectId]);
+    await onEcriture?.();
+  }, [projectId, onEcriture]);
 
   useEffect(() => {
     // Le garde evite d'ecrire dans un composant deja demonte, quand on quitte
@@ -57,6 +69,20 @@ export function useProjectDetail(projectId: number) {
         departements,
         contacts_metier: contactsMetier,
       });
+      await recharger();
+    },
+
+    async changerPhase(statut: ProjectStatus) {
+      await changeProjectStatus(projectId, { statut });
+      await recharger();
+    },
+
+    /** Modification partielle : seuls les champs fournis sont appliques. */
+    async changerCaracteristiques(champs: {
+      categorie?: ProjectCategory | null;
+      estime_j?: number | null;
+    }) {
+      await updateProject(projectId, champs);
       await recharger();
     },
 
