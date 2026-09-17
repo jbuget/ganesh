@@ -51,7 +51,7 @@ export function ProjectPanel({
 
       <aside
         aria-label={detail ? detail.project.label : "Mission"}
-        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[34rem] flex-col border-l border-slate-300 bg-white shadow-xl"
+        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[40rem] flex-col border-l border-slate-300 bg-white shadow-xl"
       >
         <header className="flex items-start gap-2 border-b border-slate-200 px-5 py-4">
           <div className="min-w-0 flex-1">
