@@ -127,3 +127,33 @@ describe("offProjectActivities", () => {
     expect(activites.map((a) => a.project.label)).toEqual(["Absences", "Formation"]);
   });
 });
+
+describe("buildProjectTree, rangé sur une colonne", () => {
+  it("applique le tri aux projets", () => {
+    const arbre = buildProjectTree(
+      [
+        mission(1, "Alpha", "projet", null, "exploration"),
+        mission(2, "Bravo", "projet", null, "exploration"),
+      ],
+      { colonne: "projet", sens: "desc" },
+    );
+
+    expect(arbre.map((n) => n.mission.project.label)).toEqual(["Bravo", "Alpha"]);
+  });
+
+  it("garde chaque lot sous son projet", () => {
+    // Trier ne doit jamais remonter un sous-projet au premier niveau : la
+    // liste se range, l'arborescence ne bouge pas.
+    const arbre = buildProjectTree(
+      [
+        mission(1, "Alpha", "projet"),
+        mission(2, "Zoulou", "lot", 1),
+        mission(3, "Delta", "lot", 1),
+      ],
+      { colonne: "projet", sens: "desc" },
+    );
+
+    expect(arbre).toHaveLength(1);
+    expect(arbre[0].lots.map((l) => l.project.label)).toEqual(["Zoulou", "Delta"]);
+  });
+});
