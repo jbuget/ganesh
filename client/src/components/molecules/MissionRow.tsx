@@ -1,10 +1,12 @@
 "use client";
 
+import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 import { categorie, libellePhase, pastillePhase } from "@/lib/board";
+import { depuis } from "@/lib/dates-relatives";
 
 interface MissionRowProps {
   mission: ProjectListItemResponse;
@@ -31,6 +33,21 @@ export function MissionRow({
 }: MissionRowProps) {
   const { project } = mission;
   const axe = categorie(project.categorie);
+  const derniere = mission.derniere_maj;
+
+  // Le dernier message en entier et mis en forme, comme il se lit dans le fil :
+  // un apercu tronque obligerait a ouvrir le panneau pour la fin d'une phrase.
+  const apercu = derniere && (
+    <>
+      <p className="mb-1.5 text-xs text-slate-500">
+        <span className="font-medium text-slate-700">
+          {derniere.author.display_name}
+        </span>{" "}
+        · {depuis(derniere.publiee_le, maintenant)}
+      </p>
+      <MarkdownView texte={derniere.texte} />
+    </>
+  );
 
   return (
     <TableRow onClick={onOpen} className="cursor-pointer">
@@ -65,11 +82,7 @@ export function MissionRow({
           plus loin, on ne saurait plus de quelle ligne il parle. L'icone dit
           deja ce que le nombre compte, d'ou l'en-tete vide. */}
       <TableCell className="w-12 text-right">
-        <UpdatesCounter
-          nombre={mission.commentaires}
-          derniere={mission.derniere_maj}
-          maintenant={maintenant}
-        />
+        <UpdatesCounter nombre={mission.commentaires} apercu={apercu} />
       </TableCell>
 
       <TableCell>

@@ -74,6 +74,45 @@ describe("MissionRow", () => {
     expect(screen.getByLabelText("3 mises à jour")).toHaveTextContent("3");
   });
 
+  it("montre au survol le dernier message, signé, daté et mis en forme", () => {
+    const suivie = {
+      ...mission(),
+      commentaires: 2,
+      derniere_maj: {
+        author: { id: 1, display_name: "Léa Chen", initiales: "LÉ" },
+        texte: "La **recette** commence lundi",
+        publiee_le: "2026-09-17T09:00:00Z",
+      },
+    } as ProjectListItemResponse;
+
+    ligne(<MissionRow mission={suivie} maintenant={MAINTENANT} onOpen={() => {}} />);
+    fireEvent.mouseMove(screen.getByLabelText("2 mises à jour"));
+
+    const infobulle = screen.getByRole("tooltip");
+    expect(infobulle).toHaveTextContent("Léa Chen");
+    expect(infobulle).toHaveTextContent("il y a 3 h");
+    expect(infobulle).toHaveTextContent("La recette commence lundi");
+    expect(infobulle.querySelector("strong")).toHaveTextContent("recette");
+  });
+
+  it("donne le message en entier, sans le tronquer", () => {
+    const long = `${"mot ".repeat(200)}fin`;
+    const suivie = {
+      ...mission(),
+      commentaires: 1,
+      derniere_maj: {
+        author: { id: 1, display_name: "Léa Chen", initiales: "LÉ" },
+        texte: long,
+        publiee_le: "2026-09-17T09:00:00Z",
+      },
+    } as ProjectListItemResponse;
+
+    ligne(<MissionRow mission={suivie} maintenant={MAINTENANT} onOpen={() => {}} />);
+    fireEvent.mouseMove(screen.getByLabelText("1 mise à jour"));
+
+    expect(screen.getByRole("tooltip")).toHaveTextContent("fin");
+  });
+
   it("n'affiche rien tant que le fil est vide", () => {
     ligne(<MissionRow mission={mission()} maintenant={MAINTENANT} onOpen={() => {}} />);
 

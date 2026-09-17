@@ -1,46 +1,36 @@
 "use client";
 
 import { MessageCircle } from "lucide-react";
+import type { ReactNode } from "react";
 
-import type { LastUpdateResponse } from "@/lib/api/generated/model";
-import { apercuMarkdown } from "@/lib/apercu-markdown";
-import { depuis } from "@/lib/dates-relatives";
 import { useTooltipCurseur } from "@/lib/use-tooltip-curseur";
 
 interface UpdatesCounterProps {
   nombre: number;
-  /** La derniere mise a jour encore lisible, s'il en reste une. */
-  derniere: LastUpdateResponse | null;
-  /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
-  maintenant: Date;
+  /**
+   * Ce que montre l'infobulle au survol — le dernier message, mis en forme.
+   *
+   * Il vient du parent et non d'ici : le rendu du markdown est un autre
+   * composant, et un atom n'en compose aucun. Absent, le decompte se montre
+   * sans infobulle.
+   */
+  apercu?: ReactNode;
 }
 
 /**
  * Le fil de suivi d'une mission, en un nombre.
  *
  * Savoir qu'il y a trois messages ne dit pas s'il faut les lire : l'infobulle
- * donne le dernier, signe et date, et cela suffit le plus souvent a s'epargner
- * l'ouverture du panneau. C'est un apercu, pas une lecture — le markdown y est
- * depouille et le texte borne.
+ * donne le dernier en entier, ce qui epargne le plus souvent l'ouverture du
+ * panneau.
  *
  * Une mission sans mise a jour ne montre rien : dans un tableau, seul ce qui
  * se lit s'affiche.
  */
-export function UpdatesCounter({ nombre, derniere, maintenant }: UpdatesCounterProps) {
+export function UpdatesCounter({ nombre, apercu }: UpdatesCounterProps) {
   const { tooltip, suivre, quitter } = useTooltipCurseur({ riche: true });
 
   if (nombre === 0) return null;
-
-  const apercu = derniere && (
-    <>
-      <span className="block font-medium">
-        {derniere.author.display_name} · {depuis(derniere.publiee_le, maintenant)}
-      </span>
-      <span className="mt-1 block text-slate-300">
-        {apercuMarkdown(derniere.texte)}
-      </span>
-    </>
-  );
 
   return (
     <span
