@@ -17,6 +17,15 @@ class ProjectUpdateRepository(ABC):
         ...
 
     @abstractmethod
+    async def count_by_project(self) -> dict[int, int]:
+        """Nombre de mises a jour vivantes de chaque mission.
+
+        Les messages retires n'y comptent pas : le tableau annonce ce qui se
+        lit encore dans le fil.
+        """
+        ...
+
+    @abstractmethod
     async def add(self, update: ProjectUpdate) -> ProjectUpdate: ...
 
     @abstractmethod

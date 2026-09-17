@@ -10,6 +10,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     BoardCardResponse,
     BoardColumnResponse,
     BoardMemberResponse,
+    BoardParentResponse,
     BoardResponse,
     MonthlyShareResponse,
     PhaseReachedResponse,
@@ -68,6 +69,15 @@ def to_board_response(board: Board) -> BoardResponse:
                             )
                             for membre in carte.intervenants
                         ],
+                        commentaires=carte.commentaires,
+                        sous_projets=carte.sous_projets,
+                        parent=(
+                            BoardParentResponse(
+                                id=carte.parent.id or 0, label=carte.parent.label
+                            )
+                            if carte.parent is not None
+                            else None
+                        ),
                     )
                     for carte in colonne.cartes
                 ],

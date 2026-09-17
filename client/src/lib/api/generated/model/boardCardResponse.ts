@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { BoardMemberResponse } from "./boardMemberResponse";
+import type { BoardParentResponse } from "./boardParentResponse";
 import type { ProjectResponse } from "./projectResponse";
 
 /**
@@ -14,4 +15,7 @@ export interface BoardCardResponse {
   project: ProjectResponse;
   consomme_j: number;
   intervenants: BoardMemberResponse[];
+  commentaires: number;
+  sous_projets: number;
+  parent: BoardParentResponse | null;
 }

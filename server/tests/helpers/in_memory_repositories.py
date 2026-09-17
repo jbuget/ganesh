@@ -292,5 +292,13 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
         self._updates.append(update)
         return update
 
+    async def count_by_project(self) -> dict[int, int]:
+        compte: dict[int, int] = {}
+        for maj in self._updates:
+            if maj.est_supprimee:
+                continue
+            compte[maj.project_id] = compte.get(maj.project_id, 0) + 1
+        return compte
+
     async def update(self, update: ProjectUpdate) -> ProjectUpdate:
         return update

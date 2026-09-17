@@ -1,6 +1,6 @@
 """Persistance du fil de suivi d'une mission."""
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
@@ -43,6 +43,17 @@ class SqlProjectUpdateRepository(ProjectUpdateRepository):
             )
         )
         return [_to_entity(model) for model in result.scalars().all()]
+
+    async def count_by_project(self) -> dict[int, int]:
+        result = await self._session.execute(
+            select(
+                ProjectUpdateModel.project_id,
+                func.count(ProjectUpdateModel.id),
+            )
+            .where(ProjectUpdateModel.supprimee_le.is_(None))
+            .group_by(ProjectUpdateModel.project_id)
+        )
+        return dict(result.tuples().all())
 
     async def add(self, update: ProjectUpdate) -> ProjectUpdate:
         model = ProjectUpdateModel(

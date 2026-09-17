@@ -104,12 +104,22 @@ class BoardMemberResponse(BaseModel):
     initiales: str
 
 
+class BoardParentResponse(BaseModel):
+    """Le projet dont un lot releve, tel qu'annonce sur sa carte."""
+
+    id: int
+    label: str
+
+
 class BoardCardResponse(BaseModel):
     """Une carte du tableau de bord."""
 
     project: ProjectResponse
     consomme_j: float
     intervenants: list[BoardMemberResponse]
+    commentaires: int
+    sous_projets: int
+    parent: BoardParentResponse | None
 
 
 class BoardColumnResponse(BaseModel):

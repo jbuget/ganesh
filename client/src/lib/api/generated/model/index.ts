@@ -10,6 +10,7 @@ export * from "./assignMemberParams";
 export * from "./boardCardResponse";
 export * from "./boardColumnResponse";
 export * from "./boardMemberResponse";
+export * from "./boardParentResponse";
 export * from "./boardResponse";
 export * from "./calendarDayResponse";
 export * from "./calendarDaySchema";
