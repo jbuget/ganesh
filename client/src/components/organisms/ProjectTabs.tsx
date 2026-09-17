@@ -53,8 +53,8 @@ export function ProjectTabs({
   const [maintenant] = useState(() => new Date());
 
   return (
-    <Tabs defaultValue="pilotage" className="gap-4">
-      <TabsList>
+    <Tabs defaultValue="pilotage" className="flex min-h-0 flex-1 flex-col gap-4">
+      <TabsList className="shrink-0">
         <TabsTrigger value="pilotage">Pilotage</TabsTrigger>
         <TabsTrigger value="updates">Mises à jour</TabsTrigger>
         <TabsTrigger value="fiche">Fiche service</TabsTrigger>
@@ -75,7 +75,7 @@ export function ProjectTabs({
         <ProjectUpdatesTab projectId={detail.project.id} maintenant={maintenant} />
       </TabsContent>
 
-      <TabsContent value="fiche">
+      <TabsContent value="fiche" className="min-h-0 flex-1">
         <ProjectSheetTab
           description={detail.project.description}
           onSave={enregistrerDescription}

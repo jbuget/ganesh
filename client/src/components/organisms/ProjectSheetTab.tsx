@@ -35,16 +35,16 @@ function Redaction({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="flex h-full min-h-0 flex-col gap-3">
       <RichTextEditor
         valeur={valeur}
         avecTitres
-        hauteur="min-h-72"
+        pleineHauteur
         placeholder="Le problème, la solution, ce que le service couvre…"
         onChange={setTexte}
         onSubmit={() => void enregistrer()}
       />
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <Button size="sm" disabled={enCours} onClick={() => void enregistrer()}>
           Enregistrer
         </Button>

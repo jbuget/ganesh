@@ -38,6 +38,11 @@ interface RichTextEditorProps {
   avecTitres?: boolean;
   /** Hauteur minimale de la zone de saisie, en classes Tailwind. */
   hauteur?: string;
+  /**
+   * Occupe toute la hauteur laissee par le parent, la zone de saisie
+   * defilant seule. Demande une chaine flex continue au-dessus.
+   */
+  pleineHauteur?: boolean;
 }
 
 /** Un bouton de la barre d'outils. */
@@ -91,6 +96,7 @@ export function RichTextEditor({
   onSubmit,
   avecTitres = false,
   hauteur = "min-h-24",
+  pleineHauteur = false,
 }: RichTextEditorProps) {
   const editor = useEditor({
     // Next rend ce composant sur le serveur : laisser ProseMirror s'installer
@@ -106,7 +112,7 @@ export function RichTextEditor({
     content: valeur,
     editorProps: {
       attributes: {
-        class: `prose prose-sm prose-slate max-w-none ${hauteur} px-3 py-2 focus:outline-none`,
+        class: `prose prose-sm prose-slate max-w-none ${pleineHauteur ? "h-full" : hauteur} px-3 py-2 focus:outline-none`,
         "aria-label": placeholder ?? "Rédaction",
       },
       handleKeyDown: (_, event) => {
@@ -125,8 +131,18 @@ export function RichTextEditor({
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-slate-300 bg-white focus-within:border-slate-500">
-      <EditorContent editor={editor} />
+    <div
+      className={[
+        "overflow-hidden rounded-md border border-slate-300 bg-white focus-within:border-slate-500",
+        pleineHauteur ? "flex min-h-0 flex-1 flex-col" : "",
+      ].join(" ")}
+    >
+      <EditorContent
+        editor={editor}
+        // La zone de saisie defile seule : la barre d'outils reste sous les
+        // yeux, meme au bas d'une fiche longue.
+        className={pleineHauteur ? "min-h-0 flex-1 overflow-y-auto" : undefined}
+      />
 
       <div className="flex flex-wrap items-center gap-0.5 border-t border-slate-200 px-1.5 py-1">
         <Outil
