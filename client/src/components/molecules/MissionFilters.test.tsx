@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
-import { BoardFilters } from "./BoardFilters";
-import { AUCUN_FILTRE, type BoardFilters as Criteres } from "@/lib/board-filters";
+import { MissionFilters } from "./MissionFilters";
+import { AUCUN_FILTRE, type MissionFilters as Criteres } from "@/lib/mission-filters";
 
 vi.mock("@/lib/api/queries", () => ({
   useTeammates: () => ({
@@ -15,7 +15,7 @@ const barre = (over: Partial<Criteres> = {}, props: Record<string, unknown> = {}
   const onChange = vi.fn();
   const onEffacer = vi.fn();
   render(
-    <BoardFilters
+    <MissionFilters
       filtres={filtres}
       actif={
         filtres.nom !== "" ||
@@ -36,7 +36,7 @@ const barre = (over: Partial<Criteres> = {}, props: Record<string, unknown> = {}
   return { onChange, onEffacer };
 };
 
-describe("BoardFilters", () => {
+describe("MissionFilters", () => {
   it("propose les cinq critères", () => {
     barre();
 
@@ -119,9 +119,17 @@ describe("BoardFilters", () => {
     expect(onEffacer).toHaveBeenCalledTimes(1);
   });
 
-  it("dit ce qu'on voit sur ce que le tableau porte", () => {
+  it("dit ce qu'on voit sur ce que l'écran porte", () => {
     barre({ phases: ["cadrage"] });
 
-    expect(screen.getByText("3 missions sur 12")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("3 missions sur 12");
+  });
+
+  it("s'annonce comme un groupe de recherche", () => {
+    barre();
+
+    expect(
+      screen.getByRole("search", { name: "Filtrer les missions" }),
+    ).toBeInTheDocument();
   });
 });

@@ -1,8 +1,9 @@
 import type {
-  BoardCardResponse,
+  BoardMemberResponse,
   ProjectCategory,
   ProjectKind,
   ProjectPriority,
+  ProjectResponse,
   ProjectStatus,
 } from "@/lib/api/generated/model";
 import { CATEGORIES, PHASES, PRIORITES } from "@/lib/board";
@@ -16,8 +17,20 @@ import { CATEGORIES, PHASES, PRIORITES } from "@/lib/board";
  */
 export type EtatMission = "active" | "archivee";
 
-/** Ce que l'on demande au tableau de montrer. */
-export interface BoardFilters {
+/**
+ * Tout ce qui se filtre : une mission, et qui s'en occupe.
+ *
+ * La forme suffit a couvrir une carte du kanban comme une ligne du referentiel.
+ * Les deux ecrans posent les memes questions au meme endroit, et une reponse
+ * commune leur evite de diverger.
+ */
+export interface FilterableMission {
+  project: ProjectResponse;
+  intervenants: BoardMemberResponse[];
+}
+
+/** Ce que l'on demande a l'ecran de montrer. */
+export interface MissionFilters {
   nom: string;
   phases: ProjectStatus[];
   categories: ProjectCategory[];
@@ -28,7 +41,7 @@ export interface BoardFilters {
 }
 
 /** Le tableau entier : aucun critere pose. */
-export const AUCUN_FILTRE: BoardFilters = {
+export const AUCUN_FILTRE: MissionFilters = {
   nom: "",
   phases: [],
   categories: [],
@@ -69,7 +82,7 @@ function normaliser(texte: string): string {
     .toLowerCase();
 }
 
-export function filtreActif(filtres: BoardFilters): boolean {
+export function filtreActif(filtres: MissionFilters): boolean {
   return (
     filtres.nom.trim() !== "" ||
     filtres.phases.length > 0 ||
@@ -92,47 +105,47 @@ export function filtreActif(filtres: BoardFilters): boolean {
  * garde ses six phases d'un filtre a l'autre, et l'on continue de lire d'ou
  * viennent les cartes et ou elles vont.
  */
-function retientLaCarte(carte: BoardCardResponse, filtres: BoardFilters): boolean {
+function retenue(mission: FilterableMission, filtres: MissionFilters): boolean {
   const recherche = normaliser(filtres.nom.trim());
-  if (recherche && !normaliser(carte.project.label).includes(recherche)) return false;
+  if (recherche && !normaliser(mission.project.label).includes(recherche)) return false;
 
   if (filtres.phases.length > 0) {
-    const phase = carte.project.statut;
+    const phase = mission.project.statut;
     if (!phase || !filtres.phases.includes(phase)) return false;
   }
 
-  const etat: EtatMission = carte.project.actif ? "active" : "archivee";
+  const etat: EtatMission = mission.project.actif ? "active" : "archivee";
   if (!(filtres.etats.length > 0 ? filtres.etats : ["active"]).includes(etat)) {
     return false;
   }
 
   if (filtres.categories.length > 0) {
-    const axe = carte.project.categorie;
+    const axe = mission.project.categorie;
     if (!axe || !filtres.categories.includes(axe)) return false;
   }
 
   if (filtres.priorites.length > 0) {
-    const urgence = carte.project.priorite;
+    const urgence = mission.project.priorite;
     if (!urgence || !filtres.priorites.includes(urgence)) return false;
   }
 
-  if (filtres.types.length > 0 && !filtres.types.includes(carte.project.kind)) {
+  if (filtres.types.length > 0 && !filtres.types.includes(mission.project.kind)) {
     return false;
   }
 
   if (filtres.intervenants.length > 0) {
-    const porteurs = carte.intervenants.map((membre) => membre.id);
+    const porteurs = mission.intervenants.map((membre) => membre.id);
     if (!filtres.intervenants.some((id) => porteurs.includes(id))) return false;
   }
 
   return true;
 }
 
-export function filtrerCartes(
-  cartes: BoardCardResponse[],
-  filtres: BoardFilters,
-): BoardCardResponse[] {
-  return cartes.filter((carte) => retientLaCarte(carte, filtres));
+export function filtrerMissions<T extends FilterableMission>(
+  missions: T[],
+  filtres: MissionFilters,
+): T[] {
+  return missions.filter((mission) => retenue(mission, filtres));
 }
 
 /**
@@ -141,7 +154,7 @@ export function filtrerCartes(
  * Elles ne voyagent que sur demande : les charger pour les masquer aussitot
  * ferait payer a chaque ouverture du tableau ce dont on se sert rarement.
  */
-export function inclutLesArchivees(filtres: BoardFilters): boolean {
+export function inclutLesArchivees(filtres: MissionFilters): boolean {
   return filtres.etats.includes("archivee");
 }
 
@@ -176,7 +189,7 @@ function valeursConnues<T extends string>(
  * Une valeur inconnue est ignoree : une adresse mal recopiee doit montrer le
  * tableau, pas un ecran vide sans explication.
  */
-export function lireFiltres(params: URLSearchParams): BoardFilters {
+export function lireFiltres(params: URLSearchParams): MissionFilters {
   return {
     nom: params.get(PARAMETRES.nom) ?? "",
     phases: valeursConnues<ProjectStatus>(params, PARAMETRES.phase, PHASES_CONNUES),
@@ -200,7 +213,7 @@ export function lireFiltres(params: URLSearchParams): BoardFilters {
 }
 
 /** Reporte les filtres dans l'URL, sans toucher aux autres parametres. */
-export function ecrireFiltres(params: URLSearchParams, filtres: BoardFilters): void {
+export function ecrireFiltres(params: URLSearchParams, filtres: MissionFilters): void {
   Object.values(PARAMETRES).forEach((nom) => params.delete(nom));
 
   if (filtres.nom.trim()) params.set(PARAMETRES.nom, filtres.nom.trim());

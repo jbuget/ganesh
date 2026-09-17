@@ -15,40 +15,46 @@ import { CATEGORIES, PHASES, PRIORITES } from "@/lib/board";
 import {
   ETATS_DE_MISSION,
   TYPES_DE_MISSION,
-  type BoardFilters as Criteres,
+  type MissionFilters as Criteres,
   type EtatMission,
-} from "@/lib/board-filters";
+} from "@/lib/mission-filters";
 
-interface BoardFiltersProps {
+interface MissionFiltersProps {
   filtres: Criteres;
   actif: boolean;
   onChange: (changement: Partial<Criteres>) => void;
   onEffacer: () => void;
-  /** Cartes affichees, et cartes que porte le tableau entier. */
+  /** Missions affichees, et missions que l'ecran porte en tout. */
   visibles: number;
   total: number;
 }
 
 /**
- * La barre de filtres du tableau.
+ * La barre de filtres d'un ecran de missions.
  *
  * Un critere vide ne retranche rien : la barre part donc du tableau entier, et
  * chaque choix le reduit. Le decompte a droite dit toujours ce qu'on voit sur
  * ce que l'on pourrait voir, pour qu'un ecran presque vide s'explique de
  * lui-meme.
  */
-export function BoardFilters({
+export function MissionFilters({
   filtres,
   actif,
   onChange,
   onEffacer,
   visibles,
   total,
-}: BoardFiltersProps) {
+}: MissionFiltersProps) {
   const { teammates } = useTeammates();
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2">
+    // Un groupe de recherche annonce : le lecteur d'ecran doit pouvoir sauter
+    // aux criteres, et savoir ce qu'ils gouvernent.
+    <div
+      role="search"
+      aria-label="Filtrer les missions"
+      className="mb-4 flex flex-wrap items-center gap-2"
+    >
       <div className="relative">
         <Search
           className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-slate-400"
@@ -143,7 +149,12 @@ export function BoardFilters({
             Effacer
           </button>
 
-          <p className="ml-auto text-sm tabular-nums text-slate-500">
+          {/*
+            Le decompte se dit a voix haute : un filtre qui ne laisse rien ne
+            se voit pas quand on ne regarde pas l'ecran, et `status` l'annonce
+            sans interrompre la frappe.
+          */}
+          <p role="status" className="ml-auto text-sm tabular-nums text-slate-500">
             {visibles} mission{visibles > 1 ? "s" : ""} sur {total}
           </p>
         </>
