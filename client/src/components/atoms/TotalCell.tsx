@@ -1,4 +1,4 @@
-import { formatDays } from "@/lib/dates";
+import { formatJoursDecimal } from "@/lib/dates";
 
 /** Cote d'une cellule portant un trait fort plutot que le trait de grille. */
 export type StrongSide = "right" | "bottom";
@@ -12,6 +12,10 @@ interface TotalCellProps {
 
 /**
  * Cellule de total, en bas de colonne ou en fin de ligne.
+ *
+ * Un total s'ecrit en decimal, « 14,5 », quand une cellule de saisie garde
+ * « ½ » : la fraction dit bien une demi-journee posee sur un jour, mais elle se
+ * lit mal des qu'elle suit un nombre, et un cumul se compare par son chiffre.
  *
  * La couleur de chaque bordure est decidee ici, jamais par une classe ajoutee
  * de l'exterieur : deux classes de couleur concurrentes sur un meme cote
@@ -36,7 +40,7 @@ export function TotalCell({
         isStrong ? "font-semibold" : "",
       ].join(" ")}
     >
-      {formatDays(value)}
+      {value === 0 ? "" : formatJoursDecimal(value)}
     </td>
   );
 }

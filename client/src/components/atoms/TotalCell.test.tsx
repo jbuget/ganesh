@@ -26,10 +26,10 @@ describe("TotalCell", () => {
     expect(screen.getByRole("cell")).toHaveTextContent("3");
   });
 
-  it("affiche un total avec demi-journée", () => {
+  it("écrit une demi-journée en décimal plutôt qu'en fraction", () => {
     renderInTable(<TotalCell value={3.5} />);
 
-    expect(screen.getByRole("cell")).toHaveTextContent("3½");
+    expect(screen.getByRole("cell")).toHaveTextContent("3,5");
   });
 
   it("reste vide quand rien n'est saisi", () => {
