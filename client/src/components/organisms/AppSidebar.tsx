@@ -18,7 +18,7 @@ const ONGLETS = [
   { href: "/", label: "Activité", Icone: CalendarDays },
   { href: "/kanban", label: "Kanban", Icone: KanbanSquare },
   { href: "/projets", label: "Projets", Icone: FolderKanban },
-  { href: "/collaborateurs", label: "Collaborateurs", Icone: Users },
+  { href: "/collaborateurs", label: "Utilisateurs", Icone: Users },
 ] as const;
 
 /** Initiales d'un nom, pour la pastille du pied de barre. */

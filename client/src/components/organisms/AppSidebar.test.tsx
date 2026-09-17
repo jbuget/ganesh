@@ -43,7 +43,7 @@ describe("AppSidebar", () => {
 
     expect(screen.getByRole("link", { name: /Activité/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Projets/ })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Collaborateurs/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Utilisateurs/ })).toBeInTheDocument();
   });
 
   it("signale l'écran courant aux lecteurs d'écran", () => {
