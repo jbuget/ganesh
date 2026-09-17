@@ -70,8 +70,14 @@ class UpdateProjectUseCase:
             if demande is ABSENT:
                 continue
             ancien = getattr(project, champ)
-            if ancien != demande:
-                changements.append((champ, ancien, demande))
+            if ancien == demande:
+                continue
+            changements.append((champ, ancien, demande))
+            if champ == "actif":
+                # Sortir du referentiel se date, y revenir efface la date :
+                # c'est l'entite qui tient cette regle, pas l'affectation.
+                project.archive() if demande is False else project.unarchive()
+            else:
                 setattr(project, champ, demande)
 
         # Rejoue les invariants de l'entite sur l'etat resultant.

@@ -20,6 +20,7 @@ def to_entity(model: ProjectModel) -> Project:
         statut=model.statut,
         parent_id=model.parent_id,
         actif=model.actif,
+        archived_at=model.archived_at,
         estime_j=model.estime_j,
         categorie=model.categorie,
         priorite=model.priorite,
@@ -64,6 +65,7 @@ class SqlProjectRepository(ProjectRepository):
             statut=project.statut,
             parent_id=project.parent_id,
             actif=project.actif,
+            archived_at=project.archived_at,
             estime_j=project.estime_j,
             categorie=project.categorie,
             priorite=project.priorite,
@@ -90,6 +92,7 @@ class SqlProjectRepository(ProjectRepository):
         model.statut = project.statut
         model.parent_id = project.parent_id
         model.actif = project.actif
+        model.archived_at = project.archived_at
         model.estime_j = project.estime_j
         model.categorie = project.categorie
         model.priorite = project.priorite

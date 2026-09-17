@@ -89,6 +89,21 @@ export function useProjectDetail(
       await recharger();
     },
 
+    /**
+     * Sort la mission du referentiel sans rien perdre : le referentiel ne la
+     * liste plus, mais les saisies deja passees dessus restent lisibles.
+     */
+    async archiver() {
+      await updateProject(projectId, { actif: false });
+      await recharger();
+    },
+
+    /** Remet la mission au referentiel, et oublie la date de sa sortie. */
+    async desarchiver() {
+      await updateProject(projectId, { actif: true });
+      await recharger();
+    },
+
     async enregistrerDescription(description: string) {
       await updateProjectDescription(projectId, { description });
       await recharger();

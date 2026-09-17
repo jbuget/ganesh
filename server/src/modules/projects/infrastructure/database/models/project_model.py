@@ -1,8 +1,18 @@
 """Modele SQLAlchemy du referentiel des missions."""
 
-from datetime import date
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, Enum, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    Boolean,
+    Date,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
@@ -33,6 +43,8 @@ class ProjectModel(Base):
         ForeignKey("projects.id", ondelete="RESTRICT"), nullable=True, index=True
     )
     actif: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    #: Date de sortie du referentiel. Nulle tant que la mission est active.
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     estime_j: Mapped[float | None] = mapped_column(Float, nullable=True)
     categorie: Mapped[ProjectCategory | None] = mapped_column(
         Enum(ProjectCategory, name="project_category", native_enum=False, length=32),

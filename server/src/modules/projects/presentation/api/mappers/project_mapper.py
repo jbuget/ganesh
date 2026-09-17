@@ -37,6 +37,7 @@ def to_project_response(
         statut=project.statut,
         parent_id=project.parent_id,
         actif=project.actif,
+        archived_at=project.archived_at,
         estime_j=project.estime_j,
         categorie=project.categorie,
         priorite=project.priorite,

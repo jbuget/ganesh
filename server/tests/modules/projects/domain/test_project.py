@@ -116,3 +116,39 @@ def test_status_can_move_backwards() -> None:
     project.change_status(ProjectStatus.CADRAGE)
 
     assert project.statut is ProjectStatus.CADRAGE
+
+
+def test_archiving_a_project_dates_its_exit() -> None:
+    project = make_project()
+
+    project.archive()
+
+    assert project.actif is False
+    assert project.archived_at is not None
+
+
+def test_archiving_an_already_archived_project_keeps_the_first_date() -> None:
+    project = make_project()
+    project.archive()
+    premiere_sortie = project.archived_at
+
+    project.archive()
+
+    assert project.archived_at == premiere_sortie
+
+
+def test_unarchiving_a_project_clears_its_exit_date() -> None:
+    project = make_project()
+    project.archive()
+
+    project.unarchive()
+
+    assert project.actif is True
+    assert project.archived_at is None
+
+
+def test_a_project_is_active_and_undated_to_begin_with() -> None:
+    project = make_project()
+
+    assert project.actif is True
+    assert project.archived_at is None

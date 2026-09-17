@@ -1,5 +1,7 @@
 "use client";
 
+import { ArchivedCallout } from "@/components/atoms/ArchivedCallout";
+import { MissionMenu } from "@/components/atoms/MissionMenu";
 import { ProjectPilotageTab } from "@/components/organisms/ProjectPilotageTab";
 import { ProjectSheetTab } from "@/components/organisms/ProjectSheetTab";
 import { ProjectUpdatesTab } from "@/components/organisms/ProjectUpdatesTab";
@@ -31,6 +33,8 @@ interface ProjectTabsProps {
   }) => Promise<void>;
   ajouterLien: (label: string, url: string, icone: LinkIcon | null) => Promise<void>;
   retirerLien: (linkId: number) => Promise<void>;
+  archiver: () => Promise<void>;
+  desarchiver: () => Promise<void>;
 }
 
 /** Ce qui reste a construire, annonce plutot que laisse vide. */
@@ -54,6 +58,8 @@ export function ProjectTabs({
   changerCaracteristiques,
   ajouterLien,
   retirerLien,
+  archiver,
+  desarchiver,
 }: ProjectTabsProps) {
   // Fige l'heure de reference le temps de la consultation : « il y a 3 min »
   // ne doit pas se recalculer a chaque rendu, et le fil n'est de toute facon
@@ -65,12 +71,29 @@ export function ProjectTabs({
       defaultValue={ongletInitial ?? "pilotage"}
       className="flex min-h-0 flex-1 flex-col gap-4"
     >
-      <TabsList className="shrink-0">
-        <TabsTrigger value="pilotage">Pilotage</TabsTrigger>
-        <TabsTrigger value="updates">Mises à jour</TabsTrigger>
-        <TabsTrigger value="fiche">Fiche service</TabsTrigger>
-        <TabsTrigger value="audit">Journal</TabsTrigger>
-      </TabsList>
+      {/* Au-dessus des onglets, donc lu avant eux : l'etat de la mission
+          conditionne tout ce qu'on s'apprete a faire dessus. */}
+      {!detail.project.actif && (
+        <ArchivedCallout archivedAt={detail.project.archived_at} />
+      )}
+
+      {/* Le menu se tient au bout des onglets, du cote ou le regard s'arrete :
+          on choisit d'abord quoi lire, et ce qui agit sur la mission entiere
+          attend a l'ecart. */}
+      <div className="flex shrink-0 items-center gap-2">
+        <TabsList className="min-w-0 flex-1">
+          <TabsTrigger value="pilotage">Pilotage</TabsTrigger>
+          <TabsTrigger value="updates">Mises à jour</TabsTrigger>
+          <TabsTrigger value="fiche">Fiche service</TabsTrigger>
+          <TabsTrigger value="audit">Journal</TabsTrigger>
+        </TabsList>
+
+        <MissionMenu
+          archivee={!detail.project.actif}
+          onArchiver={archiver}
+          onDesarchiver={desarchiver}
+        />
+      </div>
 
       <TabsContent value="pilotage">
         <ProjectPilotageTab

@@ -92,6 +92,8 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
           changerCaracteristiques={fiche.changerCaracteristiques}
           ajouterLien={fiche.ajouterLien}
           retirerLien={fiche.retirerLien}
+          archiver={fiche.archiver}
+          desarchiver={fiche.desarchiver}
         />
       </div>
     </PageLayout>

@@ -86,3 +86,15 @@ export function formatTotal(value: number): string {
 export function formatJoursDecimal(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1).replace(".", ",");
 }
+
+/**
+ * Une date ISO en « 18/09/2026 ».
+ *
+ * Decoupe la chaine plutot que de passer par `Date` : un horodatage naif
+ * interprete comme UTC reculerait d'un jour le soir, et la date affichee ne
+ * serait plus celle que le serveur a enregistree.
+ */
+export function formatDateCourte(iso: string): string {
+  const [annee, mois, jour] = iso.slice(0, 10).split("-");
+  return `${jour}/${mois}/${annee}`;
+}

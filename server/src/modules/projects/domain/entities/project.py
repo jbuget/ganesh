@@ -1,7 +1,7 @@
 """Projet, lot et activite hors projet : le referentiel des missions."""
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from enum import StrEnum
 
 from src.shared.exceptions.domain_exceptions import ValidationError
@@ -96,6 +96,9 @@ class Project:
     description: str | None = None
     #: Interlocuteurs metier, en texte libre : des noms, un service, un mail.
     contacts_metier: str | None = None
+    #: Quand la mission a quitte le referentiel. Nulle tant qu'elle est active :
+    #: la date suit l'etat, et repartir d'une mission archivee l'efface.
+    archived_at: datetime | None = None
 
     def __post_init__(self) -> None:
         self.label = self.label.strip()
@@ -130,6 +133,23 @@ class Project:
         if self.is_off_project:
             return False
         return bool(self.monday_item_id or self.monday_subitem_id)
+
+    def archive(self) -> None:
+        """Sort la mission du referentiel, en datant sa sortie.
+
+        Rien ne se perd : les saisies deja passees dessus restent lisibles, et
+        seule la liste des missions ou l'on peut encore imputer se reduit.
+        Rearchiver ne redate pas : c'est la premiere sortie qui compte.
+        """
+        if not self.actif:
+            return
+        self.actif = False
+        self.archived_at = datetime.now()
+
+    def unarchive(self) -> None:
+        """Remet la mission dans le referentiel, et oublie sa sortie."""
+        self.actif = True
+        self.archived_at = None
 
     def change_status(self, new_status: ProjectStatus) -> None:
         """Change la phase du projet. Toute transition est permise."""
