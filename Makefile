@@ -1,5 +1,11 @@
 .PHONY: install check lint test db-up db-down migrate dev-server dev-client
 
+# Les ports et le nom du projet Docker viennent du .env racine, et sont
+# transmis aux sous-commandes : une instance se deplace en entier en changeant
+# ce seul fichier.
+-include .env
+export
+
 install:
 	$(MAKE) -C server install
 	cd client && pnpm install

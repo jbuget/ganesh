@@ -1,5 +1,14 @@
 .PHONY: install lint format test test-cov archi migration migrate seed run
 
+# Repris du .env racine quand on entre par `make -C server` : les ports de
+# l'instance restent decrits a un seul endroit.
+-include ../.env
+
+POSTGRES_PORT ?= 5432
+API_PORT ?= 8000
+# La base de test suit la base de travail : meme conteneur, autre schema.
+TEST_DATABASE_URL ?= postgresql+asyncpg://timesheet:timesheet@localhost:$(POSTGRES_PORT)/timesheet_test
+
 VENV := .venv
 PY := $(VENV)/bin/python
 PIP := $(VENV)/bin/pip
@@ -26,10 +35,10 @@ archi:
 	$(VENV)/bin/lint-imports --config .importlinter
 
 test:
-	$(PY) -m pytest
+	TEST_DATABASE_URL=$(TEST_DATABASE_URL) $(PY) -m pytest
 
 test-cov:
-	$(PY) -m pytest --cov-report=html
+	TEST_DATABASE_URL=$(TEST_DATABASE_URL) $(PY) -m pytest --cov-report=html
 
 migration:
 	@read -p "Message de migration : " msg; \
@@ -42,4 +51,4 @@ seed:
 	$(PY) -m scripts.seed
 
 run:
-	$(VENV)/bin/uvicorn src.main:app --reload --port $${API_PORT:-8004}
+	$(VENV)/bin/uvicorn src.main:app --reload --port $(API_PORT)
