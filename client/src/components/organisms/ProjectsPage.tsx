@@ -47,8 +47,8 @@ export function ProjectsPage() {
     <PageLayout
       entete={
         <PageHeader
-          titre="Référentiel des missions"
-          soustitre="Ouvert à toute l'équipe. Chaque modification est tracée."
+          titre="Projets"
+          soustitre="Gestion des projets et sous-projets"
           actions={
             <>
               {ecran.isManager && (
@@ -99,7 +99,7 @@ export function ProjectsPage() {
                   la rangee se peint sous les lignes qui defilent. */}
               <TableHeader className="sticky top-0 z-10 [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50">
                 <TableRow>
-                  <TableHead>Mission</TableHead>
+                  <TableHead>Projet</TableHead>
                   {/* Le fil de suivi : son icone porte le sens, pas un titre. */}
                   <TableHead />
                   <TableHead>Phase</TableHead>
