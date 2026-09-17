@@ -10,6 +10,12 @@ import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 import { phaseLabel, phaseDot } from "@/lib/board";
+import {
+  LEFT_MARGIN,
+  NAME_COLUMN,
+  SEPARATOR,
+  THREAD_COLUMN,
+} from "@/lib/mission-columns";
 import { since } from "@/lib/relative-dates";
 
 interface MissionRowProps {
@@ -67,8 +73,28 @@ export function MissionRow({
   );
 
   return (
-    <TableRow onClick={onOpen} className="cursor-pointer">
-      <TableCell className={isWorkPackage ? "pl-14" : ""}>
+    // The background sits on the row, and the pinned cells inherit it: they
+    // then have no colour of their own to keep up to date, while staying
+    // opaque so the columns sliding underneath do not read through. It matches
+    // the page — the row does not stand out from the background, only hover
+    // marks it — and the tints are solid, not transparent, or inheritance
+    // would let what scrolls show through.
+    <TableRow
+      onClick={onOpen}
+      className="cursor-pointer bg-slate-50 hover:bg-slate-100 has-aria-expanded:bg-slate-100"
+    >
+      {/* No `z`: a pinned cell already passes in front of ordinary cells, and
+          claiming one would send it in front of the header, which must stay
+          above everything that scrolls. */}
+      <TableCell
+        className={[
+          NAME_COLUMN,
+          LEFT_MARGIN,
+          SEPARATOR,
+          "bg-inherit",
+          isWorkPackage ? "pl-14" : "",
+        ].join(" ")}
+      >
         <span className="flex items-center gap-2">
           {/* The bracket ties the work package to its project: without it,
               indentation alone gets lost as soon as a long line wraps. */}
@@ -110,6 +136,9 @@ export function MissionRow({
             ))}
           <button
             type="button"
+            // Truncated, the name stays readable in full on hover: the column
+            // has a fixed width, and the reference list's labels overflow it.
+            title={project.label}
             // The whole row responds to the mouse; this button gives the same
             // opening to the keyboard, without opening twice.
             onClick={(event) => {
@@ -117,7 +146,7 @@ export function MissionRow({
               onOpen();
             }}
             className={[
-              "cursor-pointer text-left",
+              "min-w-0 cursor-pointer truncate text-left",
               isWorkPackage ? "text-slate-600" : "font-medium text-slate-800",
             ].join(" ")}
           >
@@ -130,7 +159,9 @@ export function MissionRow({
           reports: further away, one would no longer know which row it speaks
           of. The icon already says what the number counts, hence the empty
           heading. */}
-      <TableCell className="w-12 text-right">
+      <TableCell
+        className={[THREAD_COLUMN, SEPARATOR, "bg-inherit text-right"].join(" ")}
+      >
         <UpdatesCounter
           count={mission.comments}
           preview={preview}

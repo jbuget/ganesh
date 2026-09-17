@@ -12,6 +12,8 @@ interface SortableColumnHeaderProps {
   onToggle: (column: SortColumn) => void;
   /** Number columns align right, heading included. */
   alignRight?: boolean;
+  /** What the column imposes on its header: width, sticking to the left. */
+  className?: string;
 }
 
 /**
@@ -27,6 +29,7 @@ export function SortableColumnHeader({
   sorted,
   onToggle,
   alignRight = false,
+  className,
 }: SortableColumnHeaderProps) {
   const is_active = sorted.column === column;
   const ascending = sorted.direction === "asc";
@@ -34,7 +37,7 @@ export function SortableColumnHeader({
   return (
     <TableHead
       aria-sort={is_active ? (ascending ? "ascending" : "descending") : "none"}
-      className={alignRight ? "text-right" : undefined}
+      className={[alignRight ? "text-right" : "", className ?? ""].join(" ").trim()}
     >
       <button
         type="button"
