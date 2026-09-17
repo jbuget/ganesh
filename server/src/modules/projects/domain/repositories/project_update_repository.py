@@ -26,6 +26,15 @@ class ProjectUpdateRepository(ABC):
         ...
 
     @abstractmethod
+    async def latest_by_project(self) -> dict[int, ProjectUpdate]:
+        """Derniere mise a jour encore lisible de chaque mission.
+
+        Une mise a jour retiree laisse la place a celle qui la precede : ce
+        qu'on annonce d'un fil, c'est ce qu'on y lirait en l'ouvrant.
+        """
+        ...
+
+    @abstractmethod
     async def add(self, update: ProjectUpdate) -> ProjectUpdate: ...
 
     @abstractmethod

@@ -117,9 +117,14 @@ def get_list_projects_use_case(
     entries: EntryRepository = Depends(get_entry_repository),
     assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
     users: UserRepository = Depends(get_user_repository),
+    updates: ProjectUpdateRepository = Depends(get_project_update_repository),
 ) -> ListProjectsUseCase:
     return ListProjectsUseCase(
-        projects=projects, entries=entries, assignees=assignees, users=users
+        projects=projects,
+        entries=entries,
+        assignees=assignees,
+        users=users,
+        updates=updates,
     )
 
 

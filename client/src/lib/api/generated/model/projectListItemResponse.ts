@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { BoardMemberResponse } from "./boardMemberResponse";
+import type { LastUpdateResponse } from "./lastUpdateResponse";
 import type { ProjectResponse } from "./projectResponse";
 
 /**
@@ -15,4 +16,6 @@ export interface ProjectListItemResponse {
   referents: BoardMemberResponse[];
   intervenants: BoardMemberResponse[];
   realise_j: number;
+  commentaires: number;
+  derniere_maj: LastUpdateResponse | null;
 }

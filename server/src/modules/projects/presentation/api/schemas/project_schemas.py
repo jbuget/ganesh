@@ -51,6 +51,14 @@ class ProjectResponse(BaseModel):
     is_deletable: bool
 
 
+class LastUpdateResponse(BaseModel):
+    """De quoi annoncer un fil de suivi sans l'ouvrir."""
+
+    author: "BoardMemberResponse"
+    texte: str
+    publiee_le: datetime
+
+
 class ProjectListItemResponse(BaseModel):
     """Une mission du referentiel, avec qui s'en occupe."""
 
@@ -59,6 +67,10 @@ class ProjectListItemResponse(BaseModel):
     intervenants: list["BoardMemberResponse"]
     #: Jours declares, previsionnel exclu.
     realise_j: float
+    #: Mises a jour vivantes du fil de suivi.
+    commentaires: int
+    #: La derniere d'entre elles, absente tant que rien ne se lit.
+    derniere_maj: LastUpdateResponse | None
 
 
 class UpdateProjectRequest(BaseModel):

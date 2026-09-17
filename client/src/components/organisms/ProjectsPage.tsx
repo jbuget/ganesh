@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, Upload } from "lucide-react";
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { ImportProjectsDialog } from "@/components/atoms/ImportProjectsDialog";
@@ -31,6 +31,9 @@ import { useProjectsScreen } from "@/lib/use-projects";
  */
 export function ProjectsPage() {
   const ecran = useProjectsScreen();
+  // Une seule heure de reference pour toutes les lignes : « il y a 3 h » ne
+  // doit pas dependre du moment ou chacune se rend.
+  const maintenant = useMemo(() => new Date(), []);
   const panneau = useMissionOuverte();
   const [declaration, setDeclaration] = useState(false);
   const [importation, setImportation] = useState(false);
@@ -58,7 +61,7 @@ export function ProjectsPage() {
         />
       }
     >
-      {/* Assez large pour sept colonnes, pas au point d'etirer les noms. */}
+      {/* Assez large pour huit colonnes, pas au point d'etirer les noms. */}
       <div className="max-w-[1200px]">
         {ecran.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
@@ -81,6 +84,8 @@ export function ProjectsPage() {
               <TableHeader className="sticky top-0 z-10 [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50">
                 <TableRow>
                   <TableHead>Mission</TableHead>
+                  {/* Le fil de suivi : son icone porte le sens, pas un titre. */}
+                  <TableHead />
                   <TableHead>Phase</TableHead>
                   <TableHead>Catégorie</TableHead>
                   <TableHead className="text-right">Estimé</TableHead>
@@ -96,14 +101,18 @@ export function ProjectsPage() {
                     <MissionRow
                       mission={mission}
                       estLot={mission.project.kind === "lot"}
+                      maintenant={maintenant}
                       onOpen={() => panneau.ouvrir(mission.project.id)}
+                      onOpenFil={() => panneau.ouvrir(mission.project.id, "updates")}
                     />
                     {lots.map((lot) => (
                       <MissionRow
                         key={lot.project.id}
                         mission={lot}
                         estLot
+                        maintenant={maintenant}
                         onOpen={() => panneau.ouvrir(lot.project.id)}
+                        onOpenFil={() => panneau.ouvrir(lot.project.id, "updates")}
                       />
                     ))}
                   </Fragment>
@@ -152,8 +161,11 @@ export function ProjectsPage() {
 
       {panneau.missionOuverte && (
         <ProjectPanel
-          key={panneau.missionOuverte}
+          // L'onglet fait partie de la cle : rouvrir la meme mission sur son
+          // fil doit remonter le panneau, qui choisit son onglet a l'ouverture.
+          key={`${panneau.missionOuverte}:${panneau.ongletOuvert ?? ""}`}
           projectId={panneau.missionOuverte}
+          onglet={panneau.ongletOuvert}
           onClose={panneau.fermer}
           onMissionChanged={ecran.refresh}
         />

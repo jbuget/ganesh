@@ -32,6 +32,7 @@ export * from "./hTTPValidationError";
 export * from "./importLineRequest";
 export * from "./importProjectsRequest";
 export * from "./importReportResponse";
+export * from "./lastUpdateResponse";
 export * from "./listProjectsApiV1ProjectsGetParams";
 export * from "./listProjectsParams";
 export * from "./listUsersApiV1UsersGetParams";

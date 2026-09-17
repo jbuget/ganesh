@@ -1,15 +1,22 @@
 "use client";
 
+import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
+import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 import { categorie, libellePhase, pastillePhase } from "@/lib/board";
+import { depuis } from "@/lib/dates-relatives";
 
 interface MissionRowProps {
   mission: ProjectListItemResponse;
   /** Un lot se decale sous son projet, pour que la hierarchie se lise. */
   estLot?: boolean;
+  /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
+  maintenant: Date;
   onOpen: () => void;
+  /** Ouvre la mission sur son fil, la ou l'apercu s'arrete. */
+  onOpenFil: () => void;
 }
 
 /**
@@ -20,9 +27,33 @@ interface MissionRowProps {
  * et tout ce qui se modifie continue de se faire dans le panneau, d'un seul
  * endroit.
  */
-export function MissionRow({ mission, estLot = false, onOpen }: MissionRowProps) {
+export function MissionRow({
+  mission,
+  estLot = false,
+  maintenant,
+  onOpen,
+  onOpenFil,
+}: MissionRowProps) {
   const { project } = mission;
   const axe = categorie(project.categorie);
+  const derniere = mission.derniere_maj;
+
+  // Le dernier message en entier et mis en forme, comme il se lit dans le fil :
+  // un apercu tronque obligerait a ouvrir le panneau pour la fin d'une phrase.
+  const apercu = derniere && (
+    <>
+      {/* Le trait separe la signature du propos : sans lui, la premiere ligne
+          du message se lit comme la suite de l'entete. Les marges negatives le
+          menent aux bords de la bulle, dont il traverse le rembourrage. */}
+      <p className="-mx-3 mb-2 border-b border-slate-200 px-3 pb-2 text-xs text-slate-500">
+        <span className="font-medium text-slate-700">
+          {derniere.author.display_name}
+        </span>{" "}
+        · {depuis(derniere.publiee_le, maintenant)}
+      </p>
+      <MarkdownView texte={derniere.texte} />
+    </>
+  );
 
   return (
     <TableRow onClick={onOpen} className="cursor-pointer">
@@ -51,6 +82,17 @@ export function MissionRow({ mission, estLot = false, onOpen }: MissionRowProps)
             {project.label}
           </button>
         </span>
+      </TableCell>
+
+      {/* Le fil se lit contre le nom de la mission, dont il dit l'activite :
+          plus loin, on ne saurait plus de quelle ligne il parle. L'icone dit
+          deja ce que le nombre compte, d'ou l'en-tete vide. */}
+      <TableCell className="w-12 text-right">
+        <UpdatesCounter
+          nombre={mission.commentaires}
+          apercu={apercu}
+          onOpen={onOpenFil}
+        />
       </TableCell>
 
       <TableCell>

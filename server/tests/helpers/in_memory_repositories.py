@@ -310,5 +310,13 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
             compte[maj.project_id] = compte.get(maj.project_id, 0) + 1
         return compte
 
+    async def latest_by_project(self) -> dict[int, ProjectUpdate]:
+        derniere: dict[int, ProjectUpdate] = {}
+        for maj in sorted(self._updates, key=lambda u: (u.publiee_le, u.id or 0)):
+            if maj.est_supprimee:
+                continue
+            derniere[maj.project_id] = maj
+        return derniere
+
     async def update(self, update: ProjectUpdate) -> ProjectUpdate:
         return update

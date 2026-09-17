@@ -55,6 +55,22 @@ class SqlProjectUpdateRepository(ProjectUpdateRepository):
         )
         return dict(result.tuples().all())
 
+    async def latest_by_project(self) -> dict[int, ProjectUpdate]:
+        # Les retirees sont ecartees avant le tri, et non apres : la derniere
+        # lisible d'un fil n'est pas toujours la derniere ecrite.
+        vivantes = (
+            select(ProjectUpdateModel)
+            .where(ProjectUpdateModel.supprimee_le.is_(None))
+            .order_by(
+                ProjectUpdateModel.project_id,
+                ProjectUpdateModel.publiee_le.desc(),
+                ProjectUpdateModel.id.desc(),
+            )
+            .distinct(ProjectUpdateModel.project_id)
+        )
+        result = await self._session.execute(vivantes)
+        return {model.project_id: _to_entity(model) for model in result.scalars().all()}
+
     async def add(self, update: ProjectUpdate) -> ProjectUpdate:
         model = ProjectUpdateModel(
             project_id=update.project_id,

@@ -15,6 +15,8 @@ import type {
 
 interface ProjectTabsProps {
   detail: ProjectDetailResponse;
+  /** Sur quel onglet s'ouvrir ; le pilotage a defaut. */
+  ongletInitial?: string | null;
   onChange: () => void | Promise<void>;
   enregistrerFiche: (
     departements: Department[],
@@ -41,6 +43,7 @@ function Chantier({ quoi }: { quoi: string }) {
  */
 export function ProjectTabs({
   detail,
+  ongletInitial,
   onChange,
   enregistrerFiche,
   enregistrerDescription,
@@ -53,7 +56,10 @@ export function ProjectTabs({
   const [maintenant] = useState(() => new Date());
 
   return (
-    <Tabs defaultValue="pilotage" className="flex min-h-0 flex-1 flex-col gap-4">
+    <Tabs
+      defaultValue={ongletInitial ?? "pilotage"}
+      className="flex min-h-0 flex-1 flex-col gap-4"
+    >
       <TabsList className="shrink-0">
         <TabsTrigger value="pilotage">Pilotage</TabsTrigger>
         <TabsTrigger value="updates">Mises à jour</TabsTrigger>
@@ -72,7 +78,14 @@ export function ProjectTabs({
       </TabsContent>
 
       <TabsContent value="updates">
-        <ProjectUpdatesTab projectId={detail.project.id} maintenant={maintenant} />
+        <ProjectUpdatesTab
+          projectId={detail.project.id}
+          maintenant={maintenant}
+          onChange={onChange}
+          // Venu du decompte, on vient ecrire : le curseur attend deja dans
+          // l'editeur. Venu du panneau, on vient d'abord lire.
+          focusRedaction={ongletInitial === "updates"}
+        />
       </TabsContent>
 
       <TabsContent value="fiche" className="min-h-0 flex-1">
