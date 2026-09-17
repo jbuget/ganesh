@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   dayNumber,
   firstDayOfMonth,
+  formatDateCourte,
   formatDays,
   formatJoursDecimal,
   formatTotal,
@@ -113,5 +114,15 @@ describe("formatJoursDecimal", () => {
 
   it("écrit une demi-journée seule", () => {
     expect(formatJoursDecimal(0.5)).toBe("0,5");
+  });
+});
+
+describe("formatDateCourte", () => {
+  it("écrit une date ISO en jour/mois/année", () => {
+    expect(formatDateCourte("2026-09-18")).toBe("18/09/2026");
+  });
+
+  it("ignore l'heure d'un horodatage", () => {
+    expect(formatDateCourte("2026-09-18T00:36:07.943722")).toBe("18/09/2026");
   });
 });

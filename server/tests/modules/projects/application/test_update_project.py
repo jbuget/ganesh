@@ -198,3 +198,25 @@ async def test_an_untouched_priority_survives_another_change() -> None:
     project = await repo.get_by_id(10)
     assert project is not None
     assert project.priorite is ProjectPriority.BASSE
+
+
+async def test_archiving_a_project_dates_its_exit() -> None:
+    use_case, repo, _ = build()
+
+    await use_case.execute(UpdateProjectCommand(actor_id=1, project_id=10, actif=False))
+
+    archivee = await repo.get_by_id(10)
+    assert archivee is not None
+    assert archivee.archived_at is not None
+
+
+async def test_unarchiving_a_project_clears_its_exit_date() -> None:
+    use_case, repo, _ = build()
+    await use_case.execute(UpdateProjectCommand(actor_id=1, project_id=10, actif=False))
+
+    await use_case.execute(UpdateProjectCommand(actor_id=1, project_id=10, actif=True))
+
+    rendue = await repo.get_by_id(10)
+    assert rendue is not None
+    assert rendue.actif is True
+    assert rendue.archived_at is None

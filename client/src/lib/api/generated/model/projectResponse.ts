@@ -19,6 +19,7 @@ export interface ProjectResponse {
   statut: ProjectStatus | null;
   parent_id: number | null;
   actif: boolean;
+  archived_at: string | null;
   estime_j: number | null;
   categorie: ProjectCategory | null;
   priorite: ProjectPriority | null;

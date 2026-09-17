@@ -39,6 +39,8 @@ class ProjectResponse(BaseModel):
     statut: ProjectStatus | None
     parent_id: int | None
     actif: bool
+    #: Quand la mission a quitte le referentiel, nulle tant qu'elle y est.
+    archived_at: datetime | None
     estime_j: float | None
     categorie: ProjectCategory | None
     priorite: ProjectPriority | None

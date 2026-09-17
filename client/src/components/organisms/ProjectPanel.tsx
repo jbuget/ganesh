@@ -95,6 +95,12 @@ export function ProjectPanel({
               changerCaracteristiques={fiche.changerCaracteristiques}
               ajouterLien={fiche.ajouterLien}
               retirerLien={fiche.retirerLien}
+              // Le panneau reste ouvert apres l'archivage, bien que la mission
+              // quitte la liste derriere : le fermer sur un clic malheureux
+              // laisserait sans recours, la ligne ayant disparu du referentiel.
+              // Le bandeau et « Desarchiver » gardent le retour a portee.
+              archiver={fiche.archiver}
+              desarchiver={fiche.desarchiver}
             />
           )}
         </div>
