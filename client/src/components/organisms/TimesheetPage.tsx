@@ -6,6 +6,7 @@ import { useState } from "react";
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { MissionSelector } from "@/components/atoms/MissionSelector";
 import { PageHeader } from "@/components/atoms/PageHeader";
+import { PageLayout } from "@/components/organisms/PageLayout";
 import { RemoveMissionDialog } from "@/components/atoms/RemoveMissionDialog";
 import { TeammateSelector } from "@/components/atoms/TeammateSelector";
 import { ValidateMonthDialog } from "@/components/atoms/ValidateMonthDialog";
@@ -41,12 +42,14 @@ export function TimesheetPage() {
   }
 
   return (
-    <main className="max-w-[1600px] p-6">
-      <PageHeader
-        titre="Activité"
-        soustitre="Déclarez votre temps en journées ou demi-journées. Tant que le mois n'est pas validé, tout reste modifiable."
-      />
-
+    <PageLayout
+      entete={
+        <PageHeader
+          titre="Activité"
+          soustitre="Déclarez votre temps en journées ou demi-journées. Tant que le mois n'est pas validé, tout reste modifiable."
+        />
+      }
+    >
       {/*
         Les trois commandes de la matrice, juste au-dessus d'elle : de qui on
         regarde le mois, quel mois, et la seule action qui l'engage. Les deux
@@ -156,6 +159,6 @@ export function TimesheetPage() {
           onConfirm={mois.validate}
         />
       )}
-    </main>
+    </PageLayout>
   );
 }

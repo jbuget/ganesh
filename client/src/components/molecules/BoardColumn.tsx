@@ -21,6 +21,10 @@ interface BoardColumnProps {
  *
  * Le titre et les cartes tiennent dans un meme bloc : une colonne se lit alors
  * comme une unite, et non comme un intitule flottant au-dessus d'une liste.
+ *
+ * La colonne occupe toute la hauteur et ce sont ses cartes qui defilent : une
+ * phase chargee n'allonge plus le tableau entier, et l'intitule de chaque
+ * colonne reste en vis-a-vis de celui des autres.
  */
 export function BoardColumn({
   statut,
@@ -41,11 +45,11 @@ export function BoardColumn({
         // Une bordure, et non un `ring` : celui-ci se dessine hors de la boite,
         // et le conteneur de defilement rognait alors le bord gauche de la
         // premiere colonne et le bord droit de la derniere.
-        "flex min-w-72 max-w-96 flex-1 flex-col rounded-xl border transition-colors",
+        "flex h-full min-w-72 max-w-96 flex-1 flex-col rounded-xl border transition-colors",
         isOver ? "border-sky-300 bg-sky-50" : "border-slate-300 bg-slate-100",
       ].join(" ")}
     >
-      <header className="flex items-center justify-between gap-2 px-3 pt-3 pb-2">
+      <header className="flex shrink-0 items-center justify-between gap-2 px-3 pt-3 pb-2">
         <h2 className="flex items-center gap-2 text-sm font-medium text-slate-700">
           <span
             aria-hidden
@@ -56,7 +60,10 @@ export function BoardColumn({
         <span className="text-xs tabular-nums text-slate-400">{cartes.length}</span>
       </header>
 
-      <ul ref={setNodeRef} className="flex min-h-32 flex-1 flex-col gap-2 px-2 pb-2">
+      <ul
+        ref={setNodeRef}
+        className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2"
+      >
         <SortableContext
           items={cartes.map((carte) => carte.project.id)}
           strategy={verticalListSortingStrategy}
