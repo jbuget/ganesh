@@ -5,15 +5,38 @@ import userEvent from "@testing-library/user-event";
 import { AppSidebar } from "./AppSidebar";
 
 const pathname = vi.hoisted(() => ({ value: "/" }));
+type Utilisateur = {
+  display_name: string;
+  email: string;
+  initiales: string;
+  role: string;
+};
+
+const JEREMY: Utilisateur = {
+  display_name: "Jérémy Buget",
+  email: "j.buget@waat.fr",
+  initiales: "JB",
+  role: "MANAGER",
+};
+
 const utilisateur = vi.hoisted(() => ({
-  value: { display_name: "Jérémy Buget", role: "MANAGER" } as
-    { display_name: string; role: string } | undefined,
+  value: {
+    display_name: "Jérémy Buget",
+    email: "j.buget@waat.fr",
+    initiales: "JB",
+    role: "MANAGER",
+  } as
+    | { display_name: string; email: string; initiales: string; role: string }
+    | undefined,
 }));
 
 vi.mock("next/navigation", () => ({ usePathname: () => pathname.value }));
 vi.mock("@/lib/api/queries", () => ({
   useCurrentUser: () => ({ user: utilisateur.value }),
 }));
+// La fin de session est verifiee dans `lib/use-deconnexion.test.ts` : ici, seule
+// compte la barre qui la propose.
+vi.mock("@/lib/use-deconnexion", () => ({ useDeconnexion: () => vi.fn() }));
 
 describe("AppSidebar", () => {
   it("propose de replier la barre", () => {
@@ -76,14 +99,19 @@ describe("AppSidebar", () => {
   });
 
   it("signale le rôle de manager", () => {
-    utilisateur.value = { display_name: "Jérémy Buget", role: "MANAGER" };
+    utilisateur.value = JEREMY;
     render(<AppSidebar />);
 
     expect(screen.getByText("Manager")).toBeInTheDocument();
   });
 
   it("n'affiche aucun rôle pour un collaborateur", () => {
-    utilisateur.value = { display_name: "L. Chen", role: "TEAMMATE" };
+    utilisateur.value = {
+      display_name: "L. Chen",
+      email: "l.chen@waat.fr",
+      initiales: "LC",
+      role: "TEAMMATE",
+    };
     render(<AppSidebar />);
 
     expect(screen.queryByText("Manager")).toBeNull();
@@ -91,7 +119,7 @@ describe("AppSidebar", () => {
   });
 
   it("réduit le nom à ses initiales dans la pastille", () => {
-    utilisateur.value = { display_name: "Jérémy Buget", role: "TEAMMATE" };
+    utilisateur.value = { ...JEREMY, role: "TEAMMATE" };
     render(<AppSidebar />);
 
     expect(screen.getByText("JB")).toBeInTheDocument();
