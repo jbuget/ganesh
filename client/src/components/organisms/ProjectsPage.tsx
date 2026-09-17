@@ -61,8 +61,8 @@ export function ProjectsPage() {
         />
       }
     >
-      {/* Assez large pour huit colonnes, pas au point d'etirer les noms. */}
-      <div className="max-w-[1200px]">
+      {/* Assez large pour neuf colonnes, pas au point d'etirer les noms. */}
+      <div className="max-w-[1300px]">
         {ecran.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
         {ecran.arbre.length === 0 && !ecran.isLoading && (
@@ -87,6 +87,7 @@ export function ProjectsPage() {
                   {/* Le fil de suivi : son icone porte le sens, pas un titre. */}
                   <TableHead />
                   <TableHead>Phase</TableHead>
+                  <TableHead>Priorité</TableHead>
                   <TableHead>Catégorie</TableHead>
                   <TableHead className="text-right">Estimé</TableHead>
                   <TableHead className="text-right">Réalisé</TableHead>
