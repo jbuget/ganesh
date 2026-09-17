@@ -5,14 +5,19 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 
 import { SortableProjectCard } from "@/components/molecules/SortableProjectCard";
 import type { BoardCardResponse, ProjectStatus } from "@/lib/api/generated/model";
-import { libellePhase } from "@/lib/board";
+import { libellePhase, pastillePhase } from "@/lib/board";
 
 interface BoardColumnProps {
   statut: ProjectStatus;
   cartes: BoardCardResponse[];
 }
 
-/** Une phase et ses cartes, zone de depot du glisser-deposer. */
+/**
+ * Une phase et ses cartes, zone de depot du glisser-deposer.
+ *
+ * Le titre et les cartes tiennent dans un meme bloc : une colonne se lit alors
+ * comme une unite, et non comme un intitule flottant au-dessus d'une liste.
+ */
 export function BoardColumn({ statut, cartes }: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: statut });
 
@@ -22,20 +27,23 @@ export function BoardColumn({ statut, cartes }: BoardColumnProps) {
       // Les six phases se partagent la largeur disponible plutot que d'imposer
       // un defilement des qu'un ecran n'atteint pas 1600 px. En deca de la
       // largeur minimale, le conteneur reprend le defilement horizontal.
-      className="flex min-w-52 max-w-64 flex-1 flex-col"
+      className={[
+        "flex min-w-52 max-w-64 flex-1 flex-col rounded-xl ring-1 transition-colors",
+        isOver ? "bg-sky-50 ring-sky-300" : "bg-slate-100 ring-slate-300",
+      ].join(" ")}
     >
-      <header className="mb-2 flex items-baseline justify-between px-1">
-        <h2 className="text-sm font-medium text-slate-700">{libellePhase(statut)}</h2>
+      <header className="flex items-center justify-between gap-2 px-3 pt-3 pb-2">
+        <h2 className="flex items-center gap-2 text-sm font-medium text-slate-700">
+          <span
+            aria-hidden
+            className={`size-2.5 shrink-0 rounded-full ${pastillePhase(statut)}`}
+          />
+          {libellePhase(statut)}
+        </h2>
         <span className="text-xs tabular-nums text-slate-400">{cartes.length}</span>
       </header>
 
-      <ul
-        ref={setNodeRef}
-        className={[
-          "flex min-h-32 flex-1 flex-col gap-2 rounded-lg border border-dashed p-2 transition-colors",
-          isOver ? "border-sky-400 bg-sky-50" : "border-slate-200 bg-slate-50/60",
-        ].join(" ")}
-      >
+      <ul ref={setNodeRef} className="flex min-h-32 flex-1 flex-col gap-2 px-2 pb-2">
         <SortableContext
           items={cartes.map((carte) => carte.project.id)}
           strategy={verticalListSortingStrategy}

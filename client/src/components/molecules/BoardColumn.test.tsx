@@ -63,6 +63,16 @@ describe("BoardColumn", () => {
     expect(screen.queryAllByRole("heading", { level: 3 })).toHaveLength(0);
   });
 
+  it("distingue la phase par une pastille de couleur", () => {
+    afficher([]);
+
+    const titre = screen.getByRole("heading", { level: 2 });
+    const pastille = titre.querySelector("span");
+    expect(pastille).toHaveClass("bg-blue-500");
+    // Decorative : elle double le titre, elle ne l'annonce pas deux fois.
+    expect(pastille).toHaveAttribute("aria-hidden");
+  });
+
   it("n'affiche l'invite que sur une phase vide", () => {
     afficher([carte(1, "Portail bailleurs")]);
 

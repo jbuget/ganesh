@@ -1,14 +1,26 @@
 import type { ProjectCategory, ProjectStatus } from "@/lib/api/generated/model";
 
-/** Phases du tableau, dans l'ordre des colonnes. */
-export const PHASES: { statut: ProjectStatus; libelle: string }[] = [
-  { statut: "exploration", libelle: "Exploration" },
-  { statut: "cadrage", libelle: "Cadrage" },
-  { statut: "realisation", libelle: "Réalisation" },
-  { statut: "validation", libelle: "Validation" },
-  { statut: "deploiement", libelle: "Déploiement" },
-  { statut: "exploitation", libelle: "Exploitation" },
+/**
+ * Phases du tableau, dans l'ordre des colonnes.
+ *
+ * La pastille suit l'avancement, du gris de ce qui n'est pas commence au vert
+ * de ce qui tourne : la couleur situe une colonne avant meme d'en lire le titre.
+ */
+export const PHASES: { statut: ProjectStatus; libelle: string; pastille: string }[] = [
+  { statut: "exploration", libelle: "Exploration", pastille: "bg-slate-400" },
+  { statut: "cadrage", libelle: "Cadrage", pastille: "bg-violet-500" },
+  { statut: "realisation", libelle: "Réalisation", pastille: "bg-blue-500" },
+  { statut: "validation", libelle: "Validation", pastille: "bg-amber-500" },
+  { statut: "deploiement", libelle: "Déploiement", pastille: "bg-orange-500" },
+  { statut: "exploitation", libelle: "Exploitation", pastille: "bg-emerald-500" },
 ];
+
+const PHASES_PAR_STATUT = new Map(PHASES.map((p) => [p.statut, p]));
+
+/** Couleur de la pastille d'une phase. */
+export function pastillePhase(statut: ProjectStatus): string {
+  return PHASES_PAR_STATUT.get(statut)?.pastille ?? "bg-slate-300";
+}
 
 const LIBELLES_PHASES = new Map(PHASES.map((p) => [p.statut, p.libelle]));
 
