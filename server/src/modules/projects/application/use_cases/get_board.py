@@ -55,6 +55,10 @@ class GetBoardUseCase:
 
     Toutes les phases sont retournees, meme vides : une colonne absente
     empecherait d'y deposer une carte.
+
+    Les missions archivees en sont ecartees par defaut : le tableau sert a
+    piloter ce qui tourne. On les redemande pour faire le point, et tout ce
+    qu'une carte annonce — son fil, ses lots — suit alors le meme perimetre.
     """
 
     def __init__(
@@ -71,14 +75,19 @@ class GetBoardUseCase:
         self._assignees = assignees
         self._updates = updates
 
-    async def execute(self, today: date | None = None) -> Board:
+    async def execute(
+        self, today: date | None = None, include_inactive: bool = False
+    ) -> Board:
         aujourdhui = today or date.today()
 
-        # Les archivees sont lues elles aussi : un lot survit a l'archivage de
-        # son projet, et sa carte doit continuer a nommer de quoi elle releve.
+        # Les archivees sont lues meme quand on ne les montre pas : un lot
+        # survit a l'archivage de son projet, et sa carte doit continuer a
+        # nommer de quoi elle releve.
         toutes = await self._projects.list_all(include_inactive=True)
         par_id = {p.id: p for p in toutes if p.id is not None}
-        missions = [p for p in toutes if p.actif and p.appears_on_board]
+        missions = [
+            p for p in toutes if (p.actif or include_inactive) and p.appears_on_board
+        ]
 
         utilisateurs = {u.id: u for u in await self._users.list_all(True)}
         affectations = await self._assignees.list_all(ProjectRole.INTERVENANT)

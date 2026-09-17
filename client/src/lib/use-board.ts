@@ -15,6 +15,11 @@ import { useEffect } from "react";
 /** Colonnes indexees par phase, forme pratique pour le glisser-deposer. */
 export type Colonnes = Record<ProjectStatus, BoardCardResponse[]>;
 
+/** Les archivees ne sont demandees que lorsqu'on veut les voir. */
+function perimetre(inclureArchivees: boolean) {
+  return inclureArchivees ? { include_inactive: true } : undefined;
+}
+
 function versColonnes(board: BoardResponse): Colonnes {
   return Object.fromEntries(
     board.colonnes.map((colonne) => [colonne.statut, colonne.cartes]),
@@ -27,8 +32,12 @@ function versColonnes(board: BoardResponse): Colonnes {
  * Les colonnes sont tenues localement : un glisser-deposer doit se voir
  * immediatement, sans attendre l'aller-retour serveur. L'appel suit, et un
  * echec recharge la verite du serveur plutot que de laisser un ecran qui ment.
+ *
+ * Les missions archivees ne voyagent que sur demande : le tableau sert a
+ * piloter ce qui tourne, et les charger a chaque ouverture ferait payer a tous
+ * ce dont on se sert rarement.
  */
-export function useBoard() {
+export function useBoard(inclureArchivees = false) {
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();
   const [colonnes, setColonnes] = useState<Colonnes | null>(null);
@@ -36,16 +45,16 @@ export function useBoard() {
 
   useEffect(() => {
     let vivant = true;
-    getBoard().then((reponse) => {
+    getBoard(perimetre(inclureArchivees)).then((reponse) => {
       if (vivant) setColonnes(versColonnes(reponse.data as BoardResponse));
     });
     return () => {
       vivant = false;
     };
-  }, []);
+  }, [inclureArchivees]);
 
   async function recharger() {
-    const reponse = await getBoard();
+    const reponse = await getBoard(perimetre(inclureArchivees));
     setColonnes(versColonnes(reponse.data as BoardResponse));
     await queryClient.invalidateQueries();
   }

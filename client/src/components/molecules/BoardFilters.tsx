@@ -11,7 +11,12 @@ import type {
 } from "@/lib/api/generated/model";
 import { useTeammates } from "@/lib/api/queries";
 import { CATEGORIES, PHASES } from "@/lib/board";
-import { TYPES_DE_MISSION, type BoardFilters as Criteres } from "@/lib/board-filters";
+import {
+  ETATS_DE_MISSION,
+  TYPES_DE_MISSION,
+  type BoardFilters as Criteres,
+  type EtatMission,
+} from "@/lib/board-filters";
 
 interface BoardFiltersProps {
   filtres: Criteres;
@@ -101,6 +106,13 @@ export function BoardFilters({
         options={TYPES_DE_MISSION.map(({ valeur, libelle }) => ({ valeur, libelle }))}
         valeurs={filtres.types}
         onChange={(valeurs) => onChange({ types: valeurs as ProjectKind[] })}
+      />
+
+      <FilterSelect
+        libelle="État"
+        options={ETATS_DE_MISSION.map(({ valeur, libelle }) => ({ valeur, libelle }))}
+        valeurs={filtres.etats}
+        onChange={(valeurs) => onChange({ etats: valeurs as EtatMission[] })}
       />
 
       {actif && (

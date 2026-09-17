@@ -22,7 +22,8 @@ const barre = (over: Partial<Criteres> = {}, props: Record<string, unknown> = {}
         filtres.phases.length > 0 ||
         filtres.categories.length > 0 ||
         filtres.intervenants.length > 0 ||
-        filtres.types.length > 0
+        filtres.types.length > 0 ||
+        filtres.etats.length > 0
       }
       onChange={onChange}
       onEffacer={onEffacer}
@@ -39,7 +40,7 @@ describe("BoardFilters", () => {
     barre();
 
     expect(screen.getByLabelText("Rechercher une mission")).toBeInTheDocument();
-    ["Phase", "Catégorie", "Intervenant", "Type"].forEach((critere) => {
+    ["Phase", "Catégorie", "Intervenant", "Type", "État"].forEach((critere) => {
       expect(
         screen.getByRole("button", { name: new RegExp(critere) }),
       ).toBeInTheDocument();
@@ -81,6 +82,15 @@ describe("BoardFilters", () => {
     fireEvent.click(screen.getByRole("button", { name: "Sous-projets" }));
 
     expect(onChange).toHaveBeenCalledWith({ types: ["lot"] });
+  });
+
+  it("propose de consulter les missions archivées", () => {
+    const { onChange } = barre();
+
+    fireEvent.click(screen.getByRole("button", { name: /État/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Archivées" }));
+
+    expect(onChange).toHaveBeenCalledWith({ etats: ["archivee"] });
   });
 
   it("n'offre d'effacer que lorsqu'il y a quelque chose à effacer", () => {

@@ -21,6 +21,7 @@ export * from "./createProjectRequest";
 export * from "./dayTotalResponse";
 export * from "./department";
 export * from "./entryResponse";
+export * from "./getBoardParams";
 export * from "./getMonthGridApiV1EntriesGridGetParams";
 export * from "./getMonthGridParams";
 export * from "./gridRowResponse";
