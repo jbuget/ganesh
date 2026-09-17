@@ -6,8 +6,8 @@ import type { ProjectResponse } from "@/lib/api/generated/model";
 
 /**
  * Le menu deroulant repose sur Base UI, qui ne s'ouvre pas sous jsdom : son
- * contenu se verifie dans le navigateur. Le tri des missions, lui, est teste
- * directement dans `lib/missions.test.ts`.
+ * contenu — champ de recherche compris — se verifie dans le navigateur. Le tri
+ * des missions, lui, est teste directement dans `lib/missions.test.ts`.
  */
 const PROJECTS: ProjectResponse[] = [
   {

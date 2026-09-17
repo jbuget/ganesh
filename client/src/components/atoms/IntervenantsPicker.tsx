@@ -1,9 +1,10 @@
 "use client";
 
-import { Check, Plus } from "lucide-react";
+import { Check, Plus, Search } from "lucide-react";
 import { useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useComboboxFilter } from "@/components/ui/combobox";
 import type { BoardMemberResponse, ProjectRole } from "@/lib/api/generated/model";
 import { assignMember, unassignMember } from "@/lib/api/generated/projects/projects";
 import { useTeammates } from "@/lib/api/queries";
@@ -27,6 +28,9 @@ const VISIBLES = 4;
  * La liste se remanie deux fois par semaine : on l'ouvre d'un clic sur les
  * pastilles, et chaque nom bascule au clic suivant, sans validation ni
  * fermeture. Enchainer trois personnes ne demande donc que trois clics.
+ *
+ * Le champ de recherche prend le focus a l'ouverture : sur une equipe entiere,
+ * taper trois lettres va plus vite que derouler la liste.
  */
 export function IntervenantsPicker({
   projectId,
@@ -37,7 +41,15 @@ export function IntervenantsPicker({
 }: IntervenantsPickerProps) {
   const { teammates } = useTeammates();
   const [ouvert, setOuvert] = useState(false);
+  const [recherche, setRecherche] = useState("");
+  // Le meme filtre que les menus de recherche du reste de l'application :
+  // insensible a la casse comme aux accents.
+  const { contains } = useComboboxFilter();
   const affectes = new Set(intervenants.map((membre) => membre.id));
+
+  const proposes = teammates.filter((membre) =>
+    contains(membre.display_name, recherche),
+  );
 
   async function basculer(memberId: number) {
     if (affectes.has(memberId)) {
@@ -52,7 +64,13 @@ export function IntervenantsPicker({
   const restants = intervenants.slice(VISIBLES);
 
   return (
-    <Popover open={ouvert} onOpenChange={setOuvert}>
+    <Popover
+      open={ouvert}
+      onOpenChange={(prochain) => {
+        setOuvert(prochain);
+        if (!prochain) setRecherche("");
+      }}
+    >
       <PopoverTrigger
         aria-label={`Modifier les ${invite.toLowerCase()}`}
         className="flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 -mx-1 transition-colors hover:bg-slate-100"
@@ -82,30 +100,55 @@ export function IntervenantsPicker({
         )}
       </PopoverTrigger>
 
-      <PopoverContent align="start" className="w-56 p-1">
-        <ul>
-          {teammates.map((membre) => {
-            const present = affectes.has(membre.id);
-            return (
-              <li key={membre.id}>
-                <button
-                  type="button"
-                  aria-pressed={present}
-                  onClick={() => void basculer(membre.id)}
-                  className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
-                >
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-700">
-                    {membre.initiales}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">{membre.display_name}</span>
-                  {present && (
-                    <Check className="size-4 shrink-0 text-sky-600" aria-hidden />
-                  )}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+      <PopoverContent align="start" className="w-56 gap-0 p-1">
+        {/*
+          Marges negatives : le popover a son propre padding, sans quoi le trait
+          sous le champ s'arreterait avant les bords.
+        */}
+        <div className="-mx-1 flex items-center gap-2 border-b border-border px-2.5">
+          <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+          <input
+            type="text"
+            autoFocus
+            value={recherche}
+            aria-label={`Rechercher parmi les ${invite.toLowerCase()}`}
+            placeholder="Rechercher…"
+            onChange={(event) => setRecherche(event.target.value)}
+            className="h-8 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          />
+        </div>
+
+        {proposes.length === 0 ? (
+          <p className="px-2 py-6 text-center text-sm text-muted-foreground">
+            Aucun collaborateur ne correspond.
+          </p>
+        ) : (
+          <ul className="max-h-64 overflow-y-auto overscroll-contain pt-1">
+            {proposes.map((membre) => {
+              const present = affectes.has(membre.id);
+              return (
+                <li key={membre.id}>
+                  <button
+                    type="button"
+                    aria-pressed={present}
+                    onClick={() => void basculer(membre.id)}
+                    className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
+                  >
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-700">
+                      {membre.initiales}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">
+                      {membre.display_name}
+                    </span>
+                    {present && (
+                      <Check className="size-4 shrink-0 text-sky-600" aria-hidden />
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </PopoverContent>
     </Popover>
   );
