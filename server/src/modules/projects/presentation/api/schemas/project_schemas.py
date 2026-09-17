@@ -57,6 +57,8 @@ class ProjectListItemResponse(BaseModel):
     intervenants: list["BoardMemberResponse"]
     #: Jours declares, previsionnel exclu.
     realise_j: float
+    #: Mises a jour vivantes du fil de suivi.
+    commentaires: int
 
 
 class UpdateProjectRequest(BaseModel):

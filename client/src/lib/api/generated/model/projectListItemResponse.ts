@@ -15,4 +15,5 @@ export interface ProjectListItemResponse {
   referents: BoardMemberResponse[];
   intervenants: BoardMemberResponse[];
   realise_j: number;
+  commentaires: number;
 }

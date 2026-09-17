@@ -65,6 +65,7 @@ def to_listed_project_response(listed: ListedProject) -> ProjectListItemResponse
         referents=[en_pastille(u) for u in listed.referents],
         intervenants=[en_pastille(u) for u in listed.intervenants],
         realise_j=listed.realise_j,
+        commentaires=listed.commentaires,
     )
 
 

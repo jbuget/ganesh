@@ -26,6 +26,7 @@ const mission = (champs: Record<string, unknown> = {}): ProjectListItemResponse 
     referents: [],
     intervenants: [],
     realise_j: 0,
+    commentaires: 0,
   }) as unknown as ProjectListItemResponse;
 
 function ligne(contenu: React.ReactNode) {
@@ -60,6 +61,28 @@ describe("MissionRow", () => {
     ligne(<MissionRow mission={mission()} onOpen={() => {}} />);
 
     expect(screen.getAllByText(/jrs\./)).toHaveLength(1);
+  });
+
+  it("compte les mises a jour du fil de suivi", () => {
+    const suivie = { ...mission(), commentaires: 3 } as ProjectListItemResponse;
+
+    ligne(<MissionRow mission={suivie} onOpen={() => {}} />);
+
+    expect(screen.getByLabelText("3 mises à jour")).toHaveTextContent("3");
+  });
+
+  it("accorde le décompte au singulier", () => {
+    const suivie = { ...mission(), commentaires: 1 } as ProjectListItemResponse;
+
+    ligne(<MissionRow mission={suivie} onOpen={() => {}} />);
+
+    expect(screen.getByLabelText("1 mise à jour")).toBeInTheDocument();
+  });
+
+  it("n'affiche rien tant que le fil est vide", () => {
+    ligne(<MissionRow mission={mission()} onOpen={() => {}} />);
+
+    expect(screen.queryByLabelText(/mise/)).not.toBeInTheDocument();
   });
 
   it("ouvre la mission au clic sur son nom", () => {

@@ -12,6 +12,9 @@ from src.modules.projects.domain.repositories.project_assignee_repository import
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.projects.domain.repositories.project_update_repository import (
+    ProjectUpdateRepository,
+)
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
@@ -29,6 +32,8 @@ class ListedProject:
     intervenants: list[User] = field(default_factory=list)
     #: Jours declares, previsionnel exclu.
     realise_j: float = 0.0
+    #: Mises a jour vivantes du fil de suivi.
+    commentaires: int = 0
 
     @property
     def is_deletable(self) -> bool:
@@ -45,11 +50,13 @@ class ListProjectsUseCase:
         entries: EntryRepository,
         assignees: ProjectAssigneeRepository,
         users: UserRepository,
+        updates: ProjectUpdateRepository,
     ) -> None:
         self._projects = projects
         self._entries = entries
         self._assignees = assignees
         self._users = users
+        self._updates = updates
 
     async def execute(
         self, include_inactive: bool = False, today: date | None = None
@@ -57,6 +64,7 @@ class ListProjectsUseCase:
         missions = await self._projects.list_all(include_inactive=include_inactive)
         saisies = await self._entries.count_by_project()
         realise = await self._entries.sum_realised_by_project(today or date.today())
+        commentaires = await self._updates.count_by_project()
 
         enfants: dict[int, int] = {}
         for mission in await self._projects.list_all(include_inactive=True):
@@ -84,6 +92,7 @@ class ListProjectsUseCase:
                 referents=personnes(mission.id or 0, ProjectRole.REFERENT),
                 intervenants=personnes(mission.id or 0, ProjectRole.INTERVENANT),
                 realise_j=realise.get(mission.id or 0, 0.0),
+                commentaires=commentaires.get(mission.id or 0, 0),
             )
             for mission in missions
         ]
