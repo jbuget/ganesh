@@ -5,7 +5,7 @@ import { GripVertical } from "lucide-react";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 import { avancement, categorie } from "@/lib/board";
-import { formatTotal } from "@/lib/dates";
+import { formatJoursDecimal } from "@/lib/dates";
 
 /** Teinte du rapport consomme/estime selon l'etat d'avancement. */
 const TEINTES: Record<ReturnType<typeof avancement>, string> = {
@@ -34,7 +34,7 @@ export function ProjectCard({ carte, poignee, enDeplacement }: ProjectCardProps)
         "group rounded-lg border bg-white p-3 shadow-xs transition-shadow",
         enDeplacement
           ? "border-sky-400 shadow-lg"
-          : "border-slate-200 hover:border-slate-500 hover:shadow-sm",
+          : "border-slate-300 hover:border-slate-500 hover:shadow-sm",
       ].join(" ")}
     >
       <div className="flex items-start gap-1.5">
@@ -56,8 +56,8 @@ export function ProjectCard({ carte, poignee, enDeplacement }: ProjectCardProps)
 
       <p className={`mt-2.5 text-xs tabular-nums ${TEINTES[etat]}`}>
         {project.estime_j
-          ? `${formatTotal(carte.consomme_j)}/${project.estime_j} jrs. estimés`
-          : `${formatTotal(carte.consomme_j)} jrs. consommés`}
+          ? `${formatJoursDecimal(carte.consomme_j)}/${project.estime_j} jrs. estimés`
+          : `${formatJoursDecimal(carte.consomme_j)} jrs. consommés`}
       </p>
 
       {carte.collaborateurs.length > 0 && (

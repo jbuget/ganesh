@@ -71,3 +71,18 @@ export function formatDays(value: number): string {
 export function formatTotal(value: number): string {
   return value === 0 ? "0" : formatDays(value);
 }
+
+/**
+ * Nombre de jours en decimal : 7.5 → « 7,5 », 26 → « 26 ».
+ *
+ * La matrice prefere « ½ », qui tient dans une cellule etroite. Sur une carte
+ * de tableau, ou le consomme se lit face a un estime entier, le decimal parle
+ * plus vite : « 7,5/20 » se compare d'un coup d'oeil, pas « 7½/20 ».
+ *
+ * Formate a la main plutot que par `toLocaleString` : le rendu serveur et le
+ * navigateur doivent produire la meme chaine, sans dependre des donnees de
+ * localisation disponibles de chaque cote.
+ */
+export function formatJoursDecimal(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1).replace(".", ",");
+}

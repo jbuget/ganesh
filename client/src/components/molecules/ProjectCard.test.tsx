@@ -47,6 +47,12 @@ describe("ProjectCard", () => {
     expect(screen.getByText("5/20 jrs. estimés")).toBeInTheDocument();
   });
 
+  it("écrit les demi-journées en décimal plutôt qu'en fraction", () => {
+    render(<ProjectCard carte={carte({ consomme_j: 7.5 })} />);
+
+    expect(screen.getByText("7,5/20 jrs. estimés")).toBeInTheDocument();
+  });
+
   it("se contente du consommé quand aucun estimé n'existe", () => {
     render(<ProjectCard carte={carte({ project: { estime_j: null } })} />);
 

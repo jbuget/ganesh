@@ -4,6 +4,7 @@ import {
   dayNumber,
   firstDayOfMonth,
   formatDays,
+  formatJoursDecimal,
   formatTotal,
   formatMonth,
   nextMonth,
@@ -94,5 +95,23 @@ describe("formatTotal", () => {
 
   it("affiche un total avec demi-journée", () => {
     expect(formatTotal(2.5)).toBe("2½");
+  });
+});
+
+describe("formatJoursDecimal", () => {
+  it("écrit une demi-journée en décimal, à la française", () => {
+    expect(formatJoursDecimal(7.5)).toBe("7,5");
+  });
+
+  it("laisse un entier sans décimale inutile", () => {
+    expect(formatJoursDecimal(26)).toBe("26");
+  });
+
+  it("garde le zéro visible", () => {
+    expect(formatJoursDecimal(0)).toBe("0");
+  });
+
+  it("écrit une demi-journée seule", () => {
+    expect(formatJoursDecimal(0.5)).toBe("0,5");
   });
 });
