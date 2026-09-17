@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +39,22 @@ export function ValidateMonthDialog({
   onConfirm,
 }: ValidateMonthDialogProps) {
   const manquant = Math.max(0, joursOuvres - totalSaisi);
+  const [enCours, setEnCours] = useState(false);
+
+  /**
+   * Le dialogue se referme lui-meme une fois le mois verrouille : rien dans la
+   * confirmation ne ferme la fenetre, et l'echec doit rester sous les yeux.
+   */
+  async function confirmer() {
+    if (enCours) return;
+    setEnCours(true);
+    try {
+      await onConfirm();
+      onOpenChange(false);
+    } finally {
+      setEnCours(false);
+    }
+  }
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -64,7 +82,9 @@ export function ValidateMonthDialog({
 
         <AlertDialogFooter>
           <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Valider</AlertDialogAction>
+          <AlertDialogAction onClick={confirmer} disabled={enCours}>
+            Valider
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
