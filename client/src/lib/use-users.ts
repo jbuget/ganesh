@@ -23,6 +23,11 @@ export function useUsersScreen() {
     isLoading,
     isManager: me?.role === "MANAGER",
     avecInactifs,
+
+    // Un seul instant de reference par rendu : sans cela, deux lignes de la
+    // meme liste se compareraient a deux « maintenant » differents.
+    maintenant: new Date(),
+
     basculerInactifs: () => setAvecInactifs((actuel) => !actuel),
 
     /** Par nom, seul ordre qui se retrouve a l'oeil dans une liste d'equipe. */

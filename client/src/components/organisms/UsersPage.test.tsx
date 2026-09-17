@@ -17,6 +17,7 @@ const ecran = vi.hoisted(() => ({
       initiales: "JB",
       role: "MANAGER",
       actif: true,
+      derniere_connexion: "2026-09-17T09:00:00",
     },
     {
       id: 2,
@@ -25,9 +26,11 @@ const ecran = vi.hoisted(() => ({
       initiales: "LC",
       role: "TEAMMATE",
       actif: true,
+      derniere_connexion: null,
     },
   ],
   changerRole: vi.fn(),
+  maintenant: new Date("2026-09-17T12:00:00"),
 }));
 
 vi.mock("@/lib/use-users", () => ({ useUsersScreen: () => ecran }));
@@ -65,11 +68,21 @@ describe("UsersPage", () => {
     expect(ecran.basculerInactifs).toHaveBeenCalledTimes(1);
   });
 
+  it("donne la dernière connexion de chacun", () => {
+    render(<UsersPage />);
+
+    expect(
+      screen.getByRole("columnheader", { name: "Dernière connexion" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("il y a 3 h")).toBeInTheDocument();
+    expect(screen.getByText("Jamais")).toBeInTheDocument();
+  });
+
   it("annonce une liste vide plutôt qu'un tableau sans ligne", () => {
     ecran.collaborateurs = [];
     render(<UsersPage />);
 
-    expect(screen.getByText(/Aucun collaborateur/)).toBeInTheDocument();
+    expect(screen.getByText(/Aucun utilisateur/)).toBeInTheDocument();
     expect(screen.queryByRole("table")).toBeNull();
   });
 });

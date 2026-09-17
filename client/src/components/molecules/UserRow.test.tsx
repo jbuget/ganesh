@@ -15,11 +15,18 @@ const jeremy: UserResponse = {
   actif: true,
 };
 
+const MAINTENANT = new Date("2026-09-17T12:00:00");
+
 function renderRow(user: UserResponse, roleModifiable = false) {
   return render(
     <Table>
       <TableBody>
-        <UserRow user={user} roleModifiable={roleModifiable} onChangeRole={vi.fn()} />
+        <UserRow
+          user={user}
+          roleModifiable={roleModifiable}
+          onChangeRole={vi.fn()}
+          maintenant={MAINTENANT}
+        />
       </TableBody>
     </Table>,
   );
@@ -56,5 +63,17 @@ describe("UserRow", () => {
     renderRow(jeremy, false);
 
     expect(screen.queryByRole("button", { name: /Changer le rôle/ })).toBeNull();
+  });
+
+  it("dit depuis quand le compte ne s'est plus connecté", () => {
+    renderRow({ ...jeremy, derniere_connexion: "2026-09-17T09:00:00" });
+
+    expect(screen.getByText("il y a 3 h")).toBeInTheDocument();
+  });
+
+  it("distingue un compte qui ne s'est jamais connecté", () => {
+    renderRow({ ...jeremy, derniere_connexion: null });
+
+    expect(screen.getByText("Jamais")).toBeInTheDocument();
   });
 });

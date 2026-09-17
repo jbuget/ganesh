@@ -24,10 +24,10 @@ export function UsersPage() {
   return (
     <main className="p-6">
       <PageHeader
-        titre="Collaborateurs"
+        titre="Utilisateurs"
         soustitre={
           ecran.isManager
-            ? "Vous pouvez promouvoir un collaborateur. Chaque changement est tracé."
+            ? "Vous pouvez promouvoir un utilisateur. Chaque changement est tracé."
             : "Consultable par toute l'équipe. Seul un manager change un rôle."
         }
         actions={
@@ -43,7 +43,7 @@ export function UsersPage() {
 
         {!ecran.isLoading && ecran.collaborateurs.length === 0 && (
           <p className="py-8 text-center text-sm text-slate-500">
-            Aucun collaborateur. Les comptes se créent à la première connexion.
+            Aucun utilisateur. Les comptes se créent à la première connexion.
           </p>
         )}
 
@@ -51,9 +51,10 @@ export function UsersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Collaborateur</TableHead>
+                <TableHead>Utilisateur</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Rôle</TableHead>
+                <TableHead>Dernière connexion</TableHead>
                 <TableHead>Statut</TableHead>
               </TableRow>
             </TableHeader>
@@ -64,6 +65,7 @@ export function UsersPage() {
                   user={collaborateur}
                   roleModifiable={ecran.isManager}
                   onChangeRole={ecran.changerRole}
+                  maintenant={ecran.maintenant}
                 />
               ))}
             </TableBody>

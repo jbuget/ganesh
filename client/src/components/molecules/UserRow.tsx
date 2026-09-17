@@ -4,16 +4,24 @@ import { RolePicker } from "@/components/atoms/RolePicker";
 import { UserAvatar } from "@/components/atoms/UserAvatar";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { Role, UserResponse } from "@/lib/api/generated/model";
+import { depuis } from "@/lib/dates-relatives";
 
 interface UserRowProps {
   user: UserResponse;
-  /** La gestion des collaborateurs est reservee aux managers. */
+  /** La gestion des utilisateurs est reservee aux managers. */
   roleModifiable: boolean;
   onChangeRole: (userId: number, role: Role) => void | Promise<void>;
+  /** Injecte : un rendu date par `new Date()` ne se testerait pas. */
+  maintenant: Date;
 }
 
-/** Un collaborateur : qui il est, ce qu'il peut faire, s'il est encore la. */
-export function UserRow({ user, roleModifiable, onChangeRole }: UserRowProps) {
+/** Un utilisateur : qui il est, ce qu'il peut faire, quand il est passe. */
+export function UserRow({
+  user,
+  roleModifiable,
+  onChangeRole,
+  maintenant,
+}: UserRowProps) {
   return (
     <TableRow className={user.actif ? undefined : "text-slate-400"}>
       <TableCell className="py-2">
@@ -35,6 +43,17 @@ export function UserRow({ user, roleModifiable, onChangeRole }: UserRowProps) {
           modifiable={roleModifiable}
           onChange={(role) => onChangeRole(user.id, role)}
         />
+      </TableCell>
+
+      <TableCell className="py-2 text-slate-500">
+        {/* Un compte jamais venu n'est pas « il y a longtemps » : il n'est jamais venu. */}
+        {user.derniere_connexion ? (
+          <span title={new Date(user.derniere_connexion).toLocaleString("fr-FR")}>
+            {depuis(user.derniere_connexion, maintenant)}
+          </span>
+        ) : (
+          <span className="text-slate-400">Jamais</span>
+        )}
       </TableCell>
 
       <TableCell className="py-2">
