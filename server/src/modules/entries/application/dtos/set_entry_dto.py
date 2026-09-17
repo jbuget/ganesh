@@ -27,3 +27,16 @@ class ClearEntryCommand:
     target_user_id: int
     project_id: int
     jour: date
+
+
+@dataclass(frozen=True)
+class RemoveMissionCommand:
+    """Demande de retrait d'une mission entiere d'un mois.
+
+    `mois` designe n'importe quel jour du mois vise : seul le mois compte.
+    """
+
+    actor_id: int
+    target_user_id: int
+    project_id: int
+    mois: date

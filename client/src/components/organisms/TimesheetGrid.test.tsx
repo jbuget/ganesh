@@ -183,6 +183,27 @@ describe("TimesheetGrid", () => {
     expect(screen.getByText("Ajouter une mission")).toBeInTheDocument();
   });
 
+  it("offre de retirer chaque mission, hors du cadre du tableau", () => {
+    const onRemoveMission = vi.fn();
+    render(
+      <TimesheetGrid
+        {...baseProps}
+        grid={makeGrid()}
+        onRemoveMission={onRemoveMission}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Retirer Portail bailleurs" }));
+
+    expect(onRemoveMission).toHaveBeenCalledWith(10);
+  });
+
+  it("n'offre aucun retrait quand le mois est clos", () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid({ is_writable: false })} />);
+
+    expect(screen.queryByRole("button", { name: /^Retirer/ })).toBeNull();
+  });
+
   it("réduit un week-end sans saisie à une simple bande", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 

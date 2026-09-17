@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { MissionSelector } from "@/components/atoms/MissionSelector";
+import { RemoveMissionDialog } from "@/components/atoms/RemoveMissionDialog";
 import { TeammateSelector } from "@/components/atoms/TeammateSelector";
 import { ValidateMonthDialog } from "@/components/atoms/ValidateMonthDialog";
 import { TimesheetGrid } from "@/components/organisms/TimesheetGrid";
@@ -19,6 +20,24 @@ export function TimesheetPage() {
 
   const [declarationOuverte, setDeclarationOuverte] = useState(false);
   const [validationOuverte, setValidationOuverte] = useState(false);
+  const [aRetirer, setARetirer] = useState<{
+    id: number;
+    label: string;
+    total: number;
+  } | null>(null);
+
+  /**
+   * Une ligne vide s'en va sans ceremonie : il n'y a rien a perdre. Des qu'elle
+   * porte du temps, on annonce ce qui sera efface avant de le faire.
+   */
+  function demanderLeRetrait(projectId: number) {
+    const ligne = grid?.rows.find((row) => row.project_id === projectId);
+    if (!ligne || ligne.total === 0) {
+      void mois.removeMission(projectId);
+      return;
+    }
+    setARetirer({ id: projectId, label: ligne.label, total: ligne.total });
+  }
 
   return (
     <main className="mx-auto max-w-[1600px] p-6">
@@ -88,6 +107,7 @@ export function TimesheetPage() {
           extraRows={mois.extraRows}
           today={mois.today}
           onSetValue={mois.setDayValue}
+          onRemoveMission={grid.is_writable ? demanderLeRetrait : undefined}
           ajoutDeMission={
             grid.is_writable ? (
               <MissionSelector
@@ -98,6 +118,19 @@ export function TimesheetPage() {
               />
             ) : null
           }
+        />
+      )}
+
+      {aRetirer && (
+        <RemoveMissionDialog
+          open
+          onOpenChange={(ouvert) => !ouvert && setARetirer(null)}
+          label={aRetirer.label}
+          total={aRetirer.total}
+          onConfirm={async () => {
+            await mois.removeMission(aRetirer.id);
+            setARetirer(null);
+          }}
         />
       )}
 

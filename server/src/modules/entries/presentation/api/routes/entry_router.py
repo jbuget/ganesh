@@ -9,12 +9,16 @@ from src.core.database import get_db
 from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.entries.application.dtos.set_entry_dto import (
     ClearEntryCommand,
+    RemoveMissionCommand,
     SetEntryCommand,
 )
 from src.modules.entries.application.use_cases.clear_entry import ClearEntryUseCase
 from src.modules.entries.application.use_cases.get_month_grid import (
     GetMonthGridQuery,
     GetMonthGridUseCase,
+)
+from src.modules.entries.application.use_cases.remove_mission_from_month import (
+    RemoveMissionFromMonthUseCase,
 )
 from src.modules.entries.application.use_cases.set_entry import SetEntryUseCase
 from src.modules.entries.presentation.api.mappers.entry_mapper import (
@@ -29,6 +33,7 @@ from src.modules.entries.presentation.api.schemas.entry_schemas import (
 from src.modules.entries.presentation.dependencies import (
     get_clear_entry_use_case,
     get_month_grid_use_case,
+    get_remove_mission_use_case,
     get_set_entry_use_case,
 )
 from src.modules.users.domain.entities.user import User
@@ -102,6 +107,35 @@ async def clear_entry(
             target_user_id=user_id or current_user.id,
             project_id=project_id,
             jour=jour,
+        )
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete(
+    "/mission",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="removeMissionFromMonth",
+)
+async def remove_mission_from_month(
+    project_id: int,
+    mois: date = Query(description="N'importe quel jour du mois vise"),
+    user_id: int | None = Query(
+        default=None, description="Collaborateur dont le mois est modifie."
+    ),
+    current_user: User = Depends(get_current_user),
+    use_case: RemoveMissionFromMonthUseCase = Depends(get_remove_mission_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Retire une mission d'un mois, avec le temps qu'elle porte."""
+    assert current_user.id is not None
+    await use_case.execute(
+        RemoveMissionCommand(
+            actor_id=current_user.id,
+            target_user_id=user_id or current_user.id,
+            project_id=project_id,
+            mois=mois,
         )
     )
     await session.commit()

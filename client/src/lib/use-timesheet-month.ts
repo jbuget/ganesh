@@ -3,7 +3,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { clearEntry, setEntry } from "@/lib/api/generated/entries/entries";
+import {
+  clearEntry,
+  removeMissionFromMonth,
+  setEntry,
+} from "@/lib/api/generated/entries/entries";
 import type { ProjectResponse } from "@/lib/api/generated/model";
 import { useValidateMonth } from "@/lib/api/generated/months/months";
 import { useCreateProject } from "@/lib/api/generated/projects/projects";
@@ -105,6 +109,20 @@ export function useTimesheetMonth() {
     addMission(projectId: number) {
       const project = projects.find((p) => p.id === projectId);
       if (project) setExtraRows((rows) => [...rows, project]);
+    },
+
+    /**
+     * Retire une mission du mois, avec le temps qu'elle porte.
+     *
+     * Une ligne ajoutee mais encore vide n'existe que localement : il n'y a
+     * rien a demander au serveur pour la faire disparaitre.
+     */
+    async removeMission(projectId: number) {
+      setExtraRows((rows) => rows.filter((row) => row.id !== projectId));
+      if (grid?.rows.some((row) => row.project_id === projectId)) {
+        await removeMissionFromMonth({ project_id: projectId, mois, ...target });
+        await refresh();
+      }
     },
 
     async declareProject(label: string) {

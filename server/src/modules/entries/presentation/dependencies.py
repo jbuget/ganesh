@@ -12,6 +12,9 @@ from src.modules.audit_logs.infrastructure.database.repositories.audit_log_repos
 )
 from src.modules.entries.application.use_cases.clear_entry import ClearEntryUseCase
 from src.modules.entries.application.use_cases.get_month_grid import GetMonthGridUseCase
+from src.modules.entries.application.use_cases.remove_mission_from_month import (
+    RemoveMissionFromMonthUseCase,
+)
 from src.modules.entries.application.use_cases.set_entry import SetEntryUseCase
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.entries.infrastructure.database.repositories.entry_repository_impl import (
@@ -91,5 +94,16 @@ def get_clear_entry_use_case(
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> ClearEntryUseCase:
     return ClearEntryUseCase(
+        users=users, entries=entries, months=months, audit_logs=audit_logs
+    )
+
+
+def get_remove_mission_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    entries: EntryRepository = Depends(get_entry_repository),
+    months: MonthRepository = Depends(get_month_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> RemoveMissionFromMonthUseCase:
+    return RemoveMissionFromMonthUseCase(
         users=users, entries=entries, months=months, audit_logs=audit_logs
     )

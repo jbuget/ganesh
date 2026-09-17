@@ -1,5 +1,7 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
+
 import { DayCell } from "@/components/atoms/DayCell";
 import type { DayValue } from "@/lib/day-value";
 import { DayHeader } from "@/components/atoms/DayHeader";
@@ -15,6 +17,8 @@ interface TimesheetGridProps {
   onSetValue: (projectId: number, jour: string, value: DayValue) => void;
   /** Selecteur de mission, loge dans la derniere ligne. Absent si le mois est clos. */
   ajoutDeMission?: React.ReactNode;
+  /** Retrait d'une mission. Absent si le mois est clos. */
+  onRemoveMission?: (projectId: number) => void;
 }
 
 interface DisplayRow {
@@ -40,6 +44,7 @@ export function TimesheetGrid({
   today,
   onSetValue,
   ajoutDeMission,
+  onRemoveMission,
 }: TimesheetGridProps) {
   const rows: DisplayRow[] = [
     ...grid.rows.map((row) => ({
@@ -112,6 +117,12 @@ export function TimesheetGrid({
             >
               <span className="sr-only">Total du mois</span>
             </th>
+            {onRemoveMission && (
+              // Hors du cadre : cette colonne porte une action, pas une donnee.
+              <th scope="col" className="w-10">
+                <span className="sr-only">Retirer la mission</span>
+              </th>
+            )}
           </tr>
 
           <tr>
@@ -140,6 +151,7 @@ export function TimesheetGrid({
               isStrong
               strongSides={["right", "bottom"]}
             />
+            {onRemoveMission && <td className="w-10" />}
           </tr>
         </thead>
 
@@ -191,6 +203,18 @@ export function TimesheetGrid({
                 isStrong
                 strongSides={fermeLeTableau(rowIndex) ? ["right", "bottom"] : ["right"]}
               />
+              {onRemoveMission && (
+                <td className="w-10 pl-2 align-middle">
+                  <button
+                    type="button"
+                    aria-label={`Retirer ${row.label}`}
+                    onClick={() => onRemoveMission(row.project_id)}
+                    className="cursor-pointer rounded p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 className="size-4" aria-hidden />
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
           {ajoutDeMission && (
@@ -206,6 +230,7 @@ export function TimesheetGrid({
                 colSpan={grid.days.length + 1}
                 className="border-r border-b border-r-slate-500 border-b-slate-500 bg-white"
               />
+              {onRemoveMission && <td className="w-10" />}
             </tr>
           )}
         </tbody>

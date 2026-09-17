@@ -26,6 +26,7 @@ import type {
   GetMonthGridParams,
   HTTPValidationError,
   MonthGridResponse,
+  RemoveMissionFromMonthParams,
   SetEntryParams,
   SetEntryRequest,
 } from "../model";
@@ -481,4 +482,133 @@ export const useClearEntry = <TError = HTTPValidationError, TContext = unknown>(
   TContext
 > => {
   return useMutation(getClearEntryMutationOptions(options), queryClient);
+};
+export type removeMissionFromMonthResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type removeMissionFromMonthResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type removeMissionFromMonthResponseSuccess =
+  removeMissionFromMonthResponse204 & {
+    headers: Headers;
+  };
+export type removeMissionFromMonthResponseError = removeMissionFromMonthResponse422 & {
+  headers: Headers;
+};
+
+export type removeMissionFromMonthResponse =
+  removeMissionFromMonthResponseSuccess | removeMissionFromMonthResponseError;
+
+export const getRemoveMissionFromMonthUrl = (params: RemoveMissionFromMonthParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/entries/mission?${stringifiedParams}`
+    : `/api/v1/entries/mission`;
+};
+
+/**
+ * Retire une mission d'un mois, avec le temps qu'elle porte.
+ * @summary Remove Mission From Month
+ */
+export const removeMissionFromMonth = async (
+  params: RemoveMissionFromMonthParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<removeMissionFromMonthResponse> => {
+  return bffFetcher<removeMissionFromMonthResponse>(
+    getRemoveMissionFromMonthUrl(params),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getRemoveMissionFromMonthMutationKey = () =>
+  ["removeMissionFromMonth"] as const;
+
+export const getRemoveMissionFromMonthMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeMissionFromMonth>>,
+    TError,
+    RemoveMissionFromMonthMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof removeMissionFromMonth>>,
+  TError,
+  RemoveMissionFromMonthMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRemoveMissionFromMonthMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof removeMissionFromMonth>>,
+    RemoveMissionFromMonthMutationVariables
+  > = (props) => {
+    const { params } = props ?? {};
+
+    return removeMissionFromMonth(params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemoveMissionFromMonthMutationResult = NonNullable<
+  Awaited<ReturnType<typeof removeMissionFromMonth>>
+>;
+
+export type RemoveMissionFromMonthMutationError = HTTPValidationError;
+export type RemoveMissionFromMonthMutationVariables = {
+  params: RemoveMissionFromMonthParams;
+};
+
+/**
+ * @summary Remove Mission From Month
+ */
+export const useRemoveMissionFromMonth = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof removeMissionFromMonth>>,
+      TError,
+      RemoveMissionFromMonthMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof removeMissionFromMonth>>,
+  TError,
+  RemoveMissionFromMonthMutationVariables,
+  TContext
+> => {
+  return useMutation(getRemoveMissionFromMonthMutationOptions(options), queryClient);
 };

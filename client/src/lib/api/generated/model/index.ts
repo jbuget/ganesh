@@ -40,6 +40,7 @@ export * from "./projectCategory";
 export * from "./projectKind";
 export * from "./projectResponse";
 export * from "./projectStatus";
+export * from "./removeMissionFromMonthParams";
 export * from "./reopenMonthApiV1MonthsMoisReopenPostParams";
 export * from "./reopenMonthParams";
 export * from "./role";
