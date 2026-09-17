@@ -45,14 +45,23 @@ export function TimesheetPage() {
       <PageHeader
         titre="Activité"
         soustitre="Déclarez votre temps en journées ou demi-journées. Tant que le mois n'est pas validé, tout reste modifiable."
-        actions={
-          grid?.is_writable && mois.isOwnMonth ? (
-            <Button onClick={() => setValidationOuverte(true)}>Valider le mois</Button>
-          ) : undefined
-        }
       />
 
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+      {/*
+        Les trois commandes de la matrice, juste au-dessus d'elle : de qui on
+        regarde le mois, quel mois, et la seule action qui l'engage. Les deux
+        cotes prennent la meme part de l'espace restant, ce qui centre le mois
+        quelle que soit la largeur des deux autres.
+      */}
+      <div className="mb-3 flex flex-wrap items-center gap-4">
+        <div className="flex flex-1 justify-start">
+          <TeammateSelector
+            teammates={mois.teammates}
+            selectedId={mois.targetUserId}
+            onSelect={mois.viewTeammate}
+          />
+        </div>
+
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
@@ -75,12 +84,10 @@ export function TimesheetPage() {
           </Button>
         </div>
 
-        <div className="flex items-center gap-3">
-          <TeammateSelector
-            teammates={mois.teammates}
-            selectedId={mois.targetUserId}
-            onSelect={mois.viewTeammate}
-          />
+        <div className="flex flex-1 justify-end">
+          {grid?.is_writable && mois.isOwnMonth && (
+            <Button onClick={() => setValidationOuverte(true)}>Valider le mois</Button>
+          )}
         </div>
       </div>
 
