@@ -25,6 +25,7 @@ from src.modules.months.infrastructure.database.models import (  # noqa: F401, E
 )
 from src.modules.projects.infrastructure.database.models import (  # noqa: F401, E402
     project_assignee_model,
+    project_detail_models,
     project_model,
 )
 from src.modules.users.infrastructure.database.models import (  # noqa: F401, E402

@@ -5,6 +5,7 @@ from datetime import date
 from pydantic import BaseModel, Field
 
 from src.modules.projects.domain.entities.project import (
+    Department,
     ProjectCategory,
     ProjectKind,
     ProjectStatus,
@@ -42,6 +43,7 @@ class ProjectResponse(BaseModel):
     position: int
     monday_item_id: str | None
     monday_subitem_id: str | None
+    contacts_metier: str | None
     is_syncable_to_monday: bool
     is_deletable: bool
 
@@ -120,3 +122,53 @@ class BoardResponse(BaseModel):
     """Le tableau complet, toutes phases confondues."""
 
     colonnes: list[BoardColumnResponse]
+
+
+class ProjectLinkResponse(BaseModel):
+    """Un lien utile attache a une mission."""
+
+    id: int
+    label: str
+    url: str
+
+
+class AddLinkRequest(BaseModel):
+    """Ajout d'un lien : une adresse, et un intitule facultatif."""
+
+    label: str = ""
+    url: str
+
+
+class PhaseReachedResponse(BaseModel):
+    """Date a laquelle une mission est entree dans une phase."""
+
+    statut: ProjectStatus
+    libelle: str
+    reached_at: date
+
+
+class ProjectContributionResponse(BaseModel):
+    """Temps declare par une personne sur la mission."""
+
+    member: BoardMemberResponse
+    jours: float
+
+
+class ProjectDetailResponse(BaseModel):
+    """La fiche complete d'une mission."""
+
+    project: ProjectResponse
+    departements: list[Department]
+    liens: list[ProjectLinkResponse]
+    phases: list[PhaseReachedResponse]
+    referents: list[BoardMemberResponse]
+    intervenants: list[BoardMemberResponse]
+    consomme_j: float
+    contributions: list[ProjectContributionResponse]
+
+
+class UpdateProjectDetailRequest(BaseModel):
+    """Departements concernes et interlocuteurs metier."""
+
+    departements: list[Department] = []
+    contacts_metier: str | None = None

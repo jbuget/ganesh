@@ -1,11 +1,16 @@
 """Deplace une carte sur le tableau de bord."""
 
+from datetime import date
+
 from src.modules.audit_logs.domain.entities.audit_log import AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
 from src.modules.projects.application.dtos.project_dto import MoveProjectCommand
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
+from src.modules.projects.domain.repositories.project_detail_repository import (
+    ProjectDetailRepository,
+)
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
@@ -26,13 +31,17 @@ class MoveProjectUseCase:
         self,
         users: UserRepository,
         projects: ProjectRepository,
+        details: ProjectDetailRepository,
         audit_logs: AuditLogRepository,
     ) -> None:
         self._users = users
         self._projects = projects
+        self._details = details
         self._audit_logs = audit_logs
 
-    async def execute(self, command: MoveProjectCommand) -> Project:
+    async def execute(
+        self, command: MoveProjectCommand, today: date | None = None
+    ) -> Project:
         if await self._users.get_by_id(command.actor_id) is None:
             raise EntityNotFoundError("Utilisateur inconnu.")
 
@@ -48,6 +57,11 @@ class MoveProjectUseCase:
         missions = await self._projects.list_all(include_inactive=False)
 
         mission.statut = command.statut
+        # Glisser une carte fait franchir une phase autant qu'un changement
+        # depuis le referentiel : la date se note des deux cotes.
+        await self._details.mark_phase_reached(
+            command.project_id, command.statut, today or date.today()
+        )
 
         # Le depot se raisonne par identifiant, jamais par identite d'objet :
         # `get_by_id` et `list_all` renvoient deux instances distinctes de la

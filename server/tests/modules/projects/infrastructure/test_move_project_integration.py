@@ -18,6 +18,9 @@ from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectStatus,
 )
+from src.modules.projects.infrastructure.database.repositories.project_detail_repository_impl import (
+    SqlProjectDetailRepository,
+)
 from src.modules.projects.infrastructure.database.repositories.project_repository_impl import (
     SqlProjectRepository,
 )
@@ -61,6 +64,7 @@ def use_case(session: AsyncSession) -> MoveProjectUseCase:
     return MoveProjectUseCase(
         users=SqlUserRepository(session),
         projects=SqlProjectRepository(session),
+        details=SqlProjectDetailRepository(session),
         audit_logs=SqlAuditLogRepository(session),
     )
 

@@ -131,6 +131,7 @@ class AuditLog:
         actor_id: int,
         project_id: int,
         member_id: int,
+        role: str,
         at: datetime | None = None,
     ) -> "AuditLog":
         """Un intervenant est declare sur une mission."""
@@ -139,6 +140,7 @@ class AuditLog:
             actor_id=actor_id,
             target_user_id=member_id,
             project_id=project_id,
+            new_value=role,
             at=at or datetime.now(),
         )
 
@@ -148,6 +150,7 @@ class AuditLog:
         actor_id: int,
         project_id: int,
         member_id: int,
+        role: str,
         at: datetime | None = None,
     ) -> "AuditLog":
         """Un intervenant n'est plus attendu sur une mission."""
@@ -156,6 +159,7 @@ class AuditLog:
             actor_id=actor_id,
             target_user_id=member_id,
             project_id=project_id,
+            old_value=role,
             at=at or datetime.now(),
         )
 

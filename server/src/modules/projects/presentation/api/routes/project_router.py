@@ -33,6 +33,9 @@ from src.modules.projects.application.use_cases.delete_project import (
     DeleteProjectUseCase,
 )
 from src.modules.projects.application.use_cases.get_board import GetBoardUseCase
+from src.modules.projects.application.use_cases.get_project_detail import (
+    GetProjectDetailUseCase,
+)
 from src.modules.projects.application.use_cases.import_projects import (
     ImportProjectsUseCase,
 )
@@ -41,22 +44,36 @@ from src.modules.projects.application.use_cases.move_project import MoveProjectU
 from src.modules.projects.application.use_cases.update_project import (
     UpdateProjectUseCase,
 )
+from src.modules.projects.application.use_cases.update_project_detail import (
+    AddLinkCommand,
+    AddProjectLinkUseCase,
+    RemoveProjectLinkUseCase,
+    UpdateProjectDetailCommand,
+    UpdateProjectDetailUseCase,
+)
+from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.presentation.api.mappers.project_mapper import (
     to_board_response,
     to_listed_project_response,
+    to_project_detail_response,
     to_project_response,
 )
 from src.modules.projects.presentation.api.schemas.project_schemas import (
+    AddLinkRequest,
     BoardResponse,
     ChangeStatusRequest,
     CreateProjectRequest,
     ImportProjectsRequest,
     ImportReportResponse,
     MoveProjectRequest,
+    ProjectDetailResponse,
+    ProjectLinkResponse,
     ProjectResponse,
+    UpdateProjectDetailRequest,
     UpdateProjectRequest,
 )
 from src.modules.projects.presentation.dependencies import (
+    get_add_project_link_use_case,
     get_assign_member_use_case,
     get_board_use_case,
     get_change_status_use_case,
@@ -65,7 +82,10 @@ from src.modules.projects.presentation.dependencies import (
     get_import_projects_use_case,
     get_list_projects_use_case,
     get_move_project_use_case,
+    get_project_detail_use_case,
+    get_remove_project_link_use_case,
     get_unassign_member_use_case,
+    get_update_project_detail_use_case,
     get_update_project_use_case,
 )
 from src.modules.users.domain.entities.user import User
@@ -242,6 +262,9 @@ async def move_project(
 async def assign_member(
     project_id: int,
     member_id: int,
+    role: ProjectRole = Query(
+        default=ProjectRole.INTERVENANT, description="A quel titre."
+    ),
     current_user: User = Depends(get_current_user),
     use_case: AssignMemberUseCase = Depends(get_assign_member_use_case),
     session: AsyncSession = Depends(get_db),
@@ -250,7 +273,10 @@ async def assign_member(
     assert current_user.id is not None
     await use_case.execute(
         AssignmentCommand(
-            actor_id=current_user.id, project_id=project_id, member_id=member_id
+            actor_id=current_user.id,
+            project_id=project_id,
+            member_id=member_id,
+            role=role,
         )
     )
     await session.commit()
@@ -265,6 +291,9 @@ async def assign_member(
 async def unassign_member(
     project_id: int,
     member_id: int,
+    role: ProjectRole = Query(
+        default=ProjectRole.INTERVENANT, description="A quel titre."
+    ),
     current_user: User = Depends(get_current_user),
     use_case: UnassignMemberUseCase = Depends(get_unassign_member_use_case),
     session: AsyncSession = Depends(get_db),
@@ -273,8 +302,97 @@ async def unassign_member(
     assert current_user.id is not None
     await use_case.execute(
         AssignmentCommand(
-            actor_id=current_user.id, project_id=project_id, member_id=member_id
+            actor_id=current_user.id,
+            project_id=project_id,
+            member_id=member_id,
+            role=role,
         )
     )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get(
+    "/{project_id}/detail",
+    response_model=ProjectDetailResponse,
+    operation_id="getProjectDetail",
+)
+async def get_project_detail(
+    project_id: int,
+    _: User = Depends(get_current_user),
+    use_case: GetProjectDetailUseCase = Depends(get_project_detail_use_case),
+) -> ProjectDetailResponse:
+    """La fiche complete d'une mission."""
+    return to_project_detail_response(await use_case.execute(project_id))
+
+
+@router.put(
+    "/{project_id}/detail",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="updateProjectDetail",
+)
+async def update_project_detail(
+    project_id: int,
+    payload: UpdateProjectDetailRequest,
+    current_user: User = Depends(get_current_user),
+    use_case: UpdateProjectDetailUseCase = Depends(get_update_project_detail_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Enregistre les departements concernes et les contacts metier."""
+    assert current_user.id is not None
+    await use_case.execute(
+        UpdateProjectDetailCommand(
+            actor_id=current_user.id,
+            project_id=project_id,
+            departements=payload.departements,
+            contacts_metier=payload.contacts_metier,
+        )
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/{project_id}/liens",
+    response_model=ProjectLinkResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="addProjectLink",
+)
+async def add_project_link(
+    project_id: int,
+    payload: AddLinkRequest,
+    current_user: User = Depends(get_current_user),
+    use_case: AddProjectLinkUseCase = Depends(get_add_project_link_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> ProjectLinkResponse:
+    """Attache un lien utile a la mission."""
+    assert current_user.id is not None
+    lien = await use_case.execute(
+        AddLinkCommand(
+            actor_id=current_user.id,
+            project_id=project_id,
+            label=payload.label,
+            url=payload.url,
+        )
+    )
+    await session.commit()
+    assert lien.id is not None
+    return ProjectLinkResponse(id=lien.id, label=lien.label, url=lien.url)
+
+
+@router.delete(
+    "/{project_id}/liens/{link_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="removeProjectLink",
+)
+async def remove_project_link(
+    project_id: int,
+    link_id: int,
+    _: User = Depends(get_current_user),
+    use_case: RemoveProjectLinkUseCase = Depends(get_remove_project_link_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Detache un lien de la mission."""
+    await use_case.execute(link_id)
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

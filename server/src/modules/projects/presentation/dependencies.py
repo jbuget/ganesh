@@ -28,6 +28,9 @@ from src.modules.projects.application.use_cases.delete_project import (
     DeleteProjectUseCase,
 )
 from src.modules.projects.application.use_cases.get_board import GetBoardUseCase
+from src.modules.projects.application.use_cases.get_project_detail import (
+    GetProjectDetailUseCase,
+)
 from src.modules.projects.application.use_cases.import_projects import (
     ImportProjectsUseCase,
 )
@@ -36,8 +39,16 @@ from src.modules.projects.application.use_cases.move_project import MoveProjectU
 from src.modules.projects.application.use_cases.update_project import (
     UpdateProjectUseCase,
 )
+from src.modules.projects.application.use_cases.update_project_detail import (
+    AddProjectLinkUseCase,
+    RemoveProjectLinkUseCase,
+    UpdateProjectDetailUseCase,
+)
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
+)
+from src.modules.projects.domain.repositories.project_detail_repository import (
+    ProjectDetailRepository,
 )
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
@@ -45,7 +56,16 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.infrastructure.database.repositories.project_assignee_repository_impl import (
     SqlProjectAssigneeRepository,
 )
+from src.modules.projects.infrastructure.database.repositories.project_detail_repository_impl import (
+    SqlProjectDetailRepository,
+)
 from src.modules.users.domain.repositories.user_repository import UserRepository
+
+
+def get_project_detail_repository(
+    session: AsyncSession = Depends(get_db),
+) -> ProjectDetailRepository:
+    return SqlProjectDetailRepository(session)
 
 
 def get_project_assignee_repository(
@@ -65,10 +85,11 @@ def get_create_project_use_case(
 def get_change_status_use_case(
     users: UserRepository = Depends(get_user_repository),
     projects: ProjectRepository = Depends(get_project_repository),
+    details: ProjectDetailRepository = Depends(get_project_detail_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> ChangeProjectStatusUseCase:
     return ChangeProjectStatusUseCase(
-        users=users, projects=projects, audit_logs=audit_logs
+        users=users, projects=projects, details=details, audit_logs=audit_logs
     )
 
 
@@ -120,9 +141,12 @@ def get_board_use_case(
 def get_move_project_use_case(
     users: UserRepository = Depends(get_user_repository),
     projects: ProjectRepository = Depends(get_project_repository),
+    details: ProjectDetailRepository = Depends(get_project_detail_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> MoveProjectUseCase:
-    return MoveProjectUseCase(users=users, projects=projects, audit_logs=audit_logs)
+    return MoveProjectUseCase(
+        users=users, projects=projects, details=details, audit_logs=audit_logs
+    )
 
 
 def get_assign_member_use_case(
@@ -145,3 +169,42 @@ def get_unassign_member_use_case(
     return UnassignMemberUseCase(
         users=users, projects=projects, assignees=assignees, audit_logs=audit_logs
     )
+
+
+def get_project_detail_use_case(
+    projects: ProjectRepository = Depends(get_project_repository),
+    details: ProjectDetailRepository = Depends(get_project_detail_repository),
+    assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
+    entries: EntryRepository = Depends(get_entry_repository),
+    users: UserRepository = Depends(get_user_repository),
+) -> GetProjectDetailUseCase:
+    return GetProjectDetailUseCase(
+        projects=projects,
+        details=details,
+        assignees=assignees,
+        entries=entries,
+        users=users,
+    )
+
+
+def get_update_project_detail_use_case(
+    projects: ProjectRepository = Depends(get_project_repository),
+    details: ProjectDetailRepository = Depends(get_project_detail_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> UpdateProjectDetailUseCase:
+    return UpdateProjectDetailUseCase(
+        projects=projects, details=details, audit_logs=audit_logs
+    )
+
+
+def get_add_project_link_use_case(
+    projects: ProjectRepository = Depends(get_project_repository),
+    details: ProjectDetailRepository = Depends(get_project_detail_repository),
+) -> AddProjectLinkUseCase:
+    return AddProjectLinkUseCase(projects=projects, details=details)
+
+
+def get_remove_project_link_use_case(
+    details: ProjectDetailRepository = Depends(get_project_detail_repository),
+) -> RemoveProjectLinkUseCase:
+    return RemoveProjectLinkUseCase(details=details)

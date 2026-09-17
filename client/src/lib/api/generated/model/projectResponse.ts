@@ -24,6 +24,7 @@ export interface ProjectResponse {
   position: number;
   monday_item_id: string | null;
   monday_subitem_id: string | null;
+  contacts_metier: string | null;
   is_syncable_to_monday: boolean;
   is_deletable: boolean;
 }

@@ -26,6 +26,7 @@ def to_entity(model: ProjectModel) -> Project:
         position=model.position,
         monday_item_id=model.monday_item_id,
         monday_subitem_id=model.monday_subitem_id,
+        contacts_metier=model.contacts_metier,
     )
 
 
@@ -67,6 +68,7 @@ class SqlProjectRepository(ProjectRepository):
             position=project.position,
             monday_item_id=project.monday_item_id,
             monday_subitem_id=project.monday_subitem_id,
+            contacts_metier=project.contacts_metier,
         )
         self._session.add(model)
         await self._session.flush()
@@ -90,6 +92,7 @@ class SqlProjectRepository(ProjectRepository):
         model.position = project.position
         model.monday_item_id = project.monday_item_id
         model.monday_subitem_id = project.monday_subitem_id
+        model.contacts_metier = project.contacts_metier
         await self._session.flush()
         return project
 

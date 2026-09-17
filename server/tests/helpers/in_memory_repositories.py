@@ -14,9 +14,18 @@ from src.modules.entries.domain.entities.entry import Entry
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.domain.repositories.month_repository import MonthRepository
-from src.modules.projects.domain.entities.project import Project
+from src.modules.projects.domain.entities.project import (
+    Department,
+    Project,
+    ProjectStatus,
+)
+from src.modules.projects.domain.entities.project_link import ProjectLink
+from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
+)
+from src.modules.projects.domain.repositories.project_detail_repository import (
+    ProjectDetailRepository,
 )
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
@@ -194,21 +203,64 @@ class InMemoryAuditLogRepository(AuditLogRepository):
 
 
 class InMemoryProjectAssigneeRepository(ProjectAssigneeRepository):
-    def __init__(self, affectations: dict[int, list[int]] | None = None) -> None:
-        self._par_projet: dict[int, list[int]] = affectations or {}
+    def __init__(
+        self, affectations: dict[tuple[int, ProjectRole], list[int]] | None = None
+    ) -> None:
+        self._par_projet: dict[tuple[int, ProjectRole], list[int]] = affectations or {}
 
-    async def list_for_project(self, project_id: int) -> list[int]:
-        return list(self._par_projet.get(project_id, []))
+    async def list_for_project(self, project_id: int, role: ProjectRole) -> list[int]:
+        return list(self._par_projet.get((project_id, role), []))
 
-    async def list_all(self) -> dict[int, list[int]]:
-        return {pid: list(ids) for pid, ids in self._par_projet.items()}
+    async def list_all(self, role: ProjectRole) -> dict[int, list[int]]:
+        return {
+            pid: list(ids) for (pid, r), ids in self._par_projet.items() if r is role
+        }
 
-    async def assign(self, project_id: int, user_id: int) -> None:
-        membres = self._par_projet.setdefault(project_id, [])
+    async def assign(self, project_id: int, user_id: int, role: ProjectRole) -> None:
+        membres = self._par_projet.setdefault((project_id, role), [])
         if user_id not in membres:
             membres.append(user_id)
 
-    async def unassign(self, project_id: int, user_id: int) -> None:
-        membres = self._par_projet.get(project_id)
+    async def unassign(self, project_id: int, user_id: int, role: ProjectRole) -> None:
+        membres = self._par_projet.get((project_id, role))
         if membres and user_id in membres:
             membres.remove(user_id)
+
+
+class InMemoryProjectDetailRepository(ProjectDetailRepository):
+    def __init__(self) -> None:
+        self._departments: dict[int, list[Department]] = {}
+        self._links: dict[int, list[ProjectLink]] = {}
+        self._phases: dict[int, dict[ProjectStatus, date]] = {}
+        self._next_link_id = 1
+
+    async def list_departments(self, project_id: int) -> list[Department]:
+        return list(self._departments.get(project_id, []))
+
+    async def set_departments(
+        self, project_id: int, departments: list[Department]
+    ) -> None:
+        self._departments[project_id] = list(dict.fromkeys(departments))
+
+    async def list_links(self, project_id: int) -> list[ProjectLink]:
+        return list(self._links.get(project_id, []))
+
+    async def add_link(self, link: ProjectLink) -> ProjectLink:
+        link.id = self._next_link_id
+        self._next_link_id += 1
+        self._links.setdefault(link.project_id, []).append(link)
+        return link
+
+    async def remove_link(self, link_id: int) -> None:
+        for liens in self._links.values():
+            for lien in list(liens):
+                if lien.id == link_id:
+                    liens.remove(lien)
+
+    async def list_phases_reached(self, project_id: int) -> dict[ProjectStatus, date]:
+        return dict(self._phases.get(project_id, {}))
+
+    async def mark_phase_reached(
+        self, project_id: int, statut: ProjectStatus, reached_at: date
+    ) -> None:
+        self._phases.setdefault(project_id, {}).setdefault(statut, reached_at)

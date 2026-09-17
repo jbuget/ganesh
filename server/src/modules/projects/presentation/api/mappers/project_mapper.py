@@ -1,15 +1,22 @@
 """Traduction des projets en schemas d'API."""
 
 from src.modules.projects.application.use_cases.get_board import Board
+from src.modules.projects.application.use_cases.get_project_detail import ProjectDetail
 from src.modules.projects.application.use_cases.list_projects import ListedProject
-from src.modules.projects.domain.entities.project import Project
+from src.modules.projects.domain.entities.project import Project, ProjectStatus
+from src.modules.projects.domain.services.phase_history import libelle_de_passage
 from src.modules.projects.presentation.api.schemas.project_schemas import (
     BoardCardResponse,
     BoardColumnResponse,
     BoardMemberResponse,
     BoardResponse,
+    PhaseReachedResponse,
+    ProjectContributionResponse,
+    ProjectDetailResponse,
+    ProjectLinkResponse,
     ProjectResponse,
 )
+from src.modules.users.domain.entities.user import User
 from src.shared.utils.initials import initiales
 
 
@@ -30,6 +37,7 @@ def to_project_response(
         position=project.position,
         monday_item_id=project.monday_item_id,
         monday_subitem_id=project.monday_subitem_id,
+        contacts_metier=project.contacts_metier,
         is_syncable_to_monday=project.is_syncable_to_monday,
         is_deletable=is_deletable,
     )
@@ -62,4 +70,42 @@ def to_board_response(board: Board) -> BoardResponse:
             )
             for colonne in board.colonnes
         ]
+    )
+
+
+def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
+    def en_pastille(user: User) -> BoardMemberResponse:
+        assert user.id is not None
+        return BoardMemberResponse(
+            id=user.id,
+            display_name=user.display_name,
+            initiales=initiales(user.display_name),
+        )
+
+    return ProjectDetailResponse(
+        project=to_project_response(detail.project),
+        departements=detail.departements,
+        liens=[
+            ProjectLinkResponse(id=lien.id, label=lien.label, url=lien.url)
+            for lien in detail.liens
+            if lien.id is not None
+        ],
+        # Les phases se lisent dans l'ordre nominal, pas dans celui ou la base
+        # les rend : une frise se parcourt du debut a la fin.
+        phases=[
+            PhaseReachedResponse(
+                statut=statut,
+                libelle=libelle_de_passage(statut),
+                reached_at=detail.phases_atteintes[statut],
+            )
+            for statut in ProjectStatus
+            if statut in detail.phases_atteintes
+        ],
+        referents=[en_pastille(u) for u in detail.referents],
+        intervenants=[en_pastille(u) for u in detail.intervenants],
+        consomme_j=detail.consomme_j,
+        contributions=[
+            ProjectContributionResponse(member=en_pastille(user), jours=jours)
+            for user, jours in detail.contributions
+        ],
     )

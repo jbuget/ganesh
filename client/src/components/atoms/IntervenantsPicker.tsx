@@ -4,7 +4,7 @@ import { Check, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { BoardMemberResponse } from "@/lib/api/generated/model";
+import type { BoardMemberResponse, ProjectRole } from "@/lib/api/generated/model";
 import { assignMember, unassignMember } from "@/lib/api/generated/projects/projects";
 import { useTeammates } from "@/lib/api/queries";
 
@@ -12,6 +12,10 @@ interface IntervenantsPickerProps {
   projectId: number;
   intervenants: BoardMemberResponse[];
   onChange: () => void | Promise<void>;
+  /** A quel titre ces personnes sont rattachees a la mission. */
+  role?: ProjectRole;
+  /** Invite affichee quand personne n'est encore rattache. */
+  invite?: string;
 }
 
 /** Au-dela, les pastilles se chevauchent trop pour rester lisibles. */
@@ -28,6 +32,8 @@ export function IntervenantsPicker({
   projectId,
   intervenants,
   onChange,
+  role = "intervenant",
+  invite = "Intervenants",
 }: IntervenantsPickerProps) {
   const { teammates } = useTeammates();
   const [ouvert, setOuvert] = useState(false);
@@ -35,9 +41,9 @@ export function IntervenantsPicker({
 
   async function basculer(memberId: number) {
     if (affectes.has(memberId)) {
-      await unassignMember(projectId, memberId);
+      await unassignMember(projectId, memberId, { role });
     } else {
-      await assignMember(projectId, memberId);
+      await assignMember(projectId, memberId, { role });
     }
     await onChange();
   }
@@ -48,13 +54,13 @@ export function IntervenantsPicker({
   return (
     <Popover open={ouvert} onOpenChange={setOuvert}>
       <PopoverTrigger
-        aria-label="Modifier les intervenants"
+        aria-label={`Modifier les ${invite.toLowerCase()}`}
         className="flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 -mx-1 transition-colors hover:bg-slate-100"
       >
         {intervenants.length === 0 ? (
           <span className="flex items-center gap-1 text-xs text-slate-400">
             <Plus className="size-3.5" aria-hidden />
-            Intervenants
+            {invite}
           </span>
         ) : (
           <span className="flex items-center -space-x-1.5">

@@ -48,12 +48,15 @@ class AssignMemberUseCase(_AssignmentUseCase):
 
     async def execute(self, command: AssignmentCommand) -> None:
         await self._ensure_both_exist(command)
-        await self._assignees.assign(command.project_id, command.member_id)
+        await self._assignees.assign(
+            command.project_id, command.member_id, command.role
+        )
         await self._audit_logs.add(
             AuditLog.project_assign(
                 actor_id=command.actor_id,
                 project_id=command.project_id,
                 member_id=command.member_id,
+                role=command.role.value,
             )
         )
 
@@ -63,11 +66,14 @@ class UnassignMemberUseCase(_AssignmentUseCase):
 
     async def execute(self, command: AssignmentCommand) -> None:
         await self._ensure_both_exist(command)
-        await self._assignees.unassign(command.project_id, command.member_id)
+        await self._assignees.unassign(
+            command.project_id, command.member_id, command.role
+        )
         await self._audit_logs.add(
             AuditLog.project_unassign(
                 actor_id=command.actor_id,
                 project_id=command.project_id,
                 member_id=command.member_id,
+                role=command.role.value,
             )
         )

@@ -10,6 +10,7 @@ from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
     InMemoryEntryRepository,
@@ -66,7 +67,12 @@ def build(
         projects=InMemoryProjectRepository(projects),
         entries=InMemoryEntryRepository(entries or []),
         users=InMemoryUserRepository([ALICE, BOB]),
-        assignees=InMemoryProjectAssigneeRepository(affectations or {}),
+        assignees=InMemoryProjectAssigneeRepository(
+            {
+                (pid, ProjectRole.INTERVENANT): ids
+                for pid, ids in (affectations or {}).items()
+            }
+        ),
     )
 
 

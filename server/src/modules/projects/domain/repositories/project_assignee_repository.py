@@ -2,6 +2,8 @@
 
 from abc import ABC, abstractmethod
 
+from src.modules.projects.domain.entities.project_role import ProjectRole
+
 
 class ProjectAssigneeRepository(ABC):
     """Contrat de persistance des affectations.
@@ -12,21 +14,21 @@ class ProjectAssigneeRepository(ABC):
     """
 
     @abstractmethod
-    async def list_for_project(self, project_id: int) -> list[int]:
-        """Identifiants des intervenants d'une mission."""
+    async def list_for_project(self, project_id: int, role: ProjectRole) -> list[int]:
+        """Identifiants des personnes tenant ce role sur une mission."""
         ...
 
     @abstractmethod
-    async def list_all(self) -> dict[int, list[int]]:
-        """Intervenants de toutes les missions, indexes par mission."""
+    async def list_all(self, role: ProjectRole) -> dict[int, list[int]]:
+        """Personnes tenant ce role sur chaque mission, indexees par mission."""
         ...
 
     @abstractmethod
-    async def assign(self, project_id: int, user_id: int) -> None:
-        """Ajoute un intervenant. Sans effet s'il y est deja."""
+    async def assign(self, project_id: int, user_id: int, role: ProjectRole) -> None:
+        """Confie un role a quelqu'un. Sans effet s'il le tient deja."""
         ...
 
     @abstractmethod
-    async def unassign(self, project_id: int, user_id: int) -> None:
-        """Retire un intervenant. Sans effet s'il n'y etait pas."""
+    async def unassign(self, project_id: int, user_id: int, role: ProjectRole) -> None:
+        """Retire un role a quelqu'un. Sans effet s'il ne le tenait pas."""
         ...

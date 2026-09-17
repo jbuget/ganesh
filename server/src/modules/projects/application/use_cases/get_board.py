@@ -5,6 +5,7 @@ from datetime import date
 
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
+from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -66,7 +67,7 @@ class GetBoardUseCase:
             if p.appears_on_board
         ]
         utilisateurs = {u.id: u for u in await self._users.list_all(True)}
-        affectations = await self._assignees.list_all()
+        affectations = await self._assignees.list_all(ProjectRole.INTERVENANT)
 
         colonnes = [BoardColumn(statut=statut) for statut in ProjectStatus]
         par_statut = {colonne.statut: colonne for colonne in colonnes}

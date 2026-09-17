@@ -1,6 +1,7 @@
 "use client";
 
 import { GripVertical } from "lucide-react";
+import Link from "next/link";
 
 import { IntervenantsPicker } from "@/components/atoms/IntervenantsPicker";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
@@ -47,7 +48,18 @@ export function ProjectCard({
     >
       <div className="flex items-start gap-1.5">
         <h3 className="min-w-0 flex-1 text-sm font-medium text-slate-900">
-          {project.label}
+          {/*
+            Le lien porte sur le titre seul, non sur la carte : celle-ci se
+            saisit pour la deplacer, et un clic relache apres un glissement ne
+            doit pas ouvrir une fiche.
+          */}
+          {enDeplacement ? (
+            project.label
+          ) : (
+            <Link href={`/projets/${project.id}`} className="hover:underline">
+              {project.label}
+            </Link>
+          )}
         </h3>
         {poignee ?? (
           <GripVertical className="size-4 shrink-0 text-slate-300" aria-hidden />

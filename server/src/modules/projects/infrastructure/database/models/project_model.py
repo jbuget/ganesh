@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from sqlalchemy import Boolean, Date, Enum, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Date, Enum, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
@@ -38,6 +38,7 @@ class ProjectModel(Base):
         nullable=True,
     )
     date_mise_en_service: Mapped[date | None] = mapped_column(Date, nullable=True)
+    contacts_metier: Mapped[str | None] = mapped_column(Text, nullable=True)
     #: Rang dans sa colonne du tableau de bord.
     position: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 

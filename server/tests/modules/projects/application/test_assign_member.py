@@ -12,6 +12,7 @@ from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 from tests.helpers.in_memory_repositories import (
@@ -42,7 +43,7 @@ PROJECT = Project(
 
 def build(affectes: list[int] | None = None):
     assignees = InMemoryProjectAssigneeRepository(
-        {10: list(affectes)} if affectes else {}
+        {(10, ProjectRole.INTERVENANT): list(affectes)} if affectes else {}
     )
     audit = InMemoryAuditLogRepository()
     deps = {
@@ -63,7 +64,7 @@ async def test_a_member_joins_the_mission() -> None:
 
     await assign.execute(a_command())
 
-    assert await assignees.list_for_project(10) == [2]
+    assert await assignees.list_for_project(10, ProjectRole.INTERVENANT) == [2]
 
 
 async def test_assigning_twice_leaves_a_single_intervenant() -> None:
@@ -72,7 +73,7 @@ async def test_assigning_twice_leaves_a_single_intervenant() -> None:
 
     await assign.execute(a_command())
 
-    assert await assignees.list_for_project(10) == [2]
+    assert await assignees.list_for_project(10, ProjectRole.INTERVENANT) == [2]
 
 
 async def test_a_member_leaves_the_mission() -> None:
@@ -80,7 +81,7 @@ async def test_a_member_leaves_the_mission() -> None:
 
     await unassign.execute(a_command())
 
-    assert await assignees.list_for_project(10) == [1]
+    assert await assignees.list_for_project(10, ProjectRole.INTERVENANT) == [1]
 
 
 async def test_unassigning_an_absent_member_is_harmless() -> None:
@@ -88,7 +89,7 @@ async def test_unassigning_an_absent_member_is_harmless() -> None:
 
     await unassign.execute(a_command())
 
-    assert await assignees.list_for_project(10) == [1]
+    assert await assignees.list_for_project(10, ProjectRole.INTERVENANT) == [1]
 
 
 async def test_both_movements_are_traced() -> None:
@@ -117,3 +118,45 @@ async def test_an_unknown_member_is_refused() -> None:
 
     with pytest.raises(EntityNotFoundError):
         await assign.execute(a_command(member_id=99))
+
+
+async def test_someone_can_be_both_referent_and_intervenant() -> None:
+    """Le referent d'une mission met souvent lui-meme les mains dedans."""
+    assign, _, assignees, _ = build()
+
+    await assign.execute(a_command())
+    await assign.execute(
+        AssignmentCommand(
+            actor_id=1, project_id=10, member_id=2, role=ProjectRole.REFERENT
+        )
+    )
+
+    assert await assignees.list_for_project(10, ProjectRole.INTERVENANT) == [2]
+    assert await assignees.list_for_project(10, ProjectRole.REFERENT) == [2]
+
+
+async def test_removing_one_role_leaves_the_other() -> None:
+    assign, unassign, assignees, _ = build()
+    await assign.execute(a_command())
+    await assign.execute(
+        AssignmentCommand(
+            actor_id=1, project_id=10, member_id=2, role=ProjectRole.REFERENT
+        )
+    )
+
+    await unassign.execute(a_command())
+
+    assert await assignees.list_for_project(10, ProjectRole.INTERVENANT) == []
+    assert await assignees.list_for_project(10, ProjectRole.REFERENT) == [2]
+
+
+async def test_the_trace_says_at_what_title() -> None:
+    assign, _, _, audit = build()
+
+    await assign.execute(
+        AssignmentCommand(
+            actor_id=1, project_id=10, member_id=2, role=ProjectRole.REFERENT
+        )
+    )
+
+    assert audit.logs[-1].new_value == "referent"

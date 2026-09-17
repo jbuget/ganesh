@@ -5,6 +5,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./addLinkRequest";
+export * from "./assignMemberParams";
 export * from "./boardCardResponse";
 export * from "./boardColumnResponse";
 export * from "./boardMemberResponse";
@@ -16,6 +18,7 @@ export * from "./changeStatusRequest";
 export * from "./clearEntryParams";
 export * from "./createProjectRequest";
 export * from "./dayTotalResponse";
+export * from "./department";
 export * from "./entryResponse";
 export * from "./getMonthGridApiV1EntriesGridGetParams";
 export * from "./getMonthGridParams";
@@ -36,9 +39,14 @@ export * from "./monthGridResponse";
 export * from "./monthResponse";
 export * from "./monthState";
 export * from "./moveProjectRequest";
+export * from "./phaseReachedResponse";
 export * from "./projectCategory";
+export * from "./projectContributionResponse";
+export * from "./projectDetailResponse";
 export * from "./projectKind";
+export * from "./projectLinkResponse";
 export * from "./projectResponse";
+export * from "./projectRole";
 export * from "./projectStatus";
 export * from "./removeMissionFromMonthParams";
 export * from "./reopenMonthApiV1MonthsMoisReopenPostParams";
@@ -47,6 +55,8 @@ export * from "./role";
 export * from "./setEntryApiV1EntriesPutParams";
 export * from "./setEntryParams";
 export * from "./setEntryRequest";
+export * from "./unassignMemberParams";
+export * from "./updateProjectDetailRequest";
 export * from "./updateProjectRequest";
 export * from "./userResponse";
 export * from "./validationError";

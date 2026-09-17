@@ -13,6 +13,7 @@ from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError, ValidationError
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
+    InMemoryProjectDetailRepository,
     InMemoryProjectRepository,
     InMemoryUserRepository,
 )
@@ -40,7 +41,10 @@ def build(projects: list[Project]):
     repo = InMemoryProjectRepository(projects)
     audit = InMemoryAuditLogRepository()
     use_case = MoveProjectUseCase(
-        users=InMemoryUserRepository([TEAMMATE]), projects=repo, audit_logs=audit
+        users=InMemoryUserRepository([TEAMMATE]),
+        projects=repo,
+        details=InMemoryProjectDetailRepository(),
+        audit_logs=audit,
     )
     return use_case, repo, audit
 

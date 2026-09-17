@@ -30,6 +30,25 @@ class ProjectStatus(StrEnum):
     EXPLOITATION = "exploitation"
 
 
+class Department(StrEnum):
+    """Departement de l'entreprise concerne par une mission.
+
+    Une mission peut en servir plusieurs : un portail bailleurs qui outille
+    aussi le service client concerne les deux, et le pilotage veut le voir.
+    """
+
+    ADMINISTRATIF_FINANCIER = "administratif_financier"
+    BAILLEURS = "bailleurs"
+    COPROPRIETE = "copropriete"
+    SERVICE_CLIENT = "service_client"
+    OPERATIONS = "operations"
+    SYSTEME_INFORMATION = "systeme_information"
+    RESSOURCES_HUMAINES = "ressources_humaines"
+    MARKETING_COMMUNICATION_RSE = "marketing_communication_rse"
+    TERTIAIRE = "tertiaire"
+    AUTRE = "autre"
+
+
 class ProjectCategory(StrEnum):
     """Axe strategique auquel un projet se rattache."""
 
@@ -56,6 +75,8 @@ class Project:
     position: int = 0
     monday_item_id: str | None = None
     monday_subitem_id: str | None = None
+    #: Interlocuteurs metier, en texte libre : des noms, un service, un mail.
+    contacts_metier: str | None = None
 
     def __post_init__(self) -> None:
         self.label = self.label.strip()
