@@ -36,6 +36,7 @@ export * from "./listUsersApiV1UsersGetParams";
 export * from "./listUsersParams";
 export * from "./monthCalendarResponse";
 export * from "./monthGridResponse";
+export * from "./monthlyShareResponse";
 export * from "./monthResponse";
 export * from "./monthState";
 export * from "./moveProjectRequest";

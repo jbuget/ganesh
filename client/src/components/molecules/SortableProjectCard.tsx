@@ -10,6 +10,7 @@ import type { BoardCardResponse } from "@/lib/api/generated/model";
 interface SortableProjectCardProps {
   carte: BoardCardResponse;
   onIntervenantsChange?: () => void | Promise<void>;
+  onOpen?: (projectId: number) => void;
 }
 
 /**
@@ -21,6 +22,7 @@ interface SortableProjectCardProps {
 export function SortableProjectCard({
   carte,
   onIntervenantsChange,
+  onOpen,
 }: SortableProjectCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: carte.project.id });
@@ -43,6 +45,7 @@ export function SortableProjectCard({
         <ProjectCard
           carte={carte}
           onIntervenantsChange={onIntervenantsChange}
+          onOpen={onOpen}
           poignee={
             <button
               type="button"

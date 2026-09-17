@@ -11,6 +11,7 @@ interface BoardColumnProps {
   statut: ProjectStatus;
   cartes: BoardCardResponse[];
   onIntervenantsChange?: () => void | Promise<void>;
+  onOpen?: (projectId: number) => void;
 }
 
 /**
@@ -23,6 +24,7 @@ export function BoardColumn({
   statut,
   cartes,
   onIntervenantsChange,
+  onOpen,
 }: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: statut });
 
@@ -61,6 +63,7 @@ export function BoardColumn({
               key={carte.project.id}
               carte={carte}
               onIntervenantsChange={onIntervenantsChange}
+              onOpen={onOpen}
             />
           ))}
         </SortableContext>

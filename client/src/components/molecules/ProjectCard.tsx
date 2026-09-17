@@ -1,7 +1,6 @@
 "use client";
 
 import { GripVertical } from "lucide-react";
-import Link from "next/link";
 
 import { IntervenantsPicker } from "@/components/atoms/IntervenantsPicker";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
@@ -24,6 +23,8 @@ interface ProjectCardProps {
   enDeplacement?: boolean;
   /** Recharge le tableau apres un changement d'intervenants. */
   onIntervenantsChange?: () => void | Promise<void>;
+  /** Ouvre la mission a cote du tableau. */
+  onOpen?: (projectId: number) => void;
 }
 
 /** Une mission sur le tableau de bord. */
@@ -32,6 +33,7 @@ export function ProjectCard({
   poignee,
   enDeplacement,
   onIntervenantsChange,
+  onOpen,
 }: ProjectCardProps) {
   const { project } = carte;
   const axe = categorie(project.categorie);
@@ -53,12 +55,16 @@ export function ProjectCard({
             saisit pour la deplacer, et un clic relache apres un glissement ne
             doit pas ouvrir une fiche.
           */}
-          {enDeplacement ? (
+          {enDeplacement || !onOpen ? (
             project.label
           ) : (
-            <Link href={`/projets/${project.id}`} className="hover:underline">
+            <button
+              type="button"
+              onClick={() => onOpen(project.id)}
+              className="cursor-pointer text-left hover:underline"
+            >
               {project.label}
-            </Link>
+            </button>
           )}
         </h3>
         {poignee ?? (

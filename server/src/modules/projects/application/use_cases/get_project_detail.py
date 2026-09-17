@@ -26,6 +26,16 @@ from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 
 @dataclass
+class Contribution:
+    """Ce qu'une personne a declare sur la mission."""
+
+    user: User
+    jours: float
+    #: Jours par mois, du plus recent au plus ancien. Le mois est son 1er jour.
+    par_mois: list[tuple[date, float]]
+
+
+@dataclass
 class ProjectDetail:
     """La fiche complete d'une mission."""
 
@@ -37,7 +47,7 @@ class ProjectDetail:
     intervenants: list[User]
     consomme_j: float
     #: Temps declare par chacun, du plus gros contributeur au plus petit.
-    contributions: list[tuple[User, float]]
+    contributions: list[Contribution]
 
 
 class GetProjectDetailUseCase:
@@ -75,17 +85,32 @@ class GetProjectDetailUseCase:
         # seule liste des intervenants ne raconte pas : quelqu'un peut y avoir
         # passe des jours sans y etre affecte aujourd'hui.
         par_personne: dict[int, float] = {}
+        par_mois: dict[int, dict[date, float]] = {}
         for saisie in saisies:
             par_personne[saisie.user_id] = round(
                 par_personne.get(saisie.user_id, 0.0) + float(saisie.valeur), 2
             )
+            mois = saisie.jour.replace(day=1)
+            mois_de_la_personne = par_mois.setdefault(saisie.user_id, {})
+            mois_de_la_personne[mois] = round(
+                mois_de_la_personne.get(mois, 0.0) + float(saisie.valeur), 2
+            )
+
         contributions = sorted(
             (
-                (utilisateurs[uid], jours)
+                Contribution(
+                    user=utilisateurs[uid],
+                    jours=jours,
+                    par_mois=sorted(
+                        par_mois.get(uid, {}).items(),
+                        key=lambda item: item[0],
+                        reverse=True,
+                    ),
+                )
                 for uid, jours in par_personne.items()
                 if uid in utilisateurs
             ),
-            key=lambda item: -item[1],
+            key=lambda contribution: -contribution.jours,
         )
 
         return ProjectDetail(

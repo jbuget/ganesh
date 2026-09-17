@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { BoardMemberResponse } from "./boardMemberResponse";
+import type { MonthlyShareResponse } from "./monthlyShareResponse";
 
 /**
  * Temps declare par une personne sur la mission.
@@ -12,4 +13,5 @@ import type { BoardMemberResponse } from "./boardMemberResponse";
 export interface ProjectContributionResponse {
   member: BoardMemberResponse;
   jours: number;
+  par_mois: MonthlyShareResponse[];
 }

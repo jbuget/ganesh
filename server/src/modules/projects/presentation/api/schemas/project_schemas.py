@@ -147,11 +147,19 @@ class PhaseReachedResponse(BaseModel):
     reached_at: date
 
 
+class MonthlyShareResponse(BaseModel):
+    """Temps declare sur un mois donne."""
+
+    mois: date
+    jours: float
+
+
 class ProjectContributionResponse(BaseModel):
     """Temps declare par une personne sur la mission."""
 
     member: BoardMemberResponse
     jours: float
+    par_mois: list[MonthlyShareResponse]
 
 
 class ProjectDetailResponse(BaseModel):

@@ -10,6 +10,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     BoardColumnResponse,
     BoardMemberResponse,
     BoardResponse,
+    MonthlyShareResponse,
     PhaseReachedResponse,
     ProjectContributionResponse,
     ProjectDetailResponse,
@@ -105,7 +106,14 @@ def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
         intervenants=[en_pastille(u) for u in detail.intervenants],
         consomme_j=detail.consomme_j,
         contributions=[
-            ProjectContributionResponse(member=en_pastille(user), jours=jours)
-            for user, jours in detail.contributions
+            ProjectContributionResponse(
+                member=en_pastille(contribution.user),
+                jours=contribution.jours,
+                par_mois=[
+                    MonthlyShareResponse(mois=mois, jours=jours)
+                    for mois, jours in contribution.par_mois
+                ],
+            )
+            for contribution in detail.contributions
         ],
     )

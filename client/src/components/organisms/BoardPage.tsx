@@ -16,10 +16,12 @@ import {
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 import { BoardColumn } from "@/components/molecules/BoardColumn";
+import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { ProjectCard } from "@/components/molecules/ProjectCard";
 import { PHASES } from "@/lib/board";
 import { useBoard } from "@/lib/use-board";
 import { useBoardDrag } from "@/lib/use-board-drag";
+import { useMissionOuverte } from "@/lib/mission-ouverte";
 
 /**
  * Une carte survolee l'emporte sur la colonne qui la contient.
@@ -52,6 +54,10 @@ const detectionDeCollision: CollisionDetection = (args) => {
 export function BoardPage() {
   const board = useBoard();
   const glissement = useBoardDrag(board);
+
+  // La mission ouverte vit dans l'URL : un panneau se partage par un lien, et
+  // le retour arriere le referme, comme on s'y attend d'un ecran a part.
+  const panneau = useMissionOuverte();
 
   const sensors = useSensors(
     // Quelques pixels avant de saisir : sans cela, un simple clic ferait
@@ -96,6 +102,7 @@ export function BoardPage() {
                 statut={statut}
                 cartes={board.colonnes?.[statut] ?? []}
                 onIntervenantsChange={board.recharger}
+                onOpen={panneau.ouvrir}
               />
             ))}
           </div>
@@ -115,6 +122,14 @@ export function BoardPage() {
             )}
           </DragOverlay>
         </DndContext>
+      )}
+
+      {panneau.missionOuverte && (
+        <ProjectPanel
+          key={panneau.missionOuverte}
+          projectId={panneau.missionOuverte}
+          onClose={panneau.fermer}
+        />
       )}
     </main>
   );
