@@ -25,6 +25,9 @@ const carte = (over: Record<string, unknown> = {}): BoardCardResponse =>
     },
     consomme_j: 5,
     intervenants: [{ id: 1, display_name: "Léa Chen", initiales: "LC" }],
+    commentaires: 0,
+    sous_projets: 0,
+    parent: null,
     ...over,
   }) as BoardCardResponse;
 
@@ -91,6 +94,81 @@ describe("ProjectCard", () => {
     expect(screen.getByText("3/20 jrs. estimés").className).not.toContain(
       "text-red-700",
     );
+  });
+});
+
+describe("ce que la carte porte en pied", () => {
+  it("compte les commentaires du fil de suivi", () => {
+    render(<ProjectCard carte={carte({ commentaires: 2 })} />);
+
+    expect(screen.getByLabelText("2 commentaires")).toHaveTextContent("2");
+  });
+
+  it("accorde le libellé au singulier", () => {
+    render(<ProjectCard carte={carte({ commentaires: 1 })} />);
+
+    expect(screen.getByLabelText("1 commentaire")).toBeInTheDocument();
+  });
+
+  it("compte les sous-projets", () => {
+    render(<ProjectCard carte={carte({ sous_projets: 11 })} />);
+
+    expect(screen.getByLabelText("11 sous-projets")).toHaveTextContent("11");
+  });
+
+  it("garde les repères sans rien compter quand la mission est nue", () => {
+    // Monday laisse les icones en place, sans nombre : la carte garde sa forme
+    // d'une mission a l'autre, et l'absence se lit aussi vite qu'un total.
+    render(<ProjectCard carte={carte()} />);
+
+    expect(screen.getByLabelText("Aucun commentaire")).toHaveTextContent("");
+    expect(screen.getByLabelText("Aucun sous-projet")).toHaveTextContent("");
+  });
+});
+
+describe("rattachement à un projet parent", () => {
+  it("nomme le projet dont le sous-projet relève", () => {
+    render(
+      <ProjectCard carte={carte({ parent: { id: 7, label: "Refonte du SI" } })} />,
+    );
+
+    expect(screen.getByText("Refonte du SI")).toBeInTheDocument();
+  });
+
+  it("ouvre le parent sans ouvrir la mission elle-même", () => {
+    const onOpen = vi.fn();
+    render(
+      <ProjectCard
+        carte={carte({ parent: { id: 7, label: "Refonte du SI" } })}
+        onOpen={onOpen}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Refonte du SI" }));
+
+    expect(onOpen).toHaveBeenCalledTimes(1);
+    expect(onOpen).toHaveBeenCalledWith(7);
+  });
+
+  it("ne montre aucun parent à un projet racine", () => {
+    render(<ProjectCard carte={carte()} />);
+
+    expect(screen.queryByText(/↳/)).toBeNull();
+  });
+
+  it("fige le lien pendant le glissement", () => {
+    // La copie qui suit le curseur represente un geste en cours : un lien
+    // cliquable dessus n'aurait aucune cible.
+    render(
+      <ProjectCard
+        carte={carte({ parent: { id: 7, label: "Refonte du SI" } })}
+        onOpen={vi.fn()}
+        enDeplacement
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Refonte du SI" })).toBeNull();
+    expect(screen.getByText("Refonte du SI")).toBeInTheDocument();
   });
 });
 

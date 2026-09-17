@@ -12,6 +12,9 @@ from src.modules.projects.domain.repositories.project_assignee_repository import
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.projects.domain.repositories.project_update_repository import (
+    ProjectUpdateRepository,
+)
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
@@ -23,6 +26,13 @@ class BoardCard:
     project: Project
     consomme_j: float
     intervenants: list[User]
+    #: Mises a jour vivantes du fil de suivi.
+    commentaires: int = 0
+    #: Lots rattaches a la mission.
+    sous_projets: int = 0
+    #: Projet dont la mission releve, quand elle est un lot. Il peut etre
+    #: archive : le lot en releve toujours, et la carte doit pouvoir y mener.
+    parent: Project | None = None
 
 
 @dataclass
@@ -53,21 +63,31 @@ class GetBoardUseCase:
         entries: EntryRepository,
         users: UserRepository,
         assignees: ProjectAssigneeRepository,
+        updates: ProjectUpdateRepository,
     ) -> None:
         self._projects = projects
         self._entries = entries
         self._users = users
         self._assignees = assignees
+        self._updates = updates
 
     async def execute(self, today: date | None = None) -> Board:
         aujourdhui = today or date.today()
-        missions = [
-            p
-            for p in await self._projects.list_all(include_inactive=False)
-            if p.appears_on_board
-        ]
+
+        # Les archivees sont lues elles aussi : un lot survit a l'archivage de
+        # son projet, et sa carte doit continuer a nommer de quoi elle releve.
+        toutes = await self._projects.list_all(include_inactive=True)
+        par_id = {p.id: p for p in toutes if p.id is not None}
+        missions = [p for p in toutes if p.actif and p.appears_on_board]
+
         utilisateurs = {u.id: u for u in await self._users.list_all(True)}
         affectations = await self._assignees.list_all(ProjectRole.INTERVENANT)
+        commentaires = await self._updates.count_by_project()
+
+        nb_lots: dict[int, int] = {}
+        for mission in missions:
+            if mission.parent_id is not None:
+                nb_lots[mission.parent_id] = nb_lots.get(mission.parent_id, 0) + 1
 
         colonnes = [BoardColumn(statut=statut) for statut in ProjectStatus]
         par_statut = {colonne.statut: colonne for colonne in colonnes}
@@ -103,6 +123,13 @@ class GetBoardUseCase:
                     intervenants=[
                         utilisateurs[uid] for uid in intervenants if uid in utilisateurs
                     ],
+                    commentaires=commentaires.get(mission.id, 0),
+                    sous_projets=nb_lots.get(mission.id, 0),
+                    parent=(
+                        par_id.get(mission.parent_id)
+                        if mission.parent_id is not None
+                        else None
+                    ),
                 )
             )
 

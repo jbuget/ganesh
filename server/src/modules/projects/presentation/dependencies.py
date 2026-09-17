@@ -87,6 +87,12 @@ def get_project_assignee_repository(
     return SqlProjectAssigneeRepository(session)
 
 
+def get_project_update_repository(
+    session: AsyncSession = Depends(get_db),
+) -> ProjectUpdateRepository:
+    return SqlProjectUpdateRepository(session)
+
+
 def get_create_project_use_case(
     users: UserRepository = Depends(get_user_repository),
     projects: ProjectRepository = Depends(get_project_repository),
@@ -145,9 +151,14 @@ def get_board_use_case(
     entries: EntryRepository = Depends(get_entry_repository),
     users: UserRepository = Depends(get_user_repository),
     assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
+    updates: ProjectUpdateRepository = Depends(get_project_update_repository),
 ) -> GetBoardUseCase:
     return GetBoardUseCase(
-        projects=projects, entries=entries, users=users, assignees=assignees
+        projects=projects,
+        entries=entries,
+        users=users,
+        assignees=assignees,
+        updates=updates,
     )
 
 
@@ -228,12 +239,6 @@ def get_update_description_use_case(
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> UpdateDescriptionUseCase:
     return UpdateDescriptionUseCase(projects=projects, audit_logs=audit_logs)
-
-
-def get_project_update_repository(
-    session: AsyncSession = Depends(get_db),
-) -> ProjectUpdateRepository:
-    return SqlProjectUpdateRepository(session)
 
 
 def _ecriture_du_fil(

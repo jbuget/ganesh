@@ -1,7 +1,13 @@
 "use client";
 
-import { GripVertical } from "lucide-react";
+import {
+  CornerDownRight,
+  GripVertical,
+  MessageCircle,
+  SquareStack,
+} from "lucide-react";
 
+import { CardCounter } from "@/components/atoms/CardCounter";
 import { IntervenantsPicker } from "@/components/atoms/IntervenantsPicker";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
@@ -35,7 +41,7 @@ export function ProjectCard({
   onIntervenantsChange,
   onOpen,
 }: ProjectCardProps) {
-  const { project } = carte;
+  const { project, parent } = carte;
   const axe = categorie(project.categorie);
   const etat = avancement(carte.consomme_j, project.estime_j);
 
@@ -81,6 +87,28 @@ export function ProjectCard({
         )}
       </div>
 
+      {/*
+        D'ou releve un lot se lit sous son titre : sur le tableau, une carte de
+        sous-projet ne dit rien de son projet, et l'intitule seul ne suffit pas
+        toujours a le deviner.
+      */}
+      {parent && (
+        <p className="mt-1 flex min-w-0 items-center gap-1 text-xs text-slate-500">
+          <CornerDownRight className="size-3 shrink-0" aria-hidden />
+          {enDeplacement || !onOpen ? (
+            <span className="truncate">{parent.label}</span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onOpen(parent.id)}
+              className="cursor-pointer truncate text-left hover:text-slate-700 hover:underline"
+            >
+              {parent.label}
+            </button>
+          )}
+        </p>
+      )}
+
       {axe && (
         <span
           className={`mt-2 inline-block rounded px-1.5 py-0.5 text-[11px] font-medium ${axe.classe}`}
@@ -109,6 +137,26 @@ export function ProjectCard({
             onChange={onIntervenantsChange}
           />
         )}
+      </div>
+
+      {/*
+        Ce que la mission porte autour d'elle : son fil, et ses lots. Chaque
+        nombre precede son icone, d'ou l'ecart large entre les deux decomptes :
+        plus serres, on ne saurait plus auquel des deux un nombre se rapporte.
+      */}
+      <div className="mt-2 flex items-center justify-end gap-4">
+        <CardCounter
+          icone={MessageCircle}
+          nombre={carte.commentaires}
+          libelle={["commentaire", "commentaires"]}
+          vide="Aucun commentaire"
+        />
+        <CardCounter
+          icone={SquareStack}
+          nombre={carte.sous_projets}
+          libelle={["sous-projet", "sous-projets"]}
+          vide="Aucun sous-projet"
+        />
       </div>
     </article>
   );

@@ -1,6 +1,6 @@
 """Assemblage du tableau de bord des projets."""
 
-from datetime import date
+from datetime import date, datetime
 
 from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.projects.application.use_cases.get_board import GetBoardUseCase
@@ -11,11 +11,13 @@ from src.modules.projects.domain.entities.project import (
     ProjectStatus,
 )
 from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
     InMemoryEntryRepository,
     InMemoryProjectAssigneeRepository,
     InMemoryProjectRepository,
+    InMemoryProjectUpdateRepository,
     InMemoryUserRepository,
 )
 
@@ -36,11 +38,17 @@ BOB = User(
 AUJOURDHUI = date(2026, 9, 16)
 
 
-def carte(id_: int, statut=ProjectStatus.CADRAGE, position=0, **kwargs) -> Project:
+def carte(
+    id_: int,
+    statut=ProjectStatus.CADRAGE,
+    position=0,
+    kind=ProjectKind.PROJET,
+    **kwargs,
+) -> Project:
     return Project(
         id=id_,
         label=f"Mission {id_}",
-        kind=ProjectKind.PROJET,
+        kind=kind,
         statut=statut,
         position=position,
         **kwargs,
@@ -62,6 +70,7 @@ def build(
     projects: list[Project],
     entries: list[Entry] | None = None,
     affectations: dict[int, list[int]] | None = None,
+    updates: InMemoryProjectUpdateRepository | None = None,
 ):
     return GetBoardUseCase(
         projects=InMemoryProjectRepository(projects),
@@ -73,6 +82,7 @@ def build(
                 for pid, ids in (affectations or {}).items()
             }
         ),
+        updates=updates or InMemoryProjectUpdateRepository(),
     )
 
 
@@ -208,3 +218,91 @@ async def test_off_project_activities_never_appear() -> None:
 
     toutes = [m.project.id for c in board.colonnes for m in c.cartes]
     assert toutes == [1]
+
+
+async def test_a_card_counts_the_updates_posted_on_it() -> None:
+    """Le fil de suivi se lit d'un coup d'oeil, sans ouvrir la mission."""
+    updates = InMemoryProjectUpdateRepository()
+    await updates.add(
+        ProjectUpdate(
+            id=None,
+            project_id=1,
+            author_id=1,
+            texte="Premier jet",
+            publiee_le=datetime(2026, 9, 10, 9, 0),
+        )
+    )
+    await updates.add(
+        ProjectUpdate(
+            id=None,
+            project_id=1,
+            author_id=2,
+            texte="Relecture",
+            publiee_le=datetime(2026, 9, 11, 9, 0),
+        )
+    )
+
+    board = await build([carte(1), carte(2)], updates=updates).execute(today=AUJOURDHUI)
+
+    par_mission = {c.project.id: c for c in board.colonnes[1].cartes}
+    assert par_mission[1].commentaires == 2
+    assert par_mission[2].commentaires == 0
+
+
+async def test_a_removed_update_no_longer_counts() -> None:
+    """Un message retire ne gonfle pas le compteur affiche sur la carte."""
+    updates = InMemoryProjectUpdateRepository()
+    maj = await updates.add(
+        ProjectUpdate(
+            id=None,
+            project_id=1,
+            author_id=1,
+            texte="Premier jet",
+            publiee_le=datetime(2026, 9, 10, 9, 0),
+        )
+    )
+    maj.supprimer(par=1, a=datetime(2026, 9, 12, 9, 0))
+
+    board = await build([carte(1)], updates=updates).execute(today=AUJOURDHUI)
+
+    assert board.colonnes[1].cartes[0].commentaires == 0
+
+
+async def test_a_card_counts_its_sub_projects() -> None:
+    board = await build(
+        [
+            carte(1),
+            carte(2, parent_id=1, kind=ProjectKind.LOT),
+            carte(3, parent_id=1, kind=ProjectKind.LOT),
+        ]
+    ).execute(today=AUJOURDHUI)
+
+    par_mission = {c.project.id: c for c in board.colonnes[1].cartes}
+    assert par_mission[1].sous_projets == 2
+    assert par_mission[2].sous_projets == 0
+
+
+async def test_a_sub_project_card_names_its_parent() -> None:
+    """Une carte de lot doit dire de quel projet elle releve."""
+    board = await build(
+        [carte(1), carte(2, parent_id=1, kind=ProjectKind.LOT)]
+    ).execute(today=AUJOURDHUI)
+
+    par_mission = {c.project.id: c for c in board.colonnes[1].cartes}
+    assert par_mission[2].parent is not None
+    assert par_mission[2].parent.id == 1
+    assert par_mission[1].parent is None
+
+
+async def test_an_inactive_parent_is_still_named() -> None:
+    """Un lot survit a l'archivage de son parent : le lien doit tenir."""
+    board = await build(
+        [
+            carte(1, actif=False),
+            carte(2, parent_id=1, kind=ProjectKind.LOT),
+        ]
+    ).execute(today=AUJOURDHUI)
+
+    cartes = {c.project.id: c for c in board.colonnes[1].cartes}
+    assert 1 not in cartes
+    assert cartes[2].parent is not None and cartes[2].parent.id == 1
