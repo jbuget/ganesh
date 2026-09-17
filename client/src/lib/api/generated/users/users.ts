@@ -24,6 +24,7 @@ import type {
   ChangeRoleRequest,
   HTTPValidationError,
   ListUsersParams,
+  SetActiveRequest,
   UserResponse,
 } from "../model";
 
@@ -482,4 +483,135 @@ export const useChangeUserRole = <TError = HTTPValidationError, TContext = unkno
   TContext
 > => {
   return useMutation(getChangeUserRoleMutationOptions(options), queryClient);
+};
+export type setUserActiveResponse200 = {
+  data: UserResponse;
+  status: 200;
+};
+
+export type setUserActiveResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type setUserActiveResponseSuccess = setUserActiveResponse200 & {
+  headers: Headers;
+};
+export type setUserActiveResponseError = setUserActiveResponse422 & {
+  headers: Headers;
+};
+
+export type setUserActiveResponse =
+  setUserActiveResponseSuccess | setUserActiveResponseError;
+
+export const getSetUserActiveUrl = (userId: number) => {
+  return `/api/v1/users/${userId}/actif`;
+};
+
+/**
+ * Coupe ou retablit l'acces d'un collaborateur. Reserve aux managers.
+ * @summary Set Active
+ */
+export const setUserActive = async (
+  userId: number,
+  setActiveRequest: SetActiveRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<setUserActiveResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<setUserActiveResponse>(getSetUserActiveUrl(userId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(setActiveRequest),
+  });
+};
+
+export const getSetUserActiveMutationKey = () => ["setUserActive"] as const;
+
+export const getSetUserActiveMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setUserActive>>,
+    TError,
+    SetUserActiveMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setUserActive>>,
+  TError,
+  SetUserActiveMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetUserActiveMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setUserActive>>,
+    SetUserActiveMutationVariables
+  > = (props) => {
+    const { userId, data } = props ?? {};
+
+    return setUserActive(userId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetUserActiveMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setUserActive>>
+>;
+export type SetUserActiveMutationBody = SetActiveRequest;
+export type SetUserActiveMutationError = HTTPValidationError;
+export type SetUserActiveMutationVariables = { userId: number; data: SetActiveRequest };
+
+/**
+ * @summary Set Active
+ */
+export const useSetUserActive = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setUserActive>>,
+      TError,
+      SetUserActiveMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setUserActive>>,
+  TError,
+  SetUserActiveMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetUserActiveMutationOptions(options), queryClient);
 };

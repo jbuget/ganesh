@@ -21,3 +21,12 @@ class ChangeRoleCommand:
     actor_id: int
     target_user_id: int
     role: Role
+
+
+@dataclass(frozen=True)
+class SetUserActiveCommand:
+    """Coupure ou retablissement de l'acces. Reservee aux managers."""
+
+    actor_id: int
+    target_user_id: int
+    actif: bool

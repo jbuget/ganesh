@@ -30,6 +30,8 @@ const ecran = vi.hoisted(() => ({
     },
   ],
   changerRole: vi.fn(),
+  changerActivite: vi.fn(),
+  moiId: 1,
   maintenant: new Date("2026-09-17T12:00:00"),
 }));
 
@@ -76,6 +78,24 @@ describe("UsersPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("il y a 3 h")).toBeInTheDocument();
     expect(screen.getByText("Jamais")).toBeInTheDocument();
+  });
+
+  it("nomme le statut de chaque compte", () => {
+    ecran.isManager = false;
+    render(<UsersPage />);
+
+    expect(screen.getAllByText("Actif")).toHaveLength(2);
+  });
+
+  it("laisse un manager couper l'accès d'un autre, jamais le sien", () => {
+    // Se desactiver soi-meme, c'est s'enfermer dehors : l'API le refuse, et
+    // l'ecran n'a pas a proposer un geste qui sera rejete.
+    ecran.isManager = true;
+    ecran.moiId = 1;
+    render(<UsersPage />);
+
+    const boutons = screen.getAllByRole("button", { name: "Désactiver ce compte" });
+    expect(boutons).toHaveLength(1);
   });
 
   it("annonce une liste vide plutôt qu'un tableau sans ligne", () => {

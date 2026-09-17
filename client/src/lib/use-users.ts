@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { changeUserRole } from "@/lib/api/generated/users/users";
+import { changeUserRole, setUserActive } from "@/lib/api/generated/users/users";
 import type { Role } from "@/lib/api/generated/model";
 import { useCurrentUser, useTeammates } from "@/lib/api/queries";
 
@@ -22,6 +22,9 @@ export function useUsersScreen() {
   return {
     isLoading,
     isManager: me?.role === "MANAGER",
+    //: Nul ne coupe son propre acces : le compte serait refuse des la requete
+    //: suivante, et plus personne ne pourrait le rouvrir de l'interieur.
+    moiId: me?.id,
     avecInactifs,
 
     // Un seul instant de reference par rendu : sans cela, deux lignes de la
@@ -37,6 +40,11 @@ export function useUsersScreen() {
 
     async changerRole(userId: number, role: Role) {
       await changeUserRole(userId, { role });
+      await queryClient.invalidateQueries();
+    },
+
+    async changerActivite(userId: number, actif: boolean) {
+      await setUserActive(userId, { actif });
       await queryClient.invalidateQueries();
     },
   };

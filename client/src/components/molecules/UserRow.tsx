@@ -1,6 +1,10 @@
 "use client";
 
+import { useState } from "react";
+
+import { DeactivateUserDialog } from "@/components/atoms/DeactivateUserDialog";
 import { RolePicker } from "@/components/atoms/RolePicker";
+import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { UserAvatar } from "@/components/atoms/UserAvatar";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { Role, UserResponse } from "@/lib/api/generated/model";
@@ -10,7 +14,10 @@ interface UserRowProps {
   user: UserResponse;
   /** La gestion des utilisateurs est reservee aux managers. */
   roleModifiable: boolean;
+  /** Faux sur sa propre ligne : nul ne coupe son propre acces. */
+  statutModifiable: boolean;
   onChangeRole: (userId: number, role: Role) => void | Promise<void>;
+  onSetActive: (userId: number, actif: boolean) => void | Promise<void>;
   /** Injecte : un rendu date par `new Date()` ne se testerait pas. */
   maintenant: Date;
 }
@@ -19,9 +26,13 @@ interface UserRowProps {
 export function UserRow({
   user,
   roleModifiable,
+  statutModifiable,
   onChangeRole,
+  onSetActive,
   maintenant,
 }: UserRowProps) {
+  const [coupureADemander, setCoupureADemander] = useState(false);
+
   return (
     <TableRow className={user.actif ? undefined : "text-slate-400"}>
       <TableCell className="py-2">
@@ -57,12 +68,24 @@ export function UserRow({
       </TableCell>
 
       <TableCell className="py-2">
-        {/* Un compte actif est la norme : seul l'ecart se dit. */}
-        {!user.actif && (
-          <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-500">
-            Inactif
-          </span>
-        )}
+        <StatusBadge
+          actif={user.actif}
+          modifiable={statutModifiable}
+          // Couper un acces se confirme ; le retablir ne retire rien a personne.
+          onToggle={(actif) =>
+            actif ? onSetActive(user.id, true) : setCoupureADemander(true)
+          }
+        />
+
+        <DeactivateUserDialog
+          open={coupureADemander}
+          onOpenChange={setCoupureADemander}
+          nom={user.display_name}
+          onConfirm={() => {
+            setCoupureADemander(false);
+            return onSetActive(user.id, false);
+          }}
+        />
       </TableCell>
     </TableRow>
   );

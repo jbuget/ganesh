@@ -24,3 +24,9 @@ class ChangeRoleRequest(BaseModel):
     """Promotion ou retrogradation d'un collaborateur."""
 
     role: Role
+
+
+class SetActiveRequest(BaseModel):
+    """Coupure ou retablissement de l'acces d'un collaborateur."""
+
+    actif: bool

@@ -64,7 +64,9 @@ export function UsersPage() {
                   key={collaborateur.id}
                   user={collaborateur}
                   roleModifiable={ecran.isManager}
+                  statutModifiable={ecran.isManager && collaborateur.id !== ecran.moiId}
                   onChangeRole={ecran.changerRole}
+                  onSetActive={ecran.changerActivite}
                   maintenant={ecran.maintenant}
                 />
               ))}

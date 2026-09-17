@@ -50,6 +50,14 @@ class User:
         """Chacun peut editer un mois ouvert, y compris celui d'un collegue."""
         return self.actif
 
+    def can_deactivate(self, target: "User") -> bool:
+        """Dit si ce manager peut couper l'acces de `target`.
+
+        Nul ne se desactive soi-meme : le compte serait refuse a la porte des la
+        requete suivante, et plus personne ne pourrait le rouvrir de l'interieur.
+        """
+        return self.can_manage_teammates() and target.id != self.id
+
     def enregistrer_connexion(
         self, a: datetime, fraicheur: timedelta = FRAICHEUR_CONNEXION
     ) -> bool:
