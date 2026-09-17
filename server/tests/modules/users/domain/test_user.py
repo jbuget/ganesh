@@ -1,5 +1,7 @@
 """Regles metier portees par l'utilisateur."""
 
+from datetime import datetime
+
 import pytest
 
 from src.modules.users.domain.entities.user import Role, User
@@ -52,3 +54,73 @@ def test_email_is_normalised_to_lowercase() -> None:
     )
 
     assert user.email == "j.buget@waat.fr"
+
+
+def test_a_first_connection_is_recorded() -> None:
+    user = make_user()
+
+    assert user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0)) is True
+    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 0)
+
+
+def test_a_connection_within_the_freshness_window_is_not_rewritten() -> None:
+    """Un jeton porteur est represente a chaque requete.
+
+    Sans fenetre de fraicheur, la « derniere connexion » ne mesurerait plus que
+    le nombre d'ecritures en base.
+    """
+    user = make_user()
+    user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0))
+
+    assert user.enregistrer_connexion(datetime(2026, 9, 17, 9, 3)) is False
+    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 0)
+
+
+def test_a_connection_after_the_freshness_window_is_recorded() -> None:
+    user = make_user()
+    user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0))
+
+    assert user.enregistrer_connexion(datetime(2026, 9, 17, 9, 20)) is True
+    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 20)
+
+
+def test_a_connection_is_never_dated_backwards() -> None:
+    """Deux requetes concurrentes peuvent arriver dans le desordre."""
+    user = make_user()
+    user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0))
+
+    assert user.enregistrer_connexion(datetime(2026, 9, 17, 8, 0)) is False
+    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 0)
+
+
+def with_id(user: User, user_id: int) -> User:
+    user.id = user_id
+    return user
+
+
+def test_a_manager_can_deactivate_someone_else() -> None:
+    manager = with_id(make_user(Role.MANAGER), 1)
+    other = with_id(make_user(Role.TEAMMATE), 2)
+
+    assert manager.can_deactivate(other) is True
+
+
+def test_a_manager_cannot_deactivate_themselves() -> None:
+    """Se retirer l'acces, c'est s'enfermer dehors."""
+    manager = with_id(make_user(Role.MANAGER), 1)
+
+    assert manager.can_deactivate(manager) is False
+
+
+def test_a_teammate_cannot_deactivate_anyone() -> None:
+    teammate = with_id(make_user(Role.TEAMMATE), 1)
+    other = with_id(make_user(Role.MANAGER), 2)
+
+    assert teammate.can_deactivate(other) is False
+
+
+def test_a_deactivated_manager_can_no_longer_deactivate_anyone() -> None:
+    manager = with_id(make_user(Role.MANAGER, actif=False), 1)
+    other = with_id(make_user(Role.TEAMMATE), 2)
+
+    assert manager.can_deactivate(other) is False

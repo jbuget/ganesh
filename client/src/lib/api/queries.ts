@@ -31,9 +31,14 @@ export function useCurrentUser() {
   return { ...query, user: successOf<UserResponse>(query.data) };
 }
 
-/** Les collaborateurs, pour le selecteur de consultation. */
-export function useTeammates() {
-  const query = useListUsers();
+/**
+ * Les collaborateurs.
+ *
+ * Par defaut, seuls les actifs : partout ailleurs qu'a l'ecran de gestion, un
+ * collaborateur desactive n'a plus a etre propose.
+ */
+export function useTeammates(includeInactive = false) {
+  const query = useListUsers(includeInactive ? { include_inactive: true } : undefined);
   return { ...query, teammates: successOf<UserResponse[]>(query.data) ?? [] };
 }
 

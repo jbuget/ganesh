@@ -16,4 +16,5 @@ export interface UserResponse {
   initiales: string;
   role: Role;
   actif: boolean;
+  derniere_connexion?: string | null;
 }

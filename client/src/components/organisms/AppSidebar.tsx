@@ -1,6 +1,12 @@
 "use client";
 
-import { CalendarDays, FolderKanban, KanbanSquare, PanelLeft } from "lucide-react";
+import {
+  CalendarDays,
+  FolderKanban,
+  KanbanSquare,
+  PanelLeft,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -12,6 +18,7 @@ const ONGLETS = [
   { href: "/", label: "Activité", Icone: CalendarDays },
   { href: "/kanban", label: "Kanban", Icone: KanbanSquare },
   { href: "/projets", label: "Projets", Icone: FolderKanban },
+  { href: "/collaborateurs", label: "Utilisateurs", Icone: Users },
 ] as const;
 
 /** Initiales d'un nom, pour la pastille du pied de barre. */

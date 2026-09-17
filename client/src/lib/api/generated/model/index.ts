@@ -55,6 +55,7 @@ export * from "./removeMissionFromMonthParams";
 export * from "./reopenMonthApiV1MonthsMoisReopenPostParams";
 export * from "./reopenMonthParams";
 export * from "./role";
+export * from "./setActiveRequest";
 export * from "./setEntryApiV1EntriesPutParams";
 export * from "./setEntryParams";
 export * from "./setEntryRequest";

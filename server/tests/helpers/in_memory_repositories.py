@@ -42,6 +42,9 @@ class InMemoryUserRepository(UserRepository):
     def __init__(self, users: list[User] | None = None) -> None:
         self._users: dict[int, User] = {}
         self._next_id = 1
+        #: Nombre d'ecritures subies : la fenetre de fraicheur de la derniere
+        #: connexion ne se verifie qu'en comptant ce que le use case persiste.
+        self.updates = 0
         for user in users or []:
             self._users[user.id or self._next_id] = user
             self._next_id = max(self._next_id, (user.id or 0) + 1)
@@ -66,6 +69,7 @@ class InMemoryUserRepository(UserRepository):
         return user
 
     async def update(self, user: User) -> User:
+        self.updates += 1
         if user.id is not None:
             self._users[user.id] = user
         return user
