@@ -168,21 +168,20 @@ export function ProjectPilotageTab({
               className="-mx-1 w-full rounded px-1 py-0.5 text-sm transition-colors hover:bg-slate-100 focus:bg-white focus:ring-1 focus:ring-slate-400 focus:outline-none"
             />
           </Ligne>
+
+          <Ligne titre="Liens">
+            <ProjectLinksEditor
+              liens={detail.liens}
+              onAdd={ajouterLien}
+              onRemove={retirerLien}
+            />
+          </Ligne>
         </div>
       </section>
 
       <section className="space-y-2">
         <TitreSection>Sous-projets</TitreSection>
         <ProjectSubProjects sousProjets={detail.sous_projets} />
-      </section>
-
-      <section className="space-y-2">
-        <TitreSection>Liens</TitreSection>
-        <ProjectLinksEditor
-          liens={detail.liens}
-          onAdd={ajouterLien}
-          onRemove={retirerLien}
-        />
       </section>
 
       <section className="space-y-2">

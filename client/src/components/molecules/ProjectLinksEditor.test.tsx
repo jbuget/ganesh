@@ -21,10 +21,17 @@ function saisir(placeholder: string, valeur: string) {
 }
 
 describe("ProjectLinksEditor", () => {
-  it("annonce une mission sans lien", () => {
+  it("n'offre que l'ajout quand la mission n'a aucun lien", () => {
     render(<ProjectLinksEditor liens={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
 
-    expect(screen.getByText("Aucun lien")).toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ajouter un lien" })).toBeInTheDocument();
+  });
+
+  it("garde le formulaire ferme tant qu'on ne le demande pas", () => {
+    render(<ProjectLinksEditor liens={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
+
+    expect(screen.queryByPlaceholderText("https://…")).not.toBeInTheDocument();
   });
 
   it("liste tous les liens de la mission", () => {
@@ -129,5 +136,19 @@ describe("ProjectLinksEditor", () => {
     fireEvent.click(screen.getByRole("button", { name: "Retirer Maquettes" }));
 
     expect(onRemove).toHaveBeenCalledWith(7);
+  });
+
+  it("offre le retrait de chaque lien sans attendre un survol", () => {
+    // La croix ne doit pas se meriter : au doigt, il n'y a pas de survol.
+    render(
+      <ProjectLinksEditor
+        liens={[lien(1, "Le dépôt", "depot"), lien(2, "Maquettes", "maquette")]}
+        onAdd={vi.fn()}
+        onRemove={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Retirer Le dépôt" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Retirer Maquettes" })).toBeVisible();
   });
 });

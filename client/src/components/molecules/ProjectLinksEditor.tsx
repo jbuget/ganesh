@@ -6,6 +6,7 @@ import { useState } from "react";
 import { LinkIconPicker } from "@/components/atoms/LinkIconPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { LinkIcon, ProjectLinkResponse } from "@/lib/api/generated/model";
 import { dessinIcone, libelleIcone } from "@/lib/link-icons";
 
@@ -19,9 +20,9 @@ interface ProjectLinksEditorProps {
 /**
  * Les liens utiles d'une mission : autant qu'on veut, chacun avec son icone.
  *
- * Le formulaire ne s'ouvre qu'a la demande : une fiche se consulte plus
- * souvent qu'elle ne se remplit, et trois champs vides en permanence
- * encombreraient la lecture.
+ * La saisie vit dans un popover ancre au bouton, comme les autres champs de la
+ * fiche : les liens restent une valeur parmi d'autres, et la fiche ne disparait
+ * pas derriere un voile pour trois champs.
  */
 export function ProjectLinksEditor({
   liens,
@@ -34,35 +35,34 @@ export function ProjectLinksEditor({
   const [icone, setIcone] = useState<LinkIcon | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
 
-  function refermer() {
-    setLabel("");
-    setUrl("");
-    setIcone(null);
-    setErreur(null);
-    setOuvert(false);
+  function changerOuverture(valeur: boolean) {
+    setOuvert(valeur);
+    // Refermer, de quelque maniere que ce soit, remet le formulaire a neuf.
+    if (!valeur) {
+      setLabel("");
+      setUrl("");
+      setIcone(null);
+      setErreur(null);
+    }
   }
 
   async function ajouter() {
     setErreur(null);
     try {
       await onAdd(label, url, icone);
-      refermer();
+      changerOuverture(false);
     } catch {
       setErreur("Cette adresse n'est pas valide. Elle doit commencer par http://.");
     }
   }
 
   return (
-    <div className="space-y-1.5">
-      {liens.length === 0 && !ouvert && (
-        <p className="text-sm text-slate-400">Aucun lien</p>
-      )}
-
+    <div className="space-y-1">
       <ul className="space-y-1">
         {liens.map((lien) => {
           const Dessin = dessinIcone(lien.icone);
           return (
-            <li key={lien.id} className="group flex items-center gap-1.5">
+            <li key={lien.id} className="flex items-center gap-1.5">
               <a
                 href={lien.url}
                 target="_blank"
@@ -79,7 +79,9 @@ export function ProjectLinksEditor({
                 type="button"
                 aria-label={`Retirer ${lien.label}`}
                 onClick={() => void onRemove(lien.id)}
-                className="cursor-pointer rounded p-0.5 text-slate-300 opacity-0 transition hover:text-red-600 group-hover:opacity-100"
+                // Toujours visible, et pas seulement au survol : la croix doit
+                // s'atteindre au doigt comme a la souris.
+                className="cursor-pointer rounded p-0.5 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
               >
                 <X className="size-3.5" aria-hidden />
               </button>
@@ -88,8 +90,13 @@ export function ProjectLinksEditor({
         })}
       </ul>
 
-      {ouvert ? (
-        <div className="space-y-1.5 pt-1">
+      <Popover open={ouvert} onOpenChange={changerOuverture}>
+        <PopoverTrigger className="flex cursor-pointer items-center gap-1 text-sm text-slate-400 transition-colors hover:text-slate-600">
+          <Plus className="size-3.5" aria-hidden />
+          Ajouter un lien
+        </PopoverTrigger>
+
+        <PopoverContent align="start" className="w-80 gap-1.5">
           <div className="flex gap-1.5">
             <LinkIconPicker valeur={icone} onChange={setIcone} />
             <Input
@@ -104,27 +111,21 @@ export function ProjectLinksEditor({
             onChange={(event) => setUrl(event.target.value)}
             placeholder="https://…"
             className="h-8 text-sm"
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && url.trim()) void ajouter();
+            }}
           />
           {erreur && <p className="text-xs text-red-700">{erreur}</p>}
           <div className="flex gap-2">
             <Button size="sm" onClick={() => void ajouter()} disabled={!url.trim()}>
               Ajouter
             </Button>
-            <Button size="sm" variant="ghost" onClick={refermer}>
+            <Button size="sm" variant="ghost" onClick={() => changerOuverture(false)}>
               Annuler
             </Button>
           </div>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setOuvert(true)}
-          className="flex cursor-pointer items-center gap-1 text-sm text-slate-400 transition-colors hover:text-slate-600"
-        >
-          <Plus className="size-3.5" aria-hidden />
-          Ajouter un lien
-        </button>
-      )}
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
