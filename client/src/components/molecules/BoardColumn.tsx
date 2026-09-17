@@ -39,8 +39,11 @@ export function BoardColumn({ statut, cartes }: BoardColumnProps) {
           ))}
         </SortableContext>
 
+        {/* Un <ul> n'admet que des <li> : un <p> nu casserait l'hydratation. */}
         {cartes.length === 0 && (
-          <p className="px-1 py-6 text-center text-xs text-slate-400">Aucune mission</p>
+          <li className="px-1 py-6 text-center text-xs text-slate-400">
+            Aucune mission
+          </li>
         )}
       </ul>
     </section>

@@ -150,8 +150,14 @@ export function BoardPage() {
             ))}
           </div>
 
-          {/* La copie qui suit le curseur, legerement inclinee et soulevee. */}
-          <DragOverlay dropAnimation={{ duration: 180, easing: "ease" }}>
+          {/*
+            La copie qui suit le curseur, legerement inclinee et soulevee.
+
+            Aucune animation de retour : elle vise l'element d'origine, qui a
+            change de place ou de colonne entre-temps, et laissait alors une
+            carte fantome affichee en permanence.
+          */}
+          <DragOverlay dropAnimation={null}>
             {enDeplacement && (
               <div className="w-64 rotate-2 scale-[1.02] cursor-grabbing">
                 <ProjectCard carte={enDeplacement} enDeplacement />
