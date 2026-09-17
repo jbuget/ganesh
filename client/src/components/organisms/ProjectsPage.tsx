@@ -6,6 +6,7 @@ import { Fragment, useMemo, useState } from "react";
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { ImportProjectsDialog } from "@/components/atoms/ImportProjectsDialog";
 import { PageHeader } from "@/components/atoms/PageHeader";
+import { MissionFilters } from "@/components/molecules/MissionFilters";
 import { MissionRow } from "@/components/molecules/MissionRow";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
@@ -18,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useMissionOuverte } from "@/lib/mission-ouverte";
+import { useMissionFilters } from "@/lib/use-mission-filters";
 import { useProjectsScreen } from "@/lib/use-projects";
 
 /**
@@ -30,7 +32,10 @@ import { useProjectsScreen } from "@/lib/use-projects";
  * les chemins vers la meme donnee, et les ferait diverger.
  */
 export function ProjectsPage() {
-  const ecran = useProjectsScreen();
+  // Les memes criteres que le kanban, tenus par la meme adresse : on filtre
+  // d'un ecran, on ouvre l'autre, et la question posee reste la meme.
+  const { filtres, actif, definir, effacer } = useMissionFilters();
+  const ecran = useProjectsScreen(filtres);
   // Une seule heure de reference pour toutes les lignes : « il y a 3 h » ne
   // doit pas dependre du moment ou chacune se rend.
   const maintenant = useMemo(() => new Date(), []);
@@ -63,11 +68,22 @@ export function ProjectsPage() {
     >
       {/* Assez large pour neuf colonnes, pas au point d'etirer les noms. */}
       <div className="max-w-[1300px]">
+        <MissionFilters
+          filtres={filtres}
+          actif={actif}
+          onChange={definir}
+          onEffacer={effacer}
+          visibles={ecran.visibles}
+          total={ecran.total}
+        />
+
         {ecran.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
         {ecran.arbre.length === 0 && !ecran.isLoading && (
           <p className="py-8 text-center text-sm text-slate-500">
-            Aucun projet. Déclarez-en un ou importez votre référentiel.
+            {actif
+              ? "Aucune mission ne répond aux filtres."
+              : "Aucun projet. Déclarez-en un ou importez votre référentiel."}
           </p>
         )}
 

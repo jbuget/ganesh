@@ -48,9 +48,14 @@ export function useTeammates(includeInactive = false) {
  * Les affectations viennent de la meme requete que les missions : le
  * referentiel les aligne en colonnes, et une requete par ligne les ferait
  * arriver les unes apres les autres sous les yeux du lecteur.
+ *
+ * Les archivees ne sont demandees que lorsqu'on veut les voir : partout
+ * ailleurs, une mission rangee n'a plus a etre proposee.
  */
-export function useProjects() {
-  const query = useListProjects();
+export function useProjects(includeInactive = false) {
+  const query = useListProjects(
+    includeInactive ? { include_inactive: true } : undefined,
+  );
   const missions = successOf<ProjectListItemResponse[]>(query.data) ?? [];
   return {
     ...query,
