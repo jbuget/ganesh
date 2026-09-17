@@ -12,6 +12,25 @@ jobs:
     defaults:
       run:
         working-directory: server
+
+    # Les tests d'integration touchent une vraie base, comme le veut le projet :
+    # le double en memoire rend les objets qu'on lui confie la ou la base en
+    # reconstruit d'autres, et c'est precisement cet ecart qu'ils surveillent.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: timesheet
+          POSTGRES_PASSWORD: timesheet
+          POSTGRES_DB: timesheet_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
 
@@ -39,6 +58,8 @@ jobs:
 
       - name: Tests
         run: pytest
+        env:
+          TEST_DATABASE_URL: postgresql+asyncpg://timesheet:timesheet@localhost:5432/timesheet_test
 
   client:
     name: Client — lint, types, tests
