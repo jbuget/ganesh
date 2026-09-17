@@ -63,7 +63,7 @@ Ce projet suit les principes du **Software Craftsmanship** : code propre, testé
 | Frontend | Next.js 16, TypeScript, React 19, Tailwind CSS 4 |
 | BFF | Route Handlers Next.js (`client/src/app/api/`) |
 | Backend | Python 3.12, FastAPI, SQLAlchemy async, Alembic |
-| Base de données | PostgreSQL 16 |
+| Base de données | PostgreSQL 18 |
 | Authentification | Microsoft Entra ID |
 | Tests front | Vitest + Testing Library |
 | Tests back | pytest + pytest-asyncio |

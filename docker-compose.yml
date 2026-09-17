@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     container_name: timesheet-db
     environment:
       POSTGRES_USER: timesheet
@@ -9,7 +9,10 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - timesheet-db-data:/var/lib/postgresql/data
+      # Postgres 18 range ses donnees dans `/var/lib/postgresql/18/docker` et
+      # non plus dans `/var/lib/postgresql/data` : on monte le parent, sans quoi
+      # le volume serait ignore et la base repartirait vide a chaque demarrage.
+      - timesheet-db-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U timesheet"]
       interval: 5s
