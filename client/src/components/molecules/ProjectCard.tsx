@@ -136,39 +136,48 @@ export function ProjectCard({
       </p>
 
       {/*
-        La copie qui suit le curseur n'est pas interactive : sans selecteur, un
-        clic amorce dessus ne pourrait pas ouvrir de menu en plein glissement.
-      */}
-      <div className="mt-2.5">
-        {enDeplacement || !onIntervenantsChange ? (
-          <MemberAvatars membres={carte.intervenants} />
-        ) : (
-          <IntervenantsPicker
-            projectId={project.id}
-            intervenants={carte.intervenants}
-            onChange={onIntervenantsChange}
-          />
-        )}
-      </div>
+        Le pied de carte : qui s'occupe de la mission a gauche, ce qu'elle
+        porte a droite — son fil, ses lots. Les deux tiennent sur une seule
+        ligne : ils repondent a la meme question, ce qui gravite autour de la
+        mission, et deux lignes distinctes etiraient la carte sans rien dire de
+        plus.
 
-      {/*
-        Ce que la mission porte autour d'elle : son fil, et ses lots. Chaque
-        nombre precede son icone, d'ou l'ecart large entre les deux decomptes :
-        plus serres, on ne saurait plus auquel des deux un nombre se rapporte.
+        Chaque nombre precede son icone, d'ou l'ecart large entre les deux
+        decomptes : plus serres, un nombre se lirait comme le compte de l'icone
+        qui le precede, surtout quand celle d'a cote ne compte rien.
       */}
-      <div className="mt-2 flex items-center justify-end gap-4">
-        <CardCounter
-          icone={MessageCircle}
-          nombre={carte.commentaires}
-          libelle={["commentaire", "commentaires"]}
-          vide="Aucun commentaire"
-        />
-        <CardCounter
-          icone={SquareStack}
-          nombre={carte.sous_projets}
-          libelle={["sous-projet", "sous-projets"]}
-          vide="Aucun sous-projet"
-        />
+      <div className="mt-2.5 flex items-center gap-2">
+        {/*
+          La copie qui suit le curseur n'est pas interactive : sans selecteur,
+          un clic amorce dessus ne pourrait pas ouvrir de menu en plein
+          glissement.
+        */}
+        <div className="min-w-0 flex-1">
+          {enDeplacement || !onIntervenantsChange ? (
+            <MemberAvatars membres={carte.intervenants} />
+          ) : (
+            <IntervenantsPicker
+              projectId={project.id}
+              intervenants={carte.intervenants}
+              onChange={onIntervenantsChange}
+            />
+          )}
+        </div>
+
+        <div className="flex shrink-0 items-center gap-5">
+          <CardCounter
+            icone={MessageCircle}
+            nombre={carte.commentaires}
+            libelle={["commentaire", "commentaires"]}
+            vide="Aucun commentaire"
+          />
+          <CardCounter
+            icone={SquareStack}
+            nombre={carte.sous_projets}
+            libelle={["sous-projet", "sous-projets"]}
+            vide="Aucun sous-projet"
+          />
+        </div>
       </div>
     </article>
   );
