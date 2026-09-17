@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.modules.projects.domain.entities.project_link import ProjectLink
+from src.modules.projects.domain.entities.project_link import LinkIcon, ProjectLink
 from src.shared.exceptions.domain_exceptions import ValidationError
 
 
@@ -42,3 +42,27 @@ def test_only_web_addresses_are_accepted(url: str) -> None:
 @pytest.mark.parametrize("url", ["https://waat.fr", "http://intranet/doc"])
 def test_http_and_https_are_accepted(url: str) -> None:
     assert a_link(url=url).url == url
+
+
+def test_a_link_carries_the_generic_icon_by_default() -> None:
+    assert a_link().icone is LinkIcon.LIEN
+
+
+def test_a_link_keeps_the_icon_it_is_given() -> None:
+    lien = ProjectLink(
+        id=None,
+        project_id=1,
+        label="Maquettes",
+        url="https://figma.com/x",
+        icone=LinkIcon.MAQUETTE,
+    )
+
+    assert lien.icone is LinkIcon.MAQUETTE
+
+
+def test_an_icon_outside_the_catalogue_is_refused() -> None:
+    """Le catalogue est ferme : l'ecran doit savoir dessiner ce qu'il recoit."""
+    with pytest.raises(ValidationError):
+        ProjectLink(
+            id=None, project_id=1, label="x", url="https://waat.fr", icone="licorne"
+        )

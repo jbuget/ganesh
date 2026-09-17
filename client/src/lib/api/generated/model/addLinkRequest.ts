@@ -4,11 +4,16 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
+import type { LinkIcon } from "./linkIcon";
 
 /**
- * Ajout d'un lien : une adresse, et un intitule facultatif.
+ * Ajout d'un lien : une adresse, un intitule et une icone facultatifs.
+ *
+ * Sans icone, le serveur la deduit de l'adresse : l'ecran n'a pas a connaitre
+ * la liste des services reconnus.
  */
 export interface AddLinkRequest {
   label?: string;
   url: string;
+  icone?: LinkIcon | null;
 }

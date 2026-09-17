@@ -9,9 +9,11 @@ import { IntervenantsPicker } from "@/components/atoms/IntervenantsPicker";
 import { PhasePicker } from "@/components/atoms/PhasePicker";
 import { PriorityPicker } from "@/components/atoms/PriorityPicker";
 import { ProjectContributions } from "@/components/molecules/ProjectContributions";
+import { ProjectLinksEditor } from "@/components/molecules/ProjectLinksEditor";
 import { ProjectSubProjects } from "@/components/molecules/ProjectSubProjects";
 import type {
   Department,
+  LinkIcon,
   ProjectCategory,
   ProjectDetailResponse,
   ProjectPriority,
@@ -31,6 +33,8 @@ interface ProjectPilotageTabProps {
     priorite?: ProjectPriority | null;
     estime_j?: number | null;
   }) => Promise<void>;
+  ajouterLien: (label: string, url: string, icone: LinkIcon | null) => Promise<void>;
+  retirerLien: (linkId: number) => Promise<void>;
 }
 
 /**
@@ -77,6 +81,8 @@ export function ProjectPilotageTab({
   enregistrerFiche,
   changerPhase,
   changerCaracteristiques,
+  ajouterLien,
+  retirerLien,
 }: ProjectPilotageTabProps) {
   // Tant qu'on n'a rien tape, le champ affiche ce que dit le serveur : pas de
   // copie locale a resynchroniser a chaque rechargement.
@@ -160,6 +166,14 @@ export function ProjectPilotageTab({
                 if (event.key === "Enter") event.currentTarget.blur();
               }}
               className="-mx-1 w-full rounded px-1 py-0.5 text-sm transition-colors hover:bg-slate-100 focus:bg-white focus:ring-1 focus:ring-slate-400 focus:outline-none"
+            />
+          </Ligne>
+
+          <Ligne titre="Liens">
+            <ProjectLinksEditor
+              liens={detail.liens}
+              onAdd={ajouterLien}
+              onRemove={retirerLien}
             />
           </Ligne>
         </div>

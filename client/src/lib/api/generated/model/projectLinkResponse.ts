@@ -4,6 +4,7 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
+import type { LinkIcon } from "./linkIcon";
 
 /**
  * Un lien utile attache a une mission.
@@ -12,4 +13,5 @@ export interface ProjectLinkResponse {
   id: number;
   label: string;
   url: string;
+  icone: LinkIcon;
 }

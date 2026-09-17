@@ -11,6 +11,7 @@ from src.modules.projects.domain.entities.project import (
     ProjectPriority,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.project_link import LinkIcon
 
 
 class CreateProjectRequest(BaseModel):
@@ -166,13 +167,19 @@ class ProjectLinkResponse(BaseModel):
     id: int
     label: str
     url: str
+    icone: LinkIcon
 
 
 class AddLinkRequest(BaseModel):
-    """Ajout d'un lien : une adresse, et un intitule facultatif."""
+    """Ajout d'un lien : une adresse, un intitule et une icone facultatifs.
+
+    Sans icone, le serveur la deduit de l'adresse : l'ecran n'a pas a connaitre
+    la liste des services reconnus.
+    """
 
     label: str = ""
     url: str
+    icone: LinkIcon | None = None
 
 
 class PhaseReachedResponse(BaseModel):

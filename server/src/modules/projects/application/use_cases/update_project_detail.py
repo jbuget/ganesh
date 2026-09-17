@@ -7,13 +7,14 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
 from src.modules.projects.domain.entities.project import Department
-from src.modules.projects.domain.entities.project_link import ProjectLink
+from src.modules.projects.domain.entities.project_link import LinkIcon, ProjectLink
 from src.modules.projects.domain.repositories.project_detail_repository import (
     ProjectDetailRepository,
 )
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.projects.domain.services.link_icons import deviner_icone
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 
@@ -38,12 +39,16 @@ class UpdateDescriptionCommand:
 
 @dataclass(frozen=True)
 class AddLinkCommand:
-    """Ajout d'un lien utile."""
+    """Ajout d'un lien utile.
+
+    L'icone est facultative : sans choix explicite, l'adresse la designe.
+    """
 
     actor_id: int
     project_id: int
     label: str
     url: str
+    icone: LinkIcon | None = None
 
 
 class UpdateProjectDetailUseCase:
@@ -114,6 +119,7 @@ class AddProjectLinkUseCase:
                 project_id=command.project_id,
                 label=command.label,
                 url=command.url,
+                icone=command.icone or deviner_icone(command.url),
             )
         )
 

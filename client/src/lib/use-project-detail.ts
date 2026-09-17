@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import type {
   Department,
+  LinkIcon,
   ProjectCategory,
   ProjectDetailResponse,
   ProjectPriority,
@@ -93,8 +94,9 @@ export function useProjectDetail(
       await recharger();
     },
 
-    async ajouterLien(label: string, url: string) {
-      await addProjectLink(projectId, { label, url });
+    /** `icone` a `null` : le serveur la deduit de l'adresse. */
+    async ajouterLien(label: string, url: string, icone: LinkIcon | null) {
+      await addProjectLink(projectId, { label, url, icone });
       await recharger();
     },
 
