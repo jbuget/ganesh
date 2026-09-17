@@ -4,7 +4,8 @@ import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { MarkdownView } from "@/components/atoms/MarkdownView";
-import { MarkdownEditor } from "@/components/molecules/MarkdownEditor";
+import { RichTextEditor } from "@/components/atoms/RichTextEditor";
+import { Button } from "@/components/ui/button";
 import type { ProjectUpdateResponse } from "@/lib/api/generated/model";
 import { depuis } from "@/lib/dates-relatives";
 
@@ -69,7 +70,7 @@ export function ProjectUpdateCard({
       {maj.est_supprimee ? (
         <p className="text-sm text-slate-400 italic">Message supprimé</p>
       ) : enEdition ? (
-        <MarkdownEditor
+        <Correction
           valeur={maj.texte}
           onCancel={() => setEnEdition(false)}
           onSave={async (texte) => {
@@ -81,5 +82,36 @@ export function ProjectUpdateCard({
         <MarkdownView texte={maj.texte} />
       )}
     </article>
+  );
+}
+
+/** Correction d'une mise a jour, en place dans le fil. */
+function Correction({
+  valeur,
+  onSave,
+  onCancel,
+}: {
+  valeur: string;
+  onSave: (texte: string) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [texte, setTexte] = useState(valeur);
+
+  return (
+    <div className="space-y-2">
+      <RichTextEditor
+        valeur={valeur}
+        onChange={setTexte}
+        onSubmit={() => void onSave(texte)}
+      />
+      <div className="flex items-center gap-2">
+        <Button size="sm" disabled={!texte.trim()} onClick={() => void onSave(texte)}>
+          Enregistrer
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onCancel}>
+          Annuler
+        </Button>
+      </div>
+    </div>
   );
 }

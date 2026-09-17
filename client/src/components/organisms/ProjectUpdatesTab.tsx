@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
+import { RichTextEditor } from "@/components/atoms/RichTextEditor";
 import { ProjectUpdateCard } from "@/components/molecules/ProjectUpdateCard";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useProjectUpdates } from "@/lib/use-project-updates";
 
 interface ProjectUpdatesTabProps {
@@ -24,12 +24,16 @@ export function ProjectUpdatesTab({ projectId, maintenant }: ProjectUpdatesTabPr
   const suivi = useProjectUpdates(projectId);
   const [texte, setTexte] = useState("");
   const [enCours, setEnCours] = useState(false);
+  // Remonter la cle vide l'editeur : son contenu vit dans ProseMirror, pas
+  // dans React, et il ne se reinitialise pas en changeant une propriete.
+  const [cleDeRedaction, setCleDeRedaction] = useState(0);
 
   async function publier() {
     setEnCours(true);
     try {
       await suivi.publier(texte);
       setTexte("");
+      setCleDeRedaction((cle) => cle + 1);
     } finally {
       setEnCours(false);
     }
@@ -38,24 +42,28 @@ export function ProjectUpdatesTab({ projectId, maintenant }: ProjectUpdatesTabPr
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Textarea
-          value={texte}
-          rows={3}
+        <RichTextEditor
+          key={cleDeRedaction}
+          valeur=""
           placeholder="Rédigez une mise à jour…"
-          onChange={(event) => setTexte(event.target.value)}
-          onKeyDown={(event) => {
-            if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-              if (texte.trim()) void publier();
-            }
+          onChange={setTexte}
+          onSubmit={() => {
+            if (texte.trim()) void publier();
           }}
-          className="text-sm"
         />
         {texte.trim() && (
           <div className="flex items-center gap-2">
             <Button size="sm" disabled={enCours} onClick={() => void publier()}>
               Publier
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setTexte("")}>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setTexte("");
+                setCleDeRedaction((cle) => cle + 1);
+              }}
+            >
               Annuler
             </Button>
             <span className="text-xs text-slate-400">⌘↵ pour publier</span>
