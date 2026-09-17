@@ -33,7 +33,7 @@ export function DayHeader({
       scope="col"
       title={label ?? intitule}
       className={[
-        "h-11 border-r border-b border-b-slate-300 text-xs font-normal",
+        "h-11 border-t border-r border-b border-t-slate-500 border-b-slate-300 text-xs font-normal",
         isNarrow ? "w-2.5" : "w-9",
         isLastDay ? "border-r-slate-500" : "border-r-slate-300",
         isOffDay

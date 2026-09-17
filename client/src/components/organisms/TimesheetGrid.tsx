@@ -90,13 +90,13 @@ export function TimesheetGrid({
 
   return (
     <div className="max-w-full overflow-x-auto">
-      <table className="w-max border-separate border-spacing-0 border-t border-l border-slate-500 text-slate-800">
+      <table className="w-max border-separate border-spacing-0 border-l border-slate-500 text-slate-800">
         <caption className="sr-only">Temps saisi par mission et par jour</caption>
         <thead>
           <tr>
             <th
               scope="col"
-              className="sticky left-0 z-10 h-11 w-56 border-r border-b border-r-slate-500 border-b-slate-300 bg-white px-3 text-left text-xs font-medium text-slate-600"
+              className="sticky left-0 z-10 h-11 w-56 border-t border-r border-b border-t-slate-500 border-r-slate-500 border-b-slate-300 bg-white px-3 text-left text-xs font-medium text-slate-600"
             >
               <span className="sr-only">Mission</span>
             </th>
@@ -113,12 +113,14 @@ export function TimesheetGrid({
             ))}
             <th
               scope="col"
-              className="h-11 w-14 border-r border-b border-r-slate-500 border-b-slate-300 bg-white px-2 text-xs font-medium text-slate-600"
+              className="h-11 w-14 border-t border-r border-b border-t-slate-500 border-r-slate-500 border-b-slate-300 bg-white px-2 text-xs font-medium text-slate-600"
             >
               <span className="sr-only">Total du mois</span>
             </th>
             {onRemoveMission && (
               // Hors du cadre : cette colonne porte une action, pas une donnee.
+              // C'est pourquoi le trait du haut est porte par les cellules et
+              // non par la table, qui l'aurait prolonge jusqu'ici.
               <th scope="col" className="w-10">
                 <span className="sr-only">Retirer la mission</span>
               </th>

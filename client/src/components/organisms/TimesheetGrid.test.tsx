@@ -198,6 +198,18 @@ describe("TimesheetGrid", () => {
     expect(onRemoveMission).toHaveBeenCalledWith(10);
   });
 
+  it("arrête le trait du haut à la dernière colonne de données", () => {
+    render(
+      <TimesheetGrid {...baseProps} grid={makeGrid()} onRemoveMission={vi.fn()} />,
+    );
+
+    const action = screen.getByText("Retirer la mission").closest("th")!;
+    expect(action.className).not.toContain("border-t");
+    // La colonne des totaux, elle, le porte : le cadre s'arrete a elle.
+    const totaux = screen.getByText("Total du mois").closest("th")!;
+    expect(totaux.className).toContain("border-t-slate-500");
+  });
+
   it("n'offre aucun retrait quand le mois est clos", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid({ is_writable: false })} />);
 
