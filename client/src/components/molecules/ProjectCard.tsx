@@ -1,0 +1,76 @@
+"use client";
+
+import { CalendarClock, GripVertical } from "lucide-react";
+
+import { MemberAvatars } from "@/components/atoms/MemberAvatars";
+import type { BoardCardResponse } from "@/lib/api/generated/model";
+import { avancement, categorie, formatMiseEnService } from "@/lib/board";
+import { formatTotal } from "@/lib/dates";
+
+/** Teinte du rapport consomme/estime selon l'etat d'avancement. */
+const TEINTES: Record<ReturnType<typeof avancement>, string> = {
+  "sans-estime": "text-slate-500",
+  "en-cours": "text-slate-600",
+  proche: "text-amber-700",
+  depasse: "text-red-700",
+};
+
+interface ProjectCardProps {
+  carte: BoardCardResponse;
+  /** Poignee de glissement, fournie par la couche de tri. */
+  poignee?: React.ReactNode;
+  enDeplacement?: boolean;
+}
+
+/** Une mission sur le tableau de bord. */
+export function ProjectCard({ carte, poignee, enDeplacement }: ProjectCardProps) {
+  const { project } = carte;
+  const axe = categorie(project.categorie);
+  const miseEnService = formatMiseEnService(project.date_mise_en_service);
+  const etat = avancement(carte.consomme_j, project.estime_j);
+
+  return (
+    <article
+      className={[
+        "group rounded-lg border bg-white p-3 shadow-xs transition-shadow",
+        enDeplacement
+          ? "border-sky-400 shadow-lg"
+          : "border-slate-200 hover:border-slate-300 hover:shadow-sm",
+      ].join(" ")}
+    >
+      <div className="flex items-start gap-1.5">
+        <h3 className="min-w-0 flex-1 text-sm font-medium text-slate-900">
+          {project.label}
+        </h3>
+        {poignee ?? (
+          <GripVertical className="size-4 shrink-0 text-slate-300" aria-hidden />
+        )}
+      </div>
+
+      {axe && (
+        <span
+          className={`mt-2 inline-block rounded px-1.5 py-0.5 text-[11px] font-medium ${axe.classe}`}
+        >
+          {axe.libelle}
+        </span>
+      )}
+
+      <div className="mt-2.5 flex items-center justify-between gap-2">
+        <span className={`text-xs tabular-nums ${TEINTES[etat]}`}>
+          {project.estime_j
+            ? `${formatTotal(carte.consomme_j)}/${project.estime_j} jrs.`
+            : `${formatTotal(carte.consomme_j)} jrs. consommés`}
+        </span>
+
+        <MemberAvatars membres={carte.collaborateurs} />
+      </div>
+
+      {miseEnService && (
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+          <CalendarClock className="size-3.5 shrink-0" aria-hidden />
+          Mise en service {miseEnService}
+        </p>
+      )}
+    </article>
+  );
+}

@@ -5,6 +5,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./boardCardResponse";
+export * from "./boardColumnResponse";
+export * from "./boardMemberResponse";
+export * from "./boardResponse";
 export * from "./calendarDayResponse";
 export * from "./calendarDaySchema";
 export * from "./changeRoleRequest";
@@ -31,6 +35,8 @@ export * from "./monthCalendarResponse";
 export * from "./monthGridResponse";
 export * from "./monthResponse";
 export * from "./monthState";
+export * from "./moveProjectRequest";
+export * from "./projectCategory";
 export * from "./projectKind";
 export * from "./projectResponse";
 export * from "./projectStatus";

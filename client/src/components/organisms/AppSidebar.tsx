@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, FolderKanban, PanelLeft } from "lucide-react";
+import { CalendarDays, FolderKanban, KanbanSquare, PanelLeft } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,6 +10,7 @@ import { basculerBarreLaterale, useBarreLateraleRepliee } from "@/lib/sidebar-st
 
 const ONGLETS = [
   { href: "/", label: "Activité", Icone: CalendarDays },
+  { href: "/tableau", label: "Tableau", Icone: KanbanSquare },
   { href: "/projets", label: "Projets", Icone: FolderKanban },
 ] as const;
 

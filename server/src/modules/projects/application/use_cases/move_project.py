@@ -48,11 +48,17 @@ class MoveProjectUseCase:
         missions = await self._projects.list_all(include_inactive=False)
 
         mission.statut = command.statut
+
+        # Le depot se raisonne par identifiant, jamais par identite d'objet :
+        # `get_by_id` et `list_all` renvoient deux instances distinctes de la
+        # meme ligne, et ecrire l'ancienne ecraserait le rang qu'on vient de
+        # poser sur la nouvelle.
         arrivee = [
-            p for p in missions if p.statut is command.statut and p.appears_on_board
+            p
+            for p in missions
+            if p.statut is command.statut and p.appears_on_board and p.id != mission.id
         ]
-        if mission not in arrivee:
-            arrivee.append(mission)
+        arrivee.append(mission)
         reorder_column(arrivee, deplacee=mission, vers=command.position)
 
         # La colonne quittee garderait un trou a la place de la carte partie.

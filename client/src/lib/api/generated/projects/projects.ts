@@ -21,12 +21,14 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  BoardResponse,
   ChangeStatusRequest,
   CreateProjectRequest,
   HTTPValidationError,
   ImportProjectsRequest,
   ImportReportResponse,
   ListProjectsParams,
+  MoveProjectRequest,
   ProjectResponse,
   UpdateProjectRequest,
 } from "../model";
@@ -859,4 +861,280 @@ export const useImportProjects = <TError = HTTPValidationError, TContext = unkno
   TContext
 > => {
   return useMutation(getImportProjectsMutationOptions(options), queryClient);
+};
+export type getBoardResponse200 = {
+  data: BoardResponse;
+  status: 200;
+};
+
+export type getBoardResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type getBoardResponseSuccess = getBoardResponse200 & {
+  headers: Headers;
+};
+export type getBoardResponseError = getBoardResponse422 & {
+  headers: Headers;
+};
+
+export type getBoardResponse = getBoardResponseSuccess | getBoardResponseError;
+
+export const getGetBoardUrl = () => {
+  return `/api/v1/projects/board`;
+};
+
+/**
+ * Tableau de bord des projets, une colonne par phase.
+ * @summary Get Board
+ */
+export const getBoard = async (
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<getBoardResponse> => {
+  return bffFetcher<getBoardResponse>(getGetBoardUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetBoardQueryKey = () => {
+  return [`/api/v1/projects/board`] as const;
+};
+
+export const getGetBoardQueryOptions = <
+  TData = Awaited<ReturnType<typeof getBoard>>,
+  TError = HTTPValidationError,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getBoard>>, TError, TData>>;
+  request?: SecondParameter<typeof bffFetcher>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetBoardQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getBoard>>> = ({ signal }) =>
+    getBoard({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getBoard>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetBoardQueryResult = NonNullable<Awaited<ReturnType<typeof getBoard>>>;
+export type GetBoardQueryError = HTTPValidationError;
+
+export function useGetBoard<
+  TData = Awaited<ReturnType<typeof getBoard>>,
+  TError = HTTPValidationError,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getBoard>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBoard>>,
+          TError,
+          Awaited<ReturnType<typeof getBoard>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetBoard<
+  TData = Awaited<ReturnType<typeof getBoard>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getBoard>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBoard>>,
+          TError,
+          Awaited<ReturnType<typeof getBoard>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetBoard<
+  TData = Awaited<ReturnType<typeof getBoard>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getBoard>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Board
+ */
+
+export function useGetBoard<
+  TData = Awaited<ReturnType<typeof getBoard>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getBoard>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetBoardQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type moveProjectResponse200 = {
+  data: ProjectResponse;
+  status: 200;
+};
+
+export type moveProjectResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type moveProjectResponseSuccess = moveProjectResponse200 & {
+  headers: Headers;
+};
+export type moveProjectResponseError = moveProjectResponse422 & {
+  headers: Headers;
+};
+
+export type moveProjectResponse = moveProjectResponseSuccess | moveProjectResponseError;
+
+export const getMoveProjectUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/move`;
+};
+
+/**
+ * Depose une carte dans une colonne, a un rang donne.
+ * @summary Move Project
+ */
+export const moveProject = async (
+  projectId: number,
+  moveProjectRequest: MoveProjectRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<moveProjectResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<moveProjectResponse>(getMoveProjectUrl(projectId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(moveProjectRequest),
+  });
+};
+
+export const getMoveProjectMutationKey = () => ["moveProject"] as const;
+
+export const getMoveProjectMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof moveProject>>,
+    TError,
+    MoveProjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof moveProject>>,
+  TError,
+  MoveProjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getMoveProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof moveProject>>,
+    MoveProjectMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return moveProject(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MoveProjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof moveProject>>
+>;
+export type MoveProjectMutationBody = MoveProjectRequest;
+export type MoveProjectMutationError = HTTPValidationError;
+export type MoveProjectMutationVariables = {
+  projectId: number;
+  data: MoveProjectRequest;
+};
+
+/**
+ * @summary Move Project
+ */
+export const useMoveProject = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof moveProject>>,
+      TError,
+      MoveProjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof moveProject>>,
+  TError,
+  MoveProjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getMoveProjectMutationOptions(options), queryClient);
 };

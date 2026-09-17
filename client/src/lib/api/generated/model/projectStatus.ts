@@ -8,8 +8,8 @@
 /**
  * Phase de vie d'un projet ou d'un lot.
  *
- * L'ordre declare ici est l'ordre nominal, mais un projet peut revenir en
- * arriere : aucune transition n'est interdite.
+ * L'ordre declare ici est l'ordre nominal, et celui des colonnes du tableau de
+ * bord. Un projet peut revenir en arriere : aucune transition n'est interdite.
  */
 export type ProjectStatus = (typeof ProjectStatus)[keyof typeof ProjectStatus];
 
@@ -18,5 +18,6 @@ export const ProjectStatus = {
   cadrage: "cadrage",
   realisation: "realisation",
   validation: "validation",
+  deploiement: "deploiement",
   exploitation: "exploitation",
 } as const;

@@ -4,6 +4,7 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
+import type { ProjectCategory } from "./projectCategory";
 import type { ProjectKind } from "./projectKind";
 import type { ProjectStatus } from "./projectStatus";
 
@@ -18,6 +19,9 @@ export interface ProjectResponse {
   parent_id: number | null;
   actif: boolean;
   estime_j: number | null;
+  categorie: ProjectCategory | null;
+  date_mise_en_service: string | null;
+  position: number;
   monday_item_id: string | null;
   monday_subitem_id: string | null;
   is_syncable_to_monday: boolean;
