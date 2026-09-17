@@ -18,14 +18,14 @@ import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { BoardColumn } from "@/components/molecules/BoardColumn";
-import { BoardFilters } from "@/components/molecules/BoardFilters";
+import { MissionFilters } from "@/components/molecules/MissionFilters";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { ProjectCard } from "@/components/molecules/ProjectCard";
 import { PHASES } from "@/lib/board";
-import { filtrerCartes, inclutLesArchivees } from "@/lib/board-filters";
+import { filtrerMissions, inclutLesArchivees } from "@/lib/mission-filters";
 import { useBoard } from "@/lib/use-board";
 import { useBoardDrag } from "@/lib/use-board-drag";
-import { useBoardFilters } from "@/lib/use-board-filters";
+import { useMissionFilters } from "@/lib/use-mission-filters";
 import { useMissionOuverte } from "@/lib/mission-ouverte";
 
 /**
@@ -57,7 +57,7 @@ const detectionDeCollision: CollisionDetection = (args) => {
 
 /** Kanban des missions, une colonne par phase. */
 export function BoardPage() {
-  const { filtres, actif, definir, effacer } = useBoardFilters();
+  const { filtres, actif, definir, effacer } = useMissionFilters();
 
   // Le perimetre demande au serveur suit le filtre : les archivees n'arrivent
   // que lorsqu'on les reclame, et le tableau se recharge de lui-meme des que
@@ -77,7 +77,7 @@ export function BoardPage() {
   // chaque colonne doivent parler des memes cartes.
   const colonnesAffichees = PHASES.map(({ statut }) => ({
     statut,
-    cartes: filtrerCartes(board.colonnes?.[statut] ?? [], filtres),
+    cartes: filtrerMissions(board.colonnes?.[statut] ?? [], filtres),
   }));
 
   const visibles = colonnesAffichees.reduce((total, c) => total + c.cartes.length, 0);
@@ -116,7 +116,7 @@ export function BoardPage() {
       }
     >
       <div className="flex h-full flex-col">
-        <BoardFilters
+        <MissionFilters
           filtres={filtres}
           actif={actif}
           onChange={definir}

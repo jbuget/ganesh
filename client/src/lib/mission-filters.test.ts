@@ -4,11 +4,11 @@ import {
   AUCUN_FILTRE,
   ecrireFiltres,
   filtreActif,
-  filtrerCartes,
+  filtrerMissions,
   inclutLesArchivees,
   lireFiltres,
-  type BoardFilters,
-} from "./board-filters";
+  type MissionFilters,
+} from "./mission-filters";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 
 const carte = (over: Record<string, unknown> = {}): BoardCardResponse =>
@@ -38,7 +38,7 @@ const carte = (over: Record<string, unknown> = {}): BoardCardResponse =>
     },
   }) as BoardCardResponse;
 
-const filtres = (over: Partial<BoardFilters> = {}): BoardFilters => ({
+const filtres = (over: Partial<MissionFilters> = {}): MissionFilters => ({
   ...AUCUN_FILTRE,
   ...over,
 });
@@ -60,17 +60,17 @@ describe("filtreActif", () => {
 
 describe("recherche par nom", () => {
   it("retient une mission dont le nom contient la recherche", () => {
-    expect(filtrerCartes([carte()], filtres({ nom: "bailleurs" }))).toHaveLength(1);
+    expect(filtrerMissions([carte()], filtres({ nom: "bailleurs" }))).toHaveLength(1);
   });
 
   it("ignore la casse et les accents", () => {
     const cartes = [carte({ project: { label: "Refonte extranet copropriété" } })];
 
-    expect(filtrerCartes(cartes, filtres({ nom: "COPROPRIETE" }))).toHaveLength(1);
+    expect(filtrerMissions(cartes, filtres({ nom: "COPROPRIETE" }))).toHaveLength(1);
   });
 
   it("écarte ce qui ne correspond pas", () => {
-    expect(filtrerCartes([carte()], filtres({ nom: "facturation" }))).toHaveLength(0);
+    expect(filtrerMissions([carte()], filtres({ nom: "facturation" }))).toHaveLength(0);
   });
 });
 
@@ -82,7 +82,7 @@ describe("critères à choix multiples", () => {
       carte({ project: { id: 3, categorie: null } }),
     ];
 
-    const retenues = filtrerCartes(
+    const retenues = filtrerMissions(
       cartes,
       filtres({ categories: ["innover_differencier", "structurer_plateforme"] }),
     );
@@ -97,7 +97,7 @@ describe("critères à choix multiples", () => {
       carte({ project: { id: 3, priorite: null } }),
     ];
 
-    const retenues = filtrerCartes(cartes, filtres({ priorites: ["critique"] }));
+    const retenues = filtrerMissions(cartes, filtres({ priorites: ["critique"] }));
 
     expect(retenues.map((c) => c.project.id)).toEqual([1]);
   });
@@ -108,7 +108,7 @@ describe("critères à choix multiples", () => {
       carte({ project: { id: 2 }, intervenants: [] }),
     ];
 
-    const retenues = filtrerCartes(cartes, filtres({ intervenants: [7] }));
+    const retenues = filtrerMissions(cartes, filtres({ intervenants: [7] }));
 
     expect(retenues.map((c) => c.project.id)).toEqual([1]);
   });
@@ -120,9 +120,9 @@ describe("critères à choix multiples", () => {
     ];
 
     expect(
-      filtrerCartes(cartes, filtres({ types: ["lot"] })).map((c) => c.project.id),
+      filtrerMissions(cartes, filtres({ types: ["lot"] })).map((c) => c.project.id),
     ).toEqual([2]);
-    expect(filtrerCartes(cartes, filtres({ types: ["projet", "lot"] }))).toHaveLength(
+    expect(filtrerMissions(cartes, filtres({ types: ["projet", "lot"] }))).toHaveLength(
       2,
     );
   });
@@ -137,7 +137,7 @@ describe("critères à choix multiples", () => {
       }),
     ];
 
-    const retenues = filtrerCartes(
+    const retenues = filtrerMissions(
       cartes,
       filtres({ nom: "portail", categories: ["structurer_plateforme"] }),
     );
@@ -153,19 +153,22 @@ describe("missions archivées", () => {
   ];
 
   it("les écarte tant qu'on ne les demande pas", () => {
-    const retenues = filtrerCartes(cartes, AUCUN_FILTRE);
+    const retenues = filtrerMissions(cartes, AUCUN_FILTRE);
 
     expect(retenues.map((c) => c.project.id)).toEqual([1]);
   });
 
   it("ne montre qu'elles quand on ne demande qu'elles", () => {
-    const retenues = filtrerCartes(cartes, filtres({ etats: ["archivee"] }));
+    const retenues = filtrerMissions(cartes, filtres({ etats: ["archivee"] }));
 
     expect(retenues.map((c) => c.project.id)).toEqual([2]);
   });
 
   it("montre les deux quand les deux états sont cochés", () => {
-    const retenues = filtrerCartes(cartes, filtres({ etats: ["active", "archivee"] }));
+    const retenues = filtrerMissions(
+      cartes,
+      filtres({ etats: ["active", "archivee"] }),
+    );
 
     expect(retenues.map((c) => c.project.id)).toEqual([1, 2]);
   });
@@ -188,11 +191,11 @@ describe("filtrage par phase", () => {
   ];
 
   it("garde toutes les missions quand aucune phase n'est choisie", () => {
-    expect(filtrerCartes(cartes, AUCUN_FILTRE)).toHaveLength(2);
+    expect(filtrerMissions(cartes, AUCUN_FILTRE)).toHaveLength(2);
   });
 
   it("ne garde que les missions des phases choisies", () => {
-    const retenues = filtrerCartes(cartes, filtres({ phases: ["realisation"] }));
+    const retenues = filtrerMissions(cartes, filtres({ phases: ["realisation"] }));
 
     expect(retenues.map((c) => c.project.id)).toEqual([1]);
   });

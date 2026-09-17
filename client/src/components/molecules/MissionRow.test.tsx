@@ -56,6 +56,34 @@ describe("MissionRow", () => {
     expect(screen.getByText("12 jrs.")).toBeInTheDocument();
   });
 
+  it("porte la priorité déclarée", () => {
+    ligne(
+      <MissionRow
+        mission={mission({ priorite: "critique" })}
+        maintenant={MAINTENANT}
+        onOpen={() => {}}
+        onOpenFil={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("Critique")).toBeInTheDocument();
+  });
+
+  it("laisse la colonne vide quand la mission n'est pas située", () => {
+    ligne(
+      <MissionRow
+        mission={mission({ priorite: null })}
+        maintenant={MAINTENANT}
+        onOpen={() => {}}
+        onOpenFil={() => {}}
+      />,
+    );
+
+    ["Critique", "Haute", "Normale", "Basse"].forEach((urgence) => {
+      expect(screen.queryByText(urgence)).toBeNull();
+    });
+  });
+
   it("montre le réalisé à côté de l'estimé", () => {
     const consommee = {
       ...mission(),

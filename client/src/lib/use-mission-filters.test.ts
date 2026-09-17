@@ -1,22 +1,22 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { useBoardFilters } from "./use-board-filters";
+import { useMissionFilters } from "./use-mission-filters";
 import { useMissionOuverte } from "./mission-ouverte";
 
 beforeEach(() => {
   window.history.replaceState(null, "", "/kanban");
 });
 
-describe("useBoardFilters", () => {
+describe("useMissionFilters", () => {
   it("part d'un tableau sans filtre", () => {
-    const { result } = renderHook(() => useBoardFilters());
+    const { result } = renderHook(() => useMissionFilters());
 
     expect(result.current.actif).toBe(false);
   });
 
   it("relit dans l'URL le critère qu'on vient de poser", () => {
-    const { result } = renderHook(() => useBoardFilters());
+    const { result } = renderHook(() => useMissionFilters());
 
     act(() => result.current.definir({ phases: ["realisation"] }));
 
@@ -25,7 +25,7 @@ describe("useBoardFilters", () => {
   });
 
   it("garde les autres critères en changeant l'un d'eux", () => {
-    const { result } = renderHook(() => useBoardFilters());
+    const { result } = renderHook(() => useMissionFilters());
 
     act(() => result.current.definir({ phases: ["cadrage"] }));
     act(() => result.current.definir({ nom: "portail" }));
@@ -38,7 +38,7 @@ describe("useBoardFilters", () => {
 
   it("n'ajoute aucune étape d'historique : régler un filtre n'est pas naviguer", () => {
     const profondeur = window.history.length;
-    const { result } = renderHook(() => useBoardFilters());
+    const { result } = renderHook(() => useMissionFilters());
 
     act(() => result.current.definir({ nom: "por" }));
     act(() => result.current.definir({ nom: "port" }));
@@ -47,7 +47,7 @@ describe("useBoardFilters", () => {
   });
 
   it("rend le tableau entier une fois effacé", () => {
-    const { result } = renderHook(() => useBoardFilters());
+    const { result } = renderHook(() => useMissionFilters());
 
     act(() => result.current.definir({ phases: ["cadrage"], nom: "portail" }));
     act(() => result.current.effacer());
@@ -59,7 +59,7 @@ describe("useBoardFilters", () => {
 
 describe("cohabitation avec le panneau mission", () => {
   it("ouvrir une mission ne perd pas les filtres posés", () => {
-    const { result: filtres } = renderHook(() => useBoardFilters());
+    const { result: filtres } = renderHook(() => useMissionFilters());
     const { result: panneau } = renderHook(() => useMissionOuverte());
 
     act(() => filtres.current.definir({ phases: ["cadrage"] }));
@@ -70,7 +70,7 @@ describe("cohabitation avec le panneau mission", () => {
   });
 
   it("refermer le panneau laisse les filtres en place", () => {
-    const { result: filtres } = renderHook(() => useBoardFilters());
+    const { result: filtres } = renderHook(() => useMissionFilters());
     const { result: panneau } = renderHook(() => useMissionOuverte());
 
     act(() => filtres.current.definir({ nom: "portail" }));

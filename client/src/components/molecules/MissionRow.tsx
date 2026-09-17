@@ -5,7 +5,7 @@ import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
-import { categorie, libellePhase, pastillePhase } from "@/lib/board";
+import { categorie, libellePhase, pastillePhase, priorite } from "@/lib/board";
 import { depuis } from "@/lib/dates-relatives";
 
 interface MissionRowProps {
@@ -36,6 +36,7 @@ export function MissionRow({
 }: MissionRowProps) {
   const { project } = mission;
   const axe = categorie(project.categorie);
+  const urgence = priorite(project.priorite);
   const derniere = mission.derniere_maj;
 
   // Le dernier message en entier et mis en forme, comme il se lit dans le fil :
@@ -103,6 +104,18 @@ export function MissionRow({
               className={`size-2.5 shrink-0 rounded-full ${pastillePhase(project.statut)}`}
             />
             {libellePhase(project.statut)}
+          </span>
+        )}
+      </TableCell>
+
+      {/* La priorite suit la phase, comme dans la fiche : ou en est la mission,
+          puis ce qu'elle doit passer avant. */}
+      <TableCell>
+        {urgence && (
+          <span
+            className={`rounded px-1.5 py-0.5 text-xs font-medium ${urgence.classe}`}
+          >
+            {urgence.libelle}
           </span>
         )}
       </TableCell>
