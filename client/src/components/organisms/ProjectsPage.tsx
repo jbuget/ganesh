@@ -81,14 +81,14 @@ export function ProjectsPage() {
               <TableHeader className="sticky top-0 z-10 [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50">
                 <TableRow>
                   <TableHead>Mission</TableHead>
+                  {/* Le fil de suivi : son icone porte le sens, pas un titre. */}
+                  <TableHead />
                   <TableHead>Phase</TableHead>
                   <TableHead>Catégorie</TableHead>
                   <TableHead className="text-right">Estimé</TableHead>
                   <TableHead className="text-right">Réalisé</TableHead>
                   <TableHead>Référents</TableHead>
                   <TableHead>Intervenants</TableHead>
-                  {/* Le fil de suivi : son icone porte le sens, pas un titre. */}
-                  <TableHead />
                 </TableRow>
               </TableHeader>
 

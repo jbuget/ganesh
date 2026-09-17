@@ -55,6 +55,25 @@ export function MissionRow({ mission, estLot = false, onOpen }: MissionRowProps)
         </span>
       </TableCell>
 
+      {/* Le fil se lit contre le nom de la mission, dont il dit l'activite :
+          plus loin, on ne saurait plus de quelle ligne il parle. L'icone dit
+          deja ce que le nombre compte, d'ou l'en-tete vide. Une mission sans
+          mise a jour ne montre rien, comme son realise a zero : dans un
+          tableau, seul ce qui se lit s'affiche. */}
+      <TableCell className="w-12 text-right">
+        {mission.commentaires > 0 && (
+          <span
+            aria-label={`${mission.commentaires} ${
+              mission.commentaires > 1 ? "mises à jour" : "mise à jour"
+            }`}
+            className="inline-flex items-center gap-1 text-xs tabular-nums text-slate-500"
+          >
+            {mission.commentaires}
+            <MessageCircle className="size-3.5 shrink-0" aria-hidden />
+          </span>
+        )}
+      </TableCell>
+
       <TableCell>
         {project.statut && (
           <span className="flex items-center gap-1.5 text-slate-700">
@@ -92,24 +111,6 @@ export function MissionRow({ mission, estLot = false, onOpen }: MissionRowProps)
 
       <TableCell>
         <MemberAvatars membres={mission.intervenants} />
-      </TableCell>
-
-      {/* Le fil de suivi, sans en-tete : l'icone dit deja ce que le nombre
-          compte, et un titre sur une colonne souvent vide peserait plus qu'il
-          n'eclaire. Une mission sans mise a jour ne montre rien, comme son
-          realise a zero : dans un tableau, seul ce qui se lit s'affiche. */}
-      <TableCell className="text-right">
-        {mission.commentaires > 0 && (
-          <span
-            aria-label={`${mission.commentaires} ${
-              mission.commentaires > 1 ? "mises à jour" : "mise à jour"
-            }`}
-            className="inline-flex items-center gap-1 text-xs tabular-nums text-slate-500"
-          >
-            {mission.commentaires}
-            <MessageCircle className="size-3.5 shrink-0" aria-hidden />
-          </span>
-        )}
       </TableCell>
     </TableRow>
   );
