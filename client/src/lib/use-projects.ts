@@ -2,18 +2,8 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 
-import {
-  changeProjectStatus,
-  createProject,
-  deleteProject,
-  importProjects,
-  updateProject,
-} from "@/lib/api/generated/projects/projects";
-import type {
-  ImportReportResponse,
-  ProjectKind,
-  ProjectStatus,
-} from "@/lib/api/generated/model";
+import { createProject, importProjects } from "@/lib/api/generated/projects/projects";
+import type { ImportReportResponse, ProjectKind } from "@/lib/api/generated/model";
 import { mutationResult, useCurrentUser, useProjects } from "@/lib/api/queries";
 import { parseProjectsCsv } from "@/lib/csv-import";
 import { buildProjectTree, offProjectActivities } from "@/lib/project-tree";
@@ -39,33 +29,8 @@ export function useProjectsScreen() {
     arbre: buildProjectTree(projects),
     activites: offProjectActivities(projects),
 
-    async changeStatus(projectId: number, statut: ProjectStatus) {
-      await changeProjectStatus(projectId, { statut });
-      await refresh();
-    },
-
-    async edit(
-      projectId: number,
-      edits: { label: string; estime_j: number | null; monday_item_id: string | null },
-    ) {
-      await updateProject(projectId, edits);
-      await refresh();
-    },
-
-    async setEstimate(projectId: number, estime_j: number | null) {
-      await updateProject(projectId, { estime_j });
-      await refresh();
-    },
-
-    async remove(projectId: number) {
-      await deleteProject(projectId);
-      await refresh();
-    },
-
-    async archive(projectId: number, actif: boolean) {
-      await updateProject(projectId, { actif });
-      await refresh();
-    },
+    /** Relit le referentiel apres une modification faite dans le panneau. */
+    refresh,
 
     async declare(label: string, kind: ProjectKind, parentId?: number) {
       const cree = await createProject({

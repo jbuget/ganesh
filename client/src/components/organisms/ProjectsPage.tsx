@@ -1,144 +1,32 @@
 "use client";
 
-import { Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { Fragment, useState } from "react";
 
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
-import { DeleteProjectDialog } from "@/components/atoms/DeleteProjectDialog";
-import {
-  EditProjectDialog,
-  type ProjectEdits,
-} from "@/components/atoms/EditProjectDialog";
 import { ImportProjectsDialog } from "@/components/atoms/ImportProjectsDialog";
-import { MondayLink } from "@/components/atoms/MondayLink";
-import { ProjectStatusSelect } from "@/components/atoms/ProjectStatusSelect";
+import { MissionListItem } from "@/components/atoms/MissionListItem";
+import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import type { ProjectResponse, ProjectStatus } from "@/lib/api/generated/model";
-import { useLastNonNull } from "@/lib/use-last-non-null";
+import { useMissionOuverte } from "@/lib/mission-ouverte";
 import { useProjectsScreen } from "@/lib/use-projects";
 
-/** Une mission dans le tableau, un lot etant decale sous son projet. */
-function MissionRow({
-  project,
-  estLot,
-  onChangeStatus,
-  onChangeEstimate,
-  onEdit,
-  onAddLot,
-  onArchive,
-  onDelete,
-}: {
-  project: ProjectResponse;
-  estLot: boolean;
-  onChangeStatus: (statut: ProjectStatus) => void;
-  onChangeEstimate: (estime: number | null) => void;
-  onEdit: () => void;
-  onAddLot?: () => void;
-  onArchive: () => void;
-  onDelete: () => void;
-}) {
-  return (
-    <TableRow>
-      <TableCell className={estLot ? "pl-10 text-slate-600" : "font-medium"}>
-        {estLot && <span className="mr-2 text-slate-400">└</span>}
-        {project.label}
-      </TableCell>
-
-      <TableCell>
-        {project.statut && (
-          <ProjectStatusSelect statut={project.statut} onChange={onChangeStatus} />
-        )}
-      </TableCell>
-
-      <TableCell className="text-right">
-        <input
-          type="number"
-          min={0}
-          step={0.5}
-          defaultValue={project.estime_j ?? ""}
-          aria-label={`Estimé de ${project.label}`}
-          className="w-20 rounded border border-slate-300 px-2 py-1 text-right text-sm"
-          onBlur={(event) => {
-            const valeur = event.target.value.trim();
-            const estime = valeur === "" ? null : Number(valeur);
-            if (estime !== (project.estime_j ?? null)) onChangeEstimate(estime);
-          }}
-        />
-      </TableCell>
-
-      <TableCell>
-        <MondayLink project={project} />
-      </TableCell>
-
-      <TableCell className="text-right whitespace-nowrap">
-        <Button
-          variant="ghost"
-          size="sm"
-          aria-label={`Modifier ${project.label}`}
-          onClick={onEdit}
-        >
-          <Pencil />
-        </Button>
-
-        {/* Un sous-projet ne peut pas en porter un autre : deux niveaux suffisent. */}
-        {onAddLot && (
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={`Ajouter un sous-projet à ${project.label}`}
-            onClick={onAddLot}
-          >
-            <Plus />
-          </Button>
-        )}
-
-        {/* Supprimer n'a de sens que tant que la mission n'a jamais servi ;
-            au-dela, on archive pour ne perdre aucune declaration. */}
-        {project.is_deletable ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={`Supprimer ${project.label}`}
-            onClick={onDelete}
-          >
-            <Trash2 />
-          </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            title="Cette mission porte du temps : elle ne peut plus être supprimée."
-            onClick={onArchive}
-          >
-            Archiver
-          </Button>
-        )}
-      </TableCell>
-    </TableRow>
-  );
-}
-
-/** Referentiel des missions : projets, lots et activites hors projet. */
+/**
+ * Le referentiel des missions.
+ *
+ * La liste ne montre que des noms et n'ouvre qu'une chose : le panneau de la
+ * mission, celui-la meme que le kanban. Tout ce qui se modifie s'y fait, d'un
+ * seul endroit — une liste qui edite en place multiplierait les chemins vers la
+ * meme donnee, et les ferait diverger.
+ */
 export function ProjectsPage() {
   const ecran = useProjectsScreen();
+  const panneau = useMissionOuverte();
   const [declaration, setDeclaration] = useState(false);
   const [importation, setImportation] = useState(false);
-  const [enEdition, setEnEdition] = useState<ProjectResponse | null>(null);
-  /** Projet auquel rattacher le sous-projet en cours de creation. */
-  const [parentDuLot, setParentDuLot] = useState<ProjectResponse | null>(null);
-  const [aSupprimer, setASupprimer] = useState<ProjectResponse | null>(null);
-  const parentAffiche = useLastNonNull(parentDuLot);
 
   return (
-    <main className="mx-auto max-w-[1600px] p-6">
+    <main className="mx-auto max-w-[900px] p-6">
       <header className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-lg font-semibold">Référentiel des missions</h1>
@@ -163,56 +51,31 @@ export function ProjectsPage() {
 
       {ecran.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Mission</TableHead>
-            <TableHead className="w-40">Phase</TableHead>
-            <TableHead className="w-28 text-right">Estimé (j)</TableHead>
-            <TableHead className="w-36">Monday</TableHead>
-            <TableHead className="w-28" />
-          </TableRow>
-        </TableHeader>
+      {ecran.arbre.length === 0 && !ecran.isLoading && (
+        <p className="py-8 text-center text-sm text-slate-500">
+          Aucun projet. Déclarez-en un ou importez votre référentiel.
+        </p>
+      )}
 
-        <TableBody>
-          {ecran.arbre.length === 0 && !ecran.isLoading && (
-            <TableRow>
-              <TableCell colSpan={5} className="py-8 text-center text-slate-500">
-                Aucun projet. Déclarez-en un ou importez votre référentiel.
-              </TableCell>
-            </TableRow>
-          )}
-
-          {ecran.arbre.map(({ project, lots }) => (
-            <Fragment key={project.id}>
-              <MissionRow
-                project={project}
-                estLot={project.kind === "lot"}
-                onChangeStatus={(statut) => ecran.changeStatus(project.id, statut)}
-                onChangeEstimate={(estime) => ecran.setEstimate(project.id, estime)}
-                onEdit={() => setEnEdition(project)}
-                onAddLot={
-                  project.kind === "projet" ? () => setParentDuLot(project) : undefined
-                }
-                onArchive={() => ecran.archive(project.id, false)}
-                onDelete={() => setASupprimer(project)}
+      <ul className="divide-y divide-slate-100">
+        {ecran.arbre.map(({ project, lots }) => (
+          <Fragment key={project.id}>
+            <MissionListItem
+              label={project.label}
+              estLot={project.kind === "lot"}
+              onOpen={() => panneau.ouvrir(project.id)}
+            />
+            {lots.map((lot) => (
+              <MissionListItem
+                key={lot.id}
+                label={lot.label}
+                estLot
+                onOpen={() => panneau.ouvrir(lot.id)}
               />
-              {lots.map((lot) => (
-                <MissionRow
-                  key={lot.id}
-                  project={lot}
-                  estLot
-                  onChangeStatus={(statut) => ecran.changeStatus(lot.id, statut)}
-                  onChangeEstimate={(estime) => ecran.setEstimate(lot.id, estime)}
-                  onEdit={() => setEnEdition(lot)}
-                  onArchive={() => ecran.archive(lot.id, false)}
-                  onDelete={() => setASupprimer(lot)}
-                />
-              ))}
-            </Fragment>
-          ))}
-        </TableBody>
-      </Table>
+            ))}
+          </Fragment>
+        ))}
+      </ul>
 
       {ecran.activites.length > 0 && (
         <section className="mt-8">
@@ -244,40 +107,20 @@ export function ProjectsPage() {
         }}
       />
 
-      <DeclareProjectDialog
-        open={parentDuLot !== null}
-        onOpenChange={(ouvert) => !ouvert && setParentDuLot(null)}
-        titre={`Ajouter un sous-projet à « ${parentAffiche?.label ?? ""} »`}
-        onConfirm={async (label) => {
-          if (parentDuLot) await ecran.declare(label, "lot", parentDuLot.id);
-          setParentDuLot(null);
-        }}
-      />
-
-      <EditProjectDialog
-        key={enEdition?.id ?? "aucune"}
-        project={enEdition}
-        onOpenChange={(ouvert) => !ouvert && setEnEdition(null)}
-        onConfirm={async (edits: ProjectEdits) => {
-          if (enEdition) await ecran.edit(enEdition.id, edits);
-          setEnEdition(null);
-        }}
-      />
-
-      <DeleteProjectDialog
-        project={aSupprimer}
-        onOpenChange={(ouvert) => !ouvert && setASupprimer(null)}
-        onConfirm={async () => {
-          if (aSupprimer) await ecran.remove(aSupprimer.id);
-          setASupprimer(null);
-        }}
-      />
-
       <ImportProjectsDialog
         open={importation}
         onOpenChange={setImportation}
         onImport={ecran.importCsv}
       />
+
+      {panneau.missionOuverte && (
+        <ProjectPanel
+          key={panneau.missionOuverte}
+          projectId={panneau.missionOuverte}
+          onClose={panneau.fermer}
+          onMissionChanged={ecran.refresh}
+        />
+      )}
     </main>
   );
 }
