@@ -6,6 +6,7 @@ from datetime import date
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.projects.domain.entities.project import Project
 from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -17,6 +18,14 @@ from src.modules.projects.domain.repositories.project_update_repository import (
 )
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
+
+
+@dataclass
+class LastUpdate:
+    """La derniere mise a jour lisible d'une mission, et qui l'a ecrite."""
+
+    update: ProjectUpdate
+    author: User
 
 
 @dataclass
@@ -34,6 +43,8 @@ class ListedProject:
     realise_j: float = 0.0
     #: Mises a jour vivantes du fil de suivi.
     commentaires: int = 0
+    #: La derniere d'entre elles, pour annoncer le fil sans l'ouvrir.
+    derniere_maj: LastUpdate | None = None
 
     @property
     def is_deletable(self) -> bool:
@@ -65,6 +76,7 @@ class ListProjectsUseCase:
         saisies = await self._entries.count_by_project()
         realise = await self._entries.sum_realised_by_project(today or date.today())
         commentaires = await self._updates.count_by_project()
+        dernieres = await self._updates.latest_by_project()
 
         enfants: dict[int, int] = {}
         for mission in await self._projects.list_all(include_inactive=True):
@@ -84,6 +96,13 @@ class ListProjectsUseCase:
             ]
             return sorted(connus, key=lambda u: u.display_name)
 
+        def derniere(project_id: int) -> LastUpdate | None:
+            maj = dernieres.get(project_id)
+            auteur = utilisateurs.get(maj.author_id) if maj else None
+            # Un auteur desactive puis efface laisserait un texte anonyme :
+            # mieux vaut ne rien annoncer que de le signer d'un blanc.
+            return LastUpdate(update=maj, author=auteur) if maj and auteur else None
+
         return [
             ListedProject(
                 project=mission,
@@ -93,6 +112,7 @@ class ListProjectsUseCase:
                 intervenants=personnes(mission.id or 0, ProjectRole.INTERVENANT),
                 realise_j=realise.get(mission.id or 0, 0.0),
                 commentaires=commentaires.get(mission.id or 0, 0),
+                derniere_maj=derniere(mission.id or 0),
             )
             for mission in missions
         ]

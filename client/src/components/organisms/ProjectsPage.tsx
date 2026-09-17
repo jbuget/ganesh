@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, Upload } from "lucide-react";
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { ImportProjectsDialog } from "@/components/atoms/ImportProjectsDialog";
@@ -31,6 +31,9 @@ import { useProjectsScreen } from "@/lib/use-projects";
  */
 export function ProjectsPage() {
   const ecran = useProjectsScreen();
+  // Une seule heure de reference pour toutes les lignes : « il y a 3 h » ne
+  // doit pas dependre du moment ou chacune se rend.
+  const maintenant = useMemo(() => new Date(), []);
   const panneau = useMissionOuverte();
   const [declaration, setDeclaration] = useState(false);
   const [importation, setImportation] = useState(false);
@@ -98,6 +101,7 @@ export function ProjectsPage() {
                     <MissionRow
                       mission={mission}
                       estLot={mission.project.kind === "lot"}
+                      maintenant={maintenant}
                       onOpen={() => panneau.ouvrir(mission.project.id)}
                     />
                     {lots.map((lot) => (
@@ -105,6 +109,7 @@ export function ProjectsPage() {
                         key={lot.project.id}
                         mission={lot}
                         estLot
+                        maintenant={maintenant}
                         onOpen={() => panneau.ouvrir(lot.project.id)}
                       />
                     ))}

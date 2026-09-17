@@ -4,6 +4,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MissionRow } from "./MissionRow";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 
+const MAINTENANT = new Date("2026-09-17T12:00:00Z");
+
 const membre = (id: number, nom: string) => ({
   id,
   display_name: nom,
@@ -27,6 +29,7 @@ const mission = (champs: Record<string, unknown> = {}): ProjectListItemResponse 
     intervenants: [],
     realise_j: 0,
     commentaires: 0,
+    derniere_maj: null,
   }) as unknown as ProjectListItemResponse;
 
 function ligne(contenu: React.ReactNode) {
@@ -39,7 +42,7 @@ function ligne(contenu: React.ReactNode) {
 
 describe("MissionRow", () => {
   it("affiche la phase, la catégorie et l'estimé", () => {
-    ligne(<MissionRow mission={mission()} onOpen={() => {}} />);
+    ligne(<MissionRow mission={mission()} maintenant={MAINTENANT} onOpen={() => {}} />);
 
     expect(screen.getByText("Réalisation")).toBeInTheDocument();
     expect(screen.getByText("Automatiser & fluidifier")).toBeInTheDocument();
@@ -52,42 +55,34 @@ describe("MissionRow", () => {
       realise_j: 4.5,
     } as ProjectListItemResponse;
 
-    ligne(<MissionRow mission={consommee} onOpen={() => {}} />);
+    ligne(<MissionRow mission={consommee} maintenant={MAINTENANT} onOpen={() => {}} />);
 
     expect(screen.getByText("4.5 jrs.")).toBeInTheDocument();
   });
 
   it("laisse le réalisé vide tant que rien n'est déclaré", () => {
-    ligne(<MissionRow mission={mission()} onOpen={() => {}} />);
+    ligne(<MissionRow mission={mission()} maintenant={MAINTENANT} onOpen={() => {}} />);
 
     expect(screen.getAllByText(/jrs\./)).toHaveLength(1);
   });
 
-  it("compte les mises a jour du fil de suivi", () => {
+  it("porte le décompte du fil de suivi de sa mission", () => {
     const suivie = { ...mission(), commentaires: 3 } as ProjectListItemResponse;
 
-    ligne(<MissionRow mission={suivie} onOpen={() => {}} />);
+    ligne(<MissionRow mission={suivie} maintenant={MAINTENANT} onOpen={() => {}} />);
 
     expect(screen.getByLabelText("3 mises à jour")).toHaveTextContent("3");
   });
 
-  it("accorde le décompte au singulier", () => {
-    const suivie = { ...mission(), commentaires: 1 } as ProjectListItemResponse;
-
-    ligne(<MissionRow mission={suivie} onOpen={() => {}} />);
-
-    expect(screen.getByLabelText("1 mise à jour")).toBeInTheDocument();
-  });
-
   it("n'affiche rien tant que le fil est vide", () => {
-    ligne(<MissionRow mission={mission()} onOpen={() => {}} />);
+    ligne(<MissionRow mission={mission()} maintenant={MAINTENANT} onOpen={() => {}} />);
 
     expect(screen.queryByLabelText(/mise/)).not.toBeInTheDocument();
   });
 
   it("ouvre la mission au clic sur son nom", () => {
     const ouvrir = vi.fn();
-    ligne(<MissionRow mission={mission()} onOpen={ouvrir} />);
+    ligne(<MissionRow mission={mission()} maintenant={MAINTENANT} onOpen={ouvrir} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Portail" }));
 
@@ -101,7 +96,7 @@ describe("MissionRow", () => {
       intervenants: [membre(2, "Nino Garo")],
     } as ProjectListItemResponse;
 
-    ligne(<MissionRow mission={avecMonde} onOpen={() => {}} />);
+    ligne(<MissionRow mission={avecMonde} maintenant={MAINTENANT} onOpen={() => {}} />);
 
     expect(screen.getByText("LÉ")).toBeInTheDocument();
     expect(screen.getByText("NI")).toBeInTheDocument();
@@ -111,6 +106,7 @@ describe("MissionRow", () => {
     ligne(
       <MissionRow
         mission={mission({ categorie: null, estime_j: null })}
+        maintenant={MAINTENANT}
         onOpen={() => {}}
       />,
     );
@@ -120,13 +116,20 @@ describe("MissionRow", () => {
   });
 
   it("rattache visuellement un sous-projet à son parent", () => {
-    ligne(<MissionRow mission={mission()} estLot onOpen={() => {}} />);
+    ligne(
+      <MissionRow
+        mission={mission()}
+        estLot
+        maintenant={MAINTENANT}
+        onOpen={() => {}}
+      />,
+    );
 
     expect(screen.getByText("\u2514")).toBeInTheDocument();
   });
 
   it("ne marque pas un projet de premier niveau", () => {
-    ligne(<MissionRow mission={mission()} onOpen={() => {}} />);
+    ligne(<MissionRow mission={mission()} maintenant={MAINTENANT} onOpen={() => {}} />);
 
     expect(screen.queryByText("\u2514")).not.toBeInTheDocument();
   });
@@ -135,6 +138,7 @@ describe("MissionRow", () => {
     ligne(
       <MissionRow
         mission={mission({ kind: "hors_projet", statut: null, estime_j: null })}
+        maintenant={MAINTENANT}
         onOpen={() => {}}
       />,
     );

@@ -12,6 +12,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     BoardMemberResponse,
     BoardParentResponse,
     BoardResponse,
+    LastUpdateResponse,
     MonthlyShareResponse,
     PhaseReachedResponse,
     ProjectContributionResponse,
@@ -66,6 +67,15 @@ def to_listed_project_response(listed: ListedProject) -> ProjectListItemResponse
         intervenants=[en_pastille(u) for u in listed.intervenants],
         realise_j=listed.realise_j,
         commentaires=listed.commentaires,
+        derniere_maj=(
+            None
+            if listed.derniere_maj is None
+            else LastUpdateResponse(
+                author=en_pastille(listed.derniere_maj.author),
+                texte=listed.derniere_maj.update.texte,
+                publiee_le=listed.derniere_maj.update.publiee_le,
+            )
+        ),
     )
 
 

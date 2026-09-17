@@ -17,8 +17,12 @@ const OFFSET = { x: 14, y: 18 };
  *
  * Le contenu est donne au survol et non a l'appel : une meme infobulle sert
  * ainsi plusieurs elements voisins, comme les pastilles d'intervenants.
+ *
+ * Un nom tient sur une ligne ; un message, non. `riche` rend donc la bulle
+ * pliable et bornee en largeur, pour y loger un apercu de plusieurs lignes
+ * sans qu'elle traverse l'ecran.
  */
-export function useTooltipCurseur() {
+export function useTooltipCurseur({ riche = false }: { riche?: boolean } = {}) {
   const [etat, setEtat] = useState<{ x: number; y: number; contenu: ReactNode } | null>(
     null,
   );
@@ -28,7 +32,9 @@ export function useTooltipCurseur() {
         <span
           role="tooltip"
           style={{ left: etat.x + OFFSET.x, top: etat.y + OFFSET.y }}
-          className="pointer-events-none fixed z-50 rounded-md bg-slate-800 px-2.5 py-1.5 text-xs whitespace-nowrap text-white shadow-lg"
+          className={`pointer-events-none fixed z-50 rounded-md bg-slate-800 px-2.5 py-1.5 text-xs text-white shadow-lg ${
+            riche ? "max-w-xs whitespace-pre-line" : "whitespace-nowrap"
+          }`}
         >
           {etat.contenu}
         </span>,

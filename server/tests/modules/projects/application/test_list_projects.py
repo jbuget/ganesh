@@ -68,7 +68,10 @@ def build(
 
 
 async def fil(*textes: str, retirees: int = 0) -> InMemoryProjectUpdateRepository:
-    """Un fil de suivi sur Portail, dont les dernieres sont retirees."""
+    """Un fil de suivi sur Portail, du plus ancien au plus recent.
+
+    Les `retirees` dernieres sont supprimees, ce qui laisse lire celles d'avant.
+    """
     repo = InMemoryProjectUpdateRepository()
     publiees = [
         await repo.add(
@@ -77,10 +80,10 @@ async def fil(*textes: str, retirees: int = 0) -> InMemoryProjectUpdateRepositor
                 project_id=10,
                 author_id=1,
                 texte=texte,
-                publiee_le=datetime(2026, 9, 17, 9, 0),
+                publiee_le=datetime(2026, 9, 17, 9, 0) + timedelta(hours=rang),
             )
         )
-        for texte in textes
+        for rang, texte in enumerate(textes)
     ]
     for maj in publiees[len(publiees) - retirees :] if retirees else []:
         maj.supprimer(par=1, a=datetime(2026, 9, 17, 10, 0))
@@ -157,3 +160,41 @@ async def test_a_removed_update_leaves_the_count() -> None:
     ).execute()
 
     assert listees[0].commentaires == 1
+
+
+async def test_a_mission_without_any_update_has_no_last_one() -> None:
+    listees = await build().execute()
+
+    assert listees[0].derniere_maj is None
+
+
+async def test_the_most_recent_update_is_the_one_to_show() -> None:
+    listees = await build(
+        updates=await fil("Cadrage lance", "Specs validees")
+    ).execute()
+
+    assert listees[0].derniere_maj is not None
+    assert listees[0].derniere_maj.update.texte == "Specs validees"
+
+
+async def test_the_last_update_is_signed() -> None:
+    """L'infobulle annonce qui parle : le nom doit voyager avec le texte."""
+    listees = await build(updates=await fil("Cadrage lance")).execute()
+
+    assert listees[0].derniere_maj is not None
+    assert listees[0].derniere_maj.author.display_name == "L. Chen"
+
+
+async def test_a_removed_update_gives_way_to_the_one_before_it() -> None:
+    listees = await build(
+        updates=await fil("Cadrage lance", "Ecrite par erreur", retirees=1)
+    ).execute()
+
+    assert listees[0].derniere_maj is not None
+    assert listees[0].derniere_maj.update.texte == "Cadrage lance"
+
+
+async def test_a_thread_entirely_removed_shows_nothing() -> None:
+    listees = await build(updates=await fil("Ecrite par erreur", retirees=1)).execute()
+
+    assert listees[0].derniere_maj is None
