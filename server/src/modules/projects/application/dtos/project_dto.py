@@ -7,6 +7,7 @@ from typing import Any
 from src.modules.projects.domain.entities.project import (
     ProjectCategory,
     ProjectKind,
+    ProjectPriority,
     ProjectStatus,
 )
 
@@ -47,6 +48,7 @@ class UpdateProjectCommand:
     statut: ProjectStatus | None | Any = ABSENT
     estime_j: float | None | Any = ABSENT
     categorie: ProjectCategory | None | Any = ABSENT
+    priorite: ProjectPriority | None | Any = ABSENT
     date_mise_en_service: date | None | Any = ABSENT
     actif: bool | Any = ABSENT
     parent_id: int | None | Any = ABSENT

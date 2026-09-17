@@ -21,6 +21,7 @@ const barre = (over: Partial<Criteres> = {}, props: Record<string, unknown> = {}
         filtres.nom !== "" ||
         filtres.phases.length > 0 ||
         filtres.categories.length > 0 ||
+        filtres.priorites.length > 0 ||
         filtres.intervenants.length > 0 ||
         filtres.types.length > 0 ||
         filtres.etats.length > 0
@@ -40,11 +41,13 @@ describe("BoardFilters", () => {
     barre();
 
     expect(screen.getByLabelText("Rechercher une mission")).toBeInTheDocument();
-    ["Phase", "Catégorie", "Intervenant", "Type", "État"].forEach((critere) => {
-      expect(
-        screen.getByRole("button", { name: new RegExp(critere) }),
-      ).toBeInTheDocument();
-    });
+    ["Phase", "Catégorie", "Priorité", "Intervenant", "Type", "État"].forEach(
+      (critere) => {
+        expect(
+          screen.getByRole("button", { name: new RegExp(critere) }),
+        ).toBeInTheDocument();
+      },
+    );
   });
 
   it("remonte la recherche saisie", () => {
@@ -82,6 +85,15 @@ describe("BoardFilters", () => {
     fireEvent.click(screen.getByRole("button", { name: "Sous-projets" }));
 
     expect(onChange).toHaveBeenCalledWith({ types: ["lot"] });
+  });
+
+  it("remonte une priorité cochée", () => {
+    const { onChange } = barre();
+
+    fireEvent.click(screen.getByRole("button", { name: /Priorité/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Critique" }));
+
+    expect(onChange).toHaveBeenCalledWith({ priorites: ["critique"] });
   });
 
   it("propose de consulter les missions archivées", () => {

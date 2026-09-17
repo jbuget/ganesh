@@ -11,7 +11,7 @@ import { CardCounter } from "@/components/atoms/CardCounter";
 import { IntervenantsPicker } from "@/components/atoms/IntervenantsPicker";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
-import { avancement, categorie } from "@/lib/board";
+import { avancement, categorie, priorite } from "@/lib/board";
 import { formatJoursDecimal } from "@/lib/dates";
 
 /** Teinte du rapport consomme/estime selon l'etat d'avancement. */
@@ -47,6 +47,7 @@ export function ProjectCard({
 }: ProjectCardProps) {
   const { project, parent } = carte;
   const axe = categorie(project.categorie);
+  const urgence = priorite(project.priorite);
   const archivee = !project.actif;
   const etat = avancement(carte.consomme_j, project.estime_j);
 
@@ -127,6 +128,14 @@ export function ProjectCard({
       {archivee && (
         <span className="mt-2 mr-1 inline-block rounded bg-slate-200 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">
           Archivée
+        </span>
+      )}
+
+      {urgence && (
+        <span
+          className={`mt-2 mr-1 inline-block rounded px-1.5 py-0.5 text-[11px] font-medium ${urgence.classe}`}
+        >
+          {urgence.libelle}
         </span>
       )}
 

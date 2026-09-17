@@ -8,6 +8,7 @@ from src.modules.projects.domain.entities.project import (
     Department,
     ProjectCategory,
     ProjectKind,
+    ProjectPriority,
     ProjectStatus,
 )
 
@@ -39,6 +40,7 @@ class ProjectResponse(BaseModel):
     actif: bool
     estime_j: float | None
     categorie: ProjectCategory | None
+    priorite: ProjectPriority | None
     date_mise_en_service: date | None
     position: int
     monday_item_id: str | None
@@ -66,6 +68,7 @@ class UpdateProjectRequest(BaseModel):
     statut: ProjectStatus | None = None
     estime_j: float | None = None
     categorie: ProjectCategory | None = None
+    priorite: ProjectPriority | None = None
     date_mise_en_service: date | None = None
     actif: bool | None = None
     parent_id: int | None = None

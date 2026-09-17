@@ -9,6 +9,7 @@ from src.modules.projects.application.use_cases.update_project import (
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectKind,
+    ProjectPriority,
     ProjectStatus,
 )
 from src.modules.users.domain.entities.user import Role, User
@@ -154,3 +155,46 @@ async def test_every_change_is_traced() -> None:
     assert log.action.value == "project.update"
     assert log.old_value == "Portail"
     assert log.new_value == "Portail bailleurs"
+
+
+async def test_a_priority_can_be_declared() -> None:
+    use_case, repo, _ = build()
+
+    await use_case.execute(
+        UpdateProjectCommand(
+            actor_id=1, project_id=10, priorite=ProjectPriority.CRITIQUE
+        )
+    )
+
+    project = await repo.get_by_id(10)
+    assert project is not None
+    assert project.priorite is ProjectPriority.CRITIQUE
+
+
+async def test_a_priority_can_be_taken_back() -> None:
+    """Une mission peut cesser d'etre situee par rapport aux autres."""
+    projet = make_project()
+    projet.priorite = ProjectPriority.HAUTE
+    use_case, repo, _ = build([projet])
+
+    await use_case.execute(
+        UpdateProjectCommand(actor_id=1, project_id=10, priorite=None)
+    )
+
+    project = await repo.get_by_id(10)
+    assert project is not None
+    assert project.priorite is None
+
+
+async def test_an_untouched_priority_survives_another_change() -> None:
+    projet = make_project()
+    projet.priorite = ProjectPriority.BASSE
+    use_case, repo, _ = build([projet])
+
+    await use_case.execute(
+        UpdateProjectCommand(actor_id=1, project_id=10, label="Portail bailleurs")
+    )
+
+    project = await repo.get_by_id(10)
+    assert project is not None
+    assert project.priorite is ProjectPriority.BASSE

@@ -9,6 +9,7 @@ from src.core.database import Base
 from src.modules.projects.domain.entities.project import (
     ProjectCategory,
     ProjectKind,
+    ProjectPriority,
     ProjectStatus,
 )
 
@@ -35,6 +36,10 @@ class ProjectModel(Base):
     estime_j: Mapped[float | None] = mapped_column(Float, nullable=True)
     categorie: Mapped[ProjectCategory | None] = mapped_column(
         Enum(ProjectCategory, name="project_category", native_enum=False, length=32),
+        nullable=True,
+    )
+    priorite: Mapped[ProjectPriority | None] = mapped_column(
+        Enum(ProjectPriority, name="project_priority", native_enum=False, length=16),
         nullable=True,
     )
     date_mise_en_service: Mapped[date | None] = mapped_column(Date, nullable=True)

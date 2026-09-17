@@ -22,6 +22,7 @@ CHAMPS = (
     "statut",
     "estime_j",
     "categorie",
+    "priorite",
     "date_mise_en_service",
     "actif",
     "parent_id",
