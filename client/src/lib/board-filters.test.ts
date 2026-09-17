@@ -90,6 +90,18 @@ describe("critères à choix multiples", () => {
     expect(retenues.map((c) => c.project.id)).toEqual([1, 2]);
   });
 
+  it("retient les missions de l'une des priorités choisies", () => {
+    const cartes = [
+      carte({ project: { id: 1, priorite: "critique" } }),
+      carte({ project: { id: 2, priorite: "basse" } }),
+      carte({ project: { id: 3, priorite: null } }),
+    ];
+
+    const retenues = filtrerCartes(cartes, filtres({ priorites: ["critique"] }));
+
+    expect(retenues.map((c) => c.project.id)).toEqual([1]);
+  });
+
   it("retient les missions portées par l'un des intervenants choisis", () => {
     const cartes = [
       carte({ project: { id: 1 }, intervenants: [{ id: 7 } as never] }),
@@ -192,6 +204,7 @@ describe("filtres portés par l'URL", () => {
       nom: "portail",
       phases: ["cadrage", "realisation"],
       categories: ["innover_differencier"],
+      priorites: ["haute"],
       intervenants: [3, 7],
       types: ["lot"],
       etats: ["archivee"],

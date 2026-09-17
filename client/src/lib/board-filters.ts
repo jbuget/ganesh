@@ -2,9 +2,10 @@ import type {
   BoardCardResponse,
   ProjectCategory,
   ProjectKind,
+  ProjectPriority,
   ProjectStatus,
 } from "@/lib/api/generated/model";
-import { CATEGORIES, PHASES } from "@/lib/board";
+import { CATEGORIES, PHASES, PRIORITES } from "@/lib/board";
 
 /**
  * Une mission est active tant qu'elle n'a pas ete archivee.
@@ -20,6 +21,7 @@ export interface BoardFilters {
   nom: string;
   phases: ProjectStatus[];
   categories: ProjectCategory[];
+  priorites: ProjectPriority[];
   intervenants: number[];
   types: ProjectKind[];
   etats: EtatMission[];
@@ -30,6 +32,7 @@ export const AUCUN_FILTRE: BoardFilters = {
   nom: "",
   phases: [],
   categories: [],
+  priorites: [],
   intervenants: [],
   types: [],
   etats: [],
@@ -71,6 +74,7 @@ export function filtreActif(filtres: BoardFilters): boolean {
     filtres.nom.trim() !== "" ||
     filtres.phases.length > 0 ||
     filtres.categories.length > 0 ||
+    filtres.priorites.length > 0 ||
     filtres.intervenants.length > 0 ||
     filtres.types.length > 0 ||
     filtres.etats.length > 0
@@ -107,6 +111,11 @@ function retientLaCarte(carte: BoardCardResponse, filtres: BoardFilters): boolea
     if (!axe || !filtres.categories.includes(axe)) return false;
   }
 
+  if (filtres.priorites.length > 0) {
+    const urgence = carte.project.priorite;
+    if (!urgence || !filtres.priorites.includes(urgence)) return false;
+  }
+
   if (filtres.types.length > 0 && !filtres.types.includes(carte.project.kind)) {
     return false;
   }
@@ -140,6 +149,7 @@ const PARAMETRES = {
   nom: "nom",
   phase: "phase",
   categorie: "categorie",
+  priorite: "priorite",
   intervenant: "intervenant",
   type: "type",
   etat: "etat",
@@ -147,6 +157,7 @@ const PARAMETRES = {
 
 const PHASES_CONNUES = new Set<string>(PHASES.map((p) => p.statut));
 const CATEGORIES_CONNUES = new Set<string>(CATEGORIES.map((c) => c.valeur));
+const PRIORITES_CONNUES = new Set<string>(PRIORITES.map((p) => p.valeur));
 const TYPES_CONNUS = new Set<string>(TYPES_DE_MISSION.map((t) => t.valeur));
 const ETATS_CONNUS = new Set<string>(ETATS_DE_MISSION.map((e) => e.valeur));
 
@@ -174,6 +185,11 @@ export function lireFiltres(params: URLSearchParams): BoardFilters {
       PARAMETRES.categorie,
       CATEGORIES_CONNUES,
     ),
+    priorites: valeursConnues<ProjectPriority>(
+      params,
+      PARAMETRES.priorite,
+      PRIORITES_CONNUES,
+    ),
     intervenants: params
       .getAll(PARAMETRES.intervenant)
       .map(Number)
@@ -190,6 +206,7 @@ export function ecrireFiltres(params: URLSearchParams, filtres: BoardFilters): v
   if (filtres.nom.trim()) params.set(PARAMETRES.nom, filtres.nom.trim());
   filtres.phases.forEach((phase) => params.append(PARAMETRES.phase, phase));
   filtres.categories.forEach((axe) => params.append(PARAMETRES.categorie, axe));
+  filtres.priorites.forEach((urgence) => params.append(PARAMETRES.priorite, urgence));
   filtres.intervenants.forEach((id) =>
     params.append(PARAMETRES.intervenant, String(id)),
   );

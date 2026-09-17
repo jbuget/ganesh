@@ -38,6 +38,7 @@ def to_project_response(
         actif=project.actif,
         estime_j=project.estime_j,
         categorie=project.categorie,
+        priorite=project.priorite,
         date_mise_en_service=project.date_mise_en_service,
         position=project.position,
         monday_item_id=project.monday_item_id,

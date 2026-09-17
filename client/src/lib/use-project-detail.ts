@@ -6,6 +6,7 @@ import type {
   Department,
   ProjectCategory,
   ProjectDetailResponse,
+  ProjectPriority,
   ProjectStatus,
 } from "@/lib/api/generated/model";
 import {
@@ -80,6 +81,7 @@ export function useProjectDetail(
     /** Modification partielle : seuls les champs fournis sont appliques. */
     async changerCaracteristiques(champs: {
       categorie?: ProjectCategory | null;
+      priorite?: ProjectPriority | null;
       estime_j?: number | null;
     }) {
       await updateProject(projectId, champs);

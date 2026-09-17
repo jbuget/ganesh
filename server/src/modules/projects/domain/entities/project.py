@@ -30,6 +30,19 @@ class ProjectStatus(StrEnum):
     EXPLOITATION = "exploitation"
 
 
+class ProjectPriority(StrEnum):
+    """Urgence relative d'une mission, telle que l'equipe la declare.
+
+    L'ordre declare ici va du plus urgent au moins urgent : c'est celui dans
+    lequel les choix se presentent, et celui dans lequel on lit une liste.
+    """
+
+    CRITIQUE = "critique"
+    HAUTE = "haute"
+    NORMALE = "normale"
+    BASSE = "basse"
+
+
 class Department(StrEnum):
     """Departement de l'entreprise concerne par une mission.
 
@@ -70,6 +83,9 @@ class Project:
     actif: bool = True
     estime_j: float | None = None
     categorie: ProjectCategory | None = None
+    #: Urgence declaree. Facultative : une mission n'en porte que si l'equipe a
+    #: juge utile de la situer par rapport aux autres.
+    priorite: ProjectPriority | None = None
     date_mise_en_service: date | None = None
     #: Rang dans sa colonne du tableau de bord, choisi par l'equipe.
     position: int = 0

@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ProjectCategory } from "./projectCategory";
+import type { ProjectPriority } from "./projectPriority";
 import type { ProjectStatus } from "./projectStatus";
 
 /**
@@ -15,6 +16,7 @@ export interface UpdateProjectRequest {
   statut?: ProjectStatus | null;
   estime_j?: number | null;
   categorie?: ProjectCategory | null;
+  priorite?: ProjectPriority | null;
   date_mise_en_service?: string | null;
   actif?: boolean | null;
   parent_id?: number | null;

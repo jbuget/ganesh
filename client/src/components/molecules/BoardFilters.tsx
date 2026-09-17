@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import type {
   ProjectCategory,
   ProjectKind,
+  ProjectPriority,
   ProjectStatus,
 } from "@/lib/api/generated/model";
 import { useTeammates } from "@/lib/api/queries";
-import { CATEGORIES, PHASES } from "@/lib/board";
+import { CATEGORIES, PHASES, PRIORITES } from "@/lib/board";
 import {
   ETATS_DE_MISSION,
   TYPES_DE_MISSION,
@@ -84,6 +85,22 @@ export function BoardFilters({
         options={CATEGORIES.map(({ valeur, libelle }) => ({ valeur, libelle }))}
         valeurs={filtres.categories}
         onChange={(valeurs) => onChange({ categories: valeurs as ProjectCategory[] })}
+      />
+
+      <FilterSelect
+        libelle="Priorité"
+        options={PRIORITES.map(({ valeur, libelle, pastille }) => ({
+          valeur,
+          libelle,
+          vignette: (
+            <span
+              className={`size-2.5 shrink-0 rounded-full ${pastille}`}
+              aria-hidden
+            />
+          ),
+        }))}
+        valeurs={filtres.priorites}
+        onChange={(valeurs) => onChange({ priorites: valeurs as ProjectPriority[] })}
       />
 
       <FilterSelect

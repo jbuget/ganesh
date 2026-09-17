@@ -6,6 +6,7 @@
  */
 import type { ProjectCategory } from "./projectCategory";
 import type { ProjectKind } from "./projectKind";
+import type { ProjectPriority } from "./projectPriority";
 import type { ProjectStatus } from "./projectStatus";
 
 /**
@@ -20,6 +21,7 @@ export interface ProjectResponse {
   actif: boolean;
   estime_j: number | null;
   categorie: ProjectCategory | null;
+  priorite: ProjectPriority | null;
   date_mise_en_service: string | null;
   position: number;
   monday_item_id: string | null;

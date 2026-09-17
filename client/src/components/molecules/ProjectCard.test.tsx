@@ -97,6 +97,22 @@ describe("ProjectCard", () => {
   });
 });
 
+describe("priorité", () => {
+  it("porte l'urgence déclarée, en toutes lettres", () => {
+    render(<ProjectCard carte={carte({ project: { priorite: "critique" } })} />);
+
+    expect(screen.getByText("Critique")).toBeInTheDocument();
+  });
+
+  it("ne montre rien quand la mission n'est pas située", () => {
+    render(<ProjectCard carte={carte({ project: { priorite: null } })} />);
+
+    ["Critique", "Haute", "Normale", "Basse"].forEach((urgence) => {
+      expect(screen.queryByText(urgence)).toBeNull();
+    });
+  });
+});
+
 describe("mission archivée", () => {
   it("se signale d'un coup d'œil", () => {
     render(<ProjectCard carte={carte({ project: { actif: false } })} />);

@@ -22,6 +22,7 @@ def to_entity(model: ProjectModel) -> Project:
         actif=model.actif,
         estime_j=model.estime_j,
         categorie=model.categorie,
+        priorite=model.priorite,
         date_mise_en_service=model.date_mise_en_service,
         position=model.position,
         monday_item_id=model.monday_item_id,
@@ -65,6 +66,7 @@ class SqlProjectRepository(ProjectRepository):
             actif=project.actif,
             estime_j=project.estime_j,
             categorie=project.categorie,
+            priorite=project.priorite,
             date_mise_en_service=project.date_mise_en_service,
             position=project.position,
             monday_item_id=project.monday_item_id,
@@ -90,6 +92,7 @@ class SqlProjectRepository(ProjectRepository):
         model.actif = project.actif
         model.estime_j = project.estime_j
         model.categorie = project.categorie
+        model.priorite = project.priorite
         model.date_mise_en_service = project.date_mise_en_service
         model.position = project.position
         model.monday_item_id = project.monday_item_id

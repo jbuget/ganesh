@@ -7,12 +7,14 @@ import { DepartmentPicker } from "@/components/atoms/DepartmentPicker";
 import { InlineNumberField } from "@/components/atoms/InlineNumberField";
 import { IntervenantsPicker } from "@/components/atoms/IntervenantsPicker";
 import { PhasePicker } from "@/components/atoms/PhasePicker";
+import { PriorityPicker } from "@/components/atoms/PriorityPicker";
 import { ProjectContributions } from "@/components/molecules/ProjectContributions";
 import { ProjectSubProjects } from "@/components/molecules/ProjectSubProjects";
 import type {
   Department,
   ProjectCategory,
   ProjectDetailResponse,
+  ProjectPriority,
   ProjectStatus,
 } from "@/lib/api/generated/model";
 
@@ -26,6 +28,7 @@ interface ProjectPilotageTabProps {
   changerPhase: (statut: ProjectStatus) => Promise<void>;
   changerCaracteristiques: (champs: {
     categorie?: ProjectCategory | null;
+    priorite?: ProjectPriority | null;
     estime_j?: number | null;
   }) => Promise<void>;
 }
@@ -89,6 +92,13 @@ export function ProjectPilotageTab({
         <div className="divide-y divide-slate-100">
           <Ligne titre="Phase">
             <PhasePicker statut={project.statut} onChange={changerPhase} />
+          </Ligne>
+
+          <Ligne titre="Priorité">
+            <PriorityPicker
+              valeur={project.priorite}
+              onChange={(priorite) => changerCaracteristiques({ priorite })}
+            />
           </Ligne>
 
           <Ligne titre="Catégorie">

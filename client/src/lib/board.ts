@@ -1,4 +1,8 @@
-import type { ProjectCategory, ProjectStatus } from "@/lib/api/generated/model";
+import type {
+  ProjectCategory,
+  ProjectPriority,
+  ProjectStatus,
+} from "@/lib/api/generated/model";
 
 /**
  * Phases du tableau, dans l'ordre des colonnes.
@@ -73,6 +77,51 @@ const CATEGORIES_PAR_VALEUR = new Map(CATEGORIES.map((c) => [c.valeur, c]));
 
 export function categorie(valeur: ProjectCategory | null | undefined) {
   return valeur ? (CATEGORIES_PAR_VALEUR.get(valeur) ?? null) : null;
+}
+
+/**
+ * Urgences, de la plus forte a la plus faible.
+ *
+ * La couleur est pleine, la ou les axes strategiques restent en pastel : une
+ * priorite doit sauter aux yeux d'un bout a l'autre du tableau, un axe se lit
+ * quand on s'arrete sur une carte.
+ */
+export const PRIORITES: {
+  valeur: ProjectPriority;
+  libelle: string;
+  classe: string;
+  pastille: string;
+}[] = [
+  {
+    valeur: "critique",
+    libelle: "Critique",
+    classe: "bg-slate-900 text-white",
+    pastille: "bg-slate-900",
+  },
+  {
+    valeur: "haute",
+    libelle: "Haute",
+    classe: "bg-red-600 text-white",
+    pastille: "bg-red-600",
+  },
+  {
+    valeur: "normale",
+    libelle: "Normale",
+    classe: "bg-orange-500 text-white",
+    pastille: "bg-orange-500",
+  },
+  {
+    valeur: "basse",
+    libelle: "Basse",
+    classe: "bg-amber-300 text-amber-950",
+    pastille: "bg-amber-300",
+  },
+];
+
+const PRIORITES_PAR_VALEUR = new Map(PRIORITES.map((p) => [p.valeur, p]));
+
+export function priorite(valeur: ProjectPriority | null | undefined) {
+  return valeur ? (PRIORITES_PAR_VALEUR.get(valeur) ?? null) : null;
 }
 
 /** Etat d'avancement d'une mission par rapport a son estime. */

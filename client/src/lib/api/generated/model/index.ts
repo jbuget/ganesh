@@ -50,6 +50,7 @@ export * from "./projectDetailResponse";
 export * from "./projectKind";
 export * from "./projectLinkResponse";
 export * from "./projectListItemResponse";
+export * from "./projectPriority";
 export * from "./projectResponse";
 export * from "./projectRole";
 export * from "./projectStatus";
