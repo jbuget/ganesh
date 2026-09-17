@@ -12,10 +12,10 @@ const eslintConfig = defineConfig([
     plugins: { boundaries },
     settings: {
       "boundaries/elements": [
-        { type: "ui", pattern: "src/components/ui/*", mode: "file" },
-        { type: "atoms", pattern: "src/components/atoms/*", mode: "file" },
-        { type: "molecules", pattern: "src/components/molecules/*", mode: "file" },
-        { type: "organisms", pattern: "src/components/organisms/*", mode: "file" },
+        { type: "ui", pattern: "src/components/ui", partialMatch: true },
+        { type: "atoms", pattern: "src/components/atoms", partialMatch: true },
+        { type: "molecules", pattern: "src/components/molecules", partialMatch: true },
+        { type: "organisms", pattern: "src/components/organisms", partialMatch: true },
         { type: "app", pattern: "src/app/**" },
         { type: "lib", pattern: "src/lib/**" },
       ],
@@ -63,13 +63,16 @@ const eslintConfig = defineConfig([
                 to: { element: { types: { anyOf: ["atoms", "ui", "lib"] } } },
               },
             },
-            // Un organism peut importer des atoms et des molecules.
+            // Un organism peut importer des atoms et des molecules, et composer
+            // un autre organism : une page assemble des sections.
             {
               from: { element: { type: "organisms" } },
               allow: {
                 to: {
                   element: {
-                    types: { anyOf: ["atoms", "molecules", "ui", "lib"] },
+                    types: {
+                      anyOf: ["atoms", "molecules", "organisms", "ui", "lib"],
+                    },
                   },
                 },
               },

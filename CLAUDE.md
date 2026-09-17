@@ -32,6 +32,9 @@ Timesheet permet à chaque développeur de déclarer, en journées ou demi-journ
 Ces règles sont testées **au niveau du domaine**, indépendamment de l'API et de l'UI :
 
 - Une saisie vaut `0.5` ou `1.0`, jamais autre chose.
+- **Aucune saisie n'est possible sur un jour non ouvré** (week-end ou jour férié
+  français). La règle est portée par le domaine et refusée par l'API : le
+  verrouillage de la cellule côté client n'en est que le reflet.
 - La somme des saisies d'un utilisateur pour un jour donné ne doit pas dépasser `1` (alerte, pas blocage).
 - Un mois validé est **immuable** : aucune écriture possible tant qu'un manager ne l'a pas rouvert.
 - Chaque saisie mémorise le statut du projet au moment où elle est écrite (`statut_at_entry`), ce qui permet de mesurer le temps passé par phase.
@@ -98,14 +101,16 @@ Le code partagé (exceptions, types génériques) vit dans `server/src/shared/`.
 
 ## Ports et URLs
 
-Alignés sur la numérotation WAATcher (`a1`=1, `a2`=2, `a3`=3, Timesheet=4) pour
-que les quatre projets tournent simultanément en local.
+Ports par défaut. WAATcher occupe `3001-3003` / `8001-8003` / `54321-54323`,
+il n'y a donc pas de collision, mais tout autre service local écoutant sur `3000`
+ou `5432` doit être arrêté au préalable. Les ports sont surchargeables via
+`WEB_PORT`, `API_PORT` et `POSTGRES_PORT` dans le `.env` racine.
 
 | | Port | URL |
 |---|---|---|
-| Client Next.js | `3004` | http://localhost:3004 |
-| API FastAPI | `8004` | http://localhost:8004 |
-| PostgreSQL | `54324` | — |
+| Client Next.js | `3000` | http://localhost:3000 |
+| API FastAPI | `8000` | http://localhost:8000 |
+| PostgreSQL | `5432` | — |
 
 Conventions identiques à WAATcher : `API_PREFIX=/api/v1`, variables `AZURE_AD_*`,
 callback `/api/auth/callback/azure-ad`.
@@ -118,7 +123,7 @@ Un seul vocabulaire d'URL dans tout le projet.
 
 Timesheet réutilise **l'enregistrement d'application Entra de WAATcher**
 (même `AZURE_AD_TENANT_ID` et `AZURE_AD_CLIENT_ID`). L'URI de redirection
-`http://localhost:3004/api/auth/callback/azure-ad` doit donc être déclarée sur
+`http://localhost:3000/api/auth/callback/azure-ad` doit donc être déclarée sur
 cette app registration dans le portail Azure.
 
 Le `AZURE_AD_CLIENT_SECRET` vit uniquement dans `client/.env.local` : c'est le BFF
@@ -253,6 +258,10 @@ Tests Vitest colocalisés avec le source (`*.test.ts` / `*.test.tsx`).
 
 ## Migrations de base de données
 
+- Les colonnes `Enum` sont déclarées `native_enum=False` : SQLAlchemy y stocke le
+  **nom** du membre Python, pas sa valeur. En base on lit donc `LOT`, `HORS_PROJET`
+  ou `CADRAGE`, jamais `lot` ni `cadrage`. L'ORM traduit dans les deux sens, mais
+  toute requête SQL écrite à la main doit employer les noms en majuscules.
 - Les migrations Alembic sont **immuables** une fois appliquées en production.
 - Ne jamais modifier une migration existante sans accord explicite : créer une nouvelle migration.
 - Nommage automatique : `YYYY_MM_DD_<rev>_<slug>.py`

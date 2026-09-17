@@ -1,0 +1,124 @@
+"""Provisionnement depuis Entra et gestion des roles."""
+
+import pytest
+
+from src.modules.users.application.dtos.user_dto import ChangeRoleCommand, EntraIdentity
+from src.modules.users.application.use_cases.change_user_role import (
+    ChangeUserRoleUseCase,
+)
+from src.modules.users.application.use_cases.provision_user import ProvisionUserUseCase
+from src.modules.users.domain.entities.user import Role, User
+from src.shared.exceptions.domain_exceptions import ForbiddenActionError
+from tests.helpers.in_memory_repositories import (
+    InMemoryAuditLogRepository,
+    InMemoryUserRepository,
+)
+
+
+def make_manager() -> User:
+    return User(
+        id=1,
+        entra_oid="oid-manager",
+        email="j.buget@waat.fr",
+        display_name="J. Buget",
+        role=Role.MANAGER,
+    )
+
+
+def make_teammate() -> User:
+    return User(
+        id=2,
+        entra_oid="oid-teammate",
+        email="l.chen@waat.fr",
+        display_name="L. Chen",
+        role=Role.TEAMMATE,
+    )
+
+
+def build(users: list[User] | None = None):
+    repo = InMemoryUserRepository(users if users is not None else [])
+    audit = InMemoryAuditLogRepository()
+    return (
+        ProvisionUserUseCase(users=repo),
+        ChangeUserRoleUseCase(users=repo, audit_logs=audit),
+        repo,
+        audit,
+    )
+
+
+async def test_an_unknown_identity_creates_a_teammate() -> None:
+    provision, _, repo, _ = build()
+
+    user = await provision.execute(
+        EntraIdentity(oid="oid-new", email="d.dehe@waat.fr", display_name="D. Dehe")
+    )
+
+    assert user.id is not None
+    assert user.role is Role.TEAMMATE
+    assert len(await repo.list_all()) == 1
+
+
+async def test_a_known_identity_is_reused() -> None:
+    provision, _, repo, _ = build([make_teammate()])
+
+    user = await provision.execute(
+        EntraIdentity(
+            oid="oid-teammate", email="l.chen@waat.fr", display_name="L. Chen"
+        )
+    )
+
+    assert user.id == 2
+    assert len(await repo.list_all()) == 1
+
+
+async def test_a_seeded_user_keeps_their_role_on_first_login() -> None:
+    """Le seed pre-attribue les roles avant la premiere connexion."""
+    seeded = User(
+        id=1,
+        entra_oid=None,
+        email="j.buget@waat.fr",
+        display_name="J. Buget",
+        role=Role.MANAGER,
+    )
+    provision, _, _, _ = build([seeded])
+
+    user = await provision.execute(
+        EntraIdentity(oid="oid-real", email="J.Buget@waat.fr", display_name="J. Buget")
+    )
+
+    assert user.id == 1
+    assert user.role is Role.MANAGER
+    assert user.entra_oid == "oid-real"
+
+
+async def test_a_manager_promotes_a_teammate() -> None:
+    _, change_role, repo, _ = build([make_manager(), make_teammate()])
+
+    await change_role.execute(
+        ChangeRoleCommand(actor_id=1, target_user_id=2, role=Role.MANAGER)
+    )
+
+    user = await repo.get_by_id(2)
+    assert user is not None
+    assert user.role is Role.MANAGER
+
+
+async def test_a_teammate_cannot_promote_anyone() -> None:
+    _, change_role, _, _ = build([make_manager(), make_teammate()])
+
+    with pytest.raises(ForbiddenActionError):
+        await change_role.execute(
+            ChangeRoleCommand(actor_id=2, target_user_id=2, role=Role.MANAGER)
+        )
+
+
+async def test_a_role_change_is_traced() -> None:
+    _, change_role, _, audit = build([make_manager(), make_teammate()])
+
+    await change_role.execute(
+        ChangeRoleCommand(actor_id=1, target_user_id=2, role=Role.MANAGER)
+    )
+
+    log = audit.logs[-1]
+    assert log.action.value == "user.role_change"
+    assert (log.old_value, log.new_value) == ("TEAMMATE", "MANAGER")

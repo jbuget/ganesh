@@ -1,39 +1,80 @@
 "use client";
 
-/** Valeur saisissable pour une demi-journee ou une journee complete. */
-export type DayValue = 0 | 0.5 | 1;
-
-const NEXT_VALUE: Record<DayValue, DayValue> = { 0: 0.5, 0.5: 1, 1: 0 };
-
-/** Fait tourner la valeur d'une cellule : vide -> demi -> pleine -> vide. */
-export function cycleDayValue(current: DayValue): DayValue {
-  return NEXT_VALUE[current];
-}
-
-const LABELS: Record<DayValue, string> = { 0: "", 0.5: "½", 1: "1" };
+import { cycleDayValue, type DayValue } from "@/lib/day-value";
+import { formatDays } from "@/lib/dates";
 
 interface DayCellProps {
   value: DayValue;
   isOffDay: boolean;
+  isFuture: boolean;
   isReadOnly: boolean;
+  /** La derniere ligne ferme le tableau : son trait bas est le trait fort. */
+  isLastRow?: boolean;
+  /** La derniere colonne de jours porte le trait qui la separe des totaux. */
+  isLastDay?: boolean;
+  /** Un jour non ouvre se reduit a une bande, sauf s'il porte une saisie. */
+  isNarrow?: boolean;
+  label: string;
   onChange: (next: DayValue) => void;
 }
 
-/** Cellule unitaire de la matrice de saisie. */
-export function DayCell({ value, isOffDay, isReadOnly, onChange }: DayCellProps) {
+/**
+ * Cellule unitaire de la matrice.
+ *
+ * Les bordures sont portees par le `<td>`, jamais par le bouton : le bouton se
+ * dessinerait par-dessus le trait.
+ *
+ * Les jours non ouvres sont grises et verrouilles, les jours a venir attenues :
+ * les premiers pour eviter les saisies par erreur, les seconds parce qu'ils
+ * relevent du previsionnel et non du realise. Le jour courant n'est signale que
+ * dans l'en-tete de colonne, pour ne pas charger la grille.
+ */
+export function DayCell({
+  value,
+  isOffDay,
+  isFuture,
+  isReadOnly,
+  isLastRow = false,
+  isLastDay = false,
+  isNarrow = false,
+  label,
+  onChange,
+}: DayCellProps) {
+  // Un jour non ouvre ne se saisit jamais. La regle est portee par le domaine,
+  // le verrouillage de la cellule n'en est que le reflet.
+  const isLocked = isReadOnly || isOffDay;
+
+  const background =
+    value > 0
+      ? "bg-sky-100 font-medium text-sky-900"
+      : isOffDay
+        ? "bg-slate-100"
+        : "bg-white";
+
   return (
-    <button
-      type="button"
-      aria-label={`Saisie : ${LABELS[value] || "vide"}`}
-      disabled={isReadOnly}
-      onClick={() => onChange(cycleDayValue(value))}
+    <td
       className={[
-        "h-8 w-8 border text-sm",
-        isOffDay ? "bg-slate-100 text-slate-400" : "bg-white",
-        isReadOnly ? "cursor-not-allowed opacity-60" : "cursor-pointer",
+        "border-r border-b p-0",
+        isLastDay ? "border-r-slate-500" : "border-r-slate-300",
+        isLastRow ? "border-b-slate-500" : "border-b-slate-300",
       ].join(" ")}
     >
-      {LABELS[value]}
-    </button>
+      <button
+        type="button"
+        aria-label={label}
+        title={label}
+        disabled={isLocked}
+        onClick={() => onChange(cycleDayValue(value))}
+        className={[
+          "block h-9 text-sm transition-colors",
+          isNarrow ? "w-2.5" : "w-9",
+          background,
+          isFuture && value > 0 ? "opacity-60" : "",
+          isLocked ? "cursor-not-allowed" : "cursor-pointer hover:bg-sky-50",
+        ].join(" ")}
+      >
+        {formatDays(value)}
+      </button>
+    </td>
   );
 }
