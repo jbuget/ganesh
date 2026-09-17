@@ -59,8 +59,8 @@ def build():
                 Project(
                     id=10,
                     label="Portail",
-                    kind=ProjectKind.PROJET,
-                    statut=ProjectStatus.REALISATION,
+                    kind=ProjectKind.PROJECT,
+                    status=ProjectStatus.BUILD,
                 )
             ]
         ),
@@ -76,9 +76,9 @@ def build():
     )
 
 
-async def poster(publier, texte: str = "Revue du 11/09.", auteur: int = 1):
+async def poster(publier, body: str = "Revue du 11/09.", author: int = 1):
     return await publier.execute(
-        PostUpdateCommand(actor_id=auteur, project_id=10, texte=texte), now=QUAND
+        PostUpdateCommand(actor_id=author, project_id=10, body=body), now=QUAND
     )
 
 
@@ -87,9 +87,9 @@ async def test_an_update_joins_the_thread() -> None:
 
     await poster(publier)
 
-    fil = await lister.execute(10)
-    assert [maj.update.texte for maj in fil] == ["Revue du 11/09."]
-    assert fil[0].author.display_name == "L. Chen"
+    thread = await lister.execute(10)
+    assert [update.update.body for update in thread] == ["Revue du 11/09."]
+    assert thread[0].author.display_name == "L. Chen"
 
 
 async def test_the_thread_shows_the_newest_first() -> None:
@@ -97,9 +97,9 @@ async def test_the_thread_shows_the_newest_first() -> None:
     await poster(publier, "La premiere")
     await poster(publier, "La seconde")
 
-    fil = await lister.execute(10)
+    thread = await lister.execute(10)
 
-    assert [maj.update.texte for maj in fil] == ["La seconde", "La premiere"]
+    assert [update.update.body for update in thread] == ["La seconde", "La premiere"]
 
 
 async def test_an_unknown_mission_refuses_the_update() -> None:
@@ -107,32 +107,32 @@ async def test_an_unknown_mission_refuses_the_update() -> None:
 
     with pytest.raises(EntityNotFoundError):
         await publier.execute(
-            PostUpdateCommand(actor_id=1, project_id=99, texte="Coucou"), now=QUAND
+            PostUpdateCommand(actor_id=1, project_id=99, body="Coucou"), now=QUAND
         )
 
 
 async def test_the_author_corrects_his_own_words() -> None:
     publier, corriger, _, lister, _ = build()
-    maj = await poster(publier)
+    update = await poster(publier)
 
-    assert maj.id is not None
+    assert update.id is not None
     await corriger.execute(
-        EditUpdateCommand(actor_id=1, update_id=maj.id, texte="Corrige."), now=QUAND
+        EditUpdateCommand(actor_id=1, update_id=update.id, body="Corrige."), now=QUAND
     )
 
-    fil = await lister.execute(10)
-    assert fil[0].update.texte == "Corrige."
-    assert fil[0].update.modifiee_le == QUAND
+    thread = await lister.execute(10)
+    assert thread[0].update.body == "Corrige."
+    assert thread[0].update.edited_at == QUAND
 
 
 async def test_nobody_corrects_the_words_of_another() -> None:
     publier, corriger, _, _, _ = build()
-    maj = await poster(publier)
+    update = await poster(publier)
 
-    assert maj.id is not None
+    assert update.id is not None
     with pytest.raises(ForbiddenActionError):
         await corriger.execute(
-            EditUpdateCommand(actor_id=2, update_id=maj.id, texte="Autre chose"),
+            EditUpdateCommand(actor_id=2, update_id=update.id, body="Autre chose"),
             now=QUAND,
         )
 
@@ -140,37 +140,41 @@ async def test_nobody_corrects_the_words_of_another() -> None:
 async def test_a_removed_update_keeps_its_place() -> None:
     """Le fil garde sa chronologie : l'ecran y affichera « Message supprime »."""
     publier, _, retirer, lister, _ = build()
-    maj = await poster(publier)
+    update = await poster(publier)
 
-    assert maj.id is not None
-    await retirer.execute(RemoveUpdateCommand(actor_id=1, update_id=maj.id), now=QUAND)
+    assert update.id is not None
+    await retirer.execute(
+        RemoveUpdateCommand(actor_id=1, update_id=update.id), now=QUAND
+    )
 
-    fil = await lister.execute(10)
-    assert len(fil) == 1
-    assert fil[0].update.est_supprimee
-    assert fil[0].update.texte == ""
+    thread = await lister.execute(10)
+    assert len(thread) == 1
+    assert thread[0].update.is_deleted
+    assert thread[0].update.body == ""
 
 
 async def test_nobody_removes_the_words_of_another() -> None:
     publier, _, retirer, _, _ = build()
-    maj = await poster(publier)
+    update = await poster(publier)
 
-    assert maj.id is not None
+    assert update.id is not None
     with pytest.raises(ForbiddenActionError):
         await retirer.execute(
-            RemoveUpdateCommand(actor_id=2, update_id=maj.id), now=QUAND
+            RemoveUpdateCommand(actor_id=2, update_id=update.id), now=QUAND
         )
 
 
 async def test_every_movement_is_traced() -> None:
     publier, corriger, retirer, _, audit = build()
-    maj = await poster(publier)
-    assert maj.id is not None
+    update = await poster(publier)
+    assert update.id is not None
 
     await corriger.execute(
-        EditUpdateCommand(actor_id=1, update_id=maj.id, texte="Corrige."), now=QUAND
+        EditUpdateCommand(actor_id=1, update_id=update.id, body="Corrige."), now=QUAND
     )
-    await retirer.execute(RemoveUpdateCommand(actor_id=1, update_id=maj.id), now=QUAND)
+    await retirer.execute(
+        RemoveUpdateCommand(actor_id=1, update_id=update.id), now=QUAND
+    )
 
     assert [log.action.value for log in audit.logs] == [
         "update.post",

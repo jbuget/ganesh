@@ -13,12 +13,12 @@ import type { ProjectStatus } from "./projectStatus";
  */
 export interface UpdateProjectRequest {
   label?: string | null;
-  statut?: ProjectStatus | null;
-  estime_j?: number | null;
-  categorie?: ProjectCategory | null;
-  priorite?: ProjectPriority | null;
-  date_mise_en_service?: string | null;
-  actif?: boolean | null;
+  status?: ProjectStatus | null;
+  estimated_days?: number | null;
+  category?: ProjectCategory | null;
+  priority?: ProjectPriority | null;
+  go_live_date?: string | null;
+  is_active?: boolean | null;
   parent_id?: number | null;
   monday_item_id?: string | null;
   monday_subitem_id?: string | null;

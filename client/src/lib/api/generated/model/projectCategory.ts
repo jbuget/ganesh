@@ -6,13 +6,13 @@
  */
 
 /**
- * Axe strategique auquel un projet se rattache.
+ * Strategic axis a project belongs to.
  */
 export type ProjectCategory = (typeof ProjectCategory)[keyof typeof ProjectCategory];
 
 export const ProjectCategory = {
-  automatiser_fluidifier: "automatiser_fluidifier",
-  perenniser_croissance: "perenniser_croissance",
-  innover_differencier: "innover_differencier",
-  structurer_plateforme: "structurer_plateforme",
+  automate_streamline: "automate_streamline",
+  sustain_growth: "sustain_growth",
+  innovate_differentiate: "innovate_differentiate",
+  structure_platform: "structure_platform",
 } as const;

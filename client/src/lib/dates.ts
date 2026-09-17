@@ -83,7 +83,7 @@ export function formatTotal(value: number): string {
  * navigateur doivent produire la meme chaine, sans dependre des donnees de
  * localisation disponibles de chaque cote.
  */
-export function formatJoursDecimal(value: number): string {
+export function formatDecimalDays(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1).replace(".", ",");
 }
 
@@ -95,6 +95,6 @@ export function formatJoursDecimal(value: number): string {
  * serait plus celle que le serveur a enregistree.
  */
 export function formatDateCourte(iso: string): string {
-  const [annee, mois, jour] = iso.slice(0, 10).split("-");
-  return `${jour}/${mois}/${annee}`;
+  const [annee, month, day] = iso.slice(0, 10).split("-");
+  return `${day}/${month}/${annee}`;
 }

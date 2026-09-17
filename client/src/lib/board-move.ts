@@ -13,14 +13,14 @@ import type { Colonnes } from "@/lib/use-board";
  */
 
 /** Phase et rang d'une carte, ou null si elle n'est pas sur le tableau. */
-export function localiser(
-  colonnes: Colonnes,
+export function locate(
+  columns: Colonnes,
   projectId: number,
-): { statut: ProjectStatus; position: number } | null {
-  for (const { statut } of PHASES) {
+): { status: ProjectStatus; position: number } | null {
+  for (const { status } of PHASES) {
     const position =
-      colonnes[statut]?.findIndex((c) => c.project.id === projectId) ?? -1;
-    if (position !== -1) return { statut, position };
+      columns[status]?.findIndex((c) => c.project.id === projectId) ?? -1;
+    if (position !== -1) return { status, position };
   }
   return null;
 }
@@ -31,14 +31,14 @@ export function localiser(
  * `apres` dit si le curseur a depasse la moitie de la carte survolee : on se
  * glisse alors derriere elle plutot que devant.
  */
-export function indexVise(
-  cartes: BoardCardResponse[],
-  surId: number | null,
+export function targetIndex(
+  cards: BoardCardResponse[],
+  overId: number | null,
   apres: boolean,
 ): number {
-  if (surId === null) return cartes.length;
-  const index = cartes.findIndex((c) => c.project.id === surId);
-  if (index === -1) return cartes.length;
+  if (overId === null) return cards.length;
+  const index = cards.findIndex((c) => c.project.id === overId);
+  if (index === -1) return cards.length;
   return apres ? index + 1 : index;
 }
 
@@ -49,38 +49,38 @@ export function indexVise(
  * fonction a chaque mouvement de souris, et reecrire un etat identique ferait
  * clignoter le tableau.
  */
-export function changerDeColonne(
-  colonnes: Colonnes,
+export function moveToColumn(
+  columns: Colonnes,
   projectId: number,
   vers: ProjectStatus,
   index: number,
 ): Colonnes | null {
-  const depart = localiser(colonnes, projectId);
-  if (!depart || depart.statut === vers) return null;
+  const depart = locate(columns, projectId);
+  if (!depart || depart.status === vers) return null;
 
-  const carte = colonnes[depart.statut][depart.position];
-  const arrivee = colonnes[vers];
+  const card = columns[depart.status][depart.position];
+  const arrivee = columns[vers];
   const rang = Math.max(0, Math.min(index, arrivee.length));
 
   return {
-    ...colonnes,
-    [depart.statut]: colonnes[depart.statut].filter((c) => c.project.id !== projectId),
-    [vers]: [...arrivee.slice(0, rang), carte, ...arrivee.slice(rang)],
+    ...columns,
+    [depart.status]: columns[depart.status].filter((c) => c.project.id !== projectId),
+    [vers]: [...arrivee.slice(0, rang), card, ...arrivee.slice(rang)],
   };
 }
 
 /** Change le rang d'une carte au sein de sa phase. Null si elle ne bouge pas. */
-export function reordonner(
-  colonnes: Colonnes,
+export function reorder(
+  columns: Colonnes,
   projectId: number,
   index: number,
 ): Colonnes | null {
-  const place = localiser(colonnes, projectId);
+  const place = locate(columns, projectId);
   if (!place) return null;
 
-  const cartes = colonnes[place.statut];
-  const rang = Math.max(0, Math.min(index, cartes.length - 1));
+  const cards = columns[place.status];
+  const rang = Math.max(0, Math.min(index, cards.length - 1));
   if (rang === place.position) return null;
 
-  return { ...colonnes, [place.statut]: arrayMove(cartes, place.position, rang) };
+  return { ...columns, [place.status]: arrayMove(cards, place.position, rang) };
 }

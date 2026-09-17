@@ -30,11 +30,11 @@ export function EditableTitle({
   onRename,
   niveau = 2,
 }: EditableTitleProps) {
-  const [saisie, setSaisie] = useState<string | null>(null);
+  const [entry, setSaisie] = useState<string | null>(null);
   const [enCours, setEnCours] = useState(false);
-  const [enErreur, setEnErreur] = useState(false);
+  const [hasError, setEnErreur] = useState(false);
 
-  const propre = saisie?.trim() ?? "";
+  const propre = entry?.trim() ?? "";
   const valide = propre.length > 0;
 
   function abandonner() {
@@ -62,16 +62,16 @@ export function EditableTitle({
     }
   }
 
-  if (saisie !== null) {
+  if (entry !== null) {
     return (
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <Input
             autoFocus
-            value={saisie}
+            value={entry}
             disabled={enCours}
             aria-label={invite}
-            aria-invalid={enErreur || undefined}
+            aria-invalid={hasError || undefined}
             onChange={(event) => setSaisie(event.target.value)}
             onKeyDown={(event) => {
               // Le panneau se ferme sur Echap : sans cela, abandonner la saisie
@@ -104,7 +104,7 @@ export function EditableTitle({
           </Button>
         </div>
 
-        {enErreur && (
+        {hasError && (
           <p role="alert" className="mt-1 text-xs text-red-700">
             Le nouveau titre n&apos;a pas pu être enregistré.
           </p>

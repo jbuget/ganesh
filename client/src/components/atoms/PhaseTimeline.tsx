@@ -1,5 +1,5 @@
 import type { PhaseReachedResponse } from "@/lib/api/generated/model";
-import { pastillePhase } from "@/lib/board";
+import { phaseDot } from "@/lib/board";
 
 interface PhaseTimelineProps {
   phases: PhaseReachedResponse[];
@@ -22,8 +22,8 @@ const MOIS = [
 ];
 
 function formatDate(iso: string): string {
-  const [annee, mois, jour] = iso.split("-").map(Number);
-  return `${jour} ${MOIS[mois - 1]} ${annee}`;
+  const [annee, month, day] = iso.split("-").map(Number);
+  return `${day} ${MOIS[month - 1]} ${annee}`;
 }
 
 /**
@@ -40,12 +40,12 @@ export function PhaseTimeline({ phases }: PhaseTimelineProps) {
   return (
     <ol className="space-y-1.5">
       {phases.map((phase) => (
-        <li key={phase.statut} className="flex items-center gap-2 text-sm">
+        <li key={phase.status} className="flex items-center gap-2 text-sm">
           <span
             aria-hidden
-            className={`size-2 shrink-0 rounded-full ${pastillePhase(phase.statut)}`}
+            className={`size-2 shrink-0 rounded-full ${phaseDot(phase.status)}`}
           />
-          <span className="font-medium text-slate-700">{phase.libelle}</span>
+          <span className="font-medium text-slate-700">{phase.label}</span>
           <span className="text-slate-500">le {formatDate(phase.reached_at)}</span>
         </li>
       ))}

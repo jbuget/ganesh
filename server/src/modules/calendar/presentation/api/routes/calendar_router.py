@@ -32,7 +32,7 @@ async def get_month_calendar(
         working_days=working_days_count(year, month),
         days=[
             {
-                "jour": day.jour,
+                "day": day.day,
                 "kind": day.kind.value,
                 "label": day.label,
                 "is_off_day": day.is_off_day,

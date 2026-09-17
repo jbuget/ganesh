@@ -20,7 +20,7 @@ import { useUsersScreen } from "@/lib/use-users";
  * validé n'est pas un secret de manager. Seul le changement de role l'est.
  */
 export function UsersPage() {
-  const ecran = useUsersScreen();
+  const screen = useUsersScreen();
 
   return (
     <PageLayout
@@ -28,13 +28,13 @@ export function UsersPage() {
         <PageHeader
           titre="Utilisateurs"
           soustitre={
-            ecran.isManager
+            screen.isManager
               ? "Vous pouvez promouvoir un utilisateur. Chaque changement est tracé."
               : "Consultable par toute l'équipe. Seul un manager change un rôle."
           }
           actions={
-            <Button variant="outline" onClick={ecran.basculerInactifs}>
-              {ecran.avecInactifs ? "Masquer les inactifs" : "Afficher les inactifs"}
+            <Button variant="outline" onClick={screen.basculerInactifs}>
+              {screen.avecInactifs ? "Masquer les inactifs" : "Afficher les inactifs"}
             </Button>
           }
         />
@@ -42,15 +42,15 @@ export function UsersPage() {
     >
       {/* La liste reste etroite : quatre colonnes etalees sur 2000 px ne se lisent plus. */}
       <div className="max-w-[900px]">
-        {ecran.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
+        {screen.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
-        {!ecran.isLoading && ecran.collaborateurs.length === 0 && (
+        {!screen.isLoading && screen.collaborateurs.length === 0 && (
           <p className="py-8 text-center text-sm text-slate-500">
-            Aucun utilisateur. Les comptes se créent à la première connexion.
+            Aucun user. Les comptes se créent à la première connexion.
           </p>
         )}
 
-        {ecran.collaborateurs.length > 0 && (
+        {screen.collaborateurs.length > 0 && (
           // Meme reglage que le referentiel : le conteneur de shadcn ouvre un
           // contexte de defilement qui retiendrait l'en-tete a l'interieur du
           // tableau, et le fond se pose sur les cellules, non sur la rangee.
@@ -66,17 +66,17 @@ export function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {ecran.collaborateurs.map((collaborateur) => (
+                {screen.collaborateurs.map((collaborateur) => (
                   <UserRow
                     key={collaborateur.id}
                     user={collaborateur}
-                    roleModifiable={ecran.isManager}
+                    roleModifiable={screen.isManager}
                     statutModifiable={
-                      ecran.isManager && collaborateur.id !== ecran.moiId
+                      screen.isManager && collaborateur.id !== screen.moiId
                     }
-                    onChangeRole={ecran.changerRole}
-                    onSetActive={ecran.changerActivite}
-                    maintenant={ecran.maintenant}
+                    onChangeRole={screen.changerRole}
+                    onSetActive={screen.changerActivite}
+                    maintenant={screen.maintenant}
                   />
                 ))}
               </TableBody>

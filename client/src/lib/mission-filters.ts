@@ -6,7 +6,7 @@ import type {
   ProjectResponse,
   ProjectStatus,
 } from "@/lib/api/generated/model";
-import { CATEGORIES, PHASES, PRIORITES } from "@/lib/board";
+import { CATEGORIES, PHASES, PRIORITIES } from "@/lib/board";
 
 /**
  * Une mission est active tant qu'elle n'a pas ete archivee.
@@ -26,29 +26,29 @@ export type EtatMission = "active" | "archivee";
  */
 export interface FilterableMission {
   project: ProjectResponse;
-  intervenants: BoardMemberResponse[];
+  contributors: BoardMemberResponse[];
 }
 
 /** Ce que l'on demande a l'ecran de montrer. */
 export interface MissionFilters {
-  nom: string;
+  name: string;
   phases: ProjectStatus[];
   categories: ProjectCategory[];
-  priorites: ProjectPriority[];
-  intervenants: number[];
+  priorities: ProjectPriority[];
+  contributors: number[];
   types: ProjectKind[];
-  etats: EtatMission[];
+  states: EtatMission[];
 }
 
 /** Le tableau entier : aucun critere pose. */
-export const AUCUN_FILTRE: MissionFilters = {
-  nom: "",
+export const NO_FILTER: MissionFilters = {
+  name: "",
   phases: [],
   categories: [],
-  priorites: [],
-  intervenants: [],
+  priorities: [],
+  contributors: [],
   types: [],
-  etats: [],
+  states: [],
 };
 
 /**
@@ -57,9 +57,9 @@ export const AUCUN_FILTRE: MissionFilters = {
  * Les activites hors projet n'apparaissent jamais sur le tableau : elles ne
  * portent pas de phase, et ce filtre ne les propose donc pas.
  */
-export const TYPES_DE_MISSION: { valeur: ProjectKind; libelle: string }[] = [
-  { valeur: "projet", libelle: "Projets" },
-  { valeur: "lot", libelle: "Sous-projets" },
+export const MISSION_KINDS: { value: ProjectKind; label: string }[] = [
+  { value: "project", label: "Projets" },
+  { value: "work_package", label: "Sous-projets" },
 ];
 
 /**
@@ -69,28 +69,28 @@ export const TYPES_DE_MISSION: { valeur: ProjectKind; libelle: string }[] = [
  * piloter ce qui tourne, et montre donc les seules missions actives tant qu'on
  * ne demande pas les archivees.
  */
-export const ETATS_DE_MISSION: { valeur: EtatMission; libelle: string }[] = [
-  { valeur: "active", libelle: "Actives" },
-  { valeur: "archivee", libelle: "Archivées" },
+export const MISSION_STATES: { value: EtatMission; label: string }[] = [
+  { value: "active", label: "Actives" },
+  { value: "archivee", label: "Archivées" },
 ];
 
 /** Minuscules et sans accent : on cherche « copropriete » et on trouve « copropriété ». */
-function normaliser(texte: string): string {
-  return texte
+function normalise(body: string): string {
+  return body
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase();
 }
 
-export function filtreActif(filtres: MissionFilters): boolean {
+export function filtreActif(filters: MissionFilters): boolean {
   return (
-    filtres.nom.trim() !== "" ||
-    filtres.phases.length > 0 ||
-    filtres.categories.length > 0 ||
-    filtres.priorites.length > 0 ||
-    filtres.intervenants.length > 0 ||
-    filtres.types.length > 0 ||
-    filtres.etats.length > 0
+    filters.name.trim() !== "" ||
+    filters.phases.length > 0 ||
+    filters.categories.length > 0 ||
+    filters.priorities.length > 0 ||
+    filters.contributors.length > 0 ||
+    filters.types.length > 0 ||
+    filters.states.length > 0
   );
 }
 
@@ -105,37 +105,37 @@ export function filtreActif(filtres: MissionFilters): boolean {
  * garde ses six phases d'un filtre a l'autre, et l'on continue de lire d'ou
  * viennent les cartes et ou elles vont.
  */
-function retenue(mission: FilterableMission, filtres: MissionFilters): boolean {
-  const recherche = normaliser(filtres.nom.trim());
-  if (recherche && !normaliser(mission.project.label).includes(recherche)) return false;
+function kept(mission: FilterableMission, filters: MissionFilters): boolean {
+  const search = normalise(filters.name.trim());
+  if (search && !normalise(mission.project.label).includes(search)) return false;
 
-  if (filtres.phases.length > 0) {
-    const phase = mission.project.statut;
-    if (!phase || !filtres.phases.includes(phase)) return false;
+  if (filters.phases.length > 0) {
+    const phase = mission.project.status;
+    if (!phase || !filters.phases.includes(phase)) return false;
   }
 
-  const etat: EtatMission = mission.project.actif ? "active" : "archivee";
-  if (!(filtres.etats.length > 0 ? filtres.etats : ["active"]).includes(etat)) {
+  const state: EtatMission = mission.project.is_active ? "active" : "archivee";
+  if (!(filters.states.length > 0 ? filters.states : ["active"]).includes(state)) {
     return false;
   }
 
-  if (filtres.categories.length > 0) {
-    const axe = mission.project.categorie;
-    if (!axe || !filtres.categories.includes(axe)) return false;
+  if (filters.categories.length > 0) {
+    const axis = mission.project.category;
+    if (!axis || !filters.categories.includes(axis)) return false;
   }
 
-  if (filtres.priorites.length > 0) {
-    const urgence = mission.project.priorite;
-    if (!urgence || !filtres.priorites.includes(urgence)) return false;
+  if (filters.priorities.length > 0) {
+    const urgency = mission.project.priority;
+    if (!urgency || !filters.priorities.includes(urgency)) return false;
   }
 
-  if (filtres.types.length > 0 && !filtres.types.includes(mission.project.kind)) {
+  if (filters.types.length > 0 && !filters.types.includes(mission.project.kind)) {
     return false;
   }
 
-  if (filtres.intervenants.length > 0) {
-    const porteurs = mission.intervenants.map((membre) => membre.id);
-    if (!filtres.intervenants.some((id) => porteurs.includes(id))) return false;
+  if (filters.contributors.length > 0) {
+    const porteurs = mission.contributors.map((member) => member.id);
+    if (!filters.contributors.some((id) => porteurs.includes(id))) return false;
   }
 
   return true;
@@ -143,9 +143,9 @@ function retenue(mission: FilterableMission, filtres: MissionFilters): boolean {
 
 export function filtrerMissions<T extends FilterableMission>(
   missions: T[],
-  filtres: MissionFilters,
+  filters: MissionFilters,
 ): T[] {
-  return missions.filter((mission) => retenue(mission, filtres));
+  return missions.filter((mission) => kept(mission, filters));
 }
 
 /**
@@ -154,33 +154,33 @@ export function filtrerMissions<T extends FilterableMission>(
  * Elles ne voyagent que sur demande : les charger pour les masquer aussitot
  * ferait payer a chaque ouverture du tableau ce dont on se sert rarement.
  */
-export function inclutLesArchivees(filtres: MissionFilters): boolean {
-  return filtres.etats.includes("archivee");
+export function inclutLesArchivees(filters: MissionFilters): boolean {
+  return filters.states.includes("archivee");
 }
 
-const PARAMETRES = {
-  nom: "nom",
+const PARAMETERS = {
+  name: "name",
   phase: "phase",
-  categorie: "categorie",
-  priorite: "priorite",
-  intervenant: "intervenant",
+  category: "categorie",
+  priority: "priorite",
+  contributor: "contributor",
   type: "type",
-  etat: "etat",
+  state: "etat",
 } as const;
 
-const PHASES_CONNUES = new Set<string>(PHASES.map((p) => p.statut));
-const CATEGORIES_CONNUES = new Set<string>(CATEGORIES.map((c) => c.valeur));
-const PRIORITES_CONNUES = new Set<string>(PRIORITES.map((p) => p.valeur));
-const TYPES_CONNUS = new Set<string>(TYPES_DE_MISSION.map((t) => t.valeur));
-const ETATS_CONNUS = new Set<string>(ETATS_DE_MISSION.map((e) => e.valeur));
+const PHASES_CONNUES = new Set<string>(PHASES.map((p) => p.status));
+const CATEGORIES_CONNUES = new Set<string>(CATEGORIES.map((c) => c.value));
+const PRIORITES_CONNUES = new Set<string>(PRIORITIES.map((p) => p.value));
+const TYPES_CONNUS = new Set<string>(MISSION_KINDS.map((t) => t.value));
+const ETATS_CONNUS = new Set<string>(MISSION_STATES.map((e) => e.value));
 
 /** Ne retient d'un parametre que les valeurs que l'on sait interpreter. */
 function valeursConnues<T extends string>(
   params: URLSearchParams,
-  nom: string,
-  connues: Set<string>,
+  name: string,
+  known: Set<string>,
 ): T[] {
-  return params.getAll(nom).filter((valeur) => connues.has(valeur)) as T[];
+  return params.getAll(name).filter((value) => known.has(value)) as T[];
 }
 
 /**
@@ -191,38 +191,38 @@ function valeursConnues<T extends string>(
  */
 export function lireFiltres(params: URLSearchParams): MissionFilters {
   return {
-    nom: params.get(PARAMETRES.nom) ?? "",
-    phases: valeursConnues<ProjectStatus>(params, PARAMETRES.phase, PHASES_CONNUES),
+    name: params.get(PARAMETERS.name) ?? "",
+    phases: valeursConnues<ProjectStatus>(params, PARAMETERS.phase, PHASES_CONNUES),
     categories: valeursConnues<ProjectCategory>(
       params,
-      PARAMETRES.categorie,
+      PARAMETERS.category,
       CATEGORIES_CONNUES,
     ),
-    priorites: valeursConnues<ProjectPriority>(
+    priorities: valeursConnues<ProjectPriority>(
       params,
-      PARAMETRES.priorite,
+      PARAMETERS.priority,
       PRIORITES_CONNUES,
     ),
-    intervenants: params
-      .getAll(PARAMETRES.intervenant)
+    contributors: params
+      .getAll(PARAMETERS.contributor)
       .map(Number)
       .filter((id) => Number.isInteger(id) && id > 0),
-    types: valeursConnues<ProjectKind>(params, PARAMETRES.type, TYPES_CONNUS),
-    etats: valeursConnues<EtatMission>(params, PARAMETRES.etat, ETATS_CONNUS),
+    types: valeursConnues<ProjectKind>(params, PARAMETERS.type, TYPES_CONNUS),
+    states: valeursConnues<EtatMission>(params, PARAMETERS.state, ETATS_CONNUS),
   };
 }
 
 /** Reporte les filtres dans l'URL, sans toucher aux autres parametres. */
-export function ecrireFiltres(params: URLSearchParams, filtres: MissionFilters): void {
-  Object.values(PARAMETRES).forEach((nom) => params.delete(nom));
+export function ecrireFiltres(params: URLSearchParams, filters: MissionFilters): void {
+  Object.values(PARAMETERS).forEach((name) => params.delete(name));
 
-  if (filtres.nom.trim()) params.set(PARAMETRES.nom, filtres.nom.trim());
-  filtres.phases.forEach((phase) => params.append(PARAMETRES.phase, phase));
-  filtres.categories.forEach((axe) => params.append(PARAMETRES.categorie, axe));
-  filtres.priorites.forEach((urgence) => params.append(PARAMETRES.priorite, urgence));
-  filtres.intervenants.forEach((id) =>
-    params.append(PARAMETRES.intervenant, String(id)),
+  if (filters.name.trim()) params.set(PARAMETERS.name, filters.name.trim());
+  filters.phases.forEach((phase) => params.append(PARAMETERS.phase, phase));
+  filters.categories.forEach((axis) => params.append(PARAMETERS.category, axis));
+  filters.priorities.forEach((urgency) => params.append(PARAMETERS.priority, urgency));
+  filters.contributors.forEach((id) =>
+    params.append(PARAMETERS.contributor, String(id)),
   );
-  filtres.types.forEach((type) => params.append(PARAMETRES.type, type));
-  filtres.etats.forEach((etat) => params.append(PARAMETRES.etat, etat));
+  filters.types.forEach((type) => params.append(PARAMETERS.type, type));
+  filters.states.forEach((state) => params.append(PARAMETERS.state, state));
 }

@@ -7,7 +7,7 @@
 
 export type ClearEntryParams = {
   project_id: number;
-  jour: string;
+  day: string;
   /**
    * Collaborateur dont le mois est modifie.
    */

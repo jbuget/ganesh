@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useMissionOuverte } from "@/lib/mission-ouverte";
+import { useOpenedMission } from "@/lib/mission-ouverte";
 import { useMissionFilters } from "@/lib/use-mission-filters";
 import { useMissionSort } from "@/lib/use-mission-sort";
 import { useProjectsScreen } from "@/lib/use-projects";
@@ -36,17 +36,17 @@ import { useProjectsScreen } from "@/lib/use-projects";
 export function ProjectsPage() {
   // Les memes criteres que le kanban, tenus par la meme adresse : on filtre
   // d'un ecran, on ouvre l'autre, et la question posee reste la meme.
-  const { filtres, actif, definir, effacer } = useMissionFilters();
+  const { filters, hasFilter, set, clear } = useMissionFilters();
   // Le rangement suit le meme chemin que les filtres : l'adresse le porte, et
   // le hook d'ecran rend l'arborescence deja dans l'ordre demande.
-  const { tri, basculer: trierPar } = useMissionSort();
-  const ecran = useProjectsScreen(filtres, tri);
+  const { sorted, toggle: trierPar } = useMissionSort();
+  const screen = useProjectsScreen(filters, sorted);
   // Une seule heure de reference pour toutes les lignes : « il y a 3 h » ne
   // doit pas dependre du moment ou chacune se rend.
   const maintenant = useMemo(() => new Date(), []);
-  const panneau = useMissionOuverte();
-  const [declaration, setDeclaration] = useState(false);
-  const [importation, setImportation] = useState(false);
+  const panel = useOpenedMission();
+  const [declaring, setDeclaration] = useState(false);
+  const [importing, setImportation] = useState(false);
 
   return (
     <PageLayout
@@ -56,7 +56,7 @@ export function ProjectsPage() {
           soustitre="Gestion des projets et sous-projets"
           actions={
             <>
-              {ecran.isManager && (
+              {screen.isManager && (
                 <Button variant="outline" onClick={() => setImportation(true)}>
                   <Upload />
                   Importer
@@ -74,25 +74,25 @@ export function ProjectsPage() {
       {/* Assez large pour neuf colonnes, pas au point d'etirer les noms. */}
       <div className="max-w-[1300px]">
         <MissionFilters
-          filtres={filtres}
-          actif={actif}
-          onChange={definir}
-          onEffacer={effacer}
-          visibles={ecran.visibles}
-          total={ecran.total}
+          filters={filters}
+          hasFilter={hasFilter}
+          onChange={set}
+          onEffacer={clear}
+          visible={screen.visible}
+          total={screen.total}
         />
 
-        {ecran.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
+        {screen.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
-        {ecran.arbre.length === 0 && !ecran.isLoading && (
+        {screen.tree.length === 0 && !screen.isLoading && (
           <p className="py-8 text-center text-sm text-slate-500">
-            {actif
+            {hasFilter
               ? "Aucune mission ne répond aux filtres."
               : "Aucun projet. Déclarez-en un ou importez votre référentiel."}
           </p>
         )}
 
-        {ecran.arbre.length > 0 && (
+        {screen.tree.length > 0 && (
           // Le conteneur de shadcn ouvre un contexte de defilement qui
           // retiendrait l'en-tete a l'interieur du tableau : on le neutralise
           // pour que le `sticky` se cale sur la zone defilante de la page.
@@ -105,42 +105,42 @@ export function ProjectsPage() {
               <TableHeader className="sticky top-0 z-10 [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50">
                 <TableRow>
                   <SortableColumnHeader
-                    colonne="projet"
-                    libelle="Projet"
-                    tri={tri}
+                    column="project"
+                    label="Projet"
+                    sorted={sorted}
                     onBasculer={trierPar}
                   />
                   {/* Le fil de suivi : son icone porte le sens, pas un titre. */}
                   <TableHead />
                   <SortableColumnHeader
-                    colonne="phase"
-                    libelle="Phase"
-                    tri={tri}
+                    column="phase"
+                    label="Phase"
+                    sorted={sorted}
                     onBasculer={trierPar}
                   />
                   <SortableColumnHeader
-                    colonne="priorite"
-                    libelle="Priorité"
-                    tri={tri}
+                    column="priority"
+                    label="Priorité"
+                    sorted={sorted}
                     onBasculer={trierPar}
                   />
                   <SortableColumnHeader
-                    colonne="categorie"
-                    libelle="Catégorie"
-                    tri={tri}
+                    column="category"
+                    label="Catégorie"
+                    sorted={sorted}
                     onBasculer={trierPar}
                   />
                   <SortableColumnHeader
-                    colonne="estime"
-                    libelle="Estimé"
-                    tri={tri}
+                    column="estimated"
+                    label="Estimé"
+                    sorted={sorted}
                     onBasculer={trierPar}
                     aDroite
                   />
                   <SortableColumnHeader
-                    colonne="realise"
-                    libelle="Réalisé"
-                    tri={tri}
+                    column="delivered"
+                    label="Réalisé"
+                    sorted={sorted}
                     onBasculer={trierPar}
                     aDroite
                   />
@@ -152,20 +152,20 @@ export function ProjectsPage() {
               </TableHeader>
 
               <TableBody>
-                {ecran.arbre.map(({ mission, lots }) => {
-                  const deplie = ecran.estDeplie(mission.project.id);
+                {screen.tree.map(({ mission, lots }) => {
+                  const deplie = screen.estDeplie(mission.project.id);
 
                   return (
                     <Fragment key={mission.project.id}>
                       <MissionRow
                         mission={mission}
-                        estLot={mission.project.kind === "lot"}
+                        estLot={mission.project.kind === "work_package"}
                         lots={lots.length}
                         deplie={deplie}
-                        onBasculer={() => ecran.basculer(mission.project.id)}
+                        onBasculer={() => screen.toggle(mission.project.id)}
                         maintenant={maintenant}
-                        onOpen={() => panneau.ouvrir(mission.project.id)}
-                        onOpenFil={() => panneau.ouvrir(mission.project.id, "updates")}
+                        onOpen={() => panel.open(mission.project.id)}
+                        onOpenFil={() => panel.open(mission.project.id, "updates")}
                       />
                       {deplie &&
                         lots.map((lot) => (
@@ -174,8 +174,8 @@ export function ProjectsPage() {
                             mission={lot}
                             estLot
                             maintenant={maintenant}
-                            onOpen={() => panneau.ouvrir(lot.project.id)}
-                            onOpenFil={() => panneau.ouvrir(lot.project.id, "updates")}
+                            onOpen={() => panel.open(lot.project.id)}
+                            onOpenFil={() => panel.open(lot.project.id, "updates")}
                           />
                         ))}
                     </Fragment>
@@ -186,7 +186,7 @@ export function ProjectsPage() {
           </div>
         )}
 
-        {ecran.activites.length > 0 && (
+        {screen.activities.length > 0 && (
           <section className="mt-8">
             <h2 className="mb-2 text-sm font-medium text-slate-600">
               Activités hors projet
@@ -196,12 +196,12 @@ export function ProjectsPage() {
               Sans elles, les jours ouvrés se reporteraient sur les projets.
             </p>
             <ul className="flex flex-wrap gap-2">
-              {ecran.activites.map((activite) => (
+              {screen.activities.map((activity) => (
                 <li
-                  key={activite.project.id}
+                  key={activity.project.id}
                   className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm"
                 >
-                  {activite.project.label}
+                  {activity.project.label}
                 </li>
               ))}
             </ul>
@@ -210,28 +210,28 @@ export function ProjectsPage() {
       </div>
 
       <DeclareProjectDialog
-        open={declaration}
+        open={declaring}
         onOpenChange={setDeclaration}
         onConfirm={async (label) => {
-          await ecran.declare(label, "projet");
+          await screen.declare(label, "project");
         }}
       />
 
       <ImportProjectsDialog
-        open={importation}
+        open={importing}
         onOpenChange={setImportation}
-        onImport={ecran.importCsv}
+        onImport={screen.importCsv}
       />
 
-      {panneau.missionOuverte && (
+      {panel.openedMission && (
         <ProjectPanel
           // L'onglet fait partie de la cle : rouvrir la meme mission sur son
           // fil doit remonter le panneau, qui choisit son onglet a l'ouverture.
-          key={`${panneau.missionOuverte}:${panneau.ongletOuvert ?? ""}`}
-          projectId={panneau.missionOuverte}
-          onglet={panneau.ongletOuvert}
-          onClose={panneau.fermer}
-          onMissionChanged={ecran.refresh}
+          key={`${panel.openedMission}:${panel.ongletOuvert ?? ""}`}
+          projectId={panel.openedMission}
+          onglet={panel.ongletOuvert}
+          onClose={panel.close}
+          onMissionChanged={screen.refresh}
         />
       )}
     </PageLayout>

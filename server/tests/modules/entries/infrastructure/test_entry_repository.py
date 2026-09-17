@@ -41,8 +41,8 @@ async def seed(session: AsyncSession) -> tuple[int, int]:
         Project(
             id=None,
             label="Portail",
-            kind=ProjectKind.PROJET,
-            statut=ProjectStatus.REALISATION,
+            kind=ProjectKind.PROJECT,
+            status=ProjectStatus.BUILD,
         )
     )
     assert user.id is not None and project.id is not None
@@ -58,57 +58,57 @@ async def test_an_entry_is_persisted_and_read_back(db_session: AsyncSession) -> 
             id=None,
             user_id=user_id,
             project_id=project_id,
-            jour=JOUR,
-            valeur=DayValue(0.5),
-            statut_at_entry=ProjectStatus.REALISATION,
+            day=JOUR,
+            value=DayValue(0.5),
+            status_at_entry=ProjectStatus.BUILD,
         )
     )
 
     saved = await repo.get(user_id, project_id, JOUR)
     assert saved is not None
-    assert saved.valeur == 0.5
-    assert saved.statut_at_entry is ProjectStatus.REALISATION
+    assert saved.value == 0.5
+    assert saved.status_at_entry is ProjectStatus.BUILD
 
 
 async def test_upserting_twice_keeps_a_single_row(db_session: AsyncSession) -> None:
     user_id, project_id = await seed(db_session)
     repo = SqlEntryRepository(db_session)
 
-    for valeur in (0.5, 1.0):
+    for value in (0.5, 1.0):
         await repo.upsert(
             Entry(
                 id=None,
                 user_id=user_id,
                 project_id=project_id,
-                jour=JOUR,
-                valeur=DayValue(valeur),
-                statut_at_entry=ProjectStatus.REALISATION,
+                day=JOUR,
+                value=DayValue(value),
+                status_at_entry=ProjectStatus.BUILD,
             )
         )
 
     month = await repo.list_for_month(user_id, date(2026, 9, 1))
     assert len(month) == 1
-    assert month[0].valeur == 1.0
+    assert month[0].value == 1.0
 
 
 async def test_listing_a_month_excludes_other_months(db_session: AsyncSession) -> None:
     user_id, project_id = await seed(db_session)
     repo = SqlEntryRepository(db_session)
-    for jour in (date(2026, 9, 15), date(2026, 10, 1)):
+    for day in (date(2026, 9, 15), date(2026, 10, 1)):
         await repo.upsert(
             Entry(
                 id=None,
                 user_id=user_id,
                 project_id=project_id,
-                jour=jour,
-                valeur=DayValue(1.0),
-                statut_at_entry=ProjectStatus.REALISATION,
+                day=day,
+                value=DayValue(1.0),
+                status_at_entry=ProjectStatus.BUILD,
             )
         )
 
     september = await repo.list_for_month(user_id, date(2026, 9, 1))
 
-    assert [e.jour for e in september] == [date(2026, 9, 15)]
+    assert [e.day for e in september] == [date(2026, 9, 15)]
 
 
 async def test_deleting_an_entry_removes_it(db_session: AsyncSession) -> None:
@@ -119,9 +119,9 @@ async def test_deleting_an_entry_removes_it(db_session: AsyncSession) -> None:
             id=None,
             user_id=user_id,
             project_id=project_id,
-            jour=JOUR,
-            valeur=DayValue(1.0),
-            statut_at_entry=None,
+            day=JOUR,
+            value=DayValue(1.0),
+            status_at_entry=None,
         )
     )
 
@@ -142,17 +142,17 @@ async def test_the_captured_phase_survives_a_project_status_change(
             id=None,
             user_id=user_id,
             project_id=project_id,
-            jour=JOUR,
-            valeur=DayValue(1.0),
-            statut_at_entry=ProjectStatus.CADRAGE,
+            day=JOUR,
+            value=DayValue(1.0),
+            status_at_entry=ProjectStatus.SCOPING,
         )
     )
 
     project = await projects.get_by_id(project_id)
     assert project is not None
-    project.change_status(ProjectStatus.EXPLOITATION)
+    project.change_status(ProjectStatus.OPERATIONS)
     await projects.update(project)
 
     saved = await entries.get(user_id, project_id, JOUR)
     assert saved is not None
-    assert saved.statut_at_entry is ProjectStatus.CADRAGE
+    assert saved.status_at_entry is ProjectStatus.SCOPING

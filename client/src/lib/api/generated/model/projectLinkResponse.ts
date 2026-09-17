@@ -13,5 +13,5 @@ export interface ProjectLinkResponse {
   id: number;
   label: string;
   url: string;
-  icone: LinkIcon;
+  icon: LinkIcon;
 }

@@ -16,12 +16,12 @@ import type { ProjectResponse } from "./projectResponse";
  */
 export interface ProjectDetailResponse {
   project: ProjectResponse;
-  departements: Department[];
-  liens: ProjectLinkResponse[];
+  departments: Department[];
+  links: ProjectLinkResponse[];
   phases: PhaseReachedResponse[];
-  referents: BoardMemberResponse[];
-  intervenants: BoardMemberResponse[];
-  consomme_j: number;
+  leads: BoardMemberResponse[];
+  contributors: BoardMemberResponse[];
+  consumed_days: number;
   contributions: ProjectContributionResponse[];
-  sous_projets: ProjectResponse[];
+  sub_projects: ProjectResponse[];
 }

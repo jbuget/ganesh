@@ -17,10 +17,10 @@ def _to_entity(model: ProjectUpdateModel) -> ProjectUpdate:
         id=model.id,
         project_id=model.project_id,
         author_id=model.author_id,
-        texte=model.texte,
-        publiee_le=model.publiee_le,
-        modifiee_le=model.modifiee_le,
-        supprimee_le=model.supprimee_le,
+        body=model.body,
+        published_at=model.published_at,
+        edited_at=model.edited_at,
+        deleted_at=model.deleted_at,
     )
 
 
@@ -39,7 +39,7 @@ class SqlProjectUpdateRepository(ProjectUpdateRepository):
             select(ProjectUpdateModel)
             .where(ProjectUpdateModel.project_id == project_id)
             .order_by(
-                ProjectUpdateModel.publiee_le.desc(), ProjectUpdateModel.id.desc()
+                ProjectUpdateModel.published_at.desc(), ProjectUpdateModel.id.desc()
             )
         )
         return [_to_entity(model) for model in result.scalars().all()]
@@ -50,7 +50,7 @@ class SqlProjectUpdateRepository(ProjectUpdateRepository):
                 ProjectUpdateModel.project_id,
                 func.count(ProjectUpdateModel.id),
             )
-            .where(ProjectUpdateModel.supprimee_le.is_(None))
+            .where(ProjectUpdateModel.deleted_at.is_(None))
             .group_by(ProjectUpdateModel.project_id)
         )
         return dict(result.tuples().all())
@@ -60,10 +60,10 @@ class SqlProjectUpdateRepository(ProjectUpdateRepository):
         # lisible d'un fil n'est pas toujours la derniere ecrite.
         vivantes = (
             select(ProjectUpdateModel)
-            .where(ProjectUpdateModel.supprimee_le.is_(None))
+            .where(ProjectUpdateModel.deleted_at.is_(None))
             .order_by(
                 ProjectUpdateModel.project_id,
-                ProjectUpdateModel.publiee_le.desc(),
+                ProjectUpdateModel.published_at.desc(),
                 ProjectUpdateModel.id.desc(),
             )
             .distinct(ProjectUpdateModel.project_id)
@@ -75,8 +75,8 @@ class SqlProjectUpdateRepository(ProjectUpdateRepository):
         model = ProjectUpdateModel(
             project_id=update.project_id,
             author_id=update.author_id,
-            texte=update.texte,
-            publiee_le=update.publiee_le,
+            body=update.body,
+            published_at=update.published_at,
         )
         self._session.add(model)
         await self._session.flush()
@@ -87,8 +87,8 @@ class SqlProjectUpdateRepository(ProjectUpdateRepository):
         assert update.id is not None
         model = await self._session.get(ProjectUpdateModel, update.id)
         assert model is not None
-        model.texte = update.texte
-        model.modifiee_le = update.modifiee_le
-        model.supprimee_le = update.supprimee_le
+        model.body = update.body
+        model.edited_at = update.edited_at
+        model.deleted_at = update.deleted_at
         await self._session.flush()
         return update

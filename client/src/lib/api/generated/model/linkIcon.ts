@@ -14,13 +14,13 @@
 export type LinkIcon = (typeof LinkIcon)[keyof typeof LinkIcon];
 
 export const LinkIcon = {
-  lien: "lien",
-  depot: "depot",
-  maquette: "maquette",
+  link: "link",
+  repository: "repository",
+  design: "design",
   document: "document",
-  tableur: "tableur",
+  spreadsheet: "spreadsheet",
   presentation: "presentation",
-  dossier: "dossier",
+  folder: "folder",
   discussion: "discussion",
   ticket: "ticket",
   video: "video",

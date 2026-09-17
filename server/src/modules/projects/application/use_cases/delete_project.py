@@ -41,9 +41,9 @@ class DeleteProjectUseCase:
         if project is None:
             raise EntityNotFoundError("Mission inconnue.")
 
-        saisies = (await self._entries.count_by_project()).get(command.project_id, 0)
-        sous_projets = len(await self._projects.list_children(command.project_id))
-        ensure_can_be_deleted(project, saisies=saisies, sous_projets=sous_projets)
+        entries = (await self._entries.count_by_project()).get(command.project_id, 0)
+        sub_projects = len(await self._projects.list_children(command.project_id))
+        ensure_can_be_deleted(project, entries=entries, sub_projects=sub_projects)
 
         await self._projects.delete(command.project_id)
         await self._audit_logs.add(

@@ -47,40 +47,40 @@ class ImportProjectsUseCase:
         if not actor.is_manager:
             raise ForbiddenActionError("Seul un manager peut importer un referentiel.")
 
-        rapport = ImportReport()
+        report = ImportReport()
         connus = {p.label: p for p in await self._projects.list_all(True)}
 
-        for ligne in command.lignes:
-            label = ligne.label.strip()
+        for line in command.rows:
+            label = line.label.strip()
             if label in connus:
-                rapport.ignores += 1
+                report.skipped += 1
                 continue
             try:
-                projet = await self._creer(ligne, connus)
+                projet = await self._create(line, connus)
             except DomainError as erreur:
-                rapport.erreurs.append(f"{label or '(sans nom)'} : {erreur}")
+                report.errors.append(f"{label or '(sans nom)'} : {erreur}")
                 continue
             connus[projet.label] = projet
-            rapport.crees += 1
+            report.created += 1
 
         await self._audit_logs.add(
             AuditLog(
                 action=AuditAction.PROJECT_CREATE,
                 actor_id=command.actor_id,
-                new_value=f"import : {rapport.crees} mission(s)",
+                new_value=f"import : {report.created} mission(s)",
             )
         )
-        return rapport
+        return report
 
-    async def _creer(
-        self, ligne: ProjectImportLine, connus: dict[str, Project]
+    async def _create(
+        self, line: ProjectImportLine, connus: dict[str, Project]
     ) -> Project:
         parent_id = None
-        if ligne.kind is ProjectKind.LOT:
-            parent = connus.get((ligne.parent_label or "").strip())
+        if line.kind is ProjectKind.WORK_PACKAGE:
+            parent = connus.get((line.parent_label or "").strip())
             if parent is None:
                 raise EntityNotFoundError(
-                    f"projet parent « {ligne.parent_label} » introuvable."
+                    f"projet parent « {line.parent_label} » introuvable."
                 )
             ensure_can_be_parent(parent)
             parent_id = parent.id
@@ -88,12 +88,12 @@ class ImportProjectsUseCase:
         return await self._projects.add(
             Project(
                 id=None,
-                label=ligne.label,
-                kind=ligne.kind,
-                statut=None if ligne.kind is ProjectKind.HORS_PROJET else ligne.statut,
+                label=line.label,
+                kind=line.kind,
+                status=None if line.kind is ProjectKind.OFF_PROJECT else line.status,
                 parent_id=parent_id,
-                estime_j=ligne.estime_j,
-                monday_item_id=ligne.monday_item_id,
-                monday_subitem_id=ligne.monday_subitem_id,
+                estimated_days=line.estimated_days,
+                monday_item_id=line.monday_item_id,
+                monday_subitem_id=line.monday_subitem_id,
             )
         )

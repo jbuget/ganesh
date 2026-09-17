@@ -9,7 +9,7 @@
  * Total saisi sur une journee.
  */
 export interface DayTotalResponse {
-  jour: string;
+  day: string;
   total: number;
   exceeds_capacity: boolean;
 }

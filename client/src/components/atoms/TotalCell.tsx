@@ -1,4 +1,4 @@
-import { formatJoursDecimal } from "@/lib/dates";
+import { formatDecimalDays } from "@/lib/dates";
 
 /** Cote d'une cellule portant un trait fort plutot que le trait de grille. */
 export type StrongSide = "right" | "bottom";
@@ -40,7 +40,7 @@ export function TotalCell({
         isStrong ? "font-semibold" : "",
       ].join(" ")}
     >
-      {value === 0 ? "" : formatJoursDecimal(value)}
+      {value === 0 ? "" : formatDecimalDays(value)}
     </td>
   );
 }

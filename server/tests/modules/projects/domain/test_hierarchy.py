@@ -13,22 +13,22 @@ from src.shared.exceptions.domain_exceptions import ValidationError
 
 def projet() -> Project:
     return Project(
-        id=1, label="Portail", kind=ProjectKind.PROJET, statut=ProjectStatus.CADRAGE
+        id=1, label="Portail", kind=ProjectKind.PROJECT, status=ProjectStatus.SCOPING
     )
 
 
-def lot() -> Project:
+def work_package() -> Project:
     return Project(
         id=2,
         label="Lot API",
-        kind=ProjectKind.LOT,
-        statut=ProjectStatus.CADRAGE,
+        kind=ProjectKind.WORK_PACKAGE,
+        status=ProjectStatus.SCOPING,
         parent_id=1,
     )
 
 
 def activite() -> Project:
-    return Project(id=3, label="Absences", kind=ProjectKind.HORS_PROJET, statut=None)
+    return Project(id=3, label="Absences", kind=ProjectKind.OFF_PROJECT, status=None)
 
 
 def test_a_project_can_carry_lots() -> None:
@@ -38,7 +38,7 @@ def test_a_project_can_carry_lots() -> None:
 def test_a_lot_cannot_carry_another_lot() -> None:
     """Deux niveaux suffisent : un sous-sous-projet n'a pas de sens ici."""
     with pytest.raises(ValidationError, match="sous-projet"):
-        ensure_can_be_parent(lot())
+        ensure_can_be_parent(work_package())
 
 
 def test_an_off_project_activity_cannot_carry_anything() -> None:

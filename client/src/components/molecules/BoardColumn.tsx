@@ -5,17 +5,17 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 
 import { SortableProjectCard } from "@/components/molecules/SortableProjectCard";
 import type { BoardCardResponse, ProjectStatus } from "@/lib/api/generated/model";
-import { libellePhase, pastillePhase } from "@/lib/board";
+import { phaseLabel, phaseDot } from "@/lib/board";
 
 interface BoardColumnProps {
-  statut: ProjectStatus;
-  cartes: BoardCardResponse[];
+  status: ProjectStatus;
+  cards: BoardCardResponse[];
   /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
   maintenant: Date;
   onIntervenantsChange?: () => void | Promise<void>;
   onOpen?: (projectId: number) => void;
   /** Le tableau est filtre : les cartes se lisent, mais ne se rangent plus. */
-  figees?: boolean;
+  frozen?: boolean;
 }
 
 /**
@@ -29,18 +29,18 @@ interface BoardColumnProps {
  * colonne reste en vis-a-vis de celui des autres.
  */
 export function BoardColumn({
-  statut,
-  cartes,
+  status,
+  cards,
   maintenant,
   onIntervenantsChange,
   onOpen,
-  figees,
+  frozen,
 }: BoardColumnProps) {
-  const { setNodeRef, isOver } = useDroppable({ id: statut });
+  const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
     <section
-      aria-label={libellePhase(statut)}
+      aria-label={phaseLabel(status)}
       // Les six phases se partagent la largeur disponible plutot que d'imposer
       // un defilement des qu'un ecran n'atteint pas 1600 px. En deca de la
       // largeur minimale, le conteneur reprend le defilement horizontal.
@@ -56,11 +56,11 @@ export function BoardColumn({
         <h2 className="flex items-center gap-2 text-sm font-medium text-slate-700">
           <span
             aria-hidden
-            className={`size-2.5 shrink-0 rounded-full ${pastillePhase(statut)}`}
+            className={`size-2.5 shrink-0 rounded-full ${phaseDot(status)}`}
           />
-          {libellePhase(statut)}
+          {phaseLabel(status)}
         </h2>
-        <span className="text-xs tabular-nums text-slate-400">{cartes.length}</span>
+        <span className="text-xs tabular-nums text-slate-400">{cards.length}</span>
       </header>
 
       <ul
@@ -68,25 +68,25 @@ export function BoardColumn({
         className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2"
       >
         <SortableContext
-          items={cartes.map((carte) => carte.project.id)}
+          items={cards.map((card) => card.project.id)}
           strategy={verticalListSortingStrategy}
         >
-          {cartes.map((carte) => (
+          {cards.map((card) => (
             <SortableProjectCard
-              key={carte.project.id}
-              carte={carte}
+              key={card.project.id}
+              card={card}
               maintenant={maintenant}
               onIntervenantsChange={onIntervenantsChange}
               onOpen={onOpen}
-              figee={figees}
+              frozen={frozen}
             />
           ))}
         </SortableContext>
 
         {/* Un <ul> n'admet que des <li> : un <p> nu casserait l'hydratation. */}
-        {cartes.length === 0 && (
+        {cards.length === 0 && (
           <li className="px-1 py-6 text-center text-xs text-slate-400">
-            {figees ? "Aucune mission ne répond aux filtres" : "Aucune mission"}
+            {frozen ? "Aucune mission ne répond aux filtres" : "Aucune mission"}
           </li>
         )}
       </ul>

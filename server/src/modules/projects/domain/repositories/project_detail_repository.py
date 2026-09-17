@@ -41,7 +41,7 @@ class ProjectDetailRepository(ABC):
 
     @abstractmethod
     async def mark_phase_reached(
-        self, project_id: int, statut: ProjectStatus, reached_at: date
+        self, project_id: int, status: ProjectStatus, reached_at: date
     ) -> None:
         """Note la date d'entree dans une phase. La premiere fait foi."""
         ...

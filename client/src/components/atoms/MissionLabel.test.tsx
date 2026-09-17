@@ -34,10 +34,10 @@ describe("MissionLabel", () => {
   });
 
   it("redonne le nom complet dans l'infobulle, car il peut être tronqué", () => {
-    const nom = "Automatisation du reporting de la direction financière";
-    survoler(renderLabel({ label: nom }));
+    const name = "Automatisation du reporting de la direction financière";
+    survoler(renderLabel({ label: name }));
 
-    expect(screen.getByRole("tooltip")).toHaveTextContent(nom);
+    expect(screen.getByRole("tooltip")).toHaveTextContent(name);
   });
 
   it("suit le curseur", () => {

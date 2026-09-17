@@ -6,8 +6,8 @@ import Link from "next/link";
 import { EditableTitle } from "@/components/atoms/EditableTitle";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectTabs } from "@/components/organisms/ProjectTabs";
-import { libellePhase, pastillePhase } from "@/lib/board";
-import { formatJoursDecimal } from "@/lib/dates";
+import { phaseLabel, phaseDot } from "@/lib/board";
+import { formatDecimalDays } from "@/lib/dates";
 import { useProjectDetail } from "@/lib/use-project-detail";
 
 interface ProjectDetailPageProps {
@@ -69,19 +69,19 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
               niveau={1}
             />
             <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-              {project.statut && (
+              {project.status && (
                 <span className="flex items-center gap-1.5">
                   <span
                     aria-hidden
-                    className={`size-2.5 rounded-full ${pastillePhase(project.statut)}`}
+                    className={`size-2.5 rounded-full ${phaseDot(project.status)}`}
                   />
-                  {libellePhase(project.statut)}
+                  {phaseLabel(project.status)}
                 </span>
               )}
               <span>
-                {formatJoursDecimal(detail.consomme_j)}
-                {project.estime_j ? `/${project.estime_j}` : ""} jrs.
-                {project.estime_j ? " estimés" : " consommés"}
+                {formatDecimalDays(detail.consumed_days)}
+                {project.estimated_days ? `/${project.estimated_days}` : ""} jrs.
+                {project.estimated_days ? " estimés" : " consommés"}
               </span>
             </p>
           </header>
@@ -91,7 +91,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
       <div className="max-w-[900px]">
         <ProjectTabs
           detail={detail}
-          onChange={fiche.recharger}
+          onChange={fiche.reload}
           enregistrerFiche={fiche.enregistrerFiche}
           enregistrerDescription={fiche.enregistrerDescription}
           changerPhase={fiche.changerPhase}

@@ -7,20 +7,20 @@ from src.modules.projects.domain.entities.project import ProjectStatus
 #: que « entre en deploiement le 12 mai ».
 LIBELLES_DE_PASSAGE: dict[ProjectStatus, str] = {
     ProjectStatus.EXPLORATION: "Ouvert",
-    ProjectStatus.CADRAGE: "Exploré",
-    ProjectStatus.REALISATION: "Cadré",
+    ProjectStatus.SCOPING: "Exploré",
+    ProjectStatus.BUILD: "Cadré",
     ProjectStatus.VALIDATION: "Réalisé",
-    ProjectStatus.DEPLOIEMENT: "Validé",
-    ProjectStatus.EXPLOITATION: "Déployé",
+    ProjectStatus.DEPLOYMENT: "Validé",
+    ProjectStatus.OPERATIONS: "Déployé",
 }
 
 
-def libelle_de_passage(statut: ProjectStatus) -> str:
+def transition_label(status: ProjectStatus) -> str:
     """Ce qu'une entree dans cette phase vient d'achever."""
-    return LIBELLES_DE_PASSAGE[statut]
+    return LIBELLES_DE_PASSAGE[status]
 
 
-def phases_precedentes(statut: ProjectStatus) -> list[ProjectStatus]:
+def previous_phases(status: ProjectStatus) -> list[ProjectStatus]:
     """Phases traversees avant celle-ci, dans l'ordre nominal."""
     phases: list[ProjectStatus] = list(ProjectStatus)
-    return phases[: phases.index(statut)]
+    return phases[: phases.index(status)]

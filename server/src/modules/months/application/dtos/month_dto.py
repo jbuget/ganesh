@@ -10,7 +10,7 @@ class ValidateMonthCommand:
 
     actor_id: int
     target_user_id: int
-    mois: date
+    month: date
 
 
 @dataclass(frozen=True)
@@ -19,4 +19,4 @@ class ReopenMonthCommand:
 
     actor_id: int
     target_user_id: int
-    mois: date
+    month: date

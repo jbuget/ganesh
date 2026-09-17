@@ -7,7 +7,7 @@ from src.modules.months.presentation.api.schemas.month_schemas import MonthRespo
 def to_month_response(month: Month) -> MonthResponse:
     return MonthResponse(
         user_id=month.user_id,
-        mois=month.mois,
+        month=month.month,
         state=month.state,
         is_writable=month.is_writable,
         validated_at=month.validated_at,

@@ -17,13 +17,13 @@ class LinkIcon(StrEnum):
     l'equipe quitte Figma pour autre chose, `MAQUETTE` reste juste.
     """
 
-    LIEN = "lien"
-    DEPOT = "depot"
-    MAQUETTE = "maquette"
+    LINK = "link"
+    REPOSITORY = "repository"
+    DESIGN = "design"
     DOCUMENT = "document"
-    TABLEUR = "tableur"
+    SPREADSHEET = "spreadsheet"
     PRESENTATION = "presentation"
-    DOSSIER = "dossier"
+    FOLDER = "folder"
     DISCUSSION = "discussion"
     TICKET = "ticket"
     VIDEO = "video"
@@ -37,7 +37,7 @@ class ProjectLink:
     project_id: int
     label: str
     url: str
-    icone: LinkIcon = LinkIcon.LIEN
+    icon: LinkIcon = LinkIcon.LINK
 
     def __post_init__(self) -> None:
         self.url = self.url.strip()
@@ -52,6 +52,6 @@ class ProjectLink:
         # L'ecran doit savoir dessiner ce qu'il recoit : hors du catalogue,
         # l'icone est refusee plutot que remplacee en silence.
         try:
-            self.icone = LinkIcon(self.icone)
+            self.icon = LinkIcon(self.icon)
         except ValueError as erreur:
-            raise ValidationError(f"Icone inconnue : {self.icone}.") from erreur
+            raise ValidationError(f"Icone inconnue : {self.icon}.") from erreur

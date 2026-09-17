@@ -4,32 +4,32 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ProjectLinksEditor } from "./ProjectLinksEditor";
 import type { ProjectLinkResponse } from "@/lib/api/generated/model";
 
-const lien = (
+const link = (
   id: number,
   label: string,
-  icone: ProjectLinkResponse["icone"] = "lien",
-): ProjectLinkResponse => ({ id, label, url: `https://waat.fr/${id}`, icone });
+  icon: ProjectLinkResponse["icon"] = "link",
+): ProjectLinkResponse => ({ id, label, url: `https://waat.fr/${id}`, icon });
 
 function ouvrirLeFormulaire() {
   fireEvent.click(screen.getByRole("button", { name: "Ajouter un lien" }));
 }
 
-function saisir(placeholder: string, valeur: string) {
+function saisir(placeholder: string, value: string) {
   fireEvent.change(screen.getByPlaceholderText(placeholder), {
-    target: { value: valeur },
+    target: { value: value },
   });
 }
 
 describe("ProjectLinksEditor", () => {
   it("n'offre que l'ajout quand la mission n'a aucun lien", () => {
-    render(<ProjectLinksEditor liens={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
+    render(<ProjectLinksEditor links={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
 
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Ajouter un lien" })).toBeInTheDocument();
   });
 
   it("garde le formulaire ferme tant qu'on ne le demande pas", () => {
-    render(<ProjectLinksEditor liens={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
+    render(<ProjectLinksEditor links={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
 
     expect(screen.queryByPlaceholderText("https://…")).not.toBeInTheDocument();
   });
@@ -37,7 +37,7 @@ describe("ProjectLinksEditor", () => {
   it("liste tous les liens de la mission", () => {
     render(
       <ProjectLinksEditor
-        liens={[lien(1, "Le dépôt", "depot"), lien(2, "Maquettes", "maquette")]}
+        links={[link(1, "Le dépôt", "repository"), link(2, "Maquettes", "design")]}
         onAdd={vi.fn()}
         onRemove={vi.fn()}
       />,
@@ -53,7 +53,7 @@ describe("ProjectLinksEditor", () => {
   it("annonce l'icône de chaque lien", () => {
     render(
       <ProjectLinksEditor
-        liens={[lien(1, "Le dépôt", "depot")]}
+        links={[link(1, "Le dépôt", "repository")]}
         onAdd={vi.fn()}
         onRemove={vi.fn()}
       />,
@@ -64,7 +64,7 @@ describe("ProjectLinksEditor", () => {
 
   it("laisse l'adresse décider de l'icône par défaut", async () => {
     const onAdd = vi.fn().mockResolvedValue(undefined);
-    render(<ProjectLinksEditor liens={[]} onAdd={onAdd} onRemove={vi.fn()} />);
+    render(<ProjectLinksEditor links={[]} onAdd={onAdd} onRemove={vi.fn()} />);
 
     ouvrirLeFormulaire();
     saisir("Intitulé (facultatif)", "Le dépôt");
@@ -78,7 +78,7 @@ describe("ProjectLinksEditor", () => {
 
   it("transmet l'icône choisie à la main", async () => {
     const onAdd = vi.fn().mockResolvedValue(undefined);
-    render(<ProjectLinksEditor liens={[]} onAdd={onAdd} onRemove={vi.fn()} />);
+    render(<ProjectLinksEditor links={[]} onAdd={onAdd} onRemove={vi.fn()} />);
 
     ouvrirLeFormulaire();
     fireEvent.click(screen.getByRole("button", { name: "Choisir l'icône du lien" }));
@@ -87,12 +87,12 @@ describe("ProjectLinksEditor", () => {
     fireEvent.click(screen.getByRole("button", { name: "Ajouter" }));
 
     await waitFor(() =>
-      expect(onAdd).toHaveBeenCalledWith("", "https://waat.fr/budget", "tableur"),
+      expect(onAdd).toHaveBeenCalledWith("", "https://waat.fr/budget", "spreadsheet"),
     );
   });
 
   it("refuse d'ajouter tant qu'aucune adresse n'est saisie", () => {
-    render(<ProjectLinksEditor liens={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
+    render(<ProjectLinksEditor links={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
 
     ouvrirLeFormulaire();
 
@@ -101,7 +101,7 @@ describe("ProjectLinksEditor", () => {
 
   it("explique une adresse refusée par le serveur", async () => {
     const onAdd = vi.fn().mockRejectedValue(new Error("400"));
-    render(<ProjectLinksEditor liens={[]} onAdd={onAdd} onRemove={vi.fn()} />);
+    render(<ProjectLinksEditor links={[]} onAdd={onAdd} onRemove={vi.fn()} />);
 
     ouvrirLeFormulaire();
     saisir("https://…", "ftp://waat.fr");
@@ -112,7 +112,7 @@ describe("ProjectLinksEditor", () => {
 
   it("repart d'un formulaire vierge apres un ajout", async () => {
     const onAdd = vi.fn().mockResolvedValue(undefined);
-    render(<ProjectLinksEditor liens={[]} onAdd={onAdd} onRemove={vi.fn()} />);
+    render(<ProjectLinksEditor links={[]} onAdd={onAdd} onRemove={vi.fn()} />);
 
     ouvrirLeFormulaire();
     saisir("https://…", "https://waat.fr/x");
@@ -127,7 +127,7 @@ describe("ProjectLinksEditor", () => {
     const onRemove = vi.fn().mockResolvedValue(undefined);
     render(
       <ProjectLinksEditor
-        liens={[lien(7, "Maquettes", "maquette")]}
+        links={[link(7, "Maquettes", "design")]}
         onAdd={vi.fn()}
         onRemove={onRemove}
       />,
@@ -142,7 +142,7 @@ describe("ProjectLinksEditor", () => {
     // La croix ne doit pas se meriter : au doigt, il n'y a pas de survol.
     render(
       <ProjectLinksEditor
-        liens={[lien(1, "Le dépôt", "depot"), lien(2, "Maquettes", "maquette")]}
+        links={[link(1, "Le dépôt", "repository"), link(2, "Maquettes", "design")]}
         onAdd={vi.fn()}
         onRemove={vi.fn()}
       />,

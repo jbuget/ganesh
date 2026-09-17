@@ -10,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { formatJoursDecimal } from "@/lib/dates";
+import { formatDecimalDays } from "@/lib/dates";
 
 interface RemoveMissionDialogProps {
   open: boolean;
@@ -41,8 +41,8 @@ export function RemoveMissionDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Retirer {label} ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette mission porte {formatJoursDecimal(total)} jour(s) saisi(s) sur le
-            mois. Les retirer est définitif.
+            Cette mission porte {formatDecimalDays(total)} day(s) saisi(s) sur le mois.
+            Les retirer est définitif.
           </AlertDialogDescription>
         </AlertDialogHeader>
 

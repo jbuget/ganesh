@@ -4,19 +4,14 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { FilterSelect } from "./FilterSelect";
 
 const OPTIONS = [
-  { valeur: "cadrage", libelle: "Cadrage" },
-  { valeur: "realisation", libelle: "Réalisation" },
+  { value: "scoping", label: "Cadrage" },
+  { value: "build", label: "Réalisation" },
 ];
 
 describe("FilterSelect", () => {
   it("annonce le critère quand rien n'est retenu", () => {
     render(
-      <FilterSelect
-        libelle="Phase"
-        options={OPTIONS}
-        valeurs={[]}
-        onChange={vi.fn()}
-      />,
+      <FilterSelect label="Phase" options={OPTIONS} values={[]} onChange={vi.fn()} />,
     );
 
     expect(screen.getByRole("button", { name: /Phase/ })).toBeInTheDocument();
@@ -25,9 +20,9 @@ describe("FilterSelect", () => {
   it("compte les valeurs retenues sur le déclencheur", () => {
     render(
       <FilterSelect
-        libelle="Phase"
+        label="Phase"
         options={OPTIONS}
-        valeurs={["cadrage", "realisation"]}
+        values={["scoping", "build"]}
         onChange={vi.fn()}
       />,
     );
@@ -38,27 +33,22 @@ describe("FilterSelect", () => {
   it("ajoute une valeur au clic", () => {
     const onChange = vi.fn();
     render(
-      <FilterSelect
-        libelle="Phase"
-        options={OPTIONS}
-        valeurs={[]}
-        onChange={onChange}
-      />,
+      <FilterSelect label="Phase" options={OPTIONS} values={[]} onChange={onChange} />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: /Phase/ }));
     fireEvent.click(screen.getByRole("button", { name: "Cadrage" }));
 
-    expect(onChange).toHaveBeenCalledWith(["cadrage"]);
+    expect(onChange).toHaveBeenCalledWith(["scoping"]);
   });
 
   it("retire une valeur déjà retenue", () => {
     const onChange = vi.fn();
     render(
       <FilterSelect
-        libelle="Phase"
+        label="Phase"
         options={OPTIONS}
-        valeurs={["cadrage"]}
+        values={["scoping"]}
         onChange={onChange}
       />,
     );
@@ -73,9 +63,9 @@ describe("FilterSelect", () => {
     const onChange = vi.fn();
     render(
       <FilterSelect
-        libelle="Phase"
+        label="Phase"
         options={OPTIONS}
-        valeurs={["realisation"]}
+        values={["build"]}
         onChange={onChange}
       />,
     );
@@ -83,6 +73,6 @@ describe("FilterSelect", () => {
     fireEvent.click(screen.getByRole("button", { name: /Phase/ }));
     fireEvent.click(screen.getByRole("button", { name: "Cadrage" }));
 
-    expect(onChange).toHaveBeenCalledWith(["cadrage", "realisation"]);
+    expect(onChange).toHaveBeenCalledWith(["scoping", "build"]);
   });
 });

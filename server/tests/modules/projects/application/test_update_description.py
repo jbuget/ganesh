@@ -26,8 +26,8 @@ def build(description: str | None = None):
             Project(
                 id=10,
                 label="ASTRE",
-                kind=ProjectKind.PROJET,
-                statut=ProjectStatus.EXPLOITATION,
+                kind=ProjectKind.PROJECT,
+                status=ProjectStatus.OPERATIONS,
                 description=description,
             )
         ]

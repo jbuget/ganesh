@@ -13,17 +13,17 @@ from src.modules.entries.presentation.api.schemas.entry_schemas import (
 
 def to_entry_response(entry: Entry) -> EntryResponse:
     return EntryResponse(
-        project_id=entry.project_id, jour=entry.jour, valeur=float(entry.valeur)
+        project_id=entry.project_id, day=entry.day, value=float(entry.value)
     )
 
 
 def to_month_grid_response(grid: MonthGrid) -> MonthGridResponse:
     return MonthGridResponse(
         user_id=grid.user_id,
-        mois=grid.mois,
+        month=grid.month,
         days=[
             CalendarDayResponse(
-                jour=day.jour,
+                day=day.day,
                 kind=day.kind.value,
                 label=day.label,
                 is_off_day=day.is_off_day,
@@ -35,18 +35,18 @@ def to_month_grid_response(grid: MonthGrid) -> MonthGridResponse:
                 project_id=row.project_id,
                 label=row.label,
                 kind=row.kind,
-                estime_j=row.estime_j,
+                estimated_days=row.estimated_days,
                 values=row.values,
-                total_realise=row.total_realise,
-                total_prevu=row.total_prevu,
+                actual_total=row.actual_total,
+                forecast_total=row.forecast_total,
                 total=row.total,
-                consomme_total_j=row.consomme_total_j,
+                total_consumed_days=row.total_consumed_days,
             )
             for row in grid.rows
         ],
         day_totals=[
             DayTotalResponse(
-                jour=total.jour,
+                day=total.day,
                 total=total.total,
                 exceeds_capacity=total.exceeds_capacity,
             )
@@ -54,6 +54,6 @@ def to_month_grid_response(grid: MonthGrid) -> MonthGridResponse:
         ],
         working_days=grid.working_days,
         is_writable=grid.is_writable,
-        total_realise=grid.total_realise,
-        total_prevu=grid.total_prevu,
+        actual_total=grid.actual_total,
+        forecast_total=grid.forecast_total,
     )

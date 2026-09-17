@@ -24,16 +24,16 @@ interface ProjectPilotageTabProps {
   detail: ProjectDetailResponse;
   onChange: () => void | Promise<void>;
   enregistrerFiche: (
-    departements: Department[],
+    departments: Department[],
     contactsMetier: string | null,
   ) => Promise<void>;
-  changerPhase: (statut: ProjectStatus) => Promise<void>;
+  changerPhase: (status: ProjectStatus) => Promise<void>;
   changerCaracteristiques: (champs: {
-    categorie?: ProjectCategory | null;
-    priorite?: ProjectPriority | null;
-    estime_j?: number | null;
+    category?: ProjectCategory | null;
+    priority?: ProjectPriority | null;
+    estimated_days?: number | null;
   }) => Promise<void>;
-  ajouterLien: (label: string, url: string, icone: LinkIcon | null) => Promise<void>;
+  ajouterLien: (label: string, url: string, icon: LinkIcon | null) => Promise<void>;
   retirerLien: (linkId: number) => Promise<void>;
 }
 
@@ -86,9 +86,9 @@ export function ProjectPilotageTab({
 }: ProjectPilotageTabProps) {
   // Tant qu'on n'a rien tape, le champ affiche ce que dit le serveur : pas de
   // copie locale a resynchroniser a chaque rechargement.
-  const [brouillon, setBrouillon] = useState<string | null>(null);
+  const [draft, setBrouillon] = useState<string | null>(null);
   const { project } = detail;
-  const contacts = brouillon ?? project.contacts_metier ?? "";
+  const contacts = draft ?? project.business_contacts ?? "";
 
   return (
     <div className="space-y-6">
@@ -97,44 +97,44 @@ export function ProjectPilotageTab({
 
         <div className="divide-y divide-slate-100">
           <Ligne titre="Phase">
-            <PhasePicker statut={project.statut} onChange={changerPhase} />
+            <PhasePicker status={project.status} onChange={changerPhase} />
           </Ligne>
 
           <Ligne titre="Priorité">
             <PriorityPicker
-              valeur={project.priorite}
-              onChange={(priorite) => changerCaracteristiques({ priorite })}
+              value={project.priority}
+              onChange={(priority) => changerCaracteristiques({ priority })}
             />
           </Ligne>
 
           <Ligne titre="Catégorie">
             <CategoryPicker
-              valeur={project.categorie}
-              onChange={(categorie) => changerCaracteristiques({ categorie })}
+              value={project.category}
+              onChange={(category) => changerCaracteristiques({ category })}
             />
           </Ligne>
 
           <Ligne titre="Départements">
             <DepartmentPicker
-              valeurs={detail.departements}
-              onChange={(valeurs) => enregistrerFiche(valeurs, contacts.trim() || null)}
+              values={detail.departments}
+              onChange={(values) => enregistrerFiche(values, contacts.trim() || null)}
             />
           </Ligne>
 
           <Ligne titre="Estimé (build)">
             <InlineNumberField
-              valeur={project.estime_j}
+              value={project.estimated_days}
               suffixe="jrs."
               invite="Estimer"
-              onChange={(estime_j) => changerCaracteristiques({ estime_j })}
+              onChange={(estimated_days) => changerCaracteristiques({ estimated_days })}
             />
           </Ligne>
 
           <Ligne titre="Référents projet">
             <IntervenantsPicker
               projectId={project.id}
-              intervenants={detail.referents}
-              role="referent"
+              contributors={detail.leads}
+              role="lead"
               invite="Référents"
               onChange={onChange}
             />
@@ -143,7 +143,7 @@ export function ProjectPilotageTab({
           <Ligne titre="Intervenants">
             <IntervenantsPicker
               projectId={project.id}
-              intervenants={detail.intervenants}
+              contributors={detail.contributors}
               invite="Intervenants"
               onChange={onChange}
             />
@@ -158,9 +158,9 @@ export function ProjectPilotageTab({
               onChange={(event) => setBrouillon(event.target.value)}
               // Enregistre a la sortie du champ : on n'ecrit pas a chaque frappe.
               onBlur={() => {
-                if (brouillon === null) return;
+                if (draft === null) return;
                 setBrouillon(null);
-                void enregistrerFiche(detail.departements, brouillon.trim() || null);
+                void enregistrerFiche(detail.departments, draft.trim() || null);
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter") event.currentTarget.blur();
@@ -171,7 +171,7 @@ export function ProjectPilotageTab({
 
           <Ligne titre="Liens">
             <ProjectLinksEditor
-              liens={detail.liens}
+              links={detail.links}
               onAdd={ajouterLien}
               onRemove={retirerLien}
             />
@@ -181,14 +181,14 @@ export function ProjectPilotageTab({
 
       <section className="space-y-2">
         <TitreSection>Sous-projets</TitreSection>
-        <ProjectSubProjects sousProjets={detail.sous_projets} />
+        <ProjectSubProjects sousProjets={detail.sub_projects} />
       </section>
 
       <section className="space-y-2">
         <TitreSection>Consommation</TitreSection>
         <ProjectContributions
           contributions={detail.contributions}
-          total={detail.consomme_j}
+          total={detail.consumed_days}
         />
       </section>
     </div>

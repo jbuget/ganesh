@@ -43,8 +43,8 @@ export function useUsersScreen() {
       await queryClient.invalidateQueries();
     },
 
-    async changerActivite(userId: number, actif: boolean) {
-      await setUserActive(userId, { actif });
+    async changerActivite(userId: number, is_active: boolean) {
+      await setUserActive(userId, { is_active });
       await queryClient.invalidateQueries();
     },
   };

@@ -13,12 +13,12 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import type { ImportReportResponse } from "@/lib/api/generated/model";
-import { COLONNES, parseProjectsCsv } from "@/lib/csv-import";
+import { COLUMNS, parseProjectsCsv } from "@/lib/csv-import";
 
 interface ImportProjectsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onImport: (contenu: string) => Promise<ImportReportResponse>;
+  onImport: (content: string) => Promise<ImportReportResponse>;
 }
 
 /** Import d'un referentiel depuis un export tableur. Reserve aux managers. */
@@ -27,22 +27,22 @@ export function ImportProjectsDialog({
   onOpenChange,
   onImport,
 }: ImportProjectsDialogProps) {
-  const [contenu, setContenu] = useState("");
-  const [rapport, setRapport] = useState<ImportReportResponse | null>(null);
+  const [content, setContenu] = useState("");
+  const [report, setRapport] = useState<ImportReportResponse | null>(null);
   const [enCours, setEnCours] = useState(false);
 
-  const lignes = parseProjectsCsv(contenu);
+  const lines = parseProjectsCsv(content);
 
   async function importer() {
     setEnCours(true);
     try {
-      setRapport(await onImport(contenu));
+      setRapport(await onImport(content));
     } finally {
       setEnCours(false);
     }
   }
 
-  function fermer(ouvert: boolean) {
+  function close(ouvert: boolean) {
     if (!ouvert) {
       setContenu("");
       setRapport(null);
@@ -51,22 +51,24 @@ export function ImportProjectsDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={fermer}>
+    <Dialog open={open} onOpenChange={close}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Importer un référentiel</DialogTitle>
           <DialogDescription>
-            Collez un export tableur. Les missions déjà connues sont ignorées,
+            Collez un export tableur. Les missions déjà known sont ignorées,
             l&apos;import peut donc être rejoué sans risque.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-2">
-          <Label htmlFor="csv">Colonnes reconnues : {COLONNES.join(", ")}</Label>
+          <Label htmlFor="csv">
+            Colonnes reconnues : {Object.keys(COLUMNS).join(", ")}
+          </Label>
           <textarea
             id="csv"
             rows={8}
-            value={contenu}
+            value={content}
             placeholder={"label;kind;parent_label;estime_j\nPortail;projet;;20"}
             onChange={(event) => {
               setContenu(event.target.value);
@@ -74,20 +76,18 @@ export function ImportProjectsDialog({
             }}
             className="w-full rounded-md border border-slate-300 p-2 font-mono text-xs"
           />
-          <p className="text-xs text-slate-500">
-            {lignes.length} ligne(s) détectée(s).
-          </p>
+          <p className="text-xs text-slate-500">{lines.length} line(s) détectée(s).</p>
         </div>
 
-        {rapport && (
+        {report && (
           <div className="space-y-2 rounded-md border border-slate-300 bg-slate-50 p-3 text-sm">
             <p>
-              <strong>{rapport.crees}</strong> mission(s) créée(s),{" "}
-              <strong>{rapport.ignores}</strong> déjà connue(s).
+              <strong>{report.created}</strong> mission(s) créée(s),{" "}
+              <strong>{report.skipped}</strong> déjà connue(s).
             </p>
-            {rapport.erreurs.length > 0 && (
+            {report.errors.length > 0 && (
               <ul className="list-inside list-disc text-red-800">
-                {rapport.erreurs.map((erreur) => (
+                {report.errors.map((erreur) => (
                   <li key={erreur}>{erreur}</li>
                 ))}
               </ul>
@@ -96,11 +96,11 @@ export function ImportProjectsDialog({
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => fermer(false)}>
+          <Button variant="outline" onClick={() => close(false)}>
             Fermer
           </Button>
-          <Button onClick={importer} disabled={lignes.length === 0 || enCours}>
-            Importer {lignes.length > 0 && `(${lignes.length})`}
+          <Button onClick={importer} disabled={lines.length === 0 || enCours}>
+            Importer {lines.length > 0 && `(${lines.length})`}
           </Button>
         </DialogFooter>
       </DialogContent>

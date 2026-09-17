@@ -32,13 +32,13 @@ class Entry:
     id: int | None
     user_id: int
     project_id: int
-    jour: date
-    valeur: DayValue
-    statut_at_entry: ProjectStatus | None = None
+    day: date
+    value: DayValue
+    status_at_entry: ProjectStatus | None = None
 
     def __post_init__(self) -> None:
-        if not isinstance(self.valeur, DayValue):
-            self.valeur = DayValue(self.valeur)
+        if not isinstance(self.value, DayValue):
+            self.value = DayValue(self.value)
 
     def is_forecast(self, today: date) -> bool:
         """Une saisie posee sur un jour a venir est du previsionnel.
@@ -46,4 +46,4 @@ class Entry:
         Le previsionnel ne doit jamais etre remonte vers Monday comme du temps
         passe. Le jour courant, lui, compte comme realise.
         """
-        return self.jour > today
+        return self.day > today

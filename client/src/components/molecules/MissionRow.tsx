@@ -9,7 +9,7 @@ import { PriorityMark } from "@/components/atoms/PriorityMark";
 import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
-import { libellePhase, pastillePhase } from "@/lib/board";
+import { phaseLabel, phaseDot } from "@/lib/board";
 import { depuis } from "@/lib/dates-relatives";
 
 interface MissionRowProps {
@@ -48,7 +48,7 @@ export function MissionRow({
   onOpenFil,
 }: MissionRowProps) {
   const { project } = mission;
-  const derniere = mission.derniere_maj;
+  const derniere = mission.latest_update;
 
   // Le dernier message en entier et mis en forme, comme il se lit dans le fil :
   // un apercu tronque obligerait a ouvrir le panneau pour la fin d'une phrase.
@@ -61,9 +61,9 @@ export function MissionRow({
         <span className="font-medium text-slate-700">
           {derniere.author.display_name}
         </span>{" "}
-        · {depuis(derniere.publiee_le, maintenant)}
+        · {depuis(derniere.published_at, maintenant)}
       </p>
-      <MarkdownView texte={derniere.texte} />
+      <MarkdownView body={derniere.body} />
     </>
   );
 
@@ -129,21 +129,17 @@ export function MissionRow({
           plus loin, on ne saurait plus de quelle ligne il parle. L'icone dit
           deja ce que le nombre compte, d'ou l'en-tete vide. */}
       <TableCell className="w-12 text-right">
-        <UpdatesCounter
-          nombre={mission.commentaires}
-          apercu={apercu}
-          onOpen={onOpenFil}
-        />
+        <UpdatesCounter count={mission.comments} apercu={apercu} onOpen={onOpenFil} />
       </TableCell>
 
       <TableCell>
-        {project.statut && (
+        {project.status && (
           <span className="flex items-center gap-1.5 text-slate-700">
             <span
               aria-hidden
-              className={`size-2.5 shrink-0 rounded-full ${pastillePhase(project.statut)}`}
+              className={`size-2.5 shrink-0 rounded-full ${phaseDot(project.status)}`}
             />
-            {libellePhase(project.statut)}
+            {phaseLabel(project.status)}
           </span>
         )}
       </TableCell>
@@ -151,30 +147,30 @@ export function MissionRow({
       {/* La priorite suit la phase, comme dans la fiche : ou en est la mission,
           puis ce qu'elle doit passer avant. */}
       <TableCell>
-        <PriorityMark valeur={project.priorite} />
+        <PriorityMark value={project.priority} />
       </TableCell>
 
       <TableCell>
-        <CategoryMark valeur={project.categorie} />
+        <CategoryMark value={project.category} />
       </TableCell>
 
       <TableCell className="text-right tabular-nums text-slate-600">
-        {project.estime_j != null && `${project.estime_j} jrs.`}
+        {project.estimated_days != null && `${project.estimated_days} jrs.`}
       </TableCell>
 
       {/* Le realise s'ecrit a cote de l'estime pour qu'on les compare d'un
           coup d'oeil. Un zero n'est pas une valeur a lire : une mission ou
           personne n'a encore declare reste vide. */}
       <TableCell className="text-right tabular-nums text-slate-600">
-        {mission.realise_j > 0 && `${mission.realise_j} jrs.`}
+        {mission.delivered_days > 0 && `${mission.delivered_days} jrs.`}
       </TableCell>
 
       <TableCell>
-        <MemberAvatars membres={mission.referents} />
+        <MemberAvatars members={mission.leads} />
       </TableCell>
 
       <TableCell>
-        <MemberAvatars membres={mission.intervenants} />
+        <MemberAvatars members={mission.contributors} />
       </TableCell>
     </TableRow>
   );

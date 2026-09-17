@@ -9,6 +9,6 @@
  * Temps declare sur un mois donne.
  */
 export interface MonthlyShareResponse {
-  mois: string;
-  jours: number;
+  month: string;
+  days: number;
 }

@@ -35,9 +35,9 @@ class ProjectLinkModel(Base):
     )
     label: Mapped[str] = mapped_column(String(255))
     url: Mapped[str] = mapped_column(String(2048))
-    icone: Mapped[LinkIcon] = mapped_column(
+    icon: Mapped[LinkIcon] = mapped_column(
         Enum(LinkIcon, name="link_icon", native_enum=False, length=32),
-        server_default=LinkIcon.LIEN.name,
+        server_default=LinkIcon.LINK.name,
     )
 
 
@@ -54,7 +54,7 @@ class ProjectPhaseReachedModel(Base):
     project_id: Mapped[int] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
     )
-    statut: Mapped[ProjectStatus] = mapped_column(
+    status: Mapped[ProjectStatus] = mapped_column(
         Enum(ProjectStatus, name="project_status", native_enum=False, length=16),
         primary_key=True,
     )

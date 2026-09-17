@@ -10,7 +10,7 @@ import type { ProjectStatus } from "./projectStatus";
  * Depot d'une carte : colonne d'arrivee et rang voulu.
  */
 export interface MoveProjectRequest {
-  statut: ProjectStatus;
+  status: ProjectStatus;
   /** @minimum 0 */
   position: number;
 }

@@ -10,5 +10,5 @@ import type { BoardColumnResponse } from "./boardColumnResponse";
  * Le tableau complet, toutes phases confondues.
  */
 export interface BoardResponse {
-  colonnes: BoardColumnResponse[];
+  columns: BoardColumnResponse[];
 }

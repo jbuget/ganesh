@@ -8,12 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { LinkIcon, ProjectLinkResponse } from "@/lib/api/generated/model";
-import { dessinIcone, libelleIcone } from "@/lib/link-icons";
+import { iconGlyph, libelleIcone } from "@/lib/link-icons";
 
 interface ProjectLinksEditorProps {
-  liens: ProjectLinkResponse[];
+  links: ProjectLinkResponse[];
   /** `icone` a `null` : l'adresse decide, cote serveur. */
-  onAdd: (label: string, url: string, icone: LinkIcon | null) => Promise<void>;
+  onAdd: (label: string, url: string, icon: LinkIcon | null) => Promise<void>;
   onRemove: (linkId: number) => Promise<void>;
 }
 
@@ -25,20 +25,20 @@ interface ProjectLinksEditorProps {
  * pas derriere un voile pour trois champs.
  */
 export function ProjectLinksEditor({
-  liens,
+  links,
   onAdd,
   onRemove,
 }: ProjectLinksEditorProps) {
   const [ouvert, setOuvert] = useState(false);
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
-  const [icone, setIcone] = useState<LinkIcon | null>(null);
+  const [icon, setIcone] = useState<LinkIcon | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
 
-  function changerOuverture(valeur: boolean) {
-    setOuvert(valeur);
+  function changerOuverture(value: boolean) {
+    setOuvert(value);
     // Refermer, de quelque maniere que ce soit, remet le formulaire a neuf.
-    if (!valeur) {
+    if (!value) {
       setLabel("");
       setUrl("");
       setIcone(null);
@@ -49,7 +49,7 @@ export function ProjectLinksEditor({
   async function ajouter() {
     setErreur(null);
     try {
-      await onAdd(label, url, icone);
+      await onAdd(label, url, icon);
       changerOuverture(false);
     } catch {
       setErreur("Cette adresse n'est pas valide. Elle doit commencer par http://.");
@@ -59,26 +59,26 @@ export function ProjectLinksEditor({
   return (
     <div className="space-y-1">
       <ul className="space-y-1">
-        {liens.map((lien) => {
-          const Dessin = dessinIcone(lien.icone);
+        {links.map((link) => {
+          const Glyph = iconGlyph(link.icon);
           return (
-            <li key={lien.id} className="flex items-center gap-1.5">
+            <li key={link.id} className="flex items-center gap-1.5">
               <a
-                href={lien.url}
+                href={link.url}
                 target="_blank"
                 rel="noreferrer noopener"
                 className="flex min-w-0 cursor-pointer items-center gap-1.5 text-sm text-slate-900 hover:underline"
               >
-                <Dessin
+                <Glyph
                   className="size-3.5 shrink-0"
-                  aria-label={libelleIcone(lien.icone)}
+                  aria-label={libelleIcone(link.icon)}
                 />
-                <span className="truncate">{lien.label}</span>
+                <span className="truncate">{link.label}</span>
               </a>
               <button
                 type="button"
-                aria-label={`Retirer ${lien.label}`}
-                onClick={() => void onRemove(lien.id)}
+                aria-label={`Retirer ${link.label}`}
+                onClick={() => void onRemove(link.id)}
                 // Toujours visible, et pas seulement au survol : la croix doit
                 // s'atteindre au doigt comme a la souris.
                 className="cursor-pointer rounded p-0.5 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
@@ -98,7 +98,7 @@ export function ProjectLinksEditor({
 
         <PopoverContent align="start" className="w-80 gap-1.5">
           <div className="flex gap-1.5">
-            <LinkIconPicker valeur={icone} onChange={setIcone} />
+            <LinkIconPicker value={icon} onChange={setIcone} />
             <Input
               value={label}
               onChange={(event) => setLabel(event.target.value)}

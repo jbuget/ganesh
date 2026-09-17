@@ -15,8 +15,8 @@ class SetEntryCommand:
     actor_id: int
     target_user_id: int
     project_id: int
-    jour: date
-    valeur: float
+    day: date
+    value: float
 
 
 @dataclass(frozen=True)
@@ -26,7 +26,7 @@ class ClearEntryCommand:
     actor_id: int
     target_user_id: int
     project_id: int
-    jour: date
+    day: date
 
 
 @dataclass(frozen=True)
@@ -39,4 +39,4 @@ class RemoveMissionCommand:
     actor_id: int
     target_user_id: int
     project_id: int
-    mois: date
+    month: date

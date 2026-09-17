@@ -14,7 +14,7 @@ from src.modules.projects.domain.repositories.project_detail_repository import (
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
-from src.modules.projects.domain.services.link_icons import deviner_icone
+from src.modules.projects.domain.services.link_icons import guess_icon
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 
@@ -24,8 +24,8 @@ class UpdateProjectDetailCommand:
 
     actor_id: int
     project_id: int
-    departements: list[Department]
-    contacts_metier: str | None
+    departments: list[Department]
+    business_contacts: str | None
 
 
 @dataclass(frozen=True)
@@ -48,7 +48,7 @@ class AddLinkCommand:
     project_id: int
     label: str
     url: str
-    icone: LinkIcon | None = None
+    icon: LinkIcon | None = None
 
 
 class UpdateProjectDetailUseCase:
@@ -70,19 +70,19 @@ class UpdateProjectDetailUseCase:
             raise EntityNotFoundError("Mission inconnue.")
 
         anciens_departements = await self._details.list_departments(command.project_id)
-        contacts = (command.contacts_metier or "").strip() or None
-        ancien = mission.contacts_metier
-        mission.contacts_metier = contacts
+        contacts = (command.business_contacts or "").strip() or None
+        ancien = mission.business_contacts
+        mission.business_contacts = contacts
         await self._projects.update(mission)
-        await self._details.set_departments(command.project_id, command.departements)
+        await self._details.set_departments(command.project_id, command.departments)
 
         # Une trace par champ, comme le fait deja la modification d'une mission.
-        for champ, avant, apres in (
+        for field, avant, apres in (
             ("contacts_metier", ancien, contacts),
             (
                 "departements",
                 ", ".join(sorted(d.value for d in anciens_departements)),
-                ", ".join(sorted(d.value for d in command.departements)),
+                ", ".join(sorted(d.value for d in command.departments)),
             ),
         ):
             if avant == apres:
@@ -94,7 +94,7 @@ class UpdateProjectDetailUseCase:
                     project_id=command.project_id,
                     old_value=avant,
                     new_value=apres,
-                    payload={"champ": champ},
+                    payload={"champ": field},
                 )
             )
 
@@ -119,7 +119,7 @@ class AddProjectLinkUseCase:
                 project_id=command.project_id,
                 label=command.label,
                 url=command.url,
-                icone=command.icone or deviner_icone(command.url),
+                icon=command.icon or guess_icon(command.url),
             )
         )
 

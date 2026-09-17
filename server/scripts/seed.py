@@ -69,7 +69,7 @@ async def seed_users() -> int:
                     email=email,
                     display_name=display_name,
                     role=role,
-                    actif=True,
+                    is_active=True,
                 )
             )
             created += 1
@@ -84,7 +84,7 @@ async def seed_off_project_activities() -> int:
             existing = await session.execute(
                 select(ProjectModel).where(
                     ProjectModel.label == label,
-                    ProjectModel.kind == ProjectKind.HORS_PROJET,
+                    ProjectModel.kind == ProjectKind.OFF_PROJECT,
                 )
             )
             if existing.scalar_one_or_none() is not None:
@@ -92,9 +92,9 @@ async def seed_off_project_activities() -> int:
             session.add(
                 ProjectModel(
                     label=label,
-                    kind=ProjectKind.HORS_PROJET,
-                    statut=None,
-                    actif=True,
+                    kind=ProjectKind.OFF_PROJECT,
+                    status=None,
+                    is_active=True,
                 )
             )
             created += 1
@@ -106,10 +106,10 @@ async def seed_holidays() -> int:
     created = 0
     async with AsyncSessionLocal() as session:
         for year in HOLIDAY_YEARS:
-            for jour, label in _french_holidays(year).items():
-                if await session.get(HolidayModel, jour) is not None:
+            for day, label in _french_holidays(year).items():
+                if await session.get(HolidayModel, day) is not None:
                     continue
-                session.add(HolidayModel(jour=jour, label=label))
+                session.add(HolidayModel(day=day, label=label))
                 created += 1
         await session.commit()
     return created

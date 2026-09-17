@@ -3,13 +3,13 @@
 import { useMemo } from "react";
 
 import {
-  ecrireTri,
-  lireTri,
+  writeSort,
+  readSort,
   triSuivant,
-  type ColonneTri,
-  type TriMissions,
+  type SortColumn,
+  type MissionSort,
 } from "@/lib/mission-sort";
-import { ecrireUrl, useQueryString } from "@/lib/url-state";
+import { writeUrl, useQueryString } from "@/lib/url-state";
 
 /**
  * L'ordre d'un ecran de missions, tenu par l'URL.
@@ -20,16 +20,16 @@ import { ecrireUrl, useQueryString } from "@/lib/url-state";
  * ramener a l'ecran d'avant, pas au clic precedent.
  */
 export function useMissionSort() {
-  const requete = useQueryString();
-  const tri = useMemo(() => lireTri(new URLSearchParams(requete)), [requete]);
+  const query = useQueryString();
+  const sorted = useMemo(() => readSort(new URLSearchParams(query)), [query]);
 
   return {
-    tri,
+    sorted,
 
     /** Fait passer une colonne a l'etape suivante de son cycle. */
-    basculer(colonne: ColonneTri) {
-      const suivant: TriMissions = triSuivant(tri, colonne);
-      ecrireUrl((params) => ecrireTri(params, suivant), "remplacer");
+    toggle(column: SortColumn) {
+      const suivant: MissionSort = triSuivant(sorted, column);
+      writeUrl((params) => writeSort(params, suivant), "remplacer");
     },
   };
 }

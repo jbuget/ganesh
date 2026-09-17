@@ -52,37 +52,37 @@ async def seed(session: AsyncSession) -> tuple[int, int, int]:
         )
     )
     projects = SqlProjectRepository(session)
-    vise = await projects.add(
+    target = await projects.add(
         Project(
             id=None,
             label="Portail",
-            kind=ProjectKind.PROJET,
-            statut=ProjectStatus.REALISATION,
+            kind=ProjectKind.PROJECT,
+            status=ProjectStatus.BUILD,
         )
     )
     epargne = await projects.add(
         Project(
             id=None,
             label="Extranet",
-            kind=ProjectKind.PROJET,
-            statut=ProjectStatus.REALISATION,
+            kind=ProjectKind.PROJECT,
+            status=ProjectStatus.BUILD,
         )
     )
-    assert user.id is not None and vise.id is not None and epargne.id is not None
-    return user.id, vise.id, epargne.id
+    assert user.id is not None and target.id is not None and epargne.id is not None
+    return user.id, target.id, epargne.id
 
 
 async def une_saisie(
-    session: AsyncSession, user_id: int, project_id: int, jour: int, valeur: float
+    session: AsyncSession, user_id: int, project_id: int, day: int, value: float
 ) -> None:
     await SqlEntryRepository(session).upsert(
         Entry(
             id=None,
             user_id=user_id,
             project_id=project_id,
-            jour=date(2026, 9, jour),
-            valeur=DayValue(valeur),
-            statut_at_entry=ProjectStatus.REALISATION,
+            day=date(2026, 9, day),
+            value=DayValue(value),
+            status_at_entry=ProjectStatus.BUILD,
         )
     )
 
@@ -99,14 +99,14 @@ def build(session: AsyncSession) -> RemoveMissionFromMonthUseCase:
 async def test_the_mission_leaves_the_month_and_its_neighbours_stay(
     db_session: AsyncSession,
 ) -> None:
-    user_id, vise, epargne = await seed(db_session)
-    await une_saisie(db_session, user_id, vise, 14, 1.0)
-    await une_saisie(db_session, user_id, vise, 15, 0.5)
+    user_id, target, epargne = await seed(db_session)
+    await une_saisie(db_session, user_id, target, 14, 1.0)
+    await une_saisie(db_session, user_id, target, 15, 0.5)
     await une_saisie(db_session, user_id, epargne, 14, 1.0)
 
     retires = await build(db_session).execute(
         RemoveMissionCommand(
-            actor_id=user_id, target_user_id=user_id, project_id=vise, mois=MOIS
+            actor_id=user_id, target_user_id=user_id, project_id=target, month=MOIS
         )
     )
 
@@ -118,12 +118,12 @@ async def test_the_mission_leaves_the_month_and_its_neighbours_stay(
 async def test_a_month_without_the_mission_is_left_untouched(
     db_session: AsyncSession,
 ) -> None:
-    user_id, vise, epargne = await seed(db_session)
+    user_id, target, epargne = await seed(db_session)
     await une_saisie(db_session, user_id, epargne, 14, 1.0)
 
     retires = await build(db_session).execute(
         RemoveMissionCommand(
-            actor_id=user_id, target_user_id=user_id, project_id=vise, mois=MOIS
+            actor_id=user_id, target_user_id=user_id, project_id=target, month=MOIS
         )
     )
 

@@ -8,7 +8,7 @@ from pydantic import BaseModel
 class CalendarDaySchema(BaseModel):
     """Un jour et sa nature."""
 
-    jour: date
+    day: date
     kind: str
     label: str | None = None
     is_off_day: bool

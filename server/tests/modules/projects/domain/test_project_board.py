@@ -14,40 +14,40 @@ from src.shared.exceptions.domain_exceptions import ValidationError
 
 
 def projet(**kwargs) -> Project:
-    defauts = {
+    defaults = {
         "id": 1,
         "label": "Portail",
-        "kind": ProjectKind.PROJET,
-        "statut": ProjectStatus.CADRAGE,
+        "kind": ProjectKind.PROJECT,
+        "status": ProjectStatus.SCOPING,
     }
-    return Project(**{**defauts, **kwargs})
+    return Project(**{**defaults, **kwargs})
 
 
 def test_the_phases_follow_the_project_life_cycle() -> None:
     assert [phase.value for phase in ProjectStatus] == [
         "exploration",
-        "cadrage",
-        "realisation",
+        "scoping",
+        "build",
         "validation",
-        "deploiement",
-        "exploitation",
+        "deployment",
+        "operations",
     ]
 
 
 def test_a_project_can_carry_a_category() -> None:
-    assert projet(categorie=ProjectCategory.INNOVER).categorie is (
-        ProjectCategory.INNOVER
+    assert projet(category=ProjectCategory.INNOVATE).category is (
+        ProjectCategory.INNOVATE
     )
 
 
 def test_a_category_is_optional() -> None:
-    assert projet().categorie is None
+    assert projet().category is None
 
 
 def test_a_project_can_carry_a_go_live_date() -> None:
-    mission = projet(date_mise_en_service=date(2026, 11, 15))
+    mission = projet(go_live_date=date(2026, 11, 15))
 
-    assert mission.date_mise_en_service == date(2026, 11, 15)
+    assert mission.go_live_date == date(2026, 11, 15)
 
 
 def test_a_project_holds_its_rank_within_its_phase() -> None:
@@ -66,7 +66,7 @@ def test_a_negative_rank_is_rejected() -> None:
 
 def test_an_off_project_activity_never_appears_on_the_board() -> None:
     activite = Project(
-        id=2, label="Absences", kind=ProjectKind.HORS_PROJET, statut=None
+        id=2, label="Absences", kind=ProjectKind.OFF_PROJECT, status=None
     )
 
     assert activite.appears_on_board is False
@@ -78,6 +78,6 @@ def test_a_project_appears_on_the_board() -> None:
 
 def test_a_lot_appears_on_the_board_too() -> None:
     """Un lot se pilote comme un projet : il a sa phase et sa charge."""
-    lot = projet(kind=ProjectKind.LOT, parent_id=9)
+    work_package = projet(kind=ProjectKind.WORK_PACKAGE, parent_id=9)
 
-    assert lot.appears_on_board is True
+    assert work_package.appears_on_board is True

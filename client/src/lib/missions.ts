@@ -19,7 +19,7 @@ export function availableMissions(
 ): AvailableMissions {
   const disponibles = projects.filter((p) => !excludedIds.includes(p.id));
   return {
-    projets: disponibles.filter((p) => p.kind !== "hors_projet"),
-    horsProjet: disponibles.filter((p) => p.kind === "hors_projet"),
+    projets: disponibles.filter((p) => p.kind !== "off_project"),
+    horsProjet: disponibles.filter((p) => p.kind === "off_project"),
   };
 }

@@ -22,16 +22,16 @@ interface ProjectTabsProps {
   ongletInitial?: string | null;
   onChange: () => void | Promise<void>;
   enregistrerFiche: (
-    departements: Department[],
+    departments: Department[],
     contactsMetier: string | null,
   ) => Promise<void>;
-  enregistrerDescription: (texte: string) => Promise<void>;
-  changerPhase: (statut: ProjectStatus) => Promise<void>;
+  enregistrerDescription: (body: string) => Promise<void>;
+  changerPhase: (status: ProjectStatus) => Promise<void>;
   changerCaracteristiques: (champs: {
-    categorie?: ProjectCategory | null;
-    estime_j?: number | null;
+    category?: ProjectCategory | null;
+    estimated_days?: number | null;
   }) => Promise<void>;
-  ajouterLien: (label: string, url: string, icone: LinkIcon | null) => Promise<void>;
+  ajouterLien: (label: string, url: string, icon: LinkIcon | null) => Promise<void>;
   retirerLien: (linkId: number) => Promise<void>;
   archiver: () => Promise<void>;
   desarchiver: () => Promise<void>;
@@ -73,7 +73,7 @@ export function ProjectTabs({
     >
       {/* Au-dessus des onglets, donc lu avant eux : l'etat de la mission
           conditionne tout ce qu'on s'apprete a faire dessus. */}
-      {!detail.project.actif && (
+      {!detail.project.is_active && (
         <ArchivedCallout archivedAt={detail.project.archived_at} />
       )}
 
@@ -89,7 +89,7 @@ export function ProjectTabs({
         </TabsList>
 
         <MissionMenu
-          archivee={!detail.project.actif}
+          archivee={!detail.project.is_active}
           onArchiver={archiver}
           onDesarchiver={desarchiver}
         />

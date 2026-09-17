@@ -3,10 +3,10 @@
 import { MessageCircle } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { useTooltipCurseur } from "@/lib/use-tooltip-curseur";
+import { useCursorTooltip } from "@/lib/use-tooltip-curseur";
 
 interface UpdatesCounterProps {
-  nombre: number;
+  count: number;
   /**
    * Ce que montre l'infobulle au survol — le dernier message, mis en forme.
    *
@@ -29,26 +29,26 @@ interface UpdatesCounterProps {
  * Une mission sans mise a jour ne montre rien : dans un tableau, seul ce qui
  * se lit s'affiche.
  */
-export function UpdatesCounter({ nombre, apercu, onOpen }: UpdatesCounterProps) {
-  const { tooltip, suivre, quitter } = useTooltipCurseur({ riche: true });
+export function UpdatesCounter({ count, apercu, onOpen }: UpdatesCounterProps) {
+  const { tooltip, follow, leave } = useCursorTooltip({ rich: true });
 
-  if (nombre === 0) return null;
+  if (count === 0) return null;
 
   return (
     <button
       type="button"
-      aria-label={`${nombre} ${nombre > 1 ? "mises à jour" : "mise à jour"}`}
+      aria-label={`${count} ${count > 1 ? "mises à jour" : "mise à jour"}`}
       // La ligne entiere ouvre deja la mission : sans arret, le clic
       // l'ouvrirait deux fois, et la seconde sur le mauvais onglet.
       onClick={(event) => {
         event.stopPropagation();
         onOpen();
       }}
-      onMouseMove={(event) => apercu && suivre(event, apercu)}
-      onMouseLeave={quitter}
+      onMouseMove={(event) => apercu && follow(event, apercu)}
+      onMouseLeave={leave}
       className="inline-flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 text-xs tabular-nums text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
     >
-      {nombre}
+      {count}
       <MessageCircle className="size-3.5 shrink-0" aria-hidden />
       {tooltip}
     </button>

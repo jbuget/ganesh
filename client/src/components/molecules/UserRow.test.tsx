@@ -11,9 +11,9 @@ const jeremy: UserResponse = {
   id: 1,
   email: "j.buget@waat.fr",
   display_name: "Jérémy Buget",
-  initiales: "JB",
+  initials: "JB",
   role: "MANAGER",
-  actif: true,
+  is_active: true,
 };
 
 const MAINTENANT = new Date("2026-09-17T12:00:00");
@@ -57,7 +57,7 @@ describe("UserRow", () => {
     expect(screen.getByText("Actif")).toBeInTheDocument();
 
     cleanup();
-    renderRow({ ...jeremy, actif: false });
+    renderRow({ ...jeremy, is_active: false });
     expect(screen.getByText("Désactivé")).toBeInTheDocument();
   });
 
@@ -88,7 +88,7 @@ describe("UserRow", () => {
   });
 
   it("rétablit un accès sans confirmation, car cela ne retire rien", async () => {
-    renderRow({ ...jeremy, actif: false }, true, true);
+    renderRow({ ...jeremy, is_active: false }, true, true);
 
     await userEvent.click(screen.getByRole("button", { name: "Réactiver ce compte" }));
 
@@ -108,13 +108,13 @@ describe("UserRow", () => {
   });
 
   it("dit depuis quand le compte ne s'est plus connecté", () => {
-    renderRow({ ...jeremy, derniere_connexion: "2026-09-17T09:00:00" });
+    renderRow({ ...jeremy, last_login_at: "2026-09-17T09:00:00" });
 
     expect(screen.getByText("il y a 3 h")).toBeInTheDocument();
   });
 
   it("distingue un compte qui ne s'est jamais connecté", () => {
-    renderRow({ ...jeremy, derniere_connexion: null });
+    renderRow({ ...jeremy, last_login_at: null });
 
     expect(screen.getByText("Jamais")).toBeInTheDocument();
   });

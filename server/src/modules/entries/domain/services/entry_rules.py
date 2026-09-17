@@ -11,16 +11,16 @@ LABELS: dict[DayKind, str] = {
 }
 
 
-def ensure_day_is_workable(jour: date) -> None:
+def ensure_day_is_workable(day: date) -> None:
     """Refuse toute saisie posee sur un jour non ouvre.
 
     La regle vit dans le domaine et non dans l'interface : verrouiller la
     cellule cote client est un confort, pas une garantie. L'API doit refuser la
     saisie quel que soit l'appelant.
     """
-    kind = classify_day(jour)
+    kind = classify_day(day)
     if kind is DayKind.OUVRE:
         return
     raise ValidationError(
-        f"Le {jour.isoformat()} est {LABELS[kind]} : aucune saisie n'y est possible."
+        f"Le {day.isoformat()} est {LABELS[kind]} : aucune saisie n'y est possible."
     )

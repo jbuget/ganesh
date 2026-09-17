@@ -9,7 +9,7 @@ export type GetMonthGridParams = {
   /**
    * N'importe quel jour du mois demande
    */
-  mois: string;
+  month: string;
   /**
    * Collaborateur consulte. Par defaut, l'utilisateur courant.
    */

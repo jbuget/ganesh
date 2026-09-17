@@ -15,6 +15,6 @@
 export type ProjectRole = (typeof ProjectRole)[keyof typeof ProjectRole];
 
 export const ProjectRole = {
-  intervenant: "intervenant",
-  referent: "referent",
+  contributor: "contributor",
+  lead: "lead",
 } as const;

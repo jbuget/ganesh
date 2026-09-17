@@ -13,12 +13,12 @@ import type { GridRowResponse } from "./gridRowResponse";
  */
 export interface MonthGridResponse {
   user_id: number;
-  mois: string;
+  month: string;
   days: CalendarDayResponse[];
   rows: GridRowResponse[];
   day_totals: DayTotalResponse[];
   working_days: number;
   is_writable: boolean;
-  total_realise: number;
-  total_prevu: number;
+  actual_total: number;
+  forecast_total: number;
 }

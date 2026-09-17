@@ -12,9 +12,9 @@ import type { BoardMemberResponse } from "./boardMemberResponse";
 export interface ProjectUpdateResponse {
   id: number;
   author: BoardMemberResponse;
-  texte: string;
-  publiee_le: string;
-  modifiee_le: string | null;
-  est_supprimee: boolean;
-  est_la_mienne: boolean;
+  body: string;
+  published_at: string;
+  edited_at: string | null;
+  is_deleted: boolean;
+  is_mine: boolean;
 }

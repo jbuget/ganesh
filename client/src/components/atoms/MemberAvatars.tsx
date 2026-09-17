@@ -1,13 +1,13 @@
 "use client";
 
 import type { BoardMemberResponse } from "@/lib/api/generated/model";
-import { useTooltipCurseur } from "@/lib/use-tooltip-curseur";
+import { useCursorTooltip } from "@/lib/use-tooltip-curseur";
 
 /** Au-dela, les pastilles se chevauchent trop pour rester lisibles. */
 const VISIBLES = 4;
 
 interface MemberAvatarsProps {
-  membres: BoardMemberResponse[];
+  members: BoardMemberResponse[];
 }
 
 /**
@@ -19,34 +19,34 @@ interface MemberAvatarsProps {
  * Des initiales ne se devinent pas : l'infobulle donne le nom sans attendre,
  * la ou l'attribut `title` natif laisse hesiter une seconde.
  */
-export function MemberAvatars({ membres }: MemberAvatarsProps) {
-  const { tooltip, suivre, quitter } = useTooltipCurseur();
+export function MemberAvatars({ members }: MemberAvatarsProps) {
+  const { tooltip, follow, leave } = useCursorTooltip();
 
-  if (membres.length === 0) return null;
+  if (members.length === 0) return null;
 
-  const affiches = membres.slice(0, VISIBLES);
-  const restants = membres.slice(VISIBLES);
+  const shown = members.slice(0, VISIBLES);
+  const remaining = members.slice(VISIBLES);
 
   return (
-    <div className="flex items-center -space-x-1.5" onMouseLeave={quitter}>
-      {affiches.map((membre) => (
+    <div className="flex items-center -space-x-1.5" onMouseLeave={leave}>
+      {shown.map((member) => (
         <span
-          key={membre.id}
-          onMouseMove={(event) => suivre(event, membre.display_name)}
+          key={member.id}
+          onMouseMove={(event) => follow(event, member.display_name)}
           className="flex size-6 items-center justify-center rounded-full border border-white bg-slate-200 text-[10px] font-medium text-slate-700"
         >
-          {membre.initiales}
+          {member.initials}
         </span>
       ))}
 
-      {restants.length > 0 && (
+      {remaining.length > 0 && (
         <span
           onMouseMove={(event) =>
-            suivre(event, restants.map((m) => m.display_name).join(", "))
+            follow(event, remaining.map((m) => m.display_name).join(", "))
           }
           className="flex size-6 items-center justify-center rounded-full border border-white bg-slate-100 text-[10px] font-medium text-slate-500"
         >
-          +{restants.length}
+          +{remaining.length}
         </span>
       )}
 

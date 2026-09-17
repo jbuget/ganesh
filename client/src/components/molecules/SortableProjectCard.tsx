@@ -8,13 +8,13 @@ import { ProjectCard } from "@/components/molecules/ProjectCard";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 
 interface SortableProjectCardProps {
-  carte: BoardCardResponse;
+  card: BoardCardResponse;
   /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
   maintenant: Date;
   onIntervenantsChange?: () => void | Promise<void>;
   onOpen?: (projectId: number) => void;
   /** Le tableau est filtre : la carte se lit et s'ouvre, mais ne se range plus. */
-  figee?: boolean;
+  frozen?: boolean;
 }
 
 /**
@@ -24,14 +24,14 @@ interface SortableProjectCardProps {
  * qui montre ou elle tombera : c'est la copie sous le curseur qui la represente.
  */
 export function SortableProjectCard({
-  carte,
+  card,
   maintenant,
   onIntervenantsChange,
   onOpen,
-  figee,
+  frozen,
 }: SortableProjectCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: carte.project.id, disabled: figee });
+    useSortable({ id: card.project.id, disabled: frozen });
 
   return (
     <li
@@ -49,15 +49,15 @@ export function SortableProjectCard({
       {/* Masquee, mais toujours mesuree : c'est elle qui donne sa hauteur a l'emplacement. */}
       <div className={isDragging ? "invisible" : undefined}>
         <ProjectCard
-          carte={carte}
+          card={card}
           maintenant={maintenant}
           onIntervenantsChange={onIntervenantsChange}
           onOpen={onOpen}
-          poignee={
-            figee ? null : (
+          handle={
+            frozen ? null : (
               <button
                 type="button"
-                aria-label={`Déplacer ${carte.project.label}`}
+                aria-label={`Déplacer ${card.project.label}`}
                 className="cursor-grab touch-none rounded p-0.5 text-slate-300 transition-colors hover:text-slate-500 active:cursor-grabbing"
                 {...attributes}
                 {...listeners}

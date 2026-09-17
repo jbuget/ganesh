@@ -54,7 +54,7 @@ export function TeammateSelector({
       <Combobox
         items={items}
         value={selection}
-        isItemEqualToValue={(item, valeur) => item.value === valeur.value}
+        isItemEqualToValue={(item, value) => item.value === value.value}
         onValueChange={(collaborateur) => {
           if (collaborateur) onSelect((collaborateur as TeammateItem).value);
         }}

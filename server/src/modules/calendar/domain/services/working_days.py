@@ -27,7 +27,7 @@ class DayKind(StrEnum):
 class CalendarDay:
     """Un jour du mois et sa nature."""
 
-    jour: date
+    day: date
     kind: DayKind
     label: str | None = None
 
@@ -42,20 +42,20 @@ def _french_holidays(year: int) -> dict[date, str]:
     return dict(holidays.country_holidays("FR", years=year))
 
 
-def holiday_label(jour: date) -> str | None:
+def holiday_label(day: date) -> str | None:
     """Libelle du jour ferie, ou None si le jour n'est pas ferie."""
-    return _french_holidays(jour.year).get(jour)
+    return _french_holidays(day.year).get(day)
 
 
-def classify_day(jour: date) -> DayKind:
+def classify_day(day: date) -> DayKind:
     """Determine la nature d'un jour.
 
     Un ferie tombant un week-end est signale comme ferie : c'est l'information
     la plus utile a afficher.
     """
-    if holiday_label(jour) is not None:
+    if holiday_label(day) is not None:
         return DayKind.FERIE
-    if jour.weekday() >= SATURDAY:
+    if day.weekday() >= SATURDAY:
         return DayKind.WEEKEND
     return DayKind.OUVRE
 
@@ -65,11 +65,11 @@ def days_of_month(year: int, month: int) -> list[CalendarDay]:
     _, last_day = monthrange(year, month)
     return [
         CalendarDay(
-            jour=(jour := date(year, month, day)),
-            kind=classify_day(jour),
-            label=holiday_label(jour),
+            day=(day := date(year, month, numero)),
+            kind=classify_day(day),
+            label=holiday_label(day),
         )
-        for day in range(1, last_day + 1)
+        for numero in range(1, last_day + 1)
     ]
 
 

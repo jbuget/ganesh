@@ -13,9 +13,9 @@ import type { ProjectResponse } from "./projectResponse";
  */
 export interface ProjectListItemResponse {
   project: ProjectResponse;
-  referents: BoardMemberResponse[];
-  intervenants: BoardMemberResponse[];
-  realise_j: number;
-  commentaires: number;
-  derniere_maj: LastUpdateResponse | null;
+  leads: BoardMemberResponse[];
+  contributors: BoardMemberResponse[];
+  delivered_days: number;
+  comments: number;
+  latest_update: LastUpdateResponse | null;
 }

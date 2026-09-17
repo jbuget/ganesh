@@ -11,6 +11,6 @@
 export type MonthState = (typeof MonthState)[keyof typeof MonthState];
 
 export const MonthState = {
-  ouvert: "ouvert",
-  valide: "valide",
+  open: "open",
+  validated: "validated",
 } as const;

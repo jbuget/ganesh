@@ -14,7 +14,7 @@ import {
 interface DeactivateUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  nom: string;
+  name: string;
   onConfirm: () => void | Promise<void>;
 }
 
@@ -30,17 +30,17 @@ interface DeactivateUserDialogProps {
 export function DeactivateUserDialog({
   open,
   onOpenChange,
-  nom,
+  name,
   onConfirm,
 }: DeactivateUserDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Désactiver {nom} ?</AlertDialogTitle>
+          <AlertDialogTitle>Désactiver {name} ?</AlertDialogTitle>
           <AlertDialogDescription>
             Ce compte n&apos;aura plus accès à Timesheet, et disparaîtra des listes. Ses
-            saisies passées sont conservées. Un manager peut le réactiver à tout moment.
+            entries passées sont conservées. Un manager peut le réactiver à tout moment.
           </AlertDialogDescription>
         </AlertDialogHeader>
 

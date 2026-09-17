@@ -66,9 +66,9 @@ export function useProjects(includeInactive = false) {
 }
 
 /** La matrice d'un mois, pour un collaborateur donne. */
-export function useMonthGrid(mois: string, userId: number | null, enabled: boolean) {
+export function useMonthGrid(month: string, userId: number | null, enabled: boolean) {
   const query = useGetMonthGrid(
-    { mois, ...(userId ? { user_id: userId } : {}) },
+    { month, ...(userId ? { user_id: userId } : {}) },
     { query: { enabled } },
   );
   return { ...query, grid: successOf<MonthGridResponse>(query.data) };

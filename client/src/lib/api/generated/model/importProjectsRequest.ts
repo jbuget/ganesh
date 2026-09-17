@@ -10,5 +10,5 @@ import type { ImportLineRequest } from "./importLineRequest";
  * Import en masse du referentiel.
  */
 export interface ImportProjectsRequest {
-  lignes: ImportLineRequest[];
+  rows: ImportLineRequest[];
 }

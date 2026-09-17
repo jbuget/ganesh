@@ -3,13 +3,13 @@
 import { useMemo } from "react";
 
 import {
-  AUCUN_FILTRE,
+  NO_FILTER,
   ecrireFiltres,
   filtreActif,
   lireFiltres,
   type MissionFilters,
 } from "@/lib/mission-filters";
-import { ecrireUrl, useQueryString } from "@/lib/url-state";
+import { writeUrl, useQueryString } from "@/lib/url-state";
 
 /**
  * Les filtres d'un ecran de missions, tenus par l'URL.
@@ -19,24 +19,24 @@ import { ecrireUrl, useQueryString } from "@/lib/url-state";
  * pas au troisieme clic.
  */
 export function useMissionFilters() {
-  const requete = useQueryString();
-  const filtres = useMemo(() => lireFiltres(new URLSearchParams(requete)), [requete]);
+  const query = useQueryString();
+  const filters = useMemo(() => lireFiltres(new URLSearchParams(query)), [query]);
 
-  function poser(suivants: MissionFilters) {
-    ecrireUrl((params) => ecrireFiltres(params, suivants), "remplacer");
+  function apply(next_ones: MissionFilters) {
+    writeUrl((params) => ecrireFiltres(params, next_ones), "remplacer");
   }
 
   return {
-    filtres,
-    actif: filtreActif(filtres),
+    filters,
+    hasFilter: filtreActif(filters),
 
     /** Change un seul critere, les autres restent en place. */
-    definir(changement: Partial<MissionFilters>) {
-      poser({ ...filtres, ...changement });
+    set(change: Partial<MissionFilters>) {
+      apply({ ...filters, ...change });
     },
 
-    effacer() {
-      poser(AUCUN_FILTRE);
+    clear() {
+      apply(NO_FILTER);
     },
   };
 }

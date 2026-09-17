@@ -11,6 +11,6 @@ import type { ProjectStatus } from "./projectStatus";
  * Une phase et ses cartes.
  */
 export interface BoardColumnResponse {
-  statut: ProjectStatus;
-  cartes: BoardCardResponse[];
+  status: ProjectStatus;
+  cards: BoardCardResponse[];
 }

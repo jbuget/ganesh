@@ -11,7 +11,7 @@ import type { MonthState } from "./monthState";
  */
 export interface MonthResponse {
   user_id: number;
-  mois: string;
+  month: string;
   state: MonthState;
   is_writable: boolean;
   validated_at: string | null;

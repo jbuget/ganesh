@@ -27,7 +27,7 @@ import { filtrerMissions, inclutLesArchivees } from "@/lib/mission-filters";
 import { useBoard } from "@/lib/use-board";
 import { useBoardDrag } from "@/lib/use-board-drag";
 import { useMissionFilters } from "@/lib/use-mission-filters";
-import { useMissionOuverte } from "@/lib/mission-ouverte";
+import { useOpenedMission } from "@/lib/mission-ouverte";
 
 /**
  * Une carte survolee l'emporte sur la colonne qui la contient.
@@ -36,9 +36,9 @@ import { useMissionOuverte } from "@/lib/mission-ouverte";
  * d'arrivee : sans cette preference, toute carte tombait en bas de colonne,
  * quel que soit l'endroit vise.
  */
-const prioriserLesCartes = (collisions: Collision[]) => {
-  const cartes = collisions.filter(({ id }) => typeof id === "number");
-  return cartes.length > 0 ? cartes : collisions;
+const prioritiseCards = (collisions: Collision[]) => {
+  const cards = collisions.filter(({ id }) => typeof id === "number");
+  return cards.length > 0 ? cards : collisions;
 };
 
 /**
@@ -47,24 +47,24 @@ const prioriserLesCartes = (collisions: Collision[]) => {
  * `closestCorners` seul visait la carte voisine plutot que la colonne survolee :
  * deposer dans une colonne vide envoyait la carte dans la colonne d'a cote.
  */
-const detectionDeCollision: CollisionDetection = (args) => {
-  const sousLeCurseur = pointerWithin(args);
-  if (sousLeCurseur.length > 0) return prioriserLesCartes(sousLeCurseur);
+const collisionDetection: CollisionDetection = (args) => {
+  const underCursor = pointerWithin(args);
+  if (underCursor.length > 0) return prioritiseCards(underCursor);
 
-  const recouvrement = rectIntersection(args);
-  if (recouvrement.length > 0) return prioriserLesCartes(recouvrement);
+  const overlap = rectIntersection(args);
+  if (overlap.length > 0) return prioritiseCards(overlap);
   return closestCorners(args);
 };
 
 /** Kanban des missions, une colonne par phase. */
 export function BoardPage() {
-  const { filtres, actif, definir, effacer } = useMissionFilters();
+  const { filters, hasFilter, set, clear } = useMissionFilters();
 
   // Le perimetre demande au serveur suit le filtre : les archivees n'arrivent
   // que lorsqu'on les reclame, et le tableau se recharge de lui-meme des que
   // ce choix change.
-  const board = useBoard(inclutLesArchivees(filtres));
-  const glissement = useBoardDrag(board);
+  const board = useBoard(inclutLesArchivees(filters));
+  const drag = useBoardDrag(board);
 
   // Une seule heure de reference pour tout le tableau : « il y a 3 h » ne doit
   // pas dependre du moment ou chaque carte se rend.
@@ -72,7 +72,7 @@ export function BoardPage() {
 
   // La mission ouverte vit dans l'URL : un panneau se partage par un lien, et
   // le retour arriere le referme, comme on s'y attend d'un ecran a part.
-  const panneau = useMissionOuverte();
+  const panel = useOpenedMission();
 
   // Les six phases restent affichees en toutes circonstances, meme vides : le
   // tableau garde sa forme d'un filtre a l'autre, et une colonne sans carte se
@@ -80,14 +80,14 @@ export function BoardPage() {
   //
   // Les colonnes sont calculees une fois : le decompte de la barre et celui de
   // chaque colonne doivent parler des memes cartes.
-  const colonnesAffichees = PHASES.map(({ statut }) => ({
-    statut,
-    cartes: filtrerMissions(board.colonnes?.[statut] ?? [], filtres),
+  const colonnesAffichees = PHASES.map(({ status }) => ({
+    status,
+    cards: filtrerMissions(board.columns?.[status] ?? [], filters),
   }));
 
-  const visibles = colonnesAffichees.reduce((total, c) => total + c.cartes.length, 0);
+  const visible = colonnesAffichees.reduce((total, c) => total + c.cards.length, 0);
   const total = PHASES.reduce(
-    (somme, { statut }) => somme + (board.colonnes?.[statut]?.length ?? 0),
+    (somme, { status }) => somme + (board.columns?.[status]?.length ?? 0),
     0,
   );
 
@@ -113,7 +113,7 @@ export function BoardPage() {
             // Sous filtre, la liste affichee n'est plus la liste rangee : un
             // depot y viserait un rang qui n'existe pas. Les cartes se figent
             // donc, et l'entete dit pourquoi plutot que de laisser chercher.
-            actif
+            hasFilter
               ? "Tableau filtré : les cartes ne se déplacent plus. Effacez les filtres pour les réorganiser."
               : "Glissez une mission pour changer sa phase ou la réordonner. L'ordre choisi est conservé."
           }
@@ -122,41 +122,41 @@ export function BoardPage() {
     >
       <div className="flex h-full flex-col">
         <MissionFilters
-          filtres={filtres}
-          actif={actif}
-          onChange={definir}
-          onEffacer={effacer}
-          visibles={visibles}
+          filters={filters}
+          hasFilter={hasFilter}
+          onChange={set}
+          onEffacer={clear}
+          visible={visible}
           total={total}
         />
 
-        {board.enErreur && (
+        {board.hasError && (
           <p className="mb-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
             Le déplacement n&apos;a pas pu être enregistré. Le tableau a été rechargé.
           </p>
         )}
 
-        {!board.colonnes ? (
+        {!board.columns ? (
           <p className="text-sm text-slate-500">Chargement…</p>
         ) : (
           <DndContext
             sensors={sensors}
-            collisionDetection={detectionDeCollision}
-            onDragStart={glissement.onDragStart}
-            onDragOver={glissement.onDragOver}
-            onDragEnd={glissement.onDragEnd}
-            onDragCancel={glissement.onDragCancel}
+            collisionDetection={collisionDetection}
+            onDragStart={drag.onDragStart}
+            onDragOver={drag.onDragOver}
+            onDragEnd={drag.onDragEnd}
+            onDragCancel={drag.onDragCancel}
           >
             <div className="flex min-h-0 flex-1 gap-4 overflow-x-auto pb-4">
-              {colonnesAffichees.map(({ statut, cartes }) => (
+              {colonnesAffichees.map(({ status, cards }) => (
                 <BoardColumn
-                  key={statut}
-                  statut={statut}
-                  cartes={cartes}
+                  key={status}
+                  status={status}
+                  cards={cards}
                   maintenant={maintenant}
-                  onIntervenantsChange={board.recharger}
-                  onOpen={panneau.ouvrir}
-                  figees={actif}
+                  onIntervenantsChange={board.reload}
+                  onOpen={panel.open}
+                  frozen={hasFilter}
                 />
               ))}
             </div>
@@ -169,12 +169,12 @@ export function BoardPage() {
               carte fantome affichee en permanence.
             */}
             <DragOverlay dropAnimation={null}>
-              {glissement.enDeplacement && (
+              {drag.isDragging && (
                 <div className="w-64 rotate-2 scale-[1.02] cursor-grabbing">
                   <ProjectCard
-                    carte={glissement.enDeplacement}
+                    card={drag.isDragging}
                     maintenant={maintenant}
-                    enDeplacement
+                    isDragging
                   />
                 </div>
               )}
@@ -183,12 +183,12 @@ export function BoardPage() {
         )}
       </div>
 
-      {panneau.missionOuverte && (
+      {panel.openedMission && (
         <ProjectPanel
-          key={panneau.missionOuverte}
-          projectId={panneau.missionOuverte}
-          onClose={panneau.fermer}
-          onMissionChanged={board.recharger}
+          key={panel.openedMission}
+          projectId={panel.openedMission}
+          onClose={panel.close}
+          onMissionChanged={board.reload}
         />
       )}
     </PageLayout>

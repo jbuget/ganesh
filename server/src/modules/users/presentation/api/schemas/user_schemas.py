@@ -13,11 +13,11 @@ class UserResponse(BaseModel):
     id: int
     email: str
     display_name: str
-    initiales: str
+    initials: str
     role: Role
-    actif: bool
+    is_active: bool
     #: Null tant que le compte ne s'est jamais connecte.
-    derniere_connexion: datetime | None = None
+    last_login_at: datetime | None = None
 
 
 class ChangeRoleRequest(BaseModel):
@@ -29,4 +29,4 @@ class ChangeRoleRequest(BaseModel):
 class SetActiveRequest(BaseModel):
     """Coupure ou retablissement de l'acces d'un collaborateur."""
 
-    actif: bool
+    is_active: bool

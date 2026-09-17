@@ -11,7 +11,7 @@ class MonthResponse(BaseModel):
     """Etat de saisie d'un mois."""
 
     user_id: int
-    mois: date
+    month: date
     state: MonthState
     is_writable: bool
     validated_at: datetime | None

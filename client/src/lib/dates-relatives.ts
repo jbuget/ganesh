@@ -16,8 +16,8 @@ export function depuis(iso: string, maintenant: Date): string {
   if (ecoule < HEURE) return `il y a ${Math.floor(ecoule / MINUTE)} min`;
   if (ecoule < JOUR) return `il y a ${Math.floor(ecoule / HEURE)} h`;
   if (ecoule < 7 * JOUR) {
-    const jours = Math.floor(ecoule / JOUR);
-    return jours === 1 ? "hier" : `il y a ${jours} j`;
+    const days = Math.floor(ecoule / JOUR);
+    return days === 1 ? "hier" : `il y a ${days} j`;
   }
 
   const MOIS = [

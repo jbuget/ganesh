@@ -1,21 +1,21 @@
 import type { Department } from "@/lib/api/generated/model";
 
 /** Departements de l'entreprise, dans l'ordre ou l'equipe les enonce. */
-export const DEPARTEMENTS: { valeur: Department; libelle: string }[] = [
-  { valeur: "administratif_financier", libelle: "Administratif & Financier" },
-  { valeur: "bailleurs", libelle: "Bailleurs" },
-  { valeur: "copropriete", libelle: "Copropriété" },
-  { valeur: "service_client", libelle: "Service client" },
-  { valeur: "operations", libelle: "Opérations" },
-  { valeur: "systeme_information", libelle: "Système d'information" },
-  { valeur: "ressources_humaines", libelle: "Ressources humaines" },
-  { valeur: "marketing_communication_rse", libelle: "Marketing, Communication & RSE" },
-  { valeur: "tertiaire", libelle: "Tertiaire" },
-  { valeur: "autre", libelle: "Autre" },
+export const DEPARTEMENTS: { value: Department; label: string }[] = [
+  { value: "finance_admin", label: "Administratif & Financier" },
+  { value: "landlords", label: "Bailleurs" },
+  { value: "condominium", label: "Copropriété" },
+  { value: "customer_service", label: "Service client" },
+  { value: "operations", label: "Opérations" },
+  { value: "information_systems", label: "Système d'information" },
+  { value: "human_resources", label: "Ressources humaines" },
+  { value: "marketing_communication_csr", label: "Marketing, Communication & RSE" },
+  { value: "commercial_real_estate", label: "Tertiaire" },
+  { value: "other", label: "Autre" },
 ];
 
-const PAR_VALEUR = new Map(DEPARTEMENTS.map((d) => [d.valeur, d.libelle]));
+const PAR_VALEUR = new Map(DEPARTEMENTS.map((d) => [d.value, d.label]));
 
-export function libelleDepartement(valeur: Department): string {
-  return PAR_VALEUR.get(valeur) ?? valeur;
+export function libelleDepartement(value: Department): string {
+  return PAR_VALEUR.get(value) ?? value;
 }

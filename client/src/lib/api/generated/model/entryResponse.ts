@@ -10,6 +10,6 @@
  */
 export interface EntryResponse {
   project_id: number;
-  jour: string;
-  valeur: number;
+  day: string;
+  value: number;
 }

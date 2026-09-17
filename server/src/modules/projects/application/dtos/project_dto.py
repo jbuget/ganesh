@@ -19,9 +19,9 @@ class CreateProjectCommand:
     actor_id: int
     label: str
     kind: ProjectKind
-    statut: ProjectStatus | None = None
+    status: ProjectStatus | None = None
     parent_id: int | None = None
-    estime_j: float | None = None
+    estimated_days: float | None = None
 
 
 @dataclass(frozen=True)
@@ -30,7 +30,7 @@ class ChangeProjectStatusCommand:
 
     actor_id: int
     project_id: int
-    statut: ProjectStatus
+    status: ProjectStatus
 
 
 #: Marque un champ absent de la commande, pour le distinguer d'une valeur nulle
@@ -45,12 +45,12 @@ class UpdateProjectCommand:
     actor_id: int
     project_id: int
     label: str | Any = ABSENT
-    statut: ProjectStatus | None | Any = ABSENT
-    estime_j: float | None | Any = ABSENT
-    categorie: ProjectCategory | None | Any = ABSENT
-    priorite: ProjectPriority | None | Any = ABSENT
-    date_mise_en_service: date | None | Any = ABSENT
-    actif: bool | Any = ABSENT
+    status: ProjectStatus | None | Any = ABSENT
+    estimated_days: float | None | Any = ABSENT
+    category: ProjectCategory | None | Any = ABSENT
+    priority: ProjectPriority | None | Any = ABSENT
+    go_live_date: date | None | Any = ABSENT
+    is_active: bool | Any = ABSENT
     parent_id: int | None | Any = ABSENT
     monday_item_id: str | None | Any = ABSENT
     monday_subitem_id: str | None | Any = ABSENT
@@ -65,10 +65,10 @@ class ProjectImportLine:
     """
 
     label: str
-    kind: ProjectKind = ProjectKind.PROJET
-    statut: ProjectStatus | None = ProjectStatus.EXPLORATION
+    kind: ProjectKind = ProjectKind.PROJECT
+    status: ProjectStatus | None = ProjectStatus.EXPLORATION
     parent_label: str | None = None
-    estime_j: float | None = None
+    estimated_days: float | None = None
     monday_item_id: str | None = None
     monday_subitem_id: str | None = None
 
@@ -78,16 +78,16 @@ class ImportProjectsCommand:
     """Import en masse du referentiel. Reserve aux managers."""
 
     actor_id: int
-    lignes: list[ProjectImportLine]
+    rows: list[ProjectImportLine]
 
 
 @dataclass
 class ImportReport:
     """Ce que l'import a fait, ligne par ligne."""
 
-    crees: int = 0
-    ignores: int = 0
-    erreurs: list[str] = field(default_factory=list)
+    created: int = 0
+    skipped: int = 0
+    errors: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -104,5 +104,5 @@ class MoveProjectCommand:
 
     actor_id: int
     project_id: int
-    statut: ProjectStatus
+    status: ProjectStatus
     position: int

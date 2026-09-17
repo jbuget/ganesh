@@ -11,10 +11,10 @@ from src.modules.projects.domain.entities.project_link import LinkIcon
 #: Services reconnus, par domaine. Un sous-domaine herite du sien : l'espace
 #: Slack d'une equipe vit sous `<equipe>.slack.com`.
 _ICONE_PAR_DOMAINE = {
-    "github.com": LinkIcon.DEPOT,
-    "gitlab.com": LinkIcon.DEPOT,
-    "bitbucket.org": LinkIcon.DEPOT,
-    "figma.com": LinkIcon.MAQUETTE,
+    "github.com": LinkIcon.REPOSITORY,
+    "gitlab.com": LinkIcon.REPOSITORY,
+    "bitbucket.org": LinkIcon.REPOSITORY,
+    "figma.com": LinkIcon.DESIGN,
     "notion.so": LinkIcon.DOCUMENT,
     "notion.site": LinkIcon.DOCUMENT,
     "slack.com": LinkIcon.DISCUSSION,
@@ -22,9 +22,9 @@ _ICONE_PAR_DOMAINE = {
     "monday.com": LinkIcon.TICKET,
     "atlassian.net": LinkIcon.TICKET,
     "linear.app": LinkIcon.TICKET,
-    "drive.google.com": LinkIcon.DOSSIER,
-    "sharepoint.com": LinkIcon.DOSSIER,
-    "dropbox.com": LinkIcon.DOSSIER,
+    "drive.google.com": LinkIcon.FOLDER,
+    "sharepoint.com": LinkIcon.FOLDER,
+    "dropbox.com": LinkIcon.FOLDER,
     "meet.google.com": LinkIcon.VIDEO,
     "zoom.us": LinkIcon.VIDEO,
     "loom.com": LinkIcon.VIDEO,
@@ -35,28 +35,28 @@ _ICONE_PAR_DOMAINE = {
 #: Google sert trois outils depuis `docs.google.com` : seul le chemin les separe.
 _ICONE_PAR_CHEMIN_GOOGLE = {
     "document": LinkIcon.DOCUMENT,
-    "spreadsheets": LinkIcon.TABLEUR,
+    "spreadsheets": LinkIcon.SPREADSHEET,
     "presentation": LinkIcon.PRESENTATION,
 }
 
 
-def deviner_icone(url: str) -> LinkIcon:
+def guess_icon(url: str) -> LinkIcon:
     """Propose une icone d'apres l'adresse. Une adresse inconnue reste neutre."""
     adresse = urlparse(url.strip())
     host = (adresse.hostname or "").lower()
 
-    if _correspond(host, "docs.google.com"):
+    if _matches(host, "docs.google.com"):
         premier_segment = adresse.path.lstrip("/").split("/")[0]
         return _ICONE_PAR_CHEMIN_GOOGLE.get(premier_segment, LinkIcon.DOCUMENT)
 
-    for domaine, icone in _ICONE_PAR_DOMAINE.items():
-        if _correspond(host, domaine):
-            return icone
+    for domaine, icon in _ICONE_PAR_DOMAINE.items():
+        if _matches(host, domaine):
+            return icon
 
-    return LinkIcon.LIEN
+    return LinkIcon.LINK
 
 
-def _correspond(host: str, domaine: str) -> bool:
+def _matches(host: str, domaine: str) -> bool:
     """Le domaine lui-meme, ou l'un de ses sous-domaines — et rien d'autre.
 
     La comparaison se fait sur un point : sans lui, `monfigma.com` passerait

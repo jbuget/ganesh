@@ -70,7 +70,7 @@ async def get_current_user(
     user = await provision.execute(identity)
     await session.commit()
 
-    if not user.actif:
+    if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Ce compte est desactive.",

@@ -36,7 +36,7 @@ class CreateProjectUseCase:
         if actor is None:
             raise EntityNotFoundError("Utilisateur inconnu.")
 
-        if command.kind is ProjectKind.LOT:
+        if command.kind is ProjectKind.WORK_PACKAGE:
             parent = (
                 await self._projects.get_by_id(command.parent_id)
                 if command.parent_id is not None
@@ -51,9 +51,9 @@ class CreateProjectUseCase:
                 id=None,
                 label=command.label,
                 kind=command.kind,
-                statut=command.statut,
+                status=command.status,
                 parent_id=command.parent_id,
-                estime_j=command.estime_j,
+                estimated_days=command.estimated_days,
             )
         )
 

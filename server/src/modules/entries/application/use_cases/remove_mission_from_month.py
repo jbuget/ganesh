@@ -44,33 +44,33 @@ class RemoveMissionFromMonthUseCase:
                 "Un utilisateur desactive ne peut plus modifier de saisie."
             )
 
-        month = await self._months.get(command.target_user_id, command.mois)
+        month = await self._months.get(command.target_user_id, command.month)
         if month is not None and not month.is_writable:
             raise ForbiddenActionError(
                 "Ce mois est valide : il doit etre rouvert par un manager."
             )
 
-        saisies = [
+        entries = [
             entry
             for entry in await self._entries.list_for_month(
-                command.target_user_id, command.mois
+                command.target_user_id, command.month
             )
             if entry.project_id == command.project_id
         ]
 
         retires = 0.0
-        for entry in saisies:
+        for entry in entries:
             await self._entries.delete(
-                command.target_user_id, command.project_id, entry.jour
+                command.target_user_id, command.project_id, entry.day
             )
             await self._audit_logs.add(
                 AuditLog.entry_clear(
                     actor_id=command.actor_id,
                     target_user_id=command.target_user_id,
                     project_id=command.project_id,
-                    jour=entry.jour,
-                    old_value=float(entry.valeur),
+                    day=entry.day,
+                    old_value=float(entry.value),
                 )
             )
-            retires += float(entry.valeur)
+            retires += float(entry.value)
         return retires

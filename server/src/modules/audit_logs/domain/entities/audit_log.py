@@ -44,7 +44,7 @@ class AuditLog:
     at: datetime = field(default_factory=datetime.now)
     target_user_id: int | None = None
     project_id: int | None = None
-    jour: date | None = None
+    day: date | None = None
     old_value: str | None = None
     new_value: str | None = None
     payload: dict[str, Any] | None = None
@@ -61,7 +61,7 @@ class AuditLog:
         actor_id: int,
         target_user_id: int,
         project_id: int,
-        jour: date,
+        day: date,
         old_value: float | None,
         new_value: float,
         at: datetime | None = None,
@@ -71,7 +71,7 @@ class AuditLog:
             actor_id=actor_id,
             target_user_id=target_user_id,
             project_id=project_id,
-            jour=jour,
+            day=day,
             old_value=_as_text(old_value),
             new_value=_as_text(new_value),
             at=at or datetime.now(),
@@ -83,7 +83,7 @@ class AuditLog:
         actor_id: int,
         target_user_id: int,
         project_id: int,
-        jour: date,
+        day: date,
         old_value: float | None,
         at: datetime | None = None,
     ) -> "AuditLog":
@@ -92,7 +92,7 @@ class AuditLog:
             actor_id=actor_id,
             target_user_id=target_user_id,
             project_id=project_id,
-            jour=jour,
+            day=day,
             old_value=_as_text(old_value),
             at=at or datetime.now(),
         )
@@ -102,14 +102,14 @@ class AuditLog:
         cls,
         actor_id: int,
         target_user_id: int,
-        mois: date,
+        month: date,
         at: datetime | None = None,
     ) -> "AuditLog":
         return cls(
             action=AuditAction.MONTH_VALIDATE,
             actor_id=actor_id,
             target_user_id=target_user_id,
-            jour=mois,
+            day=month,
             at=at or datetime.now(),
         )
 
@@ -118,14 +118,14 @@ class AuditLog:
         cls,
         actor_id: int,
         target_user_id: int,
-        mois: date,
+        month: date,
         at: datetime | None = None,
     ) -> "AuditLog":
         return cls(
             action=AuditAction.MONTH_REOPEN,
             actor_id=actor_id,
             target_user_id=target_user_id,
-            jour=mois,
+            day=month,
             at=at or datetime.now(),
         )
 

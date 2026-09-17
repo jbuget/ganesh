@@ -9,26 +9,26 @@ import { Button } from "@/components/ui/button";
 
 interface ProjectSheetTabProps {
   description: string | null;
-  onSave: (texte: string) => Promise<void>;
+  onSave: (body: string) => Promise<void>;
 }
 
 /** Redaction de la fiche, avec les titres qui l'articulent. */
 function Redaction({
-  valeur,
+  value,
   onSave,
   onCancel,
 }: {
-  valeur: string;
-  onSave: (texte: string) => Promise<void>;
+  value: string;
+  onSave: (body: string) => Promise<void>;
   onCancel: () => void;
 }) {
-  const [texte, setTexte] = useState(valeur);
+  const [body, setTexte] = useState(value);
   const [enCours, setEnCours] = useState(false);
 
   async function enregistrer() {
     setEnCours(true);
     try {
-      await onSave(texte);
+      await onSave(body);
     } finally {
       setEnCours(false);
     }
@@ -37,7 +37,7 @@ function Redaction({
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
       <RichTextEditor
-        valeur={valeur}
+        value={value}
         avecTitres
         pleineHauteur
         placeholder="Le problème, la solution, ce que le service couvre…"
@@ -71,10 +71,10 @@ export function ProjectSheetTab({ description, onSave }: ProjectSheetTabProps) {
   if (enEdition) {
     return (
       <Redaction
-        valeur={description ?? ""}
+        value={description ?? ""}
         onCancel={() => setEnEdition(false)}
-        onSave={async (texte) => {
-          await onSave(texte);
+        onSave={async (body) => {
+          await onSave(body);
           setEnEdition(false);
         }}
       />
@@ -93,7 +93,7 @@ export function ProjectSheetTab({ description, onSave }: ProjectSheetTabProps) {
       </button>
 
       {description ? (
-        <MarkdownView texte={description} />
+        <MarkdownView body={description} />
       ) : (
         <p className="text-sm text-slate-400">
           Aucune fiche. Décrivez le problème, la solution et ce que le service couvre.

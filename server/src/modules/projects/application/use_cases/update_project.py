@@ -19,12 +19,12 @@ from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 #: Champs modifiables, dans l'ordre ou ils sont appliques.
 CHAMPS = (
     "label",
-    "statut",
-    "estime_j",
-    "categorie",
-    "priorite",
-    "date_mise_en_service",
-    "actif",
+    "status",
+    "estimated_days",
+    "category",
+    "priority",
+    "go_live_date",
+    "is_active",
     "parent_id",
     "monday_item_id",
     "monday_subitem_id",
@@ -65,35 +65,35 @@ class UpdateProjectUseCase:
             ensure_can_be_parent(parent)
 
         changements: list[tuple[str, object, object]] = []
-        for champ in CHAMPS:
-            demande = getattr(command, champ)
+        for field in CHAMPS:
+            demande = getattr(command, field)
             if demande is ABSENT:
                 continue
-            ancien = getattr(project, champ)
+            ancien = getattr(project, field)
             if ancien == demande:
                 continue
-            changements.append((champ, ancien, demande))
-            if champ == "actif":
+            changements.append((field, ancien, demande))
+            if field == "is_active":
                 # Sortir du referentiel se date, y revenir efface la date :
                 # c'est l'entite qui tient cette regle, pas l'affectation.
                 project.archive() if demande is False else project.unarchive()
             else:
-                setattr(project, champ, demande)
+                setattr(project, field, demande)
 
         # Rejoue les invariants de l'entite sur l'etat resultant.
         project.__post_init__()
 
         await self._projects.update(project)
 
-        for champ, ancien, nouveau in changements:
+        for field, ancien, new_one in changements:
             await self._audit_logs.add(
                 AuditLog(
                     action=AuditAction.PROJECT_UPDATE,
                     actor_id=command.actor_id,
                     project_id=project.id,
                     old_value=None if ancien is None else str(ancien),
-                    new_value=None if nouveau is None else str(nouveau),
-                    payload={"champ": champ},
+                    new_value=None if new_one is None else str(new_one),
+                    payload={"champ": field},
                 )
             )
         return project

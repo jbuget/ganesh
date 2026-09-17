@@ -38,8 +38,8 @@ export type validateMonthResponseError = validateMonthResponse422 & {
 export type validateMonthResponse =
   validateMonthResponseSuccess | validateMonthResponseError;
 
-export const getValidateMonthUrl = (mois: string) => {
-  return `/api/v1/months/${mois}/validate`;
+export const getValidateMonthUrl = (month: string) => {
+  return `/api/v1/months/${month}/validate`;
 };
 
 /**
@@ -47,10 +47,10 @@ export const getValidateMonthUrl = (mois: string) => {
  * @summary Validate Month
  */
 export const validateMonth = async (
-  mois: string,
+  month: string,
   options?: Parameters<typeof bffFetcher>[1],
 ): Promise<validateMonthResponse> => {
-  return bffFetcher<validateMonthResponse>(getValidateMonthUrl(mois), {
+  return bffFetcher<validateMonthResponse>(getValidateMonthUrl(month), {
     ...options,
     method: "POST",
   });
@@ -88,9 +88,9 @@ export const getValidateMonthMutationOptions = <
     Awaited<ReturnType<typeof validateMonth>>,
     ValidateMonthMutationVariables
   > = (props) => {
-    const { mois } = props ?? {};
+    const { month } = props ?? {};
 
-    return validateMonth(mois, requestOptions);
+    return validateMonth(month, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -101,7 +101,7 @@ export type ValidateMonthMutationResult = NonNullable<
 >;
 
 export type ValidateMonthMutationError = HTTPValidationError;
-export type ValidateMonthMutationVariables = { mois: string };
+export type ValidateMonthMutationVariables = { month: string };
 
 /**
  * @summary Validate Month
@@ -144,7 +144,7 @@ export type reopenMonthResponseError = reopenMonthResponse422 & {
 
 export type reopenMonthResponse = reopenMonthResponseSuccess | reopenMonthResponseError;
 
-export const getReopenMonthUrl = (mois: string, params: ReopenMonthParams) => {
+export const getReopenMonthUrl = (month: string, params: ReopenMonthParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -156,8 +156,8 @@ export const getReopenMonthUrl = (mois: string, params: ReopenMonthParams) => {
   const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0
-    ? `/api/v1/months/${mois}/reopen?${stringifiedParams}`
-    : `/api/v1/months/${mois}/reopen`;
+    ? `/api/v1/months/${month}/reopen?${stringifiedParams}`
+    : `/api/v1/months/${month}/reopen`;
 };
 
 /**
@@ -165,11 +165,11 @@ export const getReopenMonthUrl = (mois: string, params: ReopenMonthParams) => {
  * @summary Reopen Month
  */
 export const reopenMonth = async (
-  mois: string,
+  month: string,
   params: ReopenMonthParams,
   options?: Parameters<typeof bffFetcher>[1],
 ): Promise<reopenMonthResponse> => {
-  return bffFetcher<reopenMonthResponse>(getReopenMonthUrl(mois, params), {
+  return bffFetcher<reopenMonthResponse>(getReopenMonthUrl(month, params), {
     ...options,
     method: "POST",
   });
@@ -207,9 +207,9 @@ export const getReopenMonthMutationOptions = <
     Awaited<ReturnType<typeof reopenMonth>>,
     ReopenMonthMutationVariables
   > = (props) => {
-    const { mois, params } = props ?? {};
+    const { month, params } = props ?? {};
 
-    return reopenMonth(mois, params, requestOptions);
+    return reopenMonth(month, params, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -220,7 +220,7 @@ export type ReopenMonthMutationResult = NonNullable<
 >;
 
 export type ReopenMonthMutationError = HTTPValidationError;
-export type ReopenMonthMutationVariables = { mois: string; params: ReopenMonthParams };
+export type ReopenMonthMutationVariables = { month: string; params: ReopenMonthParams };
 
 /**
  * @summary Reopen Month

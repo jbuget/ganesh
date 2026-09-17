@@ -33,38 +33,38 @@ class SetUserActiveUseCase:
         if target is None:
             raise EntityNotFoundError("Collaborateur inconnu.")
 
-        if not self._is_allowed(actor, target, command.actif):
+        if not self._is_allowed(actor, target, command.is_active):
             raise ForbiddenActionError(
                 "Seul un manager peut couper l'acces d'un collaborateur, "
                 "et nul ne peut couper le sien."
             )
 
-        previous = target.actif
-        if previous == command.actif:
+        previous = target.is_active
+        if previous == command.is_active:
             # Un clic sans effet n'a pas a laisser de trace.
             return target
 
-        target.actif = command.actif
+        target.is_active = command.is_active
         await self._users.update(target)
 
         await self._audit_logs.add(
             AuditLog(
                 action=(
                     AuditAction.USER_ACTIVATE
-                    if command.actif
+                    if command.is_active
                     else AuditAction.USER_DEACTIVATE
                 ),
                 actor_id=command.actor_id,
                 target_user_id=command.target_user_id,
                 old_value=str(previous),
-                new_value=str(command.actif),
+                new_value=str(command.is_active),
             )
         )
         return target
 
     @staticmethod
-    def _is_allowed(actor: User, target: User, actif: bool) -> bool:
+    def _is_allowed(actor: User, target: User, is_active: bool) -> bool:
         """Retablir un acces n'enferme personne dehors : seule la coupure est bridee."""
-        if actif:
+        if is_active:
             return actor.can_manage_teammates()
         return actor.can_deactivate(target)

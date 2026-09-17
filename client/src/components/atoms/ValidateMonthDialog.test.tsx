@@ -12,7 +12,7 @@ function renderDialog(props: Partial<Parameters<typeof ValidateMonthDialog>[0]> 
     <ValidateMonthDialog
       open
       onOpenChange={onOpenChange}
-      mois="mars 2026"
+      month="mars 2026"
       totalSaisi={20}
       joursOuvres={22}
       onConfirm={onConfirm}

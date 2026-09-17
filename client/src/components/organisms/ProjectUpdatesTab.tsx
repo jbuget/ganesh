@@ -31,7 +31,7 @@ export function ProjectUpdatesTab({
   focusRedaction = false,
 }: ProjectUpdatesTabProps) {
   const suivi = useProjectUpdates(projectId, onChange);
-  const [texte, setTexte] = useState("");
+  const [body, setTexte] = useState("");
   const [enCours, setEnCours] = useState(false);
   // Remonter la cle vide l'editeur : son contenu vit dans ProseMirror, pas
   // dans React, et il ne se reinitialise pas en changeant une propriete.
@@ -40,7 +40,7 @@ export function ProjectUpdatesTab({
   async function publier() {
     setEnCours(true);
     try {
-      await suivi.publier(texte);
+      await suivi.publier(body);
       setTexte("");
       setCleDeRedaction((cle) => cle + 1);
     } finally {
@@ -53,15 +53,15 @@ export function ProjectUpdatesTab({
       <div className="space-y-2">
         <RichTextEditor
           key={cleDeRedaction}
-          valeur=""
+          value=""
           placeholder="Rédigez une mise à jour…"
           autoFocus={focusRedaction}
           onChange={setTexte}
           onSubmit={() => {
-            if (texte.trim()) void publier();
+            if (body.trim()) void publier();
           }}
         />
-        {texte.trim() && (
+        {body.trim() && (
           <div className="flex items-center gap-2">
             <Button size="sm" disabled={enCours} onClick={() => void publier()}>
               Publier
@@ -95,7 +95,7 @@ export function ProjectUpdatesTab({
             key={maj.id}
             maj={maj}
             maintenant={maintenant}
-            onEdit={(texte) => suivi.corriger(maj.id, texte)}
+            onEdit={(body) => suivi.corriger(maj.id, body)}
             onRemove={() => suivi.retirer(maj.id)}
           />
         ))}

@@ -11,5 +11,5 @@ class ProjectRole(StrEnum):
     personne tient souvent les deux roles.
     """
 
-    INTERVENANT = "intervenant"
-    REFERENT = "referent"
+    CONTRIBUTOR = "contributor"
+    LEAD = "lead"

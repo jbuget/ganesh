@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  AUCUN_FILTRE,
+  NO_FILTER,
   ecrireFiltres,
   filtreActif,
   filtrerMissions,
@@ -11,24 +11,24 @@ import {
 } from "./mission-filters";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 
-const carte = (over: Record<string, unknown> = {}): BoardCardResponse =>
+const card = (over: Record<string, unknown> = {}): BoardCardResponse =>
   ({
-    consomme_j: 0,
-    intervenants: [{ id: 1, display_name: "Léa Chen", initiales: "LC" }],
-    commentaires: 0,
-    sous_projets: 0,
+    consumed_days: 0,
+    contributors: [{ id: 1, display_name: "Léa Chen", initials: "LC" }],
+    comments: 0,
+    sub_projects: 0,
     parent: null,
     ...over,
     project: {
       id: 1,
       label: "Portail bailleurs",
-      kind: "projet",
-      statut: "realisation",
+      kind: "project",
+      status: "build",
       parent_id: null,
-      actif: true,
-      estime_j: 20,
-      categorie: "innover_differencier",
-      date_mise_en_service: null,
+      is_active: true,
+      estimated_days: 20,
+      category: "innovate_differentiate",
+      go_live_date: null,
       position: 0,
       monday_item_id: null,
       monday_subitem_id: null,
@@ -38,205 +38,204 @@ const carte = (over: Record<string, unknown> = {}): BoardCardResponse =>
     },
   }) as BoardCardResponse;
 
-const filtres = (over: Partial<MissionFilters> = {}): MissionFilters => ({
-  ...AUCUN_FILTRE,
+const filters = (over: Partial<MissionFilters> = {}): MissionFilters => ({
+  ...NO_FILTER,
   ...over,
 });
 
 describe("filtreActif", () => {
   it("ne voit aucun filtre sur des critères vides", () => {
-    expect(filtreActif(AUCUN_FILTRE)).toBe(false);
+    expect(filtreActif(NO_FILTER)).toBe(false);
   });
 
   it("ignore un nom fait d'espaces", () => {
-    expect(filtreActif(filtres({ nom: "   " }))).toBe(false);
+    expect(filtreActif(filters({ name: "   " }))).toBe(false);
   });
 
   it("se déclenche dès qu'un critère est posé", () => {
-    expect(filtreActif(filtres({ phases: ["cadrage"] }))).toBe(true);
-    expect(filtreActif(filtres({ nom: "portail" }))).toBe(true);
+    expect(filtreActif(filters({ phases: ["scoping"] }))).toBe(true);
+    expect(filtreActif(filters({ name: "portail" }))).toBe(true);
   });
 });
 
 describe("recherche par nom", () => {
   it("retient une mission dont le nom contient la recherche", () => {
-    expect(filtrerMissions([carte()], filtres({ nom: "bailleurs" }))).toHaveLength(1);
+    expect(filtrerMissions([card()], filters({ name: "bailleurs" }))).toHaveLength(1);
   });
 
   it("ignore la casse et les accents", () => {
-    const cartes = [carte({ project: { label: "Refonte extranet copropriété" } })];
+    const cards = [card({ project: { label: "Refonte extranet copropriété" } })];
 
-    expect(filtrerMissions(cartes, filtres({ nom: "COPROPRIETE" }))).toHaveLength(1);
+    expect(filtrerMissions(cards, filters({ name: "COPROPRIETE" }))).toHaveLength(1);
   });
 
   it("écarte ce qui ne correspond pas", () => {
-    expect(filtrerMissions([carte()], filtres({ nom: "facturation" }))).toHaveLength(0);
+    expect(filtrerMissions([card()], filters({ name: "facturation" }))).toHaveLength(0);
   });
 });
 
 describe("critères à choix multiples", () => {
   it("retient les missions de l'une des catégories choisies", () => {
-    const cartes = [
-      carte({ project: { id: 1, categorie: "innover_differencier" } }),
-      carte({ project: { id: 2, categorie: "structurer_plateforme" } }),
-      carte({ project: { id: 3, categorie: null } }),
+    const cards = [
+      card({ project: { id: 1, category: "innovate_differentiate" } }),
+      card({ project: { id: 2, category: "structure_platform" } }),
+      card({ project: { id: 3, category: null } }),
     ];
 
-    const retenues = filtrerMissions(
-      cartes,
-      filtres({ categories: ["innover_differencier", "structurer_plateforme"] }),
+    const kept = filtrerMissions(
+      cards,
+      filters({ categories: ["innovate_differentiate", "structure_platform"] }),
     );
 
-    expect(retenues.map((c) => c.project.id)).toEqual([1, 2]);
+    expect(kept.map((c) => c.project.id)).toEqual([1, 2]);
   });
 
   it("retient les missions de l'une des priorités choisies", () => {
-    const cartes = [
-      carte({ project: { id: 1, priorite: "critique" } }),
-      carte({ project: { id: 2, priorite: "basse" } }),
-      carte({ project: { id: 3, priorite: null } }),
+    const cards = [
+      card({ project: { id: 1, priority: "critical" } }),
+      card({ project: { id: 2, priority: "low" } }),
+      card({ project: { id: 3, priority: null } }),
     ];
 
-    const retenues = filtrerMissions(cartes, filtres({ priorites: ["critique"] }));
+    const kept = filtrerMissions(cards, filters({ priorities: ["critical"] }));
 
-    expect(retenues.map((c) => c.project.id)).toEqual([1]);
+    expect(kept.map((c) => c.project.id)).toEqual([1]);
   });
 
   it("retient les missions portées par l'un des intervenants choisis", () => {
-    const cartes = [
-      carte({ project: { id: 1 }, intervenants: [{ id: 7 } as never] }),
-      carte({ project: { id: 2 }, intervenants: [] }),
+    const cards = [
+      card({ project: { id: 1 }, contributors: [{ id: 7 } as never] }),
+      card({ project: { id: 2 }, contributors: [] }),
     ];
 
-    const retenues = filtrerMissions(cartes, filtres({ intervenants: [7] }));
+    const kept = filtrerMissions(cards, filters({ contributors: [7] }));
 
-    expect(retenues.map((c) => c.project.id)).toEqual([1]);
+    expect(kept.map((c) => c.project.id)).toEqual([1]);
   });
 
   it("distingue les projets de leurs sous-projets", () => {
-    const cartes = [
-      carte({ project: { id: 1, kind: "projet" } }),
-      carte({ project: { id: 2, kind: "lot", parent_id: 1 } }),
+    const cards = [
+      card({ project: { id: 1, kind: "project" } }),
+      card({ project: { id: 2, kind: "work_package", parent_id: 1 } }),
     ];
 
     expect(
-      filtrerMissions(cartes, filtres({ types: ["lot"] })).map((c) => c.project.id),
+      filtrerMissions(cards, filters({ types: ["work_package"] })).map(
+        (c) => c.project.id,
+      ),
     ).toEqual([2]);
-    expect(filtrerMissions(cartes, filtres({ types: ["projet", "lot"] }))).toHaveLength(
-      2,
-    );
+    expect(
+      filtrerMissions(cards, filters({ types: ["project", "work_package"] })),
+    ).toHaveLength(2);
   });
 
   it("combine les critères : tous doivent être satisfaits", () => {
-    const cartes = [
-      carte({
-        project: { id: 1, label: "Portail", categorie: "innover_differencier" },
+    const cards = [
+      card({
+        project: { id: 1, label: "Portail", category: "innovate_differentiate" },
       }),
-      carte({
-        project: { id: 2, label: "Portail", categorie: "structurer_plateforme" },
+      card({
+        project: { id: 2, label: "Portail", category: "structure_platform" },
       }),
     ];
 
-    const retenues = filtrerMissions(
-      cartes,
-      filtres({ nom: "portail", categories: ["structurer_plateforme"] }),
+    const kept = filtrerMissions(
+      cards,
+      filters({ name: "portail", categories: ["structure_platform"] }),
     );
 
-    expect(retenues.map((c) => c.project.id)).toEqual([2]);
+    expect(kept.map((c) => c.project.id)).toEqual([2]);
   });
 });
 
 describe("missions archivées", () => {
-  const cartes = [
-    carte({ project: { id: 1, actif: true } }),
-    carte({ project: { id: 2, actif: false } }),
+  const cards = [
+    card({ project: { id: 1, is_active: true } }),
+    card({ project: { id: 2, is_active: false } }),
   ];
 
   it("les écarte tant qu'on ne les demande pas", () => {
-    const retenues = filtrerMissions(cartes, AUCUN_FILTRE);
+    const kept = filtrerMissions(cards, NO_FILTER);
 
-    expect(retenues.map((c) => c.project.id)).toEqual([1]);
+    expect(kept.map((c) => c.project.id)).toEqual([1]);
   });
 
   it("ne montre qu'elles quand on ne demande qu'elles", () => {
-    const retenues = filtrerMissions(cartes, filtres({ etats: ["archivee"] }));
+    const kept = filtrerMissions(cards, filters({ states: ["archivee"] }));
 
-    expect(retenues.map((c) => c.project.id)).toEqual([2]);
+    expect(kept.map((c) => c.project.id)).toEqual([2]);
   });
 
   it("montre les deux quand les deux états sont cochés", () => {
-    const retenues = filtrerMissions(
-      cartes,
-      filtres({ etats: ["active", "archivee"] }),
-    );
+    const kept = filtrerMissions(cards, filters({ states: ["active", "archivee"] }));
 
-    expect(retenues.map((c) => c.project.id)).toEqual([1, 2]);
+    expect(kept.map((c) => c.project.id)).toEqual([1, 2]);
   });
 
   it("ne les redemande au serveur que si elles sont voulues", () => {
-    expect(inclutLesArchivees(AUCUN_FILTRE)).toBe(false);
-    expect(inclutLesArchivees(filtres({ etats: ["active"] }))).toBe(false);
-    expect(inclutLesArchivees(filtres({ etats: ["archivee"] }))).toBe(true);
+    expect(inclutLesArchivees(NO_FILTER)).toBe(false);
+    expect(inclutLesArchivees(filters({ states: ["active"] }))).toBe(false);
+    expect(inclutLesArchivees(filters({ states: ["archivee"] }))).toBe(true);
   });
 
   it("compte comme un filtre : le tableau n'est plus la vue de pilotage", () => {
-    expect(filtreActif(filtres({ etats: ["archivee"] }))).toBe(true);
+    expect(filtreActif(filters({ states: ["archivee"] }))).toBe(true);
   });
 });
 
 describe("filtrage par phase", () => {
-  const cartes = [
-    carte({ project: { id: 1, statut: "realisation" } }),
-    carte({ project: { id: 2, statut: "cadrage" } }),
+  const cards = [
+    card({ project: { id: 1, status: "build" } }),
+    card({ project: { id: 2, status: "scoping" } }),
   ];
 
   it("garde toutes les missions quand aucune phase n'est choisie", () => {
-    expect(filtrerMissions(cartes, AUCUN_FILTRE)).toHaveLength(2);
+    expect(filtrerMissions(cards, NO_FILTER)).toHaveLength(2);
   });
 
   it("ne garde que les missions des phases choisies", () => {
-    const retenues = filtrerMissions(cartes, filtres({ phases: ["realisation"] }));
+    const kept = filtrerMissions(cards, filters({ phases: ["build"] }));
 
-    expect(retenues.map((c) => c.project.id)).toEqual([1]);
+    expect(kept.map((c) => c.project.id)).toEqual([1]);
   });
 });
 
 describe("filtres portés par l'URL", () => {
   it("relit ce qu'il a écrit", () => {
-    const choisis = filtres({
-      nom: "portail",
-      phases: ["cadrage", "realisation"],
-      categories: ["innover_differencier"],
-      priorites: ["haute"],
-      intervenants: [3, 7],
-      types: ["lot"],
-      etats: ["archivee"],
+    const chosen = filters({
+      name: "portail",
+      phases: ["scoping", "build"],
+      categories: ["innovate_differentiate"],
+      priorities: ["high"],
+      contributors: [3, 7],
+      types: ["work_package"],
+      states: ["archivee"],
     });
 
     const params = new URLSearchParams();
-    ecrireFiltres(params, choisis);
+    ecrireFiltres(params, chosen);
 
-    expect(lireFiltres(params)).toEqual(choisis);
+    expect(lireFiltres(params)).toEqual(chosen);
   });
 
   it("n'écrit rien quand aucun filtre n'est posé", () => {
     const params = new URLSearchParams("mission=12");
-    ecrireFiltres(params, AUCUN_FILTRE);
+    ecrireFiltres(params, NO_FILTER);
 
     expect(params.toString()).toBe("mission=12");
   });
 
   it("laisse les autres paramètres en place", () => {
-    const params = new URLSearchParams("mission=12&phase=cadrage");
-    ecrireFiltres(params, filtres({ phases: ["realisation"] }));
+    const params = new URLSearchParams("mission=12&phase=scoping");
+    ecrireFiltres(params, filters({ phases: ["build"] }));
 
     expect(params.get("mission")).toBe("12");
-    expect(params.getAll("phase")).toEqual(["realisation"]);
+    expect(params.getAll("phase")).toEqual(["build"]);
   });
 
   it("ignore une valeur inconnue plutôt que de vider l'écran", () => {
-    const params = new URLSearchParams("phase=sieste&intervenant=abc");
+    const params = new URLSearchParams("phase=sieste&contributor=abc");
 
-    expect(lireFiltres(params)).toEqual(AUCUN_FILTRE);
+    expect(lireFiltres(params)).toEqual(NO_FILTER);
   });
 });

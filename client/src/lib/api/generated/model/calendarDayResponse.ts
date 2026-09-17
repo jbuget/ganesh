@@ -9,7 +9,7 @@
  * Un jour du mois et sa nature.
  */
 export interface CalendarDayResponse {
-  jour: string;
+  day: string;
   kind: string;
   label?: string | null;
   is_off_day: boolean;

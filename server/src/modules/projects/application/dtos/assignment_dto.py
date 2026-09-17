@@ -12,4 +12,4 @@ class AssignmentCommand:
     actor_id: int
     project_id: int
     member_id: int
-    role: ProjectRole = ProjectRole.INTERVENANT
+    role: ProjectRole = ProjectRole.CONTRIBUTOR

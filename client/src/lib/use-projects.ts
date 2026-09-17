@@ -8,12 +8,12 @@ import type { ImportReportResponse, ProjectKind } from "@/lib/api/generated/mode
 import { mutationResult, useCurrentUser, useProjects } from "@/lib/api/queries";
 import { parseProjectsCsv } from "@/lib/csv-import";
 import {
-  AUCUN_FILTRE,
+  NO_FILTER,
   filtrerMissions,
   inclutLesArchivees,
   type MissionFilters,
 } from "@/lib/mission-filters";
-import { AUCUN_TRI, type TriMissions } from "@/lib/mission-sort";
+import { NO_SORT, type MissionSort } from "@/lib/mission-sort";
 import { buildProjectTree, offProjectActivities } from "@/lib/project-tree";
 
 /**
@@ -25,23 +25,23 @@ import { buildProjectTree, offProjectActivities } from "@/lib/project-tree";
  * rangee, sans avoir a savoir comment.
  */
 export function useProjectsScreen(
-  filtres: MissionFilters = AUCUN_FILTRE,
-  tri: TriMissions = AUCUN_TRI,
+  filters: MissionFilters = NO_FILTER,
+  sorted: MissionSort = NO_SORT,
 ) {
   const queryClient = useQueryClient();
   const { user: me } = useCurrentUser();
-  const { missions, isLoading } = useProjects(inclutLesArchivees(filtres));
-  const retenues = filtrerMissions(missions, filtres);
+  const { missions, isLoading } = useProjects(inclutLesArchivees(filters));
+  const kept = filtrerMissions(missions, filters);
   // On retient ce qui est deplie, pas ce qui est replie : le referentiel
   // s'ouvre sur ses projets, et les sous-projets se demandent. Une mission
   // creee en cours de route arrive donc repliee, comme les autres.
   const [deplies, setDeplies] = useState<ReadonlySet<number>>(() => new Set());
 
-  const basculer = useCallback((id: number) => {
+  const toggle = useCallback((id: number) => {
     setDeplies((actuels) => {
-      const suivants = new Set(actuels);
-      if (!suivants.delete(id)) suivants.add(id);
-      return suivants;
+      const next_ones = new Set(actuels);
+      if (!next_ones.delete(id)) next_ones.add(id);
+      return next_ones;
     });
   }, []);
 
@@ -52,16 +52,16 @@ export function useProjectsScreen(
   return {
     isLoading,
     isManager: me?.role === "MANAGER",
-    arbre: buildProjectTree(retenues, tri),
-    activites: offProjectActivities(retenues),
+    tree: buildProjectTree(kept, sorted),
+    activities: offProjectActivities(kept),
 
     /** Missions retenues, et missions que le referentiel porte en tout. */
-    visibles: retenues.length,
+    visible: kept.length,
     total: missions.length,
 
     /** Si les sous-projets d'une mission se montrent. */
     estDeplie: (id: number) => deplies.has(id),
-    basculer,
+    toggle,
 
     /** Relit le referentiel apres une modification faite dans le panneau. */
     refresh,
@@ -70,17 +70,17 @@ export function useProjectsScreen(
       const cree = await createProject({
         label,
         kind,
-        statut: "exploration",
+        status: "exploration",
         ...(parentId ? { parent_id: parentId } : {}),
       });
       await refresh();
       return mutationResult(cree);
     },
 
-    async importCsv(contenu: string): Promise<ImportReportResponse> {
-      const rapport = await importProjects({ lignes: parseProjectsCsv(contenu) });
+    async importCsv(content: string): Promise<ImportReportResponse> {
+      const report = await importProjects({ rows: parseProjectsCsv(content) });
       await refresh();
-      return mutationResult<ImportReportResponse>(rapport);
+      return mutationResult<ImportReportResponse>(report);
     },
   };
 }

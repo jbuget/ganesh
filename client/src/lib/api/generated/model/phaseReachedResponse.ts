@@ -10,7 +10,7 @@ import type { ProjectStatus } from "./projectStatus";
  * Date a laquelle une mission est entree dans une phase.
  */
 export interface PhaseReachedResponse {
-  statut: ProjectStatus;
-  libelle: string;
+  status: ProjectStatus;
+  label: string;
   reached_at: string;
 }

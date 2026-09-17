@@ -2,7 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { useMissionFilters } from "./use-mission-filters";
-import { useMissionOuverte } from "./mission-ouverte";
+import { useOpenedMission } from "./mission-ouverte";
 
 beforeEach(() => {
   window.history.replaceState(null, "", "/kanban");
@@ -12,27 +12,27 @@ describe("useMissionFilters", () => {
   it("part d'un tableau sans filtre", () => {
     const { result } = renderHook(() => useMissionFilters());
 
-    expect(result.current.actif).toBe(false);
+    expect(result.current.hasFilter).toBe(false);
   });
 
   it("relit dans l'URL le critère qu'on vient de poser", () => {
     const { result } = renderHook(() => useMissionFilters());
 
-    act(() => result.current.definir({ phases: ["realisation"] }));
+    act(() => result.current.set({ phases: ["build"] }));
 
-    expect(result.current.filtres.phases).toEqual(["realisation"]);
-    expect(window.location.search).toContain("phase=realisation");
+    expect(result.current.filters.phases).toEqual(["build"]);
+    expect(window.location.search).toContain("phase=build");
   });
 
   it("garde les autres critères en changeant l'un d'eux", () => {
     const { result } = renderHook(() => useMissionFilters());
 
-    act(() => result.current.definir({ phases: ["cadrage"] }));
-    act(() => result.current.definir({ nom: "portail" }));
+    act(() => result.current.set({ phases: ["scoping"] }));
+    act(() => result.current.set({ name: "portail" }));
 
-    expect(result.current.filtres).toMatchObject({
-      phases: ["cadrage"],
-      nom: "portail",
+    expect(result.current.filters).toMatchObject({
+      phases: ["scoping"],
+      name: "portail",
     });
   });
 
@@ -40,8 +40,8 @@ describe("useMissionFilters", () => {
     const profondeur = window.history.length;
     const { result } = renderHook(() => useMissionFilters());
 
-    act(() => result.current.definir({ nom: "por" }));
-    act(() => result.current.definir({ nom: "port" }));
+    act(() => result.current.set({ name: "por" }));
+    act(() => result.current.set({ name: "port" }));
 
     expect(window.history.length).toBe(profondeur);
   });
@@ -49,35 +49,35 @@ describe("useMissionFilters", () => {
   it("rend le tableau entier une fois effacé", () => {
     const { result } = renderHook(() => useMissionFilters());
 
-    act(() => result.current.definir({ phases: ["cadrage"], nom: "portail" }));
-    act(() => result.current.effacer());
+    act(() => result.current.set({ phases: ["scoping"], name: "portail" }));
+    act(() => result.current.clear());
 
-    expect(result.current.actif).toBe(false);
+    expect(result.current.hasFilter).toBe(false);
     expect(window.location.search).toBe("");
   });
 });
 
 describe("cohabitation avec le panneau mission", () => {
   it("ouvrir une mission ne perd pas les filtres posés", () => {
-    const { result: filtres } = renderHook(() => useMissionFilters());
-    const { result: panneau } = renderHook(() => useMissionOuverte());
+    const { result: filters } = renderHook(() => useMissionFilters());
+    const { result: panel } = renderHook(() => useOpenedMission());
 
-    act(() => filtres.current.definir({ phases: ["cadrage"] }));
-    act(() => panneau.current.ouvrir(12));
+    act(() => filters.current.set({ phases: ["scoping"] }));
+    act(() => panel.current.open(12));
 
-    expect(panneau.current.missionOuverte).toBe(12);
-    expect(filtres.current.filtres.phases).toEqual(["cadrage"]);
+    expect(panel.current.openedMission).toBe(12);
+    expect(filters.current.filters.phases).toEqual(["scoping"]);
   });
 
   it("refermer le panneau laisse les filtres en place", () => {
-    const { result: filtres } = renderHook(() => useMissionFilters());
-    const { result: panneau } = renderHook(() => useMissionOuverte());
+    const { result: filters } = renderHook(() => useMissionFilters());
+    const { result: panel } = renderHook(() => useOpenedMission());
 
-    act(() => filtres.current.definir({ nom: "portail" }));
-    act(() => panneau.current.ouvrir(12));
-    act(() => panneau.current.fermer());
+    act(() => filters.current.set({ name: "portail" }));
+    act(() => panel.current.open(12));
+    act(() => panel.current.close());
 
-    expect(panneau.current.missionOuverte).toBeNull();
-    expect(filtres.current.filtres.nom).toBe("portail");
+    expect(panel.current.openedMission).toBeNull();
+    expect(filters.current.filters.name).toBe("portail");
   });
 });

@@ -11,6 +11,6 @@ describe("libelleRole", () => {
 
 describe("ROLES", () => {
   it("énumère les deux rôles de l'application", () => {
-    expect(ROLES.map((role) => role.valeur)).toEqual(["TEAMMATE", "MANAGER"]);
+    expect(ROLES.map((role) => role.value)).toEqual(["TEAMMATE", "MANAGER"]);
   });
 });

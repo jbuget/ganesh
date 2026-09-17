@@ -17,7 +17,7 @@ import { formatTotal } from "@/lib/dates";
 interface ValidateMonthDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  mois: string;
+  month: string;
   totalSaisi: number;
   joursOuvres: number;
   onConfirm: () => Promise<void>;
@@ -33,7 +33,7 @@ interface ValidateMonthDialogProps {
 export function ValidateMonthDialog({
   open,
   onOpenChange,
-  mois,
+  month,
   totalSaisi,
   joursOuvres,
   onConfirm,
@@ -60,7 +60,7 @@ export function ValidateMonthDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="capitalize">Valider {mois} ?</AlertDialogTitle>
+          <AlertDialogTitle className="capitalize">Valider {month} ?</AlertDialogTitle>
           <AlertDialogDescription>
             Après validation, vous ne pourrez plus modifier ce mois. Seul un manager
             pourra le rouvrir.
@@ -69,9 +69,9 @@ export function ValidateMonthDialog({
 
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
           <dt className="text-muted-foreground">Total saisi</dt>
-          <dd className="text-right font-medium">{formatTotal(totalSaisi)} jour(s)</dd>
+          <dd className="text-right font-medium">{formatTotal(totalSaisi)} day(s)</dd>
           <dt className="text-muted-foreground">Jours ouvrés</dt>
-          <dd className="text-right font-medium">{joursOuvres} jours</dd>
+          <dd className="text-right font-medium">{joursOuvres} days</dd>
         </dl>
 
         {manquant > 0 && (

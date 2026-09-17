@@ -17,5 +17,5 @@ class HolidayModel(Base):
 
     __tablename__ = "holidays"
 
-    jour: Mapped[date] = mapped_column(Date, primary_key=True)
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
     label: Mapped[str] = mapped_column(String(128))

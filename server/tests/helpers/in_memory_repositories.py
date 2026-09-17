@@ -60,7 +60,7 @@ class InMemoryUserRepository(UserRepository):
         return next((u for u in self._users.values() if u.email == target), None)
 
     async def list_all(self, include_inactive: bool = False) -> list[User]:
-        return [u for u in self._users.values() if include_inactive or u.actif]
+        return [u for u in self._users.values() if include_inactive or u.is_active]
 
     async def add(self, user: User) -> User:
         user.id = self._next_id
@@ -87,7 +87,7 @@ class InMemoryProjectRepository(ProjectRepository):
         return self._projects.get(project_id)
 
     async def list_all(self, include_inactive: bool = False) -> list[Project]:
-        return [p for p in self._projects.values() if include_inactive or p.actif]
+        return [p for p in self._projects.values() if include_inactive or p.is_active]
 
     async def list_children(self, parent_id: int) -> list[Project]:
         return [p for p in self._projects.values() if p.parent_id == parent_id]
@@ -112,38 +112,36 @@ class InMemoryEntryRepository(EntryRepository):
         self._entries: list[Entry] = list(entries or [])
         self._next_id = 1
 
-    async def get(self, user_id: int, project_id: int, jour: date) -> Entry | None:
+    async def get(self, user_id: int, project_id: int, day: date) -> Entry | None:
         return next(
             (
                 e
                 for e in self._entries
-                if e.user_id == user_id
-                and e.project_id == project_id
-                and e.jour == jour
+                if e.user_id == user_id and e.project_id == project_id and e.day == day
             ),
             None,
         )
 
-    async def list_for_month(self, user_id: int, mois: date) -> list[Entry]:
+    async def list_for_month(self, user_id: int, month: date) -> list[Entry]:
         return [
             e
             for e in self._entries
             if e.user_id == user_id
-            and e.jour.year == mois.year
-            and e.jour.month == mois.month
+            and e.day.year == month.year
+            and e.day.month == month.month
         ]
 
-    async def list_for_day(self, user_id: int, jour: date) -> list[Entry]:
-        return [e for e in self._entries if e.user_id == user_id and e.jour == jour]
+    async def list_for_day(self, user_id: int, day: date) -> list[Entry]:
+        return [e for e in self._entries if e.user_id == user_id and e.day == day]
 
     async def list_for_project(self, project_id: int) -> list[Entry]:
         return [e for e in self._entries if e.project_id == project_id]
 
     async def count_by_project(self) -> dict[int, int]:
-        comptes: dict[int, int] = {}
+        counts: dict[int, int] = {}
         for entry in self._entries:
-            comptes[entry.project_id] = comptes.get(entry.project_id, 0) + 1
-        return comptes
+            counts[entry.project_id] = counts.get(entry.project_id, 0) + 1
+        return counts
 
     async def sum_realised_by_project(self, today: date) -> dict[int, float]:
         totaux: dict[int, float] = {}
@@ -151,12 +149,12 @@ class InMemoryEntryRepository(EntryRepository):
             if entry.is_forecast(today):
                 continue
             totaux[entry.project_id] = round(
-                totaux.get(entry.project_id, 0.0) + float(entry.valeur), 2
+                totaux.get(entry.project_id, 0.0) + float(entry.value), 2
             )
         return totaux
 
     async def upsert(self, entry: Entry) -> Entry:
-        existing = await self.get(entry.user_id, entry.project_id, entry.jour)
+        existing = await self.get(entry.user_id, entry.project_id, entry.day)
         if existing is not None:
             self._entries.remove(existing)
             entry.id = existing.id
@@ -166,8 +164,8 @@ class InMemoryEntryRepository(EntryRepository):
         self._entries.append(entry)
         return entry
 
-    async def delete(self, user_id: int, project_id: int, jour: date) -> None:
-        existing = await self.get(user_id, project_id, jour)
+    async def delete(self, user_id: int, project_id: int, day: date) -> None:
+        existing = await self.get(user_id, project_id, day)
         if existing is not None:
             self._entries.remove(existing)
 
@@ -176,19 +174,19 @@ class InMemoryMonthRepository(MonthRepository):
     def __init__(self, months: list[Month] | None = None) -> None:
         self._months: list[Month] = list(months or [])
 
-    async def get(self, user_id: int, mois: date) -> Month | None:
-        first = mois.replace(day=1)
+    async def get(self, user_id: int, month: date) -> Month | None:
+        first = month.replace(day=1)
         return next(
-            (m for m in self._months if m.user_id == user_id and m.mois == first),
+            (m for m in self._months if m.user_id == user_id and m.month == first),
             None,
         )
 
-    async def list_for_month(self, mois: date) -> list[Month]:
-        first = mois.replace(day=1)
-        return [m for m in self._months if m.mois == first]
+    async def list_for_month(self, month: date) -> list[Month]:
+        first = month.replace(day=1)
+        return [m for m in self._months if m.month == first]
 
     async def save(self, month: Month) -> Month:
-        existing = await self.get(month.user_id, month.mois)
+        existing = await self.get(month.user_id, month.month)
         if existing is not None:
             self._months.remove(existing)
         self._months.append(month)
@@ -205,15 +203,15 @@ class InMemoryAuditLogRepository(AuditLogRepository):
         return log
 
     async def list_for_user_month(
-        self, target_user_id: int, mois: date
+        self, target_user_id: int, month: date
     ) -> list[AuditLog]:
-        first = mois.replace(day=1)
+        first = month.replace(day=1)
         return [
             log
             for log in self.logs
             if log.target_user_id == target_user_id
-            and log.jour is not None
-            and log.jour.replace(day=1) == first
+            and log.day is not None
+            and log.day.replace(day=1) == first
         ]
 
     async def list_for_project(self, project_id: int) -> list[AuditLog]:
@@ -222,9 +220,9 @@ class InMemoryAuditLogRepository(AuditLogRepository):
 
 class InMemoryProjectAssigneeRepository(ProjectAssigneeRepository):
     def __init__(
-        self, affectations: dict[tuple[int, ProjectRole], list[int]] | None = None
+        self, assignments: dict[tuple[int, ProjectRole], list[int]] | None = None
     ) -> None:
-        self._par_projet: dict[tuple[int, ProjectRole], list[int]] = affectations or {}
+        self._par_projet: dict[tuple[int, ProjectRole], list[int]] = assignments or {}
 
     async def list_for_project(self, project_id: int, role: ProjectRole) -> list[int]:
         return list(self._par_projet.get((project_id, role), []))
@@ -270,18 +268,18 @@ class InMemoryProjectDetailRepository(ProjectDetailRepository):
         return link
 
     async def remove_link(self, link_id: int) -> None:
-        for liens in self._links.values():
-            for lien in list(liens):
-                if lien.id == link_id:
-                    liens.remove(lien)
+        for links in self._links.values():
+            for link in list(links):
+                if link.id == link_id:
+                    links.remove(link)
 
     async def list_phases_reached(self, project_id: int) -> dict[ProjectStatus, date]:
         return dict(self._phases.get(project_id, {}))
 
     async def mark_phase_reached(
-        self, project_id: int, statut: ProjectStatus, reached_at: date
+        self, project_id: int, status: ProjectStatus, reached_at: date
     ) -> None:
-        self._phases.setdefault(project_id, {}).setdefault(statut, reached_at)
+        self._phases.setdefault(project_id, {}).setdefault(status, reached_at)
 
 
 class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
@@ -293,8 +291,8 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
         return next((u for u in self._updates if u.id == update_id), None)
 
     async def list_for_project(self, project_id: int) -> list[ProjectUpdate]:
-        fil = [u for u in self._updates if u.project_id == project_id]
-        return sorted(fil, key=lambda u: (u.publiee_le, u.id or 0), reverse=True)
+        thread = [u for u in self._updates if u.project_id == project_id]
+        return sorted(thread, key=lambda u: (u.published_at, u.id or 0), reverse=True)
 
     async def add(self, update: ProjectUpdate) -> ProjectUpdate:
         update.id = self._next_id
@@ -303,20 +301,20 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
         return update
 
     async def count_by_project(self) -> dict[int, int]:
-        compte: dict[int, int] = {}
-        for maj in self._updates:
-            if maj.est_supprimee:
+        counts: dict[int, int] = {}
+        for update in self._updates:
+            if update.is_deleted:
                 continue
-            compte[maj.project_id] = compte.get(maj.project_id, 0) + 1
-        return compte
+            counts[update.project_id] = counts.get(update.project_id, 0) + 1
+        return counts
 
     async def latest_by_project(self) -> dict[int, ProjectUpdate]:
-        derniere: dict[int, ProjectUpdate] = {}
-        for maj in sorted(self._updates, key=lambda u: (u.publiee_le, u.id or 0)):
-            if maj.est_supprimee:
+        latest: dict[int, ProjectUpdate] = {}
+        for update in sorted(self._updates, key=lambda u: (u.published_at, u.id or 0)):
+            if update.is_deleted:
                 continue
-            derniere[maj.project_id] = maj
-        return derniere
+            latest[update.project_id] = update
+        return latest
 
     async def update(self, update: ProjectUpdate) -> ProjectUpdate:
         return update

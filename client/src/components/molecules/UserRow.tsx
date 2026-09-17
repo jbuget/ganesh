@@ -17,7 +17,7 @@ interface UserRowProps {
   /** Faux sur sa propre ligne : nul ne coupe son propre acces. */
   statutModifiable: boolean;
   onChangeRole: (userId: number, role: Role) => void | Promise<void>;
-  onSetActive: (userId: number, actif: boolean) => void | Promise<void>;
+  onSetActive: (userId: number, is_active: boolean) => void | Promise<void>;
   /** Injecte : un rendu date par `new Date()` ne se testerait pas. */
   maintenant: Date;
 }
@@ -34,13 +34,13 @@ export function UserRow({
   const [coupureADemander, setCoupureADemander] = useState(false);
 
   return (
-    <TableRow className={user.actif ? undefined : "text-slate-400"}>
+    <TableRow className={user.is_active ? undefined : "text-slate-400"}>
       <TableCell className="py-2">
         <span className="flex items-center gap-2.5">
           <UserAvatar
-            initiales={user.initiales}
-            nom={user.display_name}
-            attenue={!user.actif}
+            initials={user.initials}
+            name={user.display_name}
+            attenue={!user.is_active}
           />
           <span className="min-w-0 truncate font-medium">{user.display_name}</span>
         </span>
@@ -58,9 +58,9 @@ export function UserRow({
 
       <TableCell className="py-2 text-slate-500">
         {/* Un compte jamais venu n'est pas « il y a longtemps » : il n'est jamais venu. */}
-        {user.derniere_connexion ? (
-          <span title={new Date(user.derniere_connexion).toLocaleString("fr-FR")}>
-            {depuis(user.derniere_connexion, maintenant)}
+        {user.last_login_at ? (
+          <span title={new Date(user.last_login_at).toLocaleString("fr-FR")}>
+            {depuis(user.last_login_at, maintenant)}
           </span>
         ) : (
           <span className="text-slate-400">Jamais</span>
@@ -69,18 +69,18 @@ export function UserRow({
 
       <TableCell className="py-2">
         <StatusBadge
-          actif={user.actif}
+          is_active={user.is_active}
           modifiable={statutModifiable}
           // Couper un acces se confirme ; le retablir ne retire rien a personne.
-          onToggle={(actif) =>
-            actif ? onSetActive(user.id, true) : setCoupureADemander(true)
+          onToggle={(is_active) =>
+            is_active ? onSetActive(user.id, true) : setCoupureADemander(true)
           }
         />
 
         <DeactivateUserDialog
           open={coupureADemander}
           onOpenChange={setCoupureADemander}
-          nom={user.display_name}
+          name={user.display_name}
           onConfirm={() => {
             setCoupureADemander(false);
             return onSetActive(user.id, false);

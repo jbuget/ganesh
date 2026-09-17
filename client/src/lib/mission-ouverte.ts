@@ -1,6 +1,6 @@
 "use client";
 
-import { ecrireUrl, useQueryString } from "@/lib/url-state";
+import { writeUrl, useQueryString } from "@/lib/url-state";
 
 const PARAMETRE = "mission";
 const ONGLET = "onglet";
@@ -16,17 +16,17 @@ const ONGLET = "onglet";
  * L'onglet en fait partie : on ouvre une mission sur sa fiche, mais on l'ouvre
  * sur son fil quand c'est le fil qu'on est alle chercher.
  */
-export function useMissionOuverte() {
-  const requete = useQueryString();
-  const params = new URLSearchParams(requete);
-  const valeur = params.get(PARAMETRE);
+export function useOpenedMission() {
+  const query = useQueryString();
+  const params = new URLSearchParams(query);
+  const value = params.get(PARAMETRE);
 
   return {
-    missionOuverte: Number(valeur) || null,
+    openedMission: Number(value) || null,
     ongletOuvert: params.get(ONGLET),
 
-    ouvrir(projectId: number, onglet?: string) {
-      ecrireUrl((params) => {
+    open(projectId: number, onglet?: string) {
+      writeUrl((params) => {
         params.set(PARAMETRE, String(projectId));
         // Sans effacement, l'onglet d'une ouverture precedente s'appliquerait
         // a la mission suivante.
@@ -35,8 +35,8 @@ export function useMissionOuverte() {
       });
     },
 
-    fermer() {
-      ecrireUrl((params) => {
+    close() {
+      writeUrl((params) => {
         params.delete(PARAMETRE);
         params.delete(ONGLET);
       });

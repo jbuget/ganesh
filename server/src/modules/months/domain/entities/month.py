@@ -11,8 +11,8 @@ from src.shared.exceptions.domain_exceptions import ForbiddenActionError
 class MonthState(StrEnum):
     """Etat de saisie d'un mois."""
 
-    OUVERT = "ouvert"
-    VALIDE = "valide"
+    OPEN = "open"
+    VALIDATED = "validated"
 
 
 @dataclass
@@ -25,8 +25,8 @@ class Month:
     """
 
     user_id: int
-    mois: date
-    state: MonthState = MonthState.OUVERT
+    month: date
+    state: MonthState = MonthState.OPEN
     validated_at: datetime | None = None
     validated_by: int | None = None
     reopened_at: datetime | None = None
@@ -34,29 +34,29 @@ class Month:
     id: int | None = field(default=None)
 
     def __post_init__(self) -> None:
-        self.mois = self.mois.replace(day=1)
+        self.month = self.month.replace(day=1)
 
     @property
     def is_writable(self) -> bool:
         """Seul un mois ouvert accepte des saisies."""
-        return self.state is MonthState.OUVERT
+        return self.state is MonthState.OPEN
 
     def validate(self, by: User, at: datetime | None = None) -> None:
         """Verrouille le mois. Chacun valide son propre mois."""
-        if self.state is MonthState.VALIDE:
+        if self.state is MonthState.VALIDATED:
             raise ForbiddenActionError("Ce mois est deja valide.")
-        self.state = MonthState.VALIDE
+        self.state = MonthState.VALIDATED
         self.validated_by = by.id
         self.validated_at = at or datetime.now()
 
     def reopen(self, by: User, at: datetime | None = None) -> None:
         """Rouvre un mois valide. Reserve aux managers, et trace."""
-        if self.state is not MonthState.VALIDE:
+        if self.state is not MonthState.VALIDATED:
             raise ForbiddenActionError("Ce mois n'est pas valide, il est deja ouvert.")
         if not by.can_reopen_month():
             raise ForbiddenActionError(
                 "Seul un manager peut rouvrir un mois valide.",
             )
-        self.state = MonthState.OUVERT
+        self.state = MonthState.OPEN
         self.reopened_by = by.id
         self.reopened_at = at or datetime.now()

@@ -38,24 +38,24 @@ export function RolePicker({ role, modifiable, onChange }: RolePickerProps) {
 
       <PopoverContent align="start" className="w-72 p-1">
         <ul>
-          {ROLES.map((choix) => (
-            <li key={choix.valeur}>
+          {ROLES.map((choice) => (
+            <li key={choice.value}>
               <button
                 type="button"
-                aria-pressed={choix.valeur === role}
+                aria-pressed={choice.value === role}
                 onClick={() => {
                   setOuvert(false);
-                  if (choix.valeur !== role) void onChange(choix.valeur);
+                  if (choice.value !== role) void onChange(choice.value);
                 }}
                 className="flex w-full cursor-pointer items-start gap-2 rounded px-2 py-1.5 text-left transition-colors hover:bg-slate-100"
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm">{choix.libelle}</span>
+                  <span className="block text-sm">{choice.label}</span>
                   <span className="block text-xs text-slate-500">
-                    {choix.description}
+                    {choice.description}
                   </span>
                 </span>
-                {choix.valeur === role && (
+                {choice.value === role && (
                   <Check className="mt-0.5 size-4 shrink-0 text-sky-600" aria-hidden />
                 )}
               </button>

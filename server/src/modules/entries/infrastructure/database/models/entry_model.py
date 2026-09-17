@@ -24,8 +24,8 @@ class EntryModel(Base):
 
     __tablename__ = "entries"
     __table_args__ = (
-        UniqueConstraint("user_id", "project_id", "jour", name="uq_entry_slot"),
-        CheckConstraint("valeur IN (0.5, 1.0)", name="ck_entry_valeur"),
+        UniqueConstraint("user_id", "project_id", "day", name="uq_entry_slot"),
+        CheckConstraint("value IN (0.5, 1.0)", name="ck_entry_value"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -35,12 +35,12 @@ class EntryModel(Base):
     project_id: Mapped[int] = mapped_column(
         ForeignKey("projects.id", ondelete="RESTRICT"), index=True
     )
-    jour: Mapped[date] = mapped_column(Date, index=True)
-    valeur: Mapped[float] = mapped_column(Float)
+    day: Mapped[date] = mapped_column(Date, index=True)
+    value: Mapped[float] = mapped_column(Float)
 
     # Photo du statut du projet au moment de la saisie : permet de mesurer le
     # temps consomme par phase.
-    statut_at_entry: Mapped[ProjectStatus | None] = mapped_column(
+    status_at_entry: Mapped[ProjectStatus | None] = mapped_column(
         Enum(ProjectStatus, name="project_status", native_enum=False, length=16),
         nullable=True,
     )
@@ -58,7 +58,7 @@ class UserMissionModel(Base):
 
     __tablename__ = "user_missions"
     __table_args__ = (
-        UniqueConstraint("user_id", "project_id", "mois", name="uq_user_mission"),
+        UniqueConstraint("user_id", "project_id", "month", name="uq_user_mission"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -68,4 +68,4 @@ class UserMissionModel(Base):
     project_id: Mapped[int] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), index=True
     )
-    mois: Mapped[date] = mapped_column(Date, index=True)
+    month: Mapped[date] = mapped_column(Date, index=True)

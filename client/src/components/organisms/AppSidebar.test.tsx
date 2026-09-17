@@ -8,31 +8,30 @@ const pathname = vi.hoisted(() => ({ value: "/" }));
 type Utilisateur = {
   display_name: string;
   email: string;
-  initiales: string;
+  initials: string;
   role: string;
 };
 
 const JEREMY: Utilisateur = {
   display_name: "Jérémy Buget",
   email: "j.buget@waat.fr",
-  initiales: "JB",
+  initials: "JB",
   role: "MANAGER",
 };
 
-const utilisateur = vi.hoisted(() => ({
+const user = vi.hoisted(() => ({
   value: {
     display_name: "Jérémy Buget",
     email: "j.buget@waat.fr",
-    initiales: "JB",
+    initials: "JB",
     role: "MANAGER",
   } as
-    | { display_name: string; email: string; initiales: string; role: string }
-    | undefined,
+    { display_name: string; email: string; initials: string; role: string } | undefined,
 }));
 
 vi.mock("next/navigation", () => ({ usePathname: () => pathname.value }));
 vi.mock("@/lib/api/queries", () => ({
-  useCurrentUser: () => ({ user: utilisateur.value }),
+  useCurrentUser: () => ({ user: user.value }),
 }));
 // La fin de session est verifiee dans `lib/use-deconnexion.test.ts` : ici, seule
 // compte la barre qui la propose.
@@ -99,17 +98,17 @@ describe("AppSidebar", () => {
   });
 
   it("signale le rôle de manager", () => {
-    utilisateur.value = JEREMY;
+    user.value = JEREMY;
     render(<AppSidebar />);
 
     expect(screen.getByText("Manager")).toBeInTheDocument();
   });
 
   it("n'affiche aucun rôle pour un collaborateur", () => {
-    utilisateur.value = {
+    user.value = {
       display_name: "L. Chen",
       email: "l.chen@waat.fr",
-      initiales: "LC",
+      initials: "LC",
       role: "TEAMMATE",
     };
     render(<AppSidebar />);
@@ -119,14 +118,14 @@ describe("AppSidebar", () => {
   });
 
   it("réduit le nom à ses initiales dans la pastille", () => {
-    utilisateur.value = { ...JEREMY, role: "TEAMMATE" };
+    user.value = { ...JEREMY, role: "TEAMMATE" };
     render(<AppSidebar />);
 
     expect(screen.getByText("JB")).toBeInTheDocument();
   });
 
   it("ne montre aucun bloc utilisateur tant que l'identité n'est pas connue", () => {
-    utilisateur.value = undefined;
+    user.value = undefined;
     render(<AppSidebar />);
 
     expect(screen.queryByText(/Buget|Chen/)).toBeNull();

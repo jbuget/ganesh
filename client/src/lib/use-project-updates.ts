@@ -28,39 +28,39 @@ export function useProjectUpdates(
 ) {
   const [fil, setFil] = useState<ProjectUpdateResponse[] | null>(null);
 
-  const recharger = useCallback(async () => {
-    const reponse = await listProjectUpdates(projectId);
-    setFil(reponse.data as ProjectUpdateResponse[]);
+  const reload = useCallback(async () => {
+    const response = await listProjectUpdates(projectId);
+    setFil(response.data as ProjectUpdateResponse[]);
   }, [projectId]);
 
   useEffect(() => {
-    let vivant = true;
-    listProjectUpdates(projectId).then((reponse) => {
-      if (vivant) setFil(reponse.data as ProjectUpdateResponse[]);
+    let alive = true;
+    listProjectUpdates(projectId).then((response) => {
+      if (alive) setFil(response.data as ProjectUpdateResponse[]);
     });
     return () => {
-      vivant = false;
+      alive = false;
     };
   }, [projectId]);
 
   return {
     fil,
 
-    async publier(texte: string) {
-      await postProjectUpdate(projectId, { texte });
-      await recharger();
+    async publier(body: string) {
+      await postProjectUpdate(projectId, { body });
+      await reload();
       await onEcriture?.();
     },
 
-    async corriger(updateId: number, texte: string) {
-      await editProjectUpdate(projectId, updateId, { texte });
-      await recharger();
+    async corriger(updateId: number, body: string) {
+      await editProjectUpdate(projectId, updateId, { body });
+      await reload();
       await onEcriture?.();
     },
 
     async retirer(updateId: number) {
       await removeProjectUpdate(projectId, updateId);
-      await recharger();
+      await reload();
       await onEcriture?.();
     },
   };

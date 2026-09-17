@@ -22,7 +22,7 @@ def to_entity(model: AuditLogModel) -> AuditLog:
         at=model.at,
         target_user_id=model.target_user_id,
         project_id=model.project_id,
-        jour=model.jour,
+        day=model.day,
         old_value=model.old_value,
         new_value=model.new_value,
         payload=model.payload,
@@ -42,7 +42,7 @@ class SqlAuditLogRepository(AuditLogRepository):
             at=log.at,
             target_user_id=log.target_user_id,
             project_id=log.project_id,
-            jour=log.jour,
+            day=log.day,
             old_value=log.old_value,
             new_value=log.new_value,
             payload=log.payload,
@@ -53,15 +53,15 @@ class SqlAuditLogRepository(AuditLogRepository):
         return log
 
     async def list_for_user_month(
-        self, target_user_id: int, mois: date
+        self, target_user_id: int, month: date
     ) -> list[AuditLog]:
         result = await self._session.execute(
             select(AuditLogModel)
             .where(
                 and_(
                     AuditLogModel.target_user_id == target_user_id,
-                    extract("year", AuditLogModel.jour) == mois.year,
-                    extract("month", AuditLogModel.jour) == mois.month,
+                    extract("year", AuditLogModel.day) == month.year,
+                    extract("month", AuditLogModel.day) == month.month,
                 )
             )
             .order_by(AuditLogModel.at.desc())

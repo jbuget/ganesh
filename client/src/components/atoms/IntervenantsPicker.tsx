@@ -11,7 +11,7 @@ import { useTeammates } from "@/lib/api/queries";
 
 interface IntervenantsPickerProps {
   projectId: number;
-  intervenants: BoardMemberResponse[];
+  contributors: BoardMemberResponse[];
   onChange: () => void | Promise<void>;
   /** A quel titre ces personnes sont rattachees a la mission. */
   role?: ProjectRole;
@@ -34,24 +34,22 @@ const VISIBLES = 4;
  */
 export function IntervenantsPicker({
   projectId,
-  intervenants,
+  contributors,
   onChange,
-  role = "intervenant",
+  role = "contributor",
   invite = "Intervenants",
 }: IntervenantsPickerProps) {
   const { teammates } = useTeammates();
   const [ouvert, setOuvert] = useState(false);
-  const [recherche, setRecherche] = useState("");
+  const [search, setRecherche] = useState("");
   // Le meme filtre que les menus de recherche du reste de l'application :
   // insensible a la casse comme aux accents.
   const { contains } = useComboboxFilter();
-  const affectes = new Set(intervenants.map((membre) => membre.id));
+  const affectes = new Set(contributors.map((member) => member.id));
 
-  const proposes = teammates.filter((membre) =>
-    contains(membre.display_name, recherche),
-  );
+  const proposes = teammates.filter((member) => contains(member.display_name, search));
 
-  async function basculer(memberId: number) {
+  async function toggle(memberId: number) {
     if (affectes.has(memberId)) {
       await unassignMember(projectId, memberId, { role });
     } else {
@@ -60,8 +58,8 @@ export function IntervenantsPicker({
     await onChange();
   }
 
-  const visibles = intervenants.slice(0, VISIBLES);
-  const restants = intervenants.slice(VISIBLES);
+  const visible = contributors.slice(0, VISIBLES);
+  const remaining = contributors.slice(VISIBLES);
 
   return (
     <Popover
@@ -75,25 +73,25 @@ export function IntervenantsPicker({
         aria-label={`Modifier les ${invite.toLowerCase()}`}
         className="flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 -mx-1 transition-colors hover:bg-slate-100"
       >
-        {intervenants.length === 0 ? (
+        {contributors.length === 0 ? (
           <span className="flex items-center gap-1 text-sm text-slate-400">
             <Plus className="size-3.5" aria-hidden />
             {invite}
           </span>
         ) : (
           <span className="flex items-center -space-x-1.5">
-            {visibles.map((membre) => (
+            {visible.map((member) => (
               <span
-                key={membre.id}
-                title={membre.display_name}
+                key={member.id}
+                title={member.display_name}
                 className="flex size-6 items-center justify-center rounded-full border border-white bg-slate-200 text-[10px] font-medium text-slate-700"
               >
-                {membre.initiales}
+                {member.initials}
               </span>
             ))}
-            {restants.length > 0 && (
+            {remaining.length > 0 && (
               <span className="flex size-6 items-center justify-center rounded-full border border-white bg-slate-100 text-[10px] font-medium text-slate-500">
-                +{restants.length}
+                +{remaining.length}
               </span>
             )}
           </span>
@@ -110,7 +108,7 @@ export function IntervenantsPicker({
           <input
             type="text"
             autoFocus
-            value={recherche}
+            value={search}
             aria-label={`Rechercher parmi les ${invite.toLowerCase()}`}
             placeholder="Rechercher…"
             onChange={(event) => setRecherche(event.target.value)}
@@ -124,21 +122,21 @@ export function IntervenantsPicker({
           </p>
         ) : (
           <ul className="max-h-64 overflow-y-auto overscroll-contain pt-1">
-            {proposes.map((membre) => {
-              const present = affectes.has(membre.id);
+            {proposes.map((member) => {
+              const present = affectes.has(member.id);
               return (
-                <li key={membre.id}>
+                <li key={member.id}>
                   <button
                     type="button"
                     aria-pressed={present}
-                    onClick={() => void basculer(membre.id)}
+                    onClick={() => void toggle(member.id)}
                     className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
                   >
                     <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-700">
-                      {membre.initiales}
+                      {member.initials}
                     </span>
                     <span className="min-w-0 flex-1 truncate">
-                      {membre.display_name}
+                      {member.display_name}
                     </span>
                     {present && (
                       <Check className="size-4 shrink-0 text-sky-600" aria-hidden />

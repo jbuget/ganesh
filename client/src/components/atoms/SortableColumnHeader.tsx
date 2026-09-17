@@ -3,13 +3,13 @@
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 
 import { TableHead } from "@/components/ui/table";
-import type { ColonneTri, TriMissions } from "@/lib/mission-sort";
+import type { SortColumn, MissionSort } from "@/lib/mission-sort";
 
 interface SortableColumnHeaderProps {
-  colonne: ColonneTri;
-  libelle: string;
-  tri: TriMissions;
-  onBasculer: (colonne: ColonneTri) => void;
+  column: SortColumn;
+  label: string;
+  sorted: MissionSort;
+  onBasculer: (column: SortColumn) => void;
   /** Les colonnes de nombres s'alignent a droite, en-tete compris. */
   aDroite?: boolean;
 }
@@ -22,29 +22,29 @@ interface SortableColumnHeaderProps {
  * la liste. Celle qui la range, elle, garde sa fleche affichee.
  */
 export function SortableColumnHeader({
-  colonne,
-  libelle,
-  tri,
+  column,
+  label,
+  sorted,
   onBasculer,
   aDroite = false,
 }: SortableColumnHeaderProps) {
-  const actif = tri.colonne === colonne;
-  const croissant = tri.sens === "asc";
+  const is_active = sorted.column === column;
+  const croissant = sorted.direction === "asc";
 
   return (
     <TableHead
-      aria-sort={actif ? (croissant ? "ascending" : "descending") : "none"}
+      aria-sort={is_active ? (croissant ? "ascending" : "descending") : "none"}
       className={aDroite ? "text-right" : undefined}
     >
       <button
         type="button"
-        onClick={() => onBasculer(colonne)}
+        onClick={() => onBasculer(column)}
         className={`group -mx-1 flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 transition-colors hover:bg-slate-200 ${
           aDroite ? "ml-auto" : ""
         }`}
       >
-        {libelle}
-        {actif ? (
+        {label}
+        {is_active ? (
           croissant ? (
             <ArrowUp className="size-3.5 shrink-0" aria-label="Ordre croissant" />
           ) : (

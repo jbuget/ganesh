@@ -1,5 +1,5 @@
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
-import { AUCUN_TRI, comparateurDeTri, type TriMissions } from "@/lib/mission-sort";
+import { NO_SORT, comparateurDeTri, type MissionSort } from "@/lib/mission-sort";
 
 /** Une mission et, s'il s'agit d'un projet, les lots qui en dependent. */
 export interface ProjectNode {
@@ -7,7 +7,7 @@ export interface ProjectNode {
   lots: ProjectListItemResponse[];
 }
 
-const HORS_PROJET = "hors_projet";
+const HORS_PROJET = "off_project";
 
 /**
  * Organise le referentiel en arborescence : chaque projet suivi de ses lots.
@@ -22,11 +22,11 @@ const HORS_PROJET = "hors_projet";
  */
 export function buildProjectTree(
   missions: ProjectListItemResponse[],
-  tri: TriMissions = AUCUN_TRI,
+  sorted: MissionSort = NO_SORT,
 ): ProjectNode[] {
-  const ordre = comparateurDeTri(tri);
-  const projets = missions.filter((m) => m.project.kind === "projet");
-  const lots = missions.filter((m) => m.project.kind === "lot");
+  const ordre = comparateurDeTri(sorted);
+  const projets = missions.filter((m) => m.project.kind === "project");
+  const lots = missions.filter((m) => m.project.kind === "work_package");
   const idsPresents = new Set(projets.map((m) => m.project.id));
 
   const noeuds: ProjectNode[] = [...projets].sort(ordre).map((mission) => ({
@@ -50,5 +50,5 @@ export function offProjectActivities(
 ): ProjectListItemResponse[] {
   return missions
     .filter((m) => m.project.kind === HORS_PROJET)
-    .sort(comparateurDeTri(AUCUN_TRI));
+    .sort(comparateurDeTri(NO_SORT));
 }

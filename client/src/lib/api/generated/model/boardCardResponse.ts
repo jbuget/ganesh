@@ -14,10 +14,10 @@ import type { ProjectResponse } from "./projectResponse";
  */
 export interface BoardCardResponse {
   project: ProjectResponse;
-  consomme_j: number;
-  intervenants: BoardMemberResponse[];
-  commentaires: number;
-  derniere_maj: LastUpdateResponse | null;
-  sous_projets: number;
+  consumed_days: number;
+  contributors: BoardMemberResponse[];
+  comments: number;
+  latest_update: LastUpdateResponse | null;
+  sub_projects: number;
   parent: BoardParentResponse | null;
 }

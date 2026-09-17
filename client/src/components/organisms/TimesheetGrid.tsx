@@ -14,7 +14,7 @@ interface TimesheetGridProps {
   grid: MonthGridResponse;
   extraRows: ProjectResponse[];
   today: string;
-  onSetValue: (projectId: number, jour: string, value: DayValue) => void;
+  onSetValue: (projectId: number, day: string, value: DayValue) => void;
   /** Selecteur de mission, loge dans la derniere ligne. Absent si le mois est clos. */
   ajoutDeMission?: React.ReactNode;
   /** Retrait d'une mission. Absent si le mois est clos. */
@@ -24,12 +24,12 @@ interface TimesheetGridProps {
 interface DisplayRow {
   project_id: number;
   label: string;
-  estime_j: number | null;
+  estimated_days: number | null;
   values: Record<string, number>;
-  total_realise: number;
-  total_prevu: number;
+  actual_total: number;
+  forecast_total: number;
   total: number;
-  consomme_total_j: number;
+  total_consumed_days: number;
 }
 
 /**
@@ -50,29 +50,29 @@ export function TimesheetGrid({
     ...grid.rows.map((row) => ({
       project_id: row.project_id,
       label: row.label,
-      estime_j: row.estime_j ?? null,
+      estimated_days: row.estimated_days ?? null,
       values: row.values as Record<string, number>,
-      total_realise: row.total_realise,
-      total_prevu: row.total_prevu,
+      actual_total: row.actual_total,
+      forecast_total: row.forecast_total,
       total: row.total,
-      consomme_total_j: row.consomme_total_j,
+      total_consumed_days: row.total_consumed_days,
     })),
     ...extraRows
       .filter((p) => !grid.rows.some((row) => row.project_id === p.id))
       .map((p) => ({
         project_id: p.id,
         label: p.label,
-        estime_j: p.estime_j ?? null,
+        estimated_days: p.estimated_days ?? null,
         values: {},
-        total_realise: 0,
-        total_prevu: 0,
+        actual_total: 0,
+        forecast_total: 0,
         total: 0,
-        consomme_total_j: 0,
+        total_consumed_days: 0,
       })),
   ].sort((a, b) => a.label.localeCompare(b.label, "fr"));
 
   const readOnly = !grid.is_writable;
-  const totalByDate = new Map(grid.day_totals.map((total) => [total.jour, total]));
+  const totalByDate = new Map(grid.day_totals.map((total) => [total.day, total]));
 
   /**
    * La ligne d'ajout ferme le tableau quand elle est la : c'est elle qui porte
@@ -85,8 +85,8 @@ export function TimesheetGrid({
    * Un jour non ouvre se reduit a une bande, sauf s'il porte deja une saisie :
    * une donnee heritee doit rester visible et corrigeable, jamais escamotee.
    */
-  const estReduit = (jour: string, isOffDay: boolean) =>
-    isOffDay && (totalByDate.get(jour)?.total ?? 0) === 0;
+  const estReduit = (day: string, isOffDay: boolean) =>
+    isOffDay && (totalByDate.get(day)?.total ?? 0) === 0;
 
   return (
     <div className="max-w-full overflow-x-auto">
@@ -102,12 +102,12 @@ export function TimesheetGrid({
             </th>
             {grid.days.map((day, dayIndex) => (
               <DayHeader
-                isNarrow={estReduit(day.jour, day.is_off_day)}
-                key={day.jour}
-                jour={day.jour}
+                isNarrow={estReduit(day.day, day.is_off_day)}
+                key={day.day}
+                day={day.day}
                 isLastDay={dayIndex === grid.days.length - 1}
                 isOffDay={day.is_off_day}
-                isToday={day.jour === today}
+                isToday={day.day === today}
                 label={day.label ?? null}
               />
             ))}
@@ -139,17 +139,17 @@ export function TimesheetGrid({
             </th>
             {grid.days.map((day, dayIndex) => (
               <DayTotalCell
-                key={day.jour}
-                value={totalByDate.get(day.jour)?.total ?? 0}
+                key={day.day}
+                value={totalByDate.get(day.day)?.total ?? 0}
                 isOffDay={day.is_off_day}
-                isNarrow={estReduit(day.jour, day.is_off_day)}
+                isNarrow={estReduit(day.day, day.is_off_day)}
                 strongSides={
                   dayIndex === grid.days.length - 1 ? ["right", "bottom"] : ["bottom"]
                 }
               />
             ))}
             <TotalCell
-              value={grid.total_realise + grid.total_prevu}
+              value={grid.actual_total + grid.forecast_total}
               isStrong
               strongSides={["right", "bottom"]}
             />
@@ -182,22 +182,22 @@ export function TimesheetGrid({
               >
                 <MissionLabel
                   label={row.label}
-                  consommeJ={row.consomme_total_j}
-                  estimeJ={row.estime_j}
+                  consommeJ={row.total_consumed_days}
+                  estimeJ={row.estimated_days}
                 />
               </th>
               {grid.days.map((day, dayIndex) => (
                 <DayCell
-                  key={day.jour}
+                  key={day.day}
                   isLastDay={dayIndex === grid.days.length - 1}
-                  value={(row.values[day.jour] ?? 0) as DayValue}
+                  value={(row.values[day.day] ?? 0) as DayValue}
                   isOffDay={day.is_off_day}
-                  isNarrow={estReduit(day.jour, day.is_off_day)}
-                  isFuture={day.jour > today}
+                  isNarrow={estReduit(day.day, day.is_off_day)}
+                  isFuture={day.day > today}
                   isReadOnly={readOnly}
                   isLastRow={fermeLeTableau(rowIndex)}
-                  label={`${row.label} — ${day.jour}`}
-                  onChange={(next) => onSetValue(row.project_id, day.jour, next)}
+                  label={`${row.label} — ${day.day}`}
+                  onChange={(next) => onSetValue(row.project_id, day.day, next)}
                 />
               ))}
               <TotalCell

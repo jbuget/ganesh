@@ -7,14 +7,14 @@ import pytest
 from src.modules.users.domain.entities.user import Role, User
 
 
-def make_user(role: Role = Role.TEAMMATE, actif: bool = True) -> User:
+def make_user(role: Role = Role.TEAMMATE, is_active: bool = True) -> User:
     return User(
         id=None,
         entra_oid="oid-1",
         email="d.dehe@waat.fr",
         display_name="D. Dehe",
         role=role,
-        actif=actif,
+        is_active=is_active,
     )
 
 
@@ -41,7 +41,7 @@ def test_any_active_user_can_edit_an_open_month_of_anyone(role: Role) -> None:
 
 
 def test_a_deactivated_user_can_no_longer_edit_anything() -> None:
-    assert make_user(actif=False).can_edit_open_months() is False
+    assert make_user(is_active=False).can_edit_open_months() is False
 
 
 def test_email_is_normalised_to_lowercase() -> None:
@@ -59,8 +59,8 @@ def test_email_is_normalised_to_lowercase() -> None:
 def test_a_first_connection_is_recorded() -> None:
     user = make_user()
 
-    assert user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0)) is True
-    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 0)
+    assert user.record_login(datetime(2026, 9, 17, 9, 0)) is True
+    assert user.last_login_at == datetime(2026, 9, 17, 9, 0)
 
 
 def test_a_connection_within_the_freshness_window_is_not_rewritten() -> None:
@@ -70,27 +70,27 @@ def test_a_connection_within_the_freshness_window_is_not_rewritten() -> None:
     le nombre d'ecritures en base.
     """
     user = make_user()
-    user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0))
+    user.record_login(datetime(2026, 9, 17, 9, 0))
 
-    assert user.enregistrer_connexion(datetime(2026, 9, 17, 9, 3)) is False
-    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 0)
+    assert user.record_login(datetime(2026, 9, 17, 9, 3)) is False
+    assert user.last_login_at == datetime(2026, 9, 17, 9, 0)
 
 
 def test_a_connection_after_the_freshness_window_is_recorded() -> None:
     user = make_user()
-    user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0))
+    user.record_login(datetime(2026, 9, 17, 9, 0))
 
-    assert user.enregistrer_connexion(datetime(2026, 9, 17, 9, 20)) is True
-    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 20)
+    assert user.record_login(datetime(2026, 9, 17, 9, 20)) is True
+    assert user.last_login_at == datetime(2026, 9, 17, 9, 20)
 
 
 def test_a_connection_is_never_dated_backwards() -> None:
     """Deux requetes concurrentes peuvent arriver dans le desordre."""
     user = make_user()
-    user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0))
+    user.record_login(datetime(2026, 9, 17, 9, 0))
 
-    assert user.enregistrer_connexion(datetime(2026, 9, 17, 8, 0)) is False
-    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 0)
+    assert user.record_login(datetime(2026, 9, 17, 8, 0)) is False
+    assert user.last_login_at == datetime(2026, 9, 17, 9, 0)
 
 
 def with_id(user: User, user_id: int) -> User:
@@ -120,7 +120,7 @@ def test_a_teammate_cannot_deactivate_anyone() -> None:
 
 
 def test_a_deactivated_manager_can_no_longer_deactivate_anyone() -> None:
-    manager = with_id(make_user(Role.MANAGER, actif=False), 1)
+    manager = with_id(make_user(Role.MANAGER, is_active=False), 1)
     other = with_id(make_user(Role.TEAMMATE), 2)
 
     assert manager.can_deactivate(other) is False

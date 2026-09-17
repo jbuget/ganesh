@@ -5,17 +5,17 @@ import { useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { ProjectPriority } from "@/lib/api/generated/model";
-import { PRIORITES, priorite } from "@/lib/board";
+import { PRIORITIES, priority } from "@/lib/board";
 
 interface PriorityPickerProps {
-  valeur: ProjectPriority | null | undefined;
-  onChange: (valeur: ProjectPriority | null) => void | Promise<void>;
+  value: ProjectPriority | null | undefined;
+  onChange: (value: ProjectPriority | null) => void | Promise<void>;
 }
 
 /** Urgence d'une mission. Une seule, ou aucune. */
-export function PriorityPicker({ valeur, onChange }: PriorityPickerProps) {
+export function PriorityPicker({ value, onChange }: PriorityPickerProps) {
   const [ouvert, setOuvert] = useState(false);
-  const urgence = priorite(valeur);
+  const urgency = priority(value);
 
   return (
     <Popover open={ouvert} onOpenChange={setOuvert}>
@@ -23,13 +23,10 @@ export function PriorityPicker({ valeur, onChange }: PriorityPickerProps) {
         aria-label="Changer la priorité"
         className="-mx-1 flex cursor-pointer items-center rounded px-1 py-0.5 transition-colors hover:bg-slate-100"
       >
-        {urgence ? (
+        {urgency ? (
           <span className="flex items-center gap-1.5 text-sm text-slate-700">
-            <urgence.icone
-              className={`size-4 shrink-0 ${urgence.couleur}`}
-              aria-hidden
-            />
-            {urgence.libelle}
+            <urgency.icon className={`size-4 shrink-0 ${urgency.colour}`} aria-hidden />
+            {urgency.label}
           </span>
         ) : (
           <span className="flex items-center gap-1 text-sm text-slate-400">
@@ -41,25 +38,25 @@ export function PriorityPicker({ valeur, onChange }: PriorityPickerProps) {
 
       <PopoverContent align="start" className="w-48 p-1">
         <ul>
-          {PRIORITES.map((choix) => (
-            <li key={choix.valeur}>
+          {PRIORITIES.map((choice) => (
+            <li key={choice.value}>
               <button
                 type="button"
-                aria-pressed={choix.valeur === valeur}
+                aria-pressed={choice.value === value}
                 onClick={() => {
                   setOuvert(false);
                   // Recliquer sur l'urgence courante la retire : c'est le seul
                   // moyen de revenir a « aucune priorite ».
-                  void onChange(choix.valeur === valeur ? null : choix.valeur);
+                  void onChange(choice.value === value ? null : choice.value);
                 }}
                 className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
               >
-                <choix.icone
-                  className={`size-4 shrink-0 ${choix.couleur}`}
+                <choice.icon
+                  className={`size-4 shrink-0 ${choice.colour}`}
                   aria-hidden
                 />
-                <span className="min-w-0 flex-1 truncate">{choix.libelle}</span>
-                {choix.valeur === valeur && (
+                <span className="min-w-0 flex-1 truncate">{choice.label}</span>
+                {choice.value === value && (
                   <Check className="size-4 shrink-0 text-sky-600" aria-hidden />
                 )}
               </button>

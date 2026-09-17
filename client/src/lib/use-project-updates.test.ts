@@ -28,37 +28,37 @@ async function fil(onEcriture?: () => void | Promise<void>) {
 
 describe("useProjectUpdates", () => {
   it("prévient l'écran d'où l'on vient quand une mise à jour est publiée", async () => {
-    const prevenir = vi.fn();
-    const result = await fil(prevenir);
+    const notify = vi.fn();
+    const result = await fil(notify);
 
     await act(async () => {
       await result.current.publier("Cadrage lancé");
     });
 
-    expect(api.postProjectUpdate).toHaveBeenCalledWith(7, { texte: "Cadrage lancé" });
-    expect(prevenir).toHaveBeenCalledTimes(1);
+    expect(api.postProjectUpdate).toHaveBeenCalledWith(7, { body: "Cadrage lancé" });
+    expect(notify).toHaveBeenCalledTimes(1);
   });
 
   it("le prévient aussi d'une correction", async () => {
-    const prevenir = vi.fn();
-    const result = await fil(prevenir);
+    const notify = vi.fn();
+    const result = await fil(notify);
 
     await act(async () => {
       await result.current.corriger(3, "Cadrage relancé");
     });
 
-    expect(prevenir).toHaveBeenCalledTimes(1);
+    expect(notify).toHaveBeenCalledTimes(1);
   });
 
   it("le prévient d'un retrait, qui change aussi ce que la liste annonce", async () => {
-    const prevenir = vi.fn();
-    const result = await fil(prevenir);
+    const notify = vi.fn();
+    const result = await fil(notify);
 
     await act(async () => {
       await result.current.retirer(3);
     });
 
-    expect(prevenir).toHaveBeenCalledTimes(1);
+    expect(notify).toHaveBeenCalledTimes(1);
   });
 
   it("s'en passe quand personne n'écoute", async () => {
@@ -72,9 +72,9 @@ describe("useProjectUpdates", () => {
   });
 
   it("ne prévient personne à la simple lecture du fil", async () => {
-    const prevenir = vi.fn();
-    await fil(prevenir);
+    const notify = vi.fn();
+    await fil(notify);
 
-    expect(prevenir).not.toHaveBeenCalled();
+    expect(notify).not.toHaveBeenCalled();
   });
 });

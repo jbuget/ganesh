@@ -22,6 +22,6 @@ class UserModel(Base):
         Enum(Role, name="user_role", native_enum=False, length=16),
         default=Role.TEAMMATE,
     )
-    actif: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     # Nullable : les comptes pre-attribues par le seed ne se sont jamais connectes.
-    derniere_connexion: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

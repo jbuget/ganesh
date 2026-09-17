@@ -10,7 +10,7 @@ describe("DeactivateUserDialog", () => {
       <DeactivateUserDialog
         open
         onOpenChange={vi.fn()}
-        nom="L. Chen"
+        name="L. Chen"
         onConfirm={vi.fn()}
       />,
     );
@@ -24,12 +24,12 @@ describe("DeactivateUserDialog", () => {
       <DeactivateUserDialog
         open
         onOpenChange={vi.fn()}
-        nom="L. Chen"
+        name="L. Chen"
         onConfirm={vi.fn()}
       />,
     );
 
-    expect(screen.getByText(/saisies/)).toBeInTheDocument();
+    expect(screen.getByText(/entries/)).toBeInTheDocument();
   });
 
   it("coupe l'accès à la confirmation", async () => {
@@ -38,7 +38,7 @@ describe("DeactivateUserDialog", () => {
       <DeactivateUserDialog
         open
         onOpenChange={vi.fn()}
-        nom="L. Chen"
+        name="L. Chen"
         onConfirm={onConfirm}
       />,
     );

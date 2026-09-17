@@ -12,6 +12,6 @@ import type { MonthlyShareResponse } from "./monthlyShareResponse";
  */
 export interface ProjectContributionResponse {
   member: BoardMemberResponse;
-  jours: number;
-  par_mois: MonthlyShareResponse[];
+  days: number;
+  by_month: MonthlyShareResponse[];
 }

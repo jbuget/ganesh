@@ -45,7 +45,7 @@ export function useTimesheetMonth() {
   const [extraRows, setExtraRows] = useState<ProjectResponse[]>([]);
 
   const queryClient = useQueryClient();
-  const mois = firstDayOfMonth(cursor.year, cursor.month);
+  const month = firstDayOfMonth(cursor.year, cursor.month);
 
   const { user: me } = useCurrentUser();
   const { teammates } = useTeammates();
@@ -53,7 +53,7 @@ export function useTimesheetMonth() {
   const createProject = useCreateProject();
   const validateMonth = useValidateMonth();
 
-  const gridQuery = useMonthGrid(mois, viewedUserId, Boolean(me?.id));
+  const gridQuery = useMonthGrid(month, viewedUserId, Boolean(me?.id));
   const grid = gridQuery.grid;
 
   const target = viewedUserId ? { user_id: viewedUserId } : undefined;
@@ -65,7 +65,7 @@ export function useTimesheetMonth() {
   return {
     today,
     cursor,
-    mois,
+    month,
     grid,
     isLoading: gridQuery.isLoading,
     teammates,
@@ -97,11 +97,11 @@ export function useTimesheetMonth() {
     },
 
     /** Une valeur nulle retire la saisie ; toute autre valeur l'ecrit. */
-    async setDayValue(projectId: number, jour: string, value: DayValue) {
+    async setDayValue(projectId: number, day: string, value: DayValue) {
       if (value === 0) {
-        await clearEntry({ project_id: projectId, jour, ...target });
+        await clearEntry({ project_id: projectId, day, ...target });
       } else {
-        await setEntry({ project_id: projectId, jour, valeur: value }, target);
+        await setEntry({ project_id: projectId, day, value: value }, target);
       }
       await refresh();
     },
@@ -120,21 +120,21 @@ export function useTimesheetMonth() {
     async removeMission(projectId: number) {
       setExtraRows((rows) => rows.filter((row) => row.id !== projectId));
       if (grid?.rows.some((row) => row.project_id === projectId)) {
-        await removeMissionFromMonth({ project_id: projectId, mois, ...target });
+        await removeMissionFromMonth({ project_id: projectId, month, ...target });
         await refresh();
       }
     },
 
     async declareProject(label: string) {
       const created = await createProject.mutateAsync({
-        data: { label, kind: "projet", statut: "exploration" },
+        data: { label, kind: "project", status: "exploration" },
       });
       setExtraRows((rows) => [...rows, mutationResult<ProjectResponse>(created)]);
       await refresh();
     },
 
     async validate() {
-      await validateMonth.mutateAsync({ mois });
+      await validateMonth.mutateAsync({ month });
       await refresh();
     },
   };

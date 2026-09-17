@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 import { PHASES } from "@/lib/board";
-import { changerDeColonne, indexVise, localiser, reordonner } from "@/lib/board-move";
+import { moveToColumn, targetIndex, locate, reorder } from "@/lib/board-move";
 import type { Colonnes, useBoard } from "@/lib/use-board";
 
 /**
@@ -20,27 +20,27 @@ import type { Colonnes, useBoard } from "@/lib/use-board";
  * survols, React n'a pas forcement rejoue le composant.
  */
 export function useBoardDrag(board: ReturnType<typeof useBoard>) {
-  const [enDeplacement, setEnDeplacement] = useState<BoardCardResponse | null>(null);
-  const geste = useRef<{ depart: Colonnes; vivant: Colonnes } | null>(null);
+  const [isDragging, setEnDeplacement] = useState<BoardCardResponse | null>(null);
+  const gesture = useRef<{ depart: Colonnes; alive: Colonnes } | null>(null);
 
-  function appliquer(suivantes: Colonnes) {
-    geste.current!.vivant = suivantes;
-    board.previsualiser(suivantes);
+  function apply(next_ones: Colonnes) {
+    gesture.current!.alive = next_ones;
+    board.preview(next_ones);
   }
 
   /** La phase visee : on survole soit une colonne, soit une carte. */
-  function colonneCible(colonnes: Colonnes, overId: string | number) {
-    const phase = PHASES.find(({ statut }) => statut === overId);
-    if (phase) return phase.statut;
-    return localiser(colonnes, Number(overId))?.statut ?? null;
+  function targetColumn(columns: Colonnes, overId: string | number) {
+    const phase = PHASES.find(({ status }) => status === overId);
+    if (phase) return phase.status;
+    return locate(columns, Number(overId))?.status ?? null;
   }
 
   /** L'id de la carte survolee, ou null si c'est le fond d'une colonne. */
-  const carteSurvolee = (overId: string | number) =>
+  const hoveredCard = (overId: string | number) =>
     typeof overId === "number" ? overId : null;
 
   /** Le curseur a-t-il depasse le milieu de la carte survolee ? */
-  function depasseLaMoitie(event: DragOverEvent | DragEndEvent) {
+  function pastHalfway(event: DragOverEvent | DragEndEvent) {
     const glissee = event.active.rect.current.translated;
     const survolee = event.over?.rect;
     if (!glissee || !survolee) return false;
@@ -48,72 +48,72 @@ export function useBoardDrag(board: ReturnType<typeof useBoard>) {
   }
 
   return {
-    enDeplacement,
+    isDragging,
 
     onDragStart(event: DragStartEvent) {
-      if (!board.colonnes) return;
+      if (!board.columns) return;
       const id = Number(event.active.id);
-      const place = localiser(board.colonnes, id);
+      const place = locate(board.columns, id);
       if (!place) return;
-      geste.current = { depart: board.colonnes, vivant: board.colonnes };
-      setEnDeplacement(board.colonnes[place.statut][place.position]);
+      gesture.current = { depart: board.columns, alive: board.columns };
+      setEnDeplacement(board.columns[place.status][place.position]);
     },
 
     onDragOver(event: DragOverEvent) {
-      if (!geste.current || !event.over) return;
-      const { vivant } = geste.current;
+      if (!gesture.current || !event.over) return;
+      const { alive } = gesture.current;
       const id = Number(event.active.id);
 
-      const cible = colonneCible(vivant, event.over.id);
-      if (!cible) return;
+      const target = targetColumn(alive, event.over.id);
+      if (!target) return;
 
-      const surId = carteSurvolee(event.over.id);
-      const index = indexVise(vivant[cible], surId, depasseLaMoitie(event));
+      const overId = hoveredCard(event.over.id);
+      const index = targetIndex(alive[target], overId, pastHalfway(event));
 
-      const changement = changerDeColonne(vivant, id, cible, index);
-      if (changement) {
-        appliquer(changement);
+      const change = moveToColumn(alive, id, target, index);
+      if (change) {
+        apply(change);
         return;
       }
 
       // Deja dans la bonne phase : le rang continue de suivre le curseur, sinon
       // l'emplacement resterait fige la ou l'on est entre dans la colonne.
-      if (surId === null || surId === id) return;
-      const vise = localiser(vivant, surId);
+      if (overId === null || overId === id) return;
+      const vise = locate(alive, overId);
       if (!vise) return;
-      const tri = reordonner(vivant, id, vise.position);
-      if (tri) appliquer(tri);
+      const sorted = reorder(alive, id, vise.position);
+      if (sorted) apply(sorted);
     },
 
     async onDragEnd(event: DragEndEvent) {
       setEnDeplacement(null);
-      const encours = geste.current;
-      geste.current = null;
+      const encours = gesture.current;
+      gesture.current = null;
       if (!encours) return;
 
       const id = Number(event.active.id);
-      const depart = localiser(encours.depart, id);
+      const depart = locate(encours.depart, id);
       if (!depart) return;
 
       // Rien a recalculer : le survol a deja place la carte, et l'emplacement
       // en pointilles montrait exactement ou elle allait tomber. Deposer, c'est
       // enteriner ce que l'on voyait.
-      const finales = encours.vivant;
-      const arrivee = localiser(finales, id);
+      const finales = encours.alive;
+      const arrivee = locate(finales, id);
       if (!arrivee) return;
-      if (arrivee.statut === depart.statut && arrivee.position === depart.position) {
+      if (arrivee.status === depart.status && arrivee.position === depart.position) {
         // Rien n'a bouge : on remet l'ecran tel qu'il etait, sans appel serveur.
-        board.previsualiser(encours.depart);
+        board.preview(encours.depart);
         return;
       }
 
-      await board.deplacer(id, arrivee.statut, arrivee.position, finales);
+      await board.move(id, arrivee.status, arrivee.position, finales);
     },
 
     onDragCancel() {
       setEnDeplacement(null);
-      if (geste.current) board.previsualiser(geste.current.depart);
-      geste.current = null;
+      if (gesture.current) board.preview(gesture.current.depart);
+      gesture.current = null;
     },
   };
 }

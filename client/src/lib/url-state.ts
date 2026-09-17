@@ -12,9 +12,9 @@ import { useSyncExternalStore } from "react";
  * `history.pushState` ne declenche pas `popstate` : on previent donc les
  * abonnes nous-memes apres chaque ecriture.
  */
-const abonnes = new Set<() => void>();
+const subscribers = new Set<() => void>();
 
-function requete(): string {
+function query(): string {
   return typeof window === "undefined" ? "" : window.location.search;
 }
 
@@ -23,23 +23,23 @@ function surLeServeur(): string {
   return "";
 }
 
-function abonner(callback: () => void) {
-  abonnes.add(callback);
+function subscribe(callback: () => void) {
+  subscribers.add(callback);
   window.addEventListener("popstate", callback);
 
   // Le serveur rend toujours l'ecran nu. Si l'URL dit autre chose, personne ne
   // previendrait React apres l'hydratation : on le fait au premier abonnement.
-  if (requete()) queueMicrotask(callback);
+  if (query()) queueMicrotask(callback);
 
   return () => {
-    abonnes.delete(callback);
+    subscribers.delete(callback);
     window.removeEventListener("popstate", callback);
   };
 }
 
 /** Les parametres courants, tels que l'adresse les porte. */
 export function useQueryString(): string {
-  return useSyncExternalStore(abonner, requete, surLeServeur);
+  return useSyncExternalStore(subscribe, query, surLeServeur);
 }
 
 /**
@@ -50,17 +50,17 @@ export function useQueryString(): string {
  * ajoute aucune : un filtre se regle par touches successives, et chacune ne
  * doit pas devenir une etape a remonter.
  */
-export function ecrireUrl(
+export function writeUrl(
   maj: (params: URLSearchParams) => void,
   mode: "pousser" | "remplacer" = "pousser",
 ): void {
   const params = new URLSearchParams(window.location.search);
   maj(params);
 
-  const suite = params.toString();
-  const adresse = suite ? `?${suite}` : window.location.pathname;
-  if (mode === "pousser") window.history.pushState(null, "", adresse);
-  else window.history.replaceState(null, "", adresse);
+  const queryString = params.toString();
+  const address = queryString ? `?${queryString}` : window.location.pathname;
+  if (mode === "pousser") window.history.pushState(null, "", address);
+  else window.history.replaceState(null, "", address);
 
-  abonnes.forEach((callback) => callback());
+  subscribers.forEach((callback) => callback());
 }

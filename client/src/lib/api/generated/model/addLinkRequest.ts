@@ -15,5 +15,5 @@ import type { LinkIcon } from "./linkIcon";
 export interface AddLinkRequest {
   label?: string;
   url: string;
-  icone?: LinkIcon | null;
+  icon?: LinkIcon | null;
 }

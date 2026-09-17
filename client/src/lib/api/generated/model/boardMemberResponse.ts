@@ -11,5 +11,5 @@
 export interface BoardMemberResponse {
   id: number;
   display_name: string;
-  initiales: string;
+  initials: string;
 }

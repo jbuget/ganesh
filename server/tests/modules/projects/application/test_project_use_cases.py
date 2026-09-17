@@ -42,7 +42,7 @@ TEAMMATE = User(
 def make_portail() -> Project:
     """Une instance neuve par test : les entites sont mutables."""
     return Project(
-        id=10, label="Portail", kind=ProjectKind.PROJET, statut=ProjectStatus.CADRAGE
+        id=10, label="Portail", kind=ProjectKind.PROJECT, status=ProjectStatus.SCOPING
     )
 
 
@@ -79,8 +79,8 @@ async def test_any_teammate_can_create_a_project() -> None:
         CreateProjectCommand(
             actor_id=1,
             label="Nouveau portail",
-            kind=ProjectKind.PROJET,
-            statut=ProjectStatus.EXPLORATION,
+            kind=ProjectKind.PROJECT,
+            status=ProjectStatus.EXPLORATION,
         )
     )
 
@@ -96,8 +96,8 @@ async def test_a_new_project_is_not_linked_to_monday() -> None:
         CreateProjectCommand(
             actor_id=1,
             label="Nouveau",
-            kind=ProjectKind.PROJET,
-            statut=ProjectStatus.EXPLORATION,
+            kind=ProjectKind.PROJECT,
+            status=ProjectStatus.EXPLORATION,
         )
     )
 
@@ -113,8 +113,8 @@ async def test_a_lot_must_reference_an_existing_parent() -> None:
             CreateProjectCommand(
                 actor_id=1,
                 label="Lot 1",
-                kind=ProjectKind.LOT,
-                statut=ProjectStatus.CADRAGE,
+                kind=ProjectKind.WORK_PACKAGE,
+                status=ProjectStatus.SCOPING,
                 parent_id=999,
             )
         )
@@ -123,39 +123,39 @@ async def test_a_lot_must_reference_an_existing_parent() -> None:
 async def test_a_lot_is_attached_to_its_parent() -> None:
     create, _, _, repo, _ = build()
 
-    lot = await create.execute(
+    work_package = await create.execute(
         CreateProjectCommand(
             actor_id=1,
             label="Lot 1",
-            kind=ProjectKind.LOT,
-            statut=ProjectStatus.CADRAGE,
+            kind=ProjectKind.WORK_PACKAGE,
+            status=ProjectStatus.SCOPING,
             parent_id=10,
         )
     )
 
-    assert lot.parent_id == 10
-    assert [p.id for p in await repo.list_children(10)] == [lot.id]
+    assert work_package.parent_id == 10
+    assert [p.id for p in await repo.list_children(10)] == [work_package.id]
 
 
 async def test_a_lot_cannot_be_attached_to_another_lot() -> None:
     """La hierarchie s'arrete a deux niveaux."""
     parent = make_portail()
-    lot = Project(
+    work_package = Project(
         id=20,
         label="Lot existant",
-        kind=ProjectKind.LOT,
-        statut=ProjectStatus.CADRAGE,
+        kind=ProjectKind.WORK_PACKAGE,
+        status=ProjectStatus.SCOPING,
         parent_id=10,
     )
-    create, _, _, _, _ = build(projects=[parent, lot])
+    create, _, _, _, _ = build(projects=[parent, work_package])
 
     with pytest.raises(ValidationError):
         await create.execute(
             CreateProjectCommand(
                 actor_id=1,
                 label="Sous-sous-projet",
-                kind=ProjectKind.LOT,
-                statut=ProjectStatus.CADRAGE,
+                kind=ProjectKind.WORK_PACKAGE,
+                status=ProjectStatus.SCOPING,
                 parent_id=20,
             )
         )
@@ -163,7 +163,7 @@ async def test_a_lot_cannot_be_attached_to_another_lot() -> None:
 
 async def test_a_lot_cannot_hang_under_an_off_project_activity() -> None:
     activite = Project(
-        id=30, label="Absences", kind=ProjectKind.HORS_PROJET, statut=None
+        id=30, label="Absences", kind=ProjectKind.OFF_PROJECT, status=None
     )
     create, _, _, _, _ = build(projects=[activite])
 
@@ -172,8 +172,8 @@ async def test_a_lot_cannot_hang_under_an_off_project_activity() -> None:
             CreateProjectCommand(
                 actor_id=1,
                 label="Lot",
-                kind=ProjectKind.LOT,
-                statut=ProjectStatus.CADRAGE,
+                kind=ProjectKind.WORK_PACKAGE,
+                status=ProjectStatus.SCOPING,
                 parent_id=30,
             )
         )
@@ -184,11 +184,11 @@ async def test_an_off_project_activity_carries_no_status() -> None:
 
     activity = await create.execute(
         CreateProjectCommand(
-            actor_id=1, label="Formation", kind=ProjectKind.HORS_PROJET, statut=None
+            actor_id=1, label="Formation", kind=ProjectKind.OFF_PROJECT, status=None
         )
     )
 
-    assert activity.statut is None
+    assert activity.status is None
 
 
 async def test_a_blank_label_is_rejected() -> None:
@@ -199,8 +199,8 @@ async def test_a_blank_label_is_rejected() -> None:
             CreateProjectCommand(
                 actor_id=1,
                 label="  ",
-                kind=ProjectKind.PROJET,
-                statut=ProjectStatus.CADRAGE,
+                kind=ProjectKind.PROJECT,
+                status=ProjectStatus.SCOPING,
             )
         )
 
@@ -212,8 +212,8 @@ async def test_creation_is_traced() -> None:
         CreateProjectCommand(
             actor_id=1,
             label="Nouveau",
-            kind=ProjectKind.PROJET,
-            statut=ProjectStatus.EXPLORATION,
+            kind=ProjectKind.PROJECT,
+            status=ProjectStatus.EXPLORATION,
         )
     )
 
@@ -225,13 +225,13 @@ async def test_anyone_can_change_a_project_status() -> None:
 
     await change.execute(
         ChangeProjectStatusCommand(
-            actor_id=1, project_id=10, statut=ProjectStatus.REALISATION
+            actor_id=1, project_id=10, status=ProjectStatus.BUILD
         )
     )
 
     project = await repo.get_by_id(10)
     assert project is not None
-    assert project.statut is ProjectStatus.REALISATION
+    assert project.status is ProjectStatus.BUILD
 
 
 async def test_a_status_change_records_the_transition() -> None:
@@ -239,13 +239,13 @@ async def test_a_status_change_records_the_transition() -> None:
 
     await change.execute(
         ChangeProjectStatusCommand(
-            actor_id=1, project_id=10, statut=ProjectStatus.REALISATION
+            actor_id=1, project_id=10, status=ProjectStatus.BUILD
         )
     )
 
     log = audit.logs[-1]
     assert log.action.value == "project.status_change"
-    assert (log.old_value, log.new_value) == ("cadrage", "realisation")
+    assert (log.old_value, log.new_value) == ("scoping", "build")
 
 
 async def test_listing_returns_active_projects() -> None:

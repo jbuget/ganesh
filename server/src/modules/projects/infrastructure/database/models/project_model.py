@@ -35,28 +35,28 @@ class ProjectModel(Base):
         Enum(ProjectKind, name="project_kind", native_enum=False, length=16),
         index=True,
     )
-    statut: Mapped[ProjectStatus | None] = mapped_column(
+    status: Mapped[ProjectStatus | None] = mapped_column(
         Enum(ProjectStatus, name="project_status", native_enum=False, length=16),
         nullable=True,
     )
     parent_id: Mapped[int | None] = mapped_column(
         ForeignKey("projects.id", ondelete="RESTRICT"), nullable=True, index=True
     )
-    actif: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     #: Date de sortie du referentiel. Nulle tant que la mission est active.
     archived_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    estime_j: Mapped[float | None] = mapped_column(Float, nullable=True)
-    categorie: Mapped[ProjectCategory | None] = mapped_column(
+    estimated_days: Mapped[float | None] = mapped_column(Float, nullable=True)
+    category: Mapped[ProjectCategory | None] = mapped_column(
         Enum(ProjectCategory, name="project_category", native_enum=False, length=32),
         nullable=True,
     )
-    priorite: Mapped[ProjectPriority | None] = mapped_column(
+    priority: Mapped[ProjectPriority | None] = mapped_column(
         Enum(ProjectPriority, name="project_priority", native_enum=False, length=16),
         nullable=True,
     )
-    date_mise_en_service: Mapped[date | None] = mapped_column(Date, nullable=True)
+    go_live_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    contacts_metier: Mapped[str | None] = mapped_column(Text, nullable=True)
+    business_contacts: Mapped[str | None] = mapped_column(Text, nullable=True)
     #: Rang dans sa colonne du tableau de bord.
     position: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 

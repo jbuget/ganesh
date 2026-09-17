@@ -19,15 +19,15 @@ class CreateProjectRequest(BaseModel):
 
     label: str = Field(min_length=1, max_length=255)
     kind: ProjectKind
-    statut: ProjectStatus | None = None
+    status: ProjectStatus | None = None
     parent_id: int | None = None
-    estime_j: float | None = None
+    estimated_days: float | None = None
 
 
 class ChangeStatusRequest(BaseModel):
     """Changement de phase d'une mission."""
 
-    statut: ProjectStatus
+    status: ProjectStatus
 
 
 class ProjectResponse(BaseModel):
@@ -36,19 +36,19 @@ class ProjectResponse(BaseModel):
     id: int
     label: str
     kind: ProjectKind
-    statut: ProjectStatus | None
+    status: ProjectStatus | None
     parent_id: int | None
-    actif: bool
+    is_active: bool
     #: Quand la mission a quitte le referentiel, nulle tant qu'elle y est.
     archived_at: datetime | None
-    estime_j: float | None
-    categorie: ProjectCategory | None
-    priorite: ProjectPriority | None
-    date_mise_en_service: date | None
+    estimated_days: float | None
+    category: ProjectCategory | None
+    priority: ProjectPriority | None
+    go_live_date: date | None
     position: int
     monday_item_id: str | None
     monday_subitem_id: str | None
-    contacts_metier: str | None
+    business_contacts: str | None
     description: str | None
     is_syncable_to_monday: bool
     is_deletable: bool
@@ -58,34 +58,34 @@ class LastUpdateResponse(BaseModel):
     """De quoi annoncer un fil de suivi sans l'ouvrir."""
 
     author: "BoardMemberResponse"
-    texte: str
-    publiee_le: datetime
+    body: str
+    published_at: datetime
 
 
 class ProjectListItemResponse(BaseModel):
     """Une mission du referentiel, avec qui s'en occupe."""
 
     project: ProjectResponse
-    referents: list["BoardMemberResponse"]
-    intervenants: list["BoardMemberResponse"]
+    leads: list["BoardMemberResponse"]
+    contributors: list["BoardMemberResponse"]
     #: Jours declares, previsionnel exclu.
-    realise_j: float
+    delivered_days: float
     #: Mises a jour vivantes du fil de suivi.
-    commentaires: int
+    comments: int
     #: La derniere d'entre elles, absente tant que rien ne se lit.
-    derniere_maj: LastUpdateResponse | None
+    latest_update: LastUpdateResponse | None
 
 
 class UpdateProjectRequest(BaseModel):
     """Modification partielle : seuls les champs fournis sont appliques."""
 
     label: str | None = Field(default=None, min_length=1, max_length=255)
-    statut: ProjectStatus | None = None
-    estime_j: float | None = None
-    categorie: ProjectCategory | None = None
-    priorite: ProjectPriority | None = None
-    date_mise_en_service: date | None = None
-    actif: bool | None = None
+    status: ProjectStatus | None = None
+    estimated_days: float | None = None
+    category: ProjectCategory | None = None
+    priority: ProjectPriority | None = None
+    go_live_date: date | None = None
+    is_active: bool | None = None
     parent_id: int | None = None
     monday_item_id: str | None = None
     monday_subitem_id: str | None = None
@@ -95,10 +95,10 @@ class ImportLineRequest(BaseModel):
     """Une ligne d'import, telle qu'elle sort d'un tableur."""
 
     label: str
-    kind: ProjectKind = ProjectKind.PROJET
-    statut: ProjectStatus | None = ProjectStatus.EXPLORATION
+    kind: ProjectKind = ProjectKind.PROJECT
+    status: ProjectStatus | None = ProjectStatus.EXPLORATION
     parent_label: str | None = None
-    estime_j: float | None = None
+    estimated_days: float | None = None
     monday_item_id: str | None = None
     monday_subitem_id: str | None = None
 
@@ -106,21 +106,21 @@ class ImportLineRequest(BaseModel):
 class ImportProjectsRequest(BaseModel):
     """Import en masse du referentiel."""
 
-    lignes: list[ImportLineRequest]
+    rows: list[ImportLineRequest]
 
 
 class ImportReportResponse(BaseModel):
     """Ce que l'import a fait, ligne par ligne."""
 
-    crees: int
-    ignores: int
-    erreurs: list[str]
+    created: int
+    skipped: int
+    errors: list[str]
 
 
 class MoveProjectRequest(BaseModel):
     """Depot d'une carte : colonne d'arrivee et rang voulu."""
 
-    statut: ProjectStatus
+    status: ProjectStatus
     position: int = Field(ge=0)
 
 
@@ -129,7 +129,7 @@ class BoardMemberResponse(BaseModel):
 
     id: int
     display_name: str
-    initiales: str
+    initials: str
 
 
 class BoardParentResponse(BaseModel):
@@ -143,26 +143,26 @@ class BoardCardResponse(BaseModel):
     """Une carte du tableau de bord."""
 
     project: ProjectResponse
-    consomme_j: float
-    intervenants: list[BoardMemberResponse]
-    commentaires: int
+    consumed_days: float
+    contributors: list[BoardMemberResponse]
+    comments: int
     #: Le dernier message du fil, absent tant que rien ne se lit.
-    derniere_maj: LastUpdateResponse | None
-    sous_projets: int
+    latest_update: LastUpdateResponse | None
+    sub_projects: int
     parent: BoardParentResponse | None
 
 
 class BoardColumnResponse(BaseModel):
     """Une phase et ses cartes."""
 
-    statut: ProjectStatus
-    cartes: list[BoardCardResponse]
+    status: ProjectStatus
+    cards: list[BoardCardResponse]
 
 
 class BoardResponse(BaseModel):
     """Le tableau complet, toutes phases confondues."""
 
-    colonnes: list[BoardColumnResponse]
+    columns: list[BoardColumnResponse]
 
 
 class ProjectLinkResponse(BaseModel):
@@ -171,7 +171,7 @@ class ProjectLinkResponse(BaseModel):
     id: int
     label: str
     url: str
-    icone: LinkIcon
+    icon: LinkIcon
 
 
 class AddLinkRequest(BaseModel):
@@ -183,51 +183,51 @@ class AddLinkRequest(BaseModel):
 
     label: str = ""
     url: str
-    icone: LinkIcon | None = None
+    icon: LinkIcon | None = None
 
 
 class PhaseReachedResponse(BaseModel):
     """Date a laquelle une mission est entree dans une phase."""
 
-    statut: ProjectStatus
-    libelle: str
+    status: ProjectStatus
+    label: str
     reached_at: date
 
 
 class MonthlyShareResponse(BaseModel):
     """Temps declare sur un mois donne."""
 
-    mois: date
-    jours: float
+    month: date
+    days: float
 
 
 class ProjectContributionResponse(BaseModel):
     """Temps declare par une personne sur la mission."""
 
     member: BoardMemberResponse
-    jours: float
-    par_mois: list[MonthlyShareResponse]
+    days: float
+    by_month: list[MonthlyShareResponse]
 
 
 class ProjectDetailResponse(BaseModel):
     """La fiche complete d'une mission."""
 
     project: ProjectResponse
-    departements: list[Department]
-    liens: list[ProjectLinkResponse]
+    departments: list[Department]
+    links: list[ProjectLinkResponse]
     phases: list[PhaseReachedResponse]
-    referents: list[BoardMemberResponse]
-    intervenants: list[BoardMemberResponse]
-    consomme_j: float
+    leads: list[BoardMemberResponse]
+    contributors: list[BoardMemberResponse]
+    consumed_days: float
     contributions: list[ProjectContributionResponse]
-    sous_projets: list[ProjectResponse]
+    sub_projects: list[ProjectResponse]
 
 
 class UpdateProjectDetailRequest(BaseModel):
     """Departements concernes et interlocuteurs metier."""
 
-    departements: list[Department] = []
-    contacts_metier: str | None = None
+    departments: list[Department] = []
+    business_contacts: str | None = None
 
 
 class UpdateDescriptionRequest(BaseModel):
@@ -241,15 +241,15 @@ class ProjectUpdateResponse(BaseModel):
 
     id: int
     author: BoardMemberResponse
-    texte: str
-    publiee_le: datetime
-    modifiee_le: datetime | None
-    est_supprimee: bool
+    body: str
+    published_at: datetime
+    edited_at: datetime | None
+    is_deleted: bool
     #: Vrai si le lecteur courant peut la corriger ou la retirer.
-    est_la_mienne: bool
+    is_mine: bool
 
 
 class PostUpdateRequest(BaseModel):
     """Publication ou correction d'une mise a jour."""
 
-    texte: str = Field(min_length=1)
+    body: str = Field(min_length=1)

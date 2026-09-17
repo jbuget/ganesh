@@ -53,54 +53,54 @@ class MoveProjectUseCase:
                 "Une activite hors projet ne figure pas sur le tableau de bord."
             )
 
-        ancienne_phase = mission.statut
+        ancienne_phase = mission.status
         missions = await self._projects.list_all(include_inactive=False)
 
-        mission.statut = command.statut
+        mission.status = command.status
         # Glisser une carte fait franchir une phase autant qu'un changement
         # depuis le referentiel : la date se note des deux cotes.
         await self._details.mark_phase_reached(
-            command.project_id, command.statut, today or date.today()
+            command.project_id, command.status, today or date.today()
         )
 
         # Le depot se raisonne par identifiant, jamais par identite d'objet :
         # `get_by_id` et `list_all` renvoient deux instances distinctes de la
         # meme ligne, et ecrire l'ancienne ecraserait le rang qu'on vient de
         # poser sur la nouvelle.
-        arrivee = [
+        destination = [
             p
             for p in missions
-            if p.statut is command.statut and p.appears_on_board and p.id != mission.id
+            if p.status is command.status and p.appears_on_board and p.id != mission.id
         ]
-        arrivee.append(mission)
-        reorder_column(arrivee, deplacee=mission, vers=command.position)
+        destination.append(mission)
+        reorder_column(destination, deplacee=mission, vers=command.position)
 
         # La colonne quittee garderait un trou a la place de la carte partie.
-        if ancienne_phase is not command.statut:
-            depart = [
+        if ancienne_phase is not command.status:
+            origin = [
                 p
                 for p in missions
-                if p.statut is ancienne_phase
+                if p.status is ancienne_phase
                 and p.appears_on_board
                 and p.id != mission.id
             ]
             for position, restante in enumerate(
-                sorted(depart, key=lambda p: p.position)
+                sorted(origin, key=lambda p: p.position)
             ):
                 restante.position = position
-            for restante in depart:
+            for restante in origin:
                 await self._projects.update(restante)
 
-        for rangee in arrivee:
+        for rangee in destination:
             await self._projects.update(rangee)
 
-        if ancienne_phase is not command.statut:
+        if ancienne_phase is not command.status:
             await self._audit_logs.add(
                 AuditLog.project_status_change(
                     actor_id=command.actor_id,
                     project_id=mission.id,
                     old_status=ancienne_phase.value if ancienne_phase else None,
-                    new_status=command.statut.value,
+                    new_status=command.status.value,
                 )
             )
         return mission

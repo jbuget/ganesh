@@ -250,7 +250,7 @@ def get_update_description_use_case(
     return UpdateDescriptionUseCase(projects=projects, audit_logs=audit_logs)
 
 
-def _ecriture_du_fil(
+def _thread_write(
     users: UserRepository = Depends(get_user_repository),
     projects: ProjectRepository = Depends(get_project_repository),
     updates: ProjectUpdateRepository = Depends(get_project_update_repository),
@@ -266,19 +266,19 @@ def _ecriture_du_fil(
 
 
 def get_post_update_use_case(
-    depots: dict[str, object] = Depends(_ecriture_du_fil),
+    depots: dict[str, object] = Depends(_thread_write),
 ) -> PostProjectUpdateUseCase:
     return PostProjectUpdateUseCase(**depots)  # type: ignore[arg-type]
 
 
 def get_edit_update_use_case(
-    depots: dict[str, object] = Depends(_ecriture_du_fil),
+    depots: dict[str, object] = Depends(_thread_write),
 ) -> EditProjectUpdateUseCase:
     return EditProjectUpdateUseCase(**depots)  # type: ignore[arg-type]
 
 
 def get_remove_update_use_case(
-    depots: dict[str, object] = Depends(_ecriture_du_fil),
+    depots: dict[str, object] = Depends(_thread_write),
 ) -> RemoveProjectUpdateUseCase:
     return RemoveProjectUpdateUseCase(**depots)  # type: ignore[arg-type]
 

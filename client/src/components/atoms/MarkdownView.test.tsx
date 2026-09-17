@@ -5,13 +5,13 @@ import { MarkdownView } from "./MarkdownView";
 
 describe("MarkdownView", () => {
   it("rend les titres", () => {
-    render(<MarkdownView texte={"## Problème\n\nDu texte."} />);
+    render(<MarkdownView body={"## Problème\n\nDu texte."} />);
 
     expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Problème");
   });
 
   it("rend les listes et le code", () => {
-    render(<MarkdownView texte={"- import du CSV\n- via `WeasyPrint`"} />);
+    render(<MarkdownView body={"- import du CSV\n- via `WeasyPrint`"} />);
 
     expect(screen.getAllByRole("listitem")).toHaveLength(2);
     expect(screen.getByText("WeasyPrint").tagName).toBe("CODE");
@@ -19,7 +19,7 @@ describe("MarkdownView", () => {
 
   it("rend les tableaux, que remark-gfm apporte", () => {
     render(
-      <MarkdownView texte={"| Étape | Durée |\n| --- | --- |\n| Import | 2 s |"} />,
+      <MarkdownView body={"| Étape | Durée |\n| --- | --- |\n| Import | 2 s |"} />,
     );
 
     expect(screen.getByRole("table")).toBeInTheDocument();
@@ -30,7 +30,7 @@ describe("MarkdownView", () => {
     // Sans `rehype-raw`, une balise ecrite dans le markdown reste du texte :
     // rien n'est execute, et il n'y a donc rien a assainir.
     const { container } = render(
-      <MarkdownView texte={'<img src=x onerror="alert(1)">Bonjour'} />,
+      <MarkdownView body={'<img src=x onerror="alert(1)">Bonjour'} />,
     );
 
     expect(container.querySelector("img")).toBeNull();
@@ -38,7 +38,7 @@ describe("MarkdownView", () => {
   });
 
   it("garde les liens cliquables", () => {
-    render(<MarkdownView texte="[La doc](https://waat.fr/doc)" />);
+    render(<MarkdownView body="[La doc](https://waat.fr/doc)" />);
 
     expect(screen.getByRole("link", { name: "La doc" })).toHaveAttribute(
       "href",

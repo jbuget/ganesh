@@ -85,7 +85,7 @@ async def set_active(
     assert manager.id is not None
     user = await use_case.execute(
         SetUserActiveCommand(
-            actor_id=manager.id, target_user_id=user_id, actif=payload.actif
+            actor_id=manager.id, target_user_id=user_id, is_active=payload.is_active
         )
     )
     await session.commit()

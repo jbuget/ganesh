@@ -49,8 +49,8 @@ async def preparer(session: AsyncSession) -> tuple[int, dict[str, int]]:
             Project(
                 id=None,
                 label=label,
-                kind=ProjectKind.PROJET,
-                statut=ProjectStatus.CADRAGE,
+                kind=ProjectKind.PROJECT,
+                status=ProjectStatus.SCOPING,
                 position=rang,
             )
         )
@@ -69,9 +69,9 @@ def use_case(session: AsyncSession) -> MoveProjectUseCase:
     )
 
 
-async def ordre(session: AsyncSession, statut: ProjectStatus) -> list[str]:
+async def ordre(session: AsyncSession, status: ProjectStatus) -> list[str]:
     missions = [
-        p for p in await SqlProjectRepository(session).list_all() if p.statut is statut
+        p for p in await SqlProjectRepository(session).list_all() if p.status is status
     ]
     return [p.label for p in sorted(missions, key=lambda p: p.position)]
 
@@ -85,12 +85,12 @@ async def test_a_card_moved_to_the_top_really_lands_there(
         MoveProjectCommand(
             actor_id=actor_id,
             project_id=ids["Gamma"],
-            statut=ProjectStatus.CADRAGE,
+            status=ProjectStatus.SCOPING,
             position=0,
         )
     )
 
-    assert await ordre(db_session, ProjectStatus.CADRAGE) == ["Gamma", "Alpha", "Beta"]
+    assert await ordre(db_session, ProjectStatus.SCOPING) == ["Gamma", "Alpha", "Beta"]
 
 
 async def test_ranks_stay_unique_within_a_column(db_session: AsyncSession) -> None:
@@ -101,7 +101,7 @@ async def test_ranks_stay_unique_within_a_column(db_session: AsyncSession) -> No
         MoveProjectCommand(
             actor_id=actor_id,
             project_id=ids["Gamma"],
-            statut=ProjectStatus.CADRAGE,
+            status=ProjectStatus.SCOPING,
             position=0,
         )
     )
@@ -109,7 +109,7 @@ async def test_ranks_stay_unique_within_a_column(db_session: AsyncSession) -> No
     missions = [
         p
         for p in await SqlProjectRepository(db_session).list_all()
-        if p.statut is ProjectStatus.CADRAGE
+        if p.status is ProjectStatus.SCOPING
     ]
     rangs = [p.position for p in missions]
     assert sorted(rangs) == [0, 1, 2]
@@ -124,10 +124,10 @@ async def test_a_card_changing_column_keeps_a_coherent_order(
         MoveProjectCommand(
             actor_id=actor_id,
             project_id=ids["Alpha"],
-            statut=ProjectStatus.REALISATION,
+            status=ProjectStatus.BUILD,
             position=0,
         )
     )
 
-    assert await ordre(db_session, ProjectStatus.CADRAGE) == ["Beta", "Gamma"]
-    assert await ordre(db_session, ProjectStatus.REALISATION) == ["Alpha"]
+    assert await ordre(db_session, ProjectStatus.SCOPING) == ["Beta", "Gamma"]
+    assert await ordre(db_session, ProjectStatus.BUILD) == ["Alpha"]

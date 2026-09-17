@@ -16,13 +16,13 @@ import { useEffect } from "react";
 export type Colonnes = Record<ProjectStatus, BoardCardResponse[]>;
 
 /** Les archivees ne sont demandees que lorsqu'on veut les voir. */
-function perimetre(inclureArchivees: boolean) {
+function scope(inclureArchivees: boolean) {
   return inclureArchivees ? { include_inactive: true } : undefined;
 }
 
 function versColonnes(board: BoardResponse): Colonnes {
   return Object.fromEntries(
-    board.colonnes.map((colonne) => [colonne.statut, colonne.cartes]),
+    board.columns.map((column) => [column.status, column.cards]),
   ) as Colonnes;
 }
 
@@ -40,29 +40,29 @@ function versColonnes(board: BoardResponse): Colonnes {
 export function useBoard(inclureArchivees = false) {
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();
-  const [colonnes, setColonnes] = useState<Colonnes | null>(null);
-  const [enErreur, setEnErreur] = useState(false);
+  const [columns, setColonnes] = useState<Colonnes | null>(null);
+  const [hasError, setEnErreur] = useState(false);
 
   useEffect(() => {
-    let vivant = true;
-    getBoard(perimetre(inclureArchivees)).then((reponse) => {
-      if (vivant) setColonnes(versColonnes(reponse.data as BoardResponse));
+    let alive = true;
+    getBoard(scope(inclureArchivees)).then((response) => {
+      if (alive) setColonnes(versColonnes(response.data as BoardResponse));
     });
     return () => {
-      vivant = false;
+      alive = false;
     };
   }, [inclureArchivees]);
 
-  async function recharger() {
-    const reponse = await getBoard(perimetre(inclureArchivees));
-    setColonnes(versColonnes(reponse.data as BoardResponse));
+  async function reload() {
+    const response = await getBoard(scope(inclureArchivees));
+    setColonnes(versColonnes(response.data as BoardResponse));
     await queryClient.invalidateQueries();
   }
 
   return {
-    colonnes,
-    enErreur,
-    utilisateur: user,
+    columns,
+    hasError,
+    user: user,
 
     /**
      * Montre un etat sans l'enregistrer.
@@ -71,13 +71,13 @@ export function useBoard(inclureArchivees = false) {
      * referment sous le curseur, mais rien n'est ecrit tant que la carte n'est
      * pas relachee.
      */
-    previsualiser: setColonnes,
+    preview: setColonnes,
 
     /** Reprend la verite du serveur, apres un changement fait hors glissement. */
-    recharger,
+    reload,
 
     /** Applique le deplacement a l'ecran, puis l'enregistre. */
-    async deplacer(
+    async move(
       projectId: number,
       versStatut: ProjectStatus,
       versPosition: number,
@@ -87,14 +87,14 @@ export function useBoard(inclureArchivees = false) {
       setEnErreur(false);
       try {
         await moveProject(projectId, {
-          statut: versStatut,
+          status: versStatut,
           position: versPosition,
         });
         await queryClient.invalidateQueries();
       } catch {
         // L'ecran ne doit jamais rester sur un etat que le serveur ignore.
         setEnErreur(true);
-        await recharger();
+        await reload();
       }
     },
   };

@@ -9,5 +9,5 @@
  * Coupure ou retablissement de l'acces d'un collaborateur.
  */
 export interface SetActiveRequest {
-  actif: boolean;
+  is_active: boolean;
 }

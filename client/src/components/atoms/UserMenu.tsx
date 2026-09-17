@@ -37,7 +37,7 @@ export function UserMenu({ user, onSignOut, repliee = false }: UserMenuProps) {
           aria-hidden="true"
           className="flex size-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-medium text-slate-700"
         >
-          {user.initiales}
+          {user.initials}
         </span>
         <span className={repliee ? "sr-only" : "min-w-0 text-left"}>
           <span className="block truncate text-sm">{user.display_name}</span>

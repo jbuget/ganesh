@@ -32,7 +32,7 @@ class ReopenMonthUseCase:
         if actor is None:
             raise EntityNotFoundError("Utilisateur inconnu.")
 
-        month = await self._months.get(command.target_user_id, command.mois)
+        month = await self._months.get(command.target_user_id, command.month)
         if month is None:
             raise ForbiddenActionError("Ce mois n'a jamais ete valide.")
 
@@ -43,7 +43,7 @@ class ReopenMonthUseCase:
             AuditLog.month_reopen(
                 actor_id=command.actor_id,
                 target_user_id=command.target_user_id,
-                mois=month.mois,
+                month=month.month,
             )
         )
         return month

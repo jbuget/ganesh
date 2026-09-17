@@ -25,23 +25,23 @@ class ListedProject:
     """Une mission et ce que l'interface doit savoir pour proposer ses actions."""
 
     project: Project
-    saisies: int
-    sous_projets: int
+    entries: int
+    sub_projects: int
     #: Qui repond de la mission, par ordre alphabetique.
-    referents: list[User] = field(default_factory=list)
+    leads: list[User] = field(default_factory=list)
     #: Qui y travaille, par ordre alphabetique.
-    intervenants: list[User] = field(default_factory=list)
+    contributors: list[User] = field(default_factory=list)
     #: Jours declares, previsionnel exclu.
-    realise_j: float = 0.0
+    delivered_days: float = 0.0
     #: Mises a jour vivantes du fil de suivi.
-    commentaires: int = 0
+    comments: int = 0
     #: La derniere d'entre elles, pour annoncer le fil sans l'ouvrir.
-    derniere_maj: LastUpdate | None = None
+    latest_update: LastUpdate | None = None
 
     @property
     def is_deletable(self) -> bool:
         """Une mission qui n'a jamais servi peut disparaitre ; les autres s'archivent."""
-        return self.saisies == 0 and self.sous_projets == 0
+        return self.entries == 0 and self.sub_projects == 0
 
 
 class ListProjectsUseCase:
@@ -65,9 +65,9 @@ class ListProjectsUseCase:
         self, include_inactive: bool = False, today: date | None = None
     ) -> list[ListedProject]:
         missions = await self._projects.list_all(include_inactive=include_inactive)
-        saisies = await self._entries.count_by_project()
+        entries = await self._entries.count_by_project()
         realise = await self._entries.sum_realised_by_project(today or date.today())
-        commentaires = await self._updates.count_by_project()
+        comments = await self._updates.count_by_project()
         dernieres = await self._updates.latest_by_project()
 
         enfants: dict[int, int] = {}
@@ -77,34 +77,34 @@ class ListProjectsUseCase:
 
         # Les affectations se lisent en deux requetes, pas deux par mission : le
         # referentiel en aligne des dizaines sur un meme ecran.
-        utilisateurs = {u.id: u for u in await self._users.list_all(True)}
+        users = {u.id: u for u in await self._users.list_all(True)}
         par_role = {role: await self._assignees.list_all(role) for role in ProjectRole}
 
-        def personnes(project_id: int, role: ProjectRole) -> list[User]:
+        def people(project_id: int, role: ProjectRole) -> list[User]:
             connus = [
-                utilisateurs[uid]
-                for uid in par_role[role].get(project_id, [])
-                if uid in utilisateurs
+                users[uid] for uid in par_role[role].get(project_id, []) if uid in users
             ]
             return sorted(connus, key=lambda u: u.display_name)
 
-        def derniere(project_id: int) -> LastUpdate | None:
-            maj = dernieres.get(project_id)
-            auteur = utilisateurs.get(maj.author_id) if maj else None
+        def latest(project_id: int) -> LastUpdate | None:
+            update = dernieres.get(project_id)
+            author = users.get(update.author_id) if update else None
             # Un auteur desactive puis efface laisserait un texte anonyme :
             # mieux vaut ne rien annoncer que de le signer d'un blanc.
-            return LastUpdate(update=maj, author=auteur) if maj and auteur else None
+            return (
+                LastUpdate(update=update, author=author) if update and author else None
+            )
 
         return [
             ListedProject(
                 project=mission,
-                saisies=saisies.get(mission.id or 0, 0),
-                sous_projets=enfants.get(mission.id or 0, 0),
-                referents=personnes(mission.id or 0, ProjectRole.REFERENT),
-                intervenants=personnes(mission.id or 0, ProjectRole.INTERVENANT),
-                realise_j=realise.get(mission.id or 0, 0.0),
-                commentaires=commentaires.get(mission.id or 0, 0),
-                derniere_maj=derniere(mission.id or 0),
+                entries=entries.get(mission.id or 0, 0),
+                sub_projects=enfants.get(mission.id or 0, 0),
+                leads=people(mission.id or 0, ProjectRole.LEAD),
+                contributors=people(mission.id or 0, ProjectRole.CONTRIBUTOR),
+                delivered_days=realise.get(mission.id or 0, 0.0),
+                comments=comments.get(mission.id or 0, 0),
+                latest_update=latest(mission.id or 0),
             )
             for mission in missions
         ]

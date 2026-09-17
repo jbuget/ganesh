@@ -29,7 +29,7 @@ function markdownDe(editor: Editor): string {
 }
 
 interface RichTextEditorProps {
-  valeur: string;
+  value: string;
   placeholder?: string;
   onChange: (markdown: string) => void;
   /** Declenche par Cmd+Entree, pour enregistrer sans lacher le clavier. */
@@ -50,13 +50,13 @@ interface RichTextEditorProps {
 /** Un bouton de la barre d'outils. */
 function Outil({
   editor,
-  actif,
+  isActive,
   titre,
   onClick,
   children,
 }: {
   editor: Editor;
-  actif: boolean;
+  isActive: boolean;
   titre: string;
   onClick: () => void;
   children: React.ReactNode;
@@ -66,7 +66,7 @@ function Outil({
       type="button"
       title={titre}
       aria-label={titre}
-      aria-pressed={actif}
+      aria-pressed={isActive}
       // `onMouseDown` plutot que `onClick` : le bouton prendrait le focus et
       // la selection serait perdue avant que la commande ne s'applique.
       onMouseDown={(event) => {
@@ -75,7 +75,7 @@ function Outil({
         editor.chain().focus().run();
       }}
       className={`cursor-pointer rounded p-1.5 transition-colors ${
-        actif ? "bg-slate-200 text-slate-900" : "text-slate-500 hover:bg-slate-100"
+        isActive ? "bg-slate-200 text-slate-900" : "text-slate-500 hover:bg-slate-100"
       }`}
     >
       {children}
@@ -92,7 +92,7 @@ function Outil({
  * relecture.
  */
 export function RichTextEditor({
-  valeur,
+  value,
   placeholder,
   onChange,
   onSubmit,
@@ -114,7 +114,7 @@ export function RichTextEditor({
       Placeholder.configure({ placeholder: placeholder ?? "" }),
       Markdown.configure({ transformPastedText: true }),
     ],
-    content: valeur,
+    content: value,
     editorProps: {
       attributes: {
         class: `prose prose-sm prose-slate max-w-none ${pleineHauteur ? "h-full" : hauteur} px-3 py-2 focus:outline-none`,
@@ -153,7 +153,7 @@ export function RichTextEditor({
         <Outil
           editor={editor}
           titre="Gras"
-          actif={editor.isActive("bold")}
+          isActive={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}
         >
           <Bold className="size-3.5" aria-hidden />
@@ -161,7 +161,7 @@ export function RichTextEditor({
         <Outil
           editor={editor}
           titre="Italique"
-          actif={editor.isActive("italic")}
+          isActive={editor.isActive("italic")}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         >
           <Italic className="size-3.5" aria-hidden />
@@ -169,7 +169,7 @@ export function RichTextEditor({
         <Outil
           editor={editor}
           titre="Barré"
-          actif={editor.isActive("strike")}
+          isActive={editor.isActive("strike")}
           onClick={() => editor.chain().focus().toggleStrike().run()}
         >
           <Strikethrough className="size-3.5" aria-hidden />
@@ -177,7 +177,7 @@ export function RichTextEditor({
         <Outil
           editor={editor}
           titre="Code"
-          actif={editor.isActive("code")}
+          isActive={editor.isActive("code")}
           onClick={() => editor.chain().focus().toggleCode().run()}
         >
           <Code className="size-3.5" aria-hidden />
@@ -189,7 +189,7 @@ export function RichTextEditor({
             <Outil
               editor={editor}
               titre="Titre"
-              actif={editor.isActive("heading", { level: 2 })}
+              isActive={editor.isActive("heading", { level: 2 })}
               onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             >
               <Heading2 className="size-3.5" aria-hidden />
@@ -197,7 +197,7 @@ export function RichTextEditor({
             <Outil
               editor={editor}
               titre="Sous-titre"
-              actif={editor.isActive("heading", { level: 3 })}
+              isActive={editor.isActive("heading", { level: 3 })}
               onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             >
               <Heading3 className="size-3.5" aria-hidden />
@@ -210,7 +210,7 @@ export function RichTextEditor({
         <Outil
           editor={editor}
           titre="Liste à puces"
-          actif={editor.isActive("bulletList")}
+          isActive={editor.isActive("bulletList")}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
         >
           <List className="size-3.5" aria-hidden />
@@ -218,7 +218,7 @@ export function RichTextEditor({
         <Outil
           editor={editor}
           titre="Liste numérotée"
-          actif={editor.isActive("orderedList")}
+          isActive={editor.isActive("orderedList")}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
         >
           <ListOrdered className="size-3.5" aria-hidden />
@@ -226,7 +226,7 @@ export function RichTextEditor({
         <Outil
           editor={editor}
           titre="Citation"
-          actif={editor.isActive("blockquote")}
+          isActive={editor.isActive("blockquote")}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
         >
           <Quote className="size-3.5" aria-hidden />
@@ -234,7 +234,7 @@ export function RichTextEditor({
         <Outil
           editor={editor}
           titre="Lien"
-          actif={editor.isActive("link")}
+          isActive={editor.isActive("link")}
           onClick={() => {
             if (editor.isActive("link")) {
               editor.chain().focus().unsetLink().run();

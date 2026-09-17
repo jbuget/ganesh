@@ -15,9 +15,9 @@ from src.modules.calendar.domain.services.working_days import (
 # 1er mai, 14 juillet, 25 decembre.
 
 
-@pytest.mark.parametrize("jour", [date(2026, 9, 12), date(2026, 9, 13)])
-def test_a_weekend_day_is_flagged_as_weekend(jour: date) -> None:
-    assert classify_day(jour) is DayKind.WEEKEND
+@pytest.mark.parametrize("day", [date(2026, 9, 12), date(2026, 9, 13)])
+def test_a_weekend_day_is_flagged_as_weekend(day: date) -> None:
+    assert classify_day(day) is DayKind.WEEKEND
 
 
 def test_a_public_holiday_is_flagged_as_holiday() -> None:
@@ -41,8 +41,8 @@ def test_a_month_lists_all_its_days() -> None:
     days = days_of_month(2026, 9)
 
     assert len(days) == 30
-    assert days[0].jour == date(2026, 9, 1)
-    assert days[-1].jour == date(2026, 9, 30)
+    assert days[0].day == date(2026, 9, 1)
+    assert days[-1].day == date(2026, 9, 30)
 
 
 def test_february_of_a_leap_year_has_twenty_nine_days() -> None:
@@ -50,7 +50,7 @@ def test_february_of_a_leap_year_has_twenty_nine_days() -> None:
 
 
 def test_each_day_of_the_month_carries_its_kind() -> None:
-    days = {day.jour: day.kind for day in days_of_month(2026, 5)}
+    days = {day.day: day.kind for day in days_of_month(2026, 5)}
 
     assert days[date(2026, 5, 1)] is DayKind.FERIE
     assert days[date(2026, 5, 2)] is DayKind.WEEKEND

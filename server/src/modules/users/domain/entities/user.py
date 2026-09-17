@@ -28,8 +28,8 @@ class User:
     email: str
     display_name: str
     role: Role = Role.TEAMMATE
-    actif: bool = field(default=True)
-    derniere_connexion: datetime | None = None
+    is_active: bool = field(default=True)
+    last_login_at: datetime | None = None
 
     def __post_init__(self) -> None:
         self.email = self.email.strip().lower()
@@ -40,15 +40,15 @@ class User:
 
     def can_reopen_month(self) -> bool:
         """Seul un manager peut rouvrir un mois valide."""
-        return self.actif and self.is_manager
+        return self.is_active and self.is_manager
 
     def can_manage_teammates(self) -> bool:
         """La gestion des collaborateurs est reservee aux managers."""
-        return self.actif and self.is_manager
+        return self.is_active and self.is_manager
 
     def can_edit_open_months(self) -> bool:
         """Chacun peut editer un mois ouvert, y compris celui d'un collegue."""
-        return self.actif
+        return self.is_active
 
     def can_deactivate(self, target: "User") -> bool:
         """Dit si ce manager peut couper l'acces de `target`.
@@ -58,7 +58,7 @@ class User:
         """
         return self.can_manage_teammates() and target.id != self.id
 
-    def enregistrer_connexion(
+    def record_login(
         self, a: datetime, fraicheur: timedelta = FRAICHEUR_CONNEXION
     ) -> bool:
         """Horodate le passage de ce collaborateur. Dit s'il faut le persister.
@@ -67,8 +67,8 @@ class User:
         peuvent arriver dans le desordre, et la derniere connexion connue reste
         la plus recente.
         """
-        precedente = self.derniere_connexion
+        precedente = self.last_login_at
         if precedente is not None and a - precedente < fraicheur:
             return False
-        self.derniere_connexion = a
+        self.last_login_at = a
         return True

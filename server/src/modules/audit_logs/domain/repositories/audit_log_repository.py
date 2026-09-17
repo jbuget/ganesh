@@ -14,7 +14,7 @@ class AuditLogRepository(ABC):
 
     @abstractmethod
     async def list_for_user_month(
-        self, target_user_id: int, mois: date
+        self, target_user_id: int, month: date
     ) -> list[AuditLog]: ...
 
     @abstractmethod

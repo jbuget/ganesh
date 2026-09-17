@@ -9,7 +9,7 @@
  * Un jour et sa nature.
  */
 export interface CalendarDaySchema {
-  jour: string;
+  day: string;
   kind: string;
   label?: string | null;
   is_off_day: boolean;

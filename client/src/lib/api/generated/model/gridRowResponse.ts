@@ -14,10 +14,10 @@ export interface GridRowResponse {
   project_id: number;
   label: string;
   kind: ProjectKind;
-  estime_j: number | null;
+  estimated_days: number | null;
   values: GridRowResponseValues;
-  total_realise: number;
-  total_prevu: number;
+  actual_total: number;
+  forecast_total: number;
   total: number;
-  consomme_total_j: number;
+  total_consumed_days: number;
 }

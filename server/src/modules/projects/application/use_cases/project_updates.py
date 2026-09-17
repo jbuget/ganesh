@@ -47,7 +47,7 @@ class _UpdateUseCase:
         self._updates = updates
         self._audit_logs = audit_logs
 
-    async def _tracer(
+    async def _trace(
         self, action: AuditAction, actor_id: int, project_id: int, update_id: int
     ) -> None:
         await self._audit_logs.add(
@@ -59,11 +59,11 @@ class _UpdateUseCase:
             )
         )
 
-    async def _charger(self, update_id: int) -> ProjectUpdate:
-        maj = await self._updates.get(update_id)
-        if maj is None:
+    async def _load(self, update_id: int) -> ProjectUpdate:
+        update = await self._updates.get(update_id)
+        if update is None:
             raise EntityNotFoundError("Mise a jour inconnue.")
-        return maj
+        return update
 
 
 class PostProjectUpdateUseCase(_UpdateUseCase):
@@ -77,20 +77,20 @@ class PostProjectUpdateUseCase(_UpdateUseCase):
         if await self._projects.get_by_id(command.project_id) is None:
             raise EntityNotFoundError("Mission inconnue.")
 
-        maj = await self._updates.add(
+        update = await self._updates.add(
             ProjectUpdate(
                 id=None,
                 project_id=command.project_id,
                 author_id=command.actor_id,
-                texte=command.texte,
-                publiee_le=now or datetime.now(),
+                body=command.body,
+                published_at=now or datetime.now(),
             )
         )
-        assert maj.id is not None
-        await self._tracer(
-            AuditAction.UPDATE_POST, command.actor_id, command.project_id, maj.id
+        assert update.id is not None
+        await self._trace(
+            AuditAction.UPDATE_POST, command.actor_id, command.project_id, update.id
         )
-        return maj
+        return update
 
 
 class EditProjectUpdateUseCase(_UpdateUseCase):
@@ -99,13 +99,16 @@ class EditProjectUpdateUseCase(_UpdateUseCase):
     async def execute(
         self, command: EditUpdateCommand, now: datetime | None = None
     ) -> ProjectUpdate:
-        maj = await self._charger(command.update_id)
-        maj.reecrire(command.texte, par=command.actor_id, a=now or datetime.now())
-        await self._updates.update(maj)
-        await self._tracer(
-            AuditAction.UPDATE_EDIT, command.actor_id, maj.project_id, command.update_id
+        update = await self._load(command.update_id)
+        update.rewrite(command.body, par=command.actor_id, a=now or datetime.now())
+        await self._updates.update(update)
+        await self._trace(
+            AuditAction.UPDATE_EDIT,
+            command.actor_id,
+            update.project_id,
+            command.update_id,
         )
-        return maj
+        return update
 
 
 class RemoveProjectUpdateUseCase(_UpdateUseCase):
@@ -114,13 +117,13 @@ class RemoveProjectUpdateUseCase(_UpdateUseCase):
     async def execute(
         self, command: RemoveUpdateCommand, now: datetime | None = None
     ) -> None:
-        maj = await self._charger(command.update_id)
-        maj.supprimer(par=command.actor_id, a=now or datetime.now())
-        await self._updates.update(maj)
-        await self._tracer(
+        update = await self._load(command.update_id)
+        update.remove(par=command.actor_id, a=now or datetime.now())
+        await self._updates.update(update)
+        await self._trace(
             AuditAction.UPDATE_REMOVE,
             command.actor_id,
-            maj.project_id,
+            update.project_id,
             command.update_id,
         )
 
@@ -133,9 +136,9 @@ class ListProjectUpdatesUseCase:
         self._users = users
 
     async def execute(self, project_id: int) -> list[SignedUpdate]:
-        utilisateurs = {u.id: u for u in await self._users.list_all(True)}
+        users = {u.id: u for u in await self._users.list_all(True)}
         return [
-            SignedUpdate(update=maj, author=utilisateurs[maj.author_id])
-            for maj in await self._updates.list_for_project(project_id)
-            if maj.author_id in utilisateurs
+            SignedUpdate(update=update, author=users[update.author_id])
+            for update in await self._updates.list_for_project(project_id)
+            if update.author_id in users
         ]

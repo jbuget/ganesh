@@ -80,17 +80,17 @@ export function AppSidebar() {
       <nav aria-label="Navigation principale" className="flex-1 px-2">
         <ul className="flex flex-col gap-1">
           {ONGLETS.map(({ href, label, Icone }) => {
-            const actif = pathname === href;
+            const isActive = pathname === href;
             return (
               <li key={href}>
                 <Link
                   href={href}
-                  aria-current={actif ? "page" : undefined}
+                  aria-current={isActive ? "page" : undefined}
                   title={repliee ? label : undefined}
                   className={[
                     "flex items-center gap-2.5 rounded-md py-2 text-sm transition-colors",
                     repliee ? "justify-center px-0" : "px-3",
-                    actif
+                    isActive
                       ? "bg-slate-100 font-medium text-slate-900"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
                   ].join(" ")}

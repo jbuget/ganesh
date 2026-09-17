@@ -13,9 +13,9 @@ const USER: UserResponse = {
   id: 1,
   email: "j.buget@waat.fr",
   display_name: "Jérémy Buget",
-  initiales: "JB",
+  initials: "JB",
   role: "MANAGER",
-  actif: true,
+  is_active: true,
 } as UserResponse;
 
 describe("UserMenu", () => {

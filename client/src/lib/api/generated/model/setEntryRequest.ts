@@ -10,7 +10,7 @@
  */
 export interface SetEntryRequest {
   project_id: number;
-  jour: string;
+  day: string;
   /** 0.5 pour une demi-journee, 1 pour une journee */
-  valeur: number;
+  value: number;
 }

@@ -9,38 +9,38 @@ const TODAY = "2026-09-16";
 
 function makeGrid(overrides: Partial<MonthGridResponse> = {}): MonthGridResponse {
   const days = [
-    { jour: "2026-09-14", kind: "ouvre", label: null, is_off_day: false },
-    { jour: "2026-09-15", kind: "ouvre", label: null, is_off_day: false },
-    { jour: "2026-09-16", kind: "ouvre", label: null, is_off_day: false },
-    { jour: "2026-09-19", kind: "weekend", label: null, is_off_day: true },
-    { jour: "2026-09-25", kind: "ouvre", label: null, is_off_day: false },
+    { day: "2026-09-14", kind: "ouvre", label: null, is_off_day: false },
+    { day: "2026-09-15", kind: "ouvre", label: null, is_off_day: false },
+    { day: "2026-09-16", kind: "ouvre", label: null, is_off_day: false },
+    { day: "2026-09-19", kind: "weekend", label: null, is_off_day: true },
+    { day: "2026-09-25", kind: "ouvre", label: null, is_off_day: false },
   ];
   return {
     user_id: 1,
-    mois: "2026-09-01",
+    month: "2026-09-01",
     days,
     rows: [
       {
         project_id: 10,
         label: "Portail bailleurs",
-        kind: "projet",
-        estime_j: 20,
+        kind: "project",
+        estimated_days: 20,
         values: { "2026-09-15": 1, "2026-09-25": 1 },
-        total_realise: 1,
-        total_prevu: 1,
+        actual_total: 1,
+        forecast_total: 1,
         total: 2,
-        consomme_total_j: 7,
+        total_consumed_days: 7,
       },
     ],
     day_totals: days.map((day) => ({
-      jour: day.jour,
-      total: day.jour === "2026-09-15" ? 1 : day.jour === "2026-09-25" ? 1 : 0,
+      day: day.day,
+      total: day.day === "2026-09-15" ? 1 : day.day === "2026-09-25" ? 1 : 0,
       exceeds_capacity: false,
     })),
     working_days: 22,
     is_writable: true,
-    total_realise: 1,
-    total_prevu: 1,
+    actual_total: 1,
+    forecast_total: 1,
     ...overrides,
   } as MonthGridResponse;
 }
@@ -49,11 +49,11 @@ const PROJECTS: ProjectResponse[] = [
   {
     id: 11,
     label: "Absences",
-    kind: "hors_projet",
-    statut: null,
+    kind: "off_project",
+    status: null,
     parent_id: null,
-    actif: true,
-    estime_j: null,
+    is_active: true,
+    estimated_days: null,
     is_syncable_to_monday: false,
   } as ProjectResponse,
 ];
@@ -149,8 +149,8 @@ describe("TimesheetGrid", () => {
       />,
     );
 
-    const lignes = screen.getAllByRole("row");
-    expect(within(lignes.at(-1)!).getByText("Ajouter une mission")).toBeInTheDocument();
+    const lines = screen.getAllByRole("row");
+    expect(within(lines.at(-1)!).getByText("Ajouter une mission")).toBeInTheDocument();
   });
 
   it("laisse la ligne d'ajout fermer le tableau d'un trait fort", () => {
@@ -162,9 +162,9 @@ describe("TimesheetGrid", () => {
       />,
     );
 
-    const lignes = screen.getAllByRole("row");
-    const cellules = within(lignes.at(-1)!).getAllByRole("rowheader");
-    expect(cellules[0].className).toContain("border-b-slate-500");
+    const lines = screen.getAllByRole("row");
+    const cells = within(lines.at(-1)!).getAllByRole("rowheader");
+    expect(cells[0].className).toContain("border-b-slate-500");
     // La mission qui precede ne ferme plus rien : un trait faible l'en separe.
     const mission = screen.getByRole("rowheader", { name: /Portail bailleurs/ });
     expect(mission.className).toContain("border-b-slate-300");
@@ -233,8 +233,8 @@ describe("TimesheetGrid", () => {
   it("garde sa largeur à un week-end portant une saisie héritée", () => {
     // Une donnee posee avant l'interdiction doit rester visible et corrigeable.
     const grid = makeGrid({
-      days: [{ jour: "2026-09-19", kind: "weekend", label: null, is_off_day: true }],
-      day_totals: [{ jour: "2026-09-19", total: 1, exceeds_capacity: false }],
+      days: [{ day: "2026-09-19", kind: "weekend", label: null, is_off_day: true }],
+      day_totals: [{ day: "2026-09-19", total: 1, exceeds_capacity: false }],
       rows: [],
     } as Partial<MonthGridResponse>);
     render(<TimesheetGrid {...baseProps} grid={grid} />);
@@ -262,8 +262,8 @@ describe("TimesheetGrid", () => {
 
   it("colore en vert une journée complète", () => {
     const grid = makeGrid({
-      day_totals: [{ jour: "2026-09-15", total: 1, exceeds_capacity: false }],
-      days: [{ jour: "2026-09-15", kind: "ouvre", label: null, is_off_day: false }],
+      day_totals: [{ day: "2026-09-15", total: 1, exceeds_capacity: false }],
+      days: [{ day: "2026-09-15", kind: "ouvre", label: null, is_off_day: false }],
       rows: [],
     } as Partial<MonthGridResponse>);
     render(<TimesheetGrid {...baseProps} grid={grid} />);
@@ -276,8 +276,8 @@ describe("TimesheetGrid", () => {
 
   it("signale une journée incomplète dans la ligne des totaux", () => {
     const grid = makeGrid({
-      day_totals: [{ jour: "2026-09-15", total: 0.5, exceeds_capacity: false }],
-      days: [{ jour: "2026-09-15", kind: "ouvre", label: null, is_off_day: false }],
+      day_totals: [{ day: "2026-09-15", total: 0.5, exceeds_capacity: false }],
+      days: [{ day: "2026-09-15", kind: "ouvre", label: null, is_off_day: false }],
       rows: [],
     } as Partial<MonthGridResponse>);
     render(<TimesheetGrid {...baseProps} grid={grid} />);

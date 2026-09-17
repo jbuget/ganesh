@@ -10,5 +10,5 @@ import type { ProjectStatus } from "./projectStatus";
  * Changement de phase d'une mission.
  */
 export interface ChangeStatusRequest {
-  statut: ProjectStatus;
+  status: ProjectStatus;
 }

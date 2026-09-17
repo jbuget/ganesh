@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 import {
-  AUCUN_TRI,
+  NO_SORT,
   comparateurDeTri,
-  ecrireTri,
-  lireTri,
+  writeSort,
+  readSort,
   triSuivant,
-  type TriMissions,
+  type MissionSort,
 } from "@/lib/mission-sort";
 
 const mission = (
@@ -19,38 +19,38 @@ const mission = (
     project: {
       id: label.length,
       label,
-      kind: "projet",
-      statut: "exploration",
-      priorite: null,
-      categorie: null,
-      estime_j: null,
+      kind: "project",
+      status: "exploration",
+      priority: null,
+      category: null,
+      estimated_days: null,
       ...champs,
     },
-    referents: [],
-    intervenants: [],
-    realise_j: realise,
-    commentaires: 0,
-    derniere_maj: null,
+    leads: [],
+    contributors: [],
+    delivered_days: realise,
+    comments: 0,
+    latest_update: null,
   }) as ProjectListItemResponse;
 
-const labels = (missions: ProjectListItemResponse[], tri: TriMissions) =>
-  [...missions].sort(comparateurDeTri(tri)).map((m) => m.project.label);
+const labels = (missions: ProjectListItemResponse[], sorted: MissionSort) =>
+  [...missions].sort(comparateurDeTri(sorted)).map((m) => m.project.label);
 
 describe("l'ordre du référentiel", () => {
   it("range par phase puis par nom quand aucune colonne n'est demandée", () => {
     const missions = [
-      mission("Zèbre", { statut: "exploration" }),
-      mission("Alpha", { statut: "exploitation" }),
-      mission("Bravo", { statut: "exploration" }),
+      mission("Zèbre", { status: "exploration" }),
+      mission("Alpha", { status: "operations" }),
+      mission("Bravo", { status: "exploration" }),
     ];
 
-    expect(labels(missions, AUCUN_TRI)).toEqual(["Bravo", "Zèbre", "Alpha"]);
+    expect(labels(missions, NO_SORT)).toEqual(["Bravo", "Zèbre", "Alpha"]);
   });
 
   it("range par nom, accents compris", () => {
     const missions = [mission("Zèbre"), mission("Éclair"), mission("Alpha")];
 
-    expect(labels(missions, { colonne: "projet", sens: "asc" })).toEqual([
+    expect(labels(missions, { column: "project", direction: "asc" })).toEqual([
       "Alpha",
       "Éclair",
       "Zèbre",
@@ -60,7 +60,7 @@ describe("l'ordre du référentiel", () => {
   it("renverse l'ordre en sens descendant", () => {
     const missions = [mission("Alpha"), mission("Zèbre")];
 
-    expect(labels(missions, { colonne: "projet", sens: "desc" })).toEqual([
+    expect(labels(missions, { column: "project", direction: "desc" })).toEqual([
       "Zèbre",
       "Alpha",
     ]);
@@ -68,12 +68,12 @@ describe("l'ordre du référentiel", () => {
 
   it("range les phases dans leur ordre de vie, pas dans l'alphabet", () => {
     const missions = [
-      mission("Zèbre", { statut: "exploitation" }),
-      mission("Alpha", { statut: "cadrage" }),
-      mission("Bravo", { statut: "exploration" }),
+      mission("Zèbre", { status: "operations" }),
+      mission("Alpha", { status: "scoping" }),
+      mission("Bravo", { status: "exploration" }),
     ];
 
-    expect(labels(missions, { colonne: "phase", sens: "asc" })).toEqual([
+    expect(labels(missions, { column: "phase", direction: "asc" })).toEqual([
       "Bravo",
       "Alpha",
       "Zèbre",
@@ -82,12 +82,12 @@ describe("l'ordre du référentiel", () => {
 
   it("range les priorités de la plus forte à la plus faible", () => {
     const missions = [
-      mission("Basse", { priorite: "basse" }),
-      mission("Critique", { priorite: "critique" }),
-      mission("Normale", { priorite: "normale" }),
+      mission("Basse", { priority: "low" }),
+      mission("Critique", { priority: "critical" }),
+      mission("Normale", { priority: "normal" }),
     ];
 
-    expect(labels(missions, { colonne: "priorite", sens: "asc" })).toEqual([
+    expect(labels(missions, { column: "priority", direction: "asc" })).toEqual([
       "Critique",
       "Normale",
       "Basse",
@@ -96,11 +96,11 @@ describe("l'ordre du référentiel", () => {
 
   it("range les estimés par valeur, et non par leur écriture", () => {
     const missions = [
-      mission("Neuf", { estime_j: 9 }),
-      mission("Dix", { estime_j: 10 }),
+      mission("Neuf", { estimated_days: 9 }),
+      mission("Dix", { estimated_days: 10 }),
     ];
 
-    expect(labels(missions, { colonne: "estime", sens: "asc" })).toEqual([
+    expect(labels(missions, { column: "estimated", direction: "asc" })).toEqual([
       "Neuf",
       "Dix",
     ]);
@@ -109,7 +109,7 @@ describe("l'ordre du référentiel", () => {
   it("range les réalisés par valeur", () => {
     const missions = [mission("Beaucoup", {}, 12), mission("Peu", {}, 3)];
 
-    expect(labels(missions, { colonne: "realise", sens: "asc" })).toEqual([
+    expect(labels(missions, { column: "delivered", direction: "asc" })).toEqual([
       "Peu",
       "Beaucoup",
     ]);
@@ -119,15 +119,15 @@ describe("l'ordre du référentiel", () => {
     // Un estime absent n'est pas un petit estime : il n'a rien a dire, et ne
     // doit pas occuper la tete du tableau quand on cherche les gros chantiers.
     const missions = [
-      mission("Sans", { estime_j: null }),
-      mission("Avec", { estime_j: 5 }),
+      mission("Sans", { estimated_days: null }),
+      mission("Avec", { estimated_days: 5 }),
     ];
 
-    expect(labels(missions, { colonne: "estime", sens: "asc" })).toEqual([
+    expect(labels(missions, { column: "estimated", direction: "asc" })).toEqual([
       "Avec",
       "Sans",
     ]);
-    expect(labels(missions, { colonne: "estime", sens: "desc" })).toEqual([
+    expect(labels(missions, { column: "estimated", direction: "desc" })).toEqual([
       "Avec",
       "Sans",
     ]);
@@ -135,11 +135,11 @@ describe("l'ordre du référentiel", () => {
 
   it("départage par le nom deux missions que la colonne égalise", () => {
     const missions = [
-      mission("Zèbre", { estime_j: 5 }),
-      mission("Alpha", { estime_j: 5 }),
+      mission("Zèbre", { estimated_days: 5 }),
+      mission("Alpha", { estimated_days: 5 }),
     ];
 
-    expect(labels(missions, { colonne: "estime", sens: "asc" })).toEqual([
+    expect(labels(missions, { column: "estimated", direction: "asc" })).toEqual([
       "Alpha",
       "Zèbre",
     ]);
@@ -148,64 +148,69 @@ describe("l'ordre du référentiel", () => {
 
 describe("le cycle d'une colonne", () => {
   it("part en ordre croissant au premier clic", () => {
-    expect(triSuivant(AUCUN_TRI, "estime")).toEqual({ colonne: "estime", sens: "asc" });
+    expect(triSuivant(NO_SORT, "estimated")).toEqual({
+      column: "estimated",
+      direction: "asc",
+    });
   });
 
   it("passe en décroissant au deuxième", () => {
-    expect(triSuivant({ colonne: "estime", sens: "asc" }, "estime")).toEqual({
-      colonne: "estime",
-      sens: "desc",
+    expect(triSuivant({ column: "estimated", direction: "asc" }, "estimated")).toEqual({
+      column: "estimated",
+      direction: "desc",
     });
   });
 
   it("revient à l'ordre du référentiel au troisième", () => {
-    expect(triSuivant({ colonne: "estime", sens: "desc" }, "estime")).toEqual(
-      AUCUN_TRI,
+    expect(triSuivant({ column: "estimated", direction: "desc" }, "estimated")).toEqual(
+      NO_SORT,
     );
   });
 
   it("repart en croissant quand on change de colonne", () => {
-    expect(triSuivant({ colonne: "estime", sens: "desc" }, "phase")).toEqual({
-      colonne: "phase",
-      sens: "asc",
+    expect(triSuivant({ column: "estimated", direction: "desc" }, "phase")).toEqual({
+      column: "phase",
+      direction: "asc",
     });
   });
 });
 
 describe("le tri dans l'adresse", () => {
   it("ne lit aucun tri dans une adresse nue", () => {
-    expect(lireTri(new URLSearchParams())).toEqual(AUCUN_TRI);
+    expect(readSort(new URLSearchParams())).toEqual(NO_SORT);
   });
 
   it("relit le tri qu'il a écrit", () => {
     const params = new URLSearchParams();
-    ecrireTri(params, { colonne: "priorite", sens: "desc" });
+    writeSort(params, { column: "priority", direction: "desc" });
 
-    expect(lireTri(params)).toEqual({ colonne: "priorite", sens: "desc" });
+    expect(readSort(params)).toEqual({ column: "priority", direction: "desc" });
   });
 
   it("efface le tri de l'adresse quand on revient à l'ordre par défaut", () => {
-    const params = new URLSearchParams("tri=phase&sens=desc");
-    ecrireTri(params, AUCUN_TRI);
+    const params = new URLSearchParams("sort=phase&direction=desc");
+    writeSort(params, NO_SORT);
 
     expect(params.toString()).toBe("");
   });
 
   it("ignore une colonne inconnue plutôt que de trier au hasard", () => {
-    expect(lireTri(new URLSearchParams("tri=licorne&sens=asc"))).toEqual(AUCUN_TRI);
+    expect(readSort(new URLSearchParams("sort=licorne&direction=asc"))).toEqual(
+      NO_SORT,
+    );
   });
 
   it("retient l'ordre croissant quand le sens est illisible", () => {
-    expect(lireTri(new URLSearchParams("tri=phase&sens=lateral"))).toEqual({
-      colonne: "phase",
-      sens: "asc",
+    expect(readSort(new URLSearchParams("sort=phase&direction=lateral"))).toEqual({
+      column: "phase",
+      direction: "asc",
     });
   });
 
   it("laisse les autres paramètres de l'adresse en place", () => {
-    const params = new URLSearchParams("phase=cadrage");
-    ecrireTri(params, { colonne: "projet", sens: "asc" });
+    const params = new URLSearchParams("phase=scoping");
+    writeSort(params, { column: "project", direction: "asc" });
 
-    expect(params.get("phase")).toBe("cadrage");
+    expect(params.get("phase")).toBe("scoping");
   });
 });

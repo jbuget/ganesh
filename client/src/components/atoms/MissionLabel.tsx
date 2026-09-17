@@ -1,7 +1,7 @@
 "use client";
 
-import { formatJoursDecimal } from "@/lib/dates";
-import { useTooltipCurseur } from "@/lib/use-tooltip-curseur";
+import { formatDecimalDays } from "@/lib/dates";
+import { useCursorTooltip } from "@/lib/use-tooltip-curseur";
 
 interface MissionLabelProps {
   label: string;
@@ -17,14 +17,14 @@ interface MissionLabelProps {
  * pour ne pas faire concurrence a l'infobulle native du navigateur.
  */
 export function MissionLabel({ label, consommeJ, estimeJ }: MissionLabelProps) {
-  const { tooltip, suivre, quitter } = useTooltipCurseur();
+  const { tooltip, follow, leave } = useCursorTooltip();
 
-  const contenu = (
+  const content = (
     <>
       <span className="font-medium">{label}</span>
       {estimeJ !== null && (
         <span className="ml-2 text-slate-300">
-          {formatJoursDecimal(consommeJ)}/{estimeJ} jrs. estimés
+          {formatDecimalDays(consommeJ)}/{estimeJ} jrs. estimés
         </span>
       )}
     </>
@@ -33,8 +33,8 @@ export function MissionLabel({ label, consommeJ, estimeJ }: MissionLabelProps) {
   return (
     <span
       className="flex items-center"
-      onMouseMove={(event) => suivre(event, contenu)}
-      onMouseLeave={quitter}
+      onMouseMove={(event) => follow(event, content)}
+      onMouseLeave={leave}
     >
       <span className="truncate">{label}</span>
       {tooltip}

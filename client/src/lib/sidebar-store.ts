@@ -15,27 +15,27 @@ const CLE = "timesheet.sidebar-repliee";
  * Aucune valeur n'est mise en cache : `localStorage` est la seule source, ce
  * qui laisse un autre onglet la modifier sans desynchroniser celui-ci.
  */
-const abonnes = new Set<() => void>();
+const subscribers = new Set<() => void>();
 
-function lire(): boolean {
+function read(): boolean {
   return typeof window !== "undefined" && window.localStorage.getItem(CLE) === "1";
 }
 
-function prevenir() {
-  abonnes.forEach((callback) => callback());
+function notify() {
+  subscribers.forEach((callback) => callback());
 }
 
-function abonner(callback: () => void) {
-  abonnes.add(callback);
+function subscribe(callback: () => void) {
+  subscribers.add(callback);
   window.addEventListener("storage", callback);
 
   // Le serveur rend toujours la barre depliee. Si la preference dit l'inverse,
   // personne ne previendrait React apres l'hydratation : on le fait ici, au
   // premier abonnement cote client.
-  if (lire()) queueMicrotask(callback);
+  if (read()) queueMicrotask(callback);
 
   return () => {
-    abonnes.delete(callback);
+    subscribers.delete(callback);
     window.removeEventListener("storage", callback);
   };
 }
@@ -46,10 +46,10 @@ function surLeServeur() {
 }
 
 export function basculerBarreLaterale() {
-  window.localStorage.setItem(CLE, lire() ? "0" : "1");
-  prevenir();
+  window.localStorage.setItem(CLE, read() ? "0" : "1");
+  notify();
 }
 
 export function useBarreLateraleRepliee(): boolean {
-  return useSyncExternalStore(abonner, lire, surLeServeur);
+  return useSyncExternalStore(subscribe, read, surLeServeur);
 }

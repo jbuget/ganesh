@@ -8,17 +8,17 @@ const project = (id: number, label: string, kind: string): ProjectResponse =>
     id,
     label,
     kind,
-    statut: null,
+    status: null,
     parent_id: null,
-    actif: true,
-    estime_j: null,
+    is_active: true,
+    estimated_days: null,
     is_syncable_to_monday: false,
   }) as ProjectResponse;
 
 const PROJECTS = [
-  project(1, "Portail bailleurs", "projet"),
-  project(2, "Absences", "hors_projet"),
-  project(3, "Lot 1", "lot"),
+  project(1, "Portail bailleurs", "project"),
+  project(2, "Absences", "off_project"),
+  project(3, "Lot 1", "work_package"),
 ];
 
 describe("availableMissions", () => {

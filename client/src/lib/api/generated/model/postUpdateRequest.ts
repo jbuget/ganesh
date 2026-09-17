@@ -10,5 +10,5 @@
  */
 export interface PostUpdateRequest {
   /** @minLength 1 */
-  texte: string;
+  body: string;
 }

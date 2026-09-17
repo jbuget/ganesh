@@ -15,10 +15,10 @@ const OFFSET = { x: 14, y: 18 };
 /** Ce qu'on laisse respirer entre la bulle et le bord de la fenetre. */
 const MARGE = 8;
 
-interface Etat {
+interface State {
   x: number;
   y: number;
-  contenu: ReactNode;
+  content: ReactNode;
 }
 
 /**
@@ -29,12 +29,12 @@ interface Etat {
  * mesure donc avant peinture pour la ramener dans la fenetre : `useLayoutEffect`
  * s'execute entre le rendu et l'affichage, la correction ne se voit pas.
  */
-function Bulle({
+function Bubble({
   x,
   y,
-  riche,
+  rich,
   children,
-}: Etat & { riche: boolean; children: ReactNode }) {
+}: State & { rich: boolean; children: ReactNode }) {
   const element = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ left: x + OFFSET.x, top: y + OFFSET.y });
 
@@ -62,7 +62,7 @@ function Bulle({
       role="tooltip"
       style={position}
       className={
-        riche
+        rich
           ? "pointer-events-none fixed z-50 max-w-md rounded-lg border border-slate-200 bg-white px-3 py-2.5 shadow-xl"
           : "pointer-events-none fixed z-50 rounded-md bg-slate-800 px-2.5 py-1.5 text-xs whitespace-nowrap text-white shadow-lg"
       }
@@ -89,24 +89,24 @@ function Bulle({
  * apparition plutot que de suivre le curseur : un paragraphe qu'on lit ne doit
  * pas bouger sous les yeux.
  */
-export function useTooltipCurseur({ riche = false }: { riche?: boolean } = {}) {
-  const [etat, setEtat] = useState<Etat | null>(null);
+export function useCursorTooltip({ rich = false }: { rich?: boolean } = {}) {
+  const [state, setState] = useState<State | null>(null);
 
-  const tooltip = etat
+  const tooltip = state
     ? createPortal(
-        <Bulle key={`${etat.x},${etat.y}`} {...etat} riche={riche}>
-          {etat.contenu}
-        </Bulle>,
+        <Bubble key={`${state.x},${state.y}`} {...state} rich={rich}>
+          {state.content}
+        </Bubble>,
         document.body,
       )
     : null;
 
   return {
     tooltip,
-    suivre: (event: MouseEvent, contenu: ReactNode) => {
-      const position = { x: event.clientX, y: event.clientY, contenu };
-      setEtat((precedent) => (riche && precedent ? precedent : position));
+    follow: (event: MouseEvent, content: ReactNode) => {
+      const position = { x: event.clientX, y: event.clientY, content };
+      setState((precedent) => (rich && precedent ? precedent : position));
     },
-    quitter: () => setEtat(null),
+    leave: () => setState(null),
   };
 }

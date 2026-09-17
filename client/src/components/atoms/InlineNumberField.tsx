@@ -4,10 +4,10 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 
 interface InlineNumberFieldProps {
-  valeur: number | null | undefined;
+  value: number | null | undefined;
   suffixe: string;
   invite: string;
-  onChange: (valeur: number | null) => void | Promise<void>;
+  onChange: (value: number | null) => void | Promise<void>;
 }
 
 /**
@@ -18,29 +18,29 @@ interface InlineNumberFieldProps {
  * ligne.
  */
 export function InlineNumberField({
-  valeur,
+  value,
   suffixe,
   invite,
   onChange,
 }: InlineNumberFieldProps) {
-  const [saisie, setSaisie] = useState<string | null>(null);
+  const [entry, setSaisie] = useState<string | null>(null);
 
   function valider() {
-    if (saisie === null) return;
-    const propre = saisie.trim().replace(",", ".");
+    if (entry === null) return;
+    const propre = entry.trim().replace(",", ".");
     setSaisie(null);
-    const nombre = propre === "" ? null : Number(propre);
-    if (nombre !== null && (Number.isNaN(nombre) || nombre < 0)) return;
-    if (nombre !== (valeur ?? null)) void onChange(nombre);
+    const count = propre === "" ? null : Number(propre);
+    if (count !== null && (Number.isNaN(count) || count < 0)) return;
+    if (count !== (value ?? null)) void onChange(count);
   }
 
-  if (saisie !== null) {
+  if (entry !== null) {
     return (
       <input
         type="text"
         inputMode="decimal"
         autoFocus
-        value={saisie}
+        value={entry}
         aria-label={invite}
         onChange={(event) => setSaisie(event.target.value)}
         onBlur={valider}
@@ -58,18 +58,18 @@ export function InlineNumberField({
       type="button"
       aria-label={invite}
       onClick={() =>
-        setSaisie(valeur === null || valeur === undefined ? "" : String(valeur))
+        setSaisie(value === null || value === undefined ? "" : String(value))
       }
       className="-mx-1 cursor-pointer rounded px-1 py-0.5 text-sm transition-colors hover:bg-slate-100"
     >
-      {valeur === null || valeur === undefined ? (
+      {value === null || value === undefined ? (
         <span className="flex items-center gap-1 text-slate-400">
           <Plus className="size-3.5" aria-hidden />
           {invite}
         </span>
       ) : (
         <span className="text-slate-700">
-          {valeur} {suffixe}
+          {value} {suffixe}
         </span>
       )}
     </button>

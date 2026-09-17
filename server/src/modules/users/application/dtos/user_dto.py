@@ -29,4 +29,4 @@ class SetUserActiveCommand:
 
     actor_id: int
     target_user_id: int
-    actif: bool
+    is_active: bool

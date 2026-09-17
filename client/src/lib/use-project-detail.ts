@@ -35,10 +35,10 @@ export function useProjectDetail(
   const [detail, setDetail] = useState<ProjectDetailResponse | null>(null);
   const [introuvable, setIntrouvable] = useState(false);
 
-  const recharger = useCallback(async () => {
+  const reload = useCallback(async () => {
     try {
-      const reponse = await getProjectDetail(projectId);
-      setDetail(reponse.data as ProjectDetailResponse);
+      const response = await getProjectDetail(projectId);
+      setDetail(response.data as ProjectDetailResponse);
     } catch {
       setIntrouvable(true);
     }
@@ -48,50 +48,50 @@ export function useProjectDetail(
   useEffect(() => {
     // Le garde evite d'ecrire dans un composant deja demonte, quand on quitte
     // la fiche avant que la reponse ne revienne.
-    let vivant = true;
+    let alive = true;
     getProjectDetail(projectId)
-      .then((reponse) => {
-        if (vivant) setDetail(reponse.data as ProjectDetailResponse);
+      .then((response) => {
+        if (alive) setDetail(response.data as ProjectDetailResponse);
       })
       .catch(() => {
-        if (vivant) setIntrouvable(true);
+        if (alive) setIntrouvable(true);
       });
     return () => {
-      vivant = false;
+      alive = false;
     };
   }, [projectId]);
 
   return {
     detail,
     introuvable,
-    recharger,
+    reload,
 
-    async enregistrerFiche(departements: Department[], contactsMetier: string | null) {
+    async enregistrerFiche(departments: Department[], contactsMetier: string | null) {
       await updateProjectDetail(projectId, {
-        departements,
-        contacts_metier: contactsMetier,
+        departments,
+        business_contacts: contactsMetier,
       });
-      await recharger();
+      await reload();
     },
 
     async renommer(label: string) {
       await updateProject(projectId, { label });
-      await recharger();
+      await reload();
     },
 
-    async changerPhase(statut: ProjectStatus) {
-      await changeProjectStatus(projectId, { statut });
-      await recharger();
+    async changerPhase(status: ProjectStatus) {
+      await changeProjectStatus(projectId, { status });
+      await reload();
     },
 
     /** Modification partielle : seuls les champs fournis sont appliques. */
     async changerCaracteristiques(champs: {
-      categorie?: ProjectCategory | null;
-      priorite?: ProjectPriority | null;
-      estime_j?: number | null;
+      category?: ProjectCategory | null;
+      priority?: ProjectPriority | null;
+      estimated_days?: number | null;
     }) {
       await updateProject(projectId, champs);
-      await recharger();
+      await reload();
     },
 
     /**
@@ -99,30 +99,30 @@ export function useProjectDetail(
      * liste plus, mais les saisies deja passees dessus restent lisibles.
      */
     async archiver() {
-      await updateProject(projectId, { actif: false });
-      await recharger();
+      await updateProject(projectId, { is_active: false });
+      await reload();
     },
 
     /** Remet la mission au referentiel, et oublie la date de sa sortie. */
     async desarchiver() {
-      await updateProject(projectId, { actif: true });
-      await recharger();
+      await updateProject(projectId, { is_active: true });
+      await reload();
     },
 
     async enregistrerDescription(description: string) {
       await updateProjectDescription(projectId, { description });
-      await recharger();
+      await reload();
     },
 
     /** `icone` a `null` : le serveur la deduit de l'adresse. */
-    async ajouterLien(label: string, url: string, icone: LinkIcon | null) {
-      await addProjectLink(projectId, { label, url, icone });
-      await recharger();
+    async ajouterLien(label: string, url: string, icon: LinkIcon | null) {
+      await addProjectLink(projectId, { label, url, icon });
+      await reload();
     },
 
     async retirerLien(linkId: number) {
       await removeProjectLink(projectId, linkId);
-      await recharger();
+      await reload();
     },
   };
 }

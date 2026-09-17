@@ -37,9 +37,9 @@ class ValidateMonthUseCase:
         if actor is None:
             raise EntityNotFoundError("Utilisateur inconnu.")
 
-        month = await self._months.get(command.target_user_id, command.mois)
+        month = await self._months.get(command.target_user_id, command.month)
         if month is None:
-            month = Month(user_id=command.target_user_id, mois=command.mois)
+            month = Month(user_id=command.target_user_id, month=command.month)
 
         month.validate(by=actor)
         await self._months.save(month)
@@ -48,7 +48,7 @@ class ValidateMonthUseCase:
             AuditLog.month_validate(
                 actor_id=command.actor_id,
                 target_user_id=command.target_user_id,
-                mois=month.mois,
+                month=month.month,
             )
         )
         return month

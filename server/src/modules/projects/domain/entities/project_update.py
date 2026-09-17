@@ -22,43 +22,43 @@ class ProjectUpdate:
     id: int | None
     project_id: int
     author_id: int
-    texte: str
-    publiee_le: datetime
-    modifiee_le: datetime | None = None
-    supprimee_le: datetime | None = None
+    body: str
+    published_at: datetime
+    edited_at: datetime | None = None
+    deleted_at: datetime | None = None
 
     def __post_init__(self) -> None:
-        if self.supprimee_le is not None:
+        if self.deleted_at is not None:
             return
-        self.texte = self.texte.strip()
-        if not self.texte:
+        self.body = self.body.strip()
+        if not self.body:
             raise ValidationError("Une mise a jour ne peut pas etre vide.")
 
     @property
-    def est_supprimee(self) -> bool:
-        return self.supprimee_le is not None
+    def is_deleted(self) -> bool:
+        return self.deleted_at is not None
 
-    def _exiger_lauteur(self, par: int) -> None:
+    def _require_author(self, par: int) -> None:
         if par != self.author_id:
             raise ForbiddenActionError(
                 "Seul l'auteur d'une mise a jour peut la modifier."
             )
 
-    def reecrire(self, texte: str, par: int, a: datetime) -> None:
-        self._exiger_lauteur(par)
-        if self.est_supprimee:
+    def rewrite(self, body: str, par: int, a: datetime) -> None:
+        self._require_author(par)
+        if self.is_deleted:
             raise ForbiddenActionError("Une mise a jour supprimee ne se reecrit pas.")
 
-        nouveau = texte.strip()
-        if not nouveau:
+        new_one = body.strip()
+        if not new_one:
             raise ValidationError("Une mise a jour ne peut pas etre vide.")
-        self.texte = nouveau
-        self.modifiee_le = a
+        self.body = new_one
+        self.edited_at = a
 
-    def supprimer(self, par: int, a: datetime) -> None:
-        self._exiger_lauteur(par)
-        if self.est_supprimee:
+    def remove(self, par: int, a: datetime) -> None:
+        self._require_author(par)
+        if self.is_deleted:
             # Deja retiree : la premiere date fait foi.
             return
-        self.supprimee_le = a
-        self.texte = ""
+        self.deleted_at = a
+        self.body = ""

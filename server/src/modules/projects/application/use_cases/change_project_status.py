@@ -47,14 +47,14 @@ class ChangeProjectStatusUseCase:
         if project is None:
             raise EntityNotFoundError("Mission inconnue.")
 
-        previous = project.statut
-        project.change_status(command.statut)
+        previous = project.status
+        project.change_status(command.status)
         await self._projects.update(project)
 
         # La date d'entree dans une phase se note au passage : elle ne se
         # reconstitue pas apres coup, et l'audit peut etre purge.
         await self._details.mark_phase_reached(
-            command.project_id, command.statut, today or date.today()
+            command.project_id, command.status, today or date.today()
         )
 
         await self._audit_logs.add(
@@ -62,7 +62,7 @@ class ChangeProjectStatusUseCase:
                 actor_id=command.actor_id,
                 project_id=command.project_id,
                 old_status=previous.value if previous else None,
-                new_status=command.statut.value,
+                new_status=command.status.value,
             )
         )
         return project

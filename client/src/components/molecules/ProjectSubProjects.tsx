@@ -4,7 +4,7 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import type { ProjectResponse } from "@/lib/api/generated/model";
-import { libellePhase, pastillePhase } from "@/lib/board";
+import { phaseLabel, phaseDot } from "@/lib/board";
 
 interface ProjectSubProjectsProps {
   sousProjets: ProjectResponse[];
@@ -30,18 +30,18 @@ export function ProjectSubProjects({ sousProjets }: ProjectSubProjectsProps) {
             href={`/projets/${lot.id}`}
             className="group flex cursor-pointer items-center gap-2 rounded px-1 py-1.5 transition-colors hover:bg-slate-50"
           >
-            {lot.statut && (
+            {lot.status && (
               <span
                 aria-hidden
-                className={`size-2.5 shrink-0 rounded-full ${pastillePhase(lot.statut)}`}
+                className={`size-2.5 shrink-0 rounded-full ${phaseDot(lot.status)}`}
               />
             )}
             <span className="min-w-0 flex-1 truncate text-sm text-slate-700">
               {lot.label}
             </span>
-            {lot.statut && (
+            {lot.status && (
               <span className="shrink-0 text-xs text-slate-500">
-                {libellePhase(lot.statut)}
+                {phaseLabel(lot.status)}
               </span>
             )}
             <ChevronRight

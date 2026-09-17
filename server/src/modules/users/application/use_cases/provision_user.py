@@ -25,11 +25,11 @@ class ProvisionUserUseCase:
     async def execute(
         self, identity: EntraIdentity, now: datetime | None = None
     ) -> User:
-        maintenant = now or datetime.now()
+        now = now or datetime.now()
 
         existing = await self._users.get_by_entra_oid(identity.oid)
         if existing is not None:
-            if existing.enregistrer_connexion(maintenant):
+            if existing.record_login(now):
                 return await self._users.update(existing)
             return existing
 
@@ -37,7 +37,7 @@ class ProvisionUserUseCase:
         if seeded is not None:
             seeded.entra_oid = identity.oid
             seeded.display_name = identity.display_name or seeded.display_name
-            seeded.enregistrer_connexion(maintenant)
+            seeded.record_login(now)
             return await self._users.update(seeded)
 
         return await self._users.add(
@@ -47,6 +47,6 @@ class ProvisionUserUseCase:
                 email=identity.email,
                 display_name=identity.display_name,
                 role=Role.TEAMMATE,
-                derniere_connexion=maintenant,
+                last_login_at=now,
             )
         )

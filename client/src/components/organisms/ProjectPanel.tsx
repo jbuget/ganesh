@@ -89,7 +89,7 @@ export function ProjectPanel({
             <ProjectTabs
               detail={detail}
               ongletInitial={onglet}
-              onChange={fiche.recharger}
+              onChange={fiche.reload}
               enregistrerFiche={fiche.enregistrerFiche}
               enregistrerDescription={fiche.enregistrerDescription}
               changerPhase={fiche.changerPhase}

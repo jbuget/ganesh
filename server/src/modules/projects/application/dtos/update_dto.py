@@ -9,7 +9,7 @@ class PostUpdateCommand:
 
     actor_id: int
     project_id: int
-    texte: str
+    body: str
 
 
 @dataclass(frozen=True)
@@ -18,7 +18,7 @@ class EditUpdateCommand:
 
     actor_id: int
     update_id: int
-    texte: str
+    body: str
 
 
 @dataclass(frozen=True)

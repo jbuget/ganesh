@@ -56,22 +56,22 @@ class SetEntryUseCase:
             raise EntityNotFoundError("Mission inconnue.")
 
         # Invariants du domaine, verifies avant toute ecriture.
-        ensure_day_is_workable(command.jour)
-        valeur = DayValue(command.valeur)
+        ensure_day_is_workable(command.day)
+        value = DayValue(command.value)
 
-        month = await self._ensure_open_month(command.target_user_id, command.jour)
+        month = await self._ensure_open_month(command.target_user_id, command.day)
 
         previous = await self._entries.get(
-            command.target_user_id, command.project_id, command.jour
+            command.target_user_id, command.project_id, command.day
         )
         entry = await self._entries.upsert(
             Entry(
                 id=previous.id if previous else None,
                 user_id=command.target_user_id,
                 project_id=command.project_id,
-                jour=command.jour,
-                valeur=valeur,
-                statut_at_entry=project.statut,
+                day=command.day,
+                value=value,
+                status_at_entry=project.status,
             )
         )
 
@@ -80,18 +80,18 @@ class SetEntryUseCase:
                 actor_id=command.actor_id,
                 target_user_id=command.target_user_id,
                 project_id=command.project_id,
-                jour=command.jour,
-                old_value=float(previous.valeur) if previous else None,
-                new_value=float(valeur),
+                day=command.day,
+                old_value=float(previous.value) if previous else None,
+                new_value=float(value),
             )
         )
         await self._months.save(month)
         return entry
 
-    async def _ensure_open_month(self, user_id: int, jour: date) -> Month:
-        month = await self._months.get(user_id, jour)
+    async def _ensure_open_month(self, user_id: int, day: date) -> Month:
+        month = await self._months.get(user_id, day)
         if month is None:
-            month = Month(user_id=user_id, mois=jour)
+            month = Month(user_id=user_id, month=day)
         if not month.is_writable:
             raise ForbiddenActionError(
                 "Ce mois est valide : il doit etre rouvert par un manager."

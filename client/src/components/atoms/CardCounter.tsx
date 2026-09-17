@@ -3,15 +3,15 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { useTooltipCurseur } from "@/lib/use-tooltip-curseur";
+import { useCursorTooltip } from "@/lib/use-tooltip-curseur";
 
 interface CardCounterProps {
-  icone: LucideIcon;
-  nombre: number;
+  icon: LucideIcon;
+  count: number;
   /** Ce que l'icone compte, au singulier puis au pluriel. */
-  libelle: [string, string];
+  label: [string, string];
   /** Ce qu'annonce le lecteur d'ecran quand il n'y a rien a compter. */
-  vide: string;
+  empty: string;
   /**
    * Ce que montre l'infobulle au survol — le dernier message, mis en forme.
    *
@@ -35,25 +35,25 @@ interface CardCounterProps {
  * faut les lire.
  */
 export function CardCounter({
-  icone: Icone,
-  nombre,
-  libelle,
-  vide,
+  icon: Icone,
+  count,
+  label,
+  empty,
   apercu,
 }: CardCounterProps) {
-  const [singulier, pluriel] = libelle;
-  const { tooltip, suivre, quitter } = useTooltipCurseur({ riche: true });
+  const [singular, plural] = label;
+  const { tooltip, follow, leave } = useCursorTooltip({ rich: true });
 
   return (
     <span
-      aria-label={nombre === 0 ? vide : `${nombre} ${nombre > 1 ? pluriel : singulier}`}
-      onMouseMove={(event) => apercu && suivre(event, apercu)}
-      onMouseLeave={quitter}
+      aria-label={count === 0 ? empty : `${count} ${count > 1 ? plural : singular}`}
+      onMouseMove={(event) => apercu && follow(event, apercu)}
+      onMouseLeave={leave}
       className={`flex items-center gap-1 text-xs tabular-nums ${
-        nombre === 0 ? "text-slate-300" : "text-slate-500"
+        count === 0 ? "text-slate-300" : "text-slate-500"
       }`}
     >
-      {nombre > 0 && nombre}
+      {count > 0 && count}
       <Icone className="size-3.5 shrink-0" aria-hidden />
       {tooltip}
     </span>

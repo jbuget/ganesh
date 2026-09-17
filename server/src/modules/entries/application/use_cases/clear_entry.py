@@ -43,28 +43,28 @@ class ClearEntryUseCase:
                 "Un utilisateur desactive ne peut plus modifier de saisie."
             )
 
-        month = await self._months.get(command.target_user_id, command.jour)
+        month = await self._months.get(command.target_user_id, command.day)
         if month is not None and not month.is_writable:
             raise ForbiddenActionError(
                 "Ce mois est valide : il doit etre rouvert par un manager."
             )
 
         existing = await self._entries.get(
-            command.target_user_id, command.project_id, command.jour
+            command.target_user_id, command.project_id, command.day
         )
         if existing is None:
             # Le cycle de saisie repasse par le vide : ne rien trouver est normal.
             return
 
         await self._entries.delete(
-            command.target_user_id, command.project_id, command.jour
+            command.target_user_id, command.project_id, command.day
         )
         await self._audit_logs.add(
             AuditLog.entry_clear(
                 actor_id=command.actor_id,
                 target_user_id=command.target_user_id,
                 project_id=command.project_id,
-                jour=command.jour,
-                old_value=float(existing.valeur),
+                day=command.day,
+                old_value=float(existing.value),
             )
         )

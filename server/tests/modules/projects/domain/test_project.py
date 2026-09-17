@@ -11,29 +11,29 @@ from src.shared.exceptions.domain_exceptions import ValidationError
 
 
 def make_project(
-    kind: ProjectKind = ProjectKind.PROJET,
-    statut: ProjectStatus | None = ProjectStatus.REALISATION,
+    kind: ProjectKind = ProjectKind.PROJECT,
+    status: ProjectStatus | None = ProjectStatus.BUILD,
     parent_id: int | None = None,
 ) -> Project:
     return Project(
         id=1,
         label="Portail bailleurs",
         kind=kind,
-        statut=statut,
+        status=status,
         parent_id=parent_id,
     )
 
 
 def test_a_project_carries_a_phase_status() -> None:
-    assert make_project().statut is ProjectStatus.REALISATION
+    assert make_project().status is ProjectStatus.BUILD
 
 
 def test_an_off_project_activity_has_no_phase_status() -> None:
     activity = Project(
-        id=2, label="Absences", kind=ProjectKind.HORS_PROJET, statut=None
+        id=2, label="Absences", kind=ProjectKind.OFF_PROJECT, status=None
     )
 
-    assert activity.statut is None
+    assert activity.status is None
 
 
 def test_an_off_project_activity_cannot_have_a_phase_status() -> None:
@@ -41,41 +41,41 @@ def test_an_off_project_activity_cannot_have_a_phase_status() -> None:
         Project(
             id=2,
             label="Absences",
-            kind=ProjectKind.HORS_PROJET,
-            statut=ProjectStatus.CADRAGE,
+            kind=ProjectKind.OFF_PROJECT,
+            status=ProjectStatus.SCOPING,
         )
 
 
 def test_a_project_requires_a_phase_status() -> None:
     with pytest.raises(ValidationError):
-        Project(id=1, label="Portail", kind=ProjectKind.PROJET, statut=None)
+        Project(id=1, label="Portail", kind=ProjectKind.PROJECT, status=None)
 
 
 def test_a_lot_belongs_to_a_parent_project() -> None:
-    lot = make_project(kind=ProjectKind.LOT, parent_id=1)
+    work_package = make_project(kind=ProjectKind.WORK_PACKAGE, parent_id=1)
 
-    assert lot.parent_id == 1
+    assert work_package.parent_id == 1
 
 
 def test_a_lot_without_parent_is_rejected() -> None:
     with pytest.raises(ValidationError):
-        make_project(kind=ProjectKind.LOT, parent_id=None)
+        make_project(kind=ProjectKind.WORK_PACKAGE, parent_id=None)
 
 
 def test_a_label_cannot_be_blank() -> None:
     with pytest.raises(ValidationError):
-        Project(id=1, label="   ", kind=ProjectKind.PROJET)
+        Project(id=1, label="   ", kind=ProjectKind.PROJECT)
 
 
 def test_label_is_trimmed() -> None:
     assert (
-        Project(id=1, label="  Portail  ", kind=ProjectKind.PROJET).label == "Portail"
+        Project(id=1, label="  Portail  ", kind=ProjectKind.PROJECT).label == "Portail"
     )
 
 
 def test_an_off_project_activity_is_never_synced_to_monday() -> None:
     activity = Project(
-        id=2, label="Formation", kind=ProjectKind.HORS_PROJET, statut=None
+        id=2, label="Formation", kind=ProjectKind.OFF_PROJECT, status=None
     )
 
     assert activity.is_syncable_to_monday is False
@@ -93,29 +93,29 @@ def test_a_project_without_monday_link_is_not_syncable() -> None:
 
 
 def test_changing_status_is_allowed_for_a_project() -> None:
-    project = make_project(statut=ProjectStatus.CADRAGE)
+    project = make_project(status=ProjectStatus.SCOPING)
 
-    project.change_status(ProjectStatus.REALISATION)
+    project.change_status(ProjectStatus.BUILD)
 
-    assert project.statut is ProjectStatus.REALISATION
+    assert project.status is ProjectStatus.BUILD
 
 
 def test_changing_status_of_an_off_project_activity_is_rejected() -> None:
     activity = Project(
-        id=2, label="Absences", kind=ProjectKind.HORS_PROJET, statut=None
+        id=2, label="Absences", kind=ProjectKind.OFF_PROJECT, status=None
     )
 
     with pytest.raises(ValidationError):
-        activity.change_status(ProjectStatus.CADRAGE)
+        activity.change_status(ProjectStatus.SCOPING)
 
 
 def test_status_can_move_backwards() -> None:
     """Un projet peut revenir en arriere : cadrage apres realisation, par exemple."""
-    project = make_project(statut=ProjectStatus.VALIDATION)
+    project = make_project(status=ProjectStatus.VALIDATION)
 
-    project.change_status(ProjectStatus.CADRAGE)
+    project.change_status(ProjectStatus.SCOPING)
 
-    assert project.statut is ProjectStatus.CADRAGE
+    assert project.status is ProjectStatus.SCOPING
 
 
 def test_archiving_a_project_dates_its_exit() -> None:
@@ -123,7 +123,7 @@ def test_archiving_a_project_dates_its_exit() -> None:
 
     project.archive()
 
-    assert project.actif is False
+    assert project.is_active is False
     assert project.archived_at is not None
 
 
@@ -143,12 +143,12 @@ def test_unarchiving_a_project_clears_its_exit_date() -> None:
 
     project.unarchive()
 
-    assert project.actif is True
+    assert project.is_active is True
     assert project.archived_at is None
 
 
 def test_a_project_is_active_and_undated_to_begin_with() -> None:
     project = make_project()
 
-    assert project.actif is True
+    assert project.is_active is True
     assert project.archived_at is None

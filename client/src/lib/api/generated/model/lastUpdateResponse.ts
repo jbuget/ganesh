@@ -11,6 +11,6 @@ import type { BoardMemberResponse } from "./boardMemberResponse";
  */
 export interface LastUpdateResponse {
   author: BoardMemberResponse;
-  texte: string;
-  publiee_le: string;
+  body: string;
+  published_at: string;
 }

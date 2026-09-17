@@ -12,7 +12,7 @@ import { depuis } from "@/lib/dates-relatives";
 interface ProjectUpdateCardProps {
   maj: ProjectUpdateResponse;
   maintenant: Date;
-  onEdit: (texte: string) => Promise<void>;
+  onEdit: (body: string) => Promise<void>;
   onRemove: () => Promise<void>;
 }
 
@@ -35,17 +35,17 @@ export function ProjectUpdateCard({
     <article className="rounded-lg border border-slate-300 bg-white p-3">
       <header className="mb-2 flex items-center gap-2">
         <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-700">
-          {maj.author.initiales}
+          {maj.author.initials}
         </span>
         <span className="text-sm font-medium text-slate-800">
           {maj.author.display_name}
         </span>
         <span className="text-xs text-slate-400">
-          {depuis(maj.publiee_le, maintenant)}
-          {maj.modifiee_le && !maj.est_supprimee && " · modifiée"}
+          {depuis(maj.published_at, maintenant)}
+          {maj.edited_at && !maj.is_deleted && " · modifiée"}
         </span>
 
-        {maj.est_la_mienne && !maj.est_supprimee && !enEdition && (
+        {maj.is_mine && !maj.is_deleted && !enEdition && (
           <span className="ml-auto flex items-center gap-0.5">
             <button
               type="button"
@@ -67,19 +67,19 @@ export function ProjectUpdateCard({
         )}
       </header>
 
-      {maj.est_supprimee ? (
+      {maj.is_deleted ? (
         <p className="text-sm text-slate-400 italic">Message supprimé</p>
       ) : enEdition ? (
         <Correction
-          valeur={maj.texte}
+          value={maj.body}
           onCancel={() => setEnEdition(false)}
-          onSave={async (texte) => {
-            await onEdit(texte);
+          onSave={async (body) => {
+            await onEdit(body);
             setEnEdition(false);
           }}
         />
       ) : (
-        <MarkdownView texte={maj.texte} />
+        <MarkdownView body={maj.body} />
       )}
     </article>
   );
@@ -87,25 +87,25 @@ export function ProjectUpdateCard({
 
 /** Correction d'une mise a jour, en place dans le fil. */
 function Correction({
-  valeur,
+  value,
   onSave,
   onCancel,
 }: {
-  valeur: string;
-  onSave: (texte: string) => Promise<void>;
+  value: string;
+  onSave: (body: string) => Promise<void>;
   onCancel: () => void;
 }) {
-  const [texte, setTexte] = useState(valeur);
+  const [body, setTexte] = useState(value);
 
   return (
     <div className="space-y-2">
       <RichTextEditor
-        valeur={valeur}
+        value={value}
         onChange={setTexte}
-        onSubmit={() => void onSave(texte)}
+        onSubmit={() => void onSave(body)}
       />
       <div className="flex items-center gap-2">
-        <Button size="sm" disabled={!texte.trim()} onClick={() => void onSave(texte)}>
+        <Button size="sm" disabled={!body.trim()} onClick={() => void onSave(body)}>
           Enregistrer
         </Button>
         <Button size="sm" variant="ghost" onClick={onCancel}>

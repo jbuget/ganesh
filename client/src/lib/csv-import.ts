@@ -1,28 +1,54 @@
 import type { ImportLineRequest } from "@/lib/api/generated/model";
 
-/** Colonnes reconnues, dans l'ordre attendu du fichier. */
-export const COLONNES = [
-  "label",
-  "kind",
-  "parent_label",
-  "statut",
-  "estime_j",
-  "monday_item_id",
-] as const;
+/**
+ * Column headers understood in an imported file, with their aliases.
+ *
+ * A spreadsheet is written by people, not by the code: the French headers the
+ * team has been using keep working alongside the English field names, so an
+ * export prepared last month still imports today.
+ */
+export const COLUMNS = {
+  label: ["label", "libelle"],
+  kind: ["kind", "type"],
+  parent_label: ["parent_label", "parent"],
+  status: ["status", "statut"],
+  estimated_days: ["estimated_days", "estime_j"],
+  monday_item_id: ["monday_item_id"],
+} as const;
 
-const SEPARATEURS = [";", ",", "\t"];
+const SEPARATORS = [";", ",", "\t"];
+
+/**
+ * Cell values people still write in French, and what they mean.
+ *
+ * The same reasoning as the headers: a spreadsheet filled in last month must
+ * keep importing. An unknown value is passed through untouched, and the server
+ * rejects it with its own message.
+ */
+const FRENCH_KINDS: Record<string, string> = {
+  projet: "project",
+  lot: "work_package",
+  hors_projet: "off_project",
+};
+
+const FRENCH_STATUSES: Record<string, string> = {
+  cadrage: "scoping",
+  realisation: "build",
+  deploiement: "deployment",
+  exploitation: "operations",
+};
 
 /** Devine le separateur : un export francais sort souvent en point-virgule. */
-function detecterSeparateur(entete: string): string {
+function detectSeparator(entete: string): string {
   return (
-    SEPARATEURS.map((s) => ({ s, n: entete.split(s).length }))
+    SEPARATORS.map((s) => ({ s, n: entete.split(s).length }))
       .sort((a, b) => b.n - a.n)
       .find((c) => c.n > 1)?.s ?? ";"
   );
 }
 
-function decouper(ligne: string, separateur: string): string[] {
-  return ligne.split(separateur).map((c) => c.trim().replace(/^"|"$/g, ""));
+function split(line: string, separator: string): string[] {
+  return line.split(separator).map((c) => c.trim().replace(/^"|"$/g, ""));
 }
 
 /**
@@ -32,32 +58,38 @@ function decouper(ligne: string, separateur: string): string[] {
  * celles qu'on ne reconnait pas sont ignorees plutot que de faire echouer le
  * fichier entier — un export Monday porte bien d'autres colonnes.
  */
-export function parseProjectsCsv(contenu: string): ImportLineRequest[] {
-  const lignes = contenu
+export function parseProjectsCsv(content: string): ImportLineRequest[] {
+  const lines = content
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean);
-  if (lignes.length < 2) return [];
+  if (lines.length < 2) return [];
 
-  const separateur = detecterSeparateur(lignes[0]);
-  const entetes = decouper(lignes[0], separateur).map((e) => e.toLowerCase());
+  const separator = detectSeparator(lines[0]);
+  const headers = split(lines[0], separator).map((e) => e.toLowerCase());
 
-  return lignes.slice(1).map((ligne) => {
-    const cellules = decouper(ligne, separateur);
-    const valeur = (colonne: string) => {
-      const index = entetes.indexOf(colonne);
-      return index === -1 ? "" : (cellules[index] ?? "");
+  return lines.slice(1).map((line) => {
+    const cells = split(line, separator);
+    const value = (column: keyof typeof COLUMNS) => {
+      const index = COLUMNS[column]
+        .map((alias) => headers.indexOf(alias))
+        .find((position) => position !== -1);
+      return index === undefined ? "" : (cells[index] ?? "");
     };
 
-    const estime = Number.parseFloat(valeur("estime_j").replace(",", "."));
+    const estimated = Number.parseFloat(value("estimated_days").replace(",", "."));
 
     return {
-      label: valeur("label"),
-      kind: (valeur("kind") || "projet") as ImportLineRequest["kind"],
-      parent_label: valeur("parent_label") || null,
-      statut: (valeur("statut") || "exploration") as ImportLineRequest["statut"],
-      estime_j: Number.isFinite(estime) ? estime : null,
-      monday_item_id: valeur("monday_item_id") || null,
+      label: value("label"),
+      kind: (FRENCH_KINDS[value("kind")] ||
+        value("kind") ||
+        "project") as ImportLineRequest["kind"],
+      parent_label: value("parent_label") || null,
+      status: (FRENCH_STATUSES[value("status")] ||
+        value("status") ||
+        "exploration") as ImportLineRequest["status"],
+      estimated_days: Number.isFinite(estimated) ? estimated : null,
+      monday_item_id: value("monday_item_id") || null,
     };
   });
 }

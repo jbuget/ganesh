@@ -6,15 +6,15 @@ import type { ProjectContributionResponse } from "@/lib/api/generated/model";
 
 const contribution = (
   id: number,
-  nom: string,
-  jours: number,
+  name: string,
+  days: number,
 ): ProjectContributionResponse =>
   ({
-    member: { id, display_name: nom, initiales: nom.slice(0, 2).toUpperCase() },
-    jours,
-    par_mois: [
-      { mois: "2026-09-01", jours: jours / 2 },
-      { mois: "2026-08-01", jours: jours / 2 },
+    member: { id, display_name: name, initials: name.slice(0, 2).toUpperCase() },
+    days,
+    by_month: [
+      { month: "2026-09-01", days: days / 2 },
+      { month: "2026-08-01", days: days / 2 },
     ],
   }) as ProjectContributionResponse;
 

@@ -11,15 +11,15 @@ def a_link(label: str = "Cahier des charges", url: str = "https://waat.fr/cdc"):
 
 
 def test_a_link_keeps_its_label_and_address() -> None:
-    lien = a_link()
+    link = a_link()
 
-    assert (lien.label, lien.url) == ("Cahier des charges", "https://waat.fr/cdc")
+    assert (link.label, link.url) == ("Cahier des charges", "https://waat.fr/cdc")
 
 
 def test_surrounding_spaces_are_trimmed() -> None:
-    lien = a_link(label="  Maquettes  ", url="  https://figma.com/x  ")
+    link = a_link(label="  Maquettes  ", url="  https://figma.com/x  ")
 
-    assert (lien.label, lien.url) == ("Maquettes", "https://figma.com/x")
+    assert (link.label, link.url) == ("Maquettes", "https://figma.com/x")
 
 
 def test_a_link_without_label_takes_its_address() -> None:
@@ -45,24 +45,24 @@ def test_http_and_https_are_accepted(url: str) -> None:
 
 
 def test_a_link_carries_the_generic_icon_by_default() -> None:
-    assert a_link().icone is LinkIcon.LIEN
+    assert a_link().icon is LinkIcon.LINK
 
 
 def test_a_link_keeps_the_icon_it_is_given() -> None:
-    lien = ProjectLink(
+    link = ProjectLink(
         id=None,
         project_id=1,
         label="Maquettes",
         url="https://figma.com/x",
-        icone=LinkIcon.MAQUETTE,
+        icon=LinkIcon.DESIGN,
     )
 
-    assert lien.icone is LinkIcon.MAQUETTE
+    assert link.icon is LinkIcon.DESIGN
 
 
 def test_an_icon_outside_the_catalogue_is_refused() -> None:
     """Le catalogue est ferme : l'ecran doit savoir dessiner ce qu'il recoit."""
     with pytest.raises(ValidationError):
         ProjectLink(
-            id=None, project_id=1, label="x", url="https://waat.fr", icone="licorne"
+            id=None, project_id=1, label="x", url="https://waat.fr", icon="licorne"
         )

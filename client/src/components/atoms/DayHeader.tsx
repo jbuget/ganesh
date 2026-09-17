@@ -1,7 +1,7 @@
 import { dayNumber, weekdayInitial } from "@/lib/dates";
 
 interface DayHeaderProps {
-  jour: string;
+  day: string;
   isOffDay: boolean;
   isToday: boolean;
   /** Un jour non ouvre se reduit a une bande, sauf s'il porte une saisie. */
@@ -19,14 +19,14 @@ interface DayHeaderProps {
  * du tableau. Le rythme des semaines reste lisible.
  */
 export function DayHeader({
-  jour,
+  day,
   isOffDay,
   isToday,
   isNarrow = false,
   isLastDay = false,
   label,
 }: DayHeaderProps) {
-  const intitule = `${weekdayInitial(jour)} ${dayNumber(jour)}`;
+  const intitule = `${weekdayInitial(day)} ${dayNumber(day)}`;
 
   return (
     <th
@@ -50,8 +50,8 @@ export function DayHeader({
         <span className="sr-only">{intitule}</span>
       ) : (
         <>
-          <div className="leading-tight">{weekdayInitial(jour)}</div>
-          <div className="leading-tight">{dayNumber(jour)}</div>
+          <div className="leading-tight">{weekdayInitial(day)}</div>
+          <div className="leading-tight">{dayNumber(day)}</div>
         </>
       )}
     </th>

@@ -13,11 +13,11 @@ const PROJECTS: ProjectResponse[] = [
   {
     id: 1,
     label: "Portail bailleurs",
-    kind: "projet",
-    statut: "cadrage",
+    kind: "project",
+    status: "scoping",
     parent_id: null,
-    actif: true,
-    estime_j: null,
+    is_active: true,
+    estimated_days: null,
     is_syncable_to_monday: false,
   } as ProjectResponse,
 ];

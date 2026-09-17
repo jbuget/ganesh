@@ -27,5 +27,5 @@ class ProjectAssigneeModel(Base):
     role: Mapped[ProjectRole] = mapped_column(
         Enum(ProjectRole, name="project_role", native_enum=False, length=16),
         primary_key=True,
-        server_default=ProjectRole.INTERVENANT.name,
+        server_default=ProjectRole.CONTRIBUTOR.name,
     )

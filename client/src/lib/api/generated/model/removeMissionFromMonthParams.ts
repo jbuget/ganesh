@@ -10,7 +10,7 @@ export type RemoveMissionFromMonthParams = {
   /**
    * N'importe quel jour du mois vise
    */
-  mois: string;
+  month: string;
   /**
    * Collaborateur dont le mois est modifie.
    */

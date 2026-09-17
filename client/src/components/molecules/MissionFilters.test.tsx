@@ -2,33 +2,33 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { MissionFilters } from "./MissionFilters";
-import { AUCUN_FILTRE, type MissionFilters as Criteres } from "@/lib/mission-filters";
+import { NO_FILTER, type MissionFilters as Criteres } from "@/lib/mission-filters";
 
 vi.mock("@/lib/api/queries", () => ({
   useTeammates: () => ({
-    teammates: [{ id: 3, display_name: "Nino Bosc", initiales: "NB" }],
+    teammates: [{ id: 3, display_name: "Nino Bosc", initials: "NB" }],
   }),
 }));
 
 const barre = (over: Partial<Criteres> = {}, props: Record<string, unknown> = {}) => {
-  const filtres = { ...AUCUN_FILTRE, ...over };
+  const filters = { ...NO_FILTER, ...over };
   const onChange = vi.fn();
   const onEffacer = vi.fn();
   render(
     <MissionFilters
-      filtres={filtres}
-      actif={
-        filtres.nom !== "" ||
-        filtres.phases.length > 0 ||
-        filtres.categories.length > 0 ||
-        filtres.priorites.length > 0 ||
-        filtres.intervenants.length > 0 ||
-        filtres.types.length > 0 ||
-        filtres.etats.length > 0
+      filters={filters}
+      hasFilter={
+        filters.name !== "" ||
+        filters.phases.length > 0 ||
+        filters.categories.length > 0 ||
+        filters.priorities.length > 0 ||
+        filters.contributors.length > 0 ||
+        filters.types.length > 0 ||
+        filters.states.length > 0
       }
       onChange={onChange}
       onEffacer={onEffacer}
-      visibles={3}
+      visible={3}
       total={12}
       {...props}
     />,
@@ -57,7 +57,7 @@ describe("MissionFilters", () => {
       target: { value: "portail" },
     });
 
-    expect(onChange).toHaveBeenCalledWith({ nom: "portail" });
+    expect(onChange).toHaveBeenCalledWith({ name: "portail" });
   });
 
   it("remonte une phase cochée", () => {
@@ -66,7 +66,7 @@ describe("MissionFilters", () => {
     fireEvent.click(screen.getByRole("button", { name: /Phase/ }));
     fireEvent.click(screen.getByRole("button", { name: "Réalisation" }));
 
-    expect(onChange).toHaveBeenCalledWith({ phases: ["realisation"] });
+    expect(onChange).toHaveBeenCalledWith({ phases: ["build"] });
   });
 
   it("remonte un intervenant coché, par son identifiant", () => {
@@ -75,7 +75,7 @@ describe("MissionFilters", () => {
     fireEvent.click(screen.getByRole("button", { name: /Intervenant/ }));
     fireEvent.click(screen.getByRole("button", { name: /Nino Bosc/ }));
 
-    expect(onChange).toHaveBeenCalledWith({ intervenants: [3] });
+    expect(onChange).toHaveBeenCalledWith({ contributors: [3] });
   });
 
   it("distingue les projets des sous-projets", () => {
@@ -84,7 +84,7 @@ describe("MissionFilters", () => {
     fireEvent.click(screen.getByRole("button", { name: /Type/ }));
     fireEvent.click(screen.getByRole("button", { name: "Sous-projets" }));
 
-    expect(onChange).toHaveBeenCalledWith({ types: ["lot"] });
+    expect(onChange).toHaveBeenCalledWith({ types: ["work_package"] });
   });
 
   it("remonte une priorité cochée", () => {
@@ -93,7 +93,7 @@ describe("MissionFilters", () => {
     fireEvent.click(screen.getByRole("button", { name: /Priorité/ }));
     fireEvent.click(screen.getByRole("button", { name: "Critique" }));
 
-    expect(onChange).toHaveBeenCalledWith({ priorites: ["critique"] });
+    expect(onChange).toHaveBeenCalledWith({ priorities: ["critical"] });
   });
 
   it("propose de consulter les missions archivées", () => {
@@ -102,7 +102,7 @@ describe("MissionFilters", () => {
     fireEvent.click(screen.getByRole("button", { name: /État/ }));
     fireEvent.click(screen.getByRole("button", { name: "Archivées" }));
 
-    expect(onChange).toHaveBeenCalledWith({ etats: ["archivee"] });
+    expect(onChange).toHaveBeenCalledWith({ states: ["archivee"] });
   });
 
   it("n'offre d'effacer que lorsqu'il y a quelque chose à effacer", () => {
@@ -112,7 +112,7 @@ describe("MissionFilters", () => {
   });
 
   it("efface tous les critères d'un clic", () => {
-    const { onEffacer } = barre({ nom: "portail" });
+    const { onEffacer } = barre({ name: "portail" });
 
     fireEvent.click(screen.getByRole("button", { name: "Effacer" }));
 
@@ -120,7 +120,7 @@ describe("MissionFilters", () => {
   });
 
   it("dit ce qu'on voit sur ce que l'écran porte", () => {
-    barre({ phases: ["cadrage"] });
+    barre({ phases: ["scoping"] });
 
     expect(screen.getByRole("status")).toHaveTextContent("3 missions sur 12");
   });

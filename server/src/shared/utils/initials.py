@@ -1,7 +1,7 @@
 """Initiales affichees en pastille."""
 
 
-def initiales(nom: str) -> str:
+def initials(nom: str) -> str:
     """Deux initiales au plus, tirees d'un nom affiche.
 
     Les noms de l'annuaire prennent la forme « L. Chen » : le point y separe

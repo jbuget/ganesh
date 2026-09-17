@@ -29,12 +29,12 @@ ALICE = User(
 AUJOURDHUI = date(2026, 9, 17)
 
 
-def build(statut: ProjectStatus = ProjectStatus.VALIDATION):
+def build(status: ProjectStatus = ProjectStatus.VALIDATION):
     details = InMemoryProjectDetailRepository()
     use_case = ChangeProjectStatusUseCase(
         users=InMemoryUserRepository([ALICE]),
         projects=InMemoryProjectRepository(
-            [Project(id=10, label="Portail", kind=ProjectKind.PROJET, statut=statut)]
+            [Project(id=10, label="Portail", kind=ProjectKind.PROJECT, status=status)]
         ),
         details=details,
         audit_logs=InMemoryAuditLogRepository(),
@@ -47,13 +47,13 @@ async def test_entering_a_phase_is_dated() -> None:
 
     await use_case.execute(
         ChangeProjectStatusCommand(
-            actor_id=1, project_id=10, statut=ProjectStatus.DEPLOIEMENT
+            actor_id=1, project_id=10, status=ProjectStatus.DEPLOYMENT
         ),
         today=AUJOURDHUI,
     )
 
     assert await details.list_phases_reached(10) == {
-        ProjectStatus.DEPLOIEMENT: AUJOURDHUI
+        ProjectStatus.DEPLOYMENT: AUJOURDHUI
     }
 
 
@@ -62,20 +62,20 @@ async def test_passing_again_keeps_the_first_date() -> None:
     use_case, details = build()
     await use_case.execute(
         ChangeProjectStatusCommand(
-            actor_id=1, project_id=10, statut=ProjectStatus.DEPLOIEMENT
+            actor_id=1, project_id=10, status=ProjectStatus.DEPLOYMENT
         ),
         today=AUJOURDHUI,
     )
 
     await use_case.execute(
         ChangeProjectStatusCommand(
-            actor_id=1, project_id=10, statut=ProjectStatus.DEPLOIEMENT
+            actor_id=1, project_id=10, status=ProjectStatus.DEPLOYMENT
         ),
         today=date(2026, 12, 1),
     )
 
     assert (await details.list_phases_reached(10))[
-        ProjectStatus.DEPLOIEMENT
+        ProjectStatus.DEPLOYMENT
     ] == AUJOURDHUI
 
 
@@ -83,17 +83,17 @@ async def test_going_back_does_not_erase_what_happened() -> None:
     use_case, details = build()
     await use_case.execute(
         ChangeProjectStatusCommand(
-            actor_id=1, project_id=10, statut=ProjectStatus.EXPLOITATION
+            actor_id=1, project_id=10, status=ProjectStatus.OPERATIONS
         ),
         today=AUJOURDHUI,
     )
 
     await use_case.execute(
         ChangeProjectStatusCommand(
-            actor_id=1, project_id=10, statut=ProjectStatus.REALISATION
+            actor_id=1, project_id=10, status=ProjectStatus.BUILD
         ),
         today=date(2026, 10, 1),
     )
 
     atteintes = await details.list_phases_reached(10)
-    assert ProjectStatus.EXPLOITATION in atteintes
+    assert ProjectStatus.OPERATIONS in atteintes
