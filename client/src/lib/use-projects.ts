@@ -13,16 +13,21 @@ import {
   inclutLesArchivees,
   type MissionFilters,
 } from "@/lib/mission-filters";
+import { AUCUN_TRI, type TriMissions } from "@/lib/mission-sort";
 import { buildProjectTree, offProjectActivities } from "@/lib/project-tree";
 
 /**
  * Etat et actions de l'ecran du referentiel.
  *
  * Comme pour la matrice, la coordination vit dans un hook pour que le composant
- * ne porte que le rendu. Le filtrage en fait partie : l'ecran recoit les
- * criteres et rend l'arborescence deja reduite, sans avoir a savoir comment.
+ * ne porte que le rendu. Le filtrage et le rangement en font partie : l'ecran
+ * recoit les criteres et l'ordre, et rend l'arborescence deja reduite et
+ * rangee, sans avoir a savoir comment.
  */
-export function useProjectsScreen(filtres: MissionFilters = AUCUN_FILTRE) {
+export function useProjectsScreen(
+  filtres: MissionFilters = AUCUN_FILTRE,
+  tri: TriMissions = AUCUN_TRI,
+) {
   const queryClient = useQueryClient();
   const { user: me } = useCurrentUser();
   const { missions, isLoading } = useProjects(inclutLesArchivees(filtres));
@@ -47,7 +52,7 @@ export function useProjectsScreen(filtres: MissionFilters = AUCUN_FILTRE) {
   return {
     isLoading,
     isManager: me?.role === "MANAGER",
-    arbre: buildProjectTree(retenues),
+    arbre: buildProjectTree(retenues, tri),
     activites: offProjectActivities(retenues),
 
     /** Missions retenues, et missions que le referentiel porte en tout. */

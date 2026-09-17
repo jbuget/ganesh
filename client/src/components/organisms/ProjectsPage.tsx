@@ -6,6 +6,7 @@ import { Fragment, useMemo, useState } from "react";
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { ImportProjectsDialog } from "@/components/atoms/ImportProjectsDialog";
 import { PageHeader } from "@/components/atoms/PageHeader";
+import { SortableColumnHeader } from "@/components/atoms/SortableColumnHeader";
 import { MissionFilters } from "@/components/molecules/MissionFilters";
 import { MissionRow } from "@/components/molecules/MissionRow";
 import { PageLayout } from "@/components/organisms/PageLayout";
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { useMissionOuverte } from "@/lib/mission-ouverte";
 import { useMissionFilters } from "@/lib/use-mission-filters";
+import { useMissionSort } from "@/lib/use-mission-sort";
 import { useProjectsScreen } from "@/lib/use-projects";
 
 /**
@@ -35,7 +37,10 @@ export function ProjectsPage() {
   // Les memes criteres que le kanban, tenus par la meme adresse : on filtre
   // d'un ecran, on ouvre l'autre, et la question posee reste la meme.
   const { filtres, actif, definir, effacer } = useMissionFilters();
-  const ecran = useProjectsScreen(filtres);
+  // Le rangement suit le meme chemin que les filtres : l'adresse le porte, et
+  // le hook d'ecran rend l'arborescence deja dans l'ordre demande.
+  const { tri, basculer: trierPar } = useMissionSort();
+  const ecran = useProjectsScreen(filtres, tri);
   // Une seule heure de reference pour toutes les lignes : « il y a 3 h » ne
   // doit pas dependre du moment ou chacune se rend.
   const maintenant = useMemo(() => new Date(), []);
@@ -99,14 +104,48 @@ export function ProjectsPage() {
                   la rangee se peint sous les lignes qui defilent. */}
               <TableHeader className="sticky top-0 z-10 [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50">
                 <TableRow>
-                  <TableHead>Projet</TableHead>
+                  <SortableColumnHeader
+                    colonne="projet"
+                    libelle="Projet"
+                    tri={tri}
+                    onBasculer={trierPar}
+                  />
                   {/* Le fil de suivi : son icone porte le sens, pas un titre. */}
                   <TableHead />
-                  <TableHead>Phase</TableHead>
-                  <TableHead>Priorité</TableHead>
-                  <TableHead>Catégorie</TableHead>
-                  <TableHead className="text-right">Estimé</TableHead>
-                  <TableHead className="text-right">Réalisé</TableHead>
+                  <SortableColumnHeader
+                    colonne="phase"
+                    libelle="Phase"
+                    tri={tri}
+                    onBasculer={trierPar}
+                  />
+                  <SortableColumnHeader
+                    colonne="priorite"
+                    libelle="Priorité"
+                    tri={tri}
+                    onBasculer={trierPar}
+                  />
+                  <SortableColumnHeader
+                    colonne="categorie"
+                    libelle="Catégorie"
+                    tri={tri}
+                    onBasculer={trierPar}
+                  />
+                  <SortableColumnHeader
+                    colonne="estime"
+                    libelle="Estimé"
+                    tri={tri}
+                    onBasculer={trierPar}
+                    aDroite
+                  />
+                  <SortableColumnHeader
+                    colonne="realise"
+                    libelle="Réalisé"
+                    tri={tri}
+                    onBasculer={trierPar}
+                    aDroite
+                  />
+                  {/* Qui s'en occupe ne se range pas : une colonne de jetons
+                      n'a pas d'ordre que le lecteur aurait en tete. */}
                   <TableHead>Référents</TableHead>
                   <TableHead>Intervenants</TableHead>
                 </TableRow>
