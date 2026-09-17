@@ -4,6 +4,7 @@ import { Maximize2, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 
+import { EditableTitle } from "@/components/atoms/EditableTitle";
 import { ProjectTabs } from "@/components/organisms/ProjectTabs";
 import { useProjectDetail } from "@/lib/use-project-detail";
 
@@ -56,12 +57,12 @@ export function ProjectPanel({
         aria-label={detail ? detail.project.label : "Mission"}
         className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[40rem] flex-col border-l border-slate-300 bg-white shadow-xl"
       >
-        <header className="flex items-start gap-2 border-b border-slate-200 px-5 py-4">
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate text-base font-semibold">
-              {detail?.project.label ?? "Chargement…"}
-            </h2>
-          </div>
+        <header className="flex items-center gap-2 border-b border-slate-200 px-5 py-4">
+          <EditableTitle
+            label={detail?.project.label ?? "Chargement…"}
+            invite="Renommer la mission"
+            onRename={detail ? fiche.renommer : undefined}
+          />
 
           <Link
             href={`/projets/${projectId}`}

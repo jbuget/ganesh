@@ -3,6 +3,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
+import { EditableTitle } from "@/components/atoms/EditableTitle";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectTabs } from "@/components/organisms/ProjectTabs";
 import { libellePhase, pastillePhase } from "@/lib/board";
@@ -61,7 +62,12 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
           <RetourKanban />
 
           <header className="mb-6">
-            <h1 className="text-xl font-semibold">{project.label}</h1>
+            <EditableTitle
+              label={project.label}
+              invite="Renommer la mission"
+              onRename={fiche.renommer}
+              niveau={1}
+            />
             <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
               {project.statut && (
                 <span className="flex items-center gap-1.5">

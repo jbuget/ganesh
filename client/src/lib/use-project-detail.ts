@@ -74,6 +74,11 @@ export function useProjectDetail(
       await recharger();
     },
 
+    async renommer(label: string) {
+      await updateProject(projectId, { label });
+      await recharger();
+    },
+
     async changerPhase(statut: ProjectStatus) {
       await changeProjectStatus(projectId, { statut });
       await recharger();
