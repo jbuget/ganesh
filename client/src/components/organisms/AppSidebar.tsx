@@ -10,7 +10,9 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { UserMenu } from "@/components/atoms/UserMenu";
 import { Button } from "@/components/ui/button";
+import { useDeconnexion } from "@/lib/use-deconnexion";
 import { useCurrentUser } from "@/lib/api/queries";
 import { basculerBarreLaterale, useBarreLateraleRepliee } from "@/lib/sidebar-store";
 
@@ -20,16 +22,6 @@ const ONGLETS = [
   { href: "/projets", label: "Projets", Icone: FolderKanban },
   { href: "/collaborateurs", label: "Utilisateurs", Icone: Users },
 ] as const;
-
-/** Initiales d'un nom, pour la pastille du pied de barre. */
-function initiales(nom: string): string {
-  return nom
-    .split(/[\s.]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((mot) => mot[0]?.toUpperCase() ?? "")
-    .join("");
-}
 
 /**
  * Barre laterale : navigation en haut, utilisateur courant en bas.
@@ -43,6 +35,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { user } = useCurrentUser();
   const repliee = useBarreLateraleRepliee();
+  const seDeconnecter = useDeconnexion();
 
   return (
     <aside
@@ -112,28 +105,7 @@ export function AppSidebar() {
         </ul>
       </nav>
 
-      {user && (
-        <div
-          className={[
-            "flex items-center gap-2.5 border-t border-slate-200 py-3",
-            repliee ? "justify-center px-0" : "px-4",
-          ].join(" ")}
-        >
-          <span
-            aria-hidden="true"
-            title={repliee ? user.display_name : undefined}
-            className="flex size-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-medium text-slate-700"
-          >
-            {initiales(user.display_name)}
-          </span>
-          <span className={repliee ? "sr-only" : "min-w-0"}>
-            <span className="block truncate text-sm">{user.display_name}</span>
-            {user.role === "MANAGER" && (
-              <span className="block text-xs text-slate-500">Manager</span>
-            )}
-          </span>
-        </div>
-      )}
+      {user && <UserMenu user={user} repliee={repliee} onSignOut={seDeconnecter} />}
     </aside>
   );
 }
