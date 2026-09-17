@@ -293,6 +293,82 @@ describe("MissionRow", () => {
     expect(screen.queryByText("\u2514")).not.toBeInTheDocument();
   });
 
+  it("propose de replier un projet qui porte des sous-projets", () => {
+    ligne(
+      <MissionRow
+        mission={mission()}
+        lots={2}
+        deplie
+        maintenant={MAINTENANT}
+        onOpen={() => {}}
+        onOpenFil={() => {}}
+        onBasculer={() => {}}
+      />,
+    );
+
+    const bascule = screen.getByRole("button", {
+      name: "Masquer les 2 sous-projets de Portail",
+    });
+    expect(bascule).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("propose de déplier un projet dont les sous-projets sont cachés", () => {
+    ligne(
+      <MissionRow
+        mission={mission()}
+        lots={2}
+        deplie={false}
+        maintenant={MAINTENANT}
+        onOpen={() => {}}
+        onOpenFil={() => {}}
+        onBasculer={() => {}}
+      />,
+    );
+
+    const bascule = screen.getByRole("button", {
+      name: "Afficher les 2 sous-projets de Portail",
+    });
+    expect(bascule).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("bascule les sous-projets sans ouvrir la mission", () => {
+    const basculer = vi.fn();
+    const ouvrir = vi.fn();
+
+    ligne(
+      <MissionRow
+        mission={mission()}
+        lots={1}
+        deplie
+        maintenant={MAINTENANT}
+        onOpen={ouvrir}
+        onOpenFil={() => {}}
+        onBasculer={basculer}
+      />,
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Masquer le sous-projet de Portail" }),
+    );
+
+    expect(basculer).toHaveBeenCalledTimes(1);
+    expect(ouvrir).not.toHaveBeenCalled();
+  });
+
+  it("n'offre aucune bascule à un projet sans sous-projet", () => {
+    ligne(
+      <MissionRow
+        mission={mission()}
+        maintenant={MAINTENANT}
+        onOpen={() => {}}
+        onOpenFil={() => {}}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /sous-projet/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it("annonce une activité hors projet, qui n'a pas de phase", () => {
     ligne(
       <MissionRow
