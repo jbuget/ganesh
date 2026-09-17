@@ -23,7 +23,7 @@ interface MissionSelectorProps {
 const NEW_PROJECT = "__new__";
 
 /**
- * Ajout d'une mission a la matrice, depuis la barre d'outils.
+ * Ajout d'une mission a la matrice, depuis la derniere ligne du tableau.
  *
  * Les missions deja presentes sont retirees de la liste : on ne peut pas creer
  * deux lignes pour la meme mission.
@@ -46,7 +46,7 @@ export function MissionSelector({
         else onSelect(Number(value));
       }}
     >
-      <SelectTrigger className="w-56" aria-label="Ajouter une mission">
+      <SelectTrigger className="w-full" aria-label="Ajouter une mission">
         <SelectValue placeholder="+ Ajouter une mission…" />
       </SelectTrigger>
 

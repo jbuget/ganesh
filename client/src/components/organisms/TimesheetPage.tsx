@@ -60,15 +60,6 @@ export function TimesheetPage() {
             onSelect={mois.viewTeammate}
           />
 
-          {grid?.is_writable && (
-            <MissionSelector
-              projects={mois.projects}
-              excludedIds={mois.displayedProjectIds}
-              onSelect={mois.addMission}
-              onDeclareNew={() => setDeclarationOuverte(true)}
-            />
-          )}
-
           {grid?.is_writable && mois.isOwnMonth && (
             <Button onClick={() => setValidationOuverte(true)}>Valider le mois</Button>
           )}
@@ -97,6 +88,16 @@ export function TimesheetPage() {
           extraRows={mois.extraRows}
           today={mois.today}
           onSetValue={mois.setDayValue}
+          ajoutDeMission={
+            grid.is_writable ? (
+              <MissionSelector
+                projects={mois.projects}
+                excludedIds={mois.displayedProjectIds}
+                onSelect={mois.addMission}
+                onDeclareNew={() => setDeclarationOuverte(true)}
+              />
+            ) : null
+          }
         />
       )}
 

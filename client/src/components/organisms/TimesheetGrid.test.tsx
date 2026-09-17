@@ -140,6 +140,49 @@ describe("TimesheetGrid", () => {
     expect(cellule.className).toContain("border-r-slate-500");
   });
 
+  it("garde la ligne d'ajout en dernière position", () => {
+    render(
+      <TimesheetGrid
+        {...baseProps}
+        grid={makeGrid()}
+        ajoutDeMission={<button>Ajouter une mission</button>}
+      />,
+    );
+
+    const lignes = screen.getAllByRole("row");
+    expect(within(lignes.at(-1)!).getByText("Ajouter une mission")).toBeInTheDocument();
+  });
+
+  it("laisse la ligne d'ajout fermer le tableau d'un trait fort", () => {
+    render(
+      <TimesheetGrid
+        {...baseProps}
+        grid={makeGrid()}
+        ajoutDeMission={<button>Ajouter une mission</button>}
+      />,
+    );
+
+    const lignes = screen.getAllByRole("row");
+    const cellules = within(lignes.at(-1)!).getAllByRole("rowheader");
+    expect(cellules[0].className).toContain("border-b-slate-500");
+    // La mission qui precede ne ferme plus rien : un trait faible l'en separe.
+    const mission = screen.getByRole("rowheader", { name: /Portail bailleurs/ });
+    expect(mission.className).toContain("border-b-slate-300");
+  });
+
+  it("propose d'ajouter une mission plutôt que d'annoncer le vide", () => {
+    render(
+      <TimesheetGrid
+        {...baseProps}
+        grid={makeGrid({ rows: [] })}
+        ajoutDeMission={<button>Ajouter une mission</button>}
+      />,
+    );
+
+    expect(screen.queryByText(/Aucune mission pour ce mois/)).toBeNull();
+    expect(screen.getByText("Ajouter une mission")).toBeInTheDocument();
+  });
+
   it("réduit un week-end sans saisie à une simple bande", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
