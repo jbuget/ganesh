@@ -10,7 +10,7 @@ import { basculerBarreLaterale, useBarreLateraleRepliee } from "@/lib/sidebar-st
 
 const ONGLETS = [
   { href: "/", label: "Activité", Icone: CalendarDays },
-  { href: "/tableau", label: "Tableau", Icone: KanbanSquare },
+  { href: "/kanban", label: "Kanban", Icone: KanbanSquare },
   { href: "/projets", label: "Projets", Icone: FolderKanban },
 ] as const;
 

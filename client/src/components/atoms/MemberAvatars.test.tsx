@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import { MemberAvatars } from "./MemberAvatars";
 import type { BoardMemberResponse } from "@/lib/api/generated/model";
@@ -19,10 +19,22 @@ describe("MemberAvatars", () => {
     expect(screen.getByText("DD")).toBeInTheDocument();
   });
 
-  it("donne le nom complet au survol", () => {
+  it("donne le nom complet au survol, sans attendre", () => {
     render(<MemberAvatars membres={[membre(1, "Léa Chen", "LC")]} />);
 
-    expect(screen.getByText("LC")).toHaveAttribute("title", "Léa Chen");
+    fireEvent.mouseMove(screen.getByText("LC"), { clientX: 10, clientY: 10 });
+
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Léa Chen");
+  });
+
+  it("retire l'infobulle quand la souris quitte les pastilles", () => {
+    render(<MemberAvatars membres={[membre(1, "Léa Chen", "LC")]} />);
+    const pastille = screen.getByText("LC");
+
+    fireEvent.mouseMove(pastille, { clientX: 10, clientY: 10 });
+    fireEvent.mouseLeave(pastille.parentElement!);
+
+    expect(screen.queryByRole("tooltip")).toBeNull();
   });
 
   it("n'affiche rien quand personne n'a encore saisi", () => {
@@ -46,6 +58,8 @@ describe("MemberAvatars", () => {
     );
     render(<MemberAvatars membres={membres} />);
 
-    expect(screen.getByText("+2")).toHaveAttribute("title", "Personne 4, Personne 5");
+    fireEvent.mouseMove(screen.getByText("+2"), { clientX: 10, clientY: 10 });
+
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Personne 4, Personne 5");
   });
 });

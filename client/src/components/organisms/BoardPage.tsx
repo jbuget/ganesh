@@ -48,7 +48,7 @@ const detectionDeCollision: CollisionDetection = (args) => {
   return closestCorners(args);
 };
 
-/** Tableau de bord des projets, une colonne par phase. */
+/** Kanban des missions, une colonne par phase. */
 export function BoardPage() {
   const board = useBoard();
   const glissement = useBoardDrag(board);
@@ -65,7 +65,7 @@ export function BoardPage() {
   return (
     <main className="mx-auto max-w-[1600px] p-6">
       <header className="mb-6">
-        <h1 className="text-lg font-semibold">Tableau de bord</h1>
+        <h1 className="text-lg font-semibold">Kanban</h1>
         <p className="text-sm text-slate-500">
           Glissez une mission pour changer sa phase ou la réordonner. L&apos;ordre
           choisi est conservé.
