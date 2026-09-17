@@ -1,12 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  avancement,
-  categorie,
-  formatMiseEnService,
-  libellePhase,
-  PHASES,
-} from "./board";
+import { avancement, categorie, libellePhase, PHASES } from "./board";
 
 describe("PHASES", () => {
   it("suit le cycle de vie d'un projet", () => {
@@ -32,16 +26,6 @@ describe("categorie", () => {
 
   it("ne renvoie rien pour une mission sans axe", () => {
     expect(categorie(null)).toBeNull();
-  });
-});
-
-describe("formatMiseEnService", () => {
-  it("écrit la date en toutes lettres", () => {
-    expect(formatMiseEnService("2026-11-15")).toBe("15 nov. 2026");
-  });
-
-  it("ne renvoie rien quand aucune date n'est prévue", () => {
-    expect(formatMiseEnService(null)).toBeNull();
   });
 });
 

@@ -44,7 +44,7 @@ describe("ProjectCard", () => {
   it("compare le consommé à l'estimé", () => {
     render(<ProjectCard carte={carte()} />);
 
-    expect(screen.getByText("5/20 jrs.")).toBeInTheDocument();
+    expect(screen.getByText("5/20 jrs. estimés")).toBeInTheDocument();
   });
 
   it("se contente du consommé quand aucun estimé n'existe", () => {
@@ -53,14 +53,8 @@ describe("ProjectCard", () => {
     expect(screen.getByText("5 jrs. consommés")).toBeInTheDocument();
   });
 
-  it("annonce la date de mise en service", () => {
+  it("ne charge pas la carte de la date de mise en service", () => {
     render(<ProjectCard carte={carte()} />);
-
-    expect(screen.getByText(/15 nov. 2026/)).toBeInTheDocument();
-  });
-
-  it("n'annonce rien quand aucune date n'est prévue", () => {
-    render(<ProjectCard carte={carte({ project: { date_mise_en_service: null } })} />);
 
     expect(screen.queryByText(/Mise en service/)).toBeNull();
   });
@@ -74,18 +68,22 @@ describe("ProjectCard", () => {
   it("signale un dépassement du budget", () => {
     render(<ProjectCard carte={carte({ consomme_j: 25 })} />);
 
-    expect(screen.getByText("25/20 jrs.").className).toContain("text-red-700");
+    expect(screen.getByText("25/20 jrs. estimés").className).toContain("text-red-700");
   });
 
   it("alerte à l'approche du budget", () => {
     render(<ProjectCard carte={carte({ consomme_j: 17 })} />);
 
-    expect(screen.getByText("17/20 jrs.").className).toContain("text-amber-700");
+    expect(screen.getByText("17/20 jrs. estimés").className).toContain(
+      "text-amber-700",
+    );
   });
 
   it("reste discret loin du budget", () => {
     render(<ProjectCard carte={carte({ consomme_j: 3 })} />);
 
-    expect(screen.getByText("3/20 jrs.").className).not.toContain("text-red-700");
+    expect(screen.getByText("3/20 jrs. estimés").className).not.toContain(
+      "text-red-700",
+    );
   });
 });

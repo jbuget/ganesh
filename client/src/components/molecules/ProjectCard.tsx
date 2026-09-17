@@ -1,10 +1,10 @@
 "use client";
 
-import { CalendarClock, GripVertical } from "lucide-react";
+import { GripVertical } from "lucide-react";
 
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
-import { avancement, categorie, formatMiseEnService } from "@/lib/board";
+import { avancement, categorie } from "@/lib/board";
 import { formatTotal } from "@/lib/dates";
 
 /** Teinte du rapport consomme/estime selon l'etat d'avancement. */
@@ -26,7 +26,6 @@ interface ProjectCardProps {
 export function ProjectCard({ carte, poignee, enDeplacement }: ProjectCardProps) {
   const { project } = carte;
   const axe = categorie(project.categorie);
-  const miseEnService = formatMiseEnService(project.date_mise_en_service);
   const etat = avancement(carte.consomme_j, project.estime_j);
 
   return (
@@ -35,7 +34,7 @@ export function ProjectCard({ carte, poignee, enDeplacement }: ProjectCardProps)
         "group rounded-lg border bg-white p-3 shadow-xs transition-shadow",
         enDeplacement
           ? "border-sky-400 shadow-lg"
-          : "border-slate-200 hover:border-slate-300 hover:shadow-sm",
+          : "border-slate-200 hover:border-slate-500 hover:shadow-sm",
       ].join(" ")}
     >
       <div className="flex items-start gap-1.5">
@@ -55,21 +54,16 @@ export function ProjectCard({ carte, poignee, enDeplacement }: ProjectCardProps)
         </span>
       )}
 
-      <div className="mt-2.5 flex items-center justify-between gap-2">
-        <span className={`text-xs tabular-nums ${TEINTES[etat]}`}>
-          {project.estime_j
-            ? `${formatTotal(carte.consomme_j)}/${project.estime_j} jrs.`
-            : `${formatTotal(carte.consomme_j)} jrs. consommés`}
-        </span>
+      <p className={`mt-2.5 text-xs tabular-nums ${TEINTES[etat]}`}>
+        {project.estime_j
+          ? `${formatTotal(carte.consomme_j)}/${project.estime_j} jrs. estimés`
+          : `${formatTotal(carte.consomme_j)} jrs. consommés`}
+      </p>
 
-        <MemberAvatars membres={carte.collaborateurs} />
-      </div>
-
-      {miseEnService && (
-        <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
-          <CalendarClock className="size-3.5 shrink-0" aria-hidden />
-          Mise en service {miseEnService}
-        </p>
+      {carte.collaborateurs.length > 0 && (
+        <div className="mt-2.5">
+          <MemberAvatars membres={carte.collaborateurs} />
+        </div>
       )}
     </article>
   );

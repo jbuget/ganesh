@@ -62,27 +62,6 @@ export function categorie(valeur: ProjectCategory | null | undefined) {
   return valeur ? (CATEGORIES_PAR_VALEUR.get(valeur) ?? null) : null;
 }
 
-/** Date de mise en service, en toutes lettres et abregee. */
-export function formatMiseEnService(iso: string | null | undefined): string | null {
-  if (!iso) return null;
-  const [annee, mois, jour] = iso.split("-").map(Number);
-  const MOIS = [
-    "janv.",
-    "févr.",
-    "mars",
-    "avr.",
-    "mai",
-    "juin",
-    "juil.",
-    "août",
-    "sept.",
-    "oct.",
-    "nov.",
-    "déc.",
-  ];
-  return `${jour} ${MOIS[mois - 1]} ${annee}`;
-}
-
 /** Etat d'avancement d'une mission par rapport a son estime. */
 export type Avancement = "sans-estime" | "en-cours" | "proche" | "depasse";
 
