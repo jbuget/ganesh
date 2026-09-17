@@ -13,6 +13,8 @@ interface ProjectUpdatesTabProps {
   maintenant: Date;
   /** Previent l'ecran d'ou l'on vient : il annonce le fil sans l'ouvrir. */
   onChange?: () => void | Promise<void>;
+  /** Pose le curseur dans la redaction des l'ouverture. */
+  focusRedaction?: boolean;
 }
 
 /**
@@ -26,6 +28,7 @@ export function ProjectUpdatesTab({
   projectId,
   maintenant,
   onChange,
+  focusRedaction = false,
 }: ProjectUpdatesTabProps) {
   const suivi = useProjectUpdates(projectId, onChange);
   const [texte, setTexte] = useState("");
@@ -52,6 +55,7 @@ export function ProjectUpdatesTab({
           key={cleDeRedaction}
           valeur=""
           placeholder="Rédigez une mise à jour…"
+          autoFocus={focusRedaction}
           onChange={setTexte}
           onSubmit={() => {
             if (texte.trim()) void publier();

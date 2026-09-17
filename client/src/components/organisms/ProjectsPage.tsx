@@ -103,6 +103,7 @@ export function ProjectsPage() {
                       estLot={mission.project.kind === "lot"}
                       maintenant={maintenant}
                       onOpen={() => panneau.ouvrir(mission.project.id)}
+                      onOpenFil={() => panneau.ouvrir(mission.project.id, "updates")}
                     />
                     {lots.map((lot) => (
                       <MissionRow
@@ -111,6 +112,7 @@ export function ProjectsPage() {
                         estLot
                         maintenant={maintenant}
                         onOpen={() => panneau.ouvrir(lot.project.id)}
+                        onOpenFil={() => panneau.ouvrir(lot.project.id, "updates")}
                       />
                     ))}
                   </Fragment>
@@ -159,8 +161,11 @@ export function ProjectsPage() {
 
       {panneau.missionOuverte && (
         <ProjectPanel
-          key={panneau.missionOuverte}
+          // L'onglet fait partie de la cle : rouvrir la meme mission sur son
+          // fil doit remonter le panneau, qui choisit son onglet a l'ouverture.
+          key={`${panneau.missionOuverte}:${panneau.ongletOuvert ?? ""}`}
           projectId={panneau.missionOuverte}
+          onglet={panneau.ongletOuvert}
           onClose={panneau.fermer}
           onMissionChanged={ecran.refresh}
         />

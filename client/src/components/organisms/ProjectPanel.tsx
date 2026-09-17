@@ -9,6 +9,8 @@ import { useProjectDetail } from "@/lib/use-project-detail";
 
 interface ProjectPanelProps {
   projectId: number;
+  /** Sur quoi s'ouvrir : la fiche par defaut, le fil si c'est lui qu'on visait. */
+  onglet?: string | null;
   onClose: () => void;
   /** Previent le tableau : une phase changee ici y deplace une carte. */
   onMissionChanged: () => void | Promise<void>;
@@ -23,6 +25,7 @@ interface ProjectPanelProps {
  */
 export function ProjectPanel({
   projectId,
+  onglet,
   onClose,
   onMissionChanged,
 }: ProjectPanelProps) {
@@ -84,6 +87,7 @@ export function ProjectPanel({
           {detail && (
             <ProjectTabs
               detail={detail}
+              ongletInitial={onglet}
               onChange={fiche.recharger}
               enregistrerFiche={fiche.enregistrerFiche}
               enregistrerDescription={fiche.enregistrerDescription}

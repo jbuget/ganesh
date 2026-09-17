@@ -36,6 +36,8 @@ interface RichTextEditorProps {
   onSubmit?: () => void;
   /** Offre les titres : une fiche s'articule, un point hebdomadaire non. */
   avecTitres?: boolean;
+  /** Pose le curseur dans la zone de saisie des son apparition. */
+  autoFocus?: boolean;
   /** Hauteur minimale de la zone de saisie, en classes Tailwind. */
   hauteur?: string;
   /**
@@ -95,6 +97,7 @@ export function RichTextEditor({
   onChange,
   onSubmit,
   avecTitres = false,
+  autoFocus = false,
   hauteur = "min-h-24",
   pleineHauteur = false,
 }: RichTextEditorProps) {
@@ -103,6 +106,8 @@ export function RichTextEditor({
     // au premier rendu ferait diverger le HTML et provoquerait une erreur
     // d'hydratation.
     immediatelyRender: false,
+    // « end » et non « start » : on ecrit a la suite de ce qui est deja la.
+    autofocus: autoFocus ? "end" : false,
     extensions: [
       StarterKit.configure({ heading: { levels: [2, 3] } }),
       Link.configure({ openOnClick: false }),

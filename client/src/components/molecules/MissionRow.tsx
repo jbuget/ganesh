@@ -15,6 +15,8 @@ interface MissionRowProps {
   /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
   maintenant: Date;
   onOpen: () => void;
+  /** Ouvre la mission sur son fil, la ou l'apercu s'arrete. */
+  onOpenFil: () => void;
 }
 
 /**
@@ -30,6 +32,7 @@ export function MissionRow({
   estLot = false,
   maintenant,
   onOpen,
+  onOpenFil,
 }: MissionRowProps) {
   const { project } = mission;
   const axe = categorie(project.categorie);
@@ -39,7 +42,10 @@ export function MissionRow({
   // un apercu tronque obligerait a ouvrir le panneau pour la fin d'une phrase.
   const apercu = derniere && (
     <>
-      <p className="mb-1.5 text-xs text-slate-500">
+      {/* Le trait separe la signature du propos : sans lui, la premiere ligne
+          du message se lit comme la suite de l'entete. Les marges negatives le
+          menent aux bords de la bulle, dont il traverse le rembourrage. */}
+      <p className="-mx-3 mb-2 border-b border-slate-200 px-3 pb-2 text-xs text-slate-500">
         <span className="font-medium text-slate-700">
           {derniere.author.display_name}
         </span>{" "}
@@ -82,7 +88,11 @@ export function MissionRow({
           plus loin, on ne saurait plus de quelle ligne il parle. L'icone dit
           deja ce que le nombre compte, d'ou l'en-tete vide. */}
       <TableCell className="w-12 text-right">
-        <UpdatesCounter nombre={mission.commentaires} apercu={apercu} />
+        <UpdatesCounter
+          nombre={mission.commentaires}
+          apercu={apercu}
+          onOpen={onOpenFil}
+        />
       </TableCell>
 
       <TableCell>
