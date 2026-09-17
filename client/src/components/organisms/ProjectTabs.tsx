@@ -1,6 +1,7 @@
 "use client";
 
 import { ProjectPilotageTab } from "@/components/organisms/ProjectPilotageTab";
+import { ProjectSheetTab } from "@/components/organisms/ProjectSheetTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Department, ProjectDetailResponse } from "@/lib/api/generated/model";
 
@@ -11,6 +12,7 @@ interface ProjectTabsProps {
     departements: Department[],
     contactsMetier: string | null,
   ) => Promise<void>;
+  enregistrerDescription: (texte: string) => Promise<void>;
 }
 
 /** Ce qui reste a construire, annonce plutot que laisse vide. */
@@ -24,7 +26,12 @@ function Chantier({ quoi }: { quoi: string }) {
  * Partagees par le panneau lateral et la fiche en pleine page : deux montages
  * du meme contenu, pour qu'ils ne divergent pas.
  */
-export function ProjectTabs({ detail, onChange, enregistrerFiche }: ProjectTabsProps) {
+export function ProjectTabs({
+  detail,
+  onChange,
+  enregistrerFiche,
+  enregistrerDescription,
+}: ProjectTabsProps) {
   return (
     <Tabs defaultValue="pilotage" className="gap-4">
       <TabsList>
@@ -47,7 +54,10 @@ export function ProjectTabs({ detail, onChange, enregistrerFiche }: ProjectTabsP
       </TabsContent>
 
       <TabsContent value="fiche">
-        <Chantier quoi="La fiche service arrive." />
+        <ProjectSheetTab
+          description={detail.project.description}
+          onSave={enregistrerDescription}
+        />
       </TabsContent>
 
       <TabsContent value="audit">

@@ -42,6 +42,7 @@ from src.modules.projects.application.use_cases.update_project import (
 from src.modules.projects.application.use_cases.update_project_detail import (
     AddProjectLinkUseCase,
     RemoveProjectLinkUseCase,
+    UpdateDescriptionUseCase,
     UpdateProjectDetailUseCase,
 )
 from src.modules.projects.domain.repositories.project_assignee_repository import (
@@ -208,3 +209,10 @@ def get_remove_project_link_use_case(
     details: ProjectDetailRepository = Depends(get_project_detail_repository),
 ) -> RemoveProjectLinkUseCase:
     return RemoveProjectLinkUseCase(details=details)
+
+
+def get_update_description_use_case(
+    projects: ProjectRepository = Depends(get_project_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> UpdateDescriptionUseCase:
+    return UpdateDescriptionUseCase(projects=projects, audit_logs=audit_logs)

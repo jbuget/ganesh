@@ -48,6 +48,8 @@ from src.modules.projects.application.use_cases.update_project_detail import (
     AddLinkCommand,
     AddProjectLinkUseCase,
     RemoveProjectLinkUseCase,
+    UpdateDescriptionCommand,
+    UpdateDescriptionUseCase,
     UpdateProjectDetailCommand,
     UpdateProjectDetailUseCase,
 )
@@ -69,6 +71,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     ProjectDetailResponse,
     ProjectLinkResponse,
     ProjectResponse,
+    UpdateDescriptionRequest,
     UpdateProjectDetailRequest,
     UpdateProjectRequest,
 )
@@ -85,6 +88,7 @@ from src.modules.projects.presentation.dependencies import (
     get_project_detail_use_case,
     get_remove_project_link_use_case,
     get_unassign_member_use_case,
+    get_update_description_use_case,
     get_update_project_detail_use_case,
     get_update_project_use_case,
 )
@@ -394,5 +398,30 @@ async def remove_project_link(
 ) -> Response:
     """Detache un lien de la mission."""
     await use_case.execute(link_id)
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.put(
+    "/{project_id}/description",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="updateProjectDescription",
+)
+async def update_project_description(
+    project_id: int,
+    payload: UpdateDescriptionRequest,
+    current_user: User = Depends(get_current_user),
+    use_case: UpdateDescriptionUseCase = Depends(get_update_description_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Enregistre la fiche de service, en markdown."""
+    assert current_user.id is not None
+    await use_case.execute(
+        UpdateDescriptionCommand(
+            actor_id=current_user.id,
+            project_id=project_id,
+            description=payload.description,
+        )
+    )
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

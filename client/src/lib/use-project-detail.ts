@@ -7,6 +7,7 @@ import {
   addProjectLink,
   getProjectDetail,
   removeProjectLink,
+  updateProjectDescription,
   updateProjectDetail,
 } from "@/lib/api/generated/projects/projects";
 
@@ -56,6 +57,11 @@ export function useProjectDetail(projectId: number) {
         departements,
         contacts_metier: contactsMetier,
       });
+      await recharger();
+    },
+
+    async enregistrerDescription(description: string) {
+      await updateProjectDescription(projectId, { description });
       await recharger();
     },
 

@@ -80,6 +80,7 @@ export function ProjectPanel({ projectId, onClose }: ProjectPanelProps) {
               detail={detail}
               onChange={fiche.recharger}
               enregistrerFiche={fiche.enregistrerFiche}
+              enregistrerDescription={fiche.enregistrerDescription}
             />
           )}
         </div>

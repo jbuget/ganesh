@@ -39,6 +39,7 @@ def to_project_response(
         monday_item_id=project.monday_item_id,
         monday_subitem_id=project.monday_subitem_id,
         contacts_metier=project.contacts_metier,
+        description=project.description,
         is_syncable_to_monday=project.is_syncable_to_monday,
         is_deletable=is_deletable,
     )

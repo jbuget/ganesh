@@ -35,6 +35,7 @@ import type {
   ProjectLinkResponse,
   ProjectResponse,
   UnassignMemberParams,
+  UpdateDescriptionRequest,
   UpdateProjectDetailRequest,
   UpdateProjectRequest,
 } from "../model";
@@ -1949,4 +1950,147 @@ export const useRemoveProjectLink = <TError = HTTPValidationError, TContext = un
   TContext
 > => {
   return useMutation(getRemoveProjectLinkMutationOptions(options), queryClient);
+};
+export type updateProjectDescriptionResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type updateProjectDescriptionResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type updateProjectDescriptionResponseSuccess =
+  updateProjectDescriptionResponse204 & {
+    headers: Headers;
+  };
+export type updateProjectDescriptionResponseError =
+  updateProjectDescriptionResponse422 & {
+    headers: Headers;
+  };
+
+export type updateProjectDescriptionResponse =
+  updateProjectDescriptionResponseSuccess | updateProjectDescriptionResponseError;
+
+export const getUpdateProjectDescriptionUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/description`;
+};
+
+/**
+ * Enregistre la fiche de service, en markdown.
+ * @summary Update Project Description
+ */
+export const updateProjectDescription = async (
+  projectId: number,
+  updateDescriptionRequest: UpdateDescriptionRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<updateProjectDescriptionResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<updateProjectDescriptionResponse>(
+    getUpdateProjectDescriptionUrl(projectId),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(updateDescriptionRequest),
+    },
+  );
+};
+
+export const getUpdateProjectDescriptionMutationKey = () =>
+  ["updateProjectDescription"] as const;
+
+export const getUpdateProjectDescriptionMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateProjectDescription>>,
+    TError,
+    UpdateProjectDescriptionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateProjectDescription>>,
+  TError,
+  UpdateProjectDescriptionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateProjectDescriptionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateProjectDescription>>,
+    UpdateProjectDescriptionMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return updateProjectDescription(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateProjectDescriptionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateProjectDescription>>
+>;
+export type UpdateProjectDescriptionMutationBody = UpdateDescriptionRequest;
+export type UpdateProjectDescriptionMutationError = HTTPValidationError;
+export type UpdateProjectDescriptionMutationVariables = {
+  projectId: number;
+  data: UpdateDescriptionRequest;
+};
+
+/**
+ * @summary Update Project Description
+ */
+export const useUpdateProjectDescription = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateProjectDescription>>,
+      TError,
+      UpdateProjectDescriptionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateProjectDescription>>,
+  TError,
+  UpdateProjectDescriptionMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateProjectDescriptionMutationOptions(options), queryClient);
 };

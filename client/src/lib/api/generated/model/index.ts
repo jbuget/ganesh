@@ -57,6 +57,7 @@ export * from "./setEntryApiV1EntriesPutParams";
 export * from "./setEntryParams";
 export * from "./setEntryRequest";
 export * from "./unassignMemberParams";
+export * from "./updateDescriptionRequest";
 export * from "./updateProjectDetailRequest";
 export * from "./updateProjectRequest";
 export * from "./userResponse";

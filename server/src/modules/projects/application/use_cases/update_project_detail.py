@@ -28,6 +28,15 @@ class UpdateProjectDetailCommand:
 
 
 @dataclass(frozen=True)
+class UpdateDescriptionCommand:
+    """Fiche de service, en markdown."""
+
+    actor_id: int
+    project_id: int
+    description: str | None
+
+
+@dataclass(frozen=True)
 class AddLinkCommand:
     """Ajout d'un lien utile."""
 
@@ -117,3 +126,40 @@ class RemoveProjectLinkUseCase:
 
     async def execute(self, link_id: int) -> None:
         await self._details.remove_link(link_id)
+
+
+class UpdateDescriptionUseCase:
+    """Enregistre la fiche de service d'une mission.
+
+    La trace ne retient pas les deux versions du texte : une fiche fait des
+    pages, et l'audit sert a savoir qui a touche a quoi, pas a rejouer les
+    revisions. Le champ suffit.
+    """
+
+    def __init__(
+        self,
+        projects: ProjectRepository,
+        audit_logs: AuditLogRepository,
+    ) -> None:
+        self._projects = projects
+        self._audit_logs = audit_logs
+
+    async def execute(self, command: UpdateDescriptionCommand) -> None:
+        mission = await self._projects.get_by_id(command.project_id)
+        if mission is None:
+            raise EntityNotFoundError("Mission inconnue.")
+
+        description = (command.description or "").strip() or None
+        if description == mission.description:
+            return
+
+        mission.description = description
+        await self._projects.update(mission)
+        await self._audit_logs.add(
+            AuditLog(
+                action=AuditAction.PROJECT_UPDATE,
+                actor_id=command.actor_id,
+                project_id=command.project_id,
+                payload={"champ": "description"},
+            )
+        )

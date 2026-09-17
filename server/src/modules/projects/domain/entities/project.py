@@ -75,6 +75,9 @@ class Project:
     position: int = 0
     monday_item_id: str | None = None
     monday_subitem_id: str | None = None
+    #: Fiche de service en markdown : le probleme, la solution, ce qu'elle
+    #: couvre. Destinee a nourrir la fiche publique du service.
+    description: str | None = None
     #: Interlocuteurs metier, en texte libre : des noms, un service, un mail.
     contacts_metier: str | None = None
 

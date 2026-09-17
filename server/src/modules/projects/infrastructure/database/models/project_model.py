@@ -38,6 +38,7 @@ class ProjectModel(Base):
         nullable=True,
     )
     date_mise_en_service: Mapped[date | None] = mapped_column(Date, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     contacts_metier: Mapped[str | None] = mapped_column(Text, nullable=True)
     #: Rang dans sa colonne du tableau de bord.
     position: Mapped[int] = mapped_column(Integer, default=0, server_default="0")

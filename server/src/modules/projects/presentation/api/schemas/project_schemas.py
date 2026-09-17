@@ -44,6 +44,7 @@ class ProjectResponse(BaseModel):
     monday_item_id: str | None
     monday_subitem_id: str | None
     contacts_metier: str | None
+    description: str | None
     is_syncable_to_monday: bool
     is_deletable: bool
 
@@ -180,3 +181,9 @@ class UpdateProjectDetailRequest(BaseModel):
 
     departements: list[Department] = []
     contacts_metier: str | None = None
+
+
+class UpdateDescriptionRequest(BaseModel):
+    """Fiche de service, en markdown."""
+
+    description: str | None = None
