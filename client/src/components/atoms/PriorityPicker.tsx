@@ -24,9 +24,11 @@ export function PriorityPicker({ valeur, onChange }: PriorityPickerProps) {
         className="-mx-1 flex cursor-pointer items-center rounded px-1 py-0.5 transition-colors hover:bg-slate-100"
       >
         {urgence ? (
-          <span
-            className={`rounded px-1.5 py-0.5 text-xs font-medium ${urgence.classe}`}
-          >
+          <span className="flex items-center gap-1.5 text-sm text-slate-700">
+            <urgence.icone
+              className={`size-4 shrink-0 ${urgence.couleur}`}
+              aria-hidden
+            />
             {urgence.libelle}
           </span>
         ) : (
@@ -52,8 +54,8 @@ export function PriorityPicker({ valeur, onChange }: PriorityPickerProps) {
                 }}
                 className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
               >
-                <span
-                  className={`size-2.5 shrink-0 rounded-full ${choix.pastille}`}
+                <choix.icone
+                  className={`size-4 shrink-0 ${choix.couleur}`}
                   aria-hidden
                 />
                 <span className="min-w-0 flex-1 truncate">{choix.libelle}</span>
