@@ -9,7 +9,7 @@ const carte = (id: number): BoardCardResponse =>
   ({
     project: { id, label: `Mission ${id}` },
     consomme_j: 0,
-    collaborateurs: [],
+    intervenants: [],
   }) as unknown as BoardCardResponse;
 
 /** Colonnes vides, completees par celles qu'un test decrit. */

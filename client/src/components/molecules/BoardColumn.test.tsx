@@ -24,7 +24,7 @@ const carte = (id: number, label: string): BoardCardResponse =>
       is_deletable: false,
     },
     consomme_j: 5,
-    collaborateurs: [{ id: 1, display_name: "Léa Chen", initiales: "LC" }],
+    intervenants: [{ id: 1, display_name: "Léa Chen", initiales: "LC" }],
   }) as BoardCardResponse;
 
 /** Les capteurs de @dnd-kit exigent un contexte englobant. */

@@ -10,6 +10,7 @@ import { libellePhase, pastillePhase } from "@/lib/board";
 interface BoardColumnProps {
   statut: ProjectStatus;
   cartes: BoardCardResponse[];
+  onIntervenantsChange?: () => void | Promise<void>;
 }
 
 /**
@@ -18,7 +19,11 @@ interface BoardColumnProps {
  * Le titre et les cartes tiennent dans un meme bloc : une colonne se lit alors
  * comme une unite, et non comme un intitule flottant au-dessus d'une liste.
  */
-export function BoardColumn({ statut, cartes }: BoardColumnProps) {
+export function BoardColumn({
+  statut,
+  cartes,
+  onIntervenantsChange,
+}: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: statut });
 
   return (
@@ -52,7 +57,11 @@ export function BoardColumn({ statut, cartes }: BoardColumnProps) {
           strategy={verticalListSortingStrategy}
         >
           {cartes.map((carte) => (
-            <SortableProjectCard key={carte.project.id} carte={carte} />
+            <SortableProjectCard
+              key={carte.project.id}
+              carte={carte}
+              onIntervenantsChange={onIntervenantsChange}
+            />
           ))}
         </SortableContext>
 

@@ -106,7 +106,7 @@ class BoardCardResponse(BaseModel):
 
     project: ProjectResponse
     consomme_j: float
-    collaborateurs: list[BoardMemberResponse]
+    intervenants: list[BoardMemberResponse]
 
 
 class BoardColumnResponse(BaseModel):

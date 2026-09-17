@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
 from src.modules.auth.presentation.dependencies import get_current_user
+from src.modules.projects.application.dtos.assignment_dto import AssignmentCommand
 from src.modules.projects.application.dtos.project_dto import (
     ChangeProjectStatusCommand,
     CreateProjectCommand,
@@ -17,6 +18,10 @@ from src.modules.projects.application.dtos.project_dto import (
     MoveProjectCommand,
     ProjectImportLine,
     UpdateProjectCommand,
+)
+from src.modules.projects.application.use_cases.assign_member import (
+    AssignMemberUseCase,
+    UnassignMemberUseCase,
 )
 from src.modules.projects.application.use_cases.change_project_status import (
     ChangeProjectStatusUseCase,
@@ -52,6 +57,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     UpdateProjectRequest,
 )
 from src.modules.projects.presentation.dependencies import (
+    get_assign_member_use_case,
     get_board_use_case,
     get_change_status_use_case,
     get_create_project_use_case,
@@ -59,6 +65,7 @@ from src.modules.projects.presentation.dependencies import (
     get_import_projects_use_case,
     get_list_projects_use_case,
     get_move_project_use_case,
+    get_unassign_member_use_case,
     get_update_project_use_case,
 )
 from src.modules.users.domain.entities.user import User
@@ -225,3 +232,49 @@ async def move_project(
     )
     await session.commit()
     return to_project_response(mission)
+
+
+@router.put(
+    "/{project_id}/intervenants/{member_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="assignMember",
+)
+async def assign_member(
+    project_id: int,
+    member_id: int,
+    current_user: User = Depends(get_current_user),
+    use_case: AssignMemberUseCase = Depends(get_assign_member_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Declare qu'une personne intervient, ou va intervenir, sur la mission."""
+    assert current_user.id is not None
+    await use_case.execute(
+        AssignmentCommand(
+            actor_id=current_user.id, project_id=project_id, member_id=member_id
+        )
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete(
+    "/{project_id}/intervenants/{member_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="unassignMember",
+)
+async def unassign_member(
+    project_id: int,
+    member_id: int,
+    current_user: User = Depends(get_current_user),
+    use_case: UnassignMemberUseCase = Depends(get_unassign_member_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Retire une personne des intervenants de la mission."""
+    assert current_user.id is not None
+    await use_case.execute(
+        AssignmentCommand(
+            actor_id=current_user.id, project_id=project_id, member_id=member_id
+        )
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

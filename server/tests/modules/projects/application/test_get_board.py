@@ -13,6 +13,7 @@ from src.modules.projects.domain.entities.project import (
 from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
     InMemoryEntryRepository,
+    InMemoryProjectAssigneeRepository,
     InMemoryProjectRepository,
     InMemoryUserRepository,
 )
@@ -56,11 +57,16 @@ def saisie(user_id: int, project_id: int, jour: date, valeur=1.0) -> Entry:
     )
 
 
-def build(projects: list[Project], entries: list[Entry] | None = None):
+def build(
+    projects: list[Project],
+    entries: list[Entry] | None = None,
+    affectations: dict[int, list[int]] | None = None,
+):
     return GetBoardUseCase(
         projects=InMemoryProjectRepository(projects),
         entries=InMemoryEntryRepository(entries or []),
         users=InMemoryUserRepository([ALICE, BOB]),
+        assignees=InMemoryProjectAssigneeRepository(affectations or {}),
     )
 
 
@@ -140,36 +146,36 @@ async def test_forecast_time_is_excluded_from_what_is_consumed() -> None:
     assert board.colonnes[1].cartes[0].consomme_j == 1.0
 
 
-async def test_a_card_lists_who_worked_on_it() -> None:
-    board = await build(
-        [carte(1)],
-        [saisie(1, 1, date(2026, 9, 10)), saisie(2, 1, date(2026, 9, 11))],
-    ).execute(today=AUJOURDHUI)
+async def test_a_card_lists_the_people_expected_on_it() -> None:
+    board = await build([carte(1)], affectations={1: [2, 1]}).execute(today=AUJOURDHUI)
 
-    assert [c.display_name for c in board.colonnes[1].cartes[0].collaborateurs] == [
+    assert [c.display_name for c in board.colonnes[1].cartes[0].intervenants] == [
         "D. Dehe",
         "L. Chen",
     ]
 
 
-async def test_someone_who_only_planned_time_already_counts() -> None:
-    """Le previsionnel dit qui travaillera dessus : c'est une information utile."""
-    board = await build([carte(1)], [saisie(2, 1, date(2026, 12, 1))]).execute(
-        today=AUJOURDHUI
-    )
+async def test_time_spent_does_not_make_someone_an_intervenant() -> None:
+    """Une mission peut avoir consomme des jours sans que personne n'y soit plus.
 
-    assert [c.display_name for c in board.colonnes[1].cartes[0].collaborateurs] == [
-        "D. Dehe"
-    ]
-
-
-async def test_someone_appears_once_whatever_the_number_of_entries() -> None:
+    C'est le cas d'un projet en exploitation : le temps passe appartient au
+    passe, et le tableau ne doit pas laisser croire qu'on y travaille encore.
+    """
     board = await build(
-        [carte(1)],
-        [saisie(1, 1, date(2026, 9, 10)), saisie(1, 1, date(2026, 9, 11))],
+        [carte(1)], [saisie(1, 1, date(2026, 9, 10))], affectations={}
     ).execute(today=AUJOURDHUI)
 
-    assert len(board.colonnes[1].cartes[0].collaborateurs) == 1
+    assert board.colonnes[1].cartes[0].intervenants == []
+    assert board.colonnes[1].cartes[0].consomme_j == 1.0
+
+
+async def test_someone_expected_soon_counts_without_any_entry() -> None:
+    """On declare Nino sur un bug avant meme qu'il n'ait saisi la moindre heure."""
+    board = await build([carte(1)], affectations={1: [2]}).execute(today=AUJOURDHUI)
+
+    assert [c.display_name for c in board.colonnes[1].cartes[0].intervenants] == [
+        "D. Dehe"
+    ]
 
 
 async def test_a_card_carries_its_category_and_go_live_date() -> None:

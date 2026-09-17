@@ -5,6 +5,9 @@ from datetime import date
 
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
+from src.modules.projects.domain.repositories.project_assignee_repository import (
+    ProjectAssigneeRepository,
+)
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
@@ -18,7 +21,7 @@ class BoardCard:
 
     project: Project
     consomme_j: float
-    collaborateurs: list[User]
+    intervenants: list[User]
 
 
 @dataclass
@@ -48,10 +51,12 @@ class GetBoardUseCase:
         projects: ProjectRepository,
         entries: EntryRepository,
         users: UserRepository,
+        assignees: ProjectAssigneeRepository,
     ) -> None:
         self._projects = projects
         self._entries = entries
         self._users = users
+        self._assignees = assignees
 
     async def execute(self, today: date | None = None) -> Board:
         aujourdhui = today or date.today()
@@ -61,6 +66,7 @@ class GetBoardUseCase:
             if p.appears_on_board
         ]
         utilisateurs = {u.id: u for u in await self._users.list_all(True)}
+        affectations = await self._assignees.list_all()
 
         colonnes = [BoardColumn(statut=statut) for statut in ProjectStatus]
         par_statut = {colonne.statut: colonne for colonne in colonnes}
@@ -73,15 +79,17 @@ class GetBoardUseCase:
                 continue
             saisies = await self._entries.list_for_project(mission.id)
 
-            # Le previsionnel ne compte pas dans le consomme, mais il dit deja
-            # qui travaillera sur la mission : l'information est utile au
-            # pilotage, on la garde pour les collaborateurs.
             consomme = round(
                 sum(float(e.valeur) for e in saisies if not e.is_forecast(aujourdhui)),
                 2,
             )
+
+            # Les intervenants ne se deduisent pas des saisies : une mission peut
+            # tourner des semaines sans en recevoir une seule, puis reclamer une
+            # journee sur un bug. Ce que le tableau montre, c'est qui s'en occupe
+            # ces jours-ci, declare a la main et defait de meme.
             intervenants = sorted(
-                {e.user_id for e in saisies},
+                affectations.get(mission.id, []),
                 key=lambda uid: (
                     utilisateurs[uid].display_name if uid in utilisateurs else ""
                 ),
@@ -91,7 +99,7 @@ class GetBoardUseCase:
                 BoardCard(
                     project=mission,
                     consomme_j=consomme,
-                    collaborateurs=[
+                    intervenants=[
                         utilisateurs[uid] for uid in intervenants if uid in utilisateurs
                     ],
                 )

@@ -2,6 +2,7 @@
 
 import { GripVertical } from "lucide-react";
 
+import { IntervenantsPicker } from "@/components/atoms/IntervenantsPicker";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 import { avancement, categorie } from "@/lib/board";
@@ -20,10 +21,17 @@ interface ProjectCardProps {
   /** Poignee de glissement, fournie par la couche de tri. */
   poignee?: React.ReactNode;
   enDeplacement?: boolean;
+  /** Recharge le tableau apres un changement d'intervenants. */
+  onIntervenantsChange?: () => void | Promise<void>;
 }
 
 /** Une mission sur le tableau de bord. */
-export function ProjectCard({ carte, poignee, enDeplacement }: ProjectCardProps) {
+export function ProjectCard({
+  carte,
+  poignee,
+  enDeplacement,
+  onIntervenantsChange,
+}: ProjectCardProps) {
   const { project } = carte;
   const axe = categorie(project.categorie);
   const etat = avancement(carte.consomme_j, project.estime_j);
@@ -60,11 +68,21 @@ export function ProjectCard({ carte, poignee, enDeplacement }: ProjectCardProps)
           : `${formatJoursDecimal(carte.consomme_j)} jrs. consommés`}
       </p>
 
-      {carte.collaborateurs.length > 0 && (
-        <div className="mt-2.5">
-          <MemberAvatars membres={carte.collaborateurs} />
-        </div>
-      )}
+      {/*
+        La copie qui suit le curseur n'est pas interactive : sans selecteur, un
+        clic amorce dessus ne pourrait pas ouvrir de menu en plein glissement.
+      */}
+      <div className="mt-2.5">
+        {enDeplacement || !onIntervenantsChange ? (
+          <MemberAvatars membres={carte.intervenants} />
+        ) : (
+          <IntervenantsPicker
+            projectId={project.id}
+            intervenants={carte.intervenants}
+            onChange={onIntervenantsChange}
+          />
+        )}
+      </div>
     </article>
   );
 }

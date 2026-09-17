@@ -11,6 +11,7 @@ class UserResponse(BaseModel):
     id: int
     email: str
     display_name: str
+    initiales: str
     role: Role
     actif: bool
 

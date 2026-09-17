@@ -13,5 +13,5 @@ import type { ProjectResponse } from "./projectResponse";
 export interface BoardCardResponse {
   project: ProjectResponse;
   consomme_j: number;
-  collaborateurs: BoardMemberResponse[];
+  intervenants: BoardMemberResponse[];
 }

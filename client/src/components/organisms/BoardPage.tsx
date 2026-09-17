@@ -95,6 +95,7 @@ export function BoardPage() {
                 key={statut}
                 statut={statut}
                 cartes={board.colonnes?.[statut] ?? []}
+                onIntervenantsChange={board.recharger}
               />
             ))}
           </div>

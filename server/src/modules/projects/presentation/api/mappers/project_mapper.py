@@ -10,6 +10,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     BoardResponse,
     ProjectResponse,
 )
+from src.shared.utils.initials import initiales
 
 
 def to_project_response(
@@ -38,12 +39,6 @@ def to_listed_project_response(listed: ListedProject) -> ProjectResponse:
     return to_project_response(listed.project, is_deletable=listed.is_deletable)
 
 
-def initiales(nom: str) -> str:
-    """Initiales affichees en pastille sur une carte."""
-    mots = [mot for mot in nom.replace(".", " ").split() if mot]
-    return "".join(mot[0].upper() for mot in mots[:2])
-
-
 def to_board_response(board: Board) -> BoardResponse:
     return BoardResponse(
         colonnes=[
@@ -53,13 +48,13 @@ def to_board_response(board: Board) -> BoardResponse:
                     BoardCardResponse(
                         project=to_project_response(carte.project),
                         consomme_j=carte.consomme_j,
-                        collaborateurs=[
+                        intervenants=[
                             BoardMemberResponse(
                                 id=membre.id or 0,
                                 display_name=membre.display_name,
                                 initiales=initiales(membre.display_name),
                             )
-                            for membre in carte.collaborateurs
+                            for membre in carte.intervenants
                         ],
                     )
                     for carte in colonne.cartes

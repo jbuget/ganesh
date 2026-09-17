@@ -15,6 +15,9 @@ from src.modules.entries.domain.repositories.entry_repository import EntryReposi
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.domain.repositories.month_repository import MonthRepository
 from src.modules.projects.domain.entities.project import Project
+from src.modules.projects.domain.repositories.project_assignee_repository import (
+    ProjectAssigneeRepository,
+)
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
@@ -188,3 +191,24 @@ class InMemoryAuditLogRepository(AuditLogRepository):
 
     async def list_for_project(self, project_id: int) -> list[AuditLog]:
         return [log for log in self.logs if log.project_id == project_id]
+
+
+class InMemoryProjectAssigneeRepository(ProjectAssigneeRepository):
+    def __init__(self, affectations: dict[int, list[int]] | None = None) -> None:
+        self._par_projet: dict[int, list[int]] = affectations or {}
+
+    async def list_for_project(self, project_id: int) -> list[int]:
+        return list(self._par_projet.get(project_id, []))
+
+    async def list_all(self) -> dict[int, list[int]]:
+        return {pid: list(ids) for pid, ids in self._par_projet.items()}
+
+    async def assign(self, project_id: int, user_id: int) -> None:
+        membres = self._par_projet.setdefault(project_id, [])
+        if user_id not in membres:
+            membres.append(user_id)
+
+    async def unassign(self, project_id: int, user_id: int) -> None:
+        membres = self._par_projet.get(project_id)
+        if membres and user_id in membres:
+            membres.remove(user_id)

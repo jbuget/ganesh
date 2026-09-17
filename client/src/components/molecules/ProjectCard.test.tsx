@@ -24,7 +24,7 @@ const carte = (over: Record<string, unknown> = {}): BoardCardResponse =>
       ...(over.project as object),
     },
     consomme_j: 5,
-    collaborateurs: [{ id: 1, display_name: "Léa Chen", initiales: "LC" }],
+    intervenants: [{ id: 1, display_name: "Léa Chen", initiales: "LC" }],
     ...over,
   }) as BoardCardResponse;
 

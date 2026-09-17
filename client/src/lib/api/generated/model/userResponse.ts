@@ -13,6 +13,7 @@ export interface UserResponse {
   id: number;
   email: string;
   display_name: string;
+  initiales: string;
   role: Role;
   actif: boolean;
 }

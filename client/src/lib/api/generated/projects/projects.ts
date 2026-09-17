@@ -1138,3 +1138,219 @@ export const useMoveProject = <TError = HTTPValidationError, TContext = unknown>
 > => {
   return useMutation(getMoveProjectMutationOptions(options), queryClient);
 };
+export type assignMemberResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type assignMemberResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type assignMemberResponseSuccess = assignMemberResponse204 & {
+  headers: Headers;
+};
+export type assignMemberResponseError = assignMemberResponse422 & {
+  headers: Headers;
+};
+
+export type assignMemberResponse =
+  assignMemberResponseSuccess | assignMemberResponseError;
+
+export const getAssignMemberUrl = (projectId: number, memberId: number) => {
+  return `/api/v1/projects/${projectId}/intervenants/${memberId}`;
+};
+
+/**
+ * Declare qu'une personne intervient, ou va intervenir, sur la mission.
+ * @summary Assign Member
+ */
+export const assignMember = async (
+  projectId: number,
+  memberId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<assignMemberResponse> => {
+  return bffFetcher<assignMemberResponse>(getAssignMemberUrl(projectId, memberId), {
+    ...options,
+    method: "PUT",
+  });
+};
+
+export const getAssignMemberMutationKey = () => ["assignMember"] as const;
+
+export const getAssignMemberMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof assignMember>>,
+    TError,
+    AssignMemberMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof assignMember>>,
+  TError,
+  AssignMemberMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAssignMemberMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof assignMember>>,
+    AssignMemberMutationVariables
+  > = (props) => {
+    const { projectId, memberId } = props ?? {};
+
+    return assignMember(projectId, memberId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AssignMemberMutationResult = NonNullable<
+  Awaited<ReturnType<typeof assignMember>>
+>;
+
+export type AssignMemberMutationError = HTTPValidationError;
+export type AssignMemberMutationVariables = { projectId: number; memberId: number };
+
+/**
+ * @summary Assign Member
+ */
+export const useAssignMember = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof assignMember>>,
+      TError,
+      AssignMemberMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof assignMember>>,
+  TError,
+  AssignMemberMutationVariables,
+  TContext
+> => {
+  return useMutation(getAssignMemberMutationOptions(options), queryClient);
+};
+export type unassignMemberResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type unassignMemberResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type unassignMemberResponseSuccess = unassignMemberResponse204 & {
+  headers: Headers;
+};
+export type unassignMemberResponseError = unassignMemberResponse422 & {
+  headers: Headers;
+};
+
+export type unassignMemberResponse =
+  unassignMemberResponseSuccess | unassignMemberResponseError;
+
+export const getUnassignMemberUrl = (projectId: number, memberId: number) => {
+  return `/api/v1/projects/${projectId}/intervenants/${memberId}`;
+};
+
+/**
+ * Retire une personne des intervenants de la mission.
+ * @summary Unassign Member
+ */
+export const unassignMember = async (
+  projectId: number,
+  memberId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<unassignMemberResponse> => {
+  return bffFetcher<unassignMemberResponse>(getUnassignMemberUrl(projectId, memberId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getUnassignMemberMutationKey = () => ["unassignMember"] as const;
+
+export const getUnassignMemberMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof unassignMember>>,
+    TError,
+    UnassignMemberMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof unassignMember>>,
+  TError,
+  UnassignMemberMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUnassignMemberMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof unassignMember>>,
+    UnassignMemberMutationVariables
+  > = (props) => {
+    const { projectId, memberId } = props ?? {};
+
+    return unassignMember(projectId, memberId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UnassignMemberMutationResult = NonNullable<
+  Awaited<ReturnType<typeof unassignMember>>
+>;
+
+export type UnassignMemberMutationError = HTTPValidationError;
+export type UnassignMemberMutationVariables = { projectId: number; memberId: number };
+
+/**
+ * @summary Unassign Member
+ */
+export const useUnassignMember = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof unassignMember>>,
+      TError,
+      UnassignMemberMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof unassignMember>>,
+  TError,
+  UnassignMemberMutationVariables,
+  TContext
+> => {
+  return useMutation(getUnassignMemberMutationOptions(options), queryClient);
+};

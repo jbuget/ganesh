@@ -1,7 +1,9 @@
 """Cablage des use cases du referentiel."""
 
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.database import get_db
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
@@ -11,6 +13,10 @@ from src.modules.entries.presentation.dependencies import (
     get_entry_repository,
     get_project_repository,
     get_user_repository,
+)
+from src.modules.projects.application.use_cases.assign_member import (
+    AssignMemberUseCase,
+    UnassignMemberUseCase,
 )
 from src.modules.projects.application.use_cases.change_project_status import (
     ChangeProjectStatusUseCase,
@@ -30,10 +36,22 @@ from src.modules.projects.application.use_cases.move_project import MoveProjectU
 from src.modules.projects.application.use_cases.update_project import (
     UpdateProjectUseCase,
 )
+from src.modules.projects.domain.repositories.project_assignee_repository import (
+    ProjectAssigneeRepository,
+)
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.projects.infrastructure.database.repositories.project_assignee_repository_impl import (
+    SqlProjectAssigneeRepository,
+)
 from src.modules.users.domain.repositories.user_repository import UserRepository
+
+
+def get_project_assignee_repository(
+    session: AsyncSession = Depends(get_db),
+) -> ProjectAssigneeRepository:
+    return SqlProjectAssigneeRepository(session)
 
 
 def get_create_project_use_case(
@@ -92,8 +110,11 @@ def get_board_use_case(
     projects: ProjectRepository = Depends(get_project_repository),
     entries: EntryRepository = Depends(get_entry_repository),
     users: UserRepository = Depends(get_user_repository),
+    assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
 ) -> GetBoardUseCase:
-    return GetBoardUseCase(projects=projects, entries=entries, users=users)
+    return GetBoardUseCase(
+        projects=projects, entries=entries, users=users, assignees=assignees
+    )
 
 
 def get_move_project_use_case(
@@ -102,3 +123,25 @@ def get_move_project_use_case(
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> MoveProjectUseCase:
     return MoveProjectUseCase(users=users, projects=projects, audit_logs=audit_logs)
+
+
+def get_assign_member_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> AssignMemberUseCase:
+    return AssignMemberUseCase(
+        users=users, projects=projects, assignees=assignees, audit_logs=audit_logs
+    )
+
+
+def get_unassign_member_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> UnassignMemberUseCase:
+    return UnassignMemberUseCase(
+        users=users, projects=projects, assignees=assignees, audit_logs=audit_logs
+    )

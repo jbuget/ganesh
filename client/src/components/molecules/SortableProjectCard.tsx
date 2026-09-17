@@ -9,6 +9,7 @@ import type { BoardCardResponse } from "@/lib/api/generated/model";
 
 interface SortableProjectCardProps {
   carte: BoardCardResponse;
+  onIntervenantsChange?: () => void | Promise<void>;
 }
 
 /**
@@ -17,7 +18,10 @@ interface SortableProjectCardProps {
  * Pendant le glissement, la carte cede la place a un emplacement en pointilles
  * qui montre ou elle tombera : c'est la copie sous le curseur qui la represente.
  */
-export function SortableProjectCard({ carte }: SortableProjectCardProps) {
+export function SortableProjectCard({
+  carte,
+  onIntervenantsChange,
+}: SortableProjectCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: carte.project.id });
 
@@ -38,6 +42,7 @@ export function SortableProjectCard({ carte }: SortableProjectCardProps) {
       <div className={isDragging ? "invisible" : undefined}>
         <ProjectCard
           carte={carte}
+          onIntervenantsChange={onIntervenantsChange}
           poignee={
             <button
               type="button"

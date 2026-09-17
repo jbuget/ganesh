@@ -64,6 +64,9 @@ export function useBoard() {
      */
     previsualiser: setColonnes,
 
+    /** Reprend la verite du serveur, apres un changement fait hors glissement. */
+    recharger,
+
     /** Applique le deplacement a l'ecran, puis l'enregistre. */
     async deplacer(
       projectId: number,

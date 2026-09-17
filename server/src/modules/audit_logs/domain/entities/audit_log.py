@@ -21,6 +21,8 @@ class AuditAction(StrEnum):
     PROJECT_UPDATE = "project.update"
     PROJECT_DELETE = "project.delete"
     PROJECT_STATUS_CHANGE = "project.status_change"
+    PROJECT_ASSIGN = "project.assign"
+    PROJECT_UNASSIGN = "project.unassign"
     USER_ROLE_CHANGE = "user.role_change"
     USER_DEACTIVATE = "user.deactivate"
 
@@ -120,6 +122,40 @@ class AuditLog:
             actor_id=actor_id,
             target_user_id=target_user_id,
             jour=mois,
+            at=at or datetime.now(),
+        )
+
+    @classmethod
+    def project_assign(
+        cls,
+        actor_id: int,
+        project_id: int,
+        member_id: int,
+        at: datetime | None = None,
+    ) -> "AuditLog":
+        """Un intervenant est declare sur une mission."""
+        return cls(
+            action=AuditAction.PROJECT_ASSIGN,
+            actor_id=actor_id,
+            target_user_id=member_id,
+            project_id=project_id,
+            at=at or datetime.now(),
+        )
+
+    @classmethod
+    def project_unassign(
+        cls,
+        actor_id: int,
+        project_id: int,
+        member_id: int,
+        at: datetime | None = None,
+    ) -> "AuditLog":
+        """Un intervenant n'est plus attendu sur une mission."""
+        return cls(
+            action=AuditAction.PROJECT_UNASSIGN,
+            actor_id=actor_id,
+            target_user_id=member_id,
+            project_id=project_id,
             at=at or datetime.now(),
         )
 
