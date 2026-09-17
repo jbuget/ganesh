@@ -11,6 +11,8 @@ interface ProjectUpdatesTabProps {
   projectId: number;
   /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
   maintenant: Date;
+  /** Previent l'ecran d'ou l'on vient : il annonce le fil sans l'ouvrir. */
+  onChange?: () => void | Promise<void>;
 }
 
 /**
@@ -20,8 +22,12 @@ interface ProjectUpdatesTabProps {
  * pour lire ce qui est arrive depuis la derniere fois, et pour ajouter sa
  * pierre.
  */
-export function ProjectUpdatesTab({ projectId, maintenant }: ProjectUpdatesTabProps) {
-  const suivi = useProjectUpdates(projectId);
+export function ProjectUpdatesTab({
+  projectId,
+  maintenant,
+  onChange,
+}: ProjectUpdatesTabProps) {
+  const suivi = useProjectUpdates(projectId, onChange);
   const [texte, setTexte] = useState("");
   const [enCours, setEnCours] = useState(false);
   // Remonter la cle vide l'editeur : son contenu vit dans ProseMirror, pas

@@ -21,8 +21,12 @@ export function apercuMarkdown(markdown: string): string {
     .replace(/^\s{0,3}>\s?/gm, "")
     .replace(/^\s{0,3}[-*+]\s+/gm, "• ")
     .replace(/^\s{0,3}\d+\.\s+/gm, "• ")
-    .replace(/(\*\*|__)(.*?)\1/g, "$2")
-    .replace(/(\*|_)(.*?)\1/g, "$2")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    // L'underscore ne marque l'emphase qu'en bordure de mot : au milieu, il
+    // appartient au mot. `latest_by_project` n'est pas de l'italique.
+    .replace(/(?<![\w_])__(.+?)__(?![\w_])/g, "$1")
+    .replace(/(?<![\w_])_(.+?)_(?![\w_])/g, "$1")
     .replace(/~~(.*?)~~/g, "$1")
     .replace(/`([^`]*)`/g, "$1")
     .replace(/[ \t]+/g, " ")

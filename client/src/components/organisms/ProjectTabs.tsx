@@ -72,7 +72,11 @@ export function ProjectTabs({
       </TabsContent>
 
       <TabsContent value="updates">
-        <ProjectUpdatesTab projectId={detail.project.id} maintenant={maintenant} />
+        <ProjectUpdatesTab
+          projectId={detail.project.id}
+          maintenant={maintenant}
+          onChange={onChange}
+        />
       </TabsContent>
 
       <TabsContent value="fiche" className="min-h-0 flex-1">

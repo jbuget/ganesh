@@ -27,6 +27,12 @@ describe("apercuMarkdown", () => {
     expect(apercuMarkdown("- migration\n- recette")).toBe("• migration\n• recette");
   });
 
+  it("laisse intact un identifiant en snake_case", () => {
+    expect(apercuMarkdown("Voir latest_by_project() dans le repository")).toBe(
+      "Voir latest_by_project() dans le repository",
+    );
+  });
+
   it("resserre les lignes vides, qui gonfleraient l'infobulle", () => {
     expect(apercuMarkdown("Premier\n\n\nSecond")).toBe("Premier\nSecond");
   });
