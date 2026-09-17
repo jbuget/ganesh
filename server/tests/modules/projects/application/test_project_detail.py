@@ -43,6 +43,16 @@ PROJECT = Project(
 )
 
 
+def lot(project_id: int, label: str) -> Project:
+    return Project(
+        id=project_id,
+        label=label,
+        kind=ProjectKind.LOT,
+        statut=ProjectStatus.CADRAGE,
+        parent_id=10,
+    )
+
+
 def saisie(user_id: int, jour: date, valeur: float = 1.0) -> Entry:
     return Entry(
         id=None,
@@ -54,9 +64,13 @@ def saisie(user_id: int, jour: date, valeur: float = 1.0) -> Entry:
     )
 
 
-def build(entries: list[Entry] | None = None, affectations=None):
+def build(
+    entries: list[Entry] | None = None,
+    affectations=None,
+    lots: list[Project] | None = None,
+):
     return GetProjectDetailUseCase(
-        projects=InMemoryProjectRepository([PROJECT]),
+        projects=InMemoryProjectRepository([PROJECT, *(lots or [])]),
         details=InMemoryProjectDetailRepository(),
         assignees=InMemoryProjectAssigneeRepository(affectations or {}),
         entries=InMemoryEntryRepository(entries or []),
@@ -129,3 +143,21 @@ async def test_referents_and_intervenants_are_told_apart() -> None:
 
     assert [u.display_name for u in detail.referents] == ["L. Chen"]
     assert [u.display_name for u in detail.intervenants] == ["N. Garo"]
+
+
+async def test_a_mission_without_children_has_no_sub_project() -> None:
+    detail = await build().execute(10)
+
+    assert detail.sous_projets == []
+
+
+async def test_the_children_of_a_mission_are_listed_in_alphabetical_order() -> None:
+    """On cherche un lot par son nom : la liste doit se parcourir comme un index."""
+    detail = await build(
+        lots=[lot(12, "Reprise de donnees"), lot(11, "Authentification")]
+    ).execute(10)
+
+    assert [m.label for m in detail.sous_projets] == [
+        "Authentification",
+        "Reprise de donnees",
+    ]

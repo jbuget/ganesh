@@ -48,6 +48,8 @@ class ProjectDetail:
     consomme_j: float
     #: Temps declare par chacun, du plus gros contributeur au plus petit.
     contributions: list[Contribution]
+    #: Les lots rattaches a la mission, par ordre alphabetique.
+    sous_projets: list[Project]
 
 
 class GetProjectDetailUseCase:
@@ -122,4 +124,8 @@ class GetProjectDetailUseCase:
             intervenants=await personnes(ProjectRole.INTERVENANT),
             consomme_j=round(sum(float(e.valeur) for e in saisies), 2),
             contributions=contributions,
+            sous_projets=sorted(
+                await self._projects.list_children(project_id),
+                key=lambda lot: lot.label.lower(),
+            ),
         )

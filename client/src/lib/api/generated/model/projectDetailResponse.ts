@@ -23,4 +23,5 @@ export interface ProjectDetailResponse {
   intervenants: BoardMemberResponse[];
   consomme_j: number;
   contributions: ProjectContributionResponse[];
+  sous_projets: ProjectResponse[];
 }
