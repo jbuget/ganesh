@@ -26,6 +26,7 @@ import type {
   BoardResponse,
   ChangeStatusRequest,
   CreateProjectRequest,
+  GetBoardParams,
   HTTPValidationError,
   ImportProjectsRequest,
   ImportReportResponse,
@@ -891,8 +892,20 @@ export type getBoardResponseError = getBoardResponse422 & {
 
 export type getBoardResponse = getBoardResponseSuccess | getBoardResponseError;
 
-export const getGetBoardUrl = () => {
-  return `/api/v1/projects/board`;
+export const getGetBoardUrl = (params?: GetBoardParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/projects/board?${stringifiedParams}`
+    : `/api/v1/projects/board`;
 };
 
 /**
@@ -900,31 +913,37 @@ export const getGetBoardUrl = () => {
  * @summary Get Board
  */
 export const getBoard = async (
+  params?: GetBoardParams,
   options?: Parameters<typeof bffFetcher>[1],
 ): Promise<getBoardResponse> => {
-  return bffFetcher<getBoardResponse>(getGetBoardUrl(), {
+  return bffFetcher<getBoardResponse>(getGetBoardUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetBoardQueryKey = () => {
-  return [`/api/v1/projects/board`] as const;
+export const getGetBoardQueryKey = (params?: GetBoardParams) => {
+  return [`/api/v1/projects/board`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetBoardQueryOptions = <
   TData = Awaited<ReturnType<typeof getBoard>>,
   TError = HTTPValidationError,
->(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getBoard>>, TError, TData>>;
-  request?: SecondParameter<typeof bffFetcher>;
-}) => {
+>(
+  params?: GetBoardParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getBoard>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetBoardQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getGetBoardQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getBoard>>> = ({ signal }) =>
-    getBoard({ signal, ...requestOptions });
+    getBoard(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getBoard>>,
@@ -940,6 +959,7 @@ export function useGetBoard<
   TData = Awaited<ReturnType<typeof getBoard>>,
   TError = HTTPValidationError,
 >(
+  params: undefined | GetBoardParams,
   options: {
     query: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getBoard>>, TError, TData>
@@ -962,6 +982,7 @@ export function useGetBoard<
   TData = Awaited<ReturnType<typeof getBoard>>,
   TError = HTTPValidationError,
 >(
+  params?: GetBoardParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getBoard>>, TError, TData>
@@ -982,6 +1003,7 @@ export function useGetBoard<
   TData = Awaited<ReturnType<typeof getBoard>>,
   TError = HTTPValidationError,
 >(
+  params?: GetBoardParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getBoard>>, TError, TData>
@@ -998,6 +1020,7 @@ export function useGetBoard<
   TData = Awaited<ReturnType<typeof getBoard>>,
   TError = HTTPValidationError,
 >(
+  params?: GetBoardParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getBoard>>, TError, TData>
@@ -1006,7 +1029,7 @@ export function useGetBoard<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetBoardQueryOptions(options);
+  const queryOptions = getGetBoardQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

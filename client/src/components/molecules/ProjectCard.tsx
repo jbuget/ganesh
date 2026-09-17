@@ -47,6 +47,7 @@ export function ProjectCard({
 }: ProjectCardProps) {
   const { project, parent } = carte;
   const axe = categorie(project.categorie);
+  const archivee = !project.actif;
   const etat = avancement(carte.consomme_j, project.estime_j);
 
   return (
@@ -60,7 +61,11 @@ export function ProjectCard({
         onOpen(project.id);
       }}
       className={[
-        "group rounded-lg border bg-white p-3 shadow-xs transition-shadow",
+        "group rounded-lg border p-3 shadow-xs transition-shadow",
+        // Une archivee ne se pilote plus : elle se lit en retrait, pour qu'un
+        // tableau melant les deux se parcoure sans confondre ce qui tourne et
+        // ce qui est range.
+        archivee ? "bg-slate-50" : "bg-white",
         onOpen && !enDeplacement ? "cursor-pointer" : "",
         enDeplacement
           ? "border-sky-400 shadow-lg"
@@ -68,7 +73,11 @@ export function ProjectCard({
       ].join(" ")}
     >
       <div className="flex items-start gap-1.5">
-        <h3 className="min-w-0 flex-1 text-sm font-medium text-slate-900">
+        <h3
+          className={`min-w-0 flex-1 text-sm font-medium ${
+            archivee ? "text-slate-500" : "text-slate-900"
+          }`}
+        >
           {/*
             Le lien porte sur le titre seul, non sur la carte : celle-ci se
             saisit pour la deplacer, et un clic relache apres un glissement ne
@@ -113,6 +122,12 @@ export function ProjectCard({
             </button>
           )}
         </p>
+      )}
+
+      {archivee && (
+        <span className="mt-2 mr-1 inline-block rounded bg-slate-200 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">
+          Archivée
+        </span>
       )}
 
       {axe && (

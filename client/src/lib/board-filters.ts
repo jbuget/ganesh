@@ -6,6 +6,15 @@ import type {
 } from "@/lib/api/generated/model";
 import { CATEGORIES, PHASES } from "@/lib/board";
 
+/**
+ * Une mission est active tant qu'elle n'a pas ete archivee.
+ *
+ * L'archivage retire une mission des listes sans rien perdre de ce qui y a ete
+ * declare : c'est ce qu'on fait d'un projet termine ou abandonne, quand la
+ * suppression n'est plus possible.
+ */
+export type EtatMission = "active" | "archivee";
+
 /** Ce que l'on demande au tableau de montrer. */
 export interface BoardFilters {
   nom: string;
@@ -13,6 +22,7 @@ export interface BoardFilters {
   categories: ProjectCategory[];
   intervenants: number[];
   types: ProjectKind[];
+  etats: EtatMission[];
 }
 
 /** Le tableau entier : aucun critere pose. */
@@ -22,6 +32,7 @@ export const AUCUN_FILTRE: BoardFilters = {
   categories: [],
   intervenants: [],
   types: [],
+  etats: [],
 };
 
 /**
@@ -33,6 +44,18 @@ export const AUCUN_FILTRE: BoardFilters = {
 export const TYPES_DE_MISSION: { valeur: ProjectKind; libelle: string }[] = [
   { valeur: "projet", libelle: "Projets" },
   { valeur: "lot", libelle: "Sous-projets" },
+];
+
+/**
+ * Les deux etats qu'une mission peut prendre.
+ *
+ * Ce critere est le seul dont le vide n'est pas neutre : le tableau sert a
+ * piloter ce qui tourne, et montre donc les seules missions actives tant qu'on
+ * ne demande pas les archivees.
+ */
+export const ETATS_DE_MISSION: { valeur: EtatMission; libelle: string }[] = [
+  { valeur: "active", libelle: "Actives" },
+  { valeur: "archivee", libelle: "Archivées" },
 ];
 
 /** Minuscules et sans accent : on cherche « copropriete » et on trouve « copropriété ». */
@@ -49,7 +72,8 @@ export function filtreActif(filtres: BoardFilters): boolean {
     filtres.phases.length > 0 ||
     filtres.categories.length > 0 ||
     filtres.intervenants.length > 0 ||
-    filtres.types.length > 0
+    filtres.types.length > 0 ||
+    filtres.etats.length > 0
   );
 }
 
@@ -71,6 +95,11 @@ function retientLaCarte(carte: BoardCardResponse, filtres: BoardFilters): boolea
   if (filtres.phases.length > 0) {
     const phase = carte.project.statut;
     if (!phase || !filtres.phases.includes(phase)) return false;
+  }
+
+  const etat: EtatMission = carte.project.actif ? "active" : "archivee";
+  if (!(filtres.etats.length > 0 ? filtres.etats : ["active"]).includes(etat)) {
+    return false;
   }
 
   if (filtres.categories.length > 0) {
@@ -97,17 +126,29 @@ export function filtrerCartes(
   return cartes.filter((carte) => retientLaCarte(carte, filtres));
 }
 
+/**
+ * Le tableau doit-il redemander les archivees au serveur ?
+ *
+ * Elles ne voyagent que sur demande : les charger pour les masquer aussitot
+ * ferait payer a chaque ouverture du tableau ce dont on se sert rarement.
+ */
+export function inclutLesArchivees(filtres: BoardFilters): boolean {
+  return filtres.etats.includes("archivee");
+}
+
 const PARAMETRES = {
   nom: "nom",
   phase: "phase",
   categorie: "categorie",
   intervenant: "intervenant",
   type: "type",
+  etat: "etat",
 } as const;
 
 const PHASES_CONNUES = new Set<string>(PHASES.map((p) => p.statut));
 const CATEGORIES_CONNUES = new Set<string>(CATEGORIES.map((c) => c.valeur));
 const TYPES_CONNUS = new Set<string>(TYPES_DE_MISSION.map((t) => t.valeur));
+const ETATS_CONNUS = new Set<string>(ETATS_DE_MISSION.map((e) => e.valeur));
 
 /** Ne retient d'un parametre que les valeurs que l'on sait interpreter. */
 function valeursConnues<T extends string>(
@@ -138,6 +179,7 @@ export function lireFiltres(params: URLSearchParams): BoardFilters {
       .map(Number)
       .filter((id) => Number.isInteger(id) && id > 0),
     types: valeursConnues<ProjectKind>(params, PARAMETRES.type, TYPES_CONNUS),
+    etats: valeursConnues<EtatMission>(params, PARAMETRES.etat, ETATS_CONNUS),
   };
 }
 
@@ -152,4 +194,5 @@ export function ecrireFiltres(params: URLSearchParams, filtres: BoardFilters): v
     params.append(PARAMETRES.intervenant, String(id)),
   );
   filtres.types.forEach((type) => params.append(PARAMETRES.type, type));
+  filtres.etats.forEach((etat) => params.append(PARAMETRES.etat, etat));
 }

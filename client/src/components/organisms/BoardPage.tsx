@@ -22,7 +22,7 @@ import { BoardFilters } from "@/components/molecules/BoardFilters";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { ProjectCard } from "@/components/molecules/ProjectCard";
 import { PHASES } from "@/lib/board";
-import { filtrerCartes } from "@/lib/board-filters";
+import { filtrerCartes, inclutLesArchivees } from "@/lib/board-filters";
 import { useBoard } from "@/lib/use-board";
 import { useBoardDrag } from "@/lib/use-board-drag";
 import { useBoardFilters } from "@/lib/use-board-filters";
@@ -57,9 +57,13 @@ const detectionDeCollision: CollisionDetection = (args) => {
 
 /** Kanban des missions, une colonne par phase. */
 export function BoardPage() {
-  const board = useBoard();
-  const glissement = useBoardDrag(board);
   const { filtres, actif, definir, effacer } = useBoardFilters();
+
+  // Le perimetre demande au serveur suit le filtre : les archivees n'arrivent
+  // que lorsqu'on les reclame, et le tableau se recharge de lui-meme des que
+  // ce choix change.
+  const board = useBoard(inclutLesArchivees(filtres));
+  const glissement = useBoardDrag(board);
 
   // La mission ouverte vit dans l'URL : un panneau se partage par un lien, et
   // le retour arriere le referme, comme on s'y attend d'un ecran a part.

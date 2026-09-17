@@ -5,6 +5,7 @@ import {
   ecrireFiltres,
   filtreActif,
   filtrerCartes,
+  inclutLesArchivees,
   lireFiltres,
   type BoardFilters,
 } from "./board-filters";
@@ -12,6 +13,12 @@ import type { BoardCardResponse } from "@/lib/api/generated/model";
 
 const carte = (over: Record<string, unknown> = {}): BoardCardResponse =>
   ({
+    consomme_j: 0,
+    intervenants: [{ id: 1, display_name: "Léa Chen", initiales: "LC" }],
+    commentaires: 0,
+    sous_projets: 0,
+    parent: null,
+    ...over,
     project: {
       id: 1,
       label: "Portail bailleurs",
@@ -29,12 +36,6 @@ const carte = (over: Record<string, unknown> = {}): BoardCardResponse =>
       is_deletable: false,
       ...(over.project as object),
     },
-    consomme_j: 0,
-    intervenants: [{ id: 1, display_name: "Léa Chen", initiales: "LC" }],
-    commentaires: 0,
-    sous_projets: 0,
-    parent: null,
-    ...over,
   }) as BoardCardResponse;
 
 const filtres = (over: Partial<BoardFilters> = {}): BoardFilters => ({
@@ -133,6 +134,41 @@ describe("critères à choix multiples", () => {
   });
 });
 
+describe("missions archivées", () => {
+  const cartes = [
+    carte({ project: { id: 1, actif: true } }),
+    carte({ project: { id: 2, actif: false } }),
+  ];
+
+  it("les écarte tant qu'on ne les demande pas", () => {
+    const retenues = filtrerCartes(cartes, AUCUN_FILTRE);
+
+    expect(retenues.map((c) => c.project.id)).toEqual([1]);
+  });
+
+  it("ne montre qu'elles quand on ne demande qu'elles", () => {
+    const retenues = filtrerCartes(cartes, filtres({ etats: ["archivee"] }));
+
+    expect(retenues.map((c) => c.project.id)).toEqual([2]);
+  });
+
+  it("montre les deux quand les deux états sont cochés", () => {
+    const retenues = filtrerCartes(cartes, filtres({ etats: ["active", "archivee"] }));
+
+    expect(retenues.map((c) => c.project.id)).toEqual([1, 2]);
+  });
+
+  it("ne les redemande au serveur que si elles sont voulues", () => {
+    expect(inclutLesArchivees(AUCUN_FILTRE)).toBe(false);
+    expect(inclutLesArchivees(filtres({ etats: ["active"] }))).toBe(false);
+    expect(inclutLesArchivees(filtres({ etats: ["archivee"] }))).toBe(true);
+  });
+
+  it("compte comme un filtre : le tableau n'est plus la vue de pilotage", () => {
+    expect(filtreActif(filtres({ etats: ["archivee"] }))).toBe(true);
+  });
+});
+
 describe("filtrage par phase", () => {
   const cartes = [
     carte({ project: { id: 1, statut: "realisation" } }),
@@ -158,6 +194,7 @@ describe("filtres portés par l'URL", () => {
       categories: ["innover_differencier"],
       intervenants: [3, 7],
       types: ["lot"],
+      etats: ["archivee"],
     });
 
     const params = new URLSearchParams();

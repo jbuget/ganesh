@@ -6,6 +6,12 @@ import type { BoardCardResponse } from "@/lib/api/generated/model";
 
 const carte = (over: Record<string, unknown> = {}): BoardCardResponse =>
   ({
+    consomme_j: 5,
+    intervenants: [{ id: 1, display_name: "Léa Chen", initiales: "LC" }],
+    commentaires: 0,
+    sous_projets: 0,
+    parent: null,
+    ...over,
     project: {
       id: 1,
       label: "Portail bailleurs",
@@ -23,12 +29,6 @@ const carte = (over: Record<string, unknown> = {}): BoardCardResponse =>
       is_deletable: false,
       ...(over.project as object),
     },
-    consomme_j: 5,
-    intervenants: [{ id: 1, display_name: "Léa Chen", initiales: "LC" }],
-    commentaires: 0,
-    sous_projets: 0,
-    parent: null,
-    ...over,
   }) as BoardCardResponse;
 
 describe("ProjectCard", () => {
@@ -94,6 +94,20 @@ describe("ProjectCard", () => {
     expect(screen.getByText("3/20 jrs. estimés").className).not.toContain(
       "text-red-700",
     );
+  });
+});
+
+describe("mission archivée", () => {
+  it("se signale d'un coup d'œil", () => {
+    render(<ProjectCard carte={carte({ project: { actif: false } })} />);
+
+    expect(screen.getByText("Archivée")).toBeInTheDocument();
+  });
+
+  it("ne marque rien sur une mission active", () => {
+    render(<ProjectCard carte={carte()} />);
+
+    expect(screen.queryByText("Archivée")).toBeNull();
   });
 });
 

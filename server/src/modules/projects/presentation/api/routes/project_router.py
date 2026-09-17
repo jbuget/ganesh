@@ -246,11 +246,12 @@ async def delete_project(
 
 @router.get("/board", response_model=BoardResponse, operation_id="getBoard")
 async def get_board(
+    include_inactive: bool = Query(default=False),
     _: User = Depends(get_current_user),
     use_case: GetBoardUseCase = Depends(get_board_use_case),
 ) -> BoardResponse:
     """Tableau de bord des projets, une colonne par phase."""
-    return to_board_response(await use_case.execute())
+    return to_board_response(await use_case.execute(include_inactive=include_inactive))
 
 
 @router.patch(

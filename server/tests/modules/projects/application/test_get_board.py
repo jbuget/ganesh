@@ -306,3 +306,37 @@ async def test_an_inactive_parent_is_still_named() -> None:
     cartes = {c.project.id: c for c in board.colonnes[1].cartes}
     assert 1 not in cartes
     assert cartes[2].parent is not None and cartes[2].parent.id == 1
+
+
+async def test_archived_missions_stay_off_the_board_by_default() -> None:
+    board = await build([carte(1), carte(2, actif=False)]).execute(today=AUJOURDHUI)
+
+    assert [c.project.id for c in board.colonnes[1].cartes] == [1]
+
+
+async def test_archived_missions_appear_when_asked_for() -> None:
+    """On consulte les archivees pour faire le point, pas pour les piloter."""
+    board = await build([carte(1), carte(2, actif=False)]).execute(
+        today=AUJOURDHUI, include_inactive=True
+    )
+
+    assert [c.project.id for c in board.colonnes[1].cartes] == [1, 2]
+
+
+async def test_archived_sub_projects_are_counted_only_when_shown() -> None:
+    """Le compteur d'une carte dit ce que le tableau montre, rien de plus."""
+    missions = [
+        carte(1),
+        carte(2, parent_id=1, kind=ProjectKind.LOT),
+        carte(3, parent_id=1, kind=ProjectKind.LOT, actif=False),
+    ]
+
+    sans = await build(missions).execute(today=AUJOURDHUI)
+    avec = await build(missions).execute(today=AUJOURDHUI, include_inactive=True)
+
+    assert (
+        next(c for c in sans.colonnes[1].cartes if c.project.id == 1).sous_projets == 1
+    )
+    assert (
+        next(c for c in avec.colonnes[1].cartes if c.project.id == 1).sous_projets == 2
+    )
