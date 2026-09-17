@@ -67,7 +67,7 @@ export function ProjectLinksEditor({
                 href={lien.url}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="flex min-w-0 cursor-pointer items-center gap-1.5 text-sm text-sky-700 hover:underline"
+                className="flex min-w-0 cursor-pointer items-center gap-1.5 text-sm text-slate-900 hover:underline"
               >
                 <Dessin
                   className="size-3.5 shrink-0"
