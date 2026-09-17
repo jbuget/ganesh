@@ -24,8 +24,12 @@ const TEINTES: Record<ReturnType<typeof avancement>, string> = {
 
 interface ProjectCardProps {
   carte: BoardCardResponse;
-  /** Poignee de glissement, fournie par la couche de tri. */
-  poignee?: React.ReactNode;
+  /**
+   * Poignee de glissement, fournie par la couche de tri. `null` n'en montre
+   * aucune : une carte qu'on ne peut pas deplacer ne doit pas en porter le
+   * signe.
+   */
+  poignee?: React.ReactNode | null;
   enDeplacement?: boolean;
   /** Recharge le tableau apres un changement d'intervenants. */
   onIntervenantsChange?: () => void | Promise<void>;
@@ -82,8 +86,10 @@ export function ProjectCard({
             </button>
           )}
         </h3>
-        {poignee ?? (
+        {poignee === undefined ? (
           <GripVertical className="size-4 shrink-0 text-slate-300" aria-hidden />
+        ) : (
+          poignee
         )}
       </div>
 

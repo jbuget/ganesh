@@ -28,10 +28,10 @@ const carte = (id: number, label: string): BoardCardResponse =>
   }) as BoardCardResponse;
 
 /** Les capteurs de @dnd-kit exigent un contexte englobant. */
-const afficher = (cartes: BoardCardResponse[]) =>
+const afficher = (cartes: BoardCardResponse[], figees = false) =>
   render(
     <DndContext>
-      <BoardColumn statut="realisation" cartes={cartes} />
+      <BoardColumn statut="realisation" cartes={cartes} figees={figees} />
     </DndContext>,
   );
 
@@ -85,5 +85,29 @@ describe("BoardColumn", () => {
     const liste = screen.getByRole("list");
     const intrus = [...liste.children].filter((noeud) => noeud.tagName !== "LI");
     expect(intrus).toEqual([]);
+  });
+});
+
+describe("colonne figée par un filtre", () => {
+  it("retire la poignée : une carte filtrée ne se range plus", () => {
+    afficher([carte(1, "Portail bailleurs")], true);
+
+    expect(screen.queryByRole("button", { name: /Déplacer/ })).toBeNull();
+  });
+
+  it("garde sa poignée hors filtre", () => {
+    afficher([carte(1, "Portail bailleurs")]);
+
+    expect(
+      screen.getByRole("button", { name: "Déplacer Portail bailleurs" }),
+    ).toBeInTheDocument();
+  });
+
+  it("explique un vide dû aux filtres plutôt qu'un vide tout court", () => {
+    afficher([], true);
+
+    expect(
+      screen.getByText("Aucune mission ne répond aux filtres"),
+    ).toBeInTheDocument();
   });
 });

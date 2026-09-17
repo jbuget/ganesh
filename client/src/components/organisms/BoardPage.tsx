@@ -17,11 +17,14 @@ import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { BoardColumn } from "@/components/molecules/BoardColumn";
+import { BoardFilters } from "@/components/molecules/BoardFilters";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { ProjectCard } from "@/components/molecules/ProjectCard";
 import { PHASES } from "@/lib/board";
+import { filtrerCartes } from "@/lib/board-filters";
 import { useBoard } from "@/lib/use-board";
 import { useBoardDrag } from "@/lib/use-board-drag";
+import { useBoardFilters } from "@/lib/use-board-filters";
 import { useMissionOuverte } from "@/lib/mission-ouverte";
 
 /**
@@ -55,10 +58,28 @@ const detectionDeCollision: CollisionDetection = (args) => {
 export function BoardPage() {
   const board = useBoard();
   const glissement = useBoardDrag(board);
+  const { filtres, actif, definir, effacer } = useBoardFilters();
 
   // La mission ouverte vit dans l'URL : un panneau se partage par un lien, et
   // le retour arriere le referme, comme on s'y attend d'un ecran a part.
   const panneau = useMissionOuverte();
+
+  // Les six phases restent affichees en toutes circonstances, meme vides : le
+  // tableau garde sa forme d'un filtre a l'autre, et une colonne sans carte se
+  // lit comme une reponse, pas comme une disparition.
+  //
+  // Les colonnes sont calculees une fois : le decompte de la barre et celui de
+  // chaque colonne doivent parler des memes cartes.
+  const colonnesAffichees = PHASES.map(({ statut }) => ({
+    statut,
+    cartes: filtrerCartes(board.colonnes?.[statut] ?? [], filtres),
+  }));
+
+  const visibles = colonnesAffichees.reduce((total, c) => total + c.cartes.length, 0);
+  const total = PHASES.reduce(
+    (somme, { statut }) => somme + (board.colonnes?.[statut]?.length ?? 0),
+    0,
+  );
 
   const sensors = useSensors(
     // Quelques pixels avant de saisir : sans cela, un simple clic ferait
@@ -76,7 +97,23 @@ export function BoardPage() {
     <main className="p-6">
       <PageHeader
         titre="Kanban"
-        soustitre="Glissez une mission pour changer sa phase ou la réordonner. L'ordre choisi est conservé."
+        soustitre={
+          // Sous filtre, la liste affichee n'est plus la liste rangee : un
+          // depot y viserait un rang qui n'existe pas. Les cartes se figent
+          // donc, et l'entete dit pourquoi plutot que de laisser chercher.
+          actif
+            ? "Tableau filtré : les cartes ne se déplacent plus. Effacez les filtres pour les réorganiser."
+            : "Glissez une mission pour changer sa phase ou la réordonner. L'ordre choisi est conservé."
+        }
+      />
+
+      <BoardFilters
+        filtres={filtres}
+        actif={actif}
+        onChange={definir}
+        onEffacer={effacer}
+        visibles={visibles}
+        total={total}
       />
 
       {board.enErreur && (
@@ -97,13 +134,14 @@ export function BoardPage() {
           onDragCancel={glissement.onDragCancel}
         >
           <div className="flex gap-4 overflow-x-auto pb-4">
-            {PHASES.map(({ statut }) => (
+            {colonnesAffichees.map(({ statut, cartes }) => (
               <BoardColumn
                 key={statut}
                 statut={statut}
-                cartes={board.colonnes?.[statut] ?? []}
+                cartes={cartes}
                 onIntervenantsChange={board.recharger}
                 onOpen={panneau.ouvrir}
+                figees={actif}
               />
             ))}
           </div>

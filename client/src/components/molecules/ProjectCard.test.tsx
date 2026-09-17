@@ -208,6 +208,15 @@ describe("ouverture de la mission", () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
+  it("ne montre aucune poignée quand la carte ne se déplace pas", () => {
+    const { rerender } = render(<ProjectCard carte={carte()} />);
+    expect(document.querySelector("svg.lucide-grip-vertical")).not.toBeNull();
+
+    rerender(<ProjectCard carte={carte()} poignee={null} />);
+
+    expect(document.querySelector("svg.lucide-grip-vertical")).toBeNull();
+  });
+
   it("n'ouvre rien quand la carte suit le curseur", () => {
     // La copie qui suit la souris represente un geste en cours, pas une cible.
     const onOpen = vi.fn();
