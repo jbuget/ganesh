@@ -68,8 +68,11 @@ export function BoardPage() {
     }),
   );
 
+  // Le tableau prend toute la largeur, contrairement aux autres ecrans : six
+  // colonnes cote a cote y gagnent chaque pixel, et une marge centree les
+  // etranglerait sans rien apporter a la lecture.
   return (
-    <main className="mx-auto max-w-[1600px] p-6">
+    <main className="p-6">
       <header className="mb-6">
         <h1 className="text-lg font-semibold">Kanban</h1>
         <p className="text-sm text-slate-500">

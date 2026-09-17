@@ -38,7 +38,7 @@ export function BoardColumn({
         // Une bordure, et non un `ring` : celui-ci se dessine hors de la boite,
         // et le conteneur de defilement rognait alors le bord gauche de la
         // premiere colonne et le bord droit de la derniere.
-        "flex min-w-52 max-w-64 flex-1 flex-col rounded-xl border transition-colors",
+        "flex min-w-60 max-w-80 flex-1 flex-col rounded-xl border transition-colors",
         isOver ? "border-sky-300 bg-sky-50" : "border-slate-300 bg-slate-100",
       ].join(" ")}
     >
