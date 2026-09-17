@@ -12,6 +12,8 @@ interface BoardColumnProps {
   cartes: BoardCardResponse[];
   onIntervenantsChange?: () => void | Promise<void>;
   onOpen?: (projectId: number) => void;
+  /** Le tableau est filtre : les cartes se lisent, mais ne se rangent plus. */
+  figees?: boolean;
 }
 
 /**
@@ -25,6 +27,7 @@ export function BoardColumn({
   cartes,
   onIntervenantsChange,
   onOpen,
+  figees,
 }: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: statut });
 
@@ -64,6 +67,7 @@ export function BoardColumn({
               carte={carte}
               onIntervenantsChange={onIntervenantsChange}
               onOpen={onOpen}
+              figee={figees}
             />
           ))}
         </SortableContext>
@@ -71,7 +75,7 @@ export function BoardColumn({
         {/* Un <ul> n'admet que des <li> : un <p> nu casserait l'hydratation. */}
         {cartes.length === 0 && (
           <li className="px-1 py-6 text-center text-xs text-slate-400">
-            Aucune mission
+            {figees ? "Aucune mission ne répond aux filtres" : "Aucune mission"}
           </li>
         )}
       </ul>

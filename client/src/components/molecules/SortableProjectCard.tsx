@@ -11,6 +11,8 @@ interface SortableProjectCardProps {
   carte: BoardCardResponse;
   onIntervenantsChange?: () => void | Promise<void>;
   onOpen?: (projectId: number) => void;
+  /** Le tableau est filtre : la carte se lit et s'ouvre, mais ne se range plus. */
+  figee?: boolean;
 }
 
 /**
@@ -23,9 +25,10 @@ export function SortableProjectCard({
   carte,
   onIntervenantsChange,
   onOpen,
+  figee,
 }: SortableProjectCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: carte.project.id });
+    useSortable({ id: carte.project.id, disabled: figee });
 
   return (
     <li
@@ -47,15 +50,17 @@ export function SortableProjectCard({
           onIntervenantsChange={onIntervenantsChange}
           onOpen={onOpen}
           poignee={
-            <button
-              type="button"
-              aria-label={`Déplacer ${carte.project.label}`}
-              className="cursor-grab touch-none rounded p-0.5 text-slate-300 transition-colors hover:text-slate-500 active:cursor-grabbing"
-              {...attributes}
-              {...listeners}
-            >
-              <GripVertical className="size-4" />
-            </button>
+            figee ? null : (
+              <button
+                type="button"
+                aria-label={`Déplacer ${carte.project.label}`}
+                className="cursor-grab touch-none rounded p-0.5 text-slate-300 transition-colors hover:text-slate-500 active:cursor-grabbing"
+                {...attributes}
+                {...listeners}
+              >
+                <GripVertical className="size-4" />
+              </button>
+            )
           }
         />
       </div>
