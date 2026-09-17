@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useState } from "react";
 
 import { createProject, importProjects } from "@/lib/api/generated/projects/projects";
 import type { ImportReportResponse, ProjectKind } from "@/lib/api/generated/model";
@@ -26,6 +27,18 @@ export function useProjectsScreen(filtres: MissionFilters = AUCUN_FILTRE) {
   const { user: me } = useCurrentUser();
   const { missions, isLoading } = useProjects(inclutLesArchivees(filtres));
   const retenues = filtrerMissions(missions, filtres);
+  // On retient ce qui est deplie, pas ce qui est replie : le referentiel
+  // s'ouvre sur ses projets, et les sous-projets se demandent. Une mission
+  // creee en cours de route arrive donc repliee, comme les autres.
+  const [deplies, setDeplies] = useState<ReadonlySet<number>>(() => new Set());
+
+  const basculer = useCallback((id: number) => {
+    setDeplies((actuels) => {
+      const suivants = new Set(actuels);
+      if (!suivants.delete(id)) suivants.add(id);
+      return suivants;
+    });
+  }, []);
 
   async function refresh() {
     await queryClient.invalidateQueries();
@@ -40,6 +53,10 @@ export function useProjectsScreen(filtres: MissionFilters = AUCUN_FILTRE) {
     /** Missions retenues, et missions que le referentiel porte en tout. */
     visibles: retenues.length,
     total: missions.length,
+
+    /** Si les sous-projets d'une mission se montrent. */
+    estDeplie: (id: number) => deplies.has(id),
+    basculer,
 
     /** Relit le referentiel apres une modification faite dans le panneau. */
     refresh,

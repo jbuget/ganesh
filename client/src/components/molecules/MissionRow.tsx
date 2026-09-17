@@ -1,5 +1,7 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
+
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
@@ -12,6 +14,12 @@ interface MissionRowProps {
   mission: ProjectListItemResponse;
   /** Un lot se decale sous son projet, pour que la hierarchie se lise. */
   estLot?: boolean;
+  /** Combien de sous-projets la mission porte : aucun, rien a plier. */
+  lots?: number;
+  /** Si ses sous-projets sont visibles. Replie par defaut. */
+  deplie?: boolean;
+  /** Montre ou cache les sous-projets. */
+  onBasculer?: () => void;
   /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
   maintenant: Date;
   onOpen: () => void;
@@ -30,6 +38,9 @@ interface MissionRowProps {
 export function MissionRow({
   mission,
   estLot = false,
+  lots = 0,
+  deplie = false,
+  onBasculer,
   maintenant,
   onOpen,
   onOpenFil,
@@ -58,7 +69,7 @@ export function MissionRow({
 
   return (
     <TableRow onClick={onOpen} className="cursor-pointer">
-      <TableCell className={estLot ? "pl-9" : ""}>
+      <TableCell className={estLot ? "pl-14" : ""}>
         <span className="flex items-center gap-2">
           {/* Le crochet rattache le lot a son projet : sans lui, l'indentation
               seule se perd des qu'une ligne longue passe a la suivante. */}
@@ -67,6 +78,35 @@ export function MissionRow({
               └
             </span>
           )}
+
+          {/* Un referentiel de soixante lignes se parcourt mal deplie en
+              entier : le chevron rend le detail d'un projet a la demande. La
+              gouttiere reste meme sans sous-projet, sinon les noms ne
+              tomberaient plus sur la meme verticale d'une ligne a l'autre. */}
+          {!estLot &&
+            (lots > 0 ? (
+              <button
+                type="button"
+                aria-expanded={deplie}
+                aria-label={`${deplie ? "Masquer" : "Afficher"} ${
+                  lots > 1 ? `les ${lots} sous-projets` : "le sous-projet"
+                } de ${project.label}`}
+                // La ligne entiere ouvre la mission : sans arret, replier
+                // ouvrirait le panneau par la meme occasion.
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onBasculer?.();
+                }}
+                className="cursor-pointer rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700"
+              >
+                <ChevronRight
+                  aria-hidden
+                  className={`size-4 transition-transform ${deplie ? "rotate-90" : ""}`}
+                />
+              </button>
+            ) : (
+              <span aria-hidden className="size-5 shrink-0" />
+            ))}
           <button
             type="button"
             // La ligne entiere reagit a la souris ; ce bouton donne la meme

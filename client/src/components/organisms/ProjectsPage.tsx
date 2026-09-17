@@ -113,27 +113,35 @@ export function ProjectsPage() {
               </TableHeader>
 
               <TableBody>
-                {ecran.arbre.map(({ mission, lots }) => (
-                  <Fragment key={mission.project.id}>
-                    <MissionRow
-                      mission={mission}
-                      estLot={mission.project.kind === "lot"}
-                      maintenant={maintenant}
-                      onOpen={() => panneau.ouvrir(mission.project.id)}
-                      onOpenFil={() => panneau.ouvrir(mission.project.id, "updates")}
-                    />
-                    {lots.map((lot) => (
+                {ecran.arbre.map(({ mission, lots }) => {
+                  const deplie = ecran.estDeplie(mission.project.id);
+
+                  return (
+                    <Fragment key={mission.project.id}>
                       <MissionRow
-                        key={lot.project.id}
-                        mission={lot}
-                        estLot
+                        mission={mission}
+                        estLot={mission.project.kind === "lot"}
+                        lots={lots.length}
+                        deplie={deplie}
+                        onBasculer={() => ecran.basculer(mission.project.id)}
                         maintenant={maintenant}
-                        onOpen={() => panneau.ouvrir(lot.project.id)}
-                        onOpenFil={() => panneau.ouvrir(lot.project.id, "updates")}
+                        onOpen={() => panneau.ouvrir(mission.project.id)}
+                        onOpenFil={() => panneau.ouvrir(mission.project.id, "updates")}
                       />
-                    ))}
-                  </Fragment>
-                ))}
+                      {deplie &&
+                        lots.map((lot) => (
+                          <MissionRow
+                            key={lot.project.id}
+                            mission={lot}
+                            estLot
+                            maintenant={maintenant}
+                            onOpen={() => panneau.ouvrir(lot.project.id)}
+                            onOpenFil={() => panneau.ouvrir(lot.project.id, "updates")}
+                          />
+                        ))}
+                    </Fragment>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
