@@ -7,6 +7,8 @@ import StarterKit from "@tiptap/starter-kit";
 import {
   Bold,
   Code,
+  Heading2,
+  Heading3,
   Italic,
   Link2,
   List,
@@ -32,6 +34,10 @@ interface RichTextEditorProps {
   onChange: (markdown: string) => void;
   /** Declenche par Cmd+Entree, pour enregistrer sans lacher le clavier. */
   onSubmit?: () => void;
+  /** Offre les titres : une fiche s'articule, un point hebdomadaire non. */
+  avecTitres?: boolean;
+  /** Hauteur minimale de la zone de saisie, en classes Tailwind. */
+  hauteur?: string;
 }
 
 /** Un bouton de la barre d'outils. */
@@ -83,6 +89,8 @@ export function RichTextEditor({
   placeholder,
   onChange,
   onSubmit,
+  avecTitres = false,
+  hauteur = "min-h-24",
 }: RichTextEditorProps) {
   const editor = useEditor({
     // Next rend ce composant sur le serveur : laisser ProseMirror s'installer
@@ -98,8 +106,7 @@ export function RichTextEditor({
     content: valeur,
     editorProps: {
       attributes: {
-        class:
-          "prose prose-sm prose-slate max-w-none min-h-24 px-3 py-2 focus:outline-none",
+        class: `prose prose-sm prose-slate max-w-none ${hauteur} px-3 py-2 focus:outline-none`,
         "aria-label": placeholder ?? "Rédaction",
       },
       handleKeyDown: (_, event) => {
@@ -154,6 +161,28 @@ export function RichTextEditor({
         >
           <Code className="size-3.5" aria-hidden />
         </Outil>
+
+        {avecTitres && (
+          <>
+            <span aria-hidden className="mx-1 h-4 w-px bg-slate-200" />
+            <Outil
+              editor={editor}
+              titre="Titre"
+              actif={editor.isActive("heading", { level: 2 })}
+              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            >
+              <Heading2 className="size-3.5" aria-hidden />
+            </Outil>
+            <Outil
+              editor={editor}
+              titre="Sous-titre"
+              actif={editor.isActive("heading", { level: 3 })}
+              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            >
+              <Heading3 className="size-3.5" aria-hidden />
+            </Outil>
+          </>
+        )}
 
         <span aria-hidden className="mx-1 h-4 w-px bg-slate-200" />
 
