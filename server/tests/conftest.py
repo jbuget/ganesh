@@ -21,10 +21,6 @@ TEST_DATABASE_URL = os.environ.get(
 )
 
 
-def _sync_url(url: str) -> str:
-    return url.replace("+asyncpg", "")
-
-
 @pytest.fixture(scope="session")
 def migrated_database() -> str:
     """Applique les migrations sur la base de test, une fois par session."""
