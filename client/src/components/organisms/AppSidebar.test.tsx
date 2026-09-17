@@ -38,11 +38,12 @@ describe("AppSidebar", () => {
     ).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("propose les deux écrans", () => {
+  it("propose tous les écrans", () => {
     render(<AppSidebar />);
 
     expect(screen.getByRole("link", { name: /Activité/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Projets/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Collaborateurs/ })).toBeInTheDocument();
   });
 
   it("signale l'écran courant aux lecteurs d'écran", () => {
