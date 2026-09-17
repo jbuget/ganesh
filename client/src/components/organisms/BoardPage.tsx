@@ -10,18 +10,28 @@ import {
   rectIntersection,
   useSensor,
   useSensors,
+  type Collision,
   type CollisionDetection,
-  type DragEndEvent,
-  type DragStartEvent,
 } from "@dnd-kit/core";
-import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { useState } from "react";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 import { BoardColumn } from "@/components/molecules/BoardColumn";
 import { ProjectCard } from "@/components/molecules/ProjectCard";
-import type { BoardCardResponse, ProjectStatus } from "@/lib/api/generated/model";
 import { PHASES } from "@/lib/board";
-import { useBoard, type Colonnes } from "@/lib/use-board";
+import { useBoard } from "@/lib/use-board";
+import { useBoardDrag } from "@/lib/use-board-drag";
+
+/**
+ * Une carte survolee l'emporte sur la colonne qui la contient.
+ *
+ * Les deux se trouvent sous le curseur, et la colonne seule ne dit que la phase
+ * d'arrivee : sans cette preference, toute carte tombait en bas de colonne,
+ * quel que soit l'endroit vise.
+ */
+const prioriserLesCartes = (collisions: Collision[]) => {
+  const cartes = collisions.filter(({ id }) => typeof id === "number");
+  return cartes.length > 0 ? cartes : collisions;
+};
 
 /**
  * Ce qui se trouve reellement sous le curseur, en priorite.
@@ -31,24 +41,17 @@ import { useBoard, type Colonnes } from "@/lib/use-board";
  */
 const detectionDeCollision: CollisionDetection = (args) => {
   const sousLeCurseur = pointerWithin(args);
-  if (sousLeCurseur.length > 0) return sousLeCurseur;
+  if (sousLeCurseur.length > 0) return prioriserLesCartes(sousLeCurseur);
 
   const recouvrement = rectIntersection(args);
-  return recouvrement.length > 0 ? recouvrement : closestCorners(args);
+  if (recouvrement.length > 0) return prioriserLesCartes(recouvrement);
+  return closestCorners(args);
 };
-
-/** Retrouve la colonne qui contient une carte. */
-function colonneDe(colonnes: Colonnes, projectId: number): ProjectStatus | null {
-  for (const { statut } of PHASES) {
-    if (colonnes[statut]?.some((c) => c.project.id === projectId)) return statut;
-  }
-  return null;
-}
 
 /** Tableau de bord des projets, une colonne par phase. */
 export function BoardPage() {
   const board = useBoard();
-  const [enDeplacement, setEnDeplacement] = useState<BoardCardResponse | null>(null);
+  const glissement = useBoardDrag(board);
 
   const sensors = useSensors(
     // Quelques pixels avant de saisir : sans cela, un simple clic ferait
@@ -58,61 +61,6 @@ export function BoardPage() {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-
-  function handleDragStart(event: DragStartEvent) {
-    const id = Number(event.active.id);
-    const depart = board.colonnes && colonneDe(board.colonnes, id);
-    setEnDeplacement(
-      depart
-        ? (board.colonnes?.[depart].find((c) => c.project.id === id) ?? null)
-        : null,
-    );
-  }
-
-  async function handleDragEnd(event: DragEndEvent) {
-    setEnDeplacement(null);
-    const { active, over } = event;
-    if (!over || !board.colonnes) return;
-
-    const id = Number(active.id);
-    const depart = colonneDe(board.colonnes, id);
-    if (!depart) return;
-
-    // On peut relacher sur une colonne vide comme sur une autre carte.
-    const arrivee =
-      (PHASES.find((p) => p.statut === over.id)?.statut as ProjectStatus) ??
-      colonneDe(board.colonnes, Number(over.id));
-    if (!arrivee) return;
-
-    const cartesDepart = board.colonnes[depart];
-    const carte = cartesDepart.find((c) => c.project.id === id);
-    if (!carte) return;
-
-    const cartesArrivee = depart === arrivee ? cartesDepart : board.colonnes[arrivee];
-    const indexSurvole = cartesArrivee.findIndex(
-      (c) => c.project.id === Number(over.id),
-    );
-
-    const suivantes: Colonnes = { ...board.colonnes };
-    let rang: number;
-
-    if (depart === arrivee) {
-      const depuis = cartesDepart.findIndex((c) => c.project.id === id);
-      rang = indexSurvole === -1 ? cartesDepart.length - 1 : indexSurvole;
-      if (depuis === rang) return;
-      suivantes[arrivee] = arrayMove(cartesDepart, depuis, rang);
-    } else {
-      rang = indexSurvole === -1 ? cartesArrivee.length : indexSurvole;
-      suivantes[depart] = cartesDepart.filter((c) => c.project.id !== id);
-      suivantes[arrivee] = [
-        ...cartesArrivee.slice(0, rang),
-        carte,
-        ...cartesArrivee.slice(rang),
-      ];
-    }
-
-    await board.deplacer(id, arrivee, rang, suivantes);
-  }
 
   return (
     <main className="mx-auto max-w-[1600px] p-6">
@@ -136,9 +84,10 @@ export function BoardPage() {
         <DndContext
           sensors={sensors}
           collisionDetection={detectionDeCollision}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onDragCancel={() => setEnDeplacement(null)}
+          onDragStart={glissement.onDragStart}
+          onDragOver={glissement.onDragOver}
+          onDragEnd={glissement.onDragEnd}
+          onDragCancel={glissement.onDragCancel}
         >
           <div className="flex gap-4 overflow-x-auto pb-4">
             {PHASES.map(({ statut }) => (
@@ -158,9 +107,9 @@ export function BoardPage() {
             carte fantome affichee en permanence.
           */}
           <DragOverlay dropAnimation={null}>
-            {enDeplacement && (
+            {glissement.enDeplacement && (
               <div className="w-64 rotate-2 scale-[1.02] cursor-grabbing">
-                <ProjectCard carte={enDeplacement} enDeplacement />
+                <ProjectCard carte={glissement.enDeplacement} enDeplacement />
               </div>
             )}
           </DragOverlay>

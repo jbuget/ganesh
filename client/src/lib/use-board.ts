@@ -55,6 +55,15 @@ export function useBoard() {
     enErreur,
     utilisateur: user,
 
+    /**
+     * Montre un etat sans l'enregistrer.
+     *
+     * C'est ce qui se joue pendant un glissement : les colonnes s'ouvrent et se
+     * referment sous le curseur, mais rien n'est ecrit tant que la carte n'est
+     * pas relachee.
+     */
+    previsualiser: setColonnes,
+
     /** Applique le deplacement a l'ecran, puis l'enregistre. */
     async deplacer(
       projectId: number,

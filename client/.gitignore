@@ -42,3 +42,4 @@ next-env.d.ts
 
 # Garder les modeles de configuration versionnes
 !.env.example
+.vitest/
