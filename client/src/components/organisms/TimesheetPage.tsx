@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { MissionSelector } from "@/components/atoms/MissionSelector";
+import { PageHeader } from "@/components/atoms/PageHeader";
 import { RemoveMissionDialog } from "@/components/atoms/RemoveMissionDialog";
 import { TeammateSelector } from "@/components/atoms/TeammateSelector";
 import { ValidateMonthDialog } from "@/components/atoms/ValidateMonthDialog";
@@ -41,13 +42,15 @@ export function TimesheetPage() {
 
   return (
     <main className="max-w-[1600px] p-6">
-      <header className="mb-6">
-        <h1 className="text-lg font-semibold">Activité</h1>
-        <p className="text-sm text-slate-500">
-          Déclarez votre temps en journées ou demi-journées. Tant que le mois n&apos;est
-          pas validé, tout reste modifiable.
-        </p>
-      </header>
+      <PageHeader
+        titre="Activité"
+        soustitre="Déclarez votre temps en journées ou demi-journées. Tant que le mois n'est pas validé, tout reste modifiable."
+        actions={
+          grid?.is_writable && mois.isOwnMonth ? (
+            <Button onClick={() => setValidationOuverte(true)}>Valider le mois</Button>
+          ) : undefined
+        }
+      />
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -78,10 +81,6 @@ export function TimesheetPage() {
             selectedId={mois.targetUserId}
             onSelect={mois.viewTeammate}
           />
-
-          {grid?.is_writable && mois.isOwnMonth && (
-            <Button onClick={() => setValidationOuverte(true)}>Valider le mois</Button>
-          )}
         </div>
       </div>
 

@@ -15,6 +15,7 @@ import {
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
+import { PageHeader } from "@/components/atoms/PageHeader";
 import { BoardColumn } from "@/components/molecules/BoardColumn";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { ProjectCard } from "@/components/molecules/ProjectCard";
@@ -73,13 +74,10 @@ export function BoardPage() {
   // etranglerait sans rien apporter a la lecture.
   return (
     <main className="p-6">
-      <header className="mb-6">
-        <h1 className="text-lg font-semibold">Kanban</h1>
-        <p className="text-sm text-slate-500">
-          Glissez une mission pour changer sa phase ou la réordonner. L&apos;ordre
-          choisi est conservé.
-        </p>
-      </header>
+      <PageHeader
+        titre="Kanban"
+        soustitre="Glissez une mission pour changer sa phase ou la réordonner. L'ordre choisi est conservé."
+      />
 
       {board.enErreur && (
         <p className="mb-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
