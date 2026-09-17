@@ -16,6 +16,7 @@ def to_entity(model: UserModel) -> User:
         display_name=model.display_name,
         role=model.role,
         actif=model.actif,
+        derniere_connexion=model.derniere_connexion,
     )
 
 
@@ -57,6 +58,7 @@ class SqlUserRepository(UserRepository):
             display_name=user.display_name,
             role=user.role,
             actif=user.actif,
+            derniere_connexion=user.derniere_connexion,
         )
         self._session.add(model)
         await self._session.flush()
@@ -74,5 +76,6 @@ class SqlUserRepository(UserRepository):
         model.display_name = user.display_name
         model.role = user.role
         model.actif = user.actif
+        model.derniere_connexion = user.derniere_connexion
         await self._session.flush()
         return user

@@ -14,4 +14,5 @@ def to_user_response(user: User) -> UserResponse:
         initiales=initiales(user.display_name),
         role=user.role,
         actif=user.actif,
+        derniere_connexion=user.derniere_connexion,
     )

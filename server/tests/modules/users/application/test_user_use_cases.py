@@ -1,5 +1,7 @@
 """Provisionnement depuis Entra et gestion des roles."""
 
+from datetime import datetime
+
 import pytest
 
 from src.modules.users.application.dtos.user_dto import ChangeRoleCommand, EntraIdentity
@@ -122,3 +124,46 @@ async def test_a_role_change_is_traced() -> None:
     log = audit.logs[-1]
     assert log.action.value == "user.role_change"
     assert (log.old_value, log.new_value) == ("TEAMMATE", "MANAGER")
+
+
+async def test_a_new_user_is_stamped_with_their_first_connection() -> None:
+    provision, _, _, _ = build()
+
+    user = await provision.execute(
+        EntraIdentity(oid="oid-new", email="d.dehe@waat.fr", display_name="D. Dehe"),
+        now=datetime(2026, 9, 17, 9, 0),
+    )
+
+    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 0)
+
+
+async def test_a_returning_user_sees_their_connection_refreshed() -> None:
+    teammate = make_teammate()
+    teammate.derniere_connexion = datetime(2026, 9, 16, 9, 0)
+    provision, _, repo, _ = build([teammate])
+
+    await provision.execute(
+        EntraIdentity(
+            oid="oid-teammate", email="l.chen@waat.fr", display_name="L. Chen"
+        ),
+        now=datetime(2026, 9, 17, 9, 0),
+    )
+
+    stored = await repo.get_by_id(2)
+    assert stored is not None
+    assert stored.derniere_connexion == datetime(2026, 9, 17, 9, 0)
+
+
+async def test_a_busy_user_is_not_written_on_every_request() -> None:
+    """Le jeton est represente a chaque appel : la base n'a pas a le subir."""
+    teammate = make_teammate()
+    teammate.derniere_connexion = datetime(2026, 9, 17, 9, 0)
+    provision, _, repo, _ = build([teammate])
+
+    identity = EntraIdentity(
+        oid="oid-teammate", email="l.chen@waat.fr", display_name="L. Chen"
+    )
+    await provision.execute(identity, now=datetime(2026, 9, 17, 9, 1))
+    await provision.execute(identity, now=datetime(2026, 9, 17, 9, 2))
+
+    assert repo.updates == 0

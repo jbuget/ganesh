@@ -1,5 +1,7 @@
 """Regles metier portees par l'utilisateur."""
 
+from datetime import datetime
+
 import pytest
 
 from src.modules.users.domain.entities.user import Role, User
@@ -52,3 +54,40 @@ def test_email_is_normalised_to_lowercase() -> None:
     )
 
     assert user.email == "j.buget@waat.fr"
+
+
+def test_a_first_connection_is_recorded() -> None:
+    user = make_user()
+
+    assert user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0)) is True
+    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 0)
+
+
+def test_a_connection_within_the_freshness_window_is_not_rewritten() -> None:
+    """Un jeton porteur est represente a chaque requete.
+
+    Sans fenetre de fraicheur, la « derniere connexion » ne mesurerait plus que
+    le nombre d'ecritures en base.
+    """
+    user = make_user()
+    user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0))
+
+    assert user.enregistrer_connexion(datetime(2026, 9, 17, 9, 3)) is False
+    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 0)
+
+
+def test_a_connection_after_the_freshness_window_is_recorded() -> None:
+    user = make_user()
+    user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0))
+
+    assert user.enregistrer_connexion(datetime(2026, 9, 17, 9, 20)) is True
+    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 20)
+
+
+def test_a_connection_is_never_dated_backwards() -> None:
+    """Deux requetes concurrentes peuvent arriver dans le desordre."""
+    user = make_user()
+    user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0))
+
+    assert user.enregistrer_connexion(datetime(2026, 9, 17, 8, 0)) is False
+    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 0)

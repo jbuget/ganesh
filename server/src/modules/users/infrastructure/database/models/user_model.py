@@ -1,6 +1,8 @@
 """Modele SQLAlchemy des utilisateurs."""
 
-from sqlalchemy import Boolean, Enum, Integer, String
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, Enum, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
@@ -21,3 +23,5 @@ class UserModel(Base):
         default=Role.TEAMMATE,
     )
     actif: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    # Nullable : les comptes pre-attribues par le seed ne se sont jamais connectes.
+    derniere_connexion: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

@@ -1,5 +1,7 @@
 """Schemas des collaborateurs."""
 
+from datetime import datetime
+
 from pydantic import BaseModel
 
 from src.modules.users.domain.entities.user import Role
@@ -14,6 +16,8 @@ class UserResponse(BaseModel):
     initiales: str
     role: Role
     actif: bool
+    #: Null tant que le compte ne s'est jamais connecte.
+    derniere_connexion: datetime | None = None
 
 
 class ChangeRoleRequest(BaseModel):
