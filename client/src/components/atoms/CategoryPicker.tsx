@@ -24,7 +24,11 @@ export function CategoryPicker({ valeur, onChange }: CategoryPickerProps) {
         className="-mx-1 flex cursor-pointer items-center rounded px-1 py-0.5 transition-colors hover:bg-slate-100"
       >
         {axe ? (
-          <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${axe.classe}`}>
+          <span className="flex items-center gap-1.5 text-sm text-slate-700">
+            <span
+              className={`size-2.5 shrink-0 rounded-[3px] ${axe.puce}`}
+              aria-hidden
+            />
             {axe.libelle}
           </span>
         ) : (
@@ -50,6 +54,10 @@ export function CategoryPicker({ valeur, onChange }: CategoryPickerProps) {
                 }}
                 className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
               >
+                <span
+                  className={`size-2.5 shrink-0 rounded-[3px] ${choix.puce}`}
+                  aria-hidden
+                />
                 <span className="min-w-0 flex-1 truncate">{choix.libelle}</span>
                 {choix.valeur === valeur && (
                   <Check className="size-4 shrink-0 text-sky-600" aria-hidden />

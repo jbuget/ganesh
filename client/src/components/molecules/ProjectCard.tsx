@@ -8,10 +8,12 @@ import {
 } from "lucide-react";
 
 import { CardCounter } from "@/components/atoms/CardCounter";
+import { CategoryMark } from "@/components/atoms/CategoryMark";
 import { IntervenantsPicker } from "@/components/atoms/IntervenantsPicker";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
+import { PriorityMark } from "@/components/atoms/PriorityMark";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
-import { avancement, categorie, priorite } from "@/lib/board";
+import { avancement } from "@/lib/board";
 import { formatJoursDecimal } from "@/lib/dates";
 
 /** Teinte du rapport consomme/estime selon l'etat d'avancement. */
@@ -46,8 +48,6 @@ export function ProjectCard({
   onOpen,
 }: ProjectCardProps) {
   const { project, parent } = carte;
-  const axe = categorie(project.categorie);
-  const urgence = priorite(project.priorite);
   const archivee = !project.actif;
   const etat = avancement(carte.consomme_j, project.estime_j);
 
@@ -131,21 +131,12 @@ export function ProjectCard({
         </span>
       )}
 
-      {urgence && (
-        <span
-          className={`mt-2 mr-1 inline-block rounded px-1.5 py-0.5 text-[11px] font-medium ${urgence.classe}`}
-        >
-          {urgence.libelle}
-        </span>
-      )}
-
-      {axe && (
-        <span
-          className={`mt-2 inline-block rounded px-1.5 py-0.5 text-[11px] font-medium ${axe.classe}`}
-        >
-          {axe.libelle}
-        </span>
-      )}
+      {/* Urgence et axe se lisent l'un sous l'autre, en texte ordinaire : le
+          titre de la mission reste ce que la carte dit en premier. */}
+      <div className="mt-2 space-y-1 text-xs">
+        <PriorityMark valeur={project.priorite} />
+        <CategoryMark valeur={project.categorie} />
+      </div>
 
       <p className={`mt-2.5 text-xs tabular-nums ${TEINTES[etat]}`}>
         {project.estime_j

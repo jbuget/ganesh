@@ -1,3 +1,6 @@
+import { ChevronDown, ChevronsUp, Minus, OctagonAlert } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
 import type {
   ProjectCategory,
   ProjectPriority,
@@ -45,31 +48,37 @@ export function libellePhase(statut: ProjectStatus): string {
   return LIBELLES_PHASES.get(statut) ?? statut;
 }
 
-/** Axes strategiques, avec la teinte qui les distingue sur une carte. */
+/**
+ * Axes strategiques, avec la teinte qui les distingue.
+ *
+ * Meme grammaire que les phases et les urgences : une marque coloree, un
+ * libelle ordinaire. La marque est carree, la ou celle d'une phase est ronde :
+ * deux points de meme forme sur une meme ligne se confondraient.
+ */
 export const CATEGORIES: {
   valeur: ProjectCategory;
   libelle: string;
-  classe: string;
+  puce: string;
 }[] = [
   {
     valeur: "automatiser_fluidifier",
     libelle: "Automatiser & fluidifier",
-    classe: "bg-sky-100 text-sky-900",
+    puce: "bg-sky-500",
   },
   {
     valeur: "perenniser_croissance",
     libelle: "Pérenniser la croissance",
-    classe: "bg-emerald-100 text-emerald-900",
+    puce: "bg-emerald-500",
   },
   {
     valeur: "innover_differencier",
     libelle: "Innover & différencier",
-    classe: "bg-violet-100 text-violet-900",
+    puce: "bg-violet-500",
   },
   {
     valeur: "structurer_plateforme",
     libelle: "Structurer la plateforme",
-    classe: "bg-amber-100 text-amber-900",
+    puce: "bg-amber-500",
   },
 ];
 
@@ -82,40 +91,35 @@ export function categorie(valeur: ProjectCategory | null | undefined) {
 /**
  * Urgences, de la plus forte a la plus faible.
  *
- * La couleur est pleine, la ou les axes strategiques restent en pastel : une
- * priorite doit sauter aux yeux d'un bout a l'autre du tableau, un axe se lit
- * quand on s'arrete sur une carte.
+ * Une marque coloree et un libelle en texte ordinaire, comme les phases : la
+ * couleur repere, elle ne remplit pas. Trois surfaces teintees par ligne — une
+ * par phase, une par urgence, une par axe — faisaient crier les deux colonnes
+ * les moins structurantes plus fort que le nom de la mission.
+ *
+ * Chaque niveau porte une forme distincte, et pas seulement une teinte :
+ * l'echelle reste lisible sans la couleur, pour qui ne la distingue pas ou
+ * n'en dispose pas.
  */
 export const PRIORITES: {
   valeur: ProjectPriority;
   libelle: string;
-  classe: string;
-  pastille: string;
+  icone: LucideIcon;
+  couleur: string;
+  /** Epaisseur du trait, quand le dessin doit peser plus que sa teinte. */
+  trait?: number;
 }[] = [
   {
     valeur: "critique",
     libelle: "Critique",
-    classe: "bg-slate-900 text-white",
-    pastille: "bg-slate-900",
+    icone: OctagonAlert,
+    couleur: "text-slate-900",
+    // Le noir se fait plus discret que le rouge a trait egal : sans ce
+    // renfort, le niveau le plus fort pesait moins que celui d'en dessous.
+    trait: 2.5,
   },
-  {
-    valeur: "haute",
-    libelle: "Haute",
-    classe: "bg-red-600 text-white",
-    pastille: "bg-red-600",
-  },
-  {
-    valeur: "normale",
-    libelle: "Normale",
-    classe: "bg-orange-500 text-white",
-    pastille: "bg-orange-500",
-  },
-  {
-    valeur: "basse",
-    libelle: "Basse",
-    classe: "bg-amber-300 text-amber-950",
-    pastille: "bg-amber-300",
-  },
+  { valeur: "haute", libelle: "Haute", icone: ChevronsUp, couleur: "text-red-600" },
+  { valeur: "normale", libelle: "Normale", icone: Minus, couleur: "text-orange-500" },
+  { valeur: "basse", libelle: "Basse", icone: ChevronDown, couleur: "text-amber-500" },
 ];
 
 const PRIORITES_PAR_VALEUR = new Map(PRIORITES.map((p) => [p.valeur, p]));

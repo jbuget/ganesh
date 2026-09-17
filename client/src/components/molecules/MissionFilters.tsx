@@ -88,19 +88,26 @@ export function MissionFilters({
 
       <FilterSelect
         libelle="Catégorie"
-        options={CATEGORIES.map(({ valeur, libelle }) => ({ valeur, libelle }))}
+        options={CATEGORIES.map(({ valeur, libelle, puce }) => ({
+          valeur,
+          libelle,
+          vignette: (
+            <span className={`size-2.5 shrink-0 rounded-[3px] ${puce}`} aria-hidden />
+          ),
+        }))}
         valeurs={filtres.categories}
         onChange={(valeurs) => onChange({ categories: valeurs as ProjectCategory[] })}
       />
 
       <FilterSelect
         libelle="Priorité"
-        options={PRIORITES.map(({ valeur, libelle, pastille }) => ({
+        options={PRIORITES.map(({ valeur, libelle, icone: Icone, couleur, trait }) => ({
           valeur,
           libelle,
           vignette: (
-            <span
-              className={`size-2.5 shrink-0 rounded-full ${pastille}`}
+            <Icone
+              className={`size-4 shrink-0 ${couleur}`}
+              strokeWidth={trait}
               aria-hidden
             />
           ),

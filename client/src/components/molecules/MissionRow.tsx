@@ -2,12 +2,14 @@
 
 import { ChevronRight } from "lucide-react";
 
+import { CategoryMark } from "@/components/atoms/CategoryMark";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
+import { PriorityMark } from "@/components/atoms/PriorityMark";
 import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
-import { categorie, libellePhase, pastillePhase, priorite } from "@/lib/board";
+import { libellePhase, pastillePhase } from "@/lib/board";
 import { depuis } from "@/lib/dates-relatives";
 
 interface MissionRowProps {
@@ -46,8 +48,6 @@ export function MissionRow({
   onOpenFil,
 }: MissionRowProps) {
   const { project } = mission;
-  const axe = categorie(project.categorie);
-  const urgence = priorite(project.priorite);
   const derniere = mission.derniere_maj;
 
   // Le dernier message en entier et mis en forme, comme il se lit dans le fil :
@@ -151,21 +151,11 @@ export function MissionRow({
       {/* La priorite suit la phase, comme dans la fiche : ou en est la mission,
           puis ce qu'elle doit passer avant. */}
       <TableCell>
-        {urgence && (
-          <span
-            className={`rounded px-1.5 py-0.5 text-xs font-medium ${urgence.classe}`}
-          >
-            {urgence.libelle}
-          </span>
-        )}
+        <PriorityMark valeur={project.priorite} />
       </TableCell>
 
       <TableCell>
-        {axe && (
-          <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${axe.classe}`}>
-            {axe.libelle}
-          </span>
-        )}
+        <CategoryMark valeur={project.categorie} />
       </TableCell>
 
       <TableCell className="text-right tabular-nums text-slate-600">
