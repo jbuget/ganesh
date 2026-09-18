@@ -223,27 +223,6 @@ export function ProjectsPage() {
           </div>
         )}
 
-        {screen.activities.length > 0 && (
-          <section className="mt-8">
-            <h2 className="mb-2 text-sm font-medium text-slate-600">
-              Activités hors projet
-            </h2>
-            <p className="mb-3 text-sm text-slate-500">
-              Elles n&apos;ont ni phase ni estimé, et ne remontent jamais dans Monday.
-              Sans elles, les jours ouvrés se reporteraient sur les projets.
-            </p>
-            <ul className="flex flex-wrap gap-2">
-              {screen.activities.map((activity) => (
-                <li
-                  key={activity.project.id}
-                  className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm"
-                >
-                  {activity.project.label}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
       </div>
 
       <DeclareProjectDialog
