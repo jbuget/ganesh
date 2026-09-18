@@ -56,6 +56,17 @@ jobs:
       - name: Contrats d'architecture (Clean Architecture)
         run: lint-imports --config .importlinter
 
+      # Une colonne renommee sans son index, un modele modifie sans migration :
+      # le schema et les modeles divergent en silence, et rien ne le disait
+      # avant le prochain autogenerate, qui embarquait alors la correction dans
+      # un diff ou personne ne la cherchait.
+      - name: Schéma synchronisé avec les modèles
+        run: |
+          alembic upgrade head
+          alembic check
+        env:
+          DATABASE_URL: postgresql+asyncpg://timesheet:timesheet@localhost:5432/timesheet_test
+
       - name: Tests
         run: pytest
         env:

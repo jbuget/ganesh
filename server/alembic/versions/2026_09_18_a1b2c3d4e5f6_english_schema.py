@@ -48,6 +48,19 @@ COLONNES = [
     ("users", "derniere_connexion", "last_login_at"),
 ]
 
+#: (ancien index, nouvel index)
+#:
+#: Renommer une colonne ne renomme pas l'index qui la porte : le schema
+#: resterait desynchronise des modeles, et `alembic check` le signale.
+#: `ALTER INDEX` suffit — l'index est conserve, pas reconstruit.
+INDEX = [
+    ("ix_entries_jour", "ix_entries_day"),
+    ("ix_month_status_mois", "ix_month_status_month"),
+    ("ix_projects_actif", "ix_projects_is_active"),
+    ("ix_user_missions_mois", "ix_user_missions_month"),
+    ("ix_users_actif", "ix_users_is_active"),
+]
+
 #: (table, colonne, ancien membre, nouveau membre)
 MEMBRES = [
     ("projects", "status", "CADRAGE", "SCOPING"),
@@ -99,6 +112,11 @@ MEMBRES = [
 ]
 
 
+def _renommer_les_index(index: list[tuple[str, str]]) -> None:
+    for avant, apres in index:
+        op.execute(f"ALTER INDEX {avant} RENAME TO {apres}")
+
+
 def _reecrire(membres: list[tuple[str, str, str, str]]) -> None:
     for table, colonne, avant, apres in membres:
         op.execute(
@@ -109,6 +127,8 @@ def _reecrire(membres: list[tuple[str, str, str, str]]) -> None:
 def upgrade() -> None:
     for table, avant, apres in COLONNES:
         op.alter_column(table, avant, new_column_name=apres)
+
+    _renommer_les_index(INDEX)
 
     # La contrainte porte le nom de la colonne : elle se refait entierement.
     op.drop_constraint("ck_entry_valeur", "entries", type_="check")
@@ -123,6 +143,8 @@ def downgrade() -> None:
     # La contrainte tombe avant le renommage, et se refait apres : son
     # expression nomme la colonne, qui n'a pas le meme nom des deux cotes.
     op.drop_constraint("ck_entry_value", "entries", type_="check")
+
+    _renommer_les_index([(apres, avant) for avant, apres in INDEX])
 
     for table, avant, apres in reversed(COLONNES):
         op.alter_column(table, apres, new_column_name=avant)

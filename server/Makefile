@@ -1,4 +1,4 @@
-.PHONY: install lint format test test-cov archi migration migrate seed run
+.PHONY: install lint format test test-cov archi check-schema migration migrate seed run
 
 # Repris du .env racine quand on entre par `make -C server` : les ports de
 # l'instance restent decrits a un seul endroit.
@@ -33,6 +33,11 @@ format:
 
 archi:
 	$(VENV)/bin/lint-imports --config .importlinter
+
+# Verifie que la base decrite par les migrations est bien celle des modeles.
+# Demande une base a jour : `make migrate` d'abord.
+check-schema:
+	$(VENV)/bin/alembic check
 
 test:
 	TEST_DATABASE_URL=$(TEST_DATABASE_URL) $(PY) -m pytest
