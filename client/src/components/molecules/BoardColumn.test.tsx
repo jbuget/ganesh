@@ -27,11 +27,19 @@ const carte = (id: number, label: string): BoardCardResponse =>
     intervenants: [{ id: 1, display_name: "Léa Chen", initiales: "LC" }],
   }) as BoardCardResponse;
 
+/** Heure de reference figee : les apercus ne dependent pas de l'heure du run. */
+const MAINTENANT = new Date("2026-09-16T11:00:00Z");
+
 /** Les capteurs de @dnd-kit exigent un contexte englobant. */
 const afficher = (cartes: BoardCardResponse[], figees = false) =>
   render(
     <DndContext>
-      <BoardColumn statut="realisation" cartes={cartes} figees={figees} />
+      <BoardColumn
+        statut="realisation"
+        cartes={cartes}
+        maintenant={MAINTENANT}
+        figees={figees}
+      />
     </DndContext>,
   );
 

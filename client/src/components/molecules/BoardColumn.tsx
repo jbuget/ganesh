@@ -10,6 +10,8 @@ import { libellePhase, pastillePhase } from "@/lib/board";
 interface BoardColumnProps {
   statut: ProjectStatus;
   cartes: BoardCardResponse[];
+  /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
+  maintenant: Date;
   onIntervenantsChange?: () => void | Promise<void>;
   onOpen?: (projectId: number) => void;
   /** Le tableau est filtre : les cartes se lisent, mais ne se rangent plus. */
@@ -29,6 +31,7 @@ interface BoardColumnProps {
 export function BoardColumn({
   statut,
   cartes,
+  maintenant,
   onIntervenantsChange,
   onOpen,
   figees,
@@ -72,6 +75,7 @@ export function BoardColumn({
             <SortableProjectCard
               key={carte.project.id}
               carte={carte}
+              maintenant={maintenant}
               onIntervenantsChange={onIntervenantsChange}
               onOpen={onOpen}
               figee={figees}

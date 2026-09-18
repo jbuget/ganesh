@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
+from src.modules.projects.application.dtos.last_update import LastUpdate
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.repositories.project_assignee_repository import (
@@ -33,6 +34,8 @@ class BoardCard:
     #: Projet dont la mission releve, quand elle est un lot. Il peut etre
     #: archive : le lot en releve toujours, et la carte doit pouvoir y mener.
     parent: Project | None = None
+    #: Le dernier message du fil, pour l'annoncer sans ouvrir le panneau.
+    derniere_maj: LastUpdate | None = None
 
 
 @dataclass
@@ -92,6 +95,14 @@ class GetBoardUseCase:
         utilisateurs = {u.id: u for u in await self._users.list_all(True)}
         affectations = await self._assignees.list_all(ProjectRole.INTERVENANT)
         commentaires = await self._updates.count_by_project()
+        dernieres = await self._updates.latest_by_project()
+
+        def derniere(project_id: int) -> LastUpdate | None:
+            maj = dernieres.get(project_id)
+            auteur = utilisateurs.get(maj.author_id) if maj else None
+            # Un auteur desactive puis efface laisserait un texte anonyme :
+            # mieux vaut ne rien annoncer que de le signer d'un blanc.
+            return LastUpdate(update=maj, author=auteur) if maj and auteur else None
 
         nb_lots: dict[int, int] = {}
         for mission in missions:
@@ -133,6 +144,7 @@ class GetBoardUseCase:
                         utilisateurs[uid] for uid in intervenants if uid in utilisateurs
                     ],
                     commentaires=commentaires.get(mission.id, 0),
+                    derniere_maj=derniere(mission.id),
                     sous_projets=nb_lots.get(mission.id, 0),
                     parent=(
                         par_id.get(mission.parent_id)

@@ -1,5 +1,6 @@
 """Traduction des projets en schemas d'API."""
 
+from src.modules.projects.application.dtos.last_update import LastUpdate
 from src.modules.projects.application.use_cases.get_board import Board
 from src.modules.projects.application.use_cases.get_project_detail import ProjectDetail
 from src.modules.projects.application.use_cases.list_projects import ListedProject
@@ -62,6 +63,17 @@ def en_pastille(user: User) -> BoardMemberResponse:
     )
 
 
+def en_derniere_maj(derniere: LastUpdate | None) -> LastUpdateResponse | None:
+    """Le dernier message d'un fil, tel qu'une ligne ou une carte l'annonce."""
+    if derniere is None:
+        return None
+    return LastUpdateResponse(
+        author=en_pastille(derniere.author),
+        texte=derniere.update.texte,
+        publiee_le=derniere.update.publiee_le,
+    )
+
+
 def to_listed_project_response(listed: ListedProject) -> ProjectListItemResponse:
     return ProjectListItemResponse(
         project=to_project_response(listed.project, is_deletable=listed.is_deletable),
@@ -69,15 +81,7 @@ def to_listed_project_response(listed: ListedProject) -> ProjectListItemResponse
         intervenants=[en_pastille(u) for u in listed.intervenants],
         realise_j=listed.realise_j,
         commentaires=listed.commentaires,
-        derniere_maj=(
-            None
-            if listed.derniere_maj is None
-            else LastUpdateResponse(
-                author=en_pastille(listed.derniere_maj.author),
-                texte=listed.derniere_maj.update.texte,
-                publiee_le=listed.derniere_maj.update.publiee_le,
-            )
-        ),
+        derniere_maj=en_derniere_maj(listed.derniere_maj),
     )
 
 
@@ -99,6 +103,7 @@ def to_board_response(board: Board) -> BoardResponse:
                             for membre in carte.intervenants
                         ],
                         commentaires=carte.commentaires,
+                        derniere_maj=en_derniere_maj(carte.derniere_maj),
                         sous_projets=carte.sous_projets,
                         parent=(
                             BoardParentResponse(

@@ -9,6 +9,8 @@ import type { BoardCardResponse } from "@/lib/api/generated/model";
 
 interface SortableProjectCardProps {
   carte: BoardCardResponse;
+  /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
+  maintenant: Date;
   onIntervenantsChange?: () => void | Promise<void>;
   onOpen?: (projectId: number) => void;
   /** Le tableau est filtre : la carte se lit et s'ouvre, mais ne se range plus. */
@@ -23,6 +25,7 @@ interface SortableProjectCardProps {
  */
 export function SortableProjectCard({
   carte,
+  maintenant,
   onIntervenantsChange,
   onOpen,
   figee,
@@ -47,6 +50,7 @@ export function SortableProjectCard({
       <div className={isDragging ? "invisible" : undefined}>
         <ProjectCard
           carte={carte}
+          maintenant={maintenant}
           onIntervenantsChange={onIntervenantsChange}
           onOpen={onOpen}
           poignee={

@@ -9,10 +9,12 @@ import {
 
 import { CardCounter } from "@/components/atoms/CardCounter";
 import { IntervenantsPicker } from "@/components/atoms/IntervenantsPicker";
+import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 import { avancement } from "@/lib/board";
 import { formatJoursDecimal } from "@/lib/dates";
+import { depuis } from "@/lib/dates-relatives";
 
 /** Teinte du rapport consomme/estime selon l'etat d'avancement. */
 const TEINTES: Record<ReturnType<typeof avancement>, string> = {
@@ -24,6 +26,8 @@ const TEINTES: Record<ReturnType<typeof avancement>, string> = {
 
 interface ProjectCardProps {
   carte: BoardCardResponse;
+  /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
+  maintenant: Date;
   /**
    * Poignee de glissement, fournie par la couche de tri. `null` n'en montre
    * aucune : une carte qu'on ne peut pas deplacer ne doit pas en porter le
@@ -40,6 +44,7 @@ interface ProjectCardProps {
 /** Une mission sur le tableau de bord. */
 export function ProjectCard({
   carte,
+  maintenant,
   poignee,
   enDeplacement,
   onIntervenantsChange,
@@ -48,6 +53,25 @@ export function ProjectCard({
   const { project, parent } = carte;
   const archivee = !project.actif;
   const etat = avancement(carte.consomme_j, project.estime_j);
+  const derniere = carte.derniere_maj;
+
+  // Le dernier message en entier et mis en forme, comme dans le referentiel :
+  // la carte dit combien de messages porte le fil, l'apercu dit s'il faut
+  // l'ouvrir.
+  const apercu = derniere && (
+    <>
+      {/* Le trait separe la signature du propos : sans lui, la premiere ligne
+          du message se lit comme la suite de l'entete. Les marges negatives le
+          menent aux bords de la bulle, dont il traverse le rembourrage. */}
+      <p className="-mx-3 mb-2 border-b border-slate-200 px-3 pb-2 text-xs text-slate-500">
+        <span className="font-medium text-slate-700">
+          {derniere.author.display_name}
+        </span>{" "}
+        · {depuis(derniere.publiee_le, maintenant)}
+      </p>
+      <MarkdownView texte={derniere.texte} />
+    </>
+  );
 
   return (
     <article
@@ -170,6 +194,9 @@ export function ProjectCard({
             nombre={carte.commentaires}
             libelle={["commentaire", "commentaires"]}
             vide="Aucun commentaire"
+            // La copie qui suit le curseur n'annonce rien : une bulle ouverte
+            // sous la carte en plein deplacement masquerait la ou elle tombe.
+            apercu={enDeplacement ? undefined : apercu}
           />
           <CardCounter
             icone={SquareStack}
