@@ -165,6 +165,8 @@ class BoardCardResponse(BaseModel):
 
     project: ProjectResponse
     consumed_days: float
+    #: Jours de construction seuls : c'est ce que l'estime couvre.
+    build_days: float
     contributors: list[BoardMemberResponse]
     comments: int
     #: The latest message of the thread, absent while there is nothing to read.

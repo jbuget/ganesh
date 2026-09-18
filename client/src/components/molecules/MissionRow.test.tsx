@@ -12,7 +12,19 @@ const member = (id: number, name: string) => ({
   initials: name.slice(0, 2).toUpperCase(),
 });
 
-const mission = (fields: Record<string, unknown> = {}): ProjectListItemResponse =>
+const cost = (over: Record<string, unknown> = {}) => ({
+  build_days: 0,
+  run_days: 0,
+  estimated_days: 12,
+  monthly_run_rate: null,
+  has_overrun: false,
+  ...over,
+});
+
+const mission = (
+  fields: Record<string, unknown> = {},
+  costs: { cost?: Record<string, unknown>; tree_cost?: Record<string, unknown> } = {},
+): ProjectListItemResponse =>
   ({
     project: {
       id: 1,
@@ -28,6 +40,8 @@ const mission = (fields: Record<string, unknown> = {}): ProjectListItemResponse 
     leads: [],
     contributors: [],
     delivered_days: 0,
+    cost: cost(costs.cost),
+    tree_cost: cost(costs.tree_cost ?? costs.cost),
     comments: 0,
     latest_update: null,
   }) as unknown as ProjectListItemResponse;
@@ -41,10 +55,10 @@ function line(content: React.ReactNode) {
 }
 
 describe("MissionRow", () => {
-  it("shows the phase, the category and the estimate", () => {
+  it("shows the phase, the category and the build against its estimate", () => {
     line(
       <MissionRow
-        mission={mission()}
+        mission={mission({}, { cost: { build_days: 5 } })}
         now={NOW}
         onOpen={() => {}}
         onOpenThread={() => {}}
@@ -53,7 +67,99 @@ describe("MissionRow", () => {
 
     expect(screen.getByText("Réalisation")).toBeInTheDocument();
     expect(screen.getByText("Automatiser & fluidifier")).toBeInTheDocument();
-    expect(screen.getByText("12 jrs.")).toBeInTheDocument();
+    expect(screen.getByText("5/12 jrs.")).toBeInTheDocument();
+  });
+
+  it("flags a build past its estimate", () => {
+    line(
+      <MissionRow
+        mission={mission({}, { cost: { build_days: 18, has_overrun: true } })}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("18/12 jrs.")).toHaveClass("text-red-700");
+  });
+
+  it("never lets the run make a mission overrun its build estimate", () => {
+    // Portail a ete estime a douze jours et maintenu quarante : il n'est pas
+    // en retard, l'estime n'a jamais couvert son exploitation.
+    line(
+      <MissionRow
+        mission={mission({}, { cost: { build_days: 10, run_days: 40 } })}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("10/12 jrs.")).not.toHaveClass("text-red-700");
+  });
+
+  it("reads the run as a total and a pace", () => {
+    line(
+      <MissionRow
+        mission={mission({}, { cost: { run_days: 38, monthly_run_rate: 2.1 } })}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.getByText(/38 jrs\./)).toBeInTheDocument();
+    expect(screen.getByText(/2,1 j\/mois/)).toBeInTheDocument();
+  });
+
+  it("announces no pace on a mission that has not run long enough", () => {
+    line(
+      <MissionRow
+        mission={mission({}, { cost: { run_days: 2, monthly_run_rate: null } })}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText(/j\/mois/)).not.toBeInTheDocument();
+  });
+
+  it("carries what its work packages cost while it is folded", () => {
+    // Repliee, la ligne dit ce que le service a coute en entier ; depliee,
+    // chaque ligne reprend son chiffre propre.
+    line(
+      <MissionRow
+        mission={mission(
+          {},
+          { cost: { build_days: 10 }, tree_cost: { build_days: 24 } },
+        )}
+        workPackages={2}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("24/12 jrs.")).toBeInTheDocument();
+  });
+
+  it("reads its own cost again once unfolded", () => {
+    line(
+      <MissionRow
+        mission={mission(
+          {},
+          { cost: { build_days: 10 }, tree_cost: { build_days: 24 } },
+        )}
+        workPackages={2}
+        expanded
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("10/12 jrs.")).toBeInTheDocument();
   });
 
   it("carries the declared priority", () => {
@@ -84,22 +190,17 @@ describe("MissionRow", () => {
     });
   });
 
-  it("shows delivered beside estimated", () => {
-    const consumed = {
-      ...mission(),
-      delivered_days: 4.5,
-    } as ProjectListItemResponse;
-
+  it("writes half days in decimal rather than as a fraction", () => {
     line(
       <MissionRow
-        mission={consumed}
+        mission={mission({}, { cost: { build_days: 4.5, estimated_days: null } })}
         now={NOW}
         onOpen={() => {}}
         onOpenThread={() => {}}
       />,
     );
 
-    expect(screen.getByText("4.5 jrs.")).toBeInTheDocument();
+    expect(screen.getByText("4,5 jrs.")).toBeInTheDocument();
   });
 
   it("leaves delivered empty while nothing is declared", () => {
@@ -252,10 +353,26 @@ describe("MissionRow", () => {
     expect(screen.getByText("NI")).toBeInTheDocument();
   });
 
+  it("shows the estimate alone while nothing has been spent", () => {
+    line(
+      <MissionRow
+        mission={mission()}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("12 jrs.")).toBeInTheDocument();
+  });
+
   it("leaves the columns empty rather than inventing a value", () => {
     line(
       <MissionRow
-        mission={mission({ category: null, estimated_days: null })}
+        mission={mission(
+          { category: null, estimated_days: null },
+          { cost: { estimated_days: null } },
+        )}
         now={NOW}
         onOpen={() => {}}
         onOpenThread={() => {}}

@@ -10,6 +10,7 @@ const NOW = new Date("2026-09-16T11:00:00Z");
 const card = (over: Record<string, unknown> = {}): BoardCardResponse =>
   ({
     consumed_days: 5,
+    build_days: 5,
     contributors: [{ id: 1, display_name: "Léa Chen", initials: "LC" }],
     comments: 0,
     latest_update: null,
@@ -42,14 +43,14 @@ describe("ProjectCard", () => {
     expect(screen.getByRole("heading")).toHaveTextContent("Portail bailleurs");
   });
 
-  it("compares consumption against the estimate", () => {
+  it("compares the build against the estimate", () => {
     render(<ProjectCard now={NOW} card={card()} />);
 
     expect(screen.getByText("5/20 jrs. estimés")).toBeInTheDocument();
   });
 
   it("writes half days in decimal rather than as a fraction", () => {
-    render(<ProjectCard now={NOW} card={card({ consumed_days: 7.5 })} />);
+    render(<ProjectCard now={NOW} card={card({ build_days: 7.5 })} />);
 
     expect(screen.getByText("7,5/20 jrs. estimés")).toBeInTheDocument();
   });
@@ -75,13 +76,13 @@ describe("ProjectCard", () => {
   });
 
   it("flags going over the budget", () => {
-    render(<ProjectCard now={NOW} card={card({ consumed_days: 25 })} />);
+    render(<ProjectCard now={NOW} card={card({ build_days: 25 })} />);
 
     expect(screen.getByText("25/20 jrs. estimés").className).toContain("text-red-700");
   });
 
   it("warns as the budget draws near", () => {
-    render(<ProjectCard now={NOW} card={card({ consumed_days: 17 })} />);
+    render(<ProjectCard now={NOW} card={card({ build_days: 17 })} />);
 
     expect(screen.getByText("17/20 jrs. estimés").className).toContain(
       "text-amber-700",
@@ -89,7 +90,7 @@ describe("ProjectCard", () => {
   });
 
   it("stays quiet far from the budget", () => {
-    render(<ProjectCard now={NOW} card={card({ consumed_days: 3 })} />);
+    render(<ProjectCard now={NOW} card={card({ build_days: 3 })} />);
 
     expect(screen.getByText("3/20 jrs. estimés").className).not.toContain(
       "text-red-700",
@@ -278,10 +279,10 @@ describe("opening the mission", () => {
 
     fireEvent.mouseMove(screen.getByLabelText("2 commentaires"));
 
-    const preview = screen.getByRole("tooltip");
-    expect(preview).toHaveTextContent("J. Buget");
-    expect(preview).toHaveTextContent("il y a 2 h");
-    expect(preview).toHaveTextContent("Le cadrage commence lundi");
+    const apercu = screen.getByRole("tooltip");
+    expect(apercu).toHaveTextContent("J. Buget");
+    expect(apercu).toHaveTextContent("il y a 2 h");
+    expect(apercu).toHaveTextContent("Le cadrage commence lundi");
   });
 
   it("shows no preview when the thread is empty", () => {

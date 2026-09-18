@@ -2,10 +2,12 @@
 
 import { ChevronRight } from "lucide-react";
 
+import { BuildCost } from "@/components/atoms/BuildCost";
 import { CategoryMark } from "@/components/atoms/CategoryMark";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import { PriorityMark } from "@/components/atoms/PriorityMark";
+import { RunCost } from "@/components/atoms/RunCost";
 import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
@@ -49,6 +51,16 @@ export function MissionRow({
 }: MissionRowProps) {
   const { project } = mission;
   const latest = mission.latest_update;
+
+  // Folded, a row tells what the whole service cost — its own build, that of
+  // its evolutions, and the run of all of it. Unfolded, every row speaks of
+  // itself again, and the totals would be counted twice.
+  //
+  // The reading follows what the screen shows, not what a filter kept: a
+  // mission whose work packages are hidden still carries their cost, because
+  // it is still the cost of that service. For a mission without any, both
+  // figures are the same anyway.
+  const cost = expanded ? mission.cost : mission.tree_cost;
 
   // The latest message in full and formatted, as it reads in the thread: a
   // truncated preview would force opening the panel for the end of a sentence.
@@ -160,15 +172,16 @@ export function MissionRow({
         <CategoryMark value={project.category} />
       </TableCell>
 
+      {/* Build against its estimate, run apart: the estimate covered the
+          construction alone, and comparing the whole life of a service to it
+          would declare every living mission late. A zero is not a value to
+          read: a mission nobody has declared on stays empty. */}
       <TableCell className="text-right tabular-nums text-slate-600">
-        {project.estimated_days != null && `${project.estimated_days} jrs.`}
+        <BuildCost cost={cost} />
       </TableCell>
 
-      {/* Delivered sits beside estimated so the two compare at a glance. A
-          zero is not a value to read: a mission nobody has declared on stays
-          empty. */}
       <TableCell className="text-right tabular-nums text-slate-600">
-        {mission.delivered_days > 0 && `${mission.delivered_days} jrs.`}
+        <RunCost cost={cost} />
       </TableCell>
 
       <TableCell>

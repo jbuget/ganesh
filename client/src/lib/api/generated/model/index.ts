@@ -44,6 +44,7 @@ export * from "./phaseReachedResponse";
 export * from "./postUpdateRequest";
 export * from "./projectCategory";
 export * from "./projectContributionResponse";
+export * from "./projectCostResponse";
 export * from "./projectDetailResponse";
 export * from "./projectKind";
 export * from "./projectLinkResponse";

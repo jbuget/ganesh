@@ -10,10 +10,18 @@ import {
   type MissionSort,
 } from "@/lib/mission-sort";
 
+const cost = (build = 0, run = 0, estimated: number | null = null) => ({
+  build_days: build,
+  run_days: run,
+  estimated_days: estimated,
+  monthly_run_rate: null,
+  has_overrun: estimated != null && build > estimated,
+});
+
 const mission = (
   label: string,
   fields: Partial<ProjectListItemResponse["project"]> = {},
-  delivered = 0,
+  spent: { build?: number; run?: number } = {},
 ): ProjectListItemResponse =>
   ({
     project: {
@@ -28,7 +36,9 @@ const mission = (
     },
     leads: [],
     contributors: [],
-    delivered_days: delivered,
+    cost: cost(spent.build, spent.run, fields.estimated_days ?? null),
+    tree_cost: cost(spent.build, spent.run, fields.estimated_days ?? null),
+    delivered_days: (spent.build ?? 0) + (spent.run ?? 0),
     comments: 0,
     latest_update: null,
   }) as ProjectListItemResponse;
@@ -94,22 +104,25 @@ describe("the reference list order", () => {
     ]);
   });
 
-  it("arranges estimates by value, not by how they are written", () => {
+  it("arranges builds by value, not by how they are written", () => {
     const missions = [
-      mission("Neuf", { estimated_days: 9 }),
-      mission("Dix", { estimated_days: 10 }),
+      mission("Neuf", {}, { build: 9 }),
+      mission("Dix", {}, { build: 10 }),
     ];
 
-    expect(labels(missions, { column: "estimated", direction: "asc" })).toEqual([
+    expect(labels(missions, { column: "build", direction: "asc" })).toEqual([
       "Neuf",
       "Dix",
     ]);
   });
 
-  it("arranges delivered days by value", () => {
-    const missions = [mission("Beaucoup", {}, 12), mission("Peu", {}, 3)];
+  it("arranges run days by value", () => {
+    const missions = [
+      mission("Beaucoup", {}, { run: 12 }),
+      mission("Peu", {}, { run: 3 }),
+    ];
 
-    expect(labels(missions, { column: "delivered", direction: "asc" })).toEqual([
+    expect(labels(missions, { column: "run", direction: "asc" })).toEqual([
       "Peu",
       "Beaucoup",
     ]);
@@ -118,16 +131,13 @@ describe("the reference list order", () => {
   it("leaves missing values at the end of the list, in both directions", () => {
     // A missing estimate is not a small estimate: it has nothing to say, and
     // must not sit at the top when one is looking for the big jobs.
-    const missions = [
-      mission("Sans", { estimated_days: null }),
-      mission("Avec", { estimated_days: 5 }),
-    ];
+    const missions = [mission("Sans"), mission("Avec", {}, { build: 5 })];
 
-    expect(labels(missions, { column: "estimated", direction: "asc" })).toEqual([
+    expect(labels(missions, { column: "build", direction: "asc" })).toEqual([
       "Avec",
       "Sans",
     ]);
-    expect(labels(missions, { column: "estimated", direction: "desc" })).toEqual([
+    expect(labels(missions, { column: "build", direction: "desc" })).toEqual([
       "Avec",
       "Sans",
     ]);
@@ -135,11 +145,11 @@ describe("the reference list order", () => {
 
   it("settles by name two missions the column ties", () => {
     const missions = [
-      mission("Zèbre", { estimated_days: 5 }),
-      mission("Alpha", { estimated_days: 5 }),
+      mission("Zèbre", {}, { build: 5 }),
+      mission("Alpha", {}, { build: 5 }),
     ];
 
-    expect(labels(missions, { column: "estimated", direction: "asc" })).toEqual([
+    expect(labels(missions, { column: "build", direction: "asc" })).toEqual([
       "Alpha",
       "Zèbre",
     ]);
@@ -148,27 +158,25 @@ describe("the reference list order", () => {
 
 describe("the cycle of a column", () => {
   it("starts ascending on the first click", () => {
-    expect(nextSort(NO_SORT, "estimated")).toEqual({
-      column: "estimated",
+    expect(nextSort(NO_SORT, "build")).toEqual({
+      column: "build",
       direction: "asc",
     });
   });
 
   it("moves to descending on the second", () => {
-    expect(nextSort({ column: "estimated", direction: "asc" }, "estimated")).toEqual({
-      column: "estimated",
+    expect(nextSort({ column: "build", direction: "asc" }, "build")).toEqual({
+      column: "build",
       direction: "desc",
     });
   });
 
   it("returns to the reference list order on the third", () => {
-    expect(nextSort({ column: "estimated", direction: "desc" }, "estimated")).toEqual(
-      NO_SORT,
-    );
+    expect(nextSort({ column: "build", direction: "desc" }, "build")).toEqual(NO_SORT);
   });
 
   it("starts ascending again when the column changes", () => {
-    expect(nextSort({ column: "estimated", direction: "desc" }, "phase")).toEqual({
+    expect(nextSort({ column: "build", direction: "desc" }, "phase")).toEqual({
       column: "phase",
       direction: "asc",
     });

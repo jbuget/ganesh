@@ -117,8 +117,7 @@ async def test_run_never_makes_a_mission_overrun_its_build_estimate() -> None:
     assert par_id[10].cost.has_overrun is False
 
 
-async def test_a_build_past_its_estimate_is_reported(
-) -> None:
+async def test_a_build_past_its_estimate_is_reported() -> None:
     par_id = await listed(
         days_spent(10, TODAY - timedelta(days=300), ProjectStatus.DEVELOPMENT, 24)
     )

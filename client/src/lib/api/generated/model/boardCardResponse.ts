@@ -15,6 +15,7 @@ import type { ProjectResponse } from "./projectResponse";
 export interface BoardCardResponse {
   project: ProjectResponse;
   consumed_days: number;
+  build_days: number;
   contributors: BoardMemberResponse[];
   comments: number;
   latest_update: LastUpdateResponse | null;

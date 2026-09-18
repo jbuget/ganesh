@@ -24,6 +24,7 @@ const card = (id: number, label: string): BoardCardResponse =>
       is_deletable: false,
     },
     consumed_days: 5,
+    build_days: 5,
     contributors: [{ id: 1, display_name: "Léa Chen", initials: "LC" }],
   }) as BoardCardResponse;
 

@@ -16,6 +16,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
+from src.modules.projects.domain.services.project_cost import split_delivered
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
@@ -27,6 +28,9 @@ class BoardCard:
     project: Project
     consumed_days: float
     contributors: list[User]
+    #: Days spent building it, the run left apart: it is the only count the
+    #: estimate covers.
+    build_days: float = 0.0
     #: Live updates in the follow-up thread.
     comments: int = 0
     #: Work packages attached to the mission.
@@ -127,10 +131,17 @@ class GetBoardUseCase:
                 continue
             entries = await self._entries.list_for_project(mission.id)
 
-            consumed = round(
-                sum(float(e.value) for e in entries if not e.is_forecast(today)),
-                2,
-            )
+            delivered = [e for e in entries if not e.is_forecast(today)]
+            consumed = round(sum(float(e.value) for e in delivered), 2)
+
+            # The estimate only covers the construction: comparing the whole
+            # total to it would declare every maintained service late.
+            by_phase: dict[ProjectStatus | None, float] = {}
+            for entry in delivered:
+                by_phase[entry.status_at_entry] = by_phase.get(
+                    entry.status_at_entry, 0.0
+                ) + float(entry.value)
+            cost = split_delivered(by_phase)
 
             # Contributors are not deduced from entries: a mission can run for
             # weeks without a single one, then claim a day on a bug. What the
@@ -145,6 +156,7 @@ class GetBoardUseCase:
                 BoardCard(
                     project=mission,
                     consumed_days=consumed,
+                    build_days=cost.build_days,
                     contributors=[users[uid] for uid in contributors if uid in users],
                     comments=comments.get(mission.id, 0),
                     latest_update=latest(mission.id),

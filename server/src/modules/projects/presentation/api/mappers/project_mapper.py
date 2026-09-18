@@ -113,6 +113,7 @@ def to_board_response(board: Board) -> BoardResponse:
                     BoardCardResponse(
                         project=to_project_response(card.project),
                         consumed_days=card.consumed_days,
+                        build_days=card.build_days,
                         contributors=[
                             BoardMemberResponse(
                                 id=membre.id or 0,

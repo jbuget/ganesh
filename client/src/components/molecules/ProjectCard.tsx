@@ -51,7 +51,9 @@ export function ProjectCard({
 }: ProjectCardProps) {
   const { project, parent } = card;
   const archived = !project.is_active;
-  const state = progress(card.consumed_days, project.estimated_days);
+  // The estimate only covers the construction: a service kept alive for two
+  // years is not late because it is still running.
+  const state = progress(card.build_days, project.estimated_days);
   const latest = card.latest_update;
 
   // The latest message in full and formatted, as in the reference list: the
@@ -153,7 +155,7 @@ export function ProjectCard({
 
       <p className={`mt-2.5 text-xs tabular-nums ${SHADES[state]}`}>
         {project.estimated_days
-          ? `${formatDecimalDays(card.consumed_days)}/${project.estimated_days} jrs. estimés`
+          ? `${formatDecimalDays(card.build_days)}/${project.estimated_days} jrs. estimés`
           : `${formatDecimalDays(card.consumed_days)} jrs. consommés`}
       </p>
 

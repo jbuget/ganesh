@@ -131,16 +131,19 @@ export function ProjectsPage() {
                     sorted={sorted}
                     onToggle={sortBy}
                   />
+                  {/* Build against its estimate, run apart: the two answer
+                      different questions, and a single column carrying both
+                      would no longer sort. */}
                   <SortableColumnHeader
-                    column="estimated"
-                    label="Estimé"
+                    column="build"
+                    label="Build"
                     sorted={sorted}
                     onToggle={sortBy}
                     alignRight
                   />
                   <SortableColumnHeader
-                    column="delivered"
-                    label="Réalisé"
+                    column="run"
+                    label="Run"
                     sorted={sorted}
                     onToggle={sortBy}
                     alignRight
