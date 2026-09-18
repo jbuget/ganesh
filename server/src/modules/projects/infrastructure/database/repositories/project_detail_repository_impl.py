@@ -64,6 +64,25 @@ class SqlProjectDetailRepository(ProjectDetailRepository):
             for row in result.scalars().all()
         ]
 
+    async def list_links_by_project(self) -> dict[int, list[ProjectLink]]:
+        result = await self._session.execute(
+            select(ProjectLinkModel).order_by(
+                ProjectLinkModel.project_id, ProjectLinkModel.id
+            )
+        )
+        by_project: dict[int, list[ProjectLink]] = {}
+        for row in result.scalars().all():
+            by_project.setdefault(row.project_id, []).append(
+                ProjectLink(
+                    id=row.id,
+                    project_id=row.project_id,
+                    label=row.label,
+                    url=row.url,
+                    icon=row.icon,
+                )
+            )
+        return by_project
+
     async def add_link(self, link: ProjectLink) -> ProjectLink:
         model = ProjectLinkModel(
             project_id=link.project_id,

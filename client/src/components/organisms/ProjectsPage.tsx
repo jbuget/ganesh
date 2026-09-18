@@ -97,8 +97,8 @@ export function ProjectsPage() {
         </>
       }
     >
-      {/* Wide enough for nine columns, not so wide as to stretch the names. */}
-      <div className="max-w-[1300px]">
+      {/* Wide enough for ten columns, not so wide as to stretch the names. */}
+      <div className="max-w-[1400px]">
         {screen.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
         {screen.tree.length === 0 && !screen.isLoading && (
@@ -182,7 +182,10 @@ export function ProjectsPage() {
                   {/* Who looks after it does not sort: a column of badges has no
                       order the reader would have in mind. */}
                   <TableHead className={MEMBERS_COLUMN}>Référents</TableHead>
-                  <TableHead>Intervenants</TableHead>
+                  <TableHead className={MEMBERS_COLUMN}>Intervenants</TableHead>
+                  {/* Last, and without a width: it takes what is left when the
+                      screen is wider than the table. */}
+                  <TableHead>Liens</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -222,7 +225,6 @@ export function ProjectsPage() {
             </Table>
           </div>
         )}
-
       </div>
 
       <DeclareProjectDialog

@@ -29,6 +29,15 @@ class ProjectDetailRepository(ABC):
     async def list_links(self, project_id: int) -> list[ProjectLink]: ...
 
     @abstractmethod
+    async def list_links_by_project(self) -> dict[int, list[ProjectLink]]:
+        """The links of every mission, read in one go.
+
+        The reference list shows them in a column: asking for them mission by
+        mission would make the rows arrive one after the other.
+        """
+        ...
+
+    @abstractmethod
     async def add_link(self, link: ProjectLink) -> ProjectLink: ...
 
     @abstractmethod

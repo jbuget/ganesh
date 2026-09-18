@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.projects.application.dtos.last_update import LastUpdate
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
+from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
@@ -47,6 +48,8 @@ class ListedProject:
     cost: ProjectCost = NO_COST
     #: The same count, plus what its work packages cost.
     tree_cost: ProjectCost = NO_COST
+    #: The useful addresses attached to the mission, in the order they were added.
+    links: list[ProjectLink] = field(default_factory=list)
     #: Live updates in the follow-up thread.
     comments: int = 0
     #: The latest of them, to announce the thread without opening it.
@@ -86,6 +89,7 @@ class ListProjectsUseCase:
         delivered = await self._entries.sum_realised_by_project(day)
         comments = await self._updates.count_by_project()
         latest_by_project = await self._updates.latest_by_project()
+        links = await self._details.list_links_by_project()
 
         # The count is read over the whole tree, work packages a filter left
         # out included: what an evolution cost is still the cost of the service.
@@ -125,6 +129,7 @@ class ListProjectsUseCase:
                 leads=people(mission.id or 0, ProjectRole.LEAD),
                 contributors=people(mission.id or 0, ProjectRole.CONTRIBUTOR),
                 delivered_days=delivered.get(mission.id or 0, 0.0),
+                links=links.get(mission.id or 0, []),
                 cost=costs.own.get(mission.id or 0, NO_COST),
                 tree_cost=costs.tree.get(mission.id or 0, NO_COST),
                 comments=comments.get(mission.id or 0, 0),

@@ -9,6 +9,7 @@ from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.project_link import LinkIcon, ProjectLink
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.users.domain.entities.user import Role, User
@@ -204,3 +205,41 @@ async def test_a_thread_entirely_removed_shows_nothing() -> None:
     ).execute()
 
     assert listed[0].latest_update is None
+
+
+async def test_a_mission_carries_its_links() -> None:
+    """The reference list shows them in a column: they travel with the row."""
+    details = InMemoryProjectDetailRepository()
+    await details.add_link(
+        ProjectLink(
+            id=None,
+            project_id=10,
+            label="Le depot",
+            url="https://github.com/waat/portail",
+            icon=LinkIcon.REPOSITORY,
+        )
+    )
+
+    listed = await build(details=details).execute()
+
+    assert [(link.label, link.icon) for link in listed[0].links] == [
+        ("Le depot", LinkIcon.REPOSITORY)
+    ]
+
+
+async def test_a_mission_without_a_link_carries_none() -> None:
+    listed = await build().execute()
+
+    assert listed[0].links == []
+
+
+async def test_the_links_of_another_mission_stay_with_it() -> None:
+    """One read serves the whole list: each row must get its own links."""
+    details = InMemoryProjectDetailRepository()
+    await details.add_link(
+        ProjectLink(id=None, project_id=99, label="Ailleurs", url="https://ailleurs.fr")
+    )
+
+    listed = await build(details=details).execute()
+
+    assert listed[0].links == []

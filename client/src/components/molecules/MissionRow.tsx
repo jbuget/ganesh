@@ -7,6 +7,7 @@ import { CategoryMark } from "@/components/atoms/CategoryMark";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import { PriorityMark } from "@/components/atoms/PriorityMark";
+import { ProjectLinks } from "@/components/atoms/ProjectLinks";
 import { RunCost } from "@/components/atoms/RunCost";
 import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -221,6 +222,13 @@ export function MissionRow({
 
       <TableCell>
         <MemberAvatars members={mission.contributors} />
+      </TableCell>
+
+      {/* Where the mission's work is written down. The icons stand on their
+          own: in a row there is no room for their labels, which come back on
+          hover. */}
+      <TableCell>
+        <ProjectLinks links={mission.links} />
       </TableCell>
     </TableRow>
   );

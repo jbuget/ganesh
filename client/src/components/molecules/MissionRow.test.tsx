@@ -44,6 +44,7 @@ const mission = (
     tree_cost: cost(costs.tree_cost ?? costs.cost),
     comments: 0,
     latest_update: null,
+    links: [],
   }) as unknown as ProjectListItemResponse;
 
 function line(content: React.ReactNode) {
@@ -68,6 +69,34 @@ describe("MissionRow", () => {
     expect(screen.getByText("Réalisation")).toBeInTheDocument();
     expect(screen.getByText("Automatiser & fluidifier")).toBeInTheDocument();
     expect(screen.getByText("5/12 jrs.")).toBeInTheDocument();
+  });
+
+  it("shows the mission's links, which the panel alone used to carry", () => {
+    line(
+      <MissionRow
+        mission={
+          {
+            ...mission({}),
+            links: [
+              {
+                id: 1,
+                label: "Le dépôt",
+                url: "https://github.com/waat/portail",
+                icon: "repository",
+              },
+            ],
+          } as ProjectListItemResponse
+        }
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: /Le dépôt/ })).toHaveAttribute(
+      "href",
+      "https://github.com/waat/portail",
+    );
   });
 
   it("flags a build past its estimate", () => {

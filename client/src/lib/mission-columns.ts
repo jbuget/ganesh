@@ -75,4 +75,4 @@ export const MEMBERS_COLUMN = "w-[130px]";
  * nothing would show.
  */
 export const MISSIONS_TABLE =
-  "w-[1400px] table-fixed border-separate border-spacing-0 [&_tbody_td]:border-b [&_tbody_td]:border-slate-200";
+  "w-[1500px] table-fixed border-separate border-spacing-0 [&_tbody_td]:border-b [&_tbody_td]:border-slate-200";
