@@ -1,6 +1,9 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
+
+import { useTooltipCurseur } from "@/lib/use-tooltip-curseur";
 
 interface CardCounterProps {
   icone: LucideIcon;
@@ -9,6 +12,14 @@ interface CardCounterProps {
   libelle: [string, string];
   /** Ce qu'annonce le lecteur d'ecran quand il n'y a rien a compter. */
   vide: string;
+  /**
+   * Ce que montre l'infobulle au survol — le dernier message, mis en forme.
+   *
+   * Il vient du parent et non d'ici : le rendu du markdown est un autre
+   * composant, et un atom n'en compose aucun. Absent, le decompte se montre
+   * sans infobulle.
+   */
+  apercu?: ReactNode;
 }
 
 /**
@@ -18,19 +29,33 @@ interface CardCounterProps {
  * forme d'une mission a l'autre, et l'absence se lit alors aussi vite qu'un
  * total. C'est le parti pris de Monday, dont les cartes nous servent de
  * reference.
+ *
+ * Quand le decompte annonce un fil, l'infobulle en donne le dernier message,
+ * comme dans le referentiel : savoir qu'il y a trois messages ne dit pas s'il
+ * faut les lire.
  */
-export function CardCounter({ icone: Icone, nombre, libelle, vide }: CardCounterProps) {
+export function CardCounter({
+  icone: Icone,
+  nombre,
+  libelle,
+  vide,
+  apercu,
+}: CardCounterProps) {
   const [singulier, pluriel] = libelle;
+  const { tooltip, suivre, quitter } = useTooltipCurseur({ riche: true });
 
   return (
     <span
       aria-label={nombre === 0 ? vide : `${nombre} ${nombre > 1 ? pluriel : singulier}`}
+      onMouseMove={(event) => apercu && suivre(event, apercu)}
+      onMouseLeave={quitter}
       className={`flex items-center gap-1 text-xs tabular-nums ${
         nombre === 0 ? "text-slate-300" : "text-slate-500"
       }`}
     >
       {nombre > 0 && nombre}
       <Icone className="size-3.5 shrink-0" aria-hidden />
+      {tooltip}
     </span>
   );
 }

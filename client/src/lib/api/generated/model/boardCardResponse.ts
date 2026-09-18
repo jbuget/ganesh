@@ -6,6 +6,7 @@
  */
 import type { BoardMemberResponse } from "./boardMemberResponse";
 import type { BoardParentResponse } from "./boardParentResponse";
+import type { LastUpdateResponse } from "./lastUpdateResponse";
 import type { ProjectResponse } from "./projectResponse";
 
 /**
@@ -16,6 +17,7 @@ export interface BoardCardResponse {
   consomme_j: number;
   intervenants: BoardMemberResponse[];
   commentaires: number;
+  derniere_maj: LastUpdateResponse | null;
   sous_projets: number;
   parent: BoardParentResponse | null;
 }

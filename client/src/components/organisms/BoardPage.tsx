@@ -14,6 +14,7 @@ import {
   type CollisionDetection,
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { useMemo } from "react";
 
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { PageLayout } from "@/components/organisms/PageLayout";
@@ -64,6 +65,10 @@ export function BoardPage() {
   // ce choix change.
   const board = useBoard(inclutLesArchivees(filtres));
   const glissement = useBoardDrag(board);
+
+  // Une seule heure de reference pour tout le tableau : « il y a 3 h » ne doit
+  // pas dependre du moment ou chaque carte se rend.
+  const maintenant = useMemo(() => new Date(), []);
 
   // La mission ouverte vit dans l'URL : un panneau se partage par un lien, et
   // le retour arriere le referme, comme on s'y attend d'un ecran a part.
@@ -148,6 +153,7 @@ export function BoardPage() {
                   key={statut}
                   statut={statut}
                   cartes={cartes}
+                  maintenant={maintenant}
                   onIntervenantsChange={board.recharger}
                   onOpen={panneau.ouvrir}
                   figees={actif}
@@ -165,7 +171,11 @@ export function BoardPage() {
             <DragOverlay dropAnimation={null}>
               {glissement.enDeplacement && (
                 <div className="w-64 rotate-2 scale-[1.02] cursor-grabbing">
-                  <ProjectCard carte={glissement.enDeplacement} enDeplacement />
+                  <ProjectCard
+                    carte={glissement.enDeplacement}
+                    maintenant={maintenant}
+                    enDeplacement
+                  />
                 </div>
               )}
             </DragOverlay>

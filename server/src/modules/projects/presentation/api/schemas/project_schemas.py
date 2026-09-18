@@ -146,6 +146,8 @@ class BoardCardResponse(BaseModel):
     consomme_j: float
     intervenants: list[BoardMemberResponse]
     commentaires: int
+    #: Le dernier message du fil, absent tant que rien ne se lit.
+    derniere_maj: LastUpdateResponse | None
     sous_projets: int
     parent: BoardParentResponse | None
 

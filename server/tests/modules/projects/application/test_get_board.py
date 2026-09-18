@@ -340,3 +340,54 @@ async def test_archived_sub_projects_are_counted_only_when_shown() -> None:
     assert (
         next(c for c in avec.colonnes[1].cartes if c.project.id == 1).sous_projets == 2
     )
+
+
+async def test_a_card_carries_its_latest_update() -> None:
+    """La carte annonce le dernier message, pour le lire sans ouvrir le fil."""
+    updates = InMemoryProjectUpdateRepository()
+    await updates.add(
+        ProjectUpdate(
+            id=None,
+            project_id=1,
+            author_id=1,
+            texte="Premier jet",
+            publiee_le=datetime(2026, 9, 10, 9, 0),
+        )
+    )
+    await updates.add(
+        ProjectUpdate(
+            id=None,
+            project_id=1,
+            author_id=2,
+            texte="Relecture",
+            publiee_le=datetime(2026, 9, 11, 9, 0),
+        )
+    )
+
+    board = await build([carte(1), carte(2)], updates=updates).execute(today=AUJOURDHUI)
+
+    par_mission = {c.project.id: c for c in board.colonnes[1].cartes}
+    derniere = par_mission[1].derniere_maj
+    assert derniere is not None
+    assert derniere.update.texte == "Relecture"
+    assert derniere.author == BOB
+    assert par_mission[2].derniere_maj is None
+
+
+async def test_a_removed_update_is_no_longer_announced() -> None:
+    """Un message retire disparait aussi de l'apercu."""
+    updates = InMemoryProjectUpdateRepository()
+    maj = await updates.add(
+        ProjectUpdate(
+            id=None,
+            project_id=1,
+            author_id=1,
+            texte="Premier jet",
+            publiee_le=datetime(2026, 9, 10, 9, 0),
+        )
+    )
+    maj.supprimer(par=1, a=datetime(2026, 9, 12, 9, 0))
+
+    board = await build([carte(1)], updates=updates).execute(today=AUJOURDHUI)
+
+    assert board.colonnes[1].cartes[0].derniere_maj is None

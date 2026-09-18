@@ -4,9 +4,9 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
+from src.modules.projects.application.dtos.last_update import LastUpdate
 from src.modules.projects.domain.entities.project import Project
 from src.modules.projects.domain.entities.project_role import ProjectRole
-from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -18,14 +18,6 @@ from src.modules.projects.domain.repositories.project_update_repository import (
 )
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
-
-
-@dataclass
-class LastUpdate:
-    """La derniere mise a jour lisible d'une mission, et qui l'a ecrite."""
-
-    update: ProjectUpdate
-    author: User
 
 
 @dataclass

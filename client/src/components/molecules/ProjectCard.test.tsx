@@ -4,11 +4,15 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { ProjectCard } from "./ProjectCard";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 
+/** Heure de reference figee : « il y a 2 h » doit rester stable d'un run a l'autre. */
+const MAINTENANT = new Date("2026-09-16T11:00:00Z");
+
 const carte = (over: Record<string, unknown> = {}): BoardCardResponse =>
   ({
     consomme_j: 5,
     intervenants: [{ id: 1, display_name: "Léa Chen", initiales: "LC" }],
     commentaires: 0,
+    derniere_maj: null,
     sous_projets: 0,
     parent: null,
     ...over,
@@ -33,49 +37,54 @@ const carte = (over: Record<string, unknown> = {}): BoardCardResponse =>
 
 describe("ProjectCard", () => {
   it("affiche le nom de la mission", () => {
-    render(<ProjectCard carte={carte()} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte()} />);
 
     expect(screen.getByRole("heading")).toHaveTextContent("Portail bailleurs");
   });
 
   it("compare le consommé à l'estimé", () => {
-    render(<ProjectCard carte={carte()} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte()} />);
 
     expect(screen.getByText("5/20 jrs. estimés")).toBeInTheDocument();
   });
 
   it("écrit les demi-journées en décimal plutôt qu'en fraction", () => {
-    render(<ProjectCard carte={carte({ consomme_j: 7.5 })} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte({ consomme_j: 7.5 })} />);
 
     expect(screen.getByText("7,5/20 jrs. estimés")).toBeInTheDocument();
   });
 
   it("se contente du consommé quand aucun estimé n'existe", () => {
-    render(<ProjectCard carte={carte({ project: { estime_j: null } })} />);
+    render(
+      <ProjectCard
+        maintenant={MAINTENANT}
+        carte={carte({ project: { estime_j: null } })}
+      />,
+    );
 
     expect(screen.getByText("5 jrs. consommés")).toBeInTheDocument();
   });
 
   it("ne charge pas la carte de la date de mise en service", () => {
-    render(<ProjectCard carte={carte()} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte()} />);
 
     expect(screen.queryByText(/Mise en service/)).toBeNull();
   });
 
   it("affiche les intervenants", () => {
-    render(<ProjectCard carte={carte()} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte()} />);
 
     expect(screen.getByText("LC")).toBeInTheDocument();
   });
 
   it("signale un dépassement du budget", () => {
-    render(<ProjectCard carte={carte({ consomme_j: 25 })} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte({ consomme_j: 25 })} />);
 
     expect(screen.getByText("25/20 jrs. estimés").className).toContain("text-red-700");
   });
 
   it("alerte à l'approche du budget", () => {
-    render(<ProjectCard carte={carte({ consomme_j: 17 })} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte({ consomme_j: 17 })} />);
 
     expect(screen.getByText("17/20 jrs. estimés").className).toContain(
       "text-amber-700",
@@ -83,7 +92,7 @@ describe("ProjectCard", () => {
   });
 
   it("reste discret loin du budget", () => {
-    render(<ProjectCard carte={carte({ consomme_j: 3 })} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte({ consomme_j: 3 })} />);
 
     expect(screen.getByText("3/20 jrs. estimés").className).not.toContain(
       "text-red-700",
@@ -96,7 +105,12 @@ describe("ce que la carte ne dit pas", () => {
   // s'en occupe. L'urgence et l'axe strategique se lisent dans la fiche et
   // dans le referentiel, qui sont faits pour comparer.
   it("laisse l'urgence et l'axe hors de la carte", () => {
-    render(<ProjectCard carte={carte({ project: { priorite: "critique" } })} />);
+    render(
+      <ProjectCard
+        maintenant={MAINTENANT}
+        carte={carte({ project: { priorite: "critique" } })}
+      />,
+    );
 
     expect(screen.queryByText("Critique")).toBeNull();
     expect(screen.queryByText("Innover & différencier")).toBeNull();
@@ -105,13 +119,18 @@ describe("ce que la carte ne dit pas", () => {
 
 describe("mission archivée", () => {
   it("se signale d'un coup d'œil", () => {
-    render(<ProjectCard carte={carte({ project: { actif: false } })} />);
+    render(
+      <ProjectCard
+        maintenant={MAINTENANT}
+        carte={carte({ project: { actif: false } })}
+      />,
+    );
 
     expect(screen.getByText("Archivée")).toBeInTheDocument();
   });
 
   it("ne marque rien sur une mission active", () => {
-    render(<ProjectCard carte={carte()} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte()} />);
 
     expect(screen.queryByText("Archivée")).toBeNull();
   });
@@ -119,19 +138,19 @@ describe("mission archivée", () => {
 
 describe("ce que la carte porte en pied", () => {
   it("compte les commentaires du fil de suivi", () => {
-    render(<ProjectCard carte={carte({ commentaires: 2 })} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte({ commentaires: 2 })} />);
 
     expect(screen.getByLabelText("2 commentaires")).toHaveTextContent("2");
   });
 
   it("accorde le libellé au singulier", () => {
-    render(<ProjectCard carte={carte({ commentaires: 1 })} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte({ commentaires: 1 })} />);
 
     expect(screen.getByLabelText("1 commentaire")).toBeInTheDocument();
   });
 
   it("compte les sous-projets", () => {
-    render(<ProjectCard carte={carte({ sous_projets: 11 })} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte({ sous_projets: 11 })} />);
 
     expect(screen.getByLabelText("11 sous-projets")).toHaveTextContent("11");
   });
@@ -139,7 +158,7 @@ describe("ce que la carte porte en pied", () => {
   it("garde les repères sans rien compter quand la mission est nue", () => {
     // Monday laisse les icones en place, sans nombre : la carte garde sa forme
     // d'une mission a l'autre, et l'absence se lit aussi vite qu'un total.
-    render(<ProjectCard carte={carte()} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte()} />);
 
     expect(screen.getByLabelText("Aucun commentaire")).toHaveTextContent("");
     expect(screen.getByLabelText("Aucun sous-projet")).toHaveTextContent("");
@@ -149,7 +168,10 @@ describe("ce que la carte porte en pied", () => {
 describe("rattachement à un projet parent", () => {
   it("nomme le projet dont le sous-projet relève", () => {
     render(
-      <ProjectCard carte={carte({ parent: { id: 7, label: "Refonte du SI" } })} />,
+      <ProjectCard
+        maintenant={MAINTENANT}
+        carte={carte({ parent: { id: 7, label: "Refonte du SI" } })}
+      />,
     );
 
     expect(screen.getByText("Refonte du SI")).toBeInTheDocument();
@@ -159,6 +181,7 @@ describe("rattachement à un projet parent", () => {
     const onOpen = vi.fn();
     render(
       <ProjectCard
+        maintenant={MAINTENANT}
         carte={carte({ parent: { id: 7, label: "Refonte du SI" } })}
         onOpen={onOpen}
       />,
@@ -171,7 +194,7 @@ describe("rattachement à un projet parent", () => {
   });
 
   it("ne montre aucun parent à un projet racine", () => {
-    render(<ProjectCard carte={carte()} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte()} />);
 
     expect(screen.queryByText(/↳/)).toBeNull();
   });
@@ -181,6 +204,7 @@ describe("rattachement à un projet parent", () => {
     // cliquable dessus n'aurait aucune cible.
     render(
       <ProjectCard
+        maintenant={MAINTENANT}
         carte={carte({ parent: { id: 7, label: "Refonte du SI" } })}
         onOpen={vi.fn()}
         enDeplacement
@@ -195,7 +219,7 @@ describe("rattachement à un projet parent", () => {
 describe("ouverture de la mission", () => {
   it("ouvre la mission au clic n'importe où sur la carte", () => {
     const onOpen = vi.fn();
-    render(<ProjectCard carte={carte()} onOpen={onOpen} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte()} onOpen={onOpen} />);
 
     fireEvent.click(screen.getByText("5/20 jrs. estimés"));
 
@@ -204,7 +228,7 @@ describe("ouverture de la mission", () => {
 
   it("ouvre aussi depuis le titre, atteignable au clavier", () => {
     const onOpen = vi.fn();
-    render(<ProjectCard carte={carte()} onOpen={onOpen} />);
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte()} onOpen={onOpen} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Portail bailleurs" }));
 
@@ -217,6 +241,7 @@ describe("ouverture de la mission", () => {
     const onOpen = vi.fn();
     render(
       <ProjectCard
+        maintenant={MAINTENANT}
         carte={carte()}
         onOpen={onOpen}
         poignee={<button aria-label="Déplacer">glisser</button>}
@@ -229,10 +254,12 @@ describe("ouverture de la mission", () => {
   });
 
   it("ne montre aucune poignée quand la carte ne se déplace pas", () => {
-    const { rerender } = render(<ProjectCard carte={carte()} />);
+    const { rerender } = render(
+      <ProjectCard maintenant={MAINTENANT} carte={carte()} />,
+    );
     expect(document.querySelector("svg.lucide-grip-vertical")).not.toBeNull();
 
-    rerender(<ProjectCard carte={carte()} poignee={null} />);
+    rerender(<ProjectCard maintenant={MAINTENANT} carte={carte()} poignee={null} />);
 
     expect(document.querySelector("svg.lucide-grip-vertical")).toBeNull();
   });
@@ -240,10 +267,48 @@ describe("ouverture de la mission", () => {
   it("n'ouvre rien quand la carte suit le curseur", () => {
     // La copie qui suit la souris represente un geste en cours, pas une cible.
     const onOpen = vi.fn();
-    render(<ProjectCard carte={carte()} onOpen={onOpen} enDeplacement />);
+    render(
+      <ProjectCard
+        maintenant={MAINTENANT}
+        carte={carte()}
+        onOpen={onOpen}
+        enDeplacement
+      />,
+    );
 
     fireEvent.click(screen.getByText("5/20 jrs. estimés"));
 
     expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it("montre le dernier message au survol du décompte de commentaires", () => {
+    render(
+      <ProjectCard
+        maintenant={MAINTENANT}
+        carte={carte({
+          commentaires: 2,
+          derniere_maj: {
+            author: { id: 1, display_name: "J. Buget", initiales: "JB" },
+            texte: "Le cadrage commence lundi",
+            publiee_le: "2026-09-16T09:00:00Z",
+          },
+        })}
+      />,
+    );
+
+    fireEvent.mouseMove(screen.getByLabelText("2 commentaires"));
+
+    const apercu = screen.getByRole("tooltip");
+    expect(apercu).toHaveTextContent("J. Buget");
+    expect(apercu).toHaveTextContent("il y a 2 h");
+    expect(apercu).toHaveTextContent("Le cadrage commence lundi");
+  });
+
+  it("ne montre aucun aperçu quand le fil est vide", () => {
+    render(<ProjectCard maintenant={MAINTENANT} carte={carte({ commentaires: 0 })} />);
+
+    fireEvent.mouseMove(screen.getByLabelText("Aucun commentaire"));
+
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 });
