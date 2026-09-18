@@ -353,7 +353,9 @@ describe("MissionRow", () => {
     expect(screen.getByText("NI")).toBeInTheDocument();
   });
 
-  it("shows the estimate alone while nothing has been spent", () => {
+  it("still reads the real ratio when nothing has been spent yet", () => {
+    // « 12 jrs. » seul ne dirait pas si le nombre compte ce qui a ete
+    // consomme ou ce qui etait prevu.
     line(
       <MissionRow
         mission={mission()}
@@ -363,7 +365,7 @@ describe("MissionRow", () => {
       />,
     );
 
-    expect(screen.getByText("12 jrs.")).toBeInTheDocument();
+    expect(screen.getByText("0/12 jrs.")).toBeInTheDocument();
   });
 
   it("leaves the columns empty rather than inventing a value", () => {
