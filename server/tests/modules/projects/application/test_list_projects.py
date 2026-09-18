@@ -15,6 +15,7 @@ from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
     InMemoryEntryRepository,
     InMemoryProjectAssigneeRepository,
+    InMemoryProjectDetailRepository,
     InMemoryProjectRepository,
     InMemoryProjectUpdateRepository,
     InMemoryUserRepository,
@@ -57,6 +58,7 @@ def build(
     assignments=None,
     entries: list[Entry] | None = None,
     updates: InMemoryProjectUpdateRepository | None = None,
+    details: InMemoryProjectDetailRepository | None = None,
 ):
     return ListProjectsUseCase(
         projects=InMemoryProjectRepository([PORTAIL]),
@@ -64,6 +66,7 @@ def build(
         assignees=InMemoryProjectAssigneeRepository(assignments or {}),
         users=InMemoryUserRepository([ALICE, NINO]),
         updates=updates or InMemoryProjectUpdateRepository(),
+        details=details or InMemoryProjectDetailRepository(),
     )
 
 
