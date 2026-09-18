@@ -43,14 +43,14 @@ export function ProjectsPage() {
   const screen = useProjectsScreen(filters, sorted);
   // One reference time for every row: « il y a 3 h » must not depend
   // on when each one renders.
-  const maintenant = useMemo(() => new Date(), []);
+  const now = useMemo(() => new Date(), []);
   const panel = useOpenedMission();
   const [declaring, setDeclaration] = useState(false);
   const [importing, setImportation] = useState(false);
 
   return (
     <PageLayout
-      entete={
+      header={
         <PageHeader
           title="Projets"
           subtitle="Gestion des projets et sous-projets"
@@ -153,30 +153,32 @@ export function ProjectsPage() {
               </TableHeader>
 
               <TableBody>
-                {screen.tree.map(({ mission, lots }) => {
-                  const deplie = screen.estDeplie(mission.project.id);
+                {screen.tree.map(({ mission, workPackages }) => {
+                  const expanded = screen.estDeplie(mission.project.id);
 
                   return (
                     <Fragment key={mission.project.id}>
                       <MissionRow
                         mission={mission}
-                        estLot={mission.project.kind === "work_package"}
-                        lots={lots.length}
-                        deplie={deplie}
+                        isWorkPackage={mission.project.kind === "work_package"}
+                        workPackages={workPackages.length}
+                        expanded={expanded}
                         onBasculer={() => screen.toggle(mission.project.id)}
-                        maintenant={maintenant}
+                        now={now}
                         onOpen={() => panel.open(mission.project.id)}
                         onOpenFil={() => panel.open(mission.project.id, "updates")}
                       />
-                      {deplie &&
-                        lots.map((lot) => (
+                      {expanded &&
+                        workPackages.map((workPackage) => (
                           <MissionRow
-                            key={lot.project.id}
-                            mission={lot}
-                            estLot
-                            maintenant={maintenant}
-                            onOpen={() => panel.open(lot.project.id)}
-                            onOpenFil={() => panel.open(lot.project.id, "updates")}
+                            key={workPackage.project.id}
+                            mission={workPackage}
+                            isWorkPackage
+                            now={now}
+                            onOpen={() => panel.open(workPackage.project.id)}
+                            onOpenFil={() =>
+                              panel.open(workPackage.project.id, "updates")
+                            }
                           />
                         ))}
                     </Fragment>

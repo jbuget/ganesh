@@ -11,7 +11,7 @@ interface BoardColumnProps {
   status: ProjectStatus;
   cards: BoardCardResponse[];
   /** Freezes the reference time: without it, server and client would diverge. */
-  maintenant: Date;
+  now: Date;
   onIntervenantsChange?: () => void | Promise<void>;
   onOpen?: (projectId: number) => void;
   /** The board is filtered: cards can be read, but no longer arranged. */
@@ -31,7 +31,7 @@ interface BoardColumnProps {
 export function BoardColumn({
   status,
   cards,
-  maintenant,
+  now,
   onIntervenantsChange,
   onOpen,
   frozen,
@@ -75,7 +75,7 @@ export function BoardColumn({
             <SortableProjectCard
               key={card.project.id}
               card={card}
-              maintenant={maintenant}
+              now={now}
               onIntervenantsChange={onIntervenantsChange}
               onOpen={onOpen}
               frozen={frozen}

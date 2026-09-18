@@ -93,7 +93,7 @@ class UpdateProjectUseCase:
                     project_id=project.id,
                     old_value=None if ancien is None else str(ancien),
                     new_value=None if new_one is None else str(new_one),
-                    payload={"champ": field},
+                    payload={"field": field},
                 )
             )
         return project

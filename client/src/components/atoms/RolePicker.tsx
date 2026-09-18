@@ -21,14 +21,14 @@ interface RolePickerProps {
  * validated month concerns the whole team, not only those who decide it.
  */
 export function RolePicker({ role, modifiable, onChange }: RolePickerProps) {
-  const [ouvert, setOuvert] = useState(false);
+  const [isOpen, setOuvert] = useState(false);
 
   if (!modifiable) {
     return <span className="text-sm text-slate-600">{roleLabel(role)}</span>;
   }
 
   return (
-    <Popover open={ouvert} onOpenChange={setOuvert}>
+    <Popover open={isOpen} onOpenChange={setOuvert}>
       <PopoverTrigger
         aria-label={`Changer le rôle, actuellement ${roleLabel(role)}`}
         className="-mx-1 flex cursor-pointer items-center rounded px-1 py-0.5 text-sm text-slate-700 transition-colors hover:bg-slate-100"

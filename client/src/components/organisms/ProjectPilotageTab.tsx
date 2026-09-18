@@ -28,7 +28,7 @@ interface ProjectPilotageTabProps {
     contactsMetier: string | null,
   ) => Promise<void>;
   changePhase: (status: ProjectStatus) => Promise<void>;
-  updateFields: (champs: {
+  updateFields: (fields: {
     category?: ProjectCategory | null;
     priority?: ProjectPriority | null;
     estimated_days?: number | null;

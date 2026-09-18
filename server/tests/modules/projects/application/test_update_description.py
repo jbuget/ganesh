@@ -82,7 +82,7 @@ async def test_the_change_is_traced() -> None:
     )
 
     assert audit.logs[-1].action.value == "project.update"
-    assert audit.logs[-1].payload == {"champ": "description"}
+    assert audit.logs[-1].payload == {"field": "description"}
 
 
 async def test_rewriting_the_same_text_leaves_no_trace() -> None:

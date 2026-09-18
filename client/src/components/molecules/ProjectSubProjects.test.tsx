@@ -4,7 +4,7 @@ import { render, screen } from "@testing-library/react";
 import { ProjectSubProjects } from "./ProjectSubProjects";
 import type { ProjectResponse } from "@/lib/api/generated/model";
 
-const lot = (id: number, label: string, status = "scoping"): ProjectResponse =>
+const workPackage = (id: number, label: string, status = "scoping"): ProjectResponse =>
   ({ id, label, status, kind: "work_package", parent_id: 10 }) as ProjectResponse;
 
 describe("ProjectSubProjects", () => {
@@ -15,7 +15,7 @@ describe("ProjectSubProjects", () => {
   });
 
   it("leads to the sheet of each sub-project", () => {
-    render(<ProjectSubProjects subProjects={[lot(11, "Authentification")]} />);
+    render(<ProjectSubProjects subProjects={[workPackage(11, "Authentification")]} />);
 
     expect(screen.getByRole("link", { name: /Authentification/ })).toHaveAttribute(
       "href",
@@ -26,7 +26,10 @@ describe("ProjectSubProjects", () => {
   it("says the phase of each sub-project", () => {
     render(
       <ProjectSubProjects
-        subProjects={[lot(11, "Authentification"), lot(12, "Reprise", "development")]}
+        subProjects={[
+          workPackage(11, "Authentification"),
+          workPackage(12, "Reprise", "development"),
+        ]}
       />,
     );
 

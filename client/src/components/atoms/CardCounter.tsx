@@ -19,7 +19,7 @@ interface CardCounterProps {
    * component, and an atom composes none. Absent, the count shows without a
    * tooltip.
    */
-  apercu?: ReactNode;
+  preview?: ReactNode;
 }
 
 /**
@@ -38,7 +38,7 @@ export function CardCounter({
   count,
   label,
   empty,
-  apercu,
+  preview,
 }: CardCounterProps) {
   const [singular, plural] = label;
   const { tooltip, follow, leave } = useCursorTooltip({ rich: true });
@@ -46,7 +46,7 @@ export function CardCounter({
   return (
     <span
       aria-label={count === 0 ? empty : `${count} ${count > 1 ? plural : singular}`}
-      onMouseMove={(event) => apercu && follow(event, apercu)}
+      onMouseMove={(event) => preview && follow(event, preview)}
       onMouseLeave={leave}
       className={`flex items-center gap-1 text-xs tabular-nums ${
         count === 0 ? "text-slate-300" : "text-slate-500"

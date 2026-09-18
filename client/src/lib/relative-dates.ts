@@ -9,8 +9,8 @@ const JOUR = 24 * HEURE;
  * Past a week, the exact date says more than a number of days: one gets one's
  * bearings from « le 11 septembre », not from « il y a 23 jours ».
  */
-export function depuis(iso: string, maintenant: Date): string {
-  const ecoule = maintenant.getTime() - new Date(iso).getTime();
+export function depuis(iso: string, now: Date): string {
+  const ecoule = now.getTime() - new Date(iso).getTime();
 
   if (ecoule < MINUTE) return "à l'instant";
   if (ecoule < HEURE) return `il y a ${Math.floor(ecoule / MINUTE)} min`;

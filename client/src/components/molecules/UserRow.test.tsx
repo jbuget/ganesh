@@ -16,7 +16,7 @@ const jeremy: UserResponse = {
   is_active: true,
 };
 
-const MAINTENANT = new Date("2026-09-17T12:00:00");
+const NOW = new Date("2026-09-17T12:00:00");
 
 const onSetActive = vi.fn();
 
@@ -34,7 +34,7 @@ function renderRow(
           statutModifiable={statutModifiable}
           onChangeRole={vi.fn()}
           onSetActive={onSetActive}
-          maintenant={MAINTENANT}
+          now={NOW}
         />
       </TableBody>
     </Table>,

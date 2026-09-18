@@ -59,7 +59,7 @@ export function MissionSelector({
   disabled = false,
 }: MissionSelectorProps) {
   const { projets, horsProjet } = availableMissions(projects, excludedIds);
-  const [ouvert, setOuvert] = useState(false);
+  const [isOpen, setOuvert] = useState(false);
 
   const groupes: MissionGroup[] = [];
   if (projets.length > 0) {
@@ -73,7 +73,7 @@ export function MissionSelector({
     <Combobox
       items={groupes}
       value={null}
-      open={ouvert}
+      open={isOpen}
       onOpenChange={setOuvert}
       disabled={disabled}
       onValueChange={(mission) => {

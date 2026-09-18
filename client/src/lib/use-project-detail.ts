@@ -85,12 +85,12 @@ export function useProjectDetail(
     },
 
     /** Partial change: only the fields provided are applied. */
-    async updateFields(champs: {
+    async updateFields(fields: {
       category?: ProjectCategory | null;
       priority?: ProjectPriority | null;
       estimated_days?: number | null;
     }) {
-      await updateProject(projectId, champs);
+      await updateProject(projectId, fields);
       await reload();
     },
 

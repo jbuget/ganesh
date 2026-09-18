@@ -42,12 +42,12 @@ export function ImportProjectsDialog({
     }
   }
 
-  function close(ouvert: boolean) {
-    if (!ouvert) {
+  function close(isOpen: boolean) {
+    if (!isOpen) {
       setContenu("");
       setRapport(null);
     }
-    onOpenChange(ouvert);
+    onOpenChange(isOpen);
   }
 
   return (

@@ -27,14 +27,15 @@ class BoardCard:
     project: Project
     consumed_days: float
     contributors: list[User]
-    #: Mises a jour vivantes du fil de suivi.
+    #: Live updates in the follow-up thread.
     comments: int = 0
-    #: Lots rattaches a la mission.
+    #: Work packages attached to the mission.
     sub_projects: int = 0
-    #: Projet dont la mission releve, quand elle est un lot. Il peut etre
-    #: archive : le lot en releve toujours, et la carte doit pouvoir y mener.
+    #: The project the mission belongs to, when it is a work package. It may
+    #: be archived: the package still belongs to it, and the card must lead
+    #: there.
     parent: Project | None = None
-    #: Le dernier message du fil, pour l'annoncer sans ouvrir le panneau.
+    #: The latest message of the thread, to announce it without opening the panel.
     latest_update: LastUpdate | None = None
 
 
@@ -83,9 +84,9 @@ class GetBoardUseCase:
     ) -> Board:
         today = today or date.today()
 
-        # Les archivees sont lues meme quand on ne les montre pas : un lot
-        # survit a l'archivage de son projet, et sa carte doit continuer a
-        # nommer de quoi elle releve.
+        # Archived missions are read even when they are not shown: a work
+        # package outlives the archiving of its project, and its card must go
+        # on naming what it belongs to.
         all_missions = await self._projects.list_all(include_inactive=True)
         by_id = {p.id: p for p in all_missions if p.id is not None}
         missions = [
@@ -97,13 +98,13 @@ class GetBoardUseCase:
         users = {u.id: u for u in await self._users.list_all(True)}
         assignments = await self._assignees.list_all(ProjectRole.CONTRIBUTOR)
         comments = await self._updates.count_by_project()
-        dernieres = await self._updates.latest_by_project()
+        latest_by_project = await self._updates.latest_by_project()
 
         def latest(project_id: int) -> LastUpdate | None:
-            update = dernieres.get(project_id)
+            update = latest_by_project.get(project_id)
             author = users.get(update.author_id) if update else None
-            # Un auteur desactive puis efface laisserait un texte anonyme :
-            # mieux vaut ne rien annoncer que de le signer d'un blanc.
+            # An author deactivated then deleted would leave an anonymous
+            # text: better to announce nothing than to sign it with a blank.
             return (
                 LastUpdate(update=update, author=author) if update and author else None
             )
@@ -131,10 +132,10 @@ class GetBoardUseCase:
                 2,
             )
 
-            # Les intervenants ne se deduisent pas des saisies : une mission peut
-            # tourner des semaines sans en recevoir une seule, puis reclamer une
-            # journee sur un bug. Ce que le tableau montre, c'est qui s'en occupe
-            # ces jours-ci, declare a la main et defait de meme.
+            # Contributors are not deduced from entries: a mission can run for
+            # weeks without a single one, then claim a day on a bug. What the
+            # board shows is who is on it these days, declared by hand and
+            # undone the same way.
             contributors = sorted(
                 assignments.get(mission.id, []),
                 key=lambda uid: (users[uid].display_name if uid in users else ""),

@@ -94,7 +94,7 @@ class UpdateProjectDetailUseCase:
                     project_id=command.project_id,
                     old_value=avant,
                     new_value=apres,
-                    payload={"champ": field},
+                    payload={"field": field},
                 )
             )
 
@@ -166,6 +166,6 @@ class UpdateDescriptionUseCase:
                 action=AuditAction.PROJECT_UPDATE,
                 actor_id=command.actor_id,
                 project_id=command.project_id,
-                payload={"champ": "description"},
+                payload={"field": "description"},
             )
         )

@@ -39,9 +39,9 @@ const FRENCH_STATUSES: Record<string, string> = {
 };
 
 /** Guesses the separator: a French export often comes out semicolon-separated. */
-function detectSeparator(entete: string): string {
+function detectSeparator(header: string): string {
   return (
-    SEPARATORS.map((s) => ({ s, n: entete.split(s).length }))
+    SEPARATORS.map((s) => ({ s, n: header.split(s).length }))
       .sort((a, b) => b.n - a.n)
       .find((c) => c.n > 1)?.s ?? ";"
   );

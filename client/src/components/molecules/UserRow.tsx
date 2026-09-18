@@ -19,7 +19,7 @@ interface UserRowProps {
   onChangeRole: (userId: number, role: Role) => void | Promise<void>;
   onSetActive: (userId: number, is_active: boolean) => void | Promise<void>;
   /** Injected: a render dated by `new Date()` could not be tested. */
-  maintenant: Date;
+  now: Date;
 }
 
 /** A user: who they are, what they may do, when they last came by. */
@@ -29,7 +29,7 @@ export function UserRow({
   statutModifiable,
   onChangeRole,
   onSetActive,
-  maintenant,
+  now,
 }: UserRowProps) {
   const [coupureADemander, setCoupureADemander] = useState(false);
 
@@ -60,7 +60,7 @@ export function UserRow({
         {/* An account that never came is not « long ago »: it never came. */}
         {user.last_login_at ? (
           <span title={new Date(user.last_login_at).toLocaleString("fr-FR")}>
-            {depuis(user.last_login_at, maintenant)}
+            {depuis(user.last_login_at, now)}
           </span>
         ) : (
           <span className="text-slate-400">Jamais</span>

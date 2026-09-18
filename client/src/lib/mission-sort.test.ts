@@ -12,8 +12,8 @@ import {
 
 const mission = (
   label: string,
-  champs: Partial<ProjectListItemResponse["project"]> = {},
-  realise = 0,
+  fields: Partial<ProjectListItemResponse["project"]> = {},
+  delivered = 0,
 ): ProjectListItemResponse =>
   ({
     project: {
@@ -24,11 +24,11 @@ const mission = (
       priority: null,
       category: null,
       estimated_days: null,
-      ...champs,
+      ...fields,
     },
     leads: [],
     contributors: [],
-    delivered_days: realise,
+    delivered_days: delivered,
     comments: 0,
     latest_update: null,
   }) as ProjectListItemResponse;

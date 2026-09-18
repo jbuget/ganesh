@@ -2,7 +2,7 @@
 
 interface PageLayoutProps {
   /** The screen header, which does not scroll. */
-  entete: React.ReactNode;
+  header: React.ReactNode;
   /**
    * For a screen that arranges its own scrolling — the kanban and its columns —
    * instead of leaving it to the whole page.
@@ -20,13 +20,13 @@ interface PageLayoutProps {
  * under the page's own header.
  */
 export function PageLayout({
-  entete,
+  header,
   defilementInterne = false,
   children,
 }: PageLayoutProps) {
   return (
     <main className="flex h-screen flex-col">
-      <div className="shrink-0 px-6 pt-6">{entete}</div>
+      <div className="shrink-0 px-6 pt-6">{header}</div>
 
       <div
         className={[

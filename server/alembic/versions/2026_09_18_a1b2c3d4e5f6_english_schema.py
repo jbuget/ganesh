@@ -136,8 +136,33 @@ def upgrade() -> None:
 
     _reecrire(MEMBRES)
 
+    # Le journal d'audit nomme le champ touche dans son payload : la clef suit
+    # le reste, sans quoi une meme trace se lirait « champ » avant la bascule
+    # et « field » apres.
+    op.execute(
+        """
+        UPDATE audit_log
+        SET payload = (
+            (payload::jsonb - 'champ')
+            || jsonb_build_object('field', payload::jsonb -> 'champ')
+        )::json
+        WHERE payload::text LIKE '%"champ"%'
+        """
+    )
+
 
 def downgrade() -> None:
+    op.execute(
+        """
+        UPDATE audit_log
+        SET payload = (
+            (payload::jsonb - 'field')
+            || jsonb_build_object('champ', payload::jsonb -> 'field')
+        )::json
+        WHERE payload::text LIKE '%"field"%'
+        """
+    )
+
     _reecrire([(t, c, apres, avant) for t, c, avant, apres in MEMBRES])
 
     # La contrainte tombe avant le renommage, et se refait apres : son

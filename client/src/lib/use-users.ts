@@ -16,8 +16,8 @@ import { useCurrentUser, useTeammates } from "@/lib/api/queries";
 export function useUsersScreen() {
   const queryClient = useQueryClient();
   const { user: me } = useCurrentUser();
-  const [avecInactifs, setAvecInactifs] = useState(false);
-  const { teammates, isLoading } = useTeammates(avecInactifs);
+  const [withInactive, setAvecInactifs] = useState(false);
+  const { teammates, isLoading } = useTeammates(withInactive);
 
   return {
     isLoading,
@@ -25,11 +25,11 @@ export function useUsersScreen() {
     //: Nobody cuts off their own access: the account would be turned away on
     //: the next request, and no one could reopen it from inside.
     moiId: me?.id,
-    avecInactifs,
+    withInactive,
 
     // One reference instant per render: without it, two rows of the same list
     // would compare against two different « now ».
-    maintenant: new Date(),
+    now: new Date(),
 
     toggleInactive: () => setAvecInactifs((actuel) => !actuel),
 

@@ -35,10 +35,10 @@ export function useProjectsScreen(
   // We remember what is expanded, not what is collapsed: the reference list
   // opens on its projects, and sub-projects are asked for. A mission created
   // along the way therefore arrives collapsed, like the others.
-  const [deplies, setDeplies] = useState<ReadonlySet<number>>(() => new Set());
+  const [expanded, setExpanded] = useState<ReadonlySet<number>>(() => new Set());
 
   const toggle = useCallback((id: number) => {
-    setDeplies((actuels) => {
+    setExpanded((actuels) => {
       const next_ones = new Set(actuels);
       if (!next_ones.delete(id)) next_ones.add(id);
       return next_ones;
@@ -60,7 +60,7 @@ export function useProjectsScreen(
     total: missions.length,
 
     /** Whether a mission's sub-projects are showing. */
-    estDeplie: (id: number) => deplies.has(id),
+    estDeplie: (id: number) => expanded.has(id),
     toggle,
 
     /** Reads the reference list again after a change made in the panel. */

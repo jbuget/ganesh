@@ -43,7 +43,7 @@ export function TimesheetPage() {
 
   return (
     <PageLayout
-      entete={
+      header={
         <PageHeader
           title="Activité"
           subtitle="Déclarez votre temps en journées ou demi-journées. Tant que le mois n'est pas validé, tout reste modifiable."
@@ -133,7 +133,7 @@ export function TimesheetPage() {
       {aRetirer && (
         <RemoveMissionDialog
           open
-          onOpenChange={(ouvert) => !ouvert && setARetirer(null)}
+          onOpenChange={(isOpen) => !isOpen && setARetirer(null)}
           label={aRetirer.label}
           total={aRetirer.total}
           onConfirm={async () => {

@@ -11,7 +11,7 @@ import { depuis } from "@/lib/relative-dates";
 
 interface ProjectUpdateCardProps {
   maj: ProjectUpdateResponse;
-  maintenant: Date;
+  now: Date;
   onEdit: (body: string) => Promise<void>;
   onRemove: () => Promise<void>;
 }
@@ -25,7 +25,7 @@ interface ProjectUpdateCardProps {
  */
 export function ProjectUpdateCard({
   maj,
-  maintenant,
+  now,
   onEdit,
   onRemove,
 }: ProjectUpdateCardProps) {
@@ -41,7 +41,7 @@ export function ProjectUpdateCard({
           {maj.author.display_name}
         </span>
         <span className="text-xs text-slate-400">
-          {depuis(maj.published_at, maintenant)}
+          {depuis(maj.published_at, now)}
           {maj.edited_at && !maj.is_deleted && " · modifiée"}
         </span>
 

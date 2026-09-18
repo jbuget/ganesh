@@ -22,14 +22,14 @@ interface MissionMenuProps {
  * leaves room for the next ones without redrawing the header.
  */
 export function MissionMenu({ archivee, onArchiver, onDesarchiver }: MissionMenuProps) {
-  const [ouvert, setOuvert] = useState(false);
+  const [isOpen, setOuvert] = useState(false);
 
   // A single entry, saying which way it moves the mission: offering both would
   // let one pick the state one is already in.
   const Icone = archivee ? ArchiveRestore : Archive;
 
   return (
-    <Popover open={ouvert} onOpenChange={setOuvert}>
+    <Popover open={isOpen} onOpenChange={setOuvert}>
       <PopoverTrigger
         aria-label="Actions sur la mission"
         className="cursor-pointer rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"

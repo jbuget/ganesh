@@ -28,18 +28,13 @@ const card = (id: number, label: string): BoardCardResponse =>
   }) as BoardCardResponse;
 
 /** Frozen reference time: previews do not depend on when the run happens. */
-const MAINTENANT = new Date("2026-09-16T11:00:00Z");
+const NOW = new Date("2026-09-16T11:00:00Z");
 
 /** The @dnd-kit sensors require an enclosing context. */
 const show = (cards: BoardCardResponse[], frozen = false) =>
   render(
     <DndContext>
-      <BoardColumn
-        status="development"
-        cards={cards}
-        maintenant={MAINTENANT}
-        frozen={frozen}
-      />
+      <BoardColumn status="development" cards={cards} now={NOW} frozen={frozen} />
     </DndContext>,
   );
 

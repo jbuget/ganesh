@@ -34,7 +34,10 @@ describe("buildProjectTree", () => {
     ]);
 
     expect(tree).toHaveLength(1);
-    expect(tree[0].lots.map((l) => l.project.label)).toEqual(["Lot API", "Lot Front"]);
+    expect(tree[0].workPackages.map((l) => l.project.label)).toEqual([
+      "Lot API",
+      "Lot Front",
+    ]);
   });
 
   it("ranks projects and work packages alphabetically", () => {
@@ -76,7 +79,7 @@ describe("buildProjectTree", () => {
       mission(3, "Lot en cours", "work_package", 1, "development"),
     ]);
 
-    expect(tree[0].lots.map((l) => l.project.label)).toEqual([
+    expect(tree[0].workPackages.map((l) => l.project.label)).toEqual([
       "Lot en cours",
       "Lot livré",
     ]);
@@ -112,7 +115,7 @@ describe("buildProjectTree", () => {
   it("loses no project when there is no work package", () => {
     const tree = buildProjectTree([mission(1, "Portail", "project")]);
 
-    expect(tree[0].lots).toEqual([]);
+    expect(tree[0].workPackages).toEqual([]);
   });
 });
 
@@ -154,6 +157,9 @@ describe("buildProjectTree, arranged on a column", () => {
     );
 
     expect(tree).toHaveLength(1);
-    expect(tree[0].lots.map((l) => l.project.label)).toEqual(["Zoulou", "Delta"]);
+    expect(tree[0].workPackages.map((l) => l.project.label)).toEqual([
+      "Zoulou",
+      "Delta",
+    ]);
   });
 });

@@ -133,7 +133,7 @@ async def test_the_last_live_update_of_each_project_is_returned(
     removed.remove(by=author.id, at=datetime(2026, 9, 13, 9, 0))
     await updates.update(removed)
 
-    dernieres = await updates.latest_by_project()
+    latest_by_project = await updates.latest_by_project()
 
-    assert dernieres[missions[0].id].body == "Relecture"
-    assert missions[1].id not in dernieres
+    assert latest_by_project[missions[0].id].body == "Relecture"
+    assert missions[1].id not in latest_by_project

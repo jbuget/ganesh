@@ -24,24 +24,24 @@ export function ProjectSubProjects({ subProjects }: ProjectSubProjectsProps) {
 
   return (
     <ul className="space-y-0.5">
-      {subProjects.map((lot) => (
-        <li key={lot.id}>
+      {subProjects.map((workPackage) => (
+        <li key={workPackage.id}>
           <Link
-            href={`/projets/${lot.id}`}
+            href={`/projets/${workPackage.id}`}
             className="group flex cursor-pointer items-center gap-2 rounded px-1 py-1.5 transition-colors hover:bg-slate-50"
           >
-            {lot.status && (
+            {workPackage.status && (
               <span
                 aria-hidden
-                className={`size-2.5 shrink-0 rounded-full ${phaseDot(lot.status)}`}
+                className={`size-2.5 shrink-0 rounded-full ${phaseDot(workPackage.status)}`}
               />
             )}
             <span className="min-w-0 flex-1 truncate text-sm text-slate-700">
-              {lot.label}
+              {workPackage.label}
             </span>
-            {lot.status && (
+            {workPackage.status && (
               <span className="shrink-0 text-xs text-slate-500">
-                {phaseLabel(lot.status)}
+                {phaseLabel(workPackage.status)}
               </span>
             )}
             <ChevronRight

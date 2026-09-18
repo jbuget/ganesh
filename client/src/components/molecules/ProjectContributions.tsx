@@ -25,10 +25,10 @@ export function ProjectContributions({
 }: ProjectContributionsProps) {
   // Several rows stay open at once: two contributors are expanded precisely to
   // set their months side by side.
-  const [deplies, setDeplies] = useState<ReadonlySet<number>>(new Set());
+  const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set());
 
   function toggle(memberId: number) {
-    setDeplies((ouverts) => {
+    setExpanded((ouverts) => {
       const next_ones = new Set(ouverts);
       if (!next_ones.delete(memberId)) next_ones.add(memberId);
       return next_ones;
@@ -42,20 +42,20 @@ export function ProjectContributions({
   return (
     <ul className="space-y-0.5">
       {contributions.map((contribution) => {
-        const ouvert = deplies.has(contribution.member.id);
+        const isOpen = expanded.has(contribution.member.id);
         const part = total > 0 ? (contribution.days / total) * 100 : 0;
 
         return (
           <li key={contribution.member.id}>
             <button
               type="button"
-              aria-expanded={ouvert}
+              aria-expanded={isOpen}
               onClick={() => toggle(contribution.member.id)}
               className="flex w-full cursor-pointer items-center gap-2 rounded px-1 py-1.5 text-left transition-colors hover:bg-slate-50"
             >
               <ChevronRight
                 aria-hidden
-                className={`size-3.5 shrink-0 text-slate-400 transition-transform ${ouvert ? "rotate-90" : ""}`}
+                className={`size-3.5 shrink-0 text-slate-400 transition-transform ${isOpen ? "rotate-90" : ""}`}
               />
               <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-700">
                 {contribution.member.initials}
@@ -77,7 +77,7 @@ export function ProjectContributions({
               </span>
             </button>
 
-            {ouvert && (
+            {isOpen && (
               <ul className="mt-0.5 mb-1 ml-[3.25rem] space-y-0.5">
                 {contribution.by_month.map((month) => (
                   <li

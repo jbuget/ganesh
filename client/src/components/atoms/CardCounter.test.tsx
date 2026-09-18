@@ -6,13 +6,13 @@ import { CardCounter } from "./CardCounter";
 
 const APERCU = <p>Le cadrage commence lundi</p>;
 
-const counter = (count: number, apercu?: React.ReactNode) => (
+const counter = (count: number, preview?: React.ReactNode) => (
   <CardCounter
     icon={MessageCircle}
     count={count}
     label={["commentaire", "commentaires"]}
     empty="Aucun commentaire"
-    apercu={apercu}
+    preview={preview}
   />
 );
 

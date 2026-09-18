@@ -29,7 +29,7 @@ export function ProjectLinksEditor({
   onAdd,
   onRemove,
 }: ProjectLinksEditorProps) {
-  const [ouvert, setOuvert] = useState(false);
+  const [isOpen, setOuvert] = useState(false);
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
   const [icon, setIcone] = useState<LinkIcon | null>(null);
@@ -90,7 +90,7 @@ export function ProjectLinksEditor({
         })}
       </ul>
 
-      <Popover open={ouvert} onOpenChange={toggleExpanded}>
+      <Popover open={isOpen} onOpenChange={toggleExpanded}>
         <PopoverTrigger className="flex cursor-pointer items-center gap-1 text-sm text-slate-400 transition-colors hover:text-slate-600">
           <Plus className="size-3.5" aria-hidden />
           Ajouter un lien

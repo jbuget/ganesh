@@ -40,7 +40,7 @@ export function ContributorsPicker({
   invite = "Intervenants",
 }: ContributorsPickerProps) {
   const { teammates } = useTeammates();
-  const [ouvert, setOuvert] = useState(false);
+  const [isOpen, setOuvert] = useState(false);
   const [search, setRecherche] = useState("");
   // The same filter as the search menus elsewhere in the application:
   // insensitive to case and to accents alike.
@@ -63,7 +63,7 @@ export function ContributorsPicker({
 
   return (
     <Popover
-      open={ouvert}
+      open={isOpen}
       onOpenChange={(prochain) => {
         setOuvert(prochain);
         if (!prochain) setRecherche("");

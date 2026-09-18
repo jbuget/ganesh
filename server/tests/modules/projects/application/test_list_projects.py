@@ -67,14 +67,14 @@ def build(
     )
 
 
-async def thread(*textes: str, retirees: int = 0) -> InMemoryProjectUpdateRepository:
+async def thread(*bodies: str, withdrawn: int = 0) -> InMemoryProjectUpdateRepository:
     """A follow-up thread on Portail, oldest to most recent.
 
     The last `withdrawn` ones are deleted, which leaves the earlier ones to be
     read.
     """
     repo = InMemoryProjectUpdateRepository()
-    publiees = [
+    posted = [
         await repo.add(
             ProjectUpdate(
                 id=None,
@@ -84,9 +84,9 @@ async def thread(*textes: str, retirees: int = 0) -> InMemoryProjectUpdateReposi
                 published_at=datetime(2026, 9, 17, 9, 0) + timedelta(hours=rang),
             )
         )
-        for rang, body in enumerate(textes)
+        for rang, body in enumerate(bodies)
     ]
-    for update in publiees[len(publiees) - retirees :] if retirees else []:
+    for update in posted[len(posted) - withdrawn :] if withdrawn else []:
         update.remove(by=1, at=datetime(2026, 9, 17, 10, 0))
     return repo
 
@@ -157,7 +157,7 @@ async def test_the_live_updates_of_the_thread_are_counted() -> None:
 async def test_a_removed_update_leaves_the_count() -> None:
     """The reference list announces what can still be read in the thread, not its history."""
     listees = await build(
-        updates=await thread("Cadrage lance", "Ecrite par erreur", retirees=1)
+        updates=await thread("Cadrage lance", "Ecrite par erreur", withdrawn=1)
     ).execute()
 
     assert listees[0].comments == 1
@@ -188,7 +188,7 @@ async def test_the_last_update_is_signed() -> None:
 
 async def test_a_removed_update_gives_way_to_the_one_before_it() -> None:
     listees = await build(
-        updates=await thread("Cadrage lance", "Ecrite par erreur", retirees=1)
+        updates=await thread("Cadrage lance", "Ecrite par erreur", withdrawn=1)
     ).execute()
 
     assert listees[0].latest_update is not None
@@ -197,7 +197,7 @@ async def test_a_removed_update_gives_way_to_the_one_before_it() -> None:
 
 async def test_a_thread_entirely_removed_shows_nothing() -> None:
     listees = await build(
-        updates=await thread("Ecrite par erreur", retirees=1)
+        updates=await thread("Ecrite par erreur", withdrawn=1)
     ).execute()
 
     assert listees[0].latest_update is None

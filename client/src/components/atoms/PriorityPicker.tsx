@@ -14,11 +14,11 @@ interface PriorityPickerProps {
 
 /** A mission's urgency. One, or none. */
 export function PriorityPicker({ value, onChange }: PriorityPickerProps) {
-  const [ouvert, setOuvert] = useState(false);
+  const [isOpen, setOuvert] = useState(false);
   const urgency = priority(value);
 
   return (
-    <Popover open={ouvert} onOpenChange={setOuvert}>
+    <Popover open={isOpen} onOpenChange={setOuvert}>
       <PopoverTrigger
         aria-label="Changer la priorité"
         className="-mx-1 flex cursor-pointer items-center rounded px-1 py-0.5 transition-colors hover:bg-slate-100"

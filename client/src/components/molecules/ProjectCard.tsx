@@ -27,7 +27,7 @@ const SHADES: Record<ReturnType<typeof progress>, string> = {
 interface ProjectCardProps {
   card: BoardCardResponse;
   /** Freezes the reference time: without it, server and client would diverge. */
-  maintenant: Date;
+  now: Date;
   /**
    * Drag handle, provided by the sorting layer. `null` shows none: a card that
    * cannot be moved must not carry the sign of one.
@@ -43,7 +43,7 @@ interface ProjectCardProps {
 /** A mission on the board. */
 export function ProjectCard({
   card,
-  maintenant,
+  now,
   handle,
   isDragging,
   onIntervenantsChange,
@@ -57,7 +57,7 @@ export function ProjectCard({
   // The latest message in full and formatted, as in the reference list: the
   // card says how many messages the thread carries, the preview says whether
   // it needs opening.
-  const apercu = latest && (
+  const preview = latest && (
     <>
       {/* The rule separates the signature from the words: without it, the first
           line of the message reads as the continuation of the header. Negative
@@ -65,7 +65,7 @@ export function ProjectCard({
           crosses. */}
       <p className="-mx-3 mb-2 border-b border-slate-200 px-3 pb-2 text-xs text-slate-500">
         <span className="font-medium text-slate-700">{latest.author.display_name}</span>{" "}
-        · {depuis(latest.published_at, maintenant)}
+        · {depuis(latest.published_at, now)}
       </p>
       <MarkdownView body={latest.body} />
     </>
@@ -192,7 +192,7 @@ export function ProjectCard({
             empty="Aucun commentaire"
             // The copy following the cursor announces nothing: a bubble opened
             // under the card mid-drag would hide where it lands.
-            apercu={isDragging ? undefined : apercu}
+            preview={isDragging ? undefined : preview}
           />
           <CardCounter
             icon={SquareStack}

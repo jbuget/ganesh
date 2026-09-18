@@ -7,7 +7,7 @@ import { UsersPage } from "./UsersPage";
 const vue = vi.hoisted(() => ({
   isLoading: false,
   isManager: false,
-  avecInactifs: false,
+  withInactive: false,
   toggleInactive: vi.fn(),
   collaborateurs: [
     {
@@ -32,7 +32,7 @@ const vue = vi.hoisted(() => ({
   changeRole: vi.fn(),
   setActive: vi.fn(),
   moiId: 1,
-  maintenant: new Date("2026-09-17T12:00:00"),
+  now: new Date("2026-09-17T12:00:00"),
 }));
 
 vi.mock("@/lib/use-users", () => ({ useUsersScreen: () => vue }));
@@ -60,7 +60,7 @@ describe("UsersPage", () => {
   });
 
   it("makes it possible to bring up deactivated accounts", async () => {
-    vue.avecInactifs = false;
+    vue.withInactive = false;
     render(<UsersPage />);
 
     await userEvent.click(

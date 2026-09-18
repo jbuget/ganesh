@@ -39,7 +39,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
 
   if (fiche.introuvable) {
     return (
-      <PageLayout entete={<RetourKanban />}>
+      <PageLayout header={<RetourKanban />}>
         <p className="text-sm text-slate-500">Cette mission n&apos;existe pas.</p>
       </PageLayout>
     );
@@ -47,7 +47,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
 
   if (!detail) {
     return (
-      <PageLayout entete={<RetourKanban />}>
+      <PageLayout header={<RetourKanban />}>
         <p className="text-sm text-slate-500">Chargement…</p>
       </PageLayout>
     );
@@ -57,7 +57,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
 
   return (
     <PageLayout
-      entete={
+      header={
         <>
           <RetourKanban />
 

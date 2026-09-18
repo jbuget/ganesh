@@ -24,7 +24,7 @@ export function UsersPage() {
 
   return (
     <PageLayout
-      entete={
+      header={
         <PageHeader
           title="Utilisateurs"
           subtitle={
@@ -34,7 +34,7 @@ export function UsersPage() {
           }
           actions={
             <Button variant="outline" onClick={screen.toggleInactive}>
-              {screen.avecInactifs ? "Masquer les inactifs" : "Afficher les inactifs"}
+              {screen.withInactive ? "Masquer les inactifs" : "Afficher les inactifs"}
             </Button>
           }
         />
@@ -76,7 +76,7 @@ export function UsersPage() {
                     }
                     onChangeRole={screen.changeRole}
                     onSetActive={screen.setActive}
-                    maintenant={screen.maintenant}
+                    now={screen.now}
                   />
                 ))}
               </TableBody>

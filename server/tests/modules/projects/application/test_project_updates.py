@@ -76,16 +76,16 @@ def build():
     )
 
 
-async def poster(publier, body: str = "Revue du 11/09.", author: int = 1):
-    return await publier.execute(
+async def post(publish, body: str = "Revue du 11/09.", author: int = 1):
+    return await publish.execute(
         PostUpdateCommand(actor_id=author, project_id=10, body=body), now=QUAND
     )
 
 
 async def test_an_update_joins_the_thread() -> None:
-    publier, _, _, lister, _ = build()
+    publish, _, _, lister, _ = build()
 
-    await poster(publier)
+    await post(publish)
 
     thread = await lister.execute(10)
     assert [update.update.body for update in thread] == ["Revue du 11/09."]
@@ -93,9 +93,9 @@ async def test_an_update_joins_the_thread() -> None:
 
 
 async def test_the_thread_shows_the_newest_first() -> None:
-    publier, _, _, lister, _ = build()
-    await poster(publier, "La premiere")
-    await poster(publier, "La seconde")
+    publish, _, _, lister, _ = build()
+    await post(publish, "La premiere")
+    await post(publish, "La seconde")
 
     thread = await lister.execute(10)
 
@@ -103,17 +103,17 @@ async def test_the_thread_shows_the_newest_first() -> None:
 
 
 async def test_an_unknown_mission_refuses_the_update() -> None:
-    publier, _, _, _, _ = build()
+    publish, _, _, _, _ = build()
 
     with pytest.raises(EntityNotFoundError):
-        await publier.execute(
+        await publish.execute(
             PostUpdateCommand(actor_id=1, project_id=99, body="Coucou"), now=QUAND
         )
 
 
 async def test_the_author_corrects_his_own_words() -> None:
-    publier, corriger, _, lister, _ = build()
-    update = await poster(publier)
+    publish, corriger, _, lister, _ = build()
+    update = await post(publish)
 
     assert update.id is not None
     await corriger.execute(
@@ -126,8 +126,8 @@ async def test_the_author_corrects_his_own_words() -> None:
 
 
 async def test_nobody_corrects_the_words_of_another() -> None:
-    publier, corriger, _, _, _ = build()
-    update = await poster(publier)
+    publish, corriger, _, _, _ = build()
+    update = await post(publish)
 
     assert update.id is not None
     with pytest.raises(ForbiddenActionError):
@@ -139,8 +139,8 @@ async def test_nobody_corrects_the_words_of_another() -> None:
 
 async def test_a_removed_update_keeps_its_place() -> None:
     """The thread keeps its order: the screen will show « Message supprime » there."""
-    publier, _, retirer, lister, _ = build()
-    update = await poster(publier)
+    publish, _, retirer, lister, _ = build()
+    update = await post(publish)
 
     assert update.id is not None
     await retirer.execute(
@@ -154,8 +154,8 @@ async def test_a_removed_update_keeps_its_place() -> None:
 
 
 async def test_nobody_removes_the_words_of_another() -> None:
-    publier, _, retirer, _, _ = build()
-    update = await poster(publier)
+    publish, _, retirer, _, _ = build()
+    update = await post(publish)
 
     assert update.id is not None
     with pytest.raises(ForbiddenActionError):
@@ -165,8 +165,8 @@ async def test_nobody_removes_the_words_of_another() -> None:
 
 
 async def test_every_movement_is_traced() -> None:
-    publier, corriger, retirer, _, audit = build()
-    update = await poster(publier)
+    publish, corriger, retirer, _, audit = build()
+    update = await post(publish)
     assert update.id is not None
 
     await corriger.execute(

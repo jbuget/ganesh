@@ -4,7 +4,7 @@ import { NO_SORT, sortComparator, type MissionSort } from "@/lib/mission-sort";
 /** A mission and, if it is a project, the work packages under it. */
 export interface ProjectNode {
   mission: ProjectListItemResponse;
-  lots: ProjectListItemResponse[];
+  workPackages: ProjectListItemResponse[];
 }
 
 const HORS_PROJET = "off_project";
@@ -26,20 +26,22 @@ export function buildProjectTree(
 ): ProjectNode[] {
   const ordre = sortComparator(sorted);
   const projets = missions.filter((m) => m.project.kind === "project");
-  const lots = missions.filter((m) => m.project.kind === "work_package");
+  const workPackages = missions.filter((m) => m.project.kind === "work_package");
   const idsPresents = new Set(projets.map((m) => m.project.id));
 
   const noeuds: ProjectNode[] = [...projets].sort(ordre).map((mission) => ({
     mission,
-    lots: lots.filter((l) => l.project.parent_id === mission.project.id).sort(ordre),
+    workPackages: workPackages
+      .filter((l) => l.project.parent_id === mission.project.id)
+      .sort(ordre),
   }));
 
-  const orphelins = lots
+  const orphelins = workPackages
     .filter(
       (l) => l.project.parent_id === null || !idsPresents.has(l.project.parent_id),
     )
     .sort(ordre)
-    .map((lot) => ({ mission: lot, lots: [] }));
+    .map((workPackage) => ({ mission: workPackage, workPackages: [] }));
 
   return [...noeuds, ...orphelins];
 }

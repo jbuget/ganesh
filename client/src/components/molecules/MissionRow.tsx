@@ -15,15 +15,15 @@ import { depuis } from "@/lib/relative-dates";
 interface MissionRowProps {
   mission: ProjectListItemResponse;
   /** A work package indents under its project, so the hierarchy reads. */
-  estLot?: boolean;
+  isWorkPackage?: boolean;
   /** How many sub-projects the mission carries: none, nothing to fold. */
-  lots?: number;
+  workPackages?: number;
   /** Whether its sub-projects are visible. Collapsed by default. */
-  deplie?: boolean;
+  expanded?: boolean;
   /** Shows or hides the sub-projects. */
   onBasculer?: () => void;
   /** Freezes the reference time: without it, server and client would diverge. */
-  maintenant: Date;
+  now: Date;
   onOpen: () => void;
   /** Opens the mission on its thread, where the preview stops. */
   onOpenFil: () => void;
@@ -39,11 +39,11 @@ interface MissionRowProps {
  */
 export function MissionRow({
   mission,
-  estLot = false,
-  lots = 0,
-  deplie = false,
+  isWorkPackage = false,
+  workPackages = 0,
+  expanded = false,
   onBasculer,
-  maintenant,
+  now,
   onOpen,
   onOpenFil,
 }: MissionRowProps) {
@@ -52,7 +52,7 @@ export function MissionRow({
 
   // The latest message in full and formatted, as it reads in the thread: a
   // truncated preview would force opening the panel for the end of a sentence.
-  const apercu = latest && (
+  const preview = latest && (
     <>
       {/* The rule separates the signature from the words: without it, the first
           line of the message reads as the continuation of the header. Negative
@@ -60,7 +60,7 @@ export function MissionRow({
           crosses. */}
       <p className="-mx-3 mb-2 border-b border-slate-200 px-3 pb-2 text-xs text-slate-500">
         <span className="font-medium text-slate-700">{latest.author.display_name}</span>{" "}
-        · {depuis(latest.published_at, maintenant)}
+        · {depuis(latest.published_at, now)}
       </p>
       <MarkdownView body={latest.body} />
     </>
@@ -68,11 +68,11 @@ export function MissionRow({
 
   return (
     <TableRow onClick={onOpen} className="cursor-pointer">
-      <TableCell className={estLot ? "pl-14" : ""}>
+      <TableCell className={isWorkPackage ? "pl-14" : ""}>
         <span className="flex items-center gap-2">
           {/* The bracket ties the work package to its project: without it,
               indentation alone gets lost as soon as a long line wraps. */}
-          {estLot && (
+          {isWorkPackage && (
             <span aria-hidden className="-ml-4 text-slate-300">
               └
             </span>
@@ -82,13 +82,15 @@ export function MissionRow({
               chevron gives a project's detail on demand. The gutter stays even
               without sub-projects, otherwise the names would no longer fall on
               the same vertical from one row to the next. */}
-          {!estLot &&
-            (lots > 0 ? (
+          {!isWorkPackage &&
+            (workPackages > 0 ? (
               <button
                 type="button"
-                aria-expanded={deplie}
-                aria-label={`${deplie ? "Masquer" : "Afficher"} ${
-                  lots > 1 ? `les ${lots} sous-projets` : "le sous-projet"
+                aria-expanded={expanded}
+                aria-label={`${expanded ? "Masquer" : "Afficher"} ${
+                  workPackages > 1
+                    ? `les ${workPackages} sous-projets`
+                    : "le sous-projet"
                 } de ${project.label}`}
                 // The whole row opens the mission: without stopping
                 // propagation, folding would open the panel at the same time.
@@ -100,7 +102,7 @@ export function MissionRow({
               >
                 <ChevronRight
                   aria-hidden
-                  className={`size-4 transition-transform ${deplie ? "rotate-90" : ""}`}
+                  className={`size-4 transition-transform ${expanded ? "rotate-90" : ""}`}
                 />
               </button>
             ) : (
@@ -116,7 +118,7 @@ export function MissionRow({
             }}
             className={[
               "cursor-pointer text-left",
-              estLot ? "text-slate-600" : "font-medium text-slate-800",
+              isWorkPackage ? "text-slate-600" : "font-medium text-slate-800",
             ].join(" ")}
           >
             {project.label}
@@ -129,7 +131,7 @@ export function MissionRow({
           of. The icon already says what the number counts, hence the empty
           heading. */}
       <TableCell className="w-12 text-right">
-        <UpdatesCounter count={mission.comments} apercu={apercu} onOpen={onOpenFil} />
+        <UpdatesCounter count={mission.comments} preview={preview} onOpen={onOpenFil} />
       </TableCell>
 
       <TableCell>

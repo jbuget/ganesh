@@ -10,7 +10,7 @@ import { useProjectUpdates } from "@/lib/use-project-updates";
 interface ProjectUpdatesTabProps {
   projectId: number;
   /** Freezes the reference time: without it, server and client would diverge. */
-  maintenant: Date;
+  now: Date;
   /** Tells the screen one came from: it announces the thread without opening it. */
   onChange?: () => void | Promise<void>;
   /** Puts the cursor in the composer as soon as it opens. */
@@ -25,7 +25,7 @@ interface ProjectUpdatesTabProps {
  */
 export function ProjectUpdatesTab({
   projectId,
-  maintenant,
+  now,
   onChange,
   focusRedaction = false,
 }: ProjectUpdatesTabProps) {
@@ -93,7 +93,7 @@ export function ProjectUpdatesTab({
           <ProjectUpdateCard
             key={maj.id}
             maj={maj}
-            maintenant={maintenant}
+            now={now}
             onEdit={(body) => suivi.corriger(maj.id, body)}
             onRemove={() => suivi.remove(maj.id)}
           />

@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MissionRow } from "./MissionRow";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 
-const MAINTENANT = new Date("2026-09-17T12:00:00Z");
+const NOW = new Date("2026-09-17T12:00:00Z");
 
 const member = (id: number, name: string) => ({
   id,
@@ -12,7 +12,7 @@ const member = (id: number, name: string) => ({
   initials: name.slice(0, 2).toUpperCase(),
 });
 
-const mission = (champs: Record<string, unknown> = {}): ProjectListItemResponse =>
+const mission = (fields: Record<string, unknown> = {}): ProjectListItemResponse =>
   ({
     project: {
       id: 1,
@@ -23,7 +23,7 @@ const mission = (champs: Record<string, unknown> = {}): ProjectListItemResponse 
       estimated_days: 12,
       parent_id: null,
       is_active: true,
-      ...champs,
+      ...fields,
     },
     leads: [],
     contributors: [],
@@ -45,7 +45,7 @@ describe("MissionRow", () => {
     line(
       <MissionRow
         mission={mission()}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
         onOpenFil={() => {}}
       />,
@@ -60,7 +60,7 @@ describe("MissionRow", () => {
     line(
       <MissionRow
         mission={mission({ priority: "critical" })}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
         onOpenFil={() => {}}
       />,
@@ -73,7 +73,7 @@ describe("MissionRow", () => {
     line(
       <MissionRow
         mission={mission({ priority: null })}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
         onOpenFil={() => {}}
       />,
@@ -93,7 +93,7 @@ describe("MissionRow", () => {
     line(
       <MissionRow
         mission={consommee}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
         onOpenFil={() => {}}
       />,
@@ -106,7 +106,7 @@ describe("MissionRow", () => {
     line(
       <MissionRow
         mission={mission()}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
         onOpenFil={() => {}}
       />,
@@ -119,12 +119,7 @@ describe("MissionRow", () => {
     const suivie = { ...mission(), comments: 3 } as ProjectListItemResponse;
 
     line(
-      <MissionRow
-        mission={suivie}
-        maintenant={MAINTENANT}
-        onOpen={() => {}}
-        onOpenFil={() => {}}
-      />,
+      <MissionRow mission={suivie} now={NOW} onOpen={() => {}} onOpenFil={() => {}} />,
     );
 
     expect(screen.getByLabelText("3 mises à jour")).toHaveTextContent("3");
@@ -142,12 +137,7 @@ describe("MissionRow", () => {
     } as ProjectListItemResponse;
 
     line(
-      <MissionRow
-        mission={suivie}
-        maintenant={MAINTENANT}
-        onOpen={() => {}}
-        onOpenFil={() => {}}
-      />,
+      <MissionRow mission={suivie} now={NOW} onOpen={() => {}} onOpenFil={() => {}} />,
     );
     fireEvent.mouseMove(screen.getByLabelText("2 mises à jour"));
 
@@ -171,12 +161,7 @@ describe("MissionRow", () => {
     } as ProjectListItemResponse;
 
     line(
-      <MissionRow
-        mission={suivie}
-        maintenant={MAINTENANT}
-        onOpen={() => {}}
-        onOpenFil={() => {}}
-      />,
+      <MissionRow mission={suivie} now={NOW} onOpen={() => {}} onOpenFil={() => {}} />,
     );
     fireEvent.mouseMove(screen.getByLabelText("1 mise à jour"));
 
@@ -189,12 +174,7 @@ describe("MissionRow", () => {
     const suivie = { ...mission(), comments: 2 } as ProjectListItemResponse;
 
     line(
-      <MissionRow
-        mission={suivie}
-        maintenant={MAINTENANT}
-        onOpen={open}
-        onOpenFil={openThread}
-      />,
+      <MissionRow mission={suivie} now={NOW} onOpen={open} onOpenFil={openThread} />,
     );
     fireEvent.click(screen.getByLabelText("2 mises à jour"));
 
@@ -207,7 +187,7 @@ describe("MissionRow", () => {
     line(
       <MissionRow
         mission={mission()}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
         onOpenFil={() => {}}
       />,
@@ -219,12 +199,7 @@ describe("MissionRow", () => {
   it("opens the mission on a click on its name", () => {
     const open = vi.fn();
     line(
-      <MissionRow
-        mission={mission()}
-        maintenant={MAINTENANT}
-        onOpen={open}
-        onOpenFil={() => {}}
-      />,
+      <MissionRow mission={mission()} now={NOW} onOpen={open} onOpenFil={() => {}} />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Portail" }));
@@ -242,7 +217,7 @@ describe("MissionRow", () => {
     line(
       <MissionRow
         mission={avecMonde}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
         onOpenFil={() => {}}
       />,
@@ -256,7 +231,7 @@ describe("MissionRow", () => {
     line(
       <MissionRow
         mission={mission({ category: null, estimated_days: null })}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
         onOpenFil={() => {}}
       />,
@@ -270,8 +245,8 @@ describe("MissionRow", () => {
     line(
       <MissionRow
         mission={mission()}
-        estLot
-        maintenant={MAINTENANT}
+        isWorkPackage
+        now={NOW}
         onOpen={() => {}}
         onOpenFil={() => {}}
       />,
@@ -284,7 +259,7 @@ describe("MissionRow", () => {
     line(
       <MissionRow
         mission={mission()}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
         onOpenFil={() => {}}
       />,
@@ -297,9 +272,9 @@ describe("MissionRow", () => {
     line(
       <MissionRow
         mission={mission()}
-        lots={2}
-        deplie
-        maintenant={MAINTENANT}
+        workPackages={2}
+        expanded
+        now={NOW}
         onOpen={() => {}}
         onOpenFil={() => {}}
         onBasculer={() => {}}
@@ -316,9 +291,9 @@ describe("MissionRow", () => {
     line(
       <MissionRow
         mission={mission()}
-        lots={2}
-        deplie={false}
-        maintenant={MAINTENANT}
+        workPackages={2}
+        expanded={false}
+        now={NOW}
         onOpen={() => {}}
         onOpenFil={() => {}}
         onBasculer={() => {}}
@@ -338,9 +313,9 @@ describe("MissionRow", () => {
     line(
       <MissionRow
         mission={mission()}
-        lots={1}
-        deplie
-        maintenant={MAINTENANT}
+        workPackages={1}
+        expanded
+        now={NOW}
         onOpen={open}
         onOpenFil={() => {}}
         onBasculer={toggle}
@@ -358,7 +333,7 @@ describe("MissionRow", () => {
     line(
       <MissionRow
         mission={mission()}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
         onOpenFil={() => {}}
       />,
@@ -373,7 +348,7 @@ describe("MissionRow", () => {
     line(
       <MissionRow
         mission={mission({ kind: "off_project", status: null, estimated_days: null })}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
         onOpenFil={() => {}}
       />,

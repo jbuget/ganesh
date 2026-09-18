@@ -27,7 +27,7 @@ interface ProjectTabsProps {
   ) => Promise<void>;
   saveDescription: (body: string) => Promise<void>;
   changePhase: (status: ProjectStatus) => Promise<void>;
-  updateFields: (champs: {
+  updateFields: (fields: {
     category?: ProjectCategory | null;
     estimated_days?: number | null;
   }) => Promise<void>;
@@ -64,7 +64,7 @@ export function ProjectTabs({
   // Freezes the reference time for the duration of the visit: « il y a 3
   // min » must not recompute on every render, and the thread is only
   // loaded after mounting anyway — nothing is rendered server-side.
-  const [maintenant] = useState(() => new Date());
+  const [now] = useState(() => new Date());
 
   return (
     <Tabs
@@ -110,7 +110,7 @@ export function ProjectTabs({
       <TabsContent value="updates">
         <ProjectUpdatesTab
           projectId={detail.project.id}
-          maintenant={maintenant}
+          now={now}
           onChange={onChange}
           // Coming from the counter, one comes to write: the cursor is already
           // waiting in the editor. Coming from the panel, one comes to read

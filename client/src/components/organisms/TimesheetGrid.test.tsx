@@ -135,9 +135,9 @@ describe("TimesheetGrid", () => {
   it("closes the table with a strong rule even with no mission", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid({ rows: [] })} />);
 
-    const cellule = screen.getByText(/Aucune mission pour ce mois/);
-    expect(cellule.className).toContain("border-b-slate-500");
-    expect(cellule.className).toContain("border-r-slate-500");
+    const cell = screen.getByText(/Aucune mission pour ce mois/);
+    expect(cell.className).toContain("border-b-slate-500");
+    expect(cell.className).toContain("border-r-slate-500");
   });
 
   it("keeps the add row in last place", () => {
@@ -219,15 +219,15 @@ describe("TimesheetGrid", () => {
   it("shrinks a weekend with no entry to a plain band", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
-    const entete = screen.getByRole("columnheader", { name: /S 19/ });
-    expect(entete.className).toContain("w-2.5");
+    const header = screen.getByRole("columnheader", { name: /S 19/ });
+    expect(header.className).toContain("w-2.5");
   });
 
   it("keeps its width on a working day", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
-    const entete = screen.getByRole("columnheader", { name: /M 15/ });
-    expect(entete.className).toContain("w-9");
+    const header = screen.getByRole("columnheader", { name: /M 15/ });
+    expect(header.className).toContain("w-9");
   });
 
   it("keeps its width on a weekend carrying an inherited entry", () => {
@@ -239,9 +239,9 @@ describe("TimesheetGrid", () => {
     } as Partial<MonthGridResponse>);
     render(<TimesheetGrid {...baseProps} grid={grid} />);
 
-    const entete = screen.getByRole("columnheader", { name: /S 19/ });
-    expect(entete.className).toContain("w-9");
-    expect(entete.className).not.toContain("w-2.5");
+    const header = screen.getByRole("columnheader", { name: /S 19/ });
+    expect(header.className).toContain("w-9");
+    expect(header.className).not.toContain("w-2.5");
   });
 
   it("shows one total per day", () => {

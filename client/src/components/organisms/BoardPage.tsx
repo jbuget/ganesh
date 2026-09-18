@@ -68,7 +68,7 @@ export function BoardPage() {
 
   // One reference time for the whole board: « il y a 3 h » must not
   // depend on when each card renders.
-  const maintenant = useMemo(() => new Date(), []);
+  const now = useMemo(() => new Date(), []);
 
   // The open mission lives in the URL: a panel is shared by a link, and going
   // back closes it, as one expects of a screen of its own.
@@ -106,7 +106,7 @@ export function BoardPage() {
   return (
     <PageLayout
       defilementInterne
-      entete={
+      header={
         <PageHeader
           title="Kanban"
           subtitle={
@@ -153,7 +153,7 @@ export function BoardPage() {
                   key={status}
                   status={status}
                   cards={cards}
-                  maintenant={maintenant}
+                  now={now}
                   onIntervenantsChange={board.reload}
                   onOpen={panel.open}
                   frozen={hasFilter}
@@ -171,11 +171,7 @@ export function BoardPage() {
             <DragOverlay dropAnimation={null}>
               {drag.isDragging && (
                 <div className="w-64 rotate-2 scale-[1.02] cursor-grabbing">
-                  <ProjectCard
-                    card={drag.isDragging}
-                    maintenant={maintenant}
-                    isDragging
-                  />
+                  <ProjectCard card={drag.isDragging} now={now} isDragging />
                 </div>
               )}
             </DragOverlay>

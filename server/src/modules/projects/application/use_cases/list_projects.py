@@ -33,9 +33,9 @@ class ListedProject:
     contributors: list[User] = field(default_factory=list)
     #: Jours declares, previsionnel exclu.
     delivered_days: float = 0.0
-    #: Mises a jour vivantes du fil de suivi.
+    #: Live updates in the follow-up thread.
     comments: int = 0
-    #: La derniere d'entre elles, pour annoncer le fil sans l'ouvrir.
+    #: The latest of them, to announce the thread without opening it.
     latest_update: LastUpdate | None = None
 
     @property
@@ -66,17 +66,17 @@ class ListProjectsUseCase:
     ) -> list[ListedProject]:
         missions = await self._projects.list_all(include_inactive=include_inactive)
         entries = await self._entries.count_by_project()
-        realise = await self._entries.sum_realised_by_project(today or date.today())
+        delivered = await self._entries.sum_realised_by_project(today or date.today())
         comments = await self._updates.count_by_project()
-        dernieres = await self._updates.latest_by_project()
+        latest_by_project = await self._updates.latest_by_project()
 
         enfants: dict[int, int] = {}
         for mission in await self._projects.list_all(include_inactive=True):
             if mission.parent_id is not None:
                 enfants[mission.parent_id] = enfants.get(mission.parent_id, 0) + 1
 
-        # Les affectations se lisent en deux requetes, pas deux par mission : le
-        # referentiel en aligne des dizaines sur un meme ecran.
+        # Assignments are read in two queries, not two per mission: the
+        # reference list lines up dozens of them on a single screen.
         users = {u.id: u for u in await self._users.list_all(True)}
         par_role = {role: await self._assignees.list_all(role) for role in ProjectRole}
 
@@ -87,10 +87,10 @@ class ListProjectsUseCase:
             return sorted(connus, key=lambda u: u.display_name)
 
         def latest(project_id: int) -> LastUpdate | None:
-            update = dernieres.get(project_id)
+            update = latest_by_project.get(project_id)
             author = users.get(update.author_id) if update else None
-            # Un auteur desactive puis efface laisserait un texte anonyme :
-            # mieux vaut ne rien annoncer que de le signer d'un blanc.
+            # An author deactivated then deleted would leave an anonymous
+            # text: better to announce nothing than to sign it with a blank.
             return (
                 LastUpdate(update=update, author=author) if update and author else None
             )
@@ -102,7 +102,7 @@ class ListProjectsUseCase:
                 sub_projects=enfants.get(mission.id or 0, 0),
                 leads=people(mission.id or 0, ProjectRole.LEAD),
                 contributors=people(mission.id or 0, ProjectRole.CONTRIBUTOR),
-                delivered_days=realise.get(mission.id or 0, 0.0),
+                delivered_days=delivered.get(mission.id or 0, 0.0),
                 comments=comments.get(mission.id or 0, 0),
                 latest_update=latest(mission.id or 0),
             )

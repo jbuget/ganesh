@@ -6,7 +6,7 @@ import { PageLayout } from "./PageLayout";
 describe("PageLayout", () => {
   it("shows the header and the content", () => {
     render(
-      <PageLayout entete={<h1>Référentiel</h1>}>
+      <PageLayout header={<h1>Référentiel</h1>}>
         <p>Une mission</p>
       </PageLayout>,
     );
@@ -19,7 +19,7 @@ describe("PageLayout", () => {
     // That is the whole point of the skeleton: were the header to share the
     // scrolling container, it would go off with the content.
     render(
-      <PageLayout entete={<h1>Référentiel</h1>}>
+      <PageLayout header={<h1>Référentiel</h1>}>
         <p>Une mission</p>
       </PageLayout>,
     );

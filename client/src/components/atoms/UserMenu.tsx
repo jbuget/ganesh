@@ -22,10 +22,10 @@ interface UserMenuProps {
  * — and the one command that goes nowhere else.
  */
 export function UserMenu({ user, onSignOut, repliee = false }: UserMenuProps) {
-  const [ouvert, setOuvert] = useState(false);
+  const [isOpen, setOuvert] = useState(false);
 
   return (
-    <Popover open={ouvert} onOpenChange={setOuvert}>
+    <Popover open={isOpen} onOpenChange={setOuvert}>
       <PopoverTrigger
         aria-label={`Compte de ${user.display_name}`}
         className={[

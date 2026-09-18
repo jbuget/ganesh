@@ -14,11 +14,11 @@ interface CategoryPickerProps {
 
 /** A mission's strategic axis. One, or none. */
 export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
-  const [ouvert, setOuvert] = useState(false);
+  const [isOpen, setOuvert] = useState(false);
   const axis = category(value);
 
   return (
-    <Popover open={ouvert} onOpenChange={setOuvert}>
+    <Popover open={isOpen} onOpenChange={setOuvert}>
       <PopoverTrigger
         aria-label="Changer la catégorie"
         className="-mx-1 flex cursor-pointer items-center rounded px-1 py-0.5 transition-colors hover:bg-slate-100"
