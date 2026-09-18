@@ -58,6 +58,6 @@ class EntraTokenValidator:
                 issuer=self._issuer,
             )
         except JWTError as error:
-            logger.warning("Jeton Entra refuse : %s", error)
+            logger.warning("Entra token refused: %s", error)
             raise ForbiddenActionError("Jeton d'authentification invalide.") from error
         return claims

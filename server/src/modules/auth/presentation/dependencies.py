@@ -41,7 +41,7 @@ async def get_current_user(
     provision = ProvisionUserUseCase(users=SqlUserRepository(session))
 
     if not settings.require_auth:
-        logger.warning("Authentification desactivee : identite de developpement.")
+        logger.warning("Authentication disabled: development identity.")
         user = await provision.execute(DEV_IDENTITY)
         await session.commit()
         return user
