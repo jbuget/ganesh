@@ -6,7 +6,7 @@
  */
 
 /**
- * Le projet dont un lot releve, tel qu'annonce sur sa carte.
+ * The project a work package belongs to, as announced on its card.
  */
 export interface BoardParentResponse {
   id: number;

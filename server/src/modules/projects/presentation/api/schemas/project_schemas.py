@@ -1,4 +1,4 @@
-"""Schemas du referentiel des missions."""
+"""Schemas of the mission reference list."""
 
 from datetime import date, datetime
 
@@ -15,241 +15,241 @@ from src.modules.projects.domain.entities.project_link import LinkIcon
 
 
 class CreateProjectRequest(BaseModel):
-    """Creation d'une mission."""
+    """Creating a mission."""
 
     label: str = Field(min_length=1, max_length=255)
     kind: ProjectKind
-    statut: ProjectStatus | None = None
+    status: ProjectStatus | None = None
     parent_id: int | None = None
-    estime_j: float | None = None
+    estimated_days: float | None = None
 
 
 class ChangeStatusRequest(BaseModel):
-    """Changement de phase d'une mission."""
+    """Changing the phase of a mission."""
 
-    statut: ProjectStatus
+    status: ProjectStatus
 
 
 class ProjectResponse(BaseModel):
-    """Une mission du referentiel."""
+    """A mission from the reference list."""
 
     id: int
     label: str
     kind: ProjectKind
-    statut: ProjectStatus | None
+    status: ProjectStatus | None
     parent_id: int | None
-    actif: bool
-    #: Quand la mission a quitte le referentiel, nulle tant qu'elle y est.
+    is_active: bool
+    #: When the mission left the reference list, null while it is still there.
     archived_at: datetime | None
-    estime_j: float | None
-    categorie: ProjectCategory | None
-    priorite: ProjectPriority | None
-    date_mise_en_service: date | None
+    estimated_days: float | None
+    category: ProjectCategory | None
+    priority: ProjectPriority | None
+    go_live_date: date | None
     position: int
     monday_item_id: str | None
     monday_subitem_id: str | None
-    contacts_metier: str | None
+    business_contacts: str | None
     description: str | None
     is_syncable_to_monday: bool
     is_deletable: bool
 
 
 class LastUpdateResponse(BaseModel):
-    """De quoi annoncer un fil de suivi sans l'ouvrir."""
+    """Enough to announce a follow-up thread without opening it."""
 
     author: "BoardMemberResponse"
-    texte: str
-    publiee_le: datetime
+    body: str
+    published_at: datetime
 
 
 class ProjectListItemResponse(BaseModel):
-    """Une mission du referentiel, avec qui s'en occupe."""
+    """A mission from the reference list, with who looks after it."""
 
     project: ProjectResponse
-    referents: list["BoardMemberResponse"]
-    intervenants: list["BoardMemberResponse"]
+    leads: list["BoardMemberResponse"]
+    contributors: list["BoardMemberResponse"]
     #: Jours declares, previsionnel exclu.
-    realise_j: float
-    #: Mises a jour vivantes du fil de suivi.
-    commentaires: int
-    #: La derniere d'entre elles, absente tant que rien ne se lit.
-    derniere_maj: LastUpdateResponse | None
+    delivered_days: float
+    #: Live updates in the follow-up thread.
+    comments: int
+    #: The latest of them, absent while there is nothing to read.
+    latest_update: LastUpdateResponse | None
 
 
 class UpdateProjectRequest(BaseModel):
-    """Modification partielle : seuls les champs fournis sont appliques."""
+    """Partial change: only the fields provided are applied."""
 
     label: str | None = Field(default=None, min_length=1, max_length=255)
-    statut: ProjectStatus | None = None
-    estime_j: float | None = None
-    categorie: ProjectCategory | None = None
-    priorite: ProjectPriority | None = None
-    date_mise_en_service: date | None = None
-    actif: bool | None = None
+    status: ProjectStatus | None = None
+    estimated_days: float | None = None
+    category: ProjectCategory | None = None
+    priority: ProjectPriority | None = None
+    go_live_date: date | None = None
+    is_active: bool | None = None
     parent_id: int | None = None
     monday_item_id: str | None = None
     monday_subitem_id: str | None = None
 
 
 class ImportLineRequest(BaseModel):
-    """Une ligne d'import, telle qu'elle sort d'un tableur."""
+    """One import line, as it comes out of a spreadsheet."""
 
     label: str
-    kind: ProjectKind = ProjectKind.PROJET
-    statut: ProjectStatus | None = ProjectStatus.EXPLORATION
+    kind: ProjectKind = ProjectKind.PROJECT
+    status: ProjectStatus | None = ProjectStatus.EXPLORATION
     parent_label: str | None = None
-    estime_j: float | None = None
+    estimated_days: float | None = None
     monday_item_id: str | None = None
     monday_subitem_id: str | None = None
 
 
 class ImportProjectsRequest(BaseModel):
-    """Import en masse du referentiel."""
+    """Bulk import of the reference list."""
 
-    lignes: list[ImportLineRequest]
+    rows: list[ImportLineRequest]
 
 
 class ImportReportResponse(BaseModel):
-    """Ce que l'import a fait, ligne par ligne."""
+    """What the import did, line by line."""
 
-    crees: int
-    ignores: int
-    erreurs: list[str]
+    created: int
+    skipped: int
+    errors: list[str]
 
 
 class MoveProjectRequest(BaseModel):
-    """Depot d'une carte : colonne d'arrivee et rang voulu."""
+    """Dropping a card: the column it lands in and the rank wanted."""
 
-    statut: ProjectStatus
+    status: ProjectStatus
     position: int = Field(ge=0)
 
 
 class BoardMemberResponse(BaseModel):
-    """Un intervenant, tel qu'affiche en pastille sur une carte."""
+    """A contributor, as shown by an avatar on a card."""
 
     id: int
     display_name: str
-    initiales: str
+    initials: str
 
 
 class BoardParentResponse(BaseModel):
-    """Le projet dont un lot releve, tel qu'annonce sur sa carte."""
+    """The project a work package belongs to, as announced on its card."""
 
     id: int
     label: str
 
 
 class BoardCardResponse(BaseModel):
-    """Une carte du tableau de bord."""
+    """A board card."""
 
     project: ProjectResponse
-    consomme_j: float
-    intervenants: list[BoardMemberResponse]
-    commentaires: int
-    #: Le dernier message du fil, absent tant que rien ne se lit.
-    derniere_maj: LastUpdateResponse | None
-    sous_projets: int
+    consumed_days: float
+    contributors: list[BoardMemberResponse]
+    comments: int
+    #: The latest message of the thread, absent while there is nothing to read.
+    latest_update: LastUpdateResponse | None
+    sub_projects: int
     parent: BoardParentResponse | None
 
 
 class BoardColumnResponse(BaseModel):
-    """Une phase et ses cartes."""
+    """A phase and its cards."""
 
-    statut: ProjectStatus
-    cartes: list[BoardCardResponse]
+    status: ProjectStatus
+    cards: list[BoardCardResponse]
 
 
 class BoardResponse(BaseModel):
-    """Le tableau complet, toutes phases confondues."""
+    """The whole board, every phase together."""
 
-    colonnes: list[BoardColumnResponse]
+    columns: list[BoardColumnResponse]
 
 
 class ProjectLinkResponse(BaseModel):
-    """Un lien utile attache a une mission."""
+    """A useful link attached to a mission."""
 
     id: int
     label: str
     url: str
-    icone: LinkIcon
+    icon: LinkIcon
 
 
 class AddLinkRequest(BaseModel):
-    """Ajout d'un lien : une adresse, un intitule et une icone facultatifs.
+    """Adding a link: an address, an optional label and an optional icon.
 
-    Sans icone, le serveur la deduit de l'adresse : l'ecran n'a pas a connaitre
-    la liste des services reconnus.
+    Without an icon, the server infers it from the address: the screen does not
+    have to know the list of recognised services.
     """
 
     label: str = ""
     url: str
-    icone: LinkIcon | None = None
+    icon: LinkIcon | None = None
 
 
 class PhaseReachedResponse(BaseModel):
-    """Date a laquelle une mission est entree dans une phase."""
+    """The date a mission entered a phase."""
 
-    statut: ProjectStatus
-    libelle: str
+    status: ProjectStatus
+    label: str
     reached_at: date
 
 
 class MonthlyShareResponse(BaseModel):
-    """Temps declare sur un mois donne."""
+    """Time declared over a given month."""
 
-    mois: date
-    jours: float
+    month: date
+    days: float
 
 
 class ProjectContributionResponse(BaseModel):
-    """Temps declare par une personne sur la mission."""
+    """Time one person declared on the mission."""
 
     member: BoardMemberResponse
-    jours: float
-    par_mois: list[MonthlyShareResponse]
+    days: float
+    by_month: list[MonthlyShareResponse]
 
 
 class ProjectDetailResponse(BaseModel):
-    """La fiche complete d'une mission."""
+    """The full sheet of a mission."""
 
     project: ProjectResponse
-    departements: list[Department]
-    liens: list[ProjectLinkResponse]
+    departments: list[Department]
+    links: list[ProjectLinkResponse]
     phases: list[PhaseReachedResponse]
-    referents: list[BoardMemberResponse]
-    intervenants: list[BoardMemberResponse]
-    consomme_j: float
+    leads: list[BoardMemberResponse]
+    contributors: list[BoardMemberResponse]
+    consumed_days: float
     contributions: list[ProjectContributionResponse]
-    sous_projets: list[ProjectResponse]
+    sub_projects: list[ProjectResponse]
 
 
 class UpdateProjectDetailRequest(BaseModel):
-    """Departements concernes et interlocuteurs metier."""
+    """Departments concerned and business contacts."""
 
-    departements: list[Department] = []
-    contacts_metier: str | None = None
+    departments: list[Department] = []
+    business_contacts: str | None = None
 
 
 class UpdateDescriptionRequest(BaseModel):
-    """Fiche de service, en markdown."""
+    """Service sheet, in markdown."""
 
     description: str | None = None
 
 
 class ProjectUpdateResponse(BaseModel):
-    """Une mise a jour du fil de suivi."""
+    """One update from the follow-up thread."""
 
     id: int
     author: BoardMemberResponse
-    texte: str
-    publiee_le: datetime
-    modifiee_le: datetime | None
-    est_supprimee: bool
-    #: Vrai si le lecteur courant peut la corriger ou la retirer.
-    est_la_mienne: bool
+    body: str
+    published_at: datetime
+    edited_at: datetime | None
+    is_deleted: bool
+    #: True if the current reader may correct or withdraw it.
+    is_mine: bool
 
 
 class PostUpdateRequest(BaseModel):
-    """Publication ou correction d'une mise a jour."""
+    """Posting or correcting an update."""
 
-    texte: str = Field(min_length=1)
+    body: str = Field(min_length=1)

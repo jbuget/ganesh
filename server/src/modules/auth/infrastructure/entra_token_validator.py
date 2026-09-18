@@ -1,8 +1,8 @@
-"""Validation des jetons emis par Microsoft Entra ID.
+"""Validating tokens issued by Microsoft Entra ID.
 
-Les cles publiques sont recuperees sur le point JWKS du tenant et mises en
-cache : Entra les fait tourner rarement, et un appel reseau par requete serait
-un cout inutile.
+Public keys are fetched from the tenant's JWKS endpoint and cached: Entra
+rotates them rarely, and one network call per request would be a needless
+cost.
 """
 
 import logging
@@ -20,7 +20,7 @@ JWKS_CACHE: dict[str, dict[str, Any]] = {}
 
 
 class EntraTokenValidator:
-    """Verifie la signature et les revendications d'un jeton Entra."""
+    """Checks the signature and claims of an Entra token."""
 
     def __init__(self, tenant_id: str, client_id: str) -> None:
         self._tenant_id = tenant_id
@@ -48,7 +48,7 @@ class EntraTokenValidator:
         return keys
 
     async def validate(self, token: str) -> dict[str, Any]:
-        """Retourne les revendications du jeton, ou refuse l'acces."""
+        """Returns the token claims, or denies access."""
         try:
             claims: dict[str, Any] = jwt.decode(
                 token,
@@ -58,6 +58,6 @@ class EntraTokenValidator:
                 issuer=self._issuer,
             )
         except JWTError as error:
-            logger.warning("Jeton Entra refuse : %s", error)
+            logger.warning("Entra token refused: %s", error)
             raise ForbiddenActionError("Jeton d'authentification invalide.") from error
         return claims

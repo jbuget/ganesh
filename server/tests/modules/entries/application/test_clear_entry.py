@@ -1,4 +1,4 @@
-"""Suppression d'une saisie."""
+"""Deleting an entry."""
 
 from datetime import date
 
@@ -38,9 +38,9 @@ ALICE = User(
     role=Role.TEAMMATE,
 )
 PROJECT = Project(
-    id=10, label="Portail", kind=ProjectKind.PROJET, statut=ProjectStatus.CADRAGE
+    id=10, label="Portail", kind=ProjectKind.PROJECT, status=ProjectStatus.SCOPING
 )
-JOUR = date(2026, 9, 15)
+DAY = date(2026, 9, 15)
 
 
 def build(entries: list[Entry] | None = None, months: list[Month] | None = None):
@@ -61,14 +61,14 @@ def build(entries: list[Entry] | None = None, months: list[Month] | None = None)
     return clear, set_entry, entry_repo, audit
 
 
-def an_entry(jour: date = JOUR, valeur: float = 1.0) -> Entry:
+def an_entry(day: date = DAY, value: float = 1.0) -> Entry:
     return Entry(
         id=1,
         user_id=1,
         project_id=10,
-        jour=jour,
-        valeur=DayValue(valeur),
-        statut_at_entry=ProjectStatus.CADRAGE,
+        day=day,
+        value=DayValue(value),
+        status_at_entry=ProjectStatus.SCOPING,
     )
 
 
@@ -76,28 +76,28 @@ async def test_an_entry_is_removed() -> None:
     clear, _, entries, _ = build([an_entry()])
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, jour=JOUR)
+        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
     )
 
-    assert await entries.get(1, 10, JOUR) is None
+    assert await entries.get(1, 10, DAY) is None
 
 
 async def test_clearing_an_empty_cell_is_harmless() -> None:
-    """Le cycle de saisie repasse par le vide : l'operation doit rester sure."""
+    """The entry cycle passes back through empty: the operation must stay safe."""
     clear, _, entries, _ = build()
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, jour=JOUR)
+        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
     )
 
-    assert await entries.get(1, 10, JOUR) is None
+    assert await entries.get(1, 10, DAY) is None
 
 
 async def test_removal_is_traced_with_the_previous_value() -> None:
-    clear, _, _, audit = build([an_entry(valeur=0.5)])
+    clear, _, _, audit = build([an_entry(value=0.5)])
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, jour=JOUR)
+        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
     )
 
     log = audit.logs[-1]
@@ -109,23 +109,23 @@ async def test_clearing_an_empty_cell_leaves_no_trace() -> None:
     clear, _, _, audit = build()
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, jour=JOUR)
+        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
     )
 
     assert audit.logs == []
 
 
 async def test_a_validated_month_refuses_removal() -> None:
-    month = Month(user_id=1, mois=date(2026, 9, 1))
+    month = Month(user_id=1, month=date(2026, 9, 1))
     month.validate(by=ALICE)
     clear, _, entries, _ = build([an_entry()], months=[month])
 
     with pytest.raises(ForbiddenActionError):
         await clear.execute(
-            ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, jour=JOUR)
+            ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
         )
 
-    assert await entries.get(1, 10, JOUR) is not None
+    assert await entries.get(1, 10, DAY) is not None
 
 
 async def test_an_unknown_actor_is_rejected() -> None:
@@ -133,34 +133,34 @@ async def test_an_unknown_actor_is_rejected() -> None:
 
     with pytest.raises(EntityNotFoundError):
         await clear.execute(
-            ClearEntryCommand(actor_id=99, target_user_id=1, project_id=10, jour=JOUR)
+            ClearEntryCommand(actor_id=99, target_user_id=1, project_id=10, day=DAY)
         )
 
 
 async def test_a_non_working_day_can_still_be_cleaned_up() -> None:
-    """On interdit de saisir un samedi, jamais d'en retirer une saisie heritee."""
-    samedi = date(2026, 9, 12)
-    clear, _, entries, _ = build([an_entry(jour=samedi)])
+    """Entering on a Saturday is forbidden, removing an inherited entry never is."""
+    saturday = date(2026, 9, 12)
+    clear, _, entries, _ = build([an_entry(day=saturday)])
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, jour=samedi)
+        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=saturday)
     )
 
-    assert await entries.get(1, 10, samedi) is None
+    assert await entries.get(1, 10, saturday) is None
 
 
 async def test_a_full_cycle_returns_the_cell_to_empty() -> None:
-    """Vide -> demi -> pleine -> vide : le tour complet du clic."""
+    """Empty -> half -> full -> empty: the full round of the click."""
     clear, set_entry, entries, _ = build()
-    for valeur in (0.5, 1.0):
+    for value in (0.5, 1.0):
         await set_entry.execute(
             SetEntryCommand(
-                actor_id=1, target_user_id=1, project_id=10, jour=JOUR, valeur=valeur
+                actor_id=1, target_user_id=1, project_id=10, day=DAY, value=value
             )
         )
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, jour=JOUR)
+        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
     )
 
-    assert await entries.get(1, 10, JOUR) is None
+    assert await entries.get(1, 10, DAY) is None

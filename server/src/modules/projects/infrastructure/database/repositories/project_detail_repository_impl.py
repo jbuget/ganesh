@@ -1,4 +1,4 @@
-"""Persistance des collections attachees a une mission."""
+"""Persistence of the collections attached to a mission."""
 
 from datetime import date
 
@@ -19,7 +19,7 @@ from src.modules.projects.infrastructure.database.models.project_detail_models i
 
 
 class SqlProjectDetailRepository(ProjectDetailRepository):
-    """Collections du detail, en base."""
+    """Detail collections, in the database."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -59,7 +59,7 @@ class SqlProjectDetailRepository(ProjectDetailRepository):
                 project_id=row.project_id,
                 label=row.label,
                 url=row.url,
-                icone=row.icone,
+                icon=row.icon,
             )
             for row in result.scalars().all()
         ]
@@ -69,7 +69,7 @@ class SqlProjectDetailRepository(ProjectDetailRepository):
             project_id=link.project_id,
             label=link.label,
             url=link.url,
-            icone=link.icone,
+            icon=link.icon,
         )
         self._session.add(model)
         await self._session.flush()
@@ -84,18 +84,18 @@ class SqlProjectDetailRepository(ProjectDetailRepository):
     async def list_phases_reached(self, project_id: int) -> dict[ProjectStatus, date]:
         result = await self._session.execute(
             select(
-                ProjectPhaseReachedModel.statut, ProjectPhaseReachedModel.reached_at
+                ProjectPhaseReachedModel.status, ProjectPhaseReachedModel.reached_at
             ).where(ProjectPhaseReachedModel.project_id == project_id)
         )
         return dict(result.all())  # type: ignore[arg-type]
 
     async def mark_phase_reached(
-        self, project_id: int, statut: ProjectStatus, reached_at: date
+        self, project_id: int, status: ProjectStatus, reached_at: date
     ) -> None:
-        # La premiere date fait foi : repasser par une phase ne reecrit pas
-        # l'histoire, et l'on garde la date du premier franchissement.
+        # The first date is the one that counts: passing through a phase again
+        # does not rewrite history, and the first crossing is kept.
         await self._session.execute(
             insert(ProjectPhaseReachedModel)
-            .values(project_id=project_id, statut=statut, reached_at=reached_at)
+            .values(project_id=project_id, status=status, reached_at=reached_at)
             .on_conflict_do_nothing()
         )

@@ -4,7 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 import type { ProjectContributionResponse } from "@/lib/api/generated/model";
-import { formatJoursDecimal, formatMonth } from "@/lib/dates";
+import { formatDecimalDays, formatMonth } from "@/lib/dates";
 
 interface ProjectContributionsProps {
   contributions: ProjectContributionResponse[];
@@ -12,26 +12,26 @@ interface ProjectContributionsProps {
 }
 
 /**
- * Qui a consomme quoi sur une mission.
+ * Who consumed what on a mission.
  *
- * Une liste plutot qu'un tableau : on est deux a six sur une mission, et ce
- * qu'on y lit est une part, pas une grille de chiffres. Le detail mensuel se
- * deplie sous la ligne plutot que d'ouvrir un ecran : les autres contributeurs
- * restent sous les yeux, et c'est a eux qu'on se compare.
+ * A list rather than a table: two to six people are on a mission, and what one
+ * reads there is a share, not a grid of figures. The monthly detail unfolds
+ * under the row rather than opening a screen: the other contributors stay
+ * before the eyes, and they are what one compares against.
  */
 export function ProjectContributions({
   contributions,
   total,
 }: ProjectContributionsProps) {
-  // Plusieurs lignes restent ouvertes a la fois : on deplie deux intervenants
-  // justement pour confronter leurs mois.
-  const [deplies, setDeplies] = useState<ReadonlySet<number>>(new Set());
+  // Several rows stay open at once: two contributors are expanded precisely to
+  // set their months side by side.
+  const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set());
 
-  function basculer(memberId: number) {
-    setDeplies((ouverts) => {
-      const suivants = new Set(ouverts);
-      if (!suivants.delete(memberId)) suivants.add(memberId);
-      return suivants;
+  function toggle(memberId: number) {
+    setExpanded((ouverts) => {
+      const next_ones = new Set(ouverts);
+      if (!next_ones.delete(memberId)) next_ones.add(memberId);
+      return next_ones;
     });
   }
 
@@ -42,23 +42,23 @@ export function ProjectContributions({
   return (
     <ul className="space-y-0.5">
       {contributions.map((contribution) => {
-        const ouvert = deplies.has(contribution.member.id);
-        const part = total > 0 ? (contribution.jours / total) * 100 : 0;
+        const isOpen = expanded.has(contribution.member.id);
+        const part = total > 0 ? (contribution.days / total) * 100 : 0;
 
         return (
           <li key={contribution.member.id}>
             <button
               type="button"
-              aria-expanded={ouvert}
-              onClick={() => basculer(contribution.member.id)}
+              aria-expanded={isOpen}
+              onClick={() => toggle(contribution.member.id)}
               className="flex w-full cursor-pointer items-center gap-2 rounded px-1 py-1.5 text-left transition-colors hover:bg-slate-50"
             >
               <ChevronRight
                 aria-hidden
-                className={`size-3.5 shrink-0 text-slate-400 transition-transform ${ouvert ? "rotate-90" : ""}`}
+                className={`size-3.5 shrink-0 text-slate-400 transition-transform ${isOpen ? "rotate-90" : ""}`}
               />
               <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-700">
-                {contribution.member.initiales}
+                {contribution.member.initials}
               </span>
               <span className="min-w-0 flex-1 truncate text-sm text-slate-700">
                 {contribution.member.display_name}
@@ -73,25 +73,25 @@ export function ProjectContributions({
                 />
               </span>
               <span className="w-16 shrink-0 text-right text-sm tabular-nums text-slate-600">
-                {formatJoursDecimal(contribution.jours)} jrs.
+                {formatDecimalDays(contribution.days)} jrs.
               </span>
             </button>
 
-            {ouvert && (
+            {isOpen && (
               <ul className="mt-0.5 mb-1 ml-[3.25rem] space-y-0.5">
-                {contribution.par_mois.map((mois) => (
+                {contribution.by_month.map((month) => (
                   <li
-                    key={mois.mois}
+                    key={month.month}
                     className="flex items-center gap-2 text-sm text-slate-500"
                   >
                     <span className="min-w-0 flex-1 truncate capitalize">
                       {formatMonth(
-                        Number(mois.mois.slice(0, 4)),
-                        Number(mois.mois.slice(5, 7)),
+                        Number(month.month.slice(0, 4)),
+                        Number(month.month.slice(5, 7)),
                       )}
                     </span>
                     <span className="w-16 shrink-0 text-right tabular-nums">
-                      {formatJoursDecimal(mois.jours)} jrs.
+                      {formatDecimalDays(month.days)} jrs.
                     </span>
                   </li>
                 ))}

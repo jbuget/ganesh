@@ -8,9 +8,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * L'application est concue pour un affichage clair : la matrice repose sur des
- * nuances de gris et de bleu tres legeres, illisibles sur fond sombre. On force
- * donc le schema clair plutot que de subir le theme du systeme.
+ * The application is built for a light display: the grid rests on very faint
+ * greys and blues, unreadable on a dark ground. We therefore force the light
+ * scheme rather than suffer the system theme.
  */
 :root {
   color-scheme: light;
@@ -158,8 +158,8 @@ body {
 }
 
 /*
- * Invite de l'editeur riche : ProseMirror marque le premier paragraphe vide,
- * a nous de peindre le texte.
+ * The rich editor's placeholder: ProseMirror marks the first empty paragraph,
+ * painting the text is up to us.
  */
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);

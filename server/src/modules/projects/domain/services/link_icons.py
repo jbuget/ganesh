@@ -1,20 +1,21 @@
-"""Ce qu'une adresse laisse deviner de la nature d'un lien.
+"""What an address lets one guess about the nature of a link.
 
-Coller une adresse suffit a poser un lien : plutot que d'obliger a choisir une
-icone, on la propose a partir du service vise. L'auteur garde le dernier mot.
+Pasting an address is enough to add a link: rather than forcing a choice of
+icon, one is suggested from the service it points to. The author has the last
+word.
 """
 
 from urllib.parse import urlparse
 
 from src.modules.projects.domain.entities.project_link import LinkIcon
 
-#: Services reconnus, par domaine. Un sous-domaine herite du sien : l'espace
-#: Slack d'une equipe vit sous `<equipe>.slack.com`.
-_ICONE_PAR_DOMAINE = {
-    "github.com": LinkIcon.DEPOT,
-    "gitlab.com": LinkIcon.DEPOT,
-    "bitbucket.org": LinkIcon.DEPOT,
-    "figma.com": LinkIcon.MAQUETTE,
+#: Known services, by domain. A subdomain inherits from its own: a team's
+#: Slack space lives under `<team>.slack.com`.
+_ICON_BY_DOMAIN = {
+    "github.com": LinkIcon.REPOSITORY,
+    "gitlab.com": LinkIcon.REPOSITORY,
+    "bitbucket.org": LinkIcon.REPOSITORY,
+    "figma.com": LinkIcon.DESIGN,
     "notion.so": LinkIcon.DOCUMENT,
     "notion.site": LinkIcon.DOCUMENT,
     "slack.com": LinkIcon.DISCUSSION,
@@ -22,9 +23,9 @@ _ICONE_PAR_DOMAINE = {
     "monday.com": LinkIcon.TICKET,
     "atlassian.net": LinkIcon.TICKET,
     "linear.app": LinkIcon.TICKET,
-    "drive.google.com": LinkIcon.DOSSIER,
-    "sharepoint.com": LinkIcon.DOSSIER,
-    "dropbox.com": LinkIcon.DOSSIER,
+    "drive.google.com": LinkIcon.FOLDER,
+    "sharepoint.com": LinkIcon.FOLDER,
+    "dropbox.com": LinkIcon.FOLDER,
     "meet.google.com": LinkIcon.VIDEO,
     "zoom.us": LinkIcon.VIDEO,
     "loom.com": LinkIcon.VIDEO,
@@ -32,34 +33,34 @@ _ICONE_PAR_DOMAINE = {
     "youtu.be": LinkIcon.VIDEO,
 }
 
-#: Google sert trois outils depuis `docs.google.com` : seul le chemin les separe.
-_ICONE_PAR_CHEMIN_GOOGLE = {
+#: Google serves three tools from `docs.google.com`: only the path tells them apart.
+_ICON_BY_GOOGLE_PATH = {
     "document": LinkIcon.DOCUMENT,
-    "spreadsheets": LinkIcon.TABLEUR,
+    "spreadsheets": LinkIcon.SPREADSHEET,
     "presentation": LinkIcon.PRESENTATION,
 }
 
 
-def deviner_icone(url: str) -> LinkIcon:
-    """Propose une icone d'apres l'adresse. Une adresse inconnue reste neutre."""
-    adresse = urlparse(url.strip())
-    host = (adresse.hostname or "").lower()
+def guess_icon(url: str) -> LinkIcon:
+    """Suggests an icon from the address. An unknown address stays neutral."""
+    parsed = urlparse(url.strip())
+    host = (parsed.hostname or "").lower()
 
-    if _correspond(host, "docs.google.com"):
-        premier_segment = adresse.path.lstrip("/").split("/")[0]
-        return _ICONE_PAR_CHEMIN_GOOGLE.get(premier_segment, LinkIcon.DOCUMENT)
+    if _matches(host, "docs.google.com"):
+        first_segment = parsed.path.lstrip("/").split("/")[0]
+        return _ICON_BY_GOOGLE_PATH.get(first_segment, LinkIcon.DOCUMENT)
 
-    for domaine, icone in _ICONE_PAR_DOMAINE.items():
-        if _correspond(host, domaine):
-            return icone
+    for domaine, icon in _ICON_BY_DOMAIN.items():
+        if _matches(host, domaine):
+            return icon
 
-    return LinkIcon.LIEN
+    return LinkIcon.LINK
 
 
-def _correspond(host: str, domaine: str) -> bool:
-    """Le domaine lui-meme, ou l'un de ses sous-domaines — et rien d'autre.
+def _matches(host: str, domaine: str) -> bool:
+    """The domain itself, or one of its subdomains — and nothing else.
 
-    La comparaison se fait sur un point : sans lui, `monfigma.com` passerait
-    pour Figma.
+    The comparison hinges on a dot: without it, `myfigma.com` would pass for
+    Figma.
     """
     return host == domaine or host.endswith(f".{domaine}")

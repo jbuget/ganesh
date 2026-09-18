@@ -1,4 +1,4 @@
-"""Traduction de l'etat des mois en schemas d'API."""
+"""Translating month state into API schemas."""
 
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.presentation.api.schemas.month_schemas import MonthResponse
@@ -7,7 +7,7 @@ from src.modules.months.presentation.api.schemas.month_schemas import MonthRespo
 def to_month_response(month: Month) -> MonthResponse:
     return MonthResponse(
         user_id=month.user_id,
-        mois=month.mois,
+        month=month.month,
         state=month.state,
         is_writable=month.is_writable,
         validated_at=month.validated_at,

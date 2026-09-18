@@ -17,42 +17,42 @@ import { formatTotal } from "@/lib/dates";
 interface ValidateMonthDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  mois: string;
-  totalSaisi: number;
-  joursOuvres: number;
+  month: string;
+  totalEntered: number;
+  workingDays: number;
   onConfirm: () => Promise<void>;
 }
 
 /**
- * Confirmation avant verrouillage d'un mois.
+ * Confirmation before locking a month.
  *
- * Le recapitulatif est affiche avant la decision : le controle de completude
- * fait la qualite de la donnee, mieux qu'un blocage qui pousserait a remplir
- * n'importe quoi.
+ * The summary is shown before the decision: checking completeness is what makes
+ * the data good, better than a block that would push people to fill in
+ * anything.
  */
 export function ValidateMonthDialog({
   open,
   onOpenChange,
-  mois,
-  totalSaisi,
-  joursOuvres,
+  month,
+  totalEntered,
+  workingDays,
   onConfirm,
 }: ValidateMonthDialogProps) {
-  const manquant = Math.max(0, joursOuvres - totalSaisi);
-  const [enCours, setEnCours] = useState(false);
+  const missing = Math.max(0, workingDays - totalEntered);
+  const [busy, setBusy] = useState(false);
 
   /**
-   * Le dialogue se referme lui-meme une fois le mois verrouille : rien dans la
-   * confirmation ne ferme la fenetre, et l'echec doit rester sous les yeux.
+   * The dialog closes itself once the month is locked: nothing in the
+   * confirmation closes the window, and a failure must stay before the eyes.
    */
-  async function confirmer() {
-    if (enCours) return;
-    setEnCours(true);
+  async function confirm() {
+    if (busy) return;
+    setBusy(true);
     try {
       await onConfirm();
       onOpenChange(false);
     } finally {
-      setEnCours(false);
+      setBusy(false);
     }
   }
 
@@ -60,29 +60,29 @@ export function ValidateMonthDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="capitalize">Valider {mois} ?</AlertDialogTitle>
+          <AlertDialogTitle className="capitalize">Valider {month} ?</AlertDialogTitle>
           <AlertDialogDescription>
             Après validation, vous ne pourrez plus modifier ce mois. Seul un manager
-            pourra le rouvrir.
+            pourra le reopen.
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
           <dt className="text-muted-foreground">Total saisi</dt>
-          <dd className="text-right font-medium">{formatTotal(totalSaisi)} jour(s)</dd>
+          <dd className="text-right font-medium">{formatTotal(totalEntered)} day(s)</dd>
           <dt className="text-muted-foreground">Jours ouvrés</dt>
-          <dd className="text-right font-medium">{joursOuvres} jours</dd>
+          <dd className="text-right font-medium">{workingDays} days</dd>
         </dl>
 
-        {manquant > 0 && (
+        {missing > 0 && (
           <p className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            Il manque {formatTotal(manquant)} jour(s) pour couvrir le mois.
+            Il manque {formatTotal(missing)} jour(s) pour couvrir le mois.
           </p>
         )}
 
         <AlertDialogFooter>
           <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={confirmer} disabled={enCours}>
+          <AlertDialogAction onClick={confirm} disabled={busy}>
             Valider
           </AlertDialogAction>
         </AlertDialogFooter>

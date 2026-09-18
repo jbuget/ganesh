@@ -8,41 +8,41 @@ const project = (id: number, label: string, kind: string): ProjectResponse =>
     id,
     label,
     kind,
-    statut: null,
+    status: null,
     parent_id: null,
-    actif: true,
-    estime_j: null,
+    is_active: true,
+    estimated_days: null,
     is_syncable_to_monday: false,
   }) as ProjectResponse;
 
 const PROJECTS = [
-  project(1, "Portail bailleurs", "projet"),
-  project(2, "Absences", "hors_projet"),
-  project(3, "Lot 1", "lot"),
+  project(1, "Portail bailleurs", "project"),
+  project(2, "Absences", "off_project"),
+  project(3, "Lot 1", "work_package"),
 ];
 
 describe("availableMissions", () => {
-  it("sépare les projets et les lots des activités hors projet", () => {
-    const { projets, horsProjet } = availableMissions(PROJECTS, []);
+  it("separates projects and work packages from off-project work", () => {
+    const { projectMissions, offProject } = availableMissions(PROJECTS, []);
 
-    expect(projets.map((p) => p.label)).toEqual(["Portail bailleurs", "Lot 1"]);
-    expect(horsProjet.map((p) => p.label)).toEqual(["Absences"]);
+    expect(projectMissions.map((p) => p.label)).toEqual(["Portail bailleurs", "Lot 1"]);
+    expect(offProject.map((p) => p.label)).toEqual(["Absences"]);
   });
 
-  it("écarte les missions déjà présentes dans la matrice", () => {
-    const { projets } = availableMissions(PROJECTS, [1]);
+  it("rules out missions already in the grid", () => {
+    const { projectMissions } = availableMissions(PROJECTS, [1]);
 
-    expect(projets.map((p) => p.label)).toEqual(["Lot 1"]);
+    expect(projectMissions.map((p) => p.label)).toEqual(["Lot 1"]);
   });
 
-  it("peut ne plus rien avoir à proposer", () => {
-    const { projets, horsProjet } = availableMissions(PROJECTS, [1, 2, 3]);
+  it("may have nothing left to offer", () => {
+    const { projectMissions, offProject } = availableMissions(PROJECTS, [1, 2, 3]);
 
-    expect(projets).toEqual([]);
-    expect(horsProjet).toEqual([]);
+    expect(projectMissions).toEqual([]);
+    expect(offProject).toEqual([]);
   });
 
-  it("ne modifie pas la liste reçue", () => {
+  it("does not change the list received", () => {
     const copie = [...PROJECTS];
     availableMissions(PROJECTS, [1]);
 

@@ -5,55 +5,55 @@ import { useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { LinkIcon } from "@/lib/api/generated/model";
-import { ICONES_DE_LIEN, dessinIcone } from "@/lib/link-icons";
+import { LINK_ICONS, iconGlyph } from "@/lib/link-icons";
 
 interface LinkIconPickerProps {
   /** `null` : laisser l'adresse decider. */
-  valeur: LinkIcon | null;
-  onChange: (valeur: LinkIcon | null) => void;
+  value: LinkIcon | null;
+  onChange: (value: LinkIcon | null) => void;
 }
 
 /**
- * L'icone d'un lien.
+ * The icon of a link.
  *
- * « Automatique » est propose en tete et reste le choix par defaut : coller une
- * adresse connue suffit le plus souvent, et c'est le serveur qui tranche. Le
- * selecteur n'est la que pour les cas ou il se tromperait.
+ * « Automatique » comes first and stays the default: pasting a known
+ * address is usually enough, and the server decides. The picker is only there
+ * for the cases where it would get it wrong.
  */
-export function LinkIconPicker({ valeur, onChange }: LinkIconPickerProps) {
-  const [ouvert, setOuvert] = useState(false);
+export function LinkIconPicker({ value, onChange }: LinkIconPickerProps) {
+  const [open, setOpen] = useState(false);
 
   return (
-    <Popover open={ouvert} onOpenChange={setOuvert}>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label="Choisir l'icône du lien"
         className="flex h-8 w-9 cursor-pointer items-center justify-center rounded-md border border-slate-200 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
       >
-        <Glyphe Dessin={valeur ? dessinIcone(valeur) : Sparkles} />
+        <Glyph icon={value ? iconGlyph(value) : Sparkles} />
       </PopoverTrigger>
 
       <PopoverContent align="start" className="w-52 p-1">
         <ul>
           <li>
-            <Choix
-              Dessin={Sparkles}
-              libelle="Automatique"
-              actif={valeur === null}
+            <Choice
+              icon={Sparkles}
+              label="Automatique"
+              is_active={value === null}
               onClick={() => {
-                setOuvert(false);
+                setOpen(false);
                 onChange(null);
               }}
             />
           </li>
-          {ICONES_DE_LIEN.map((icone) => (
-            <li key={icone.valeur}>
-              <Choix
-                Dessin={icone.Dessin}
-                libelle={icone.libelle}
-                actif={icone.valeur === valeur}
+          {LINK_ICONS.map((icon) => (
+            <li key={icon.value}>
+              <Choice
+                icon={icon.glyph}
+                label={icon.label}
+                is_active={icon.value === value}
                 onClick={() => {
-                  setOuvert(false);
-                  onChange(icone.valeur);
+                  setOpen(false);
+                  onChange(icon.value);
                 }}
               />
             </li>
@@ -64,32 +64,32 @@ export function LinkIconPicker({ valeur, onChange }: LinkIconPickerProps) {
   );
 }
 
-/** Le dessin d'une icone, recu en prop : rien n'est cree pendant le rendu. */
-function Glyphe({ Dessin, className }: { Dessin: LucideIcon; className?: string }) {
-  return <Dessin className={`size-4 shrink-0 ${className ?? ""}`} aria-hidden />;
+/** An icon drawing, received as a prop: nothing is created during the render. */
+function Glyph({ icon: Icon, className }: { icon: LucideIcon; className?: string }) {
+  return <Icon className={`size-4 shrink-0 ${className ?? ""}`} aria-hidden />;
 }
 
-function Choix({
-  Dessin,
-  libelle,
-  actif,
+function Choice({
+  icon,
+  label,
+  is_active,
   onClick,
 }: {
-  Dessin: LucideIcon;
-  libelle: string;
-  actif: boolean;
+  icon: LucideIcon;
+  label: string;
+  is_active: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
-      aria-pressed={actif}
+      aria-pressed={is_active}
       onClick={onClick}
       className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
     >
-      <Glyphe Dessin={Dessin} className="text-slate-500" />
-      <span className="min-w-0 flex-1 truncate">{libelle}</span>
-      {actif && <Check className="size-4 shrink-0 text-sky-600" aria-hidden />}
+      <Glyph icon={icon} className="text-slate-500" />
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      {is_active && <Check className="size-4 shrink-0 text-sky-600" aria-hidden />}
     </button>
   );
 }

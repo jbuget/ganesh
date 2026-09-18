@@ -1,4 +1,4 @@
-"""Cablage des use cases de saisie."""
+"""Wiring of the entry use cases."""
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession

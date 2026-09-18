@@ -1,19 +1,19 @@
-"""Utilisateur de Timesheet et droits associes a son role."""
+"""Timesheet user, and the rights that come with their role."""
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import StrEnum
 
-#: Deca de laquelle une nouvelle connexion ne vaut pas une ecriture en base.
+#: Below this, a fresh login is not worth a write to the database.
 #:
-#: L'API est sans session : un jeton porteur est represente a chaque requete, et
-#: la seule chose qu'elle sache observer est « ce collaborateur etait la ». Sans
-#: cette fenetre, la colonne ne mesurerait plus que le trafic HTTP.
-FRAICHEUR_CONNEXION = timedelta(minutes=15)
+#: The API is sessionless: a bearer token is presented on every request, and
+#: the only thing it can observe is "this teammate was here". Without this
+#: window, the column would measure nothing but HTTP traffic.
+LOGIN_FRESHNESS = timedelta(minutes=15)
 
 
 class Role(StrEnum):
-    """Role fonctionnel d'un utilisateur."""
+    """What a user is allowed to do."""
 
     TEAMMATE = "TEAMMATE"
     MANAGER = "MANAGER"
@@ -21,15 +21,15 @@ class Role(StrEnum):
 
 @dataclass
 class User:
-    """Un membre de l'equipe, provisionne depuis Microsoft Entra ID."""
+    """A team member, provisioned from Microsoft Entra ID."""
 
     id: int | None
     entra_oid: str
     email: str
     display_name: str
     role: Role = Role.TEAMMATE
-    actif: bool = field(default=True)
-    derniere_connexion: datetime | None = None
+    is_active: bool = field(default=True)
+    last_login_at: datetime | None = None
 
     def __post_init__(self) -> None:
         self.email = self.email.strip().lower()
@@ -39,36 +39,35 @@ class User:
         return self.role is Role.MANAGER
 
     def can_reopen_month(self) -> bool:
-        """Seul un manager peut rouvrir un mois valide."""
-        return self.actif and self.is_manager
+        """Only a manager can reopen a validated month."""
+        return self.is_active and self.is_manager
 
     def can_manage_teammates(self) -> bool:
-        """La gestion des collaborateurs est reservee aux managers."""
-        return self.actif and self.is_manager
+        """Managing teammates is reserved for managers."""
+        return self.is_active and self.is_manager
 
     def can_edit_open_months(self) -> bool:
-        """Chacun peut editer un mois ouvert, y compris celui d'un collegue."""
-        return self.actif
+        """Anyone may edit an open month, a colleague's included."""
+        return self.is_active
 
     def can_deactivate(self, target: "User") -> bool:
-        """Dit si ce manager peut couper l'acces de `target`.
+        """Tells whether this manager may cut `target` off.
 
-        Nul ne se desactive soi-meme : le compte serait refuse a la porte des la
-        requete suivante, et plus personne ne pourrait le rouvrir de l'interieur.
+        Nobody deactivates themselves: the account would be turned away at the
+        door on the very next request, and no one could reopen it from inside.
         """
         return self.can_manage_teammates() and target.id != self.id
 
-    def enregistrer_connexion(
-        self, a: datetime, fraicheur: timedelta = FRAICHEUR_CONNEXION
+    def record_login(
+        self, at: datetime, freshness: timedelta = LOGIN_FRESHNESS
     ) -> bool:
-        """Horodate le passage de ce collaborateur. Dit s'il faut le persister.
+        """Stamps this teammate's visit. Tells whether it is worth persisting.
 
-        L'horodatage n'avance jamais a reculons : deux requetes concurrentes
-        peuvent arriver dans le desordre, et la derniere connexion connue reste
-        la plus recente.
+        The stamp never moves backwards: two concurrent requests may arrive out
+        of order, and the last known login stays the most recent one.
         """
-        precedente = self.derniere_connexion
-        if precedente is not None and a - precedente < fraicheur:
+        previous = self.last_login_at
+        if previous is not None and at - previous < freshness:
             return False
-        self.derniere_connexion = a
+        self.last_login_at = at
         return True

@@ -1,41 +1,41 @@
 # Timesheet
 
-Suivi du temps passé par projet pour l'équipe Dev & Automatisation de WAAT.
+Per-project time tracking for WAAT's Dev & Automation team.
 
-Chaque développeur déclare, en journées ou demi-journées, le temps passé (ou prévu)
-sur chaque projet ou sous-projet, sous forme d'une matrice `jours du mois × missions`.
+Every developer declares, in days or half days, the time spent (or planned) on
+each project or sub-project, as a `days of the month × missions` grid.
 
-## Démarrage
+## Getting started
 
 ```bash
-make install     # venv Python + dépendances pnpm
-make db-up       # PostgreSQL sur le port du .env
-make migrate     # applique les migrations Alembic
+make install     # Python venv + pnpm dependencies
+make db-up       # PostgreSQL on the port from .env
+make migrate     # applies the Alembic migrations
 
-make dev-server  # API FastAPI
+make dev-server  # FastAPI API
 make dev-client  # Next.js
 ```
 
 ### Ports
 
-`WEB_PORT`, `API_PORT` et `POSTGRES_PORT` sont lus dans le `.env` racine
-(`3000` / `8000` / `5432` par défaut) et transmis par les `make` : deux copies du
-dépôt tournent côte à côte en changeant ce seul fichier, à condition d'y donner
-aussi un `COMPOSE_PROJECT_NAME` distinct. Les URL correspondantes se reportent
-dans `server/.env` (`API_URL`, `ALLOWED_ORIGINS`, `DATABASE_URL`) et
-`client/.env.local` (`API_URL`, `APP_URL`, `AZURE_AD_REDIRECT_URI`), et l'URI de
-redirection doit être déclarée sur l'app registration Entra.
+`WEB_PORT`, `API_PORT` and `POSTGRES_PORT` are read from the root `.env`
+(`3000` / `8000` / `5432` by default) and passed on by the `make` targets: two
+copies of the repository run side by side by changing that one file, provided it
+also carries a distinct `COMPOSE_PROJECT_NAME`. The matching URLs go into
+`server/.env` (`API_URL`, `ALLOWED_ORIGINS`, `DATABASE_URL`) and
+`client/.env.local` (`API_URL`, `APP_URL`, `AZURE_AD_REDIRECT_URI`), and the
+redirect URI must be declared on the Entra app registration.
 
-Lancer `pnpm dev` directement depuis `client/` ignore le `.env` racine et
-retombe sur `3000` : passer par `make dev-client`.
+Running `pnpm dev` straight from `client/` ignores the root `.env` and falls
+back to `3000`: go through `make dev-client`.
 
-## Qualité
+## Quality
 
 ```bash
-make check       # lint + architecture + types + tests, serveur et client
+make check       # lint + architecture + types + tests, server and client
 ```
 
 ## Documentation
 
-- `CLAUDE.md` — charte de développement (architecture, git, tests, conventions)
-- `AGENTS.md` — conventions UI et Atomic Design
+- `CLAUDE.md` — development charter (architecture, git, tests, conventions)
+- `AGENTS.md` — UI conventions and Atomic Design

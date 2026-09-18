@@ -3,19 +3,19 @@ import { describe, expect, it } from "vitest";
 import { cycleDayValue } from "./day-value";
 
 describe("cycleDayValue", () => {
-  it("passe de vide à une journée complète", () => {
+  it("moves from empty to a full day", () => {
     expect(cycleDayValue(0)).toBe(1);
   });
 
-  it("passe d'une journée complète à une demi-journée", () => {
+  it("moves from a full day to a half day", () => {
     expect(cycleDayValue(1)).toBe(0.5);
   });
 
-  it("revient à vide après une demi-journée", () => {
+  it("returns to empty after a half day", () => {
     expect(cycleDayValue(0.5)).toBe(0);
   });
 
-  it("boucle en trois clics", () => {
+  it("loops in three clicks", () => {
     expect(cycleDayValue(cycleDayValue(cycleDayValue(0)))).toBe(0);
   });
 });

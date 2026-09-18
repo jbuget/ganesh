@@ -1,63 +1,63 @@
 import { describe, expect, it } from "vitest";
 
-import { avancement, categorie, libellePhase, PHASES, rangPhase } from "./board";
+import { progress, category, phaseLabel, PHASES, phaseRank } from "./board";
 
 describe("PHASES", () => {
-  it("suit le cycle de vie d'un projet", () => {
-    expect(PHASES.map((p) => p.statut)).toEqual([
+  it("follows the life cycle of a project", () => {
+    expect(PHASES.map((p) => p.status)).toEqual([
       "exploration",
-      "cadrage",
-      "realisation",
+      "scoping",
+      "development",
       "validation",
-      "deploiement",
-      "exploitation",
+      "deployment",
+      "operations",
     ]);
   });
 
-  it("nomme chaque phase en français", () => {
-    expect(libellePhase("deploiement")).toBe("Déploiement");
+  it("names each phase in French", () => {
+    expect(phaseLabel("deployment")).toBe("Déploiement");
   });
 });
 
-describe("rangPhase", () => {
-  it("classe les phases dans l'ordre des colonnes du kanban", () => {
-    expect(rangPhase("cadrage")).toBeLessThan(rangPhase("realisation"));
-    expect(rangPhase("realisation")).toBeLessThan(rangPhase("exploitation"));
+describe("phaseRank", () => {
+  it("ranks the phases in kanban column order", () => {
+    expect(phaseRank("scoping")).toBeLessThan(phaseRank("development"));
+    expect(phaseRank("development")).toBeLessThan(phaseRank("operations"));
   });
 
-  it("renvoie en fin de liste ce qui ne porte pas de phase", () => {
-    expect(rangPhase(null)).toBeGreaterThan(rangPhase("exploitation"));
+  it("sends what carries no phase to the end of the list", () => {
+    expect(phaseRank(null)).toBeGreaterThan(phaseRank("operations"));
   });
 });
 
-describe("categorie", () => {
-  it("donne le libellé et la teinte d'un axe", () => {
-    expect(categorie("innover_differencier")?.libelle).toBe("Innover & différencier");
+describe("category", () => {
+  it("gives the label and the shade of an axis", () => {
+    expect(category("innovate_differentiate")?.label).toBe("Innover & différencier");
   });
 
-  it("ne renvoie rien pour une mission sans axe", () => {
-    expect(categorie(null)).toBeNull();
+  it("returns nothing for a mission with no axis", () => {
+    expect(category(null)).toBeNull();
   });
 });
 
 describe("avancement", () => {
-  it("ne juge pas une mission sans estimé", () => {
-    expect(avancement(12, null)).toBe("sans-estime");
+  it("passes no judgement on a mission with no estimate", () => {
+    expect(progress(12, null)).toBe("no-estimate");
   });
 
-  it("reste discret tant qu'on est loin du budget", () => {
-    expect(avancement(5, 20)).toBe("en-cours");
+  it("stays quiet while the budget is far off", () => {
+    expect(progress(5, 20)).toBe("ongoing");
   });
 
-  it("alerte quand on approche du budget", () => {
-    expect(avancement(16, 20)).toBe("proche");
+  it("warns when the budget draws near", () => {
+    expect(progress(16, 20)).toBe("close");
   });
 
-  it("signale un dépassement", () => {
-    expect(avancement(21, 20)).toBe("depasse");
+  it("flags an overrun", () => {
+    expect(progress(21, 20)).toBe("over");
   });
 
-  it("considère le budget atteint comme encore tenu", () => {
-    expect(avancement(20, 20)).toBe("proche");
+  it("treats a budget just reached as still held", () => {
+    expect(progress(20, 20)).toBe("close");
   });
 });

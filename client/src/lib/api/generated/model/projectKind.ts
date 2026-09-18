@@ -6,12 +6,12 @@
  */
 
 /**
- * Nature d'une mission.
+ * What kind of mission this is.
  */
 export type ProjectKind = (typeof ProjectKind)[keyof typeof ProjectKind];
 
 export const ProjectKind = {
-  projet: "projet",
-  lot: "lot",
-  hors_projet: "hors_projet",
+  project: "project",
+  work_package: "work_package",
+  off_project: "off_project",
 } as const;

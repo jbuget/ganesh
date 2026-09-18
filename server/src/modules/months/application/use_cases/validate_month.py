@@ -1,4 +1,4 @@
-"""Verrouille un mois de saisie."""
+"""Locks a month of entries."""
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
@@ -15,7 +15,7 @@ from src.shared.exceptions.domain_exceptions import (
 
 
 class ValidateMonthUseCase:
-    """Passe un mois a l'etat valide, apres confirmation de l'utilisateur."""
+    """Moves a month to the validated state, once the user confirms."""
 
     def __init__(
         self,
@@ -30,16 +30,16 @@ class ValidateMonthUseCase:
     async def execute(self, command: ValidateMonthCommand) -> Month:
         if command.actor_id != command.target_user_id:
             raise ForbiddenActionError(
-                "Chacun valide son propre mois : la validation n'est pas delegable."
+                "Everyone validates their own month: validation cannot be delegated."
             )
 
         actor = await self._users.get_by_id(command.actor_id)
         if actor is None:
             raise EntityNotFoundError("Utilisateur inconnu.")
 
-        month = await self._months.get(command.target_user_id, command.mois)
+        month = await self._months.get(command.target_user_id, command.month)
         if month is None:
-            month = Month(user_id=command.target_user_id, mois=command.mois)
+            month = Month(user_id=command.target_user_id, month=command.month)
 
         month.validate(by=actor)
         await self._months.save(month)
@@ -48,7 +48,7 @@ class ValidateMonthUseCase:
             AuditLog.month_validate(
                 actor_id=command.actor_id,
                 target_user_id=command.target_user_id,
-                mois=month.mois,
+                month=month.month,
             )
         )
         return month

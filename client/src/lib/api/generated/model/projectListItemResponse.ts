@@ -9,13 +9,13 @@ import type { LastUpdateResponse } from "./lastUpdateResponse";
 import type { ProjectResponse } from "./projectResponse";
 
 /**
- * Une mission du referentiel, avec qui s'en occupe.
+ * A mission from the reference list, with who looks after it.
  */
 export interface ProjectListItemResponse {
   project: ProjectResponse;
-  referents: BoardMemberResponse[];
-  intervenants: BoardMemberResponse[];
-  realise_j: number;
-  commentaires: number;
-  derniere_maj: LastUpdateResponse | null;
+  leads: BoardMemberResponse[];
+  contributors: BoardMemberResponse[];
+  delivered_days: number;
+  comments: number;
+  latest_update: LastUpdateResponse | null;
 }

@@ -4,48 +4,48 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { PriorityPicker } from "./PriorityPicker";
 
 describe("PriorityPicker", () => {
-  it("invite à situer une mission qui ne l'est pas", () => {
-    render(<PriorityPicker valeur={null} onChange={vi.fn()} />);
+  it("invites placing a mission that is not placed", () => {
+    render(<PriorityPicker value={null} onChange={vi.fn()} />);
 
     expect(
       screen.getByRole("button", { name: "Changer la priorité" }),
     ).toHaveTextContent("Priorité");
   });
 
-  it("affiche l'urgence déclarée", () => {
-    render(<PriorityPicker valeur="haute" onChange={vi.fn()} />);
+  it("shows the declared urgency", () => {
+    render(<PriorityPicker value="high" onChange={vi.fn()} />);
 
     expect(
       screen.getByRole("button", { name: "Changer la priorité" }),
     ).toHaveTextContent("Haute");
   });
 
-  it("propose les quatre urgences, de la plus forte à la plus faible", () => {
-    render(<PriorityPicker valeur={null} onChange={vi.fn()} />);
+  it("offers the four urgencies, from strongest to weakest", () => {
+    render(<PriorityPicker value={null} onChange={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Changer la priorité" }));
 
-    const choix = screen
+    const choice = screen
       .getAllByRole("button")
-      .map((bouton) => bouton.textContent)
-      .filter((texte) => texte && texte !== "Priorité");
-    expect(choix).toEqual(["Critique", "Haute", "Normale", "Basse"]);
+      .map((button) => button.textContent)
+      .filter((body) => body && body !== "Priorité");
+    expect(choice).toEqual(["Critique", "Haute", "Normale", "Basse"]);
   });
 
-  it("déclare l'urgence choisie", () => {
+  it("declares the chosen urgency", () => {
     const onChange = vi.fn();
-    render(<PriorityPicker valeur={null} onChange={onChange} />);
+    render(<PriorityPicker value={null} onChange={onChange} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Changer la priorité" }));
     fireEvent.click(screen.getByRole("button", { name: "Critique" }));
 
-    expect(onChange).toHaveBeenCalledWith("critique");
+    expect(onChange).toHaveBeenCalledWith("critical");
   });
 
-  it("retire l'urgence quand on reclique dessus", () => {
-    // C'est le seul moyen de revenir a « aucune priorite ».
+  it("takes the urgency back when clicked again", () => {
+    // The only way back to « no priority ».
     const onChange = vi.fn();
-    render(<PriorityPicker valeur="basse" onChange={onChange} />);
+    render(<PriorityPicker value="low" onChange={onChange} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Changer la priorité" }));
     fireEvent.click(screen.getByRole("button", { name: "Basse" }));

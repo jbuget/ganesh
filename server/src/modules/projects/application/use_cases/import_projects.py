@@ -1,4 +1,4 @@
-"""Importe un referentiel de missions en une passe."""
+"""Imports a mission reference list in one pass."""
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
@@ -23,11 +23,11 @@ from src.shared.exceptions.domain_exceptions import (
 
 
 class ImportProjectsUseCase:
-    """Cree les missions absentes du referentiel, sans toucher aux autres.
+    """Creates the missions missing from the reference list, leaving others be.
 
-    L'import est rejouable : une mission deja presente est ignoree, jamais
-    dupliquee ni ecrasee. Une ligne en erreur n'interrompt pas les suivantes,
-    et le rapport dit precisement ce qui a echoue.
+    The import can be replayed: a mission already there is skipped, never
+    duplicated nor overwritten. A failing line does not stop the following
+    ones, and the report says precisely what went wrong.
     """
 
     def __init__(
@@ -45,42 +45,42 @@ class ImportProjectsUseCase:
         if actor is None:
             raise EntityNotFoundError("Utilisateur inconnu.")
         if not actor.is_manager:
-            raise ForbiddenActionError("Seul un manager peut importer un referentiel.")
+            raise ForbiddenActionError("Only a manager can import a reference list.")
 
-        rapport = ImportReport()
-        connus = {p.label: p for p in await self._projects.list_all(True)}
+        report = ImportReport()
+        known = {p.label: p for p in await self._projects.list_all(True)}
 
-        for ligne in command.lignes:
-            label = ligne.label.strip()
-            if label in connus:
-                rapport.ignores += 1
+        for line in command.rows:
+            label = line.label.strip()
+            if label in known:
+                report.skipped += 1
                 continue
             try:
-                projet = await self._creer(ligne, connus)
-            except DomainError as erreur:
-                rapport.erreurs.append(f"{label or '(sans nom)'} : {erreur}")
+                project = await self._create(line, known)
+            except DomainError as error:
+                report.errors.append(f"{label or '(unnamed)'}: {error}")
                 continue
-            connus[projet.label] = projet
-            rapport.crees += 1
+            known[project.label] = project
+            report.created += 1
 
         await self._audit_logs.add(
             AuditLog(
                 action=AuditAction.PROJECT_CREATE,
                 actor_id=command.actor_id,
-                new_value=f"import : {rapport.crees} mission(s)",
+                new_value=f"import : {report.created} mission(s)",
             )
         )
-        return rapport
+        return report
 
-    async def _creer(
-        self, ligne: ProjectImportLine, connus: dict[str, Project]
+    async def _create(
+        self, line: ProjectImportLine, known: dict[str, Project]
     ) -> Project:
         parent_id = None
-        if ligne.kind is ProjectKind.LOT:
-            parent = connus.get((ligne.parent_label or "").strip())
+        if line.kind is ProjectKind.WORK_PACKAGE:
+            parent = known.get((line.parent_label or "").strip())
             if parent is None:
                 raise EntityNotFoundError(
-                    f"projet parent « {ligne.parent_label} » introuvable."
+                    f"parent project « {line.parent_label} » not found."
                 )
             ensure_can_be_parent(parent)
             parent_id = parent.id
@@ -88,12 +88,12 @@ class ImportProjectsUseCase:
         return await self._projects.add(
             Project(
                 id=None,
-                label=ligne.label,
-                kind=ligne.kind,
-                statut=None if ligne.kind is ProjectKind.HORS_PROJET else ligne.statut,
+                label=line.label,
+                kind=line.kind,
+                status=None if line.kind is ProjectKind.OFF_PROJECT else line.status,
                 parent_id=parent_id,
-                estime_j=ligne.estime_j,
-                monday_item_id=ligne.monday_item_id,
-                monday_subitem_id=ligne.monday_subitem_id,
+                estimated_days=line.estimated_days,
+                monday_item_id=line.monday_item_id,
+                monday_subitem_id=line.monday_subitem_id,
             )
         )

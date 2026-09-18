@@ -1,11 +1,11 @@
-"""Initiales affichees en pastille."""
+"""Initials shown in an avatar."""
 
 
-def initiales(nom: str) -> str:
-    """Deux initiales au plus, tirees d'un nom affiche.
+def initials(name: str) -> str:
+    """At most two initials, taken from a display name.
 
-    Les noms de l'annuaire prennent la forme « L. Chen » : le point y separe
-    autant que l'espace, faute de quoi « L. » donnerait une seule initiale.
+    Directory names come as « L. Chen »: the dot separates as much as
+    the space does, otherwise « L. » would yield a single initial.
     """
-    mots = [mot for mot in nom.replace(".", " ").split() if mot]
-    return "".join(mot[0].upper() for mot in mots[:2])
+    words = [word for word in name.replace(".", " ").split() if word]
+    return "".join(word[0].upper() for word in words[:2])

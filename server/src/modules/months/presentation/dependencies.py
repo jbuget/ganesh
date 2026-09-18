@@ -1,4 +1,4 @@
-"""Cablage des use cases de gestion des mois."""
+"""Wiring of the month use cases."""
 
 from fastapi import Depends
 

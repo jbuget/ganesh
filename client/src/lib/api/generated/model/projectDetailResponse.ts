@@ -12,16 +12,16 @@ import type { ProjectLinkResponse } from "./projectLinkResponse";
 import type { ProjectResponse } from "./projectResponse";
 
 /**
- * La fiche complete d'une mission.
+ * The full sheet of a mission.
  */
 export interface ProjectDetailResponse {
   project: ProjectResponse;
-  departements: Department[];
-  liens: ProjectLinkResponse[];
+  departments: Department[];
+  links: ProjectLinkResponse[];
   phases: PhaseReachedResponse[];
-  referents: BoardMemberResponse[];
-  intervenants: BoardMemberResponse[];
-  consomme_j: number;
+  leads: BoardMemberResponse[];
+  contributors: BoardMemberResponse[];
+  consumed_days: number;
   contributions: ProjectContributionResponse[];
-  sous_projets: ProjectResponse[];
+  sub_projects: ProjectResponse[];
 }

@@ -1,50 +1,50 @@
-# Point ouvert : pas d'hydratation avec `next dev`
+# Open issue: no hydration under `next dev`
 
-**Statut : non résolu.** L'application est pleinement fonctionnelle en production ;
-seul le serveur de développement est affecté.
+**Status: unresolved.** The application is fully functional in production; only
+the development server is affected.
 
-## Symptôme
+## Symptom
 
-Avec `pnpm dev`, la page est rendue côté serveur (le HTML est correct et complet)
-mais React ne s'hydrate jamais :
+Under `pnpm dev` the page is rendered server-side (the HTML is correct and
+complete) but React never hydrates:
 
-- aucune clé `__reactFiber$…` sur les nœuds du DOM ;
-- les boutons ne réagissent pas, aucun `useState` ne se met à jour ;
-- aucune requête n'est émise vers le BFF, donc la matrice reste vide ;
-- **aucune erreur** en console, et tous les chunks répondent `200`.
+- no `__reactFiber$…` key on the DOM nodes;
+- buttons do not react, no `useState` ever updates;
+- no request goes out to the BFF, so the grid stays empty;
+- **no error** in the console, and every chunk answers `200`.
 
-Avec `pnpm build && pnpm start`, tout fonctionne : matrice, saisie au clic,
-totaux, navigation entre mois.
+Under `pnpm build && pnpm start` everything works: the grid, click-to-enter,
+totals, month-to-month navigation.
 
-## Ce qui a été écarté
+## What has been ruled out
 
-| Piste | Verdict |
+| Lead | Verdict |
 |---|---|
-| Code applicatif | Écarté : un `page.tsx` réduit à un compteur `useState` ne s'hydrate pas davantage |
-| `QueryProvider` / React Query | Écarté : un layout minimal sans provider ne change rien |
-| Turbopack | Écarté : `next dev --webpack` reproduit exactement le même symptôme |
-| Chunk manquant ou 404 | Écarté : les 17 scripts répondent `200` |
-| CSP bloquant les scripts inline | Écarté : aucun en-tête CSP, pas de `nonce` |
-| Cache de build | Écarté : `rm -rf .next` et redémarrage ne changent rien |
-| HTML invalide | Corrigé par ailleurs (voir plus bas), mais sans effet sur ce point |
+| Application code | Ruled out: a `page.tsx` cut down to a `useState` counter hydrates no better |
+| `QueryProvider` / React Query | Ruled out: a minimal layout with no provider changes nothing |
+| Turbopack | Ruled out: `next dev --webpack` reproduces exactly the same symptom |
+| A missing chunk, or a 404 | Ruled out: all 17 scripts answer `200` |
+| A CSP blocking inline scripts | Ruled out: no CSP header, no `nonce` |
+| Build cache | Ruled out: `rm -rf .next` and a restart change nothing |
+| Invalid HTML | Fixed along the way (see below), but with no effect on this issue |
 
-## Piste restante
+## The remaining lead
 
-L'extension Chrome utilisée pour tester injecte un script dans la page
-(`chrome-extension://…/injected.js`). En développement, Next charge en plus son
-overlay `next-devtools`, absent en production — c'est la principale différence
-entre les deux modes. Une interférence entre les deux est l'hypothèse la plus
-plausible, mais elle n'a pas pu être confirmée faute de pouvoir tester dans un
-navigateur sans extension.
+The Chrome extension used for testing injects a script into the page
+(`chrome-extension://…/injected.js`). In development Next also loads its
+`next-devtools` overlay, absent in production — that is the main difference
+between the two modes. Interference between the two is the most plausible
+hypothesis, but it could not be confirmed for want of a browser without
+extensions to test in.
 
-**Premier test à faire :** ouvrir `http://localhost:3000` dans une fenêtre de
-navigation privée, ou dans un navigateur sans extension. Si la page s'hydrate,
-le problème vient de l'extension et non du projet.
+**First test to run:** open `http://localhost:3000` in a private window, or in a
+browser with no extension. If the page hydrates, the problem comes from the
+extension and not from the project.
 
-## Note connexe, celle-ci corrigée
+## A related note, this one fixed
 
-Un vrai défaut a été trouvé et corrigé pendant ce diagnostic : `DayCell` rendait
-un `<button>` directement enfant de `<tr>`, ce qui est du HTML invalide et
-casse l'hydratation React. Le composant rend désormais `<td><button/></td>`, et
-un test verrouille la régression (`DayCell.test.tsx`, « est une cellule de
-tableau, pas un bouton nu dans la ligne »).
+One real defect was found and fixed during this investigation: `DayCell`
+rendered a `<button>` as a direct child of `<tr>`, which is invalid HTML and
+breaks React hydration. The component now renders `<td><button/></td>`, and a
+test locks the regression down (`DayCell.test.tsx`, "is a table cell, not a bare
+button in the row").

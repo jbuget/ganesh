@@ -1,4 +1,4 @@
-"""La derniere mise a jour d'une mission, telle qu'on l'annonce ailleurs."""
+"""A mission's latest update, as announced elsewhere."""
 
 from dataclasses import dataclass
 
@@ -8,11 +8,11 @@ from src.modules.users.domain.entities.user import User
 
 @dataclass
 class LastUpdate:
-    """La derniere mise a jour lisible d'une mission, et qui l'a ecrite.
+    """The latest readable update of a mission, and who wrote it.
 
-    Le referentiel et le tableau l'annoncent tous deux sans ouvrir le fil : le
-    dernier message se decrit donc a un seul endroit, hors de l'un ou l'autre
-    des deux cas d'usage.
+    The reference list and the board both announce it without opening the
+    thread: the latest message is therefore described in one place, outside
+    either of the two use cases.
     """
 
     update: ProjectUpdate

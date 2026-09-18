@@ -1,21 +1,21 @@
 import { Archive } from "lucide-react";
 
-import { formatDateCourte } from "@/lib/dates";
+import { formatShortDate } from "@/lib/dates";
 
 interface ArchivedCalloutProps {
-  /** Quand la mission a quitte le referentiel, si la date est connue. */
+  /** When the mission left the reference list, if the date is known. */
   archivedAt: string | null | undefined;
 }
 
 /**
- * L'etat d'une mission qui ne figure plus au referentiel.
+ * The state of a mission that no longer appears in the reference list.
  *
- * Une mission archivee s'ouvre comme les autres, et rien dans la fiche ne
- * dirait qu'elle n'apparait plus nulle part : sans ce bandeau, on la
- * modifierait en croyant travailler sur une mission vivante.
+ * An archived mission opens like any other, and nothing in the sheet would say
+ * it shows up nowhere any more: without this banner, one would edit it
+ * believing it a live mission.
  *
- * Les missions archivees avant que la date ne soit enregistree n'en portent
- * pas : le bandeau se contente alors de l'etat, plutot que d'inventer un jour.
+ * Missions archived before the date was recorded carry none: the banner then
+ * settles for the state, rather than inventing a day.
  */
 export function ArchivedCallout({ archivedAt }: ArchivedCalloutProps) {
   return (
@@ -25,7 +25,7 @@ export function ArchivedCallout({ archivedAt }: ArchivedCalloutProps) {
     >
       <Archive className="size-4 shrink-0 text-amber-600" aria-hidden />
       {archivedAt
-        ? `Cette mission a été archivée le ${formatDateCourte(archivedAt)}.`
+        ? `Cette mission a été archivée le ${formatShortDate(archivedAt)}.`
         : "Cette mission est archivée."}
     </p>
   );

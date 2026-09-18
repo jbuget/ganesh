@@ -5,20 +5,20 @@ import userEvent from "@testing-library/user-event";
 import { RolePicker } from "./RolePicker";
 
 describe("RolePicker", () => {
-  it("affiche le rôle courant", () => {
+  it("shows the current role", () => {
     render(<RolePicker role="MANAGER" modifiable onChange={vi.fn()} />);
 
     expect(screen.getByRole("button", { name: /Manager/ })).toBeInTheDocument();
   });
 
-  it("n'offre aucun bouton quand le rôle n'est pas modifiable", () => {
+  it("offers no button when the role cannot be changed", () => {
     render(<RolePicker role="TEAMMATE" modifiable={false} onChange={vi.fn()} />);
 
     expect(screen.getByText("Collaborateur")).toBeInTheDocument();
     expect(screen.queryByRole("button")).toBeNull();
   });
 
-  it("change le rôle au choix d'un autre", async () => {
+  it("changes the role when another is chosen", async () => {
     const onChange = vi.fn();
     render(<RolePicker role="TEAMMATE" modifiable onChange={onChange} />);
 
@@ -28,7 +28,7 @@ describe("RolePicker", () => {
     expect(onChange).toHaveBeenCalledWith("MANAGER");
   });
 
-  it("ne rejoue pas le rôle déjà porté", async () => {
+  it("does not replay the role already held", async () => {
     const onChange = vi.fn();
     render(<RolePicker role="MANAGER" modifiable onChange={onChange} />);
 

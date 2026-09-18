@@ -1,126 +1,126 @@
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
-import { PRIORITES, rangPhase } from "@/lib/board";
+import { PRIORITIES, phaseRank } from "@/lib/board";
 
-/** Les colonnes du referentiel sur lesquelles on peut ranger la liste. */
-export type ColonneTri =
-  "projet" | "phase" | "priorite" | "categorie" | "estime" | "realise";
+/** The reference list columns the list can be ordered by. */
+export type SortColumn =
+  "project" | "phase" | "priority" | "category" | "estimated" | "delivered";
 
-export type SensTri = "asc" | "desc";
+export type SortDirection = "asc" | "desc";
 
-/** La colonne demandee, ou `null` pour l'ordre propre au referentiel. */
-export interface TriMissions {
-  colonne: ColonneTri | null;
-  sens: SensTri;
+/** The column asked for, or `null` for the reference list's own order. */
+export interface MissionSort {
+  column: SortColumn | null;
+  direction: SortDirection;
 }
 
-export const AUCUN_TRI: TriMissions = { colonne: null, sens: "asc" };
+export const NO_SORT: MissionSort = { column: null, direction: "asc" };
 
-const COLONNES: ColonneTri[] = [
-  "projet",
+const COLUMNS: SortColumn[] = [
+  "project",
   "phase",
-  "priorite",
-  "categorie",
-  "estime",
-  "realise",
+  "priority",
+  "category",
+  "estimated",
+  "delivered",
 ];
 
-const PARAMETRES = { colonne: "tri", sens: "sens" } as const;
+const PARAMETERS = { column: "sort", direction: "direction" } as const;
 
-const RANGS_PRIORITES = new Map(PRIORITES.map((p, rang) => [p.valeur, rang]));
+const PRIORITY_RANKS = new Map(PRIORITIES.map((p, rank) => [p.value, rank]));
 
 type Mission = ProjectListItemResponse;
 
 /**
- * Ce que chaque colonne donne a comparer.
+ * What each column gives to compare.
  *
- * Une valeur absente vaut `null` : elle ne se compare pas, et le tri la range
- * en fin de liste plutot que de lui inventer un rang.
+ * A missing value is `null`: it does not compare, and the sort puts it at the
+ * end of the list rather than inventing a rank for it.
  */
-const VALEURS: Record<ColonneTri, (m: Mission) => string | number | null> = {
-  projet: (m) => m.project.label,
-  phase: (m) => (m.project.statut ? rangPhase(m.project.statut) : null),
-  priorite: (m) =>
-    m.project.priorite ? (RANGS_PRIORITES.get(m.project.priorite) ?? null) : null,
-  categorie: (m) => m.project.categorie,
-  estime: (m) => m.project.estime_j ?? null,
-  realise: (m) => m.realise_j,
+const VALUES: Record<SortColumn, (m: Mission) => string | number | null> = {
+  project: (m) => m.project.label,
+  phase: (m) => (m.project.status ? phaseRank(m.project.status) : null),
+  priority: (m) =>
+    m.project.priority ? (PRIORITY_RANKS.get(m.project.priority) ?? null) : null,
+  category: (m) => m.project.category,
+  estimated: (m) => m.project.estimated_days ?? null,
+  delivered: (m) => m.delivered_days,
 };
 
-function parLabel(a: Mission, b: Mission): number {
+function byLabel(a: Mission, b: Mission): number {
   return a.project.label.localeCompare(b.project.label, "fr");
 }
 
 /**
- * Ou en est la mission d'abord, son nom ensuite.
+ * Where the mission stands first, its name second.
  *
- * Le referentiel se parcourt comme le kanban se lit, de gauche a droite : ce
- * qui demarre en haut, ce qui tourne en bas. A phase egale, l'alphabet, seul
- * ordre ou l'on retrouve une mission dont on connait le nom.
+ * The reference list is scanned the way the kanban reads, left to right: what
+ * is starting at the top, what is running at the bottom. At equal phase, the
+ * alphabet, the only order in which one finds a mission one knows by name.
  */
-function parPhasePuisLabel(a: Mission, b: Mission): number {
-  const ecart = rangPhase(a.project.statut) - rangPhase(b.project.statut);
-  return ecart !== 0 ? ecart : parLabel(a, b);
+function byPhaseThenLabel(a: Mission, b: Mission): number {
+  const gap = phaseRank(a.project.status) - phaseRank(b.project.status);
+  return gap !== 0 ? gap : byLabel(a, b);
 }
 
 /**
- * Le comparateur a appliquer aux missions d'un meme niveau.
+ * The comparator to apply to missions of the same level.
  *
- * Le sens ne renverse que la comparaison des valeurs : les missions sans
- * valeur restent en fin de liste, et deux missions qu'une colonne egalise
- * restent departagees par leur nom. Sans cela, inverser le sens ferait remonter
- * les trous en tete, et l'ordre des ex aequo changerait a chaque rendu.
+ * The direction only reverses the comparison of values: missions without a
+ * value stay at the end of the list, and two missions a column ties are still
+ * settled by their name. Without that, reversing the direction would bring the
+ * gaps to the top, and the order of ties would change on every render.
  */
-export function comparateurDeTri(tri: TriMissions) {
-  if (tri.colonne === null) return parPhasePuisLabel;
+export function sortComparator(sorted: MissionSort) {
+  if (sorted.column === null) return byPhaseThenLabel;
 
-  const valeurDe = VALEURS[tri.colonne];
-  const signe = tri.sens === "desc" ? -1 : 1;
+  const valueOf = VALUES[sorted.column];
+  const sign = sorted.direction === "desc" ? -1 : 1;
 
   return (a: Mission, b: Mission): number => {
-    const gauche = valeurDe(a);
-    const droite = valeurDe(b);
+    const left = valueOf(a);
+    const right = valueOf(b);
 
-    if (gauche === null || droite === null) {
-      if (gauche === droite) return parLabel(a, b);
-      return gauche === null ? 1 : -1;
+    if (left === null || right === null) {
+      if (left === right) return byLabel(a, b);
+      return left === null ? 1 : -1;
     }
 
-    const ecart =
-      typeof gauche === "string" && typeof droite === "string"
-        ? gauche.localeCompare(droite, "fr")
-        : Number(gauche) - Number(droite);
+    const gap =
+      typeof left === "string" && typeof right === "string"
+        ? left.localeCompare(right, "fr")
+        : Number(left) - Number(right);
 
-    return ecart !== 0 ? signe * ecart : parLabel(a, b);
+    return gap !== 0 ? sign * gap : byLabel(a, b);
   };
 }
 
 /**
- * Le tri obtenu en cliquant une colonne : croissant, decroissant, puis plus
- * rien. Le troisieme clic rend son ordre au referentiel, sans avoir a chercher
- * comment le retrouver.
+ * The sort you get by clicking a column: ascending, descending, then nothing.
+ * The third click gives the reference list its own order back, without having
+ * to hunt for how to find it again.
  */
-export function triSuivant(tri: TriMissions, colonne: ColonneTri): TriMissions {
-  if (tri.colonne !== colonne) return { colonne, sens: "asc" };
-  if (tri.sens === "asc") return { colonne, sens: "desc" };
-  return AUCUN_TRI;
+export function nextSort(sorted: MissionSort, column: SortColumn): MissionSort {
+  if (sorted.column !== column) return { column, direction: "asc" };
+  if (sorted.direction === "asc") return { column, direction: "desc" };
+  return NO_SORT;
 }
 
-export function lireTri(params: URLSearchParams): TriMissions {
-  const colonne = params.get(PARAMETRES.colonne);
-  if (!colonne || !COLONNES.includes(colonne as ColonneTri)) return AUCUN_TRI;
+export function readSort(params: URLSearchParams): MissionSort {
+  const column = params.get(PARAMETERS.column);
+  if (!column || !COLUMNS.includes(column as SortColumn)) return NO_SORT;
 
   return {
-    colonne: colonne as ColonneTri,
-    sens: params.get(PARAMETRES.sens) === "desc" ? "desc" : "asc",
+    column: column as SortColumn,
+    direction: params.get(PARAMETERS.direction) === "desc" ? "desc" : "asc",
   };
 }
 
-/** Reporte le tri dans l'URL, sans toucher aux autres parametres. */
-export function ecrireTri(params: URLSearchParams, tri: TriMissions): void {
-  params.delete(PARAMETRES.colonne);
-  params.delete(PARAMETRES.sens);
-  if (tri.colonne === null) return;
+/** Writes the sort into the URL, leaving the other parameters alone. */
+export function writeSort(params: URLSearchParams, sorted: MissionSort): void {
+  params.delete(PARAMETERS.column);
+  params.delete(PARAMETERS.direction);
+  if (sorted.column === null) return;
 
-  params.set(PARAMETRES.colonne, tri.colonne);
-  params.set(PARAMETRES.sens, tri.sens);
+  params.set(PARAMETERS.column, sorted.column);
+  params.set(PARAMETERS.direction, sorted.direction);
 }

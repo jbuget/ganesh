@@ -1,7 +1,7 @@
-"""Routes du referentiel des missions.
+"""Routes of the mission reference list.
 
-La creation et le changement de statut sont ouverts a toute l'equipe : le parti
-pris est la confiance, la tracabilite est le garde-fou.
+Creating and changing status are open to the whole team: trust is the stance,
+traceability the safeguard.
 """
 
 from fastapi import APIRouter, Depends, Query, Response, status
@@ -124,7 +124,7 @@ async def list_projects(
     _: User = Depends(get_current_user),
     use_case: ListProjectsUseCase = Depends(get_list_projects_use_case),
 ) -> list[ProjectListItemResponse]:
-    """Liste les missions du referentiel."""
+    """Lists the missions in the reference list."""
     missions = await use_case.execute(include_inactive=include_inactive)
     return [to_listed_project_response(mission) for mission in missions]
 
@@ -138,16 +138,16 @@ async def create_project(
     use_case: CreateProjectUseCase = Depends(get_create_project_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectResponse:
-    """Declare une nouvelle mission."""
+    """Declares a new mission."""
     assert current_user.id is not None
     project = await use_case.execute(
         CreateProjectCommand(
             actor_id=current_user.id,
             label=payload.label,
             kind=payload.kind,
-            statut=payload.statut,
+            status=payload.status,
             parent_id=payload.parent_id,
-            estime_j=payload.estime_j,
+            estimated_days=payload.estimated_days,
         )
     )
     await session.commit()
@@ -166,11 +166,11 @@ async def change_status(
     use_case: ChangeProjectStatusUseCase = Depends(get_change_status_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectResponse:
-    """Fait changer la phase d'une mission."""
+    """Moves a mission to another phase."""
     assert current_user.id is not None
     project = await use_case.execute(
         ChangeProjectStatusCommand(
-            actor_id=current_user.id, project_id=project_id, statut=payload.statut
+            actor_id=current_user.id, project_id=project_id, status=payload.status
         )
     )
     await session.commit()
@@ -187,11 +187,13 @@ async def update_project(
     use_case: UpdateProjectUseCase = Depends(get_update_project_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectResponse:
-    """Modifie une mission. Seuls les champs fournis sont appliques."""
+    """Changes a mission. Only the fields provided are applied."""
     assert current_user.id is not None
-    fournis = payload.model_dump(exclude_unset=True)
+    provided = payload.model_dump(exclude_unset=True)
     project = await use_case.execute(
-        UpdateProjectCommand(actor_id=current_user.id, project_id=project_id, **fournis)
+        UpdateProjectCommand(
+            actor_id=current_user.id, project_id=project_id, **provided
+        )
     )
     await session.commit()
     return to_project_response(project)
@@ -208,19 +210,17 @@ async def import_projects(
     use_case: ImportProjectsUseCase = Depends(get_import_projects_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ImportReportResponse:
-    """Importe un referentiel de missions. Reserve aux managers."""
+    """Imports a mission reference list. Managers only."""
     assert current_user.id is not None
-    rapport = await use_case.execute(
+    report = await use_case.execute(
         ImportProjectsCommand(
             actor_id=current_user.id,
-            lignes=[
-                ProjectImportLine(**ligne.model_dump()) for ligne in payload.lignes
-            ],
+            rows=[ProjectImportLine(**line.model_dump()) for line in payload.rows],
         )
     )
     await session.commit()
     return ImportReportResponse(
-        crees=rapport.crees, ignores=rapport.ignores, erreurs=rapport.erreurs
+        created=report.created, skipped=report.skipped, errors=report.errors
     )
 
 
@@ -235,7 +235,7 @@ async def delete_project(
     use_case: DeleteProjectUseCase = Depends(get_delete_project_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
-    """Supprime une mission jamais utilisee. Sinon, il faut l'archiver."""
+    """Deletes a mission never used. Otherwise, it must be archived."""
     assert current_user.id is not None
     await use_case.execute(
         DeleteProjectCommand(actor_id=current_user.id, project_id=project_id)
@@ -250,7 +250,7 @@ async def get_board(
     _: User = Depends(get_current_user),
     use_case: GetBoardUseCase = Depends(get_board_use_case),
 ) -> BoardResponse:
-    """Tableau de bord des projets, une colonne par phase."""
+    """Project board, one column per phase."""
     return to_board_response(await use_case.execute(include_inactive=include_inactive))
 
 
@@ -266,13 +266,13 @@ async def move_project(
     use_case: MoveProjectUseCase = Depends(get_move_project_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectResponse:
-    """Depose une carte dans une colonne, a un rang donne."""
+    """Drops a card into a column, at a given rank."""
     assert current_user.id is not None
     mission = await use_case.execute(
         MoveProjectCommand(
             actor_id=current_user.id,
             project_id=project_id,
-            statut=payload.statut,
+            status=payload.status,
             position=payload.position,
         )
     )
@@ -289,13 +289,13 @@ async def assign_member(
     project_id: int,
     member_id: int,
     role: ProjectRole = Query(
-        default=ProjectRole.INTERVENANT, description="A quel titre."
+        default=ProjectRole.CONTRIBUTOR, description="A quel titre."
     ),
     current_user: User = Depends(get_current_user),
     use_case: AssignMemberUseCase = Depends(get_assign_member_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
-    """Declare qu'une personne intervient, ou va intervenir, sur la mission."""
+    """Declares that someone is working, or about to work, on the mission."""
     assert current_user.id is not None
     await use_case.execute(
         AssignmentCommand(
@@ -318,13 +318,13 @@ async def unassign_member(
     project_id: int,
     member_id: int,
     role: ProjectRole = Query(
-        default=ProjectRole.INTERVENANT, description="A quel titre."
+        default=ProjectRole.CONTRIBUTOR, description="A quel titre."
     ),
     current_user: User = Depends(get_current_user),
     use_case: UnassignMemberUseCase = Depends(get_unassign_member_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
-    """Retire une personne des intervenants de la mission."""
+    """Removes someone from the mission's contributors."""
     assert current_user.id is not None
     await use_case.execute(
         AssignmentCommand(
@@ -348,7 +348,7 @@ async def get_project_detail(
     _: User = Depends(get_current_user),
     use_case: GetProjectDetailUseCase = Depends(get_project_detail_use_case),
 ) -> ProjectDetailResponse:
-    """La fiche complete d'une mission."""
+    """The full sheet of a mission."""
     return to_project_detail_response(await use_case.execute(project_id))
 
 
@@ -364,14 +364,14 @@ async def update_project_detail(
     use_case: UpdateProjectDetailUseCase = Depends(get_update_project_detail_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
-    """Enregistre les departements concernes et les contacts metier."""
+    """Saves the departments concerned and the business contacts."""
     assert current_user.id is not None
     await use_case.execute(
         UpdateProjectDetailCommand(
             actor_id=current_user.id,
             project_id=project_id,
-            departements=payload.departements,
-            contacts_metier=payload.contacts_metier,
+            departments=payload.departments,
+            business_contacts=payload.business_contacts,
         )
     )
     await session.commit()
@@ -391,21 +391,21 @@ async def add_project_link(
     use_case: AddProjectLinkUseCase = Depends(get_add_project_link_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectLinkResponse:
-    """Attache un lien utile a la mission."""
+    """Attaches a useful link to the mission."""
     assert current_user.id is not None
-    lien = await use_case.execute(
+    link = await use_case.execute(
         AddLinkCommand(
             actor_id=current_user.id,
             project_id=project_id,
             label=payload.label,
             url=payload.url,
-            icone=payload.icone,
+            icon=payload.icon,
         )
     )
     await session.commit()
-    assert lien.id is not None
+    assert link.id is not None
     return ProjectLinkResponse(
-        id=lien.id, label=lien.label, url=lien.url, icone=lien.icone
+        id=link.id, label=link.label, url=link.url, icon=link.icon
     )
 
 
@@ -421,7 +421,7 @@ async def remove_project_link(
     use_case: RemoveProjectLinkUseCase = Depends(get_remove_project_link_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
-    """Detache un lien de la mission."""
+    """Detaches a link from the mission."""
     await use_case.execute(link_id)
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -439,7 +439,7 @@ async def update_project_description(
     use_case: UpdateDescriptionUseCase = Depends(get_update_description_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
-    """Enregistre la fiche de service, en markdown."""
+    """Saves the service sheet, in markdown."""
     assert current_user.id is not None
     await use_case.execute(
         UpdateDescriptionCommand(
@@ -462,11 +462,11 @@ async def list_project_updates(
     current_user: User = Depends(get_current_user),
     use_case: ListProjectUpdatesUseCase = Depends(get_list_updates_use_case),
 ) -> list[ProjectUpdateResponse]:
-    """Le fil de suivi d'une mission, de la plus recente a la plus ancienne."""
+    """A mission's follow-up thread, most recent first."""
     assert current_user.id is not None
     return [
-        to_project_update_response(signee, current_user.id)
-        for signee in await use_case.execute(project_id)
+        to_project_update_response(signed, current_user.id)
+        for signed in await use_case.execute(project_id)
     ]
 
 
@@ -481,19 +481,21 @@ async def post_project_update(
     payload: PostUpdateRequest,
     current_user: User = Depends(get_current_user),
     use_case: PostProjectUpdateUseCase = Depends(get_post_update_use_case),
-    lecture: ListProjectUpdatesUseCase = Depends(get_list_updates_use_case),
+    list_updates: ListProjectUpdatesUseCase = Depends(get_list_updates_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectUpdateResponse:
-    """Publie une mise a jour sur la mission."""
+    """Posts an update on the mission."""
     assert current_user.id is not None
-    maj = await use_case.execute(
+    update = await use_case.execute(
         PostUpdateCommand(
-            actor_id=current_user.id, project_id=project_id, texte=payload.texte
+            actor_id=current_user.id, project_id=project_id, body=payload.body
         )
     )
     await session.commit()
-    signee = next(s for s in await lecture.execute(project_id) if s.update.id == maj.id)
-    return to_project_update_response(signee, current_user.id)
+    signed = next(
+        s for s in await list_updates.execute(project_id) if s.update.id == update.id
+    )
+    return to_project_update_response(signed, current_user.id)
 
 
 @router.put(
@@ -509,11 +511,11 @@ async def edit_project_update(
     use_case: EditProjectUpdateUseCase = Depends(get_edit_update_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
-    """Corrige une mise a jour. Seul son auteur le peut."""
+    """Corrects an update. Only its author may."""
     assert current_user.id is not None
     await use_case.execute(
         EditUpdateCommand(
-            actor_id=current_user.id, update_id=update_id, texte=payload.texte
+            actor_id=current_user.id, update_id=update_id, body=payload.body
         )
     )
     await session.commit()
@@ -532,7 +534,7 @@ async def remove_project_update(
     use_case: RemoveProjectUpdateUseCase = Depends(get_remove_update_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
-    """Retire une mise a jour. Elle garde sa place dans le fil."""
+    """Withdraws an update. It keeps its place in the thread."""
     assert current_user.id is not None
     await use_case.execute(
         RemoveUpdateCommand(actor_id=current_user.id, update_id=update_id)

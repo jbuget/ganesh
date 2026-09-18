@@ -8,79 +8,79 @@ import { Input } from "@/components/ui/input";
 
 interface EditableTitleProps {
   label: string;
-  /** Ce que le bouton crayon annonce aux lecteurs d'ecran. */
-  invite: string;
-  /** Absent quand le renommage n'est pas permis : le crayon disparait alors. */
+  /** What the pencil button announces to screen readers. */
+  hint: string;
+  /** Absent when renaming is not allowed: the pencil then disappears. */
   onRename?: (label: string) => void | Promise<void>;
-  /** `1` en pleine page, `2` dans un panneau : le titre suit son contexte. */
-  niveau?: 1 | 2;
+  /** `1` on a full page, `2` in a panel: the title follows its context. */
+  level?: 1 | 2;
 }
 
 /**
- * Un titre qui se renomme sur place.
+ * A title that renames in place.
  *
- * Le crayon n'ouvre le champ qu'a la demande : un titre se lit bien plus
- * souvent qu'il ne se change, et une bordure de saisie permanente ferait du
- * bruit en tete de chaque fiche. Une fois ouvert, le champ s'assume : boutons
- * explicites, Entree pour valider, Echap pour abandonner.
+ * The pencil only opens the field on demand: a title is read far more often
+ * than it is changed, and a permanent input border would make noise at the top
+ * of every sheet. Once open, the field owns it: explicit buttons, Enter to
+ * confirm, Escape to give up.
  */
 export function EditableTitle({
   label,
-  invite,
+  hint,
   onRename,
-  niveau = 2,
+  level = 2,
 }: EditableTitleProps) {
-  const [saisie, setSaisie] = useState<string | null>(null);
-  const [enCours, setEnCours] = useState(false);
-  const [enErreur, setEnErreur] = useState(false);
+  const [entry, setEntry] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
-  const propre = saisie?.trim() ?? "";
-  const valide = propre.length > 0;
+  const trimmed = entry?.trim() ?? "";
+  const isValid = trimmed.length > 0;
 
-  function abandonner() {
-    setSaisie(null);
-    setEnErreur(false);
+  function cancel() {
+    setEntry(null);
+    setHasError(false);
   }
 
-  async function valider() {
-    if (!valide || enCours) return;
-    if (propre === label) {
-      abandonner();
+  async function validate() {
+    if (!isValid || busy) return;
+    if (trimmed === label) {
+      cancel();
       return;
     }
-    setEnCours(true);
-    setEnErreur(false);
+    setBusy(true);
+    setHasError(false);
     try {
-      await onRename?.(propre);
-      abandonner();
+      await onRename?.(trimmed);
+      cancel();
     } catch {
-      // La saisie reste a l'ecran : on ne fait pas retaper un titre a quelqu'un
-      // sous pretexte que le reseau a flanche.
-      setEnErreur(true);
+      // The input stays on screen: nobody is made to retype a title because
+      // the network gave out.
+      setHasError(true);
     } finally {
-      setEnCours(false);
+      setBusy(false);
     }
   }
 
-  if (saisie !== null) {
+  if (entry !== null) {
     return (
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <Input
             autoFocus
-            value={saisie}
-            disabled={enCours}
-            aria-label={invite}
-            aria-invalid={enErreur || undefined}
-            onChange={(event) => setSaisie(event.target.value)}
+            value={entry}
+            disabled={busy}
+            aria-label={hint}
+            aria-invalid={hasError || undefined}
+            onChange={(event) => setEntry(event.target.value)}
             onKeyDown={(event) => {
-              // Le panneau se ferme sur Echap : sans cela, abandonner la saisie
-              // fermerait la fiche par la meme occasion.
+              // The panel closes on Escape: without this, giving up on the
+              // input would close the sheet at the same time.
               if (event.key === "Escape") {
                 event.stopPropagation();
-                abandonner();
+                cancel();
               }
-              if (event.key === "Enter") void valider();
+              if (event.key === "Enter") void validate();
             }}
             className="text-sm"
           />
@@ -88,46 +88,46 @@ export function EditableTitle({
           <Button
             size="sm"
             variant="ghost"
-            disabled={enCours}
-            onClick={abandonner}
+            disabled={busy}
+            onClick={cancel}
             className="cursor-pointer"
           >
             Annuler
           </Button>
           <Button
             size="sm"
-            disabled={!valide || enCours}
-            onClick={() => void valider()}
+            disabled={!isValid || busy}
+            onClick={() => void validate()}
             className="cursor-pointer"
           >
             Enregistrer
           </Button>
         </div>
 
-        {enErreur && (
+        {hasError && (
           <p role="alert" className="mt-1 text-xs text-red-700">
-            Le nouveau titre n&apos;a pas pu être enregistré.
+            Le nouveau title n&apos;a pas pu être enregistré.
           </p>
         )}
       </div>
     );
   }
 
-  const Titre = niveau === 1 ? "h1" : "h2";
+  const Title = level === 1 ? "h1" : "h2";
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-1.5">
-      <Titre
-        className={`truncate font-semibold ${niveau === 1 ? "text-xl" : "text-base"}`}
+      <Title
+        className={`truncate font-semibold ${level === 1 ? "text-xl" : "text-base"}`}
       >
         {label}
-      </Titre>
+      </Title>
 
       {onRename && (
         <button
           type="button"
-          aria-label={invite}
-          onClick={() => setSaisie(label)}
+          aria-label={hint}
+          onClick={() => setEntry(label)}
           className="cursor-pointer rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
         >
           <Pencil className="size-3.5" aria-hidden />

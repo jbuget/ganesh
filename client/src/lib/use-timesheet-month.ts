@@ -21,7 +21,7 @@ import {
 import type { DayValue } from "@/lib/day-value";
 import { firstDayOfMonth, nextMonth, previousMonth } from "@/lib/dates";
 
-/** Date du jour en heure locale : `toISOString` renverrait la veille en soiree. */
+/** Today's date in local time: `toISOString` would return yesterday in the evening. */
 export function todayIso(): string {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -30,10 +30,10 @@ export function todayIso(): string {
 }
 
 /**
- * Etat et actions de l'ecran de saisie d'un mois.
+ * State and actions of a month's entry screen.
  *
- * Toute la coordination vit ici — navigation, donnees, ecritures — pour que le
- * composant ne porte plus que le rendu.
+ * All the coordination lives here — navigation, data, writes — so the component
+ * carries nothing but the rendering.
  */
 export function useTimesheetMonth() {
   const today = todayIso();
@@ -45,7 +45,7 @@ export function useTimesheetMonth() {
   const [extraRows, setExtraRows] = useState<ProjectResponse[]>([]);
 
   const queryClient = useQueryClient();
-  const mois = firstDayOfMonth(cursor.year, cursor.month);
+  const month = firstDayOfMonth(cursor.year, cursor.month);
 
   const { user: me } = useCurrentUser();
   const { teammates } = useTeammates();
@@ -53,7 +53,7 @@ export function useTimesheetMonth() {
   const createProject = useCreateProject();
   const validateMonth = useValidateMonth();
 
-  const gridQuery = useMonthGrid(mois, viewedUserId, Boolean(me?.id));
+  const gridQuery = useMonthGrid(month, viewedUserId, Boolean(me?.id));
   const grid = gridQuery.grid;
 
   const target = viewedUserId ? { user_id: viewedUserId } : undefined;
@@ -65,7 +65,7 @@ export function useTimesheetMonth() {
   return {
     today,
     cursor,
-    mois,
+    month,
     grid,
     isLoading: gridQuery.isLoading,
     teammates,
@@ -76,7 +76,7 @@ export function useTimesheetMonth() {
     currentUserId: me?.id ?? null,
     isOwnMonth: viewedUserId === null || viewedUserId === me?.id,
 
-    /** Missions deja presentes dans la matrice, a ne pas reproposer. */
+    /** Missions already in the grid, not to be offered again. */
     displayedProjectIds: [
       ...(grid?.rows.map((row) => row.project_id) ?? []),
       ...extraRows.map((project) => project.id),
@@ -96,12 +96,12 @@ export function useTimesheetMonth() {
       setViewedUserId(userId === me?.id ? null : userId);
     },
 
-    /** Une valeur nulle retire la saisie ; toute autre valeur l'ecrit. */
-    async setDayValue(projectId: number, jour: string, value: DayValue) {
+    /** A null value removes the entry; any other value writes it. */
+    async setDayValue(projectId: number, day: string, value: DayValue) {
       if (value === 0) {
-        await clearEntry({ project_id: projectId, jour, ...target });
+        await clearEntry({ project_id: projectId, day, ...target });
       } else {
-        await setEntry({ project_id: projectId, jour, valeur: value }, target);
+        await setEntry({ project_id: projectId, day, value: value }, target);
       }
       await refresh();
     },
@@ -112,29 +112,29 @@ export function useTimesheetMonth() {
     },
 
     /**
-     * Retire une mission du mois, avec le temps qu'elle porte.
+     * Removes a mission from the month, with the time it carries.
      *
-     * Une ligne ajoutee mais encore vide n'existe que localement : il n'y a
-     * rien a demander au serveur pour la faire disparaitre.
+     * A row added but still empty exists locally only: there is nothing to ask
+     * the server to make it disappear.
      */
     async removeMission(projectId: number) {
       setExtraRows((rows) => rows.filter((row) => row.id !== projectId));
       if (grid?.rows.some((row) => row.project_id === projectId)) {
-        await removeMissionFromMonth({ project_id: projectId, mois, ...target });
+        await removeMissionFromMonth({ project_id: projectId, month, ...target });
         await refresh();
       }
     },
 
     async declareProject(label: string) {
       const created = await createProject.mutateAsync({
-        data: { label, kind: "projet", statut: "exploration" },
+        data: { label, kind: "project", status: "exploration" },
       });
       setExtraRows((rows) => [...rows, mutationResult<ProjectResponse>(created)]);
       await refresh();
     },
 
     async validate() {
-      await validateMonth.mutateAsync({ mois });
+      await validateMonth.mutateAsync({ month });
       await refresh();
     },
   };

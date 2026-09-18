@@ -3,49 +3,49 @@
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 
 import { TableHead } from "@/components/ui/table";
-import type { ColonneTri, TriMissions } from "@/lib/mission-sort";
+import type { SortColumn, MissionSort } from "@/lib/mission-sort";
 
 interface SortableColumnHeaderProps {
-  colonne: ColonneTri;
-  libelle: string;
-  tri: TriMissions;
-  onBasculer: (colonne: ColonneTri) => void;
-  /** Les colonnes de nombres s'alignent a droite, en-tete compris. */
-  aDroite?: boolean;
+  column: SortColumn;
+  label: string;
+  sorted: MissionSort;
+  onToggle: (column: SortColumn) => void;
+  /** Number columns align right, heading included. */
+  alignRight?: boolean;
 }
 
 /**
- * Un en-tete de colonne sur lequel on range le tableau.
+ * A column header the table gets arranged by.
  *
- * La double fleche ne parait qu'au survol de l'en-tete vise : neuf colonnes
- * qui reclameraient l'attention en meme temps ne diraient plus laquelle ordonne
- * la liste. Celle qui la range, elle, garde sa fleche affichee.
+ * The double arrow only appears when hovering the header aimed at: nine
+ * columns calling for attention at once would no longer say which one orders
+ * the list. The one that does keeps its arrow showing.
  */
 export function SortableColumnHeader({
-  colonne,
-  libelle,
-  tri,
-  onBasculer,
-  aDroite = false,
+  column,
+  label,
+  sorted,
+  onToggle,
+  alignRight = false,
 }: SortableColumnHeaderProps) {
-  const actif = tri.colonne === colonne;
-  const croissant = tri.sens === "asc";
+  const is_active = sorted.column === column;
+  const ascending = sorted.direction === "asc";
 
   return (
     <TableHead
-      aria-sort={actif ? (croissant ? "ascending" : "descending") : "none"}
-      className={aDroite ? "text-right" : undefined}
+      aria-sort={is_active ? (ascending ? "ascending" : "descending") : "none"}
+      className={alignRight ? "text-right" : undefined}
     >
       <button
         type="button"
-        onClick={() => onBasculer(colonne)}
+        onClick={() => onToggle(column)}
         className={`group -mx-1 flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 transition-colors hover:bg-slate-200 ${
-          aDroite ? "ml-auto" : ""
+          alignRight ? "ml-auto" : ""
         }`}
       >
-        {libelle}
-        {actif ? (
-          croissant ? (
+        {label}
+        {is_active ? (
+          ascending ? (
             <ArrowUp className="size-3.5 shrink-0" aria-label="Ordre croissant" />
           ) : (
             <ArrowDown className="size-3.5 shrink-0" aria-label="Ordre décroissant" />

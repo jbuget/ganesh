@@ -4,20 +4,20 @@ import { render, screen } from "@testing-library/react";
 import { UserAvatar } from "./UserAvatar";
 
 describe("UserAvatar", () => {
-  it("affiche les initiales", () => {
-    render(<UserAvatar initiales="JB" nom="Jérémy Buget" />);
+  it("shows the initials", () => {
+    render(<UserAvatar initials="JB" name="Jérémy Buget" />);
 
     expect(screen.getByText("JB")).toBeInTheDocument();
   });
 
-  it("donne le nom complet, que des initiales ne laissent pas deviner", () => {
-    render(<UserAvatar initiales="JB" nom="Jérémy Buget" />);
+  it("gives the full name, which initials do not let one guess", () => {
+    render(<UserAvatar initials="JB" name="Jérémy Buget" />);
 
     expect(screen.getByTitle("Jérémy Buget")).toBeInTheDocument();
   });
 
-  it("atténue la pastille d'un collaborateur inactif", () => {
-    const { container } = render(<UserAvatar initiales="LC" nom="L. Chen" attenue />);
+  it("dims the avatar of an inactive teammate", () => {
+    const { container } = render(<UserAvatar initials="LC" name="L. Chen" dimmed />);
 
     expect(container.firstElementChild?.className).toContain("opacity-50");
   });

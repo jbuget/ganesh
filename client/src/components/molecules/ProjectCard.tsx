@@ -8,89 +8,87 @@ import {
 } from "lucide-react";
 
 import { CardCounter } from "@/components/atoms/CardCounter";
-import { IntervenantsPicker } from "@/components/atoms/IntervenantsPicker";
+import { ContributorsPicker } from "@/components/atoms/ContributorsPicker";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
-import { avancement } from "@/lib/board";
-import { formatJoursDecimal } from "@/lib/dates";
-import { depuis } from "@/lib/dates-relatives";
+import { progress } from "@/lib/board";
+import { formatDecimalDays } from "@/lib/dates";
+import { since } from "@/lib/relative-dates";
 
-/** Teinte du rapport consomme/estime selon l'etat d'avancement. */
-const TEINTES: Record<ReturnType<typeof avancement>, string> = {
-  "sans-estime": "text-slate-500",
-  "en-cours": "text-slate-600",
-  proche: "text-amber-700",
-  depasse: "text-red-700",
+/** Shade of the consumed/estimated ratio, by how far along it is. */
+const SHADES: Record<ReturnType<typeof progress>, string> = {
+  "no-estimate": "text-slate-500",
+  ongoing: "text-slate-600",
+  close: "text-amber-700",
+  over: "text-red-700",
 };
 
 interface ProjectCardProps {
-  carte: BoardCardResponse;
-  /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
-  maintenant: Date;
+  card: BoardCardResponse;
+  /** Freezes the reference time: without it, server and client would diverge. */
+  now: Date;
   /**
-   * Poignee de glissement, fournie par la couche de tri. `null` n'en montre
-   * aucune : une carte qu'on ne peut pas deplacer ne doit pas en porter le
-   * signe.
+   * Drag handle, provided by the sorting layer. `null` shows none: a card that
+   * cannot be moved must not carry the sign of one.
    */
-  poignee?: React.ReactNode | null;
-  enDeplacement?: boolean;
-  /** Recharge le tableau apres un changement d'intervenants. */
-  onIntervenantsChange?: () => void | Promise<void>;
-  /** Ouvre la mission a cote du tableau. */
+  handle?: React.ReactNode | null;
+  isDragging?: boolean;
+  /** Reloads the board after a change of contributors. */
+  onContributorsChange?: () => void | Promise<void>;
+  /** Opens the mission beside the board. */
   onOpen?: (projectId: number) => void;
 }
 
-/** Une mission sur le tableau de bord. */
+/** A mission on the board. */
 export function ProjectCard({
-  carte,
-  maintenant,
-  poignee,
-  enDeplacement,
-  onIntervenantsChange,
+  card,
+  now,
+  handle,
+  isDragging,
+  onContributorsChange,
   onOpen,
 }: ProjectCardProps) {
-  const { project, parent } = carte;
-  const archivee = !project.actif;
-  const etat = avancement(carte.consomme_j, project.estime_j);
-  const derniere = carte.derniere_maj;
+  const { project, parent } = card;
+  const archived = !project.is_active;
+  const state = progress(card.consumed_days, project.estimated_days);
+  const latest = card.latest_update;
 
-  // Le dernier message en entier et mis en forme, comme dans le referentiel :
-  // la carte dit combien de messages porte le fil, l'apercu dit s'il faut
-  // l'ouvrir.
-  const apercu = derniere && (
+  // The latest message in full and formatted, as in the reference list: the
+  // card says how many messages the thread carries, the preview says whether
+  // it needs opening.
+  const preview = latest && (
     <>
-      {/* Le trait separe la signature du propos : sans lui, la premiere ligne
-          du message se lit comme la suite de l'entete. Les marges negatives le
-          menent aux bords de la bulle, dont il traverse le rembourrage. */}
+      {/* The rule separates the signature from the words: without it, the first
+          line of the message reads as the continuation of the header. Negative
+          margins carry it to the edges of the bubble, whose padding it
+          crosses. */}
       <p className="-mx-3 mb-2 border-b border-slate-200 px-3 pb-2 text-xs text-slate-500">
-        <span className="font-medium text-slate-700">
-          {derniere.author.display_name}
-        </span>{" "}
-        · {depuis(derniere.publiee_le, maintenant)}
+        <span className="font-medium text-slate-700">{latest.author.display_name}</span>{" "}
+        · {since(latest.published_at, now)}
       </p>
-      <MarkdownView texte={derniere.texte} />
+      <MarkdownView body={latest.body} />
     </>
   );
 
   return (
     <article
-      // Toute la carte ouvre la mission, et non son seul titre : c'est la carte
-      // qu'on vise du regard. Les controles qu'elle porte — poignee, pastilles
-      // d'intervenants — gardent leur clic, d'ou le filtre sur les boutons.
+      // The whole card opens the mission, not its title alone: it is the card
+      // the eye aims at. The controls it carries — handle, contributor avatars
+      // — keep their click, hence the filter on buttons.
       onClick={(event) => {
-        if (!onOpen || enDeplacement) return;
+        if (!onOpen || isDragging) return;
         if ((event.target as HTMLElement).closest("button")) return;
         onOpen(project.id);
       }}
       className={[
         "group rounded-lg border p-3 shadow-xs transition-shadow",
-        // Une archivee ne se pilote plus : elle se lit en retrait, pour qu'un
-        // tableau melant les deux se parcoure sans confondre ce qui tourne et
-        // ce qui est range.
-        archivee ? "bg-slate-50" : "bg-white",
-        onOpen && !enDeplacement ? "cursor-pointer" : "",
-        enDeplacement
+        // An archived mission is no longer steered: it reads set back, so that
+        // a board mixing both can be scanned without confusing what is running
+        // with what has been put away.
+        archived ? "bg-slate-50" : "bg-white",
+        onOpen && !isDragging ? "cursor-pointer" : "",
+        isDragging
           ? "border-sky-400 shadow-lg"
           : "border-slate-300 hover:border-slate-500 hover:shadow-sm",
       ].join(" ")}
@@ -98,15 +96,15 @@ export function ProjectCard({
       <div className="flex items-start gap-1.5">
         <h3
           className={`min-w-0 flex-1 text-sm font-medium ${
-            archivee ? "text-slate-500" : "text-slate-900"
+            archived ? "text-slate-500" : "text-slate-900"
           }`}
         >
           {/*
-            Le lien porte sur le titre seul, non sur la carte : celle-ci se
-            saisit pour la deplacer, et un clic relache apres un glissement ne
-            doit pas ouvrir une fiche.
+            The link is on the title alone, not on the card: the card is
+            grabbed to move it, and a click released after a drag must not open
+            a sheet.
           */}
-          {enDeplacement || !onOpen ? (
+          {isDragging || !onOpen ? (
             project.label
           ) : (
             <button
@@ -118,22 +116,22 @@ export function ProjectCard({
             </button>
           )}
         </h3>
-        {poignee === undefined ? (
+        {handle === undefined ? (
           <GripVertical className="size-4 shrink-0 text-slate-300" aria-hidden />
         ) : (
-          poignee
+          handle
         )}
       </div>
 
       {/*
-        D'ou releve un lot se lit sous son titre : sur le tableau, une carte de
-        sous-projet ne dit rien de son projet, et l'intitule seul ne suffit pas
-        toujours a le deviner.
+        What a work package belongs to reads under its title: on the board, a
+        sub-project card says nothing of its project, and the label alone is
+        not always enough to guess it.
       */}
       {parent && (
         <p className="mt-1 flex min-w-0 items-center gap-1 text-xs text-slate-500">
           <CornerDownRight className="size-3 shrink-0" aria-hidden />
-          {enDeplacement || !onOpen ? (
+          {isDragging || !onOpen ? (
             <span className="truncate">{parent.label}</span>
           ) : (
             <button
@@ -147,62 +145,60 @@ export function ProjectCard({
         </p>
       )}
 
-      {archivee && (
+      {archived && (
         <span className="mt-2 mr-1 inline-block rounded bg-slate-200 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">
           Archivée
         </span>
       )}
 
-      <p className={`mt-2.5 text-xs tabular-nums ${TEINTES[etat]}`}>
-        {project.estime_j
-          ? `${formatJoursDecimal(carte.consomme_j)}/${project.estime_j} jrs. estimés`
-          : `${formatJoursDecimal(carte.consomme_j)} jrs. consommés`}
+      <p className={`mt-2.5 text-xs tabular-nums ${SHADES[state]}`}>
+        {project.estimated_days
+          ? `${formatDecimalDays(card.consumed_days)}/${project.estimated_days} jrs. estimés`
+          : `${formatDecimalDays(card.consumed_days)} jrs. consommés`}
       </p>
 
       {/*
-        Le pied de carte : qui s'occupe de la mission a gauche, ce qu'elle
-        porte a droite — son fil, ses lots. Les deux tiennent sur une seule
-        ligne : ils repondent a la meme question, ce qui gravite autour de la
-        mission, et deux lignes distinctes etiraient la carte sans rien dire de
-        plus.
+        The card footer: who looks after the mission on the left, what it
+        carries on the right — its thread, its work packages. Both fit on one
+        line: they answer the same question, what orbits the mission, and two
+        separate lines would stretch the card without saying more.
 
-        Chaque nombre precede son icone, d'ou l'ecart large entre les deux
-        decomptes : plus serres, un nombre se lirait comme le compte de l'icone
-        qui le precede, surtout quand celle d'a cote ne compte rien.
+        Each number precedes its icon, hence the wide gap between the two
+        counts: closer together, a number would read as the count of the icon
+        before it, all the more when the one beside it counts nothing.
       */}
       <div className="mt-2.5 flex items-center gap-2">
         {/*
-          La copie qui suit le curseur n'est pas interactive : sans selecteur,
-          un clic amorce dessus ne pourrait pas ouvrir de menu en plein
-          glissement.
+          The copy following the cursor is not interactive: without a picker, a
+          click started on it could not open a menu mid-drag.
         */}
         <div className="min-w-0 flex-1">
-          {enDeplacement || !onIntervenantsChange ? (
-            <MemberAvatars membres={carte.intervenants} />
+          {isDragging || !onContributorsChange ? (
+            <MemberAvatars members={card.contributors} />
           ) : (
-            <IntervenantsPicker
+            <ContributorsPicker
               projectId={project.id}
-              intervenants={carte.intervenants}
-              onChange={onIntervenantsChange}
+              contributors={card.contributors}
+              onChange={onContributorsChange}
             />
           )}
         </div>
 
         <div className="flex shrink-0 items-center gap-5">
           <CardCounter
-            icone={MessageCircle}
-            nombre={carte.commentaires}
-            libelle={["commentaire", "commentaires"]}
-            vide="Aucun commentaire"
-            // La copie qui suit le curseur n'annonce rien : une bulle ouverte
-            // sous la carte en plein deplacement masquerait la ou elle tombe.
-            apercu={enDeplacement ? undefined : apercu}
+            icon={MessageCircle}
+            count={card.comments}
+            label={["commentaire", "commentaires"]}
+            empty="Aucun commentaire"
+            // The copy following the cursor announces nothing: a bubble opened
+            // under the card mid-drag would hide where it lands.
+            preview={isDragging ? undefined : preview}
           />
           <CardCounter
-            icone={SquareStack}
-            nombre={carte.sous_projets}
-            libelle={["sous-projet", "sous-projets"]}
-            vide="Aucun sous-projet"
+            icon={SquareStack}
+            count={card.sub_projects}
+            label={["sous-projet", "sous-projets"]}
+            empty="Aucun sous-projet"
           />
         </div>
       </div>

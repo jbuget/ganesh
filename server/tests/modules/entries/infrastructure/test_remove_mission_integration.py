@@ -1,7 +1,7 @@
-"""Le retrait d'une mission, contre une vraie base PostgreSQL.
+"""Removing a mission, against a real PostgreSQL database.
 
-Le double en memoire rend les memes objets que ceux qu'on lui a confies, la
-base en reconstruit d'autres : ce test tient l'usage a distance de cet ecart.
+The in-memory double hands back the very objects it was given, the database
+rebuilds others: this test keeps the behaviour clear of that difference.
 """
 
 from datetime import date
@@ -38,7 +38,7 @@ from src.modules.users.infrastructure.database.repositories.user_repository_impl
 
 pytestmark = pytest.mark.db
 
-MOIS = date(2026, 9, 1)
+MONTH = date(2026, 9, 1)
 
 
 async def seed(session: AsyncSession) -> tuple[int, int, int]:
@@ -52,37 +52,37 @@ async def seed(session: AsyncSession) -> tuple[int, int, int]:
         )
     )
     projects = SqlProjectRepository(session)
-    vise = await projects.add(
+    target = await projects.add(
         Project(
             id=None,
             label="Portail",
-            kind=ProjectKind.PROJET,
-            statut=ProjectStatus.REALISATION,
+            kind=ProjectKind.PROJECT,
+            status=ProjectStatus.DEVELOPMENT,
         )
     )
     epargne = await projects.add(
         Project(
             id=None,
             label="Extranet",
-            kind=ProjectKind.PROJET,
-            statut=ProjectStatus.REALISATION,
+            kind=ProjectKind.PROJECT,
+            status=ProjectStatus.DEVELOPMENT,
         )
     )
-    assert user.id is not None and vise.id is not None and epargne.id is not None
-    return user.id, vise.id, epargne.id
+    assert user.id is not None and target.id is not None and epargne.id is not None
+    return user.id, target.id, epargne.id
 
 
-async def une_saisie(
-    session: AsyncSession, user_id: int, project_id: int, jour: int, valeur: float
+async def an_entry(
+    session: AsyncSession, user_id: int, project_id: int, day: int, value: float
 ) -> None:
     await SqlEntryRepository(session).upsert(
         Entry(
             id=None,
             user_id=user_id,
             project_id=project_id,
-            jour=date(2026, 9, jour),
-            valeur=DayValue(valeur),
-            statut_at_entry=ProjectStatus.REALISATION,
+            day=date(2026, 9, day),
+            value=DayValue(value),
+            status_at_entry=ProjectStatus.DEVELOPMENT,
         )
     )
 
@@ -99,33 +99,33 @@ def build(session: AsyncSession) -> RemoveMissionFromMonthUseCase:
 async def test_the_mission_leaves_the_month_and_its_neighbours_stay(
     db_session: AsyncSession,
 ) -> None:
-    user_id, vise, epargne = await seed(db_session)
-    await une_saisie(db_session, user_id, vise, 14, 1.0)
-    await une_saisie(db_session, user_id, vise, 15, 0.5)
-    await une_saisie(db_session, user_id, epargne, 14, 1.0)
+    user_id, target, epargne = await seed(db_session)
+    await an_entry(db_session, user_id, target, 14, 1.0)
+    await an_entry(db_session, user_id, target, 15, 0.5)
+    await an_entry(db_session, user_id, epargne, 14, 1.0)
 
-    retires = await build(db_session).execute(
+    removed = await build(db_session).execute(
         RemoveMissionCommand(
-            actor_id=user_id, target_user_id=user_id, project_id=vise, mois=MOIS
+            actor_id=user_id, target_user_id=user_id, project_id=target, month=MONTH
         )
     )
 
-    assert retires == 1.5
-    restantes = await SqlEntryRepository(db_session).list_for_month(user_id, MOIS)
-    assert [entry.project_id for entry in restantes] == [epargne]
+    assert removed == 1.5
+    remaining = await SqlEntryRepository(db_session).list_for_month(user_id, MONTH)
+    assert [entry.project_id for entry in remaining] == [epargne]
 
 
 async def test_a_month_without_the_mission_is_left_untouched(
     db_session: AsyncSession,
 ) -> None:
-    user_id, vise, epargne = await seed(db_session)
-    await une_saisie(db_session, user_id, epargne, 14, 1.0)
+    user_id, target, epargne = await seed(db_session)
+    await an_entry(db_session, user_id, epargne, 14, 1.0)
 
-    retires = await build(db_session).execute(
+    removed = await build(db_session).execute(
         RemoveMissionCommand(
-            actor_id=user_id, target_user_id=user_id, project_id=vise, mois=MOIS
+            actor_id=user_id, target_user_id=user_id, project_id=target, month=MONTH
         )
     )
 
-    assert retires == 0
-    assert len(await SqlEntryRepository(db_session).list_for_month(user_id, MOIS)) == 1
+    assert removed == 0
+    assert len(await SqlEntryRepository(db_session).list_for_month(user_id, MONTH)) == 1

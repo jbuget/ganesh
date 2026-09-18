@@ -4,65 +4,65 @@ import { MessageCircle } from "lucide-react";
 
 import { CardCounter } from "./CardCounter";
 
-const APERCU = <p>Le cadrage commence lundi</p>;
+const PREVIEW = <p>Le cadrage commence lundi</p>;
 
-const compteur = (nombre: number, apercu?: React.ReactNode) => (
+const counter = (count: number, preview?: React.ReactNode) => (
   <CardCounter
-    icone={MessageCircle}
-    nombre={nombre}
-    libelle={["commentaire", "commentaires"]}
-    vide="Aucun commentaire"
-    apercu={apercu}
+    icon={MessageCircle}
+    count={count}
+    label={["commentaire", "commentaires"]}
+    empty="Aucun commentaire"
+    preview={preview}
   />
 );
 
 describe("CardCounter", () => {
-  it("annonce le nombre au pluriel", () => {
-    render(compteur(3));
+  it("announces the number in the plural", () => {
+    render(counter(3));
 
     expect(screen.getByLabelText("3 commentaires")).toHaveTextContent("3");
   });
 
-  it("accorde au singulier", () => {
-    render(compteur(1));
+  it("agrees in the singular", () => {
+    render(counter(1));
 
     expect(screen.getByLabelText("1 commentaire")).toBeInTheDocument();
   });
 
-  it("garde l'icône sans nombre quand il n'y a rien à compter", () => {
-    render(compteur(0));
+  it("keeps the icon without a number when there is nothing to count", () => {
+    render(counter(0));
 
     expect(screen.getByLabelText("Aucun commentaire")).toHaveTextContent("");
   });
 
-  it("atténue l'icône quand le décompte est nul", () => {
-    render(compteur(0));
+  it("dims the icon when the count is nil", () => {
+    render(counter(0));
 
     expect(screen.getByLabelText("Aucun commentaire").className).toContain(
       "text-slate-300",
     );
   });
 
-  it("montre l'aperçu au survol", () => {
-    render(compteur(2, APERCU));
+  it("shows the preview on hover", () => {
+    render(counter(2, PREVIEW));
 
     fireEvent.mouseMove(screen.getByLabelText("2 commentaires"));
 
     expect(screen.getByRole("tooltip")).toHaveTextContent("Le cadrage commence lundi");
   });
 
-  it("referme l'aperçu quand la souris quitte le décompte", () => {
-    render(compteur(2, APERCU));
-    const decompte = screen.getByLabelText("2 commentaires");
+  it("closes the preview when the mouse leaves the count", () => {
+    render(counter(2, PREVIEW));
+    const count = screen.getByLabelText("2 commentaires");
 
-    fireEvent.mouseMove(decompte);
-    fireEvent.mouseLeave(decompte);
+    fireEvent.mouseMove(count);
+    fireEvent.mouseLeave(count);
 
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 
-  it("compte sans infobulle quand il n'y a rien à montrer", () => {
-    render(compteur(2));
+  it("counts without a tooltip when there is nothing to show", () => {
+    render(counter(2));
 
     fireEvent.mouseMove(screen.getByLabelText("2 commentaires"));
 

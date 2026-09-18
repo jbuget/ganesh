@@ -7,15 +7,15 @@ on:
 
 jobs:
   server:
-    name: Serveur — lint, architecture, tests
+    name: Server — lint, architecture, tests
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: server
 
-    # Les tests d'integration touchent une vraie base, comme le veut le projet :
-    # le double en memoire rend les objets qu'on lui confie la ou la base en
-    # reconstruit d'autres, et c'est precisement cet ecart qu'ils surveillent.
+    # Integration tests hit a real database, as the project asks: the in-memory
+    # double hands back the very objects it was given, where the database
+    # rebuilds others, and that gap is exactly what they watch.
     services:
       postgres:
         image: postgres:18
@@ -40,12 +40,12 @@ jobs:
           cache: pip
           cache-dependency-path: server/requirements-dev.txt
 
-      - name: Installer les dépendances
+      - name: Install the dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
-      - name: Format et lint
+      - name: Format and lint
         run: |
           isort --check-only src/ tests/
           black --check src/ tests/
@@ -53,8 +53,19 @@ jobs:
           flake8 src/ tests/
           mypy src/
 
-      - name: Contrats d'architecture (Clean Architecture)
+      - name: Architecture contracts (Clean Architecture)
         run: lint-imports --config .importlinter
+
+      # A column renamed without its index, a model changed without a
+      # migration: schema and models drift apart in silence, and nothing said
+      # so until the next autogenerate, which then carried the correction in a
+      # diff where nobody was looking for it.
+      - name: Schema in step with the models
+        run: |
+          alembic upgrade head
+          alembic check
+        env:
+          DATABASE_URL: postgresql+asyncpg://timesheet:timesheet@localhost:5432/timesheet_test
 
       - name: Tests
         run: pytest
@@ -80,10 +91,10 @@ jobs:
           cache: pnpm
           cache-dependency-path: client/pnpm-lock.yaml
 
-      - name: Installer les dépendances
+      - name: Install the dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint (dont Atomic Design)
+      - name: Lint (Atomic Design included)
         run: pnpm lint
 
       - name: Format

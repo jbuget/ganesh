@@ -25,7 +25,7 @@ interface MissionSelectorProps {
   disabled?: boolean;
 }
 
-/** Une mission proposee : `value` / `label` est la forme que Base UI sait lire. */
+/** An offered mission: `value` / `label` is the shape Base UI can read. */
 interface MissionItem {
   value: number;
   label: string;
@@ -36,20 +36,20 @@ interface MissionGroup {
   items: MissionItem[];
 }
 
-const enItems = (projects: ProjectResponse[]): MissionItem[] =>
+const asItems = (projects: ProjectResponse[]): MissionItem[] =>
   projects.map((project) => ({ value: project.id, label: project.label }));
 
 /**
- * Ajout d'une mission a la matrice, depuis la derniere ligne du tableau.
+ * Adding a mission to the grid, from the last row of the table.
  *
- * Les missions deja presentes sont retirees de la liste : on ne peut pas creer
- * deux lignes pour la meme mission.
+ * Missions already there are taken out of the list: no two rows for the same
+ * mission.
  *
- * Le referentiel compte des dizaines de projets et de lots : le champ de
- * recherche en tete du menu evite de parcourir la liste entiere pour trouver
- * celui qu'on cherche. « Declarer un nouveau projet » reste en pied de menu,
- * hors du filtre : c'est justement quand aucune mission ne correspond qu'on en
- * a besoin.
+ * The reference list runs to dozens of projects and work packages: the search
+ * field at the top of the menu saves scanning the whole list for the one being
+ * looked for. « Declarer un nouveau projet » stays at the foot of the
+ * menu, outside the filter: it is precisely when no mission matches that one
+ * needs it.
  */
 export function MissionSelector({
   projects,
@@ -58,23 +58,23 @@ export function MissionSelector({
   onDeclareNew,
   disabled = false,
 }: MissionSelectorProps) {
-  const { projets, horsProjet } = availableMissions(projects, excludedIds);
-  const [ouvert, setOuvert] = useState(false);
+  const { projectMissions, offProject } = availableMissions(projects, excludedIds);
+  const [isOpen, setOpen] = useState(false);
 
-  const groupes: MissionGroup[] = [];
-  if (projets.length > 0) {
-    groupes.push({ value: "Projets et lots", items: enItems(projets) });
+  const groups: MissionGroup[] = [];
+  if (projectMissions.length > 0) {
+    groups.push({ value: "Projets et lots", items: asItems(projectMissions) });
   }
-  if (horsProjet.length > 0) {
-    groupes.push({ value: "Hors projet", items: enItems(horsProjet) });
+  if (offProject.length > 0) {
+    groups.push({ value: "Hors projet", items: asItems(offProject) });
   }
 
   return (
     <Combobox
-      items={groupes}
+      items={groups}
       value={null}
-      open={ouvert}
-      onOpenChange={setOuvert}
+      open={isOpen}
+      onOpenChange={setOpen}
       disabled={disabled}
       onValueChange={(mission) => {
         if (mission) onSelect((mission as MissionItem).value);
@@ -93,9 +93,9 @@ export function MissionSelector({
         <ComboboxEmpty>Aucune mission ne correspond.</ComboboxEmpty>
 
         <ComboboxList>
-          {(groupe: MissionGroup) => (
-            <ComboboxGroup key={groupe.value} items={groupe.items}>
-              <ComboboxGroupLabel>{groupe.value}</ComboboxGroupLabel>
+          {(group: MissionGroup) => (
+            <ComboboxGroup key={group.value} items={group.items}>
+              <ComboboxGroupLabel>{group.value}</ComboboxGroupLabel>
               <ComboboxCollection>
                 {(mission: MissionItem) => (
                   <ComboboxItem key={mission.value} value={mission}>
@@ -111,7 +111,7 @@ export function MissionSelector({
           <button
             type="button"
             onClick={() => {
-              setOuvert(false);
+              setOpen(false);
               onDeclareNew();
             }}
             className="w-full cursor-pointer rounded-md px-1.5 py-1 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground"

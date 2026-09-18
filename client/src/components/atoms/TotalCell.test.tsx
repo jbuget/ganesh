@@ -14,31 +14,31 @@ function renderInTable(ui: React.ReactElement) {
 }
 
 describe("TotalCell", () => {
-  it("ne signale rien pour un total normal", () => {
+  it("flags nothing for a normal total", () => {
     renderInTable(<TotalCell value={1} />);
 
     expect(screen.getByRole("cell")).not.toHaveAttribute("data-alert");
   });
 
-  it("affiche un total entier", () => {
+  it("shows a whole total", () => {
     renderInTable(<TotalCell value={3} />);
 
     expect(screen.getByRole("cell")).toHaveTextContent("3");
   });
 
-  it("écrit une demi-journée en décimal plutôt qu'en fraction", () => {
+  it("writes a half day in decimal rather than as a fraction", () => {
     renderInTable(<TotalCell value={3.5} />);
 
     expect(screen.getByRole("cell")).toHaveTextContent("3,5");
   });
 
-  it("reste vide quand rien n'est saisi", () => {
+  it("stays empty when nothing is declared", () => {
     renderInTable(<TotalCell value={0} />);
 
     expect(screen.getByRole("cell")).toHaveTextContent("");
   });
 
-  it("signale visuellement un dépassement", () => {
+  it("visually flags an overrun", () => {
     renderInTable(<TotalCell value={1.5} isAlert />);
 
     expect(screen.getByRole("cell")).toHaveAttribute("data-alert", "true");

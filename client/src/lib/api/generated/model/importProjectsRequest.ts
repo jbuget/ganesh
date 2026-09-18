@@ -7,8 +7,8 @@
 import type { ImportLineRequest } from "./importLineRequest";
 
 /**
- * Import en masse du referentiel.
+ * Bulk import of the reference list.
  */
 export interface ImportProjectsRequest {
-  lignes: ImportLineRequest[];
+  rows: ImportLineRequest[];
 }

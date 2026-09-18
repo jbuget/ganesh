@@ -7,10 +7,10 @@
 import type { BoardMemberResponse } from "./boardMemberResponse";
 
 /**
- * De quoi annoncer un fil de suivi sans l'ouvrir.
+ * Enough to announce a follow-up thread without opening it.
  */
 export interface LastUpdateResponse {
   author: BoardMemberResponse;
-  texte: string;
-  publiee_le: string;
+  body: string;
+  published_at: string;
 }

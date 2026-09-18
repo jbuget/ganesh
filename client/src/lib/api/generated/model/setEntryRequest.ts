@@ -6,11 +6,11 @@
  */
 
 /**
- * Demande d'ecriture d'une saisie.
+ * Request to write an entry.
  */
 export interface SetEntryRequest {
   project_id: number;
-  jour: string;
-  /** 0.5 pour une demi-journee, 1 pour une journee */
-  valeur: number;
+  day: string;
+  /** 0.5 for a half day, 1 for a full day */
+  value: number;
 }

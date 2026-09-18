@@ -56,7 +56,7 @@ export const getHealthUrl = () => {
 };
 
 /**
- * Verifie que l'API repond.
+ * Checks that the API answers.
  * @summary Health
  */
 export const health = async (

@@ -5,125 +5,120 @@ import { render, screen, within } from "@testing-library/react";
 import { BoardColumn } from "./BoardColumn";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 
-const carte = (id: number, label: string): BoardCardResponse =>
+const card = (id: number, label: string): BoardCardResponse =>
   ({
     project: {
       id,
       label,
-      kind: "projet",
-      statut: "realisation",
+      kind: "project",
+      status: "development",
       parent_id: null,
-      actif: true,
-      estime_j: 20,
-      categorie: "innover_differencier",
-      date_mise_en_service: "2026-11-15",
+      is_active: true,
+      estimated_days: 20,
+      category: "innovate_differentiate",
+      go_live_date: "2026-11-15",
       position: 0,
       monday_item_id: null,
       monday_subitem_id: null,
       is_syncable_to_monday: false,
       is_deletable: false,
     },
-    consomme_j: 5,
-    intervenants: [{ id: 1, display_name: "Léa Chen", initiales: "LC" }],
+    consumed_days: 5,
+    contributors: [{ id: 1, display_name: "Léa Chen", initials: "LC" }],
   }) as BoardCardResponse;
 
-/** Heure de reference figee : les apercus ne dependent pas de l'heure du run. */
-const MAINTENANT = new Date("2026-09-16T11:00:00Z");
+/** Frozen reference time: previews do not depend on when the run happens. */
+const NOW = new Date("2026-09-16T11:00:00Z");
 
-/** Les capteurs de @dnd-kit exigent un contexte englobant. */
-const afficher = (cartes: BoardCardResponse[], figees = false) =>
+/** The @dnd-kit sensors require an enclosing context. */
+const show = (cards: BoardCardResponse[], frozen = false) =>
   render(
     <DndContext>
-      <BoardColumn
-        statut="realisation"
-        cartes={cartes}
-        maintenant={MAINTENANT}
-        figees={figees}
-      />
+      <BoardColumn status="development" cards={cards} now={NOW} frozen={frozen} />
     </DndContext>,
   );
 
 describe("BoardColumn", () => {
-  it("annonce la phase et compte ses missions", () => {
-    afficher([carte(1, "Portail bailleurs"), carte(2, "Refonte extranet")]);
+  it("announces the phase and counts its missions", () => {
+    show([card(1, "Portail bailleurs"), card(2, "Refonte extranet")]);
 
-    const colonne = screen.getByRole("region", { name: "Réalisation" });
-    expect(within(colonne).getByRole("heading", { level: 2 })).toHaveTextContent(
+    const column = screen.getByRole("region", { name: "Réalisation" });
+    expect(within(column).getByRole("heading", { level: 2 })).toHaveTextContent(
       "Réalisation",
     );
-    expect(within(colonne).getByText("2")).toBeInTheDocument();
+    expect(within(column).getByText("2")).toBeInTheDocument();
   });
 
-  it("affiche une carte par mission, dans l'ordre reçu", () => {
-    afficher([carte(1, "Portail bailleurs"), carte(2, "Refonte extranet")]);
+  it("shows one card per mission, in the order received", () => {
+    show([card(1, "Portail bailleurs"), card(2, "Refonte extranet")]);
 
-    const titres = screen.getAllByRole("heading", { level: 3 });
-    expect(titres.map((titre) => titre.textContent)).toEqual([
+    const headings = screen.getAllByRole("heading", { level: 3 });
+    expect(headings.map((title) => title.textContent)).toEqual([
       "Portail bailleurs",
       "Refonte extranet",
     ]);
   });
 
-  it("invite au dépôt quand la phase est vide", () => {
-    afficher([]);
+  it("invites a drop when the phase is empty", () => {
+    show([]);
 
     expect(screen.getByText("Aucune mission")).toBeInTheDocument();
     expect(screen.queryAllByRole("heading", { level: 3 })).toHaveLength(0);
   });
 
-  it("distingue la phase par une pastille de couleur", () => {
-    afficher([]);
+  it("tells the phase apart by a coloured dot", () => {
+    show([]);
 
-    const titre = screen.getByRole("heading", { level: 2 });
-    const pastille = titre.querySelector("span");
-    expect(pastille).toHaveClass("bg-blue-500");
-    // Decorative : elle double le titre, elle ne l'annonce pas deux fois.
-    expect(pastille).toHaveAttribute("aria-hidden");
+    const title = screen.getByRole("heading", { level: 2 });
+    const dot = title.querySelector("span");
+    expect(dot).toHaveClass("bg-blue-500");
+    // Decorative: it doubles the title, it does not announce it twice.
+    expect(dot).toHaveAttribute("aria-hidden");
   });
 
-  it("garde son intitulé hors de la liste qui défile", () => {
-    // Chaque colonne defile pour elle-meme : son titre doit rester en
-    // vis-a-vis de celui des autres, quelle que soit sa pile de cartes.
-    afficher([carte(1, "Portail bailleurs")]);
+  it("keeps its heading out of the scrolling list", () => {
+    // Each column scrolls on its own: its title must stay level with the
+    // others', whatever its stack of cards.
+    show([card(1, "Portail bailleurs")]);
 
-    const defilante = screen.getByRole("list");
+    const scroller = screen.getByRole("list");
 
-    expect(defilante).toHaveClass("overflow-y-auto");
-    expect(defilante).not.toContainElement(screen.getByRole("heading", { level: 2 }));
+    expect(scroller).toHaveClass("overflow-y-auto");
+    expect(scroller).not.toContainElement(screen.getByRole("heading", { level: 2 }));
   });
 
-  it("n'affiche l'invite que sur une phase vide", () => {
-    afficher([carte(1, "Portail bailleurs")]);
+  it("shows the prompt only on an empty phase", () => {
+    show([card(1, "Portail bailleurs")]);
 
     expect(screen.queryByText("Aucune mission")).not.toBeInTheDocument();
   });
 
-  it("ne place que des <li> dans la liste, sous peine de casser l'hydratation", () => {
-    afficher([]);
+  it("puts only <li> in the list, on pain of breaking hydration", () => {
+    show([]);
 
-    const liste = screen.getByRole("list");
-    const intrus = [...liste.children].filter((noeud) => noeud.tagName !== "LI");
-    expect(intrus).toEqual([]);
+    const list = screen.getByRole("list");
+    const others = [...list.children].filter((noeud) => noeud.tagName !== "LI");
+    expect(others).toEqual([]);
   });
 });
 
-describe("colonne figée par un filtre", () => {
-  it("retire la poignée : une carte filtrée ne se range plus", () => {
-    afficher([carte(1, "Portail bailleurs")], true);
+describe("a column frozen by a filter", () => {
+  it("removes the handle: a filtered card no longer arranges", () => {
+    show([card(1, "Portail bailleurs")], true);
 
     expect(screen.queryByRole("button", { name: /Déplacer/ })).toBeNull();
   });
 
-  it("garde sa poignée hors filtre", () => {
-    afficher([carte(1, "Portail bailleurs")]);
+  it("keeps its handle when unfiltered", () => {
+    show([card(1, "Portail bailleurs")]);
 
     expect(
       screen.getByRole("button", { name: "Déplacer Portail bailleurs" }),
     ).toBeInTheDocument();
   });
 
-  it("explique un vide dû aux filtres plutôt qu'un vide tout court", () => {
-    afficher([], true);
+  it("explains an emptiness caused by filters rather than a plain emptiness", () => {
+    show([], true);
 
     expect(
       screen.getByText("Aucune mission ne répond aux filtres"),

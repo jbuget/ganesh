@@ -1,4 +1,4 @@
-"""Regle de completude d'une journee : la somme ne doit pas depasser 1."""
+"""How full a day may be: the sum must not go over 1."""
 
 import pytest
 

@@ -8,14 +8,14 @@ import type { ProjectKind } from "./projectKind";
 import type { ProjectStatus } from "./projectStatus";
 
 /**
- * Une ligne d'import, telle qu'elle sort d'un tableur.
+ * One import line, as it comes out of a spreadsheet.
  */
 export interface ImportLineRequest {
   label: string;
   kind?: ProjectKind;
-  statut?: ProjectStatus | null;
+  status?: ProjectStatus | null;
   parent_label?: string | null;
-  estime_j?: number | null;
+  estimated_days?: number | null;
   monday_item_id?: string | null;
   monday_subitem_id?: string | null;
 }

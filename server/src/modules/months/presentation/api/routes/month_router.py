@@ -1,4 +1,4 @@
-"""Routes de validation et de reouverture des mois."""
+"""Routes to validate and reopen months."""
 
 from datetime import date
 
@@ -28,37 +28,39 @@ router = APIRouter(prefix="/months", tags=["months"])
 
 
 @router.post(
-    "/{mois}/validate", response_model=MonthResponse, operation_id="validateMonth"
+    "/{month}/validate", response_model=MonthResponse, operation_id="validateMonth"
 )
 async def validate_month(
-    mois: date,
+    month: date,
     current_user: User = Depends(get_current_user),
     use_case: ValidateMonthUseCase = Depends(get_validate_month_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> MonthResponse:
-    """Verrouille son propre mois. La validation n'est pas delegable."""
+    """Locks one's own month. Validation cannot be delegated."""
     assert current_user.id is not None
-    month = await use_case.execute(
+    validated = await use_case.execute(
         ValidateMonthCommand(
-            actor_id=current_user.id, target_user_id=current_user.id, mois=mois
+            actor_id=current_user.id, target_user_id=current_user.id, month=month
         )
     )
     await session.commit()
-    return to_month_response(month)
+    return to_month_response(validated)
 
 
-@router.post("/{mois}/reopen", response_model=MonthResponse, operation_id="reopenMonth")
+@router.post(
+    "/{month}/reopen", response_model=MonthResponse, operation_id="reopenMonth"
+)
 async def reopen_month(
-    mois: date,
+    month: date,
     user_id: int,
     manager: User = Depends(get_current_manager),
     use_case: ReopenMonthUseCase = Depends(get_reopen_month_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> MonthResponse:
-    """Rouvre le mois valide d'un collaborateur. Reserve aux managers."""
+    """Reopens a teammate's validated month. Managers only."""
     assert manager.id is not None
-    month = await use_case.execute(
-        ReopenMonthCommand(actor_id=manager.id, target_user_id=user_id, mois=mois)
+    reopened = await use_case.execute(
+        ReopenMonthCommand(actor_id=manager.id, target_user_id=user_id, month=month)
     )
     await session.commit()
-    return to_month_response(month)
+    return to_month_response(reopened)

@@ -8,56 +8,56 @@ import { ProjectCard } from "@/components/molecules/ProjectCard";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 
 interface SortableProjectCardProps {
-  carte: BoardCardResponse;
-  /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
-  maintenant: Date;
-  onIntervenantsChange?: () => void | Promise<void>;
+  card: BoardCardResponse;
+  /** Freezes the reference time: without it, server and client would diverge. */
+  now: Date;
+  onContributorsChange?: () => void | Promise<void>;
   onOpen?: (projectId: number) => void;
-  /** Le tableau est filtre : la carte se lit et s'ouvre, mais ne se range plus. */
-  figee?: boolean;
+  /** The board is filtered: the card reads and opens, but no longer arranges. */
+  frozen?: boolean;
 }
 
 /**
- * Carte deplacable.
+ * A movable card.
  *
- * Pendant le glissement, la carte cede la place a un emplacement en pointilles
- * qui montre ou elle tombera : c'est la copie sous le curseur qui la represente.
+ * During the drag, the card gives way to a dotted slot showing where it will
+ * land: it is the copy under the cursor that stands for it.
  */
 export function SortableProjectCard({
-  carte,
-  maintenant,
-  onIntervenantsChange,
+  card,
+  now,
+  onContributorsChange,
   onOpen,
-  figee,
+  frozen,
 }: SortableProjectCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: carte.project.id, disabled: figee });
+    useSortable({ id: card.project.id, disabled: frozen });
 
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      // Un contour plutot qu'une bordure : il se superpose a la carte sans
-      // rien ajouter a sa hauteur, donc l'emplacement fait exactement la
-      // taille de la carte qui viendra s'y loger.
+      // An outline rather than a border: it overlays the card without adding to
+      // its height, so the slot is exactly the size of the card that will come
+      // to sit in it.
       className={
         isDragging
           ? "rounded-lg bg-sky-50/70 outline-2 -outline-offset-2 outline-dashed outline-sky-400"
           : undefined
       }
     >
-      {/* Masquee, mais toujours mesuree : c'est elle qui donne sa hauteur a l'emplacement. */}
+      {/* Hidden, but still measured: it is what gives the slot its height. */}
       <div className={isDragging ? "invisible" : undefined}>
         <ProjectCard
-          carte={carte}
-          maintenant={maintenant}
-          onIntervenantsChange={onIntervenantsChange}
+          card={card}
+          now={now}
+          onContributorsChange={onContributorsChange}
           onOpen={onOpen}
-          poignee={
-            figee ? null : (
+          handle={
+            frozen ? null : (
               <button
                 type="button"
-                aria-label={`Déplacer ${carte.project.label}`}
+                aria-label={`Déplacer ${card.project.label}`}
                 className="cursor-grab touch-none rounded p-0.5 text-slate-300 transition-colors hover:text-slate-500 active:cursor-grabbing"
                 {...attributes}
                 {...listeners}

@@ -1,4 +1,4 @@
-"""Deplace une carte sur le tableau de bord."""
+"""Moves a card on the board."""
 
 from datetime import date
 
@@ -20,11 +20,11 @@ from src.shared.exceptions.domain_exceptions import EntityNotFoundError, Validat
 
 
 class MoveProjectUseCase:
-    """Change la phase d'une carte, son rang, ou les deux.
+    """Changes a card's phase, its rank, or both.
 
-    Un glisser-deposer produit toujours ces deux informations : la colonne
-    d'arrivee et le rang voulu. Les traiter ensemble evite deux ecritures
-    concurrentes pour un seul geste.
+    A drag and drop always produces both: the column it lands in and the rank
+    wanted. Handling them together avoids two concurrent writes for a single
+    gesture.
     """
 
     def __init__(
@@ -49,58 +49,56 @@ class MoveProjectUseCase:
         if mission is None or mission.id is None:
             raise EntityNotFoundError("Mission inconnue.")
         if not mission.appears_on_board:
-            raise ValidationError(
-                "Une activite hors projet ne figure pas sur le tableau de bord."
-            )
+            raise ValidationError("Off-project work does not appear on the board.")
 
-        ancienne_phase = mission.statut
+        previous_phase = mission.status
         missions = await self._projects.list_all(include_inactive=False)
 
-        mission.statut = command.statut
-        # Glisser une carte fait franchir une phase autant qu'un changement
-        # depuis le referentiel : la date se note des deux cotes.
+        mission.status = command.status
+        # Dragging a card crosses a phase just as a change from the reference
+        # list does: the date is recorded on both sides.
         await self._details.mark_phase_reached(
-            command.project_id, command.statut, today or date.today()
+            command.project_id, command.status, today or date.today()
         )
 
-        # Le depot se raisonne par identifiant, jamais par identite d'objet :
-        # `get_by_id` et `list_all` renvoient deux instances distinctes de la
-        # meme ligne, et ecrire l'ancienne ecraserait le rang qu'on vient de
-        # poser sur la nouvelle.
-        arrivee = [
+        # The drop is reasoned about by id, never by object identity:
+        # `get_by_id` and `list_all` return two distinct instances of the same
+        # row, and writing the old one would overwrite the rank just set on the
+        # new one.
+        destination = [
             p
             for p in missions
-            if p.statut is command.statut and p.appears_on_board and p.id != mission.id
+            if p.status is command.status and p.appears_on_board and p.id != mission.id
         ]
-        arrivee.append(mission)
-        reorder_column(arrivee, deplacee=mission, vers=command.position)
+        destination.append(mission)
+        reorder_column(destination, moved=mission, to=command.position)
 
-        # La colonne quittee garderait un trou a la place de la carte partie.
-        if ancienne_phase is not command.statut:
-            depart = [
+        # The column left behind would keep a gap where the card used to be.
+        if previous_phase is not command.status:
+            origin = [
                 p
                 for p in missions
-                if p.statut is ancienne_phase
+                if p.status is previous_phase
                 and p.appears_on_board
                 and p.id != mission.id
             ]
             for position, restante in enumerate(
-                sorted(depart, key=lambda p: p.position)
+                sorted(origin, key=lambda p: p.position)
             ):
                 restante.position = position
-            for restante in depart:
+            for restante in origin:
                 await self._projects.update(restante)
 
-        for rangee in arrivee:
+        for rangee in destination:
             await self._projects.update(rangee)
 
-        if ancienne_phase is not command.statut:
+        if previous_phase is not command.status:
             await self._audit_logs.add(
                 AuditLog.project_status_change(
                     actor_id=command.actor_id,
                     project_id=mission.id,
-                    old_status=ancienne_phase.value if ancienne_phase else None,
-                    new_status=command.statut.value,
+                    old_status=previous_phase.value if previous_phase else None,
+                    new_status=command.status.value,
                 )
             )
         return mission

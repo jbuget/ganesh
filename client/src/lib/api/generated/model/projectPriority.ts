@@ -6,16 +6,16 @@
  */
 
 /**
- * Urgence relative d'une mission, telle que l'equipe la declare.
+ * How urgent a mission is, as the team declares it.
  *
- * L'ordre declare ici va du plus urgent au moins urgent : c'est celui dans
- * lequel les choix se presentent, et celui dans lequel on lit une liste.
+ * The order declared here runs from the most urgent to the least: it is the
+ * order the choices are offered in, and the order a list reads in.
  */
 export type ProjectPriority = (typeof ProjectPriority)[keyof typeof ProjectPriority];
 
 export const ProjectPriority = {
-  critique: "critique",
-  haute: "haute",
-  normale: "normale",
-  basse: "basse",
+  critical: "critical",
+  high: "high",
+  normal: "normal",
+  low: "low",
 } as const;

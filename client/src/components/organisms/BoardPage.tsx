@@ -23,97 +23,97 @@ import { MissionFilters } from "@/components/molecules/MissionFilters";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { ProjectCard } from "@/components/molecules/ProjectCard";
 import { PHASES } from "@/lib/board";
-import { filtrerMissions, inclutLesArchivees } from "@/lib/mission-filters";
+import { filterMissions, includesArchived } from "@/lib/mission-filters";
 import { useBoard } from "@/lib/use-board";
 import { useBoardDrag } from "@/lib/use-board-drag";
 import { useMissionFilters } from "@/lib/use-mission-filters";
-import { useMissionOuverte } from "@/lib/mission-ouverte";
+import { useOpenedMission } from "@/lib/opened-mission";
 
 /**
- * Une carte survolee l'emporte sur la colonne qui la contient.
+ * A hovered card wins over the column containing it.
  *
- * Les deux se trouvent sous le curseur, et la colonne seule ne dit que la phase
- * d'arrivee : sans cette preference, toute carte tombait en bas de colonne,
- * quel que soit l'endroit vise.
+ * Both sit under the cursor, and the column alone only says the phase being
+ * entered: without this preference, every card landed at the bottom of the
+ * column, wherever one was aiming.
  */
-const prioriserLesCartes = (collisions: Collision[]) => {
-  const cartes = collisions.filter(({ id }) => typeof id === "number");
-  return cartes.length > 0 ? cartes : collisions;
+const prioritiseCards = (collisions: Collision[]) => {
+  const cards = collisions.filter(({ id }) => typeof id === "number");
+  return cards.length > 0 ? cards : collisions;
 };
 
 /**
- * Ce qui se trouve reellement sous le curseur, en priorite.
+ * What actually lies under the cursor, first and foremost.
  *
- * `closestCorners` seul visait la carte voisine plutot que la colonne survolee :
- * deposer dans une colonne vide envoyait la carte dans la colonne d'a cote.
+ * `closestCorners` alone aimed at the neighbouring card rather than the hovered
+ * column: dropping into an empty column sent the card to the one next door.
  */
-const detectionDeCollision: CollisionDetection = (args) => {
-  const sousLeCurseur = pointerWithin(args);
-  if (sousLeCurseur.length > 0) return prioriserLesCartes(sousLeCurseur);
+const collisionDetection: CollisionDetection = (args) => {
+  const underCursor = pointerWithin(args);
+  if (underCursor.length > 0) return prioritiseCards(underCursor);
 
-  const recouvrement = rectIntersection(args);
-  if (recouvrement.length > 0) return prioriserLesCartes(recouvrement);
+  const overlap = rectIntersection(args);
+  if (overlap.length > 0) return prioritiseCards(overlap);
   return closestCorners(args);
 };
 
-/** Kanban des missions, une colonne par phase. */
+/** Mission kanban, one column per phase. */
 export function BoardPage() {
-  const { filtres, actif, definir, effacer } = useMissionFilters();
+  const { filters, hasFilter, set, clear } = useMissionFilters();
 
-  // Le perimetre demande au serveur suit le filtre : les archivees n'arrivent
-  // que lorsqu'on les reclame, et le tableau se recharge de lui-meme des que
-  // ce choix change.
-  const board = useBoard(inclutLesArchivees(filtres));
-  const glissement = useBoardDrag(board);
+  // The scope asked of the server follows the filter: archived missions only
+  // arrive when called for, and the board reloads itself as soon as that
+  // choice changes.
+  const board = useBoard(includesArchived(filters));
+  const drag = useBoardDrag(board);
 
-  // Une seule heure de reference pour tout le tableau : « il y a 3 h » ne doit
-  // pas dependre du moment ou chaque carte se rend.
-  const maintenant = useMemo(() => new Date(), []);
+  // One reference time for the whole board: « il y a 3 h » must not
+  // depend on when each card renders.
+  const now = useMemo(() => new Date(), []);
 
-  // La mission ouverte vit dans l'URL : un panneau se partage par un lien, et
-  // le retour arriere le referme, comme on s'y attend d'un ecran a part.
-  const panneau = useMissionOuverte();
+  // The open mission lives in the URL: a panel is shared by a link, and going
+  // back closes it, as one expects of a screen of its own.
+  const panel = useOpenedMission();
 
-  // Les six phases restent affichees en toutes circonstances, meme vides : le
-  // tableau garde sa forme d'un filtre a l'autre, et une colonne sans carte se
-  // lit comme une reponse, pas comme une disparition.
+  // The six phases stay shown in every case, even empty: the board keeps its
+  // shape from one filter to the next, and a column with no card reads as an
+  // answer, not as a disappearance.
   //
-  // Les colonnes sont calculees une fois : le decompte de la barre et celui de
-  // chaque colonne doivent parler des memes cartes.
-  const colonnesAffichees = PHASES.map(({ statut }) => ({
-    statut,
-    cartes: filtrerMissions(board.colonnes?.[statut] ?? [], filtres),
+  // The columns are computed once: the bar's count and each column's must
+  // speak of the same cards.
+  const visibleColumns = PHASES.map(({ status }) => ({
+    status,
+    cards: filterMissions(board.columns?.[status] ?? [], filters),
   }));
 
-  const visibles = colonnesAffichees.reduce((total, c) => total + c.cartes.length, 0);
+  const visible = visibleColumns.reduce((total, c) => total + c.cards.length, 0);
   const total = PHASES.reduce(
-    (somme, { statut }) => somme + (board.colonnes?.[statut]?.length ?? 0),
+    (somme, { status }) => somme + (board.columns?.[status]?.length ?? 0),
     0,
   );
 
   const sensors = useSensors(
-    // Quelques pixels avant de saisir : sans cela, un simple clic ferait
-    // demarrer un glissement.
+    // A few pixels before grabbing: without this, a plain click would start a
+    // drag.
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
 
-  // Le tableau prend toute la largeur, contrairement aux autres ecrans : six
-  // colonnes cote a cote y gagnent chaque pixel, et une marge centree les
-  // etranglerait sans rien apporter a la lecture.
+  // The board takes the full width, unlike the other screens: six columns side
+  // by side gain from every pixel, and a centred margin would throttle them
+  // without helping anyone read.
   return (
     <PageLayout
-      defilementInterne
-      entete={
+      innerScroll
+      header={
         <PageHeader
-          titre="Kanban"
-          soustitre={
-            // Sous filtre, la liste affichee n'est plus la liste rangee : un
-            // depot y viserait un rang qui n'existe pas. Les cartes se figent
-            // donc, et l'entete dit pourquoi plutot que de laisser chercher.
-            actif
+          title="Kanban"
+          subtitle={
+            // Under a filter, the list shown is no longer the list arranged: a
+            // drop would aim at a rank that does not exist. The cards freeze,
+            // and the header says why rather than leaving one to wonder.
+            hasFilter
               ? "Tableau filtré : les cartes ne se déplacent plus. Effacez les filtres pour les réorganiser."
               : "Glissez une mission pour changer sa phase ou la réordonner. L'ordre choisi est conservé."
           }
@@ -122,60 +122,56 @@ export function BoardPage() {
     >
       <div className="flex h-full flex-col">
         <MissionFilters
-          filtres={filtres}
-          actif={actif}
-          onChange={definir}
-          onEffacer={effacer}
-          visibles={visibles}
+          filters={filters}
+          hasFilter={hasFilter}
+          onChange={set}
+          onClear={clear}
+          visible={visible}
           total={total}
         />
 
-        {board.enErreur && (
+        {board.hasError && (
           <p className="mb-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
             Le déplacement n&apos;a pas pu être enregistré. Le tableau a été rechargé.
           </p>
         )}
 
-        {!board.colonnes ? (
+        {!board.columns ? (
           <p className="text-sm text-slate-500">Chargement…</p>
         ) : (
           <DndContext
             sensors={sensors}
-            collisionDetection={detectionDeCollision}
-            onDragStart={glissement.onDragStart}
-            onDragOver={glissement.onDragOver}
-            onDragEnd={glissement.onDragEnd}
-            onDragCancel={glissement.onDragCancel}
+            collisionDetection={collisionDetection}
+            onDragStart={drag.onDragStart}
+            onDragOver={drag.onDragOver}
+            onDragEnd={drag.onDragEnd}
+            onDragCancel={drag.onDragCancel}
           >
             <div className="flex min-h-0 flex-1 gap-4 overflow-x-auto pb-4">
-              {colonnesAffichees.map(({ statut, cartes }) => (
+              {visibleColumns.map(({ status, cards }) => (
                 <BoardColumn
-                  key={statut}
-                  statut={statut}
-                  cartes={cartes}
-                  maintenant={maintenant}
-                  onIntervenantsChange={board.recharger}
-                  onOpen={panneau.ouvrir}
-                  figees={actif}
+                  key={status}
+                  status={status}
+                  cards={cards}
+                  now={now}
+                  onContributorsChange={board.reload}
+                  onOpen={panel.open}
+                  frozen={hasFilter}
                 />
               ))}
             </div>
 
             {/*
-              La copie qui suit le curseur, legerement inclinee et soulevee.
+              The copy following the cursor, slightly tilted and lifted.
 
-              Aucune animation de retour : elle vise l'element d'origine, qui a
-              change de place ou de colonne entre-temps, et laissait alors une
-              carte fantome affichee en permanence.
+              No return animation: it aims at the original element, which has
+              changed place or column in the meantime, and used to leave a ghost
+              card showing permanently.
             */}
             <DragOverlay dropAnimation={null}>
-              {glissement.enDeplacement && (
+              {drag.isDragging && (
                 <div className="w-64 rotate-2 scale-[1.02] cursor-grabbing">
-                  <ProjectCard
-                    carte={glissement.enDeplacement}
-                    maintenant={maintenant}
-                    enDeplacement
-                  />
+                  <ProjectCard card={drag.isDragging} now={now} isDragging />
                 </div>
               )}
             </DragOverlay>
@@ -183,12 +179,12 @@ export function BoardPage() {
         )}
       </div>
 
-      {panneau.missionOuverte && (
+      {panel.openedMission && (
         <ProjectPanel
-          key={panneau.missionOuverte}
-          projectId={panneau.missionOuverte}
-          onClose={panneau.fermer}
-          onMissionChanged={board.recharger}
+          key={panel.openedMission}
+          projectId={panel.openedMission}
+          onClose={panel.close}
+          onMissionChanged={board.reload}
         />
       )}
     </PageLayout>

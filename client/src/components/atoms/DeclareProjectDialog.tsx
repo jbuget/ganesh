@@ -18,31 +18,31 @@ interface DeclareProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (label: string) => Promise<void>;
-  /** Le meme dialogue sert a declarer un projet ou a lui ajouter un sous-projet. */
-  titre?: string;
+  /** The same dialog declares a project or adds a sub-project to one. */
+  title?: string;
 }
 
-/** Declaration d'un nouveau projet, ouverte a toute l'equipe. */
+/** Declaring a new project, open to the whole team. */
 export function DeclareProjectDialog({
   open,
   onOpenChange,
   onConfirm,
-  titre = "Déclarer un projet",
+  title = "Déclarer un projet",
 }: DeclareProjectDialogProps) {
   const [label, setLabel] = useState("");
-  const [enCours, setEnCours] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  const valide = label.trim().length > 0;
+  const isValid = label.trim().length > 0;
 
-  async function confirmer() {
-    if (!valide) return;
-    setEnCours(true);
+  async function confirm() {
+    if (!isValid) return;
+    setBusy(true);
     try {
       await onConfirm(label.trim());
       setLabel("");
       onOpenChange(false);
     } finally {
-      setEnCours(false);
+      setBusy(false);
     }
   }
 
@@ -50,7 +50,7 @@ export function DeclareProjectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{titre}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             Le projet sera ajouté au référentiel commun et visible de toute
             l&apos;équipe.
@@ -66,7 +66,7 @@ export function DeclareProjectDialog({
             placeholder="Refonte extranet copropriété"
             onChange={(event) => setLabel(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter") confirmer();
+              if (event.key === "Enter") confirm();
             }}
           />
         </div>
@@ -75,7 +75,7 @@ export function DeclareProjectDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Annuler
           </Button>
-          <Button onClick={confirmer} disabled={!valide || enCours}>
+          <Button onClick={confirm} disabled={!isValid || busy}>
             Déclarer
           </Button>
         </DialogFooter>

@@ -14,30 +14,30 @@ import {
 interface DeactivateUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  nom: string;
+  name: string;
   onConfirm: () => void | Promise<void>;
 }
 
 /**
- * Confirmation avant de couper l'acces d'un utilisateur.
+ * Confirmation before cutting off a user's access.
  *
- * Rien n'est efface : les saisies passees restent et continuent d'alimenter les
- * totaux par projet. Le dire ici evite d'hesiter devant une action reversible.
+ * Nothing is erased: past entries stay and go on feeding the per-project
+ * totals. Saying so here saves hesitating over a reversible action.
  *
- * Le retablissement, lui, ne passe pas par une confirmation : il ne retire rien
- * a personne.
+ * Restoring, on the other hand, needs no confirmation: it takes nothing away
+ * from anyone.
  */
 export function DeactivateUserDialog({
   open,
   onOpenChange,
-  nom,
+  name,
   onConfirm,
 }: DeactivateUserDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Désactiver {nom} ?</AlertDialogTitle>
+          <AlertDialogTitle>Désactiver {name} ?</AlertDialogTitle>
           <AlertDialogDescription>
             Ce compte n&apos;aura plus accès à Timesheet, et disparaîtra des listes. Ses
             saisies passées sont conservées. Un manager peut le réactiver à tout moment.

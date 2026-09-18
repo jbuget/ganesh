@@ -7,7 +7,7 @@
 import type { Role } from "./role";
 
 /**
- * Promotion ou retrogradation d'un collaborateur.
+ * Promoting or demoting a teammate.
  */
 export interface ChangeRoleRequest {
   role: Role;

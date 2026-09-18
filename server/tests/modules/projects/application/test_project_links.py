@@ -1,4 +1,4 @@
-"""Les liens utiles attaches a une mission."""
+"""The useful links attached to a mission."""
 
 import pytest
 
@@ -26,8 +26,8 @@ def build():
             Project(
                 id=10,
                 label="ASTRE",
-                kind=ProjectKind.PROJET,
-                statut=ProjectStatus.EXPLOITATION,
+                kind=ProjectKind.PROJECT,
+                status=ProjectStatus.OPERATIONS,
             )
         ]
     )
@@ -44,8 +44,8 @@ async def test_a_link_is_attached_to_the_mission() -> None:
         )
     )
 
-    (lien,) = await details.list_links(10)
-    assert (lien.label, lien.url) == ("Maquettes", "https://figma.com/x")
+    (link,) = await details.list_links(10)
+    assert (link.label, link.url) == ("Maquettes", "https://figma.com/x")
 
 
 async def test_a_mission_holds_as_many_links_as_wanted() -> None:
@@ -61,7 +61,7 @@ async def test_a_mission_holds_as_many_links_as_wanted() -> None:
             )
         )
 
-    assert [lien.label for lien in await details.list_links(10)] == [
+    assert [link.label for link in await details.list_links(10)] == [
         "Lien 1",
         "Lien 2",
         "Lien 3",
@@ -69,7 +69,7 @@ async def test_a_mission_holds_as_many_links_as_wanted() -> None:
 
 
 async def test_an_icon_is_guessed_from_the_address_when_none_is_given() -> None:
-    """Coller une adresse connue suffit : l'icone suit sans qu'on la choisisse."""
+    """Pasting a known address is enough: the icon follows unasked."""
     use_case, details = build()
 
     await use_case.execute(
@@ -78,8 +78,8 @@ async def test_an_icon_is_guessed_from_the_address_when_none_is_given() -> None:
         )
     )
 
-    (lien,) = await details.list_links(10)
-    assert lien.icone is LinkIcon.DEPOT
+    (link,) = await details.list_links(10)
+    assert link.icon is LinkIcon.REPOSITORY
 
 
 async def test_a_chosen_icon_wins_over_the_guess() -> None:
@@ -91,12 +91,12 @@ async def test_a_chosen_icon_wins_over_the_guess() -> None:
             project_id=10,
             label="Les specs",
             url="https://github.com/waat/x",
-            icone=LinkIcon.DOCUMENT,
+            icon=LinkIcon.DOCUMENT,
         )
     )
 
-    (lien,) = await details.list_links(10)
-    assert lien.icone is LinkIcon.DOCUMENT
+    (link,) = await details.list_links(10)
+    assert link.icon is LinkIcon.DOCUMENT
 
 
 async def test_an_unknown_mission_is_rejected() -> None:
@@ -109,14 +109,14 @@ async def test_an_unknown_mission_is_rejected() -> None:
 
 
 async def test_a_link_can_be_detached() -> None:
-    ajout, details = build()
-    lien = await ajout.execute(
+    add_link, details = build()
+    link = await add_link.execute(
         AddLinkCommand(
             actor_id=1, project_id=10, label="Maquettes", url="https://figma.com/x"
         )
     )
-    assert lien.id is not None
+    assert link.id is not None
 
-    await RemoveProjectLinkUseCase(details=details).execute(lien.id)
+    await RemoveProjectLinkUseCase(details=details).execute(link.id)
 
     assert await details.list_links(10) == []

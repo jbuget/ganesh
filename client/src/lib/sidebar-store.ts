@@ -2,54 +2,54 @@
 
 import { useSyncExternalStore } from "react";
 
-const CLE = "timesheet.sidebar-repliee";
+const KEY = "timesheet.sidebar-collapsed";
 
 /**
- * Preference de repli de la barre laterale.
+ * Whether the sidebar is collapsed.
  *
- * Elle vit hors de React et se lit avec `useSyncExternalStore` : initialiser un
- * etat depuis `localStorage` au premier rendu ferait diverger le serveur et le
- * client, et le lire dans un effet imposerait un `setState` que React
- * deconseille.
+ * It lives outside React and is read with `useSyncExternalStore`: seeding state
+ * from `localStorage` on the first render would make server and client
+ * diverge, and reading it in an effect would force a `setState` React advises
+ * against.
  *
- * Aucune valeur n'est mise en cache : `localStorage` est la seule source, ce
- * qui laisse un autre onglet la modifier sans desynchroniser celui-ci.
+ * No value is cached: `localStorage` is the only source, which lets another tab
+ * change it without putting this one out of step.
  */
-const abonnes = new Set<() => void>();
+const subscribers = new Set<() => void>();
 
-function lire(): boolean {
-  return typeof window !== "undefined" && window.localStorage.getItem(CLE) === "1";
+function read(): boolean {
+  return typeof window !== "undefined" && window.localStorage.getItem(KEY) === "1";
 }
 
-function prevenir() {
-  abonnes.forEach((callback) => callback());
+function notify() {
+  subscribers.forEach((callback) => callback());
 }
 
-function abonner(callback: () => void) {
-  abonnes.add(callback);
+function subscribe(callback: () => void) {
+  subscribers.add(callback);
   window.addEventListener("storage", callback);
 
-  // Le serveur rend toujours la barre depliee. Si la preference dit l'inverse,
-  // personne ne previendrait React apres l'hydratation : on le fait ici, au
-  // premier abonnement cote client.
-  if (lire()) queueMicrotask(callback);
+  // The server always renders the sidebar expanded. If the preference says
+  // otherwise, nobody would tell React after hydration: we do it here, on the
+  // first client-side subscription.
+  if (read()) queueMicrotask(callback);
 
   return () => {
-    abonnes.delete(callback);
+    subscribers.delete(callback);
     window.removeEventListener("storage", callback);
   };
 }
 
-/** Cote serveur, la barre est toujours depliee : c'est l'etat par defaut. */
-function surLeServeur() {
+/** Server-side the sidebar is always expanded: that is the default state. */
+function onServer() {
   return false;
 }
 
-export function basculerBarreLaterale() {
-  window.localStorage.setItem(CLE, lire() ? "0" : "1");
-  prevenir();
+export function toggleSidebar() {
+  window.localStorage.setItem(KEY, read() ? "0" : "1");
+  notify();
 }
 
-export function useBarreLateraleRepliee(): boolean {
-  return useSyncExternalStore(abonner, lire, surLeServeur);
+export function useSidebarCollapsed(): boolean {
+  return useSyncExternalStore(subscribe, read, onServer);
 }

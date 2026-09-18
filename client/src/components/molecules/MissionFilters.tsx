@@ -11,45 +11,45 @@ import type {
   ProjectStatus,
 } from "@/lib/api/generated/model";
 import { useTeammates } from "@/lib/api/queries";
-import { CATEGORIES, PHASES, PRIORITES } from "@/lib/board";
+import { CATEGORIES, PHASES, PRIORITIES } from "@/lib/board";
 import {
-  ETATS_DE_MISSION,
-  TYPES_DE_MISSION,
-  type MissionFilters as Criteres,
-  type EtatMission,
+  MISSION_STATES,
+  MISSION_KINDS,
+  type MissionFilters as Criteria,
+  type MissionState,
 } from "@/lib/mission-filters";
 
 interface MissionFiltersProps {
-  filtres: Criteres;
-  actif: boolean;
-  onChange: (changement: Partial<Criteres>) => void;
-  onEffacer: () => void;
-  /** Missions affichees, et missions que l'ecran porte en tout. */
-  visibles: number;
+  filters: Criteria;
+  hasFilter: boolean;
+  onChange: (change: Partial<Criteria>) => void;
+  onClear: () => void;
+  /** Missions shown, and missions the screen carries in all. */
+  visible: number;
   total: number;
 }
 
 /**
- * La barre de filtres d'un ecran de missions.
+ * The filter bar of a mission screen.
  *
- * Un critere vide ne retranche rien : la barre part donc du tableau entier, et
- * chaque choix le reduit. Le decompte a droite dit toujours ce qu'on voit sur
- * ce que l'on pourrait voir, pour qu'un ecran presque vide s'explique de
- * lui-meme.
+ * An empty criterion takes nothing away: the bar therefore starts from the
+ * whole board, and every choice narrows it. The count on the right always says
+ * what is seen against what could be seen, so that a nearly empty screen
+ * explains itself.
  */
 export function MissionFilters({
-  filtres,
-  actif,
+  filters,
+  hasFilter,
   onChange,
-  onEffacer,
-  visibles,
+  onClear,
+  visible,
   total,
 }: MissionFiltersProps) {
   const { teammates } = useTeammates();
 
   return (
-    // Un groupe de recherche annonce : le lecteur d'ecran doit pouvoir sauter
-    // aux criteres, et savoir ce qu'ils gouvernent.
+    // An announced search group: a screen reader must be able to jump to the
+    // criteria, and know what they govern.
     <div
       role="search"
       aria-label="Filtrer les missions"
@@ -62,8 +62,8 @@ export function MissionFilters({
         />
         <Input
           type="search"
-          value={filtres.nom}
-          onChange={(event) => onChange({ nom: event.target.value })}
+          value={filters.name}
+          onChange={(event) => onChange({ name: event.target.value })}
           placeholder="Rechercher une mission"
           aria-label="Rechercher une mission"
           className="h-9 w-64 pl-8"
@@ -71,79 +71,76 @@ export function MissionFilters({
       </div>
 
       <FilterSelect
-        libelle="Phase"
-        options={PHASES.map(({ statut, libelle, pastille }) => ({
-          valeur: statut,
-          libelle,
-          vignette: (
-            <span
-              className={`size-2.5 shrink-0 rounded-full ${pastille}`}
-              aria-hidden
-            />
+        label="Phase"
+        options={PHASES.map(({ status, label, dot }) => ({
+          value: status,
+          label,
+          thumbnail: (
+            <span className={`size-2.5 shrink-0 rounded-full ${dot}`} aria-hidden />
           ),
         }))}
-        valeurs={filtres.phases}
-        onChange={(valeurs) => onChange({ phases: valeurs as ProjectStatus[] })}
+        values={filters.phases}
+        onChange={(values) => onChange({ phases: values as ProjectStatus[] })}
       />
 
       <FilterSelect
-        libelle="Catégorie"
-        options={CATEGORIES.map(({ valeur, libelle, puce }) => ({
-          valeur,
-          libelle,
-          vignette: (
-            <span className={`size-2.5 shrink-0 rounded-[3px] ${puce}`} aria-hidden />
+        label="Catégorie"
+        options={CATEGORIES.map(({ value, label, bullet }) => ({
+          value,
+          label,
+          thumbnail: (
+            <span className={`size-2.5 shrink-0 rounded-[3px] ${bullet}`} aria-hidden />
           ),
         }))}
-        valeurs={filtres.categories}
-        onChange={(valeurs) => onChange({ categories: valeurs as ProjectCategory[] })}
+        values={filters.categories}
+        onChange={(values) => onChange({ categories: values as ProjectCategory[] })}
       />
 
       <FilterSelect
-        libelle="Priorité"
-        options={PRIORITES.map(({ valeur, libelle, icone: Icone, couleur }) => ({
-          valeur,
-          libelle,
-          vignette: <Icone className={`size-4 shrink-0 ${couleur}`} aria-hidden />,
+        label="Priorité"
+        options={PRIORITIES.map(({ value, label, icon: Icon, colour }) => ({
+          value,
+          label,
+          thumbnail: <Icon className={`size-4 shrink-0 ${colour}`} aria-hidden />,
         }))}
-        valeurs={filtres.priorites}
-        onChange={(valeurs) => onChange({ priorites: valeurs as ProjectPriority[] })}
+        values={filters.priorities}
+        onChange={(values) => onChange({ priorities: values as ProjectPriority[] })}
       />
 
       <FilterSelect
-        libelle="Intervenant"
-        options={teammates.map((membre) => ({
-          valeur: String(membre.id),
-          libelle: membre.display_name,
-          vignette: (
+        label="Intervenant"
+        options={teammates.map((member) => ({
+          value: String(member.id),
+          label: member.display_name,
+          thumbnail: (
             <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-700">
-              {membre.initiales}
+              {member.initials}
             </span>
           ),
         }))}
-        valeurs={filtres.intervenants.map(String)}
-        onChange={(valeurs) => onChange({ intervenants: valeurs.map(Number) })}
+        values={filters.contributors.map(String)}
+        onChange={(values) => onChange({ contributors: values.map(Number) })}
       />
 
       <FilterSelect
-        libelle="Type"
-        options={TYPES_DE_MISSION.map(({ valeur, libelle }) => ({ valeur, libelle }))}
-        valeurs={filtres.types}
-        onChange={(valeurs) => onChange({ types: valeurs as ProjectKind[] })}
+        label="Type"
+        options={MISSION_KINDS.map(({ value, label }) => ({ value, label }))}
+        values={filters.types}
+        onChange={(values) => onChange({ types: values as ProjectKind[] })}
       />
 
       <FilterSelect
-        libelle="État"
-        options={ETATS_DE_MISSION.map(({ valeur, libelle }) => ({ valeur, libelle }))}
-        valeurs={filtres.etats}
-        onChange={(valeurs) => onChange({ etats: valeurs as EtatMission[] })}
+        label="État"
+        options={MISSION_STATES.map(({ value, label }) => ({ value, label }))}
+        values={filters.states}
+        onChange={(values) => onChange({ states: values as MissionState[] })}
       />
 
-      {actif && (
+      {hasFilter && (
         <>
           <button
             type="button"
-            onClick={onEffacer}
+            onClick={onClear}
             className="flex cursor-pointer items-center gap-1 rounded-md px-2 py-1.5 text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
           >
             <X className="size-3.5" aria-hidden />
@@ -151,12 +148,12 @@ export function MissionFilters({
           </button>
 
           {/*
-            Le decompte se dit a voix haute : un filtre qui ne laisse rien ne
-            se voit pas quand on ne regarde pas l'ecran, et `status` l'annonce
-            sans interrompre la frappe.
+            The count is spoken aloud: a filter that leaves nothing cannot be
+            seen when one is not looking at the screen, and `status` announces
+            it without interrupting typing.
           */}
           <p role="status" className="ml-auto text-sm tabular-nums text-slate-500">
-            {visibles} mission{visibles > 1 ? "s" : ""} sur {total}
+            {visible} mission{visible > 1 ? "s" : ""} sur {total}
           </p>
         </>
       )}

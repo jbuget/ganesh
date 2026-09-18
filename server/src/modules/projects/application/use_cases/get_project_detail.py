@@ -1,4 +1,4 @@
-"""Rassemble tout ce qu'on veut lire sur une mission."""
+"""Gathers everything one wants to read about a mission."""
 
 from dataclasses import dataclass
 from datetime import date
@@ -27,33 +27,33 @@ from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 @dataclass
 class Contribution:
-    """Ce qu'une personne a declare sur la mission."""
+    """What one person declared on the mission."""
 
     user: User
-    jours: float
-    #: Jours par mois, du plus recent au plus ancien. Le mois est son 1er jour.
-    par_mois: list[tuple[date, float]]
+    days: float
+    #: Days per month, most recent first. A month is named by its 1st day.
+    by_month: list[tuple[date, float]]
 
 
 @dataclass
 class ProjectDetail:
-    """La fiche complete d'une mission."""
+    """The full sheet of a mission."""
 
     project: Project
-    departements: list[Department]
-    liens: list[ProjectLink]
-    phases_atteintes: dict[ProjectStatus, date]
-    referents: list[User]
-    intervenants: list[User]
-    consomme_j: float
-    #: Temps declare par chacun, du plus gros contributeur au plus petit.
+    departments: list[Department]
+    links: list[ProjectLink]
+    phases_reached: dict[ProjectStatus, date]
+    leads: list[User]
+    contributors: list[User]
+    consumed_days: float
+    #: Time declared by each person, largest contributor first.
     contributions: list[Contribution]
-    #: Les lots rattaches a la mission, par ordre alphabetique.
-    sous_projets: list[Project]
+    #: Work packages attached to the mission, in alphabetical order.
+    sub_projects: list[Project]
 
 
 class GetProjectDetailUseCase:
-    """Lit une mission et tout ce qui s'y rattache."""
+    """Reads a mission and everything attached to it."""
 
     def __init__(
         self,
@@ -74,58 +74,58 @@ class GetProjectDetailUseCase:
         if mission is None:
             raise EntityNotFoundError("Mission inconnue.")
 
-        utilisateurs = {u.id: u for u in await self._users.list_all(True)}
+        users = {u.id: u for u in await self._users.list_all(True)}
 
-        async def personnes(role: ProjectRole) -> list[User]:
+        async def people(role: ProjectRole) -> list[User]:
             ids = await self._assignees.list_for_project(project_id, role)
-            connus = [utilisateurs[uid] for uid in ids if uid in utilisateurs]
-            return sorted(connus, key=lambda u: u.display_name)
+            known = [users[uid] for uid in ids if uid in users]
+            return sorted(known, key=lambda u: u.display_name)
 
-        saisies = await self._entries.list_for_project(project_id)
+        entries = await self._entries.list_for_project(project_id)
 
-        # Le temps par personne dit qui a vraiment porte la mission, ce que la
-        # seule liste des intervenants ne raconte pas : quelqu'un peut y avoir
-        # passe des jours sans y etre affecte aujourd'hui.
-        par_personne: dict[int, float] = {}
-        par_mois: dict[int, dict[date, float]] = {}
-        for saisie in saisies:
-            par_personne[saisie.user_id] = round(
-                par_personne.get(saisie.user_id, 0.0) + float(saisie.valeur), 2
+        # Time per person tells who really carried the mission, which the list
+        # of contributors alone does not: someone may have spent days on it
+        # without being assigned to it today.
+        by_person: dict[int, float] = {}
+        by_month: dict[int, dict[date, float]] = {}
+        for entry in entries:
+            by_person[entry.user_id] = round(
+                by_person.get(entry.user_id, 0.0) + float(entry.value), 2
             )
-            mois = saisie.jour.replace(day=1)
-            mois_de_la_personne = par_mois.setdefault(saisie.user_id, {})
-            mois_de_la_personne[mois] = round(
-                mois_de_la_personne.get(mois, 0.0) + float(saisie.valeur), 2
+            month = entry.day.replace(day=1)
+            person_months = by_month.setdefault(entry.user_id, {})
+            person_months[month] = round(
+                person_months.get(month, 0.0) + float(entry.value), 2
             )
 
         contributions = sorted(
             (
                 Contribution(
-                    user=utilisateurs[uid],
-                    jours=jours,
-                    par_mois=sorted(
-                        par_mois.get(uid, {}).items(),
+                    user=users[uid],
+                    days=days,
+                    by_month=sorted(
+                        by_month.get(uid, {}).items(),
                         key=lambda item: item[0],
                         reverse=True,
                     ),
                 )
-                for uid, jours in par_personne.items()
-                if uid in utilisateurs
+                for uid, days in by_person.items()
+                if uid in users
             ),
-            key=lambda contribution: -contribution.jours,
+            key=lambda contribution: -contribution.days,
         )
 
         return ProjectDetail(
             project=mission,
-            departements=await self._details.list_departments(project_id),
-            liens=await self._details.list_links(project_id),
-            phases_atteintes=await self._details.list_phases_reached(project_id),
-            referents=await personnes(ProjectRole.REFERENT),
-            intervenants=await personnes(ProjectRole.INTERVENANT),
-            consomme_j=round(sum(float(e.valeur) for e in saisies), 2),
+            departments=await self._details.list_departments(project_id),
+            links=await self._details.list_links(project_id),
+            phases_reached=await self._details.list_phases_reached(project_id),
+            leads=await people(ProjectRole.LEAD),
+            contributors=await people(ProjectRole.CONTRIBUTOR),
+            consumed_days=round(sum(float(e.value) for e in entries), 2),
             contributions=contributions,
-            sous_projets=sorted(
+            sub_projects=sorted(
                 await self._projects.list_children(project_id),
-                key=lambda lot: lot.label.lower(),
+                key=lambda work_package: work_package.label.lower(),
             ),
         )

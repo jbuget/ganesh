@@ -6,10 +6,10 @@
  */
 
 /**
- * Un jour et sa nature.
+ * A day and its kind.
  */
 export interface CalendarDaySchema {
-  jour: string;
+  day: string;
   kind: string;
   label?: string | null;
   is_off_day: boolean;

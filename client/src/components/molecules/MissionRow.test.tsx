@@ -4,50 +4,50 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MissionRow } from "./MissionRow";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 
-const MAINTENANT = new Date("2026-09-17T12:00:00Z");
+const NOW = new Date("2026-09-17T12:00:00Z");
 
-const membre = (id: number, nom: string) => ({
+const member = (id: number, name: string) => ({
   id,
-  display_name: nom,
-  initiales: nom.slice(0, 2).toUpperCase(),
+  display_name: name,
+  initials: name.slice(0, 2).toUpperCase(),
 });
 
-const mission = (champs: Record<string, unknown> = {}): ProjectListItemResponse =>
+const mission = (fields: Record<string, unknown> = {}): ProjectListItemResponse =>
   ({
     project: {
       id: 1,
       label: "Portail",
-      kind: "projet",
-      statut: "realisation",
-      categorie: "automatiser_fluidifier",
-      estime_j: 12,
+      kind: "project",
+      status: "development",
+      category: "automate_streamline",
+      estimated_days: 12,
       parent_id: null,
-      actif: true,
-      ...champs,
+      is_active: true,
+      ...fields,
     },
-    referents: [],
-    intervenants: [],
-    realise_j: 0,
-    commentaires: 0,
-    derniere_maj: null,
+    leads: [],
+    contributors: [],
+    delivered_days: 0,
+    comments: 0,
+    latest_update: null,
   }) as unknown as ProjectListItemResponse;
 
-function ligne(contenu: React.ReactNode) {
+function line(content: React.ReactNode) {
   return render(
     <table>
-      <tbody>{contenu}</tbody>
+      <tbody>{content}</tbody>
     </table>,
   );
 }
 
 describe("MissionRow", () => {
-  it("affiche la phase, la catégorie et l'estimé", () => {
-    ligne(
+  it("shows the phase, the category and the estimate", () => {
+    line(
       <MissionRow
         mission={mission()}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
@@ -56,126 +56,126 @@ describe("MissionRow", () => {
     expect(screen.getByText("12 jrs.")).toBeInTheDocument();
   });
 
-  it("porte la priorité déclarée", () => {
-    ligne(
+  it("carries the declared priority", () => {
+    line(
       <MissionRow
-        mission={mission({ priorite: "critique" })}
-        maintenant={MAINTENANT}
+        mission={mission({ priority: "critical" })}
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
     expect(screen.getByText("Critique")).toBeInTheDocument();
   });
 
-  it("laisse la colonne vide quand la mission n'est pas située", () => {
-    ligne(
+  it("leaves the column empty when the mission is not placed", () => {
+    line(
       <MissionRow
-        mission={mission({ priorite: null })}
-        maintenant={MAINTENANT}
+        mission={mission({ priority: null })}
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
-    ["Critique", "Haute", "Normale", "Basse"].forEach((urgence) => {
-      expect(screen.queryByText(urgence)).toBeNull();
+    ["Critique", "Haute", "Normale", "Basse"].forEach((urgency) => {
+      expect(screen.queryByText(urgency)).toBeNull();
     });
   });
 
-  it("montre le réalisé à côté de l'estimé", () => {
-    const consommee = {
+  it("shows delivered beside estimated", () => {
+    const consumed = {
       ...mission(),
-      realise_j: 4.5,
+      delivered_days: 4.5,
     } as ProjectListItemResponse;
 
-    ligne(
+    line(
       <MissionRow
-        mission={consommee}
-        maintenant={MAINTENANT}
+        mission={consumed}
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
     expect(screen.getByText("4.5 jrs.")).toBeInTheDocument();
   });
 
-  it("laisse le réalisé vide tant que rien n'est déclaré", () => {
-    ligne(
+  it("leaves delivered empty while nothing is declared", () => {
+    line(
       <MissionRow
         mission={mission()}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
     expect(screen.getAllByText(/jrs\./)).toHaveLength(1);
   });
 
-  it("porte le décompte du fil de suivi de sa mission", () => {
-    const suivie = { ...mission(), commentaires: 3 } as ProjectListItemResponse;
+  it("carries the count of its mission's follow-up thread", () => {
+    const withComments = { ...mission(), comments: 3 } as ProjectListItemResponse;
 
-    ligne(
+    line(
       <MissionRow
-        mission={suivie}
-        maintenant={MAINTENANT}
+        mission={withComments}
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
     expect(screen.getByLabelText("3 mises à jour")).toHaveTextContent("3");
   });
 
-  it("montre au survol le dernier message, signé, daté et mis en forme", () => {
-    const suivie = {
+  it("shows on hover the latest message, signed, dated and formatted", () => {
+    const withComments = {
       ...mission(),
-      commentaires: 2,
-      derniere_maj: {
-        author: { id: 1, display_name: "Léa Chen", initiales: "LÉ" },
-        texte: "La **recette** commence lundi",
-        publiee_le: "2026-09-17T09:00:00Z",
+      comments: 2,
+      latest_update: {
+        author: { id: 1, display_name: "Léa Chen", initials: "LÉ" },
+        body: "La **recette** commence lundi",
+        published_at: "2026-09-17T09:00:00Z",
       },
     } as ProjectListItemResponse;
 
-    ligne(
+    line(
       <MissionRow
-        mission={suivie}
-        maintenant={MAINTENANT}
+        mission={withComments}
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
     fireEvent.mouseMove(screen.getByLabelText("2 mises à jour"));
 
-    const infobulle = screen.getByRole("tooltip");
-    expect(infobulle).toHaveTextContent("Léa Chen");
-    expect(infobulle).toHaveTextContent("il y a 3 h");
-    expect(infobulle).toHaveTextContent("La recette commence lundi");
-    expect(infobulle.querySelector("strong")).toHaveTextContent("recette");
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip).toHaveTextContent("Léa Chen");
+    expect(tooltip).toHaveTextContent("il y a 3 h");
+    expect(tooltip).toHaveTextContent("La recette commence lundi");
+    expect(tooltip.querySelector("strong")).toHaveTextContent("recette");
   });
 
-  it("donne le message en entier, sans le tronquer", () => {
+  it("gives the message in full, without truncating it", () => {
     const long = `${"mot ".repeat(200)}fin`;
-    const suivie = {
+    const withComments = {
       ...mission(),
-      commentaires: 1,
-      derniere_maj: {
-        author: { id: 1, display_name: "Léa Chen", initiales: "LÉ" },
-        texte: long,
-        publiee_le: "2026-09-17T09:00:00Z",
+      comments: 1,
+      latest_update: {
+        author: { id: 1, display_name: "Léa Chen", initials: "LÉ" },
+        body: long,
+        published_at: "2026-09-17T09:00:00Z",
       },
     } as ProjectListItemResponse;
 
-    ligne(
+    line(
       <MissionRow
-        mission={suivie}
-        maintenant={MAINTENANT}
+        mission={withComments}
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
     fireEvent.mouseMove(screen.getByLabelText("1 mise à jour"));
@@ -183,68 +183,68 @@ describe("MissionRow", () => {
     expect(screen.getByRole("tooltip")).toHaveTextContent("fin");
   });
 
-  it("ouvre le fil de la mission au clic sur son décompte", () => {
-    const ouvrirFil = vi.fn();
-    const ouvrir = vi.fn();
-    const suivie = { ...mission(), commentaires: 2 } as ProjectListItemResponse;
+  it("opens the mission's thread on a click on its count", () => {
+    const openThread = vi.fn();
+    const open = vi.fn();
+    const withComments = { ...mission(), comments: 2 } as ProjectListItemResponse;
 
-    ligne(
+    line(
       <MissionRow
-        mission={suivie}
-        maintenant={MAINTENANT}
-        onOpen={ouvrir}
-        onOpenFil={ouvrirFil}
+        mission={withComments}
+        now={NOW}
+        onOpen={open}
+        onOpenThread={openThread}
       />,
     );
     fireEvent.click(screen.getByLabelText("2 mises à jour"));
 
-    expect(ouvrirFil).toHaveBeenCalledTimes(1);
-    // La ligne entiere ouvre la mission : le decompte ne doit pas faire les deux.
-    expect(ouvrir).not.toHaveBeenCalled();
+    expect(openThread).toHaveBeenCalledTimes(1);
+    // The whole row opens the mission: the counter must not do both.
+    expect(open).not.toHaveBeenCalled();
   });
 
-  it("n'affiche rien tant que le fil est vide", () => {
-    ligne(
+  it("shows nothing while the thread is empty", () => {
+    line(
       <MissionRow
         mission={mission()}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
     expect(screen.queryByLabelText(/mise/)).not.toBeInTheDocument();
   });
 
-  it("ouvre la mission au clic sur son nom", () => {
-    const ouvrir = vi.fn();
-    ligne(
+  it("opens the mission on a click on its name", () => {
+    const open = vi.fn();
+    line(
       <MissionRow
         mission={mission()}
-        maintenant={MAINTENANT}
-        onOpen={ouvrir}
-        onOpenFil={() => {}}
+        now={NOW}
+        onOpen={open}
+        onOpenThread={() => {}}
       />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Portail" }));
 
-    expect(ouvrir).toHaveBeenCalledTimes(1);
+    expect(open).toHaveBeenCalledTimes(1);
   });
 
-  it("distingue les référents des intervenants", () => {
-    const avecMonde = {
+  it("tells leads from contributors", () => {
+    const withWorld = {
       ...mission(),
-      referents: [membre(1, "Léa Chen")],
-      intervenants: [membre(2, "Nino Garo")],
+      leads: [member(1, "Léa Chen")],
+      contributors: [member(2, "Nino Garo")],
     } as ProjectListItemResponse;
 
-    ligne(
+    line(
       <MissionRow
-        mission={avecMonde}
-        maintenant={MAINTENANT}
+        mission={withWorld}
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
@@ -252,13 +252,13 @@ describe("MissionRow", () => {
     expect(screen.getByText("NI")).toBeInTheDocument();
   });
 
-  it("laisse les colonnes vides plutôt que d'inventer une valeur", () => {
-    ligne(
+  it("leaves the columns empty rather than inventing a value", () => {
+    line(
       <MissionRow
-        mission={mission({ categorie: null, estime_j: null })}
-        maintenant={MAINTENANT}
+        mission={mission({ category: null, estimated_days: null })}
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
@@ -266,101 +266,101 @@ describe("MissionRow", () => {
     expect(screen.getByText("Réalisation")).toBeInTheDocument();
   });
 
-  it("rattache visuellement un sous-projet à son parent", () => {
-    ligne(
+  it("visually ties a sub-project to its parent", () => {
+    line(
       <MissionRow
         mission={mission()}
-        estLot
-        maintenant={MAINTENANT}
+        isWorkPackage
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
     expect(screen.getByText("\u2514")).toBeInTheDocument();
   });
 
-  it("ne marque pas un projet de premier niveau", () => {
-    ligne(
+  it("does not mark a first-level project", () => {
+    line(
       <MissionRow
         mission={mission()}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
     expect(screen.queryByText("\u2514")).not.toBeInTheDocument();
   });
 
-  it("propose de replier un projet qui porte des sous-projets", () => {
-    ligne(
+  it("offers to fold a project carrying sub-projects", () => {
+    line(
       <MissionRow
         mission={mission()}
-        lots={2}
-        deplie
-        maintenant={MAINTENANT}
+        workPackages={2}
+        expanded
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
-        onBasculer={() => {}}
+        onOpenThread={() => {}}
+        onToggle={() => {}}
       />,
     );
 
-    const bascule = screen.getByRole("button", {
+    const toggle = screen.getByRole("button", {
       name: "Masquer les 2 sous-projets de Portail",
     });
-    expect(bascule).toHaveAttribute("aria-expanded", "true");
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
   });
 
-  it("propose de déplier un projet dont les sous-projets sont cachés", () => {
-    ligne(
+  it("offers to unfold a project whose sub-projects are hidden", () => {
+    line(
       <MissionRow
         mission={mission()}
-        lots={2}
-        deplie={false}
-        maintenant={MAINTENANT}
+        workPackages={2}
+        expanded={false}
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
-        onBasculer={() => {}}
+        onOpenThread={() => {}}
+        onToggle={() => {}}
       />,
     );
 
-    const bascule = screen.getByRole("button", {
+    const toggle = screen.getByRole("button", {
       name: "Afficher les 2 sous-projets de Portail",
     });
-    expect(bascule).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("bascule les sous-projets sans ouvrir la mission", () => {
-    const basculer = vi.fn();
-    const ouvrir = vi.fn();
+  it("toggles the sub-projects without opening the mission", () => {
+    const toggle = vi.fn();
+    const open = vi.fn();
 
-    ligne(
+    line(
       <MissionRow
         mission={mission()}
-        lots={1}
-        deplie
-        maintenant={MAINTENANT}
-        onOpen={ouvrir}
-        onOpenFil={() => {}}
-        onBasculer={basculer}
+        workPackages={1}
+        expanded
+        now={NOW}
+        onOpen={open}
+        onOpenThread={() => {}}
+        onToggle={toggle}
       />,
     );
     fireEvent.click(
       screen.getByRole("button", { name: "Masquer le sous-projet de Portail" }),
     );
 
-    expect(basculer).toHaveBeenCalledTimes(1);
-    expect(ouvrir).not.toHaveBeenCalled();
+    expect(toggle).toHaveBeenCalledTimes(1);
+    expect(open).not.toHaveBeenCalled();
   });
 
-  it("n'offre aucune bascule à un projet sans sous-projet", () => {
-    ligne(
+  it("offers no toggle to a project with no sub-project", () => {
+    line(
       <MissionRow
         mission={mission()}
-        maintenant={MAINTENANT}
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
@@ -369,13 +369,13 @@ describe("MissionRow", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("annonce une activité hors projet, qui n'a pas de phase", () => {
-    ligne(
+  it("announces off-project work, which has no phase", () => {
+    line(
       <MissionRow
-        mission={mission({ kind: "hors_projet", statut: null, estime_j: null })}
-        maintenant={MAINTENANT}
+        mission={mission({ kind: "off_project", status: null, estimated_days: null })}
+        now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 

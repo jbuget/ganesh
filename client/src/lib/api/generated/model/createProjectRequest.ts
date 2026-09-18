@@ -8,7 +8,7 @@ import type { ProjectKind } from "./projectKind";
 import type { ProjectStatus } from "./projectStatus";
 
 /**
- * Creation d'une mission.
+ * Creating a mission.
  */
 export interface CreateProjectRequest {
   /**
@@ -17,7 +17,7 @@ export interface CreateProjectRequest {
    */
   label: string;
   kind: ProjectKind;
-  statut?: ProjectStatus | null;
+  status?: ProjectStatus | null;
   parent_id?: number | null;
-  estime_j?: number | null;
+  estimated_days?: number | null;
 }

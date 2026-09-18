@@ -1,4 +1,4 @@
-"""Ce que le referentiel affiche de chaque mission."""
+"""What the reference list shows of each mission."""
 
 from datetime import date, datetime, timedelta
 
@@ -35,166 +35,169 @@ NINO = User(
     role=Role.TEAMMATE,
 )
 PORTAIL = Project(
-    id=10, label="Portail", kind=ProjectKind.PROJET, statut=ProjectStatus.CADRAGE
+    id=10, label="Portail", kind=ProjectKind.PROJECT, status=ProjectStatus.SCOPING
 )
 
 
-AUJOURDHUI = date(2026, 9, 17)
+TODAY = date(2026, 9, 17)
 
 
-def saisie(jour: date, valeur: float = 1.0) -> Entry:
+def entry(day: date, value: float = 1.0) -> Entry:
     return Entry(
         id=None,
         user_id=1,
         project_id=10,
-        jour=jour,
-        valeur=DayValue(valeur),
-        statut_at_entry=ProjectStatus.CADRAGE,
+        day=day,
+        value=DayValue(value),
+        status_at_entry=ProjectStatus.SCOPING,
     )
 
 
 def build(
-    affectations=None,
+    assignments=None,
     entries: list[Entry] | None = None,
     updates: InMemoryProjectUpdateRepository | None = None,
 ):
     return ListProjectsUseCase(
         projects=InMemoryProjectRepository([PORTAIL]),
         entries=InMemoryEntryRepository(entries or []),
-        assignees=InMemoryProjectAssigneeRepository(affectations or {}),
+        assignees=InMemoryProjectAssigneeRepository(assignments or {}),
         users=InMemoryUserRepository([ALICE, NINO]),
         updates=updates or InMemoryProjectUpdateRepository(),
     )
 
 
-async def fil(*textes: str, retirees: int = 0) -> InMemoryProjectUpdateRepository:
-    """Un fil de suivi sur Portail, du plus ancien au plus recent.
+async def thread(*bodies: str, withdrawn: int = 0) -> InMemoryProjectUpdateRepository:
+    """A follow-up thread on Portail, oldest to most recent.
 
-    Les `retirees` dernieres sont supprimees, ce qui laisse lire celles d'avant.
+    The last `withdrawn` ones are deleted, which leaves the earlier ones to be
+    read.
     """
     repo = InMemoryProjectUpdateRepository()
-    publiees = [
+    posted = [
         await repo.add(
             ProjectUpdate(
                 id=None,
                 project_id=10,
                 author_id=1,
-                texte=texte,
-                publiee_le=datetime(2026, 9, 17, 9, 0) + timedelta(hours=rang),
+                body=body,
+                published_at=datetime(2026, 9, 17, 9, 0) + timedelta(hours=rank),
             )
         )
-        for rang, texte in enumerate(textes)
+        for rank, body in enumerate(bodies)
     ]
-    for maj in publiees[len(publiees) - retirees :] if retirees else []:
-        maj.supprimer(par=1, a=datetime(2026, 9, 17, 10, 0))
+    for update in posted[len(posted) - withdrawn :] if withdrawn else []:
+        update.remove(by=1, at=datetime(2026, 9, 17, 10, 0))
     return repo
 
 
 async def test_a_mission_without_anyone_assigned_lists_nobody() -> None:
-    listees = await build().execute()
+    listed = await build().execute()
 
-    assert listees[0].referents == []
-    assert listees[0].intervenants == []
+    assert listed[0].leads == []
+    assert listed[0].contributors == []
 
 
-async def test_referents_and_intervenants_are_told_apart() -> None:
-    listees = await build(
+async def test_leads_and_contributors_are_told_apart() -> None:
+    listed = await build(
         {
-            (10, ProjectRole.REFERENT): [1],
-            (10, ProjectRole.INTERVENANT): [2],
+            (10, ProjectRole.LEAD): [1],
+            (10, ProjectRole.CONTRIBUTOR): [2],
         }
     ).execute()
 
-    assert [u.display_name for u in listees[0].referents] == ["L. Chen"]
-    assert [u.display_name for u in listees[0].intervenants] == ["N. Garo"]
+    assert [u.display_name for u in listed[0].leads] == ["L. Chen"]
+    assert [u.display_name for u in listed[0].contributors] == ["N. Garo"]
 
 
 async def test_the_assigned_are_listed_in_alphabetical_order() -> None:
-    """La liste se parcourt du regard : deux colonnes doivent s'aligner."""
-    listees = await build({(10, ProjectRole.INTERVENANT): [2, 1]}).execute()
+    """The list is scanned by eye: two columns must line up."""
+    listed = await build({(10, ProjectRole.CONTRIBUTOR): [2, 1]}).execute()
 
-    assert [u.display_name for u in listees[0].intervenants] == ["L. Chen", "N. Garo"]
+    assert [u.display_name for u in listed[0].contributors] == ["L. Chen", "N. Garo"]
 
 
 async def test_a_mission_nobody_declared_time_on_shows_nothing() -> None:
-    listees = await build().execute(today=AUJOURDHUI)
+    listed = await build().execute(today=TODAY)
 
-    assert listees[0].realise_j == 0.0
+    assert listed[0].delivered_days == 0.0
 
 
 async def test_the_declared_days_are_summed() -> None:
-    listees = await build(
-        entries=[saisie(AUJOURDHUI - timedelta(days=1)), saisie(AUJOURDHUI, 0.5)]
-    ).execute(today=AUJOURDHUI)
+    listed = await build(
+        entries=[entry(TODAY - timedelta(days=1)), entry(TODAY, 0.5)]
+    ).execute(today=TODAY)
 
-    assert listees[0].realise_j == 1.5
+    assert listed[0].delivered_days == 1.5
 
 
 async def test_a_day_to_come_is_forecast_and_stays_out() -> None:
-    """Le realise ne doit jamais grossir de ce qui n'a pas encore ete fait."""
-    listees = await build(
-        entries=[saisie(AUJOURDHUI), saisie(AUJOURDHUI + timedelta(days=1))]
-    ).execute(today=AUJOURDHUI)
+    """Delivered time must never swell with what has not been done yet."""
+    listed = await build(
+        entries=[entry(TODAY), entry(TODAY + timedelta(days=1))]
+    ).execute(today=TODAY)
 
-    assert listees[0].realise_j == 1.0
+    assert listed[0].delivered_days == 1.0
 
 
 async def test_a_mission_without_any_update_counts_none() -> None:
-    listees = await build().execute()
+    listed = await build().execute()
 
-    assert listees[0].commentaires == 0
+    assert listed[0].comments == 0
 
 
 async def test_the_live_updates_of_the_thread_are_counted() -> None:
-    listees = await build(
-        updates=await fil("Cadrage lance", "Specs validees")
+    listed = await build(
+        updates=await thread("Cadrage lance", "Specs validees")
     ).execute()
 
-    assert listees[0].commentaires == 2
+    assert listed[0].comments == 2
 
 
 async def test_a_removed_update_leaves_the_count() -> None:
-    """Le referentiel annonce ce qui se lit encore dans le fil, pas son histoire."""
-    listees = await build(
-        updates=await fil("Cadrage lance", "Ecrite par erreur", retirees=1)
+    """The reference list announces what can still be read in the thread, not its history."""
+    listed = await build(
+        updates=await thread("Cadrage lance", "Ecrite par erreur", withdrawn=1)
     ).execute()
 
-    assert listees[0].commentaires == 1
+    assert listed[0].comments == 1
 
 
 async def test_a_mission_without_any_update_has_no_last_one() -> None:
-    listees = await build().execute()
+    listed = await build().execute()
 
-    assert listees[0].derniere_maj is None
+    assert listed[0].latest_update is None
 
 
 async def test_the_most_recent_update_is_the_one_to_show() -> None:
-    listees = await build(
-        updates=await fil("Cadrage lance", "Specs validees")
+    listed = await build(
+        updates=await thread("Cadrage lance", "Specs validees")
     ).execute()
 
-    assert listees[0].derniere_maj is not None
-    assert listees[0].derniere_maj.update.texte == "Specs validees"
+    assert listed[0].latest_update is not None
+    assert listed[0].latest_update.update.body == "Specs validees"
 
 
 async def test_the_last_update_is_signed() -> None:
-    """L'infobulle annonce qui parle : le nom doit voyager avec le texte."""
-    listees = await build(updates=await fil("Cadrage lance")).execute()
+    """The tooltip says who is speaking: the name must travel with the text."""
+    listed = await build(updates=await thread("Cadrage lance")).execute()
 
-    assert listees[0].derniere_maj is not None
-    assert listees[0].derniere_maj.author.display_name == "L. Chen"
+    assert listed[0].latest_update is not None
+    assert listed[0].latest_update.author.display_name == "L. Chen"
 
 
 async def test_a_removed_update_gives_way_to_the_one_before_it() -> None:
-    listees = await build(
-        updates=await fil("Cadrage lance", "Ecrite par erreur", retirees=1)
+    listed = await build(
+        updates=await thread("Cadrage lance", "Ecrite par erreur", withdrawn=1)
     ).execute()
 
-    assert listees[0].derniere_maj is not None
-    assert listees[0].derniere_maj.update.texte == "Cadrage lance"
+    assert listed[0].latest_update is not None
+    assert listed[0].latest_update.update.body == "Cadrage lance"
 
 
 async def test_a_thread_entirely_removed_shows_nothing() -> None:
-    listees = await build(updates=await fil("Ecrite par erreur", retirees=1)).execute()
+    listed = await build(
+        updates=await thread("Ecrite par erreur", withdrawn=1)
+    ).execute()
 
-    assert listees[0].derniere_maj is None
+    assert listed[0].latest_update is None

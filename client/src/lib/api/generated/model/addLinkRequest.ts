@@ -7,13 +7,13 @@
 import type { LinkIcon } from "./linkIcon";
 
 /**
- * Ajout d'un lien : une adresse, un intitule et une icone facultatifs.
+ * Adding a link: an address, an optional label and an optional icon.
  *
- * Sans icone, le serveur la deduit de l'adresse : l'ecran n'a pas a connaitre
- * la liste des services reconnus.
+ * Without an icon, the server infers it from the address: the screen does not
+ * have to know the list of recognised services.
  */
 export interface AddLinkRequest {
   label?: string;
   url: string;
-  icone?: LinkIcon | null;
+  icon?: LinkIcon | null;
 }

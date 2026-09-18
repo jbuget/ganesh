@@ -1,8 +1,8 @@
-"""Deplacement d'une carte, contre une vraie base.
+"""Moving a card, against a real database.
 
-Le double en memoire renvoie la meme instance depuis `get_by_id` et
-`list_all` ; la base, elle, en renvoie deux. Ce test existe pour couvrir cette
-difference, qui a masque un bug de renumerotation.
+The in-memory double returns the same instance from `get_by_id` and
+`list_all`; the database returns two. This test exists to cover that
+difference, which once hid a renumbering bug.
 """
 
 import pytest
@@ -32,7 +32,7 @@ from src.modules.users.infrastructure.database.repositories.user_repository_impl
 pytestmark = pytest.mark.db
 
 
-async def preparer(session: AsyncSession) -> tuple[int, dict[str, int]]:
+async def prepare(session: AsyncSession) -> tuple[int, dict[str, int]]:
     user = await SqlUserRepository(session).add(
         User(
             id=None,
@@ -44,14 +44,14 @@ async def preparer(session: AsyncSession) -> tuple[int, dict[str, int]]:
     )
     repo = SqlProjectRepository(session)
     ids = {}
-    for rang, label in enumerate(["Alpha", "Beta", "Gamma"]):
+    for rank, label in enumerate(["Alpha", "Beta", "Gamma"]):
         mission = await repo.add(
             Project(
                 id=None,
                 label=label,
-                kind=ProjectKind.PROJET,
-                statut=ProjectStatus.CADRAGE,
-                position=rang,
+                kind=ProjectKind.PROJECT,
+                status=ProjectStatus.SCOPING,
+                position=rank,
             )
         )
         assert mission.id is not None
@@ -69,9 +69,9 @@ def use_case(session: AsyncSession) -> MoveProjectUseCase:
     )
 
 
-async def ordre(session: AsyncSession, statut: ProjectStatus) -> list[str]:
+async def labels_in_order(session: AsyncSession, status: ProjectStatus) -> list[str]:
     missions = [
-        p for p in await SqlProjectRepository(session).list_all() if p.statut is statut
+        p for p in await SqlProjectRepository(session).list_all() if p.status is status
     ]
     return [p.label for p in sorted(missions, key=lambda p: p.position)]
 
@@ -79,29 +79,33 @@ async def ordre(session: AsyncSession, statut: ProjectStatus) -> list[str]:
 async def test_a_card_moved_to_the_top_really_lands_there(
     db_session: AsyncSession,
 ) -> None:
-    actor_id, ids = await preparer(db_session)
+    actor_id, ids = await prepare(db_session)
 
     await use_case(db_session).execute(
         MoveProjectCommand(
             actor_id=actor_id,
             project_id=ids["Gamma"],
-            statut=ProjectStatus.CADRAGE,
+            status=ProjectStatus.SCOPING,
             position=0,
         )
     )
 
-    assert await ordre(db_session, ProjectStatus.CADRAGE) == ["Gamma", "Alpha", "Beta"]
+    assert await labels_in_order(db_session, ProjectStatus.SCOPING) == [
+        "Gamma",
+        "Alpha",
+        "Beta",
+    ]
 
 
 async def test_ranks_stay_unique_within_a_column(db_session: AsyncSession) -> None:
-    """Deux cartes au meme rang rendraient l'ordre instable."""
-    actor_id, ids = await preparer(db_session)
+    """Two cards at the same rank would make the order unstable."""
+    actor_id, ids = await prepare(db_session)
 
     await use_case(db_session).execute(
         MoveProjectCommand(
             actor_id=actor_id,
             project_id=ids["Gamma"],
-            statut=ProjectStatus.CADRAGE,
+            status=ProjectStatus.SCOPING,
             position=0,
         )
     )
@@ -109,25 +113,25 @@ async def test_ranks_stay_unique_within_a_column(db_session: AsyncSession) -> No
     missions = [
         p
         for p in await SqlProjectRepository(db_session).list_all()
-        if p.statut is ProjectStatus.CADRAGE
+        if p.status is ProjectStatus.SCOPING
     ]
-    rangs = [p.position for p in missions]
-    assert sorted(rangs) == [0, 1, 2]
+    ranks = [p.position for p in missions]
+    assert sorted(ranks) == [0, 1, 2]
 
 
 async def test_a_card_changing_column_keeps_a_coherent_order(
     db_session: AsyncSession,
 ) -> None:
-    actor_id, ids = await preparer(db_session)
+    actor_id, ids = await prepare(db_session)
 
     await use_case(db_session).execute(
         MoveProjectCommand(
             actor_id=actor_id,
             project_id=ids["Alpha"],
-            statut=ProjectStatus.REALISATION,
+            status=ProjectStatus.DEVELOPMENT,
             position=0,
         )
     )
 
-    assert await ordre(db_session, ProjectStatus.CADRAGE) == ["Beta", "Gamma"]
-    assert await ordre(db_session, ProjectStatus.REALISATION) == ["Alpha"]
+    assert await labels_in_order(db_session, ProjectStatus.SCOPING) == ["Beta", "Gamma"]
+    assert await labels_in_order(db_session, ProjectStatus.DEVELOPMENT) == ["Alpha"]

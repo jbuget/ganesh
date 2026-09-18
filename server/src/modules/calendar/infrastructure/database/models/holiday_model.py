@@ -1,7 +1,7 @@
-"""Modele SQLAlchemy des jours feries.
+"""SQLAlchemy model of public holidays.
 
-La table sert de reference partagee et permet d'ajuster un jour chome
-specifique a l'entreprise sans toucher au code.
+The table acts as a shared reference and allows adjusting a company-specific
+non-working day without touching the code.
 """
 
 from datetime import date
@@ -13,9 +13,9 @@ from src.core.database import Base
 
 
 class HolidayModel(Base):
-    """Un jour ferie ou chome."""
+    """A public or company holiday."""
 
     __tablename__ = "holidays"
 
-    jour: Mapped[date] = mapped_column(Date, primary_key=True)
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
     label: Mapped[str] = mapped_column(String(128))

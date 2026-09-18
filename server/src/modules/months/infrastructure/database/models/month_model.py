@@ -1,4 +1,4 @@
-"""Modele SQLAlchemy de l'etat de saisie des mois."""
+"""SQLAlchemy model of month entry state."""
 
 from datetime import date, datetime
 
@@ -10,19 +10,19 @@ from src.modules.months.domain.entities.month import MonthState
 
 
 class MonthModel(Base):
-    """Etat de saisie d'un mois, pour un utilisateur."""
+    """Entry state of a month, for one user."""
 
     __tablename__ = "month_status"
-    __table_args__ = (UniqueConstraint("user_id", "mois", name="uq_month_user"),)
+    __table_args__ = (UniqueConstraint("user_id", "month", name="uq_month_user"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
-    mois: Mapped[date] = mapped_column(Date, index=True)
+    month: Mapped[date] = mapped_column(Date, index=True)
     state: Mapped[MonthState] = mapped_column(
         Enum(MonthState, name="month_state", native_enum=False, length=16),
-        default=MonthState.OUVERT,
+        default=MonthState.OPEN,
     )
     validated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     validated_by: Mapped[int | None] = mapped_column(

@@ -7,9 +7,9 @@
 import type { Department } from "./department";
 
 /**
- * Departements concernes et interlocuteurs metier.
+ * Departments concerned and business contacts.
  */
 export interface UpdateProjectDetailRequest {
-  departements?: Department[];
-  contacts_metier?: string | null;
+  departments?: Department[];
+  business_contacts?: string | null;
 }

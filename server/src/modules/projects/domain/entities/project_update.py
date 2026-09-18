@@ -1,4 +1,4 @@
-"""Mise a jour publiee sur une mission."""
+"""An update posted on a mission."""
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -11,54 +11,52 @@ from src.shared.exceptions.domain_exceptions import (
 
 @dataclass
 class ProjectUpdate:
-    """Ce que quelqu'un vient dire de l'avancement d'une mission.
+    """What someone comes to say about how a mission is going.
 
-    Une mise a jour n'est pas effacee mais marquee supprimee : le fil garde sa
-    chronologie et ses reponses, et l'ecran y affiche « Message supprime ».
-    Seul son auteur peut la reecrire ou la retirer — un fil de suivi n'est pas
-    un wiki, chacun repond de ses mots.
+    An update is not erased but marked deleted: the thread keeps its order and
+    its replies, and the screen shows "Message supprime" there. Only its author
+    may rewrite or withdraw it — a follow-up thread is not a wiki, everyone
+    answers for their own words.
     """
 
     id: int | None
     project_id: int
     author_id: int
-    texte: str
-    publiee_le: datetime
-    modifiee_le: datetime | None = None
-    supprimee_le: datetime | None = None
+    body: str
+    published_at: datetime
+    edited_at: datetime | None = None
+    deleted_at: datetime | None = None
 
     def __post_init__(self) -> None:
-        if self.supprimee_le is not None:
+        if self.deleted_at is not None:
             return
-        self.texte = self.texte.strip()
-        if not self.texte:
-            raise ValidationError("Une mise a jour ne peut pas etre vide.")
+        self.body = self.body.strip()
+        if not self.body:
+            raise ValidationError("An update cannot be empty.")
 
     @property
-    def est_supprimee(self) -> bool:
-        return self.supprimee_le is not None
+    def is_deleted(self) -> bool:
+        return self.deleted_at is not None
 
-    def _exiger_lauteur(self, par: int) -> None:
-        if par != self.author_id:
-            raise ForbiddenActionError(
-                "Seul l'auteur d'une mise a jour peut la modifier."
-            )
+    def _require_author(self, by: int) -> None:
+        if by != self.author_id:
+            raise ForbiddenActionError("Only the author of an update may change it.")
 
-    def reecrire(self, texte: str, par: int, a: datetime) -> None:
-        self._exiger_lauteur(par)
-        if self.est_supprimee:
-            raise ForbiddenActionError("Une mise a jour supprimee ne se reecrit pas.")
+    def rewrite(self, body: str, by: int, at: datetime) -> None:
+        self._require_author(by)
+        if self.is_deleted:
+            raise ForbiddenActionError("A deleted update cannot be rewritten.")
 
-        nouveau = texte.strip()
-        if not nouveau:
-            raise ValidationError("Une mise a jour ne peut pas etre vide.")
-        self.texte = nouveau
-        self.modifiee_le = a
+        new_one = body.strip()
+        if not new_one:
+            raise ValidationError("An update cannot be empty.")
+        self.body = new_one
+        self.edited_at = at
 
-    def supprimer(self, par: int, a: datetime) -> None:
-        self._exiger_lauteur(par)
-        if self.est_supprimee:
-            # Deja retiree : la premiere date fait foi.
+    def remove(self, by: int, at: datetime) -> None:
+        self._require_author(by)
+        if self.is_deleted:
+            # Already withdrawn: the first date is the one that counts.
             return
-        self.supprimee_le = a
-        self.texte = ""
+        self.deleted_at = at
+        self.body = ""

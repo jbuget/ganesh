@@ -1,4 +1,4 @@
-"""Implementation SQLAlchemy du port EntryRepository."""
+"""SQLAlchemy implementation of the EntryRepository port."""
 
 from datetime import date
 
@@ -15,54 +15,54 @@ def to_entity(model: EntryModel) -> Entry:
         id=model.id,
         user_id=model.user_id,
         project_id=model.project_id,
-        jour=model.jour,
-        valeur=DayValue(model.valeur),
-        statut_at_entry=model.statut_at_entry,
+        day=model.day,
+        value=DayValue(model.value),
+        status_at_entry=model.status_at_entry,
     )
 
 
 class SqlEntryRepository(EntryRepository):
-    """Persiste les saisies de temps."""
+    """Persists time entries."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
     async def _get_model(
-        self, user_id: int, project_id: int, jour: date
+        self, user_id: int, project_id: int, day: date
     ) -> EntryModel | None:
         result = await self._session.execute(
             select(EntryModel).where(
                 and_(
                     EntryModel.user_id == user_id,
                     EntryModel.project_id == project_id,
-                    EntryModel.jour == jour,
+                    EntryModel.day == day,
                 )
             )
         )
         return result.scalar_one_or_none()
 
-    async def get(self, user_id: int, project_id: int, jour: date) -> Entry | None:
-        model = await self._get_model(user_id, project_id, jour)
+    async def get(self, user_id: int, project_id: int, day: date) -> Entry | None:
+        model = await self._get_model(user_id, project_id, day)
         return to_entity(model) if model else None
 
-    async def list_for_month(self, user_id: int, mois: date) -> list[Entry]:
+    async def list_for_month(self, user_id: int, month: date) -> list[Entry]:
         result = await self._session.execute(
             select(EntryModel)
             .where(
                 and_(
                     EntryModel.user_id == user_id,
-                    extract("year", EntryModel.jour) == mois.year,
-                    extract("month", EntryModel.jour) == mois.month,
+                    extract("year", EntryModel.day) == month.year,
+                    extract("month", EntryModel.day) == month.month,
                 )
             )
-            .order_by(EntryModel.jour)
+            .order_by(EntryModel.day)
         )
         return [to_entity(model) for model in result.scalars().all()]
 
-    async def list_for_day(self, user_id: int, jour: date) -> list[Entry]:
+    async def list_for_day(self, user_id: int, day: date) -> list[Entry]:
         result = await self._session.execute(
             select(EntryModel).where(
-                and_(EntryModel.user_id == user_id, EntryModel.jour == jour)
+                and_(EntryModel.user_id == user_id, EntryModel.day == day)
             )
         )
         return [to_entity(model) for model in result.scalars().all()]
@@ -71,7 +71,7 @@ class SqlEntryRepository(EntryRepository):
         result = await self._session.execute(
             select(EntryModel)
             .where(EntryModel.project_id == project_id)
-            .order_by(EntryModel.jour)
+            .order_by(EntryModel.day)
         )
         return [to_entity(model) for model in result.scalars().all()]
 
@@ -83,32 +83,32 @@ class SqlEntryRepository(EntryRepository):
 
     async def sum_realised_by_project(self, today: date) -> dict[int, float]:
         result = await self._session.execute(
-            select(EntryModel.project_id, func.sum(EntryModel.valeur))
-            .where(EntryModel.jour <= today)
+            select(EntryModel.project_id, func.sum(EntryModel.value))
+            .where(EntryModel.day <= today)
             .group_by(EntryModel.project_id)
         )
         return {project_id: float(total) for project_id, total in result.all()}
 
     async def upsert(self, entry: Entry) -> Entry:
-        model = await self._get_model(entry.user_id, entry.project_id, entry.jour)
+        model = await self._get_model(entry.user_id, entry.project_id, entry.day)
         if model is None:
             model = EntryModel(
                 user_id=entry.user_id,
                 project_id=entry.project_id,
-                jour=entry.jour,
-                valeur=float(entry.valeur),
-                statut_at_entry=entry.statut_at_entry,
+                day=entry.day,
+                value=float(entry.value),
+                status_at_entry=entry.status_at_entry,
             )
             self._session.add(model)
         else:
-            model.valeur = float(entry.valeur)
-            model.statut_at_entry = entry.statut_at_entry
+            model.value = float(entry.value)
+            model.status_at_entry = entry.status_at_entry
         await self._session.flush()
         entry.id = model.id
         return entry
 
-    async def delete(self, user_id: int, project_id: int, jour: date) -> None:
-        model = await self._get_model(user_id, project_id, jour)
+    async def delete(self, user_id: int, project_id: int, day: date) -> None:
+        model = await self._get_model(user_id, project_id, day)
         if model is not None:
             await self._session.delete(model)
             await self._session.flush()

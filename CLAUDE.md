@@ -2,148 +2,207 @@
 
 # CLAUDE.md — Timesheet
 
-Guide de développement pour Claude Code sur ce projet. Ces règles s'appliquent à toutes les contributions, sans exception.
+Development guide for Claude Code on this project. These rules apply to every
+contribution, without exception.
 
-Ce projet reprend délibérément les conventions de **WAATcher**. En cas de doute sur un point non couvert ici, se référer à l'existant WAATcher plutôt que d'inventer : **la cohérence prime sur la préférence personnelle**.
+This project deliberately follows **WAATcher**'s conventions. When in doubt on a
+point not covered here, look at what WAATcher does rather than inventing:
+**consistency beats personal preference**.
 
 ---
 
-## Le produit
+## The product
 
-Timesheet permet à chaque développeur de déclarer, en journées ou demi-journées, le temps passé (ou prévu) sur chaque projet ou sous-projet, sous forme d'une matrice `jours du mois × missions`.
+Timesheet lets every developer declare, in days or half days, the time spent (or
+planned) on each project or sub-project, as a `days of the month × missions`
+grid.
 
-- **V1 : aucune intégration Monday.** Les projets sont créés dans l'application ou importés par CSV.
-- **V1.1 :** bouton « Synchroniser vers Monday », réservé aux managers. Les colonnes `monday_item_id` / `monday_subitem_id` existent dès la V1, nullables.
-- Monday ne sera **jamais** une source de saisie : la synchronisation est unidirectionnelle, Timesheet → Monday.
+- **V1: no Monday integration.** Projects are created in the application or
+  imported from CSV.
+- **V1.1:** a "Sync to Monday" button, managers only. The `monday_item_id` /
+  `monday_subitem_id` columns exist from V1, nullable.
+- Monday will **never** be a source of entry: syncing goes one way, Timesheet →
+  Monday.
 
-### Rôles
+### Roles
 
 | Action | `TEAMMATE` | `MANAGER` |
 |---|---|---|
-| Saisir son mois, consulter et éditer le mois ouvert d'un collègue | ✅ | ✅ |
-| Créer / modifier un projet, changer son statut | ✅ | ✅ |
-| Valider son propre mois | ✅ | ✅ |
-| Rouvrir un mois validé | ❌ | ✅ |
-| Gestion des collaborateurs | ❌ | ✅ |
-| Synchroniser vers Monday (V1.1) | ❌ | ✅ |
+| Fill in one's own month, read and edit a colleague's open month | ✅ | ✅ |
+| Create / change a project, change its status | ✅ | ✅ |
+| Validate one's own month | ✅ | ✅ |
+| Reopen a validated month | ❌ | ✅ |
+| Manage teammates | ❌ | ✅ |
+| Sync to Monday (V1.1) | ❌ | ✅ |
 
-### Invariants métier
+### Business invariants
 
-Ces règles sont testées **au niveau du domaine**, indépendamment de l'API et de l'UI :
+These rules are tested **at the domain level**, independently of the API and of
+the UI:
 
-- Une saisie vaut `0.5` ou `1.0`, jamais autre chose.
-- **Aucune saisie n'est possible sur un jour non ouvré** (week-end ou jour férié
-  français). La règle est portée par le domaine et refusée par l'API : le
-  verrouillage de la cellule côté client n'en est que le reflet.
-- La somme des saisies d'un utilisateur pour un jour donné ne doit pas dépasser `1` (alerte, pas blocage).
-- Un mois validé est **immuable** : aucune écriture possible tant qu'un manager ne l'a pas rouvert.
-- Chaque saisie mémorise le statut du projet au moment où elle est écrite (`statut_at_entry`), ce qui permet de mesurer le temps passé par phase.
-- Les activités hors projet (absences, formation, interne) n'ont pas de statut et ne sont jamais synchronisées.
-- Toute action significative est tracée dans `audit_log`.
+- An entry is `0.5` or `1.0`, never anything else.
+- **No entry is possible on a non-working day** (weekend or French public
+  holiday). The domain carries the rule and the API refuses the write: locking
+  the cell on the client is only its reflection.
+- A user's entries for one day must not add up to more than `1` (a warning, not
+  a block).
+- A validated month is **immutable**: no write is possible until a manager
+  reopens it.
+- Every entry remembers the project status at the moment it is written
+  (`status_at_entry`), which makes it possible to measure time spent per phase.
+- Off-project work (absences, training, internal) carries no status and is never
+  synced.
+- Every action that matters is traced in `audit_log`.
 
 ---
 
-## Philosophie
+## Philosophy
 
-Ce projet suit les principes du **Software Craftsmanship** : code propre, testé, bien architecturé, livré en continu avec discipline. Chaque contribution doit laisser le code dans un meilleur état qu'elle ne l'a trouvé (règle du boy scout).
+This project follows **Software Craftsmanship**: clean, tested, well-architected
+code, delivered continuously and with discipline. Every contribution must leave
+the code better than it found it (the boy scout rule).
 
-- **TDD** : écrire le test avant le code de production. Les tests documentent l'intention, pas l'implémentation.
-- **Baby Steps** : avancer par petits incréments vérifiables. Chaque étape doit compiler, passer les tests, et laisser le code dans un état cohérent.
-- **Clean Code** : noms explicites, fonctions courtes à responsabilité unique, pas de commentaires inutiles, pas de code mort.
-- **Clean Architecture** (côté serveur) : respecter les couches — jamais de dépendance vers l'extérieur depuis le domaine.
-- **DRY / SOLID** : une règle métier s'écrit à un seul endroit ; les types d'API ne s'écrivent jamais à la main.
-- **YAGNI / KISS** : ne pas anticiper. Implémenter ce qui est demandé, rien de plus.
+- **TDD**: write the test before the production code. Tests document intent, not
+  implementation.
+- **Baby steps**: move in small verifiable increments. Every step must compile,
+  pass the tests, and leave the code coherent.
+- **Clean Code**: explicit names, short single-purpose functions, no pointless
+  comments, no dead code.
+- **Clean Architecture** (server side): respect the layers — never a dependency
+  outwards from the domain.
+- **DRY / SOLID**: a business rule is written in one place; API types are never
+  written by hand.
+- **YAGNI / KISS**: do not anticipate. Implement what was asked, nothing more.
+
+---
+
+## Language: code in English, interface in French
+
+**The whole codebase is in English** — identifiers, comments, docstrings, test
+labels, database columns, API fields, enumeration values, URL parameters.
+
+**What the user reads stays in French** — screen labels, phase names in the
+timeline, column headings, dialog text, and the CSV import aliases, which accept
+the French headers and values the team has been typing.
+
+Three consequences:
+
+- An English comment quoting the interface quotes French. That is right, not an
+  oversight.
+- A rename must never cross a label. A French label composed at run time —
+  `` `${count > 1 ? "mises à jour" : "mise à jour"}` `` — is invisible to the
+  type checker and to the tests, which assert on the count and not the wording.
+  Only opening the screen catches it. **Check in the browser after any broad
+  rename.**
+- To find what is still French, do not search with a list of words: it only
+  finds what one already has in mind. Extract every identifier, split it into
+  words, and read the sorted column of distinct words — what is French stands
+  out.
 
 ---
 
 ## Stack
 
-| Couche | Technologie |
+| Layer | Technology |
 |--------|------------|
 | Frontend | Next.js 16, TypeScript, React 19, Tailwind CSS 4 |
-| BFF | Route Handlers Next.js (`client/src/app/api/`) |
-| Backend | Python 3.12, FastAPI, SQLAlchemy async, Alembic |
-| Base de données | PostgreSQL 18 |
-| Authentification | Microsoft Entra ID |
-| Tests front | Vitest + Testing Library |
-| Tests back | pytest + pytest-asyncio |
-| Client API | Orval (généré depuis OpenAPI) |
+| BFF | Next.js Route Handlers (`client/src/app/api/`) |
+| Backend | Python 3.12, FastAPI, async SQLAlchemy, Alembic |
+| Database | PostgreSQL 18 |
+| Authentication | Microsoft Entra ID |
+| Front-end tests | Vitest + Testing Library |
+| Back-end tests | pytest + pytest-asyncio |
+| API client | Orval (generated from OpenAPI) |
 
 ---
 
-## Architecture serveur
+## Server architecture
 
-Le backend suit une **Clean Architecture** stricte par module fonctionnel. Chaque module dans `server/src/modules/<nom>/` est organisé en 4 couches :
+The backend follows a strict **Clean Architecture** per functional module. Every
+module under `server/src/modules/<name>/` is organised in 4 layers:
 
 ```
 src/modules/<module>/
-├── domain/           # Entités, value objects, interfaces de repositories (aucune dépendance externe)
+├── domain/           # Entities, value objects, repository interfaces (no external dependency)
 ├── application/      # Use cases, DTOs
-├── infrastructure/   # Modèles SQLAlchemy, implémentations de repositories
-└── presentation/     # Routes FastAPI, schémas Pydantic, dépendances
+├── infrastructure/   # SQLAlchemy models, repository implementations
+└── presentation/     # FastAPI routes, Pydantic schemas, dependencies
 ```
 
-Modules : `users`, `projects`, `entries`, `months`, `calendar`, `audit_logs`.
+Modules: `users`, `projects`, `entries`, `months`, `calendar`, `audit_logs`.
 
-**Règles d'or :**
-- Le domaine ne connaît ni SQLAlchemy, ni FastAPI, ni Pydantic, ni aucun framework. Les entités sont des `dataclass`.
-- Les use cases orchestrent, ils ne font pas de logique métier directe.
-- Les repositories sont des interfaces (ABC) dans le domaine, implémentées dans l'infrastructure.
-- **Un use case ne peut jamais appeler un autre use case.** Extraire la logique partagée dans un service domaine.
-- **Les routes FastAPI n'injectent jamais de repository directement** — uniquement des use cases.
-- Toujours dépendre de l'interface, jamais de l'implémentation concrète.
+**Golden rules:**
+- The domain knows nothing of SQLAlchemy, FastAPI, Pydantic or any framework.
+  Entities are `dataclass`es.
+- Use cases orchestrate; they do not carry business logic themselves.
+- Repositories are interfaces (ABC) in the domain, implemented in the
+  infrastructure.
+- **A use case may never call another use case.** Extract shared logic into a
+  domain service.
+- **FastAPI routes never inject a repository directly** — use cases only.
+- Always depend on the interface, never on the concrete implementation.
 
-**Ces règles ne sont pas déclaratives : elles sont vérifiées par `import-linter`** (`server/.importlinter`), exécuté par `make lint` et en CI. Une violation casse le build.
+**These rules are not declarative: they are enforced by `import-linter`**
+(`server/.importlinter`), run by `make lint` and in CI. A violation breaks the
+build.
 
-Le code partagé (exceptions, types génériques) vit dans `server/src/shared/`.
+Shared code (exceptions, generic types) lives in `server/src/shared/`.
 
 ---
 
-## Ports et URLs
+## Ports and URLs
 
-Ports par défaut. WAATcher occupe `3001-3003` / `8001-8003` / `54321-54323`,
-il n'y a donc pas de collision, mais tout autre service local écoutant sur `3000`
-ou `5432` doit être arrêté au préalable. Les ports sont surchargeables via
-`WEB_PORT`, `API_PORT` et `POSTGRES_PORT` dans le `.env` racine.
+Default ports. WAATcher occupies `3001-3003` / `8001-8003` / `54321-54323`, so
+there is no clash, but any other local service listening on `3000` or `5432`
+must be stopped first. The ports can be overridden through `WEB_PORT`,
+`API_PORT` and `POSTGRES_PORT` in the root `.env`.
 
 | | Port | URL |
 |---|---|---|
-| Client Next.js | `3000` | http://localhost:3000 |
-| API FastAPI | `8000` | http://localhost:8000 |
+| Next.js client | `3000` | http://localhost:3000 |
+| FastAPI API | `8000` | http://localhost:8000 |
 | PostgreSQL | `5432` | — |
 
-Conventions identiques à WAATcher : `API_PREFIX=/api/v1`, variables `AZURE_AD_*`,
+Same conventions as WAATcher: `API_PREFIX=/api/v1`, `AZURE_AD_*` variables,
 callback `/api/auth/callback/azure-ad`.
 
-**Le BFF expose exactement les mêmes chemins que l'API** : le navigateur appelle
-`/api/v1/<ressource>`, le Route Handler relaie vers `${API_URL}/api/v1/<ressource>`.
-Un seul vocabulaire d'URL dans tout le projet.
+**The BFF exposes exactly the same paths as the API**: the browser calls
+`/api/v1/<resource>`, the Route Handler relays to
+`${API_URL}/api/v1/<resource>`. One URL vocabulary across the whole project.
 
-### Identifiants Entra
+### Entra credentials
 
-Timesheet réutilise **l'enregistrement d'application Entra de WAATcher**
-(même `AZURE_AD_TENANT_ID` et `AZURE_AD_CLIENT_ID`). L'URI de redirection
-`http://localhost:3000/api/auth/callback/azure-ad` doit donc être déclarée sur
-cette app registration dans le portail Azure.
+Timesheet reuses **WAATcher's Entra app registration** (same
+`AZURE_AD_TENANT_ID` and `AZURE_AD_CLIENT_ID`). The redirect URI
+`http://localhost:3000/api/auth/callback/azure-ad` must therefore be declared on
+that app registration in the Azure portal.
 
-Le `AZURE_AD_CLIENT_SECRET` vit uniquement dans `client/.env.local` : c'est le BFF
-qui porte le flow OAuth. Le serveur ne fait que valider les jetons et n'a besoin
-que du tenant et du client id.
+The `AZURE_AD_CLIENT_SECRET` lives in `client/.env.local` alone: the BFF is what
+carries the OAuth flow. The server only validates tokens and needs nothing but
+the tenant and the client id.
 
 ---
 
-## Architecture client
+## Client architecture
 
-- **BFF obligatoire** : le navigateur n'appelle jamais FastAPI directement. Il appelle les Route Handlers de `client/src/app/api/`, qui relaient vers l'API en injectant le token Entra. Le token reste côté serveur, dans une session `httpOnly`.
-- **Hooks Orval uniquement** : les hooks de données viennent exclusivement du client généré (`client/src/lib/api/generated/`), dont la `baseUrl` pointe vers le BFF. Ne jamais créer d'instance fetch/axios custom pour appeler l'API.
-- **Aucun type d'API écrit à la main** : ils sont générés depuis l'OpenAPI de FastAPI (`pnpm api:generate`).
-> **Divergence assumée avec WAATcher.** WAATcher n'a pas de BFF : son navigateur
-> appelle FastAPI directement via `NEXT_PUBLIC_API_URL`. Timesheet introduit
-> délibérément un BFF, pour que le jeton Entra ne quitte jamais le serveur et que
-> l'API ne soit pas exposée publiquement. C'est le seul écart structurel ; tout le
-> reste suit WAATcher.
+- **The BFF is mandatory**: the browser never calls FastAPI directly. It calls
+  the Route Handlers under `client/src/app/api/`, which relay to the API,
+  injecting the Entra token. The token stays server-side, in an `httpOnly`
+  session.
+- **Orval hooks only**: data hooks come exclusively from the generated client
+  (`client/src/lib/api/generated/`), whose `baseUrl` points at the BFF. Never
+  create a custom fetch/axios instance to call the API.
+- **No API type written by hand**: they are generated from FastAPI's OpenAPI
+  (`pnpm api:generate`).
 
-- **Atomic Design** : voir `AGENTS.md`. Les règles de composition sont vérifiées par `eslint-plugin-boundaries`. Une violation casse le lint.
+> **A deliberate divergence from WAATcher.** WAATcher has no BFF: its browser
+> calls FastAPI directly through `NEXT_PUBLIC_API_URL`. Timesheet introduces a
+> BFF on purpose, so that the Entra token never leaves the server and the API is
+> not publicly exposed. That is the one structural gap; everything else follows
+> WAATcher.
+
+- **Atomic Design**: see `AGENTS.md`. The composition rules are enforced by
+  `eslint-plugin-boundaries`. A violation breaks the lint.
 
 ---
 
@@ -151,27 +210,27 @@ que du tenant et du client id.
 
 ### Branches
 
-Modèle **Git Feature Branching** :
+**Git Feature Branching** model:
 
-- `main` — production, protégée
-- `feature/<description>` — nouvelle fonctionnalité
-- `fix/<description>` — correction de bug
-- `chore/<description>` — maintenance, tooling, dépendances
-- `refactor/<description>` — refactoring sans changement fonctionnel
+- `main` — production, protected
+- `feature/<description>` — new feature
+- `fix/<description>` — bug fix
+- `chore/<description>` — maintenance, tooling, dependencies
+- `refactor/<description>` — refactoring with no functional change
 
-**Workflow :** créer une branche depuis `main`, ouvrir une PR vers `main`, merger après review.
+**Workflow:** branch off `main`, open a PR against `main`, merge after review.
 
-**Règle stricte :** ne jamais pousser directement sur `main`.
+**Strict rule:** never push straight to `main`.
 
 ### Commits
 
-Format **Conventional Commits** obligatoire :
+**Conventional Commits** format, mandatory:
 
 ```
-<type>(<scope optionnel>): <description courte en anglais>
+<type>(<optional scope>): <short description in English>
 ```
 
-Types : `feat`, `fix`, `chore`, `refactor`, `test`, `docs`, `perf`, `ci`
+Types: `feat`, `fix`, `chore`, `refactor`, `test`, `docs`, `perf`, `ci`
 
 ```
 feat(entries): capture project status on each timesheet entry
@@ -179,15 +238,15 @@ fix(months): prevent writing to a validated month
 test(projects): cover status transition rules
 ```
 
-- Description en anglais, minuscule, sans point final
-- Un commit = une intention claire
-- Pas de `WIP`, pas de `fix fix`, pas de `misc`
+- Description in English, lowercase, no full stop
+- One commit = one clear intent
+- No `WIP`, no `fix fix`, no `misc`
 
-N'applique jamais la mention "Co-authored by Claude".
+Never add a "Co-authored by Claude" line.
 
-### Pull Requests
+### Pull requests
 
-Titre et description en français, template obligatoire :
+Title and description in French, mandatory template:
 
 ```markdown
 ### Problème
@@ -201,41 +260,43 @@ Titre et description en français, template obligatoire :
 
 ---
 
-## Qualité — checks obligatoires avant tout push
+## Quality — mandatory checks before any push
 
 ### Backend (`server/`)
 
 ```bash
-make lint    # isort + black + ruff + flake8 + import-linter
-make test    # pytest avec couverture
-make format  # corrige isort + black + ruff
+make lint          # isort + black + ruff + flake8 + mypy + import-linter
+make test          # pytest with coverage
+make format        # fixes isort + black + ruff
+make check-schema  # alembic check: the schema matches the models
 ```
 
 ### Frontend (`client/`)
 
 ```bash
-pnpm lint          # ESLint (dont les règles Atomic Design)
+pnpm lint          # ESLint (Atomic Design rules included)
 pnpm format:check  # Prettier
 pnpm type-check    # tsc --noEmit
 pnpm test          # Vitest
 ```
 
-Depuis la racine : `make check` lance l'ensemble.
+From the root: `make check` runs the lot.
 
-**Le lint doit passer à zéro erreur à la fin de chaque tâche**, sans exception.
+**The lint must come out at zero errors at the end of every task**, without
+exception.
 
 ---
 
 ## Tests
 
-### Principes
+### Principles
 
-- **TDD** : red → green → refactor.
-- Un test = un comportement, pas une implémentation.
-- Pas de test qui teste un mock qui teste un mock.
-- Les use cases se testent avec des **repositories en mémoire**, pas des mocks.
-- Les tests d'intégration touchent une vraie base de données, pas une base mockée.
-- Nommage backend : `test_<quoi>_<dans quel contexte>_<résultat attendu>`.
+- **TDD**: red → green → refactor.
+- One test = one behaviour, not an implementation.
+- No test that tests a mock that tests a mock.
+- Use cases are tested with **in-memory repositories**, not mocks.
+- Integration tests hit a real database, never a mocked one.
+- Backend naming: `test_<what>_<in which context>_<expected result>`.
 
 ### Backend — structure
 
@@ -243,45 +304,58 @@ Depuis la racine : `make check` lance l'ensemble.
 server/tests/
 ├── conftest.py
 ├── modules/<module>/
-│   ├── domain/           # Entités et services domaine
-│   ├── application/      # Use cases (repositories en mémoire)
-│   ├── infrastructure/   # Intégration, vraie DB
-│   └── presentation/     # Routes FastAPI
+│   ├── domain/           # Entities and domain services
+│   ├── application/      # Use cases (in-memory repositories)
+│   ├── infrastructure/   # Integration, real DB
+│   └── presentation/     # FastAPI routes
 └── shared/
 ```
 
 ### Frontend — structure
 
-Tests Vitest colocalisés avec le source (`*.test.ts` / `*.test.tsx`).
+Vitest tests colocated with the source (`*.test.ts` / `*.test.tsx`).
 
 ---
 
-## Migrations de base de données
+## Database migrations
 
-- Les colonnes `Enum` sont déclarées `native_enum=False` : SQLAlchemy y stocke le
-  **nom** du membre Python, pas sa valeur. En base on lit donc `LOT`, `HORS_PROJET`
-  ou `CADRAGE`, jamais `lot` ni `cadrage`. L'ORM traduit dans les deux sens, mais
-  toute requête SQL écrite à la main doit employer les noms en majuscules.
-- Les migrations Alembic sont **immuables** une fois appliquées en production.
-- Ne jamais modifier une migration existante sans accord explicite : créer une nouvelle migration.
-- Nommage automatique : `YYYY_MM_DD_<rev>_<slug>.py`
-- Tout nouveau modèle doit être importé dans `server/alembic/env.py`, sinon l'autogenerate ne le voit pas.
+- `Enum` columns are declared `native_enum=False`: SQLAlchemy stores the **name**
+  of the Python member, not its value. In the database one therefore reads
+  `WORK_PACKAGE`, `OFF_PROJECT` or `SCOPING`, never `work_package` nor
+  `scoping`. The ORM translates both ways, but any SQL written by hand must use
+  the uppercase names.
+- Alembic migrations are **immutable** once applied in production.
+- Never change an existing migration without explicit agreement: create a new
+  one.
+- Automatic naming: `YYYY_MM_DD_<rev>_<slug>.py`
+- Every new model must be imported in `server/alembic/env.py`, otherwise
+  autogenerate does not see it.
+- **A rename carries more than the column.** Renaming a column leaves behind the
+  index that carries it, the `NOT NULL` constraint PostgreSQL named after it, and
+  any check constraint whose expression names it. `alembic check` sees the index
+  and nothing else — the CI runs it, but the constraints must be renamed by
+  hand, in the same migration.
+- **Renaming an enumeration member rewrites data.** The stored value is the
+  member's name: the migration must `UPDATE` every column that carries it, and
+  do the reverse on downgrade. The same goes for any key inside a JSON payload,
+  such as `audit_log.payload`.
 
 ```bash
-make migration   # demande un message
+make migration   # asks for a message
 make migrate     # alembic upgrade head
 ```
 
 ---
 
-## Conventions de code
+## Code conventions
 
 ### Python (backend)
 
-- Typage strict partout — pas de `Any` sans justification.
-- **Syntaxe de typage 3.10+ obligatoire** — builtins natifs, jamais les alias `typing` :
+- Strict typing everywhere — no `Any` without justification.
+- **3.10+ typing syntax is mandatory** — native builtins, never the `typing`
+  aliases:
 
-  | Interdit | Obligatoire |
+  | Forbidden | Required |
   |-------------|----------------|
   | `Optional[X]` | `X \| None` |
   | `Union[X, Y]` | `X \| Y` |
@@ -291,27 +365,29 @@ make migrate     # alembic upgrade head
   | `Set[X]` | `set[X]` |
   | `Type[X]` | `type[X]` |
 
-- Pas de logique métier dans les routes FastAPI.
-- Les exceptions métier héritent de `src/shared/exceptions/domain_exceptions.py`.
-- `async/await` partout sur les I/O — pas de blocking calls.
-- Pas de `print()` en production — utiliser `logging`.
+- No business logic in FastAPI routes.
+- Business exceptions inherit from
+  `src/shared/exceptions/domain_exceptions.py`.
+- `async/await` everywhere on I/O — no blocking calls.
+- No `print()` in production — use `logging`.
 
 ### TypeScript (frontend)
 
-- Pas de `any` — typer explicitement ou utiliser les types générés par Orval.
-- Server components par défaut, `"use client"` seulement si nécessaire.
-- Un composant = une responsabilité. Extraire les hooks complexes dans `src/lib/`.
-- Tous les éléments cliquables portent la classe `cursor-pointer`.
+- No `any` — type explicitly or use the types Orval generates.
+- Server components by default, `"use client"` only when needed.
+- One component = one responsibility. Extract complex hooks into `src/lib/`.
+- Every clickable element carries the `cursor-pointer` class.
 
 ---
 
-## Ce qu'il ne faut jamais faire
+## What must never be done
 
-- Commiter des fichiers `.env`, secrets, clés API.
-- Bypasser les hooks de commit (`--no-verify`).
-- Pousser directement sur `main`.
-- Désactiver un test qui échoue sans le corriger.
-- Contourner un contrat `import-linter` ou une règle `boundaries` au lieu de corriger la conception.
-- Appeler FastAPI directement depuis le navigateur, en contournant le BFF.
-- Écrire un type d'API à la main plutôt que de régénérer le client Orval.
-- Laisser du code commenté ou des `TODO` sans ticket associé.
+- Commit `.env` files, secrets or API keys.
+- Bypass the commit hooks (`--no-verify`).
+- Push straight to `main`.
+- Disable a failing test instead of fixing it.
+- Work around an `import-linter` contract or a `boundaries` rule instead of
+  fixing the design.
+- Call FastAPI straight from the browser, going around the BFF.
+- Write an API type by hand instead of regenerating the Orval client.
+- Leave commented-out code, or `TODO`s with no ticket attached.

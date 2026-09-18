@@ -1,4 +1,4 @@
-"""Suppression d'une mission du referentiel."""
+"""Deleting a mission from the reference list."""
 
 from datetime import date
 
@@ -35,29 +35,29 @@ TEAMMATE = User(
 )
 
 
-def projet(id_: int = 10, kind: ProjectKind = ProjectKind.PROJET) -> Project:
+def project(id_: int = 10, kind: ProjectKind = ProjectKind.PROJECT) -> Project:
     return Project(
         id=id_,
         label=f"Mission {id_}",
         kind=kind,
-        statut=ProjectStatus.CADRAGE,
-        parent_id=10 if kind is ProjectKind.LOT else None,
+        status=ProjectStatus.SCOPING,
+        parent_id=10 if kind is ProjectKind.WORK_PACKAGE else None,
     )
 
 
-def saisie(project_id: int) -> Entry:
+def entry(project_id: int) -> Entry:
     return Entry(
         id=None,
         user_id=1,
         project_id=project_id,
-        jour=date(2026, 9, 15),
-        valeur=DayValue(1.0),
-        statut_at_entry=ProjectStatus.CADRAGE,
+        day=date(2026, 9, 15),
+        value=DayValue(1.0),
+        status_at_entry=ProjectStatus.SCOPING,
     )
 
 
 def build(projects: list[Project] | None = None, entries: list[Entry] | None = None):
-    repo = InMemoryProjectRepository(projects if projects is not None else [projet()])
+    repo = InMemoryProjectRepository(projects if projects is not None else [project()])
     audit = InMemoryAuditLogRepository()
     use_case = DeleteProjectUseCase(
         users=InMemoryUserRepository([TEAMMATE]),
@@ -77,25 +77,25 @@ async def test_a_mission_never_used_is_deleted() -> None:
 
 
 async def test_a_mission_carrying_time_is_refused() -> None:
-    use_case, repo, _ = build(entries=[saisie(10)])
+    use_case, repo, _ = build(entries=[entry(10)])
 
-    with pytest.raises(ForbiddenActionError, match="archiver"):
+    with pytest.raises(ForbiddenActionError, match="archive"):
         await use_case.execute(DeleteProjectCommand(actor_id=1, project_id=10))
 
     assert await repo.get_by_id(10) is not None
 
 
 async def test_a_project_carrying_sub_projects_is_refused() -> None:
-    use_case, repo, _ = build([projet(), projet(11, ProjectKind.LOT)])
+    use_case, repo, _ = build([project(), project(11, ProjectKind.WORK_PACKAGE)])
 
-    with pytest.raises(ForbiddenActionError, match="sous-projet"):
+    with pytest.raises(ForbiddenActionError, match="sub-project"):
         await use_case.execute(DeleteProjectCommand(actor_id=1, project_id=10))
 
     assert await repo.get_by_id(10) is not None
 
 
 async def test_a_sub_project_never_used_is_deleted() -> None:
-    use_case, repo, _ = build([projet(), projet(11, ProjectKind.LOT)])
+    use_case, repo, _ = build([project(), project(11, ProjectKind.WORK_PACKAGE)])
 
     await use_case.execute(DeleteProjectCommand(actor_id=1, project_id=11))
 
@@ -103,8 +103,8 @@ async def test_a_sub_project_never_used_is_deleted() -> None:
 
 
 async def test_time_on_another_mission_does_not_block() -> None:
-    """Le comptage doit porter sur la mission visee, pas sur le referentiel."""
-    use_case, repo, _ = build([projet(), projet(11)], entries=[saisie(11)])
+    """The count must cover the mission aimed at, not the whole reference list."""
+    use_case, repo, _ = build([project(), project(11)], entries=[entry(11)])
 
     await use_case.execute(DeleteProjectCommand(actor_id=1, project_id=10))
 

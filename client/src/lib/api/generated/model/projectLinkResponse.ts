@@ -7,11 +7,11 @@
 import type { LinkIcon } from "./linkIcon";
 
 /**
- * Un lien utile attache a une mission.
+ * A useful link attached to a mission.
  */
 export interface ProjectLinkResponse {
   id: number;
   label: string;
   url: string;
-  icone: LinkIcon;
+  icon: LinkIcon;
 }

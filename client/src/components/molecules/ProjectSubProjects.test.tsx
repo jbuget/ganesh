@@ -4,29 +4,32 @@ import { render, screen } from "@testing-library/react";
 import { ProjectSubProjects } from "./ProjectSubProjects";
 import type { ProjectResponse } from "@/lib/api/generated/model";
 
-const lot = (id: number, label: string, statut = "cadrage"): ProjectResponse =>
-  ({ id, label, statut, kind: "lot", parent_id: 10 }) as ProjectResponse;
+const workPackage = (id: number, label: string, status = "scoping"): ProjectResponse =>
+  ({ id, label, status, kind: "work_package", parent_id: 10 }) as ProjectResponse;
 
 describe("ProjectSubProjects", () => {
-  it("annonce qu'aucun sous-projet n'est rattaché", () => {
-    render(<ProjectSubProjects sousProjets={[]} />);
+  it("announces that no sub-project is attached", () => {
+    render(<ProjectSubProjects subProjects={[]} />);
 
     expect(screen.getByText("Aucun sous-projet")).toBeInTheDocument();
   });
 
-  it("mène à la fiche de chaque sous-projet", () => {
-    render(<ProjectSubProjects sousProjets={[lot(11, "Authentification")]} />);
+  it("leads to the sheet of each sub-project", () => {
+    render(<ProjectSubProjects subProjects={[workPackage(11, "Authentification")]} />);
 
     expect(screen.getByRole("link", { name: /Authentification/ })).toHaveAttribute(
       "href",
-      "/projets/11",
+      "/projects/11",
     );
   });
 
-  it("dit la phase de chaque sous-projet", () => {
+  it("says the phase of each sub-project", () => {
     render(
       <ProjectSubProjects
-        sousProjets={[lot(11, "Authentification"), lot(12, "Reprise", "realisation")]}
+        subProjects={[
+          workPackage(11, "Authentification"),
+          workPackage(12, "Reprise", "development"),
+        ]}
       />,
     );
 

@@ -1,4 +1,4 @@
-"""Coupe ou retablit l'acces d'un collaborateur."""
+"""Cuts off or restores a teammate's access."""
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
@@ -14,10 +14,10 @@ from src.shared.exceptions.domain_exceptions import (
 
 
 class SetUserActiveUseCase:
-    """Desactive ou reactive un collaborateur. Reserve aux managers.
+    """Deactivates or reactivates a teammate. Managers only.
 
-    Desactiver ne supprime rien : les saisies passees restent en base et
-    continuent d'alimenter les totaux par projet. Seul l'acces est coupe.
+    Deactivating deletes nothing: past entries stay in the database and go on
+    feeding the per-project totals. Only access is cut off.
     """
 
     def __init__(self, users: UserRepository, audit_logs: AuditLogRepository) -> None:
@@ -33,38 +33,38 @@ class SetUserActiveUseCase:
         if target is None:
             raise EntityNotFoundError("Collaborateur inconnu.")
 
-        if not self._is_allowed(actor, target, command.actif):
+        if not self._is_allowed(actor, target, command.is_active):
             raise ForbiddenActionError(
-                "Seul un manager peut couper l'acces d'un collaborateur, "
-                "et nul ne peut couper le sien."
+                "Only a manager can cut off a teammate's access, "
+                "and nobody can cut off their own."
             )
 
-        previous = target.actif
-        if previous == command.actif:
-            # Un clic sans effet n'a pas a laisser de trace.
+        previous = target.is_active
+        if previous == command.is_active:
+            # A click with no effect has no business leaving a trace.
             return target
 
-        target.actif = command.actif
+        target.is_active = command.is_active
         await self._users.update(target)
 
         await self._audit_logs.add(
             AuditLog(
                 action=(
                     AuditAction.USER_ACTIVATE
-                    if command.actif
+                    if command.is_active
                     else AuditAction.USER_DEACTIVATE
                 ),
                 actor_id=command.actor_id,
                 target_user_id=command.target_user_id,
                 old_value=str(previous),
-                new_value=str(command.actif),
+                new_value=str(command.is_active),
             )
         )
         return target
 
     @staticmethod
-    def _is_allowed(actor: User, target: User, actif: bool) -> bool:
-        """Retablir un acces n'enferme personne dehors : seule la coupure est bridee."""
-        if actif:
+    def _is_allowed(actor: User, target: User, is_active: bool) -> bool:
+        """Restoring access locks nobody out: only cutting off is restrained."""
+        if is_active:
             return actor.can_manage_teammates()
         return actor.can_deactivate(target)

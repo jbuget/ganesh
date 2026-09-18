@@ -3,58 +3,58 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import { UpdatesCounter } from "./UpdatesCounter";
 
-const APERCU = <p>Le cadrage commence lundi</p>;
+const PREVIEW = <p>Le cadrage commence lundi</p>;
 
 describe("UpdatesCounter", () => {
-  it("n'affiche rien tant que le fil est vide", () => {
+  it("shows nothing while the thread is empty", () => {
     const { container } = render(
-      <UpdatesCounter nombre={0} apercu={APERCU} onOpen={() => {}} />,
+      <UpdatesCounter count={0} preview={PREVIEW} onOpen={() => {}} />,
     );
 
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("compte les mises à jour du fil", () => {
-    render(<UpdatesCounter nombre={3} apercu={APERCU} onOpen={() => {}} />);
+  it("counts the thread's updates", () => {
+    render(<UpdatesCounter count={3} preview={PREVIEW} onOpen={() => {}} />);
 
     expect(screen.getByLabelText("3 mises à jour")).toHaveTextContent("3");
   });
 
-  it("accorde le décompte au singulier", () => {
-    render(<UpdatesCounter nombre={1} apercu={APERCU} onOpen={() => {}} />);
+  it("agrees the count in the singular", () => {
+    render(<UpdatesCounter count={1} preview={PREVIEW} onOpen={() => {}} />);
 
     expect(screen.getByLabelText("1 mise à jour")).toBeInTheDocument();
   });
 
-  it("montre l'aperçu au survol", () => {
-    render(<UpdatesCounter nombre={1} apercu={APERCU} onOpen={() => {}} />);
+  it("shows the preview on hover", () => {
+    render(<UpdatesCounter count={1} preview={PREVIEW} onOpen={() => {}} />);
 
     fireEvent.mouseMove(screen.getByLabelText("1 mise à jour"));
 
     expect(screen.getByRole("tooltip")).toHaveTextContent("Le cadrage commence lundi");
   });
 
-  it("mène au fil au clic", () => {
-    const ouvrir = vi.fn();
-    render(<UpdatesCounter nombre={1} apercu={APERCU} onOpen={ouvrir} />);
+  it("leads to the thread on click", () => {
+    const open = vi.fn();
+    render(<UpdatesCounter count={1} preview={PREVIEW} onOpen={open} />);
 
     fireEvent.click(screen.getByLabelText("1 mise à jour"));
 
-    expect(ouvrir).toHaveBeenCalledTimes(1);
+    expect(open).toHaveBeenCalledTimes(1);
   });
 
-  it("referme l'infobulle quand la souris quitte le décompte", () => {
-    render(<UpdatesCounter nombre={1} apercu={APERCU} onOpen={() => {}} />);
-    const compteur = screen.getByLabelText("1 mise à jour");
+  it("closes the tooltip when the mouse leaves the count", () => {
+    render(<UpdatesCounter count={1} preview={PREVIEW} onOpen={() => {}} />);
+    const counter = screen.getByLabelText("1 mise à jour");
 
-    fireEvent.mouseMove(compteur);
-    fireEvent.mouseLeave(compteur);
+    fireEvent.mouseMove(counter);
+    fireEvent.mouseLeave(counter);
 
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 
-  it("compte sans infobulle quand il n'y a rien à montrer", () => {
-    render(<UpdatesCounter nombre={2} onOpen={() => {}} />);
+  it("counts without a tooltip when there is nothing to show", () => {
+    render(<UpdatesCounter count={2} onOpen={() => {}} />);
 
     fireEvent.mouseMove(screen.getByLabelText("2 mises à jour"));
 

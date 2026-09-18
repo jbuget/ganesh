@@ -14,79 +14,79 @@ interface TimesheetGridProps {
   grid: MonthGridResponse;
   extraRows: ProjectResponse[];
   today: string;
-  onSetValue: (projectId: number, jour: string, value: DayValue) => void;
-  /** Selecteur de mission, loge dans la derniere ligne. Absent si le mois est clos. */
-  ajoutDeMission?: React.ReactNode;
-  /** Retrait d'une mission. Absent si le mois est clos. */
+  onSetValue: (projectId: number, day: string, value: DayValue) => void;
+  /** Mission picker, housed in the last row. Absent when the month is closed. */
+  addingMission?: React.ReactNode;
+  /** Removing a mission. Absent when the month is closed. */
   onRemoveMission?: (projectId: number) => void;
 }
 
 interface DisplayRow {
   project_id: number;
   label: string;
-  estime_j: number | null;
+  estimated_days: number | null;
   values: Record<string, number>;
-  total_realise: number;
-  total_prevu: number;
+  actual_total: number;
+  forecast_total: number;
   total: number;
-  consomme_total_j: number;
+  total_consumed_days: number;
 }
 
 /**
- * La matrice de saisie : missions en lignes, jours du mois en colonnes.
+ * The entry grid: missions as rows, days of the month as columns.
  *
- * Les lignes ajoutees mais encore vides sont conservees localement : sans cela,
- * une mission choisie disparaitrait tant qu'aucune valeur n'y est saisie.
+ * Rows added but still empty are kept locally: without that, a chosen mission
+ * would disappear until a value was entered on it.
  */
 export function TimesheetGrid({
   grid,
   extraRows,
   today,
   onSetValue,
-  ajoutDeMission,
+  addingMission,
   onRemoveMission,
 }: TimesheetGridProps) {
   const rows: DisplayRow[] = [
     ...grid.rows.map((row) => ({
       project_id: row.project_id,
       label: row.label,
-      estime_j: row.estime_j ?? null,
+      estimated_days: row.estimated_days ?? null,
       values: row.values as Record<string, number>,
-      total_realise: row.total_realise,
-      total_prevu: row.total_prevu,
+      actual_total: row.actual_total,
+      forecast_total: row.forecast_total,
       total: row.total,
-      consomme_total_j: row.consomme_total_j,
+      total_consumed_days: row.total_consumed_days,
     })),
     ...extraRows
       .filter((p) => !grid.rows.some((row) => row.project_id === p.id))
       .map((p) => ({
         project_id: p.id,
         label: p.label,
-        estime_j: p.estime_j ?? null,
+        estimated_days: p.estimated_days ?? null,
         values: {},
-        total_realise: 0,
-        total_prevu: 0,
+        actual_total: 0,
+        forecast_total: 0,
         total: 0,
-        consomme_total_j: 0,
+        total_consumed_days: 0,
       })),
   ].sort((a, b) => a.label.localeCompare(b.label, "fr"));
 
   const readOnly = !grid.is_writable;
-  const totalByDate = new Map(grid.day_totals.map((total) => [total.jour, total]));
+  const totalByDate = new Map(grid.day_totals.map((total) => [total.day, total]));
 
   /**
-   * La ligne d'ajout ferme le tableau quand elle est la : c'est elle qui porte
-   * alors le trait fort du bas, et les missions se separent d'un trait faible.
+   * The add row closes the table when it is there: it then carries the strong
+   * bottom rule, and the missions are separated by a light one.
    */
-  const fermeLeTableau = (rowIndex: number) =>
-    !ajoutDeMission && rowIndex === rows.length - 1;
+  const closesTheTable = (rowIndex: number) =>
+    !addingMission && rowIndex === rows.length - 1;
 
   /**
-   * Un jour non ouvre se reduit a une bande, sauf s'il porte deja une saisie :
-   * une donnee heritee doit rester visible et corrigeable, jamais escamotee.
+   * A non-working day shrinks to a band, unless it already carries an entry:
+   * inherited data must stay visible and correctable, never spirited away.
    */
-  const estReduit = (jour: string, isOffDay: boolean) =>
-    isOffDay && (totalByDate.get(jour)?.total ?? 0) === 0;
+  const isNarrow = (day: string, isOffDay: boolean) =>
+    isOffDay && (totalByDate.get(day)?.total ?? 0) === 0;
 
   return (
     <div className="max-w-full overflow-x-auto">
@@ -102,12 +102,12 @@ export function TimesheetGrid({
             </th>
             {grid.days.map((day, dayIndex) => (
               <DayHeader
-                isNarrow={estReduit(day.jour, day.is_off_day)}
-                key={day.jour}
-                jour={day.jour}
+                isNarrow={isNarrow(day.day, day.is_off_day)}
+                key={day.day}
+                day={day.day}
                 isLastDay={dayIndex === grid.days.length - 1}
                 isOffDay={day.is_off_day}
-                isToday={day.jour === today}
+                isToday={day.day === today}
                 label={day.label ?? null}
               />
             ))}
@@ -118,9 +118,9 @@ export function TimesheetGrid({
               <span className="sr-only">Total du mois</span>
             </th>
             {onRemoveMission && (
-              // Hors du cadre : cette colonne porte une action, pas une donnee.
-              // C'est pourquoi le trait du haut est porte par les cellules et
-              // non par la table, qui l'aurait prolonge jusqu'ici.
+              // Outside the frame: this column carries an action, not data.
+              // That is why the top rule is carried by the cells and not by the
+              // table, which would have run it all the way here.
               <th scope="col" className="w-10">
                 <span className="sr-only">Retirer la mission</span>
               </th>
@@ -139,17 +139,17 @@ export function TimesheetGrid({
             </th>
             {grid.days.map((day, dayIndex) => (
               <DayTotalCell
-                key={day.jour}
-                value={totalByDate.get(day.jour)?.total ?? 0}
+                key={day.day}
+                value={totalByDate.get(day.day)?.total ?? 0}
                 isOffDay={day.is_off_day}
-                isNarrow={estReduit(day.jour, day.is_off_day)}
+                isNarrow={isNarrow(day.day, day.is_off_day)}
                 strongSides={
                   dayIndex === grid.days.length - 1 ? ["right", "bottom"] : ["bottom"]
                 }
               />
             ))}
             <TotalCell
-              value={grid.total_realise + grid.total_prevu}
+              value={grid.actual_total + grid.forecast_total}
               isStrong
               strongSides={["right", "bottom"]}
             />
@@ -158,11 +158,12 @@ export function TimesheetGrid({
         </thead>
 
         <tbody>
-          {rows.length === 0 && !ajoutDeMission && (
+          {rows.length === 0 && !addingMission && (
             <tr>
               <td
                 colSpan={grid.days.length + 2}
-                // Seule ligne du corps : elle ferme le tableau en bas et a droite.
+                // The only row in the body: it closes the table at the bottom
+                // and on the right.
                 className="border-r border-b border-r-slate-500 border-b-slate-500 bg-white px-3 py-6 text-center text-sm text-slate-500"
               >
                 Aucune mission pour ce mois. Ajoutez-en une pour commencer à saisir.
@@ -175,35 +176,35 @@ export function TimesheetGrid({
                 scope="row"
                 className={[
                   "sticky left-0 z-10 w-56 border-r border-b border-r-slate-500 bg-white px-3 py-1.5 text-left text-sm font-normal",
-                  fermeLeTableau(rowIndex)
+                  closesTheTable(rowIndex)
                     ? "border-b-slate-500"
                     : "border-b-slate-300",
                 ].join(" ")}
               >
                 <MissionLabel
                   label={row.label}
-                  consommeJ={row.consomme_total_j}
-                  estimeJ={row.estime_j}
+                  consumedDays={row.total_consumed_days}
+                  estimatedDays={row.estimated_days}
                 />
               </th>
               {grid.days.map((day, dayIndex) => (
                 <DayCell
-                  key={day.jour}
+                  key={day.day}
                   isLastDay={dayIndex === grid.days.length - 1}
-                  value={(row.values[day.jour] ?? 0) as DayValue}
+                  value={(row.values[day.day] ?? 0) as DayValue}
                   isOffDay={day.is_off_day}
-                  isNarrow={estReduit(day.jour, day.is_off_day)}
-                  isFuture={day.jour > today}
+                  isNarrow={isNarrow(day.day, day.is_off_day)}
+                  isFuture={day.day > today}
                   isReadOnly={readOnly}
-                  isLastRow={fermeLeTableau(rowIndex)}
-                  label={`${row.label} — ${day.jour}`}
-                  onChange={(next) => onSetValue(row.project_id, day.jour, next)}
+                  isLastRow={closesTheTable(rowIndex)}
+                  label={`${row.label} — ${day.day}`}
+                  onChange={(next) => onSetValue(row.project_id, day.day, next)}
                 />
               ))}
               <TotalCell
                 value={row.total}
                 isStrong
-                strongSides={fermeLeTableau(rowIndex) ? ["right", "bottom"] : ["right"]}
+                strongSides={closesTheTable(rowIndex) ? ["right", "bottom"] : ["right"]}
               />
               {onRemoveMission && (
                 <td className="w-10 pl-2 align-middle">
@@ -219,14 +220,14 @@ export function TimesheetGrid({
               )}
             </tr>
           ))}
-          {ajoutDeMission && (
+          {addingMission && (
             <tr>
               <th
                 scope="row"
-                // Ferme le tableau en bas, comme le faisait la derniere mission.
+                // Closes the table at the bottom, as the last mission did.
                 className="sticky left-0 z-10 w-56 border-r border-b border-r-slate-500 border-b-slate-500 bg-white px-3 py-1.5 text-left font-normal"
               >
-                {ajoutDeMission}
+                {addingMission}
               </th>
               <td
                 colSpan={grid.days.length + 1}

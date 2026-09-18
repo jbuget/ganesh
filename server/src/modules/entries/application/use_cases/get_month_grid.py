@@ -1,4 +1,4 @@
-"""Construit la matrice de saisie d'un mois : missions en lignes, jours en colonnes."""
+"""Builds a month's entry grid: missions as rows, days as columns."""
 
 from dataclasses import dataclass, field
 from datetime import date
@@ -21,49 +21,49 @@ from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 @dataclass(frozen=True)
 class GetMonthGridQuery:
-    """Demande la matrice d'un utilisateur pour un mois."""
+    """Asks for a user's grid for one month."""
 
     user_id: int
-    mois: date
+    month: date
     today: date | None = None
 
 
 @dataclass
 class GridRow:
-    """Une ligne de la matrice : une mission et ses saisies du mois."""
+    """One grid row: a mission and its entries for the month."""
 
     project_id: int
     label: str
     kind: ProjectKind
-    estime_j: float | None
+    estimated_days: float | None
     values: dict[date, float] = field(default_factory=dict)
-    total_realise: float = 0.0
-    total_prevu: float = 0.0
-    #: Consomme du projet entier, tous mois et tous developpeurs confondus.
-    #: C'est la seule grandeur comparable a `estime_j`, qui porte sur le projet.
-    consomme_total_j: float = 0.0
+    actual_total: float = 0.0
+    forecast_total: float = 0.0
+    #: Consumed across the whole project, every month and every developer.
+    #: The only figure comparable to `estimated_days`, which covers the project.
+    total_consumed_days: float = 0.0
 
     @property
     def total(self) -> float:
-        """Total du mois, realise et previsionnel confondus."""
-        return round(self.total_realise + self.total_prevu, 2)
+        """Month total, delivered and forecast together."""
+        return round(self.actual_total + self.forecast_total, 2)
 
 
 @dataclass
 class DayTotal:
-    """Total saisi sur une journee, tous projets confondus."""
+    """Total entered on one day, across every project."""
 
-    jour: date
+    day: date
     total: float
     exceeds_capacity: bool
 
 
 @dataclass
 class MonthGrid:
-    """La matrice complete d'un mois."""
+    """The complete grid for a month."""
 
     user_id: int
-    mois: date
+    month: date
     days: list[CalendarDay]
     rows: list[GridRow]
     day_totals: list[DayTotal]
@@ -71,16 +71,16 @@ class MonthGrid:
     is_writable: bool
 
     @property
-    def total_realise(self) -> float:
-        return round(sum(row.total_realise for row in self.rows), 2)
+    def actual_total(self) -> float:
+        return round(sum(row.actual_total for row in self.rows), 2)
 
     @property
-    def total_prevu(self) -> float:
-        return round(sum(row.total_prevu for row in self.rows), 2)
+    def forecast_total(self) -> float:
+        return round(sum(row.forecast_total for row in self.rows), 2)
 
 
 class GetMonthGridUseCase:
-    """Assemble la matrice affichee par l'ecran de saisie."""
+    """Assembles the grid the entry screen displays."""
 
     def __init__(
         self,
@@ -95,21 +95,21 @@ class GetMonthGridUseCase:
         self._months = months
 
     async def _project_consumption(self, project_id: int, today: date) -> float:
-        """Temps deja consomme sur un projet, previsionnel exclu."""
+        """Time already consumed on a project, forecast excluded."""
         entries = await self._entries.list_for_project(project_id)
         return round(
-            sum(float(e.valeur) for e in entries if not e.is_forecast(today)), 2
+            sum(float(e.value) for e in entries if not e.is_forecast(today)), 2
         )
 
     async def execute(self, query: GetMonthGridQuery) -> MonthGrid:
         if await self._users.get_by_id(query.user_id) is None:
             raise EntityNotFoundError("Utilisateur inconnu.")
 
-        mois = query.mois.replace(day=1)
+        month = query.month.replace(day=1)
         today = query.today or date.today()
 
-        calendar_days = days_of_month(mois.year, mois.month)
-        month_entries = await self._entries.list_for_month(query.user_id, mois)
+        calendar_days = days_of_month(month.year, month.month)
+        month_entries = await self._entries.list_for_month(query.user_id, month)
 
         rows: dict[int, GridRow] = {}
         for entry in month_entries:
@@ -122,44 +122,44 @@ class GetMonthGridUseCase:
                     project_id=entry.project_id,
                     label=project.label,
                     kind=project.kind,
-                    estime_j=project.estime_j,
+                    estimated_days=project.estimated_days,
                 )
                 rows[entry.project_id] = row
 
-            row.values[entry.jour] = float(entry.valeur)
+            row.values[entry.day] = float(entry.value)
             if entry.is_forecast(today):
-                row.total_prevu = round(row.total_prevu + float(entry.valeur), 2)
+                row.forecast_total = round(row.forecast_total + float(entry.value), 2)
             else:
-                row.total_realise = round(row.total_realise + float(entry.valeur), 2)
+                row.actual_total = round(row.actual_total + float(entry.value), 2)
 
         for row in rows.values():
-            row.consomme_total_j = await self._project_consumption(
+            row.total_consumed_days = await self._project_consumption(
                 row.project_id, today
             )
 
         day_totals = [
             DayTotal(
-                jour=day.jour,
+                day=calendar_day.day,
                 total=(
                     total := day_total(
-                        row.values[day.jour]
+                        row.values[calendar_day.day]
                         for row in rows.values()
-                        if day.jour in row.values
+                        if calendar_day.day in row.values
                     )
                 ),
                 exceeds_capacity=exceeds_one_day([total]),
             )
-            for day in calendar_days
+            for calendar_day in calendar_days
         ]
 
-        month = await self._months.get(query.user_id, mois)
+        month_status = await self._months.get(query.user_id, month)
 
         return MonthGrid(
             user_id=query.user_id,
-            mois=mois,
+            month=month,
             days=calendar_days,
             rows=sorted(rows.values(), key=lambda r: r.label),
             day_totals=day_totals,
-            working_days=working_days_count(mois.year, mois.month),
-            is_writable=month.is_writable if month else True,
+            working_days=working_days_count(month.year, month.month),
+            is_writable=month_status.is_writable if month_status else True,
         )

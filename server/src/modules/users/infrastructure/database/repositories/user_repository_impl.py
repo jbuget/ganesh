@@ -1,4 +1,4 @@
-"""Implementation SQLAlchemy du port UserRepository."""
+"""SQLAlchemy implementation of the UserRepository port."""
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,13 +15,13 @@ def to_entity(model: UserModel) -> User:
         email=model.email,
         display_name=model.display_name,
         role=model.role,
-        actif=model.actif,
-        derniere_connexion=model.derniere_connexion,
+        is_active=model.is_active,
+        last_login_at=model.last_login_at,
     )
 
 
 class SqlUserRepository(UserRepository):
-    """Persiste les utilisateurs en base."""
+    """Persists users in the database."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -47,7 +47,7 @@ class SqlUserRepository(UserRepository):
     async def list_all(self, include_inactive: bool = False) -> list[User]:
         statement = select(UserModel).order_by(UserModel.display_name)
         if not include_inactive:
-            statement = statement.where(UserModel.actif.is_(True))
+            statement = statement.where(UserModel.is_active.is_(True))
         result = await self._session.execute(statement)
         return [to_entity(model) for model in result.scalars().all()]
 
@@ -57,8 +57,8 @@ class SqlUserRepository(UserRepository):
             email=user.email,
             display_name=user.display_name,
             role=user.role,
-            actif=user.actif,
-            derniere_connexion=user.derniere_connexion,
+            is_active=user.is_active,
+            last_login_at=user.last_login_at,
         )
         self._session.add(model)
         await self._session.flush()
@@ -75,7 +75,7 @@ class SqlUserRepository(UserRepository):
         model.email = user.email
         model.display_name = user.display_name
         model.role = user.role
-        model.actif = user.actif
-        model.derniere_connexion = user.derniere_connexion
+        model.is_active = user.is_active
+        model.last_login_at = user.last_login_at
         await self._session.flush()
         return user

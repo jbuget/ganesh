@@ -1,24 +1,23 @@
-"""Ordre des cartes dans une colonne du tableau de bord."""
+"""Order of the cards within a board column."""
 
 from src.modules.projects.domain.entities.project import Project
 
 
-def reorder_column(colonne: list[Project], deplacee: Project, vers: int) -> None:
-    """Place `deplacee` au rang `vers` et renumerote toute la colonne.
+def reorder_column(column: list[Project], moved: Project, to: int) -> None:
+    """Puts `moved` at rank `to` and renumbers the whole column.
 
-    La renumerotation systematique est volontaire : laisser des trous ou des
-    rangs identiques finirait par rendre l'ordre instable d'un chargement a
-    l'autre, ce qui est exactement ce que l'equipe cherche a eviter en rangeant
-    ses cartes.
+    Renumbering every time is deliberate: leaving gaps or equal ranks would
+    end up making the order unstable from one load to the next, which is
+    exactly what the team is trying to avoid by arranging its cards.
     """
-    if not colonne:
+    if not column:
         return
 
-    restantes = [p for p in colonne if p.id != deplacee.id]
-    restantes.sort(key=lambda p: p.position)
+    remaining = [p for p in column if p.id != moved.id]
+    remaining.sort(key=lambda p: p.position)
 
-    rang = max(0, min(vers, len(restantes)))
-    restantes.insert(rang, deplacee)
+    rank = max(0, min(to, len(remaining)))
+    remaining.insert(rank, moved)
 
-    for position, mission in enumerate(restantes):
+    for position, mission in enumerate(remaining):
         mission.position = position

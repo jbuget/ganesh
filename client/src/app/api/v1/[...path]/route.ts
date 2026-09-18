@@ -1,11 +1,11 @@
 /**
- * BFF : unique porte d'entree du navigateur vers l'API.
+ * BFF: the browser's only way into the API.
  *
- * Le navigateur appelle `/api/v1/...`, ce handler relaie vers
- * `${API_URL}/api/v1/...` en injectant le jeton Entra recupere cote serveur.
- * Le jeton ne traverse jamais la frontiere du navigateur.
+ * The browser calls `/api/v1/...`, this handler relays to
+ * `${API_URL}/api/v1/...`, injecting the Entra token fetched server-side. The
+ * token never crosses the browser boundary.
  *
- * Les chemins sont identiques des deux cotes : un seul vocabulaire d'URL.
+ * The paths are identical on both sides: one URL vocabulary.
  */
 import { NextRequest, NextResponse } from "next/server";
 

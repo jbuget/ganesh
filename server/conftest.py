@@ -1,8 +1,8 @@
-"""Configuration pytest racine : rend le package src importable.
+"""Root pytest configuration: makes the src package importable.
 
-`holidays` emet un avertissement informatif sur sa future strategie de version
-au moment de son import. On l'importe ici une fois, silencieusement, pour garder
-une sortie de tests propre sans masquer les avertissements du projet.
+`holidays` emits an informational warning about its future versioning strategy
+when imported. We import it here once, silently, to keep a clean test output
+without muffling the project's own warnings.
 """
 
 import warnings

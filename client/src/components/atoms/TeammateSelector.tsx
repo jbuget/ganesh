@@ -21,17 +21,17 @@ interface TeammateSelectorProps {
   onSelect: (userId: number) => void;
 }
 
-/** Un collaborateur propose : `value` / `label` est la forme que Base UI sait lire. */
+/** An offered teammate: `value` / `label` is the shape Base UI can read. */
 interface TeammateItem {
   value: number;
   label: string;
 }
 
 /**
- * Choix du collaborateur consulte. Chacun peut consulter le mois de chacun.
+ * Choosing which teammate is looked at. Anyone may look at anyone's month.
  *
- * Le champ de recherche en tete du menu evite de parcourir toute l'equipe pour
- * trouver un nom, comme dans les autres menus de l'application.
+ * The search field at the top of the menu saves scanning the whole team for a
+ * name, as in the other menus of the application.
  */
 export function TeammateSelector({
   teammates,
@@ -54,9 +54,9 @@ export function TeammateSelector({
       <Combobox
         items={items}
         value={selection}
-        isItemEqualToValue={(item, valeur) => item.value === valeur.value}
-        onValueChange={(collaborateur) => {
-          if (collaborateur) onSelect((collaborateur as TeammateItem).value);
+        isItemEqualToValue={(item, value) => item.value === value.value}
+        onValueChange={(teammate) => {
+          if (teammate) onSelect((teammate as TeammateItem).value);
         }}
       >
         <ComboboxTrigger id="teammate" className="w-52">
@@ -69,9 +69,9 @@ export function TeammateSelector({
           <ComboboxEmpty>Aucun collaborateur ne correspond.</ComboboxEmpty>
 
           <ComboboxList>
-            {(collaborateur: TeammateItem) => (
-              <ComboboxItem key={collaborateur.value} value={collaborateur}>
-                {collaborateur.label}
+            {(teammate: TeammateItem) => (
+              <ComboboxItem key={teammate.value} value={teammate}>
+                {teammate.label}
               </ComboboxItem>
             )}
           </ComboboxList>

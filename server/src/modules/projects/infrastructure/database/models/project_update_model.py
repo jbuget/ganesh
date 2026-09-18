@@ -1,4 +1,4 @@
-"""Modele SQLAlchemy du fil de suivi d'une mission."""
+"""SQLAlchemy model of a mission's follow-up thread."""
 
 from datetime import datetime
 
@@ -9,11 +9,11 @@ from src.core.database import Base
 
 
 class ProjectUpdateModel(Base):
-    """Table des mises a jour publiees sur une mission.
+    """Table of the updates posted on a mission.
 
-    Rien n'est efface : une suppression pose une date, et le fil garde sa
-    chronologie. Le texte, lui, est vide a ce moment-la — inutile de conserver
-    des mots que leur auteur a voulu retirer.
+    Nothing is erased: a deletion sets a date, and the thread keeps its order.
+    The text itself is emptied at that point — no point keeping words their
+    author wanted withdrawn.
     """
 
     __tablename__ = "project_updates"
@@ -23,7 +23,7 @@ class ProjectUpdateModel(Base):
         ForeignKey("projects.id", ondelete="CASCADE"), index=True
     )
     author_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
-    texte: Mapped[str] = mapped_column(Text)
-    publiee_le: Mapped[datetime] = mapped_column(DateTime)
-    modifiee_le: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    supprimee_le: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    body: Mapped[str] = mapped_column(Text)
+    published_at: Mapped[datetime] = mapped_column(DateTime)
+    edited_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

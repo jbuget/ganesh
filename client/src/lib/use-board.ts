@@ -12,89 +12,88 @@ import type {
 import { useCurrentUser } from "@/lib/api/queries";
 import { useEffect } from "react";
 
-/** Colonnes indexees par phase, forme pratique pour le glisser-deposer. */
-export type Colonnes = Record<ProjectStatus, BoardCardResponse[]>;
+/** Columns indexed by phase, a handy shape for drag and drop. */
+export type Columns = Record<ProjectStatus, BoardCardResponse[]>;
 
-/** Les archivees ne sont demandees que lorsqu'on veut les voir. */
-function perimetre(inclureArchivees: boolean) {
-  return inclureArchivees ? { include_inactive: true } : undefined;
+/** Archived ones are only asked for when they are wanted. */
+function scope(includeArchived: boolean) {
+  return includeArchived ? { include_inactive: true } : undefined;
 }
 
-function versColonnes(board: BoardResponse): Colonnes {
+function toColumns(board: BoardResponse): Columns {
   return Object.fromEntries(
-    board.colonnes.map((colonne) => [colonne.statut, colonne.cartes]),
-  ) as Colonnes;
+    board.columns.map((column) => [column.status, column.cards]),
+  ) as Columns;
 }
 
 /**
- * Etat du tableau de bord et deplacement des cartes.
+ * Board state and card moves.
  *
- * Les colonnes sont tenues localement : un glisser-deposer doit se voir
- * immediatement, sans attendre l'aller-retour serveur. L'appel suit, et un
- * echec recharge la verite du serveur plutot que de laisser un ecran qui ment.
+ * Columns are held locally: a drag and drop must show at once, without waiting
+ * for the server round trip. The call follows, and a failure reloads the
+ * server's truth rather than leaving a screen that lies.
  *
- * Les missions archivees ne voyagent que sur demande : le tableau sert a
- * piloter ce qui tourne, et les charger a chaque ouverture ferait payer a tous
- * ce dont on se sert rarement.
+ * Archived missions only travel on request: the board is there to steer what is
+ * running, and loading them on every opening would make everyone pay for what
+ * is rarely used.
  */
-export function useBoard(inclureArchivees = false) {
+export function useBoard(includeArchived = false) {
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();
-  const [colonnes, setColonnes] = useState<Colonnes | null>(null);
-  const [enErreur, setEnErreur] = useState(false);
+  const [columns, setColumns] = useState<Columns | null>(null);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    let vivant = true;
-    getBoard(perimetre(inclureArchivees)).then((reponse) => {
-      if (vivant) setColonnes(versColonnes(reponse.data as BoardResponse));
+    let alive = true;
+    getBoard(scope(includeArchived)).then((response) => {
+      if (alive) setColumns(toColumns(response.data as BoardResponse));
     });
     return () => {
-      vivant = false;
+      alive = false;
     };
-  }, [inclureArchivees]);
+  }, [includeArchived]);
 
-  async function recharger() {
-    const reponse = await getBoard(perimetre(inclureArchivees));
-    setColonnes(versColonnes(reponse.data as BoardResponse));
+  async function reload() {
+    const response = await getBoard(scope(includeArchived));
+    setColumns(toColumns(response.data as BoardResponse));
     await queryClient.invalidateQueries();
   }
 
   return {
-    colonnes,
-    enErreur,
-    utilisateur: user,
+    columns,
+    hasError,
+    user: user,
 
     /**
-     * Montre un etat sans l'enregistrer.
+     * Shows a state without saving it.
      *
-     * C'est ce qui se joue pendant un glissement : les colonnes s'ouvrent et se
-     * referment sous le curseur, mais rien n'est ecrit tant que la carte n'est
-     * pas relachee.
+     * That is what happens during a drag: columns open and close under the
+     * cursor, but nothing is written until the card is released.
      */
-    previsualiser: setColonnes,
+    preview: setColumns,
 
-    /** Reprend la verite du serveur, apres un changement fait hors glissement. */
-    recharger,
+    /** Takes the server's truth back, after a change made outside a drag. */
+    reload,
 
-    /** Applique le deplacement a l'ecran, puis l'enregistre. */
-    async deplacer(
+    /** Applies the move on screen, then saves it. */
+    async move(
       projectId: number,
-      versStatut: ProjectStatus,
-      versPosition: number,
-      colonnesApres: Colonnes,
+      toStatus: ProjectStatus,
+      toPosition: number,
+      nextColumns: Columns,
     ) {
-      setColonnes(colonnesApres);
-      setEnErreur(false);
+      setColumns(nextColumns);
+      setHasError(false);
       try {
         await moveProject(projectId, {
-          statut: versStatut,
-          position: versPosition,
+          status: toStatus,
+          position: toPosition,
         });
         await queryClient.invalidateQueries();
       } catch {
-        // L'ecran ne doit jamais rester sur un etat que le serveur ignore.
-        setEnErreur(true);
-        await recharger();
+        // The screen must never sit on a state the server knows nothing of.
+        setHasError(true);
+        await reload();
       }
     },
   };

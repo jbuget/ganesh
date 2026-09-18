@@ -7,25 +7,25 @@ import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { RichTextEditor } from "@/components/atoms/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import type { ProjectUpdateResponse } from "@/lib/api/generated/model";
-import { depuis } from "@/lib/dates-relatives";
+import { since } from "@/lib/relative-dates";
 
 interface ProjectUpdateCardProps {
-  maj: ProjectUpdateResponse;
-  maintenant: Date;
-  onEdit: (texte: string) => Promise<void>;
+  update: ProjectUpdateResponse;
+  now: Date;
+  onEdit: (body: string) => Promise<void>;
   onRemove: () => Promise<void>;
 }
 
 /**
- * Une mise a jour du fil.
+ * One update from the thread.
  *
- * Retiree, elle garde sa place et sa signature : le fil raconte qu'il s'est
- * passe quelque chose, et les reponses qu'elle a suscitees gardent leur
- * contexte. Seul son texte disparait.
+ * Withdrawn, it keeps its place and its signature: the thread still tells that
+ * something happened, and the replies it drew keep their context. Only its text
+ * goes.
  */
 export function ProjectUpdateCard({
-  maj,
-  maintenant,
+  update,
+  now,
   onEdit,
   onRemove,
 }: ProjectUpdateCardProps) {
@@ -35,17 +35,17 @@ export function ProjectUpdateCard({
     <article className="rounded-lg border border-slate-300 bg-white p-3">
       <header className="mb-2 flex items-center gap-2">
         <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-700">
-          {maj.author.initiales}
+          {update.author.initials}
         </span>
         <span className="text-sm font-medium text-slate-800">
-          {maj.author.display_name}
+          {update.author.display_name}
         </span>
         <span className="text-xs text-slate-400">
-          {depuis(maj.publiee_le, maintenant)}
-          {maj.modifiee_le && !maj.est_supprimee && " · modifiée"}
+          {since(update.published_at, now)}
+          {update.edited_at && !update.is_deleted && " · modifiée"}
         </span>
 
-        {maj.est_la_mienne && !maj.est_supprimee && !enEdition && (
+        {update.is_mine && !update.is_deleted && !enEdition && (
           <span className="ml-auto flex items-center gap-0.5">
             <button
               type="button"
@@ -67,45 +67,45 @@ export function ProjectUpdateCard({
         )}
       </header>
 
-      {maj.est_supprimee ? (
+      {update.is_deleted ? (
         <p className="text-sm text-slate-400 italic">Message supprimé</p>
       ) : enEdition ? (
         <Correction
-          valeur={maj.texte}
+          value={update.body}
           onCancel={() => setEnEdition(false)}
-          onSave={async (texte) => {
-            await onEdit(texte);
+          onSave={async (body) => {
+            await onEdit(body);
             setEnEdition(false);
           }}
         />
       ) : (
-        <MarkdownView texte={maj.texte} />
+        <MarkdownView body={update.body} />
       )}
     </article>
   );
 }
 
-/** Correction d'une mise a jour, en place dans le fil. */
+/** Correcting an update, in place in the thread. */
 function Correction({
-  valeur,
+  value,
   onSave,
   onCancel,
 }: {
-  valeur: string;
-  onSave: (texte: string) => Promise<void>;
+  value: string;
+  onSave: (body: string) => Promise<void>;
   onCancel: () => void;
 }) {
-  const [texte, setTexte] = useState(valeur);
+  const [body, setBody] = useState(value);
 
   return (
     <div className="space-y-2">
       <RichTextEditor
-        valeur={valeur}
-        onChange={setTexte}
-        onSubmit={() => void onSave(texte)}
+        value={value}
+        onChange={setBody}
+        onSubmit={() => void onSave(body)}
       />
       <div className="flex items-center gap-2">
-        <Button size="sm" disabled={!texte.trim()} onClick={() => void onSave(texte)}>
+        <Button size="sm" disabled={!body.trim()} onClick={() => void onSave(body)}>
           Enregistrer
         </Button>
         <Button size="sm" variant="ghost" onClick={onCancel}>

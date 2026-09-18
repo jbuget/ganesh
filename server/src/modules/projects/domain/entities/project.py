@@ -1,4 +1,4 @@
-"""Projet, lot et activite hors projet : le referentiel des missions."""
+"""Project, work package and off-project activity: the mission reference list."""
 
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -8,153 +8,153 @@ from src.shared.exceptions.domain_exceptions import ValidationError
 
 
 class ProjectKind(StrEnum):
-    """Nature d'une mission."""
+    """What kind of mission this is."""
 
-    PROJET = "projet"
-    LOT = "lot"
-    HORS_PROJET = "hors_projet"
+    PROJECT = "project"
+    WORK_PACKAGE = "work_package"
+    OFF_PROJECT = "off_project"
 
 
 class ProjectStatus(StrEnum):
-    """Phase de vie d'un projet ou d'un lot.
+    """Life-cycle phase of a project or a work package.
 
-    L'ordre declare ici est l'ordre nominal, et celui des colonnes du tableau de
-    bord. Un projet peut revenir en arriere : aucune transition n'est interdite.
+    The order declared here is the nominal one, and the order of the board
+    columns. A project may move backwards: no transition is forbidden.
     """
 
     EXPLORATION = "exploration"
-    CADRAGE = "cadrage"
-    REALISATION = "realisation"
+    SCOPING = "scoping"
+    DEVELOPMENT = "development"
     VALIDATION = "validation"
-    DEPLOIEMENT = "deploiement"
-    EXPLOITATION = "exploitation"
+    DEPLOYMENT = "deployment"
+    OPERATIONS = "operations"
 
 
 class ProjectPriority(StrEnum):
-    """Urgence relative d'une mission, telle que l'equipe la declare.
+    """How urgent a mission is, as the team declares it.
 
-    L'ordre declare ici va du plus urgent au moins urgent : c'est celui dans
-    lequel les choix se presentent, et celui dans lequel on lit une liste.
+    The order declared here runs from the most urgent to the least: it is the
+    order the choices are offered in, and the order a list reads in.
     """
 
-    CRITIQUE = "critique"
-    HAUTE = "haute"
-    NORMALE = "normale"
-    BASSE = "basse"
+    CRITICAL = "critical"
+    HIGH = "high"
+    NORMAL = "normal"
+    LOW = "low"
 
 
 class Department(StrEnum):
-    """Departement de l'entreprise concerne par une mission.
+    """Company department a mission serves.
 
-    Une mission peut en servir plusieurs : un portail bailleurs qui outille
-    aussi le service client concerne les deux, et le pilotage veut le voir.
+    A mission may serve several: a landlord portal that also equips customer
+    service concerns both, and steering wants to see it.
     """
 
-    ADMINISTRATIF_FINANCIER = "administratif_financier"
-    BAILLEURS = "bailleurs"
-    COPROPRIETE = "copropriete"
-    SERVICE_CLIENT = "service_client"
+    FINANCE_ADMIN = "finance_admin"
+    LANDLORDS = "landlords"
+    CONDOMINIUM = "condominium"
+    CUSTOMER_SERVICE = "customer_service"
     OPERATIONS = "operations"
-    SYSTEME_INFORMATION = "systeme_information"
-    RESSOURCES_HUMAINES = "ressources_humaines"
-    MARKETING_COMMUNICATION_RSE = "marketing_communication_rse"
-    TERTIAIRE = "tertiaire"
-    AUTRE = "autre"
+    INFORMATION_SYSTEMS = "information_systems"
+    HUMAN_RESOURCES = "human_resources"
+    MARKETING_COMMUNICATION_CSR = "marketing_communication_csr"
+    COMMERCIAL_REAL_ESTATE = "commercial_real_estate"
+    OTHER = "other"
 
 
 class ProjectCategory(StrEnum):
-    """Axe strategique auquel un projet se rattache."""
+    """Strategic axis a project belongs to."""
 
-    AUTOMATISER = "automatiser_fluidifier"
-    PERENNISER = "perenniser_croissance"
-    INNOVER = "innover_differencier"
-    STRUCTURER = "structurer_plateforme"
+    AUTOMATE = "automate_streamline"
+    SUSTAIN = "sustain_growth"
+    INNOVATE = "innovate_differentiate"
+    STRUCTURE = "structure_platform"
 
 
 @dataclass
 class Project:
-    """Une mission sur laquelle du temps peut etre impute."""
+    """A mission time can be booked against."""
 
     id: int | None
     label: str
     kind: ProjectKind
-    statut: ProjectStatus | None = ProjectStatus.EXPLORATION
+    status: ProjectStatus | None = ProjectStatus.EXPLORATION
     parent_id: int | None = None
-    actif: bool = True
-    estime_j: float | None = None
-    categorie: ProjectCategory | None = None
-    #: Urgence declaree. Facultative : une mission n'en porte que si l'equipe a
-    #: juge utile de la situer par rapport aux autres.
-    priorite: ProjectPriority | None = None
-    date_mise_en_service: date | None = None
-    #: Rang dans sa colonne du tableau de bord, choisi par l'equipe.
+    is_active: bool = True
+    estimated_days: float | None = None
+    category: ProjectCategory | None = None
+    #: Declared urgency. Optional: a mission only carries one if the team saw
+    #: a point in placing it against the others.
+    priority: ProjectPriority | None = None
+    go_live_date: date | None = None
+    #: Rank within its board column, chosen by the team.
     position: int = 0
     monday_item_id: str | None = None
     monday_subitem_id: str | None = None
-    #: Fiche de service en markdown : le probleme, la solution, ce qu'elle
-    #: couvre. Destinee a nourrir la fiche publique du service.
+    #: Service sheet in markdown: the problem, the solution, what it covers.
+    #: Meant to feed the public service page.
     description: str | None = None
-    #: Interlocuteurs metier, en texte libre : des noms, un service, un mail.
-    contacts_metier: str | None = None
-    #: Quand la mission a quitte le referentiel. Nulle tant qu'elle est active :
-    #: la date suit l'etat, et repartir d'une mission archivee l'efface.
+    #: Business contacts, free text: names, a department, an email.
+    business_contacts: str | None = None
+    #: When the mission left the reference list. Null while it is active: the
+    #: date follows the state, and reviving an archived mission clears it.
     archived_at: datetime | None = None
 
     def __post_init__(self) -> None:
         self.label = self.label.strip()
         if not self.label:
-            raise ValidationError("Le libelle d'une mission ne peut pas etre vide.")
+            raise ValidationError("A mission label cannot be empty.")
 
-        if self.kind is ProjectKind.HORS_PROJET and self.statut is not None:
+        if self.kind is ProjectKind.OFF_PROJECT and self.status is not None:
+            raise ValidationError("An off-project activity carries no phase status.")
+        if self.kind is not ProjectKind.OFF_PROJECT and self.status is None:
             raise ValidationError(
-                "Une activite hors projet ne porte pas de statut de phase."
+                "A project or a work package must carry a phase status."
             )
-        if self.kind is not ProjectKind.HORS_PROJET and self.statut is None:
-            raise ValidationError("Un projet ou un lot doit porter un statut de phase.")
 
-        if self.kind is ProjectKind.LOT and self.parent_id is None:
-            raise ValidationError("Un lot doit etre rattache a un projet parent.")
+        if self.kind is ProjectKind.WORK_PACKAGE and self.parent_id is None:
+            raise ValidationError(
+                "A work package must be attached to a parent project."
+            )
 
         if self.position < 0:
-            raise ValidationError("Le rang d'une mission ne peut pas etre negatif.")
+            raise ValidationError("A mission rank cannot be negative.")
 
     @property
     def is_off_project(self) -> bool:
-        return self.kind is ProjectKind.HORS_PROJET
+        return self.kind is ProjectKind.OFF_PROJECT
 
     @property
     def appears_on_board(self) -> bool:
-        """Seul ce qui porte une phase se pilote sur le tableau de bord."""
+        """Only what carries a phase is steered on the board."""
         return not self.is_off_project
 
     @property
     def is_syncable_to_monday(self) -> bool:
-        """Seules les missions rattachees a Monday remontent vers Monday."""
+        """Only missions tied to Monday are pushed back to Monday."""
         if self.is_off_project:
             return False
         return bool(self.monday_item_id or self.monday_subitem_id)
 
     def archive(self) -> None:
-        """Sort la mission du referentiel, en datant sa sortie.
+        """Take the mission out of the reference list, stamping when it left.
 
-        Rien ne se perd : les saisies deja passees dessus restent lisibles, et
-        seule la liste des missions ou l'on peut encore imputer se reduit.
-        Rearchiver ne redate pas : c'est la premiere sortie qui compte.
+        Nothing is lost: entries already booked against it stay readable, and
+        only the list of missions one can still book against shrinks.
+        Archiving twice does not restamp: the first exit is the one that counts.
         """
-        if not self.actif:
+        if not self.is_active:
             return
-        self.actif = False
+        self.is_active = False
         self.archived_at = datetime.now()
 
     def unarchive(self) -> None:
-        """Remet la mission dans le referentiel, et oublie sa sortie."""
-        self.actif = True
+        """Put the mission back into the reference list, forgetting its exit."""
+        self.is_active = True
         self.archived_at = None
 
     def change_status(self, new_status: ProjectStatus) -> None:
-        """Change la phase du projet. Toute transition est permise."""
+        """Change the project phase. Every transition is allowed."""
         if self.is_off_project:
-            raise ValidationError(
-                "Une activite hors projet ne porte pas de statut de phase."
-            )
-        self.statut = new_status
+            raise ValidationError("An off-project activity carries no phase status.")
+        self.status = new_status

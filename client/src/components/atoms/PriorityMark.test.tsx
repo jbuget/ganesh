@@ -4,30 +4,28 @@ import { render, screen } from "@testing-library/react";
 import { PriorityMark } from "./PriorityMark";
 
 describe("PriorityMark", () => {
-  it("écrit le niveau en toutes lettres", () => {
-    render(<PriorityMark valeur="haute" />);
+  it("spells the level out in full", () => {
+    render(<PriorityMark value="high" />);
 
     expect(screen.getByText("Haute")).toBeInTheDocument();
   });
 
-  it("donne à chaque niveau un dessin distinct, et pas qu'une teinte", () => {
-    // Sans la couleur — daltonisme, impression, ecran mal calibre — c'est le
-    // remplissage de la jauge qui doit porter l'echelle.
-    const formes = (["critique", "haute", "normale", "basse"] as const).map(
-      (niveau) => {
-        const { container, unmount } = render(<PriorityMark valeur={niveau} />);
-        const classe = container.querySelector("svg")?.getAttribute("class") ?? "";
-        const forme = classe.split(" ").find((c) => c.startsWith("lucide-"));
-        unmount();
-        return forme;
-      },
-    );
+  it("gives each level a distinct drawing, and not just a shade", () => {
+    // Without colour — colour blindness, print, a poorly calibrated screen — it
+    // is how full the gauge is that must carry the scale.
+    const shapes = (["critical", "high", "normal", "low"] as const).map((level) => {
+      const { container, unmount } = render(<PriorityMark value={level} />);
+      const className = container.querySelector("svg")?.getAttribute("class") ?? "";
+      const shape = className.split(" ").find((c) => c.startsWith("lucide-"));
+      unmount();
+      return shape;
+    });
 
-    expect(new Set(formes).size).toBe(4);
+    expect(new Set(shapes).size).toBe(4);
   });
 
-  it("ne marque rien sans priorité", () => {
-    const { container } = render(<PriorityMark valeur={null} />);
+  it("marks nothing without a priority", () => {
+    const { container } = render(<PriorityMark value={null} />);
 
     expect(container).toBeEmptyDOMElement();
   });

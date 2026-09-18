@@ -1,4 +1,4 @@
-"""Implementation SQLAlchemy du port MonthRepository."""
+"""SQLAlchemy implementation of the MonthRepository port."""
 
 from datetime import date
 
@@ -14,7 +14,7 @@ def to_entity(model: MonthModel) -> Month:
     return Month(
         id=model.id,
         user_id=model.user_id,
-        mois=model.mois,
+        month=model.month,
         state=model.state,
         validated_at=model.validated_at,
         validated_by=model.validated_by,
@@ -24,38 +24,40 @@ def to_entity(model: MonthModel) -> Month:
 
 
 class SqlMonthRepository(MonthRepository):
-    """Persiste l'etat de saisie des mois."""
+    """Persists month entry state."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get(self, user_id: int, mois: date) -> Month | None:
+    async def get(self, user_id: int, month: date) -> Month | None:
         result = await self._session.execute(
             select(MonthModel).where(
                 and_(
                     MonthModel.user_id == user_id,
-                    MonthModel.mois == mois.replace(day=1),
+                    MonthModel.month == month.replace(day=1),
                 )
             )
         )
         model = result.scalar_one_or_none()
         return to_entity(model) if model else None
 
-    async def list_for_month(self, mois: date) -> list[Month]:
+    async def list_for_month(self, month: date) -> list[Month]:
         result = await self._session.execute(
-            select(MonthModel).where(MonthModel.mois == mois.replace(day=1))
+            select(MonthModel).where(MonthModel.month == month.replace(day=1))
         )
         return [to_entity(model) for model in result.scalars().all()]
 
     async def save(self, month: Month) -> Month:
         result = await self._session.execute(
             select(MonthModel).where(
-                and_(MonthModel.user_id == month.user_id, MonthModel.mois == month.mois)
+                and_(
+                    MonthModel.user_id == month.user_id, MonthModel.month == month.month
+                )
             )
         )
         model = result.scalar_one_or_none()
         if model is None:
-            model = MonthModel(user_id=month.user_id, mois=month.mois)
+            model = MonthModel(user_id=month.user_id, month=month.month)
             self._session.add(model)
         model.state = month.state
         model.validated_at = month.validated_at

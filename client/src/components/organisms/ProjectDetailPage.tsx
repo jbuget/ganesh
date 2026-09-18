@@ -6,16 +6,16 @@ import Link from "next/link";
 import { EditableTitle } from "@/components/atoms/EditableTitle";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectTabs } from "@/components/organisms/ProjectTabs";
-import { libellePhase, pastillePhase } from "@/lib/board";
-import { formatJoursDecimal } from "@/lib/dates";
+import { phaseLabel, phaseDot } from "@/lib/board";
+import { formatDecimalDays } from "@/lib/dates";
 import { useProjectDetail } from "@/lib/use-project-detail";
 
 interface ProjectDetailPageProps {
   projectId: number;
 }
 
-/** Le chemin du retour, au meme endroit dans tous les etats de la fiche. */
-function RetourKanban() {
+/** The way back, in the same place in every state of the sheet. */
+function BackToBoard() {
   return (
     <Link
       href="/kanban"
@@ -28,18 +28,18 @@ function RetourKanban() {
 }
 
 /**
- * La mission en pleine page.
+ * The mission on a full page.
  *
- * Meme contenu que le panneau lateral, au large : pour lire une fiche service
- * ou parcourir un journal, l'espace compte.
+ * The same content as the side panel, with room to breathe: to read a service
+ * sheet or go through a log, space counts.
  */
 export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
-  const fiche = useProjectDetail(projectId);
-  const detail = fiche.detail;
+  const sheet = useProjectDetail(projectId);
+  const detail = sheet.detail;
 
-  if (fiche.introuvable) {
+  if (sheet.notFound) {
     return (
-      <PageLayout entete={<RetourKanban />}>
+      <PageLayout header={<BackToBoard />}>
         <p className="text-sm text-slate-500">Cette mission n&apos;existe pas.</p>
       </PageLayout>
     );
@@ -47,7 +47,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
 
   if (!detail) {
     return (
-      <PageLayout entete={<RetourKanban />}>
+      <PageLayout header={<BackToBoard />}>
         <p className="text-sm text-slate-500">Chargement…</p>
       </PageLayout>
     );
@@ -57,31 +57,31 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
 
   return (
     <PageLayout
-      entete={
+      header={
         <>
-          <RetourKanban />
+          <BackToBoard />
 
           <header className="mb-6">
             <EditableTitle
               label={project.label}
-              invite="Renommer la mission"
-              onRename={fiche.renommer}
-              niveau={1}
+              hint="Renommer la mission"
+              onRename={sheet.rename}
+              level={1}
             />
             <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-              {project.statut && (
+              {project.status && (
                 <span className="flex items-center gap-1.5">
                   <span
                     aria-hidden
-                    className={`size-2.5 rounded-full ${pastillePhase(project.statut)}`}
+                    className={`size-2.5 rounded-full ${phaseDot(project.status)}`}
                   />
-                  {libellePhase(project.statut)}
+                  {phaseLabel(project.status)}
                 </span>
               )}
               <span>
-                {formatJoursDecimal(detail.consomme_j)}
-                {project.estime_j ? `/${project.estime_j}` : ""} jrs.
-                {project.estime_j ? " estimés" : " consommés"}
+                {formatDecimalDays(detail.consumed_days)}
+                {project.estimated_days ? `/${project.estimated_days}` : ""} jrs.
+                {project.estimated_days ? " estimés" : " consommés"}
               </span>
             </p>
           </header>
@@ -91,15 +91,15 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
       <div className="max-w-[900px]">
         <ProjectTabs
           detail={detail}
-          onChange={fiche.recharger}
-          enregistrerFiche={fiche.enregistrerFiche}
-          enregistrerDescription={fiche.enregistrerDescription}
-          changerPhase={fiche.changerPhase}
-          changerCaracteristiques={fiche.changerCaracteristiques}
-          ajouterLien={fiche.ajouterLien}
-          retirerLien={fiche.retirerLien}
-          archiver={fiche.archiver}
-          desarchiver={fiche.desarchiver}
+          onChange={sheet.reload}
+          saveSheet={sheet.saveSheet}
+          saveDescription={sheet.saveDescription}
+          changePhase={sheet.changePhase}
+          updateFields={sheet.updateFields}
+          addLink={sheet.addLink}
+          removeLink={sheet.removeLink}
+          archive={sheet.archive}
+          unarchive={sheet.unarchive}
         />
       </div>
     </PageLayout>

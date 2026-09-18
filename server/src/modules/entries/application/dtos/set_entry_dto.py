@@ -1,4 +1,4 @@
-"""Commandes d'ecriture des saisies."""
+"""Commands that write entries."""
 
 from dataclasses import dataclass
 from datetime import date
@@ -6,37 +6,37 @@ from datetime import date
 
 @dataclass(frozen=True)
 class SetEntryCommand:
-    """Demande d'ecriture d'une saisie.
+    """Request to write an entry.
 
-    `actor_id` est celui qui agit, `target_user_id` celui dont le mois est
-    modifie. Les deux different quand un collegue corrige une saisie.
+    `actor_id` is who acts, `target_user_id` whose month is changed. They
+    differ when a colleague fixes an entry.
     """
 
     actor_id: int
     target_user_id: int
     project_id: int
-    jour: date
-    valeur: float
+    day: date
+    value: float
 
 
 @dataclass(frozen=True)
 class ClearEntryCommand:
-    """Demande de suppression d'une saisie."""
+    """Request to delete an entry."""
 
     actor_id: int
     target_user_id: int
     project_id: int
-    jour: date
+    day: date
 
 
 @dataclass(frozen=True)
 class RemoveMissionCommand:
-    """Demande de retrait d'une mission entiere d'un mois.
+    """Request to remove a whole mission from a month.
 
-    `mois` designe n'importe quel jour du mois vise : seul le mois compte.
+    `month` may be any day of the month aimed at: only the month matters.
     """
 
     actor_id: int
     target_user_id: int
     project_id: int
-    mois: date
+    month: date

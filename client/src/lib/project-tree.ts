@@ -1,54 +1,54 @@
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
-import { AUCUN_TRI, comparateurDeTri, type TriMissions } from "@/lib/mission-sort";
+import { NO_SORT, sortComparator, type MissionSort } from "@/lib/mission-sort";
 
-/** Une mission et, s'il s'agit d'un projet, les lots qui en dependent. */
+/** A mission and, if it is a project, the work packages under it. */
 export interface ProjectNode {
   mission: ProjectListItemResponse;
-  lots: ProjectListItemResponse[];
+  workPackages: ProjectListItemResponse[];
 }
 
-const HORS_PROJET = "hors_projet";
+const OFF_PROJECT = "off_project";
 
 /**
- * Organise le referentiel en arborescence : chaque projet suivi de ses lots.
+ * Arranges the reference list as a tree: each project followed by its packages.
  *
- * Le tri s'applique a chaque niveau separement — les projets entre eux, les
- * lots au sein de leur projet : ranger la liste ne doit pas arracher un
- * sous-projet a son parent.
+ * The sort applies to each level separately — projects among themselves, work
+ * packages within their project: ordering the list must not tear a sub-project
+ * away from its parent.
  *
- * Un lot dont le parent est absent de la liste — filtre, archive — remonte au
- * premier niveau plutot que de disparaitre : une mission invisible serait une
- * mission qu'on croit supprimee.
+ * A work package whose parent is absent from the list — filtered out, archived
+ * — moves up to the first level rather than disappearing: an invisible mission
+ * would be a mission believed deleted.
  */
 export function buildProjectTree(
   missions: ProjectListItemResponse[],
-  tri: TriMissions = AUCUN_TRI,
+  sorted: MissionSort = NO_SORT,
 ): ProjectNode[] {
-  const ordre = comparateurDeTri(tri);
-  const projets = missions.filter((m) => m.project.kind === "projet");
-  const lots = missions.filter((m) => m.project.kind === "lot");
-  const idsPresents = new Set(projets.map((m) => m.project.id));
+  const compare = sortComparator(sorted);
+  const projects = missions.filter((m) => m.project.kind === "project");
+  const workPackages = missions.filter((m) => m.project.kind === "work_package");
+  const presentIds = new Set(projects.map((m) => m.project.id));
 
-  const noeuds: ProjectNode[] = [...projets].sort(ordre).map((mission) => ({
+  const nodes: ProjectNode[] = [...projects].sort(compare).map((mission) => ({
     mission,
-    lots: lots.filter((l) => l.project.parent_id === mission.project.id).sort(ordre),
+    workPackages: workPackages
+      .filter((l) => l.project.parent_id === mission.project.id)
+      .sort(compare),
   }));
 
-  const orphelins = lots
-    .filter(
-      (l) => l.project.parent_id === null || !idsPresents.has(l.project.parent_id),
-    )
-    .sort(ordre)
-    .map((lot) => ({ mission: lot, lots: [] }));
+  const orphans = workPackages
+    .filter((l) => l.project.parent_id === null || !presentIds.has(l.project.parent_id))
+    .sort(compare)
+    .map((workPackage) => ({ mission: workPackage, workPackages: [] }));
 
-  return [...noeuds, ...orphelins];
+  return [...nodes, ...orphans];
 }
 
-/** Activites hors projet, listees a part : elles n'ont ni lot ni estime. */
+/** Off-project work, listed apart: it has neither package nor estimate. */
 export function offProjectActivities(
   missions: ProjectListItemResponse[],
 ): ProjectListItemResponse[] {
   return missions
-    .filter((m) => m.project.kind === HORS_PROJET)
-    .sort(comparateurDeTri(AUCUN_TRI));
+    .filter((m) => m.project.kind === OFF_PROJECT)
+    .sort(sortComparator(NO_SORT));
 }

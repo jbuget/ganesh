@@ -4,44 +4,44 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import type { ProjectResponse } from "@/lib/api/generated/model";
-import { libellePhase, pastillePhase } from "@/lib/board";
+import { phaseLabel, phaseDot } from "@/lib/board";
 
 interface ProjectSubProjectsProps {
-  sousProjets: ProjectResponse[];
+  subProjects: ProjectResponse[];
 }
 
 /**
- * Les lots rattaches a une mission.
+ * The work packages attached to a mission.
  *
- * Chaque ligne mene a la fiche du lot plutot que de la deplier ici : un lot se
- * pilote comme une mission a part entiere, avec ses propres intervenants et sa
- * propre consommation, et n'a pas sa place en resume dans la fiche du parent.
+ * Each row leads to the package's sheet rather than unfolding it here: a work
+ * package is steered like a mission in its own right, with its own contributors
+ * and its own consumption, and has no place summarised in the parent's sheet.
  */
-export function ProjectSubProjects({ sousProjets }: ProjectSubProjectsProps) {
-  if (sousProjets.length === 0) {
+export function ProjectSubProjects({ subProjects }: ProjectSubProjectsProps) {
+  if (subProjects.length === 0) {
     return <p className="text-sm text-slate-400">Aucun sous-projet</p>;
   }
 
   return (
     <ul className="space-y-0.5">
-      {sousProjets.map((lot) => (
-        <li key={lot.id}>
+      {subProjects.map((workPackage) => (
+        <li key={workPackage.id}>
           <Link
-            href={`/projets/${lot.id}`}
+            href={`/projects/${workPackage.id}`}
             className="group flex cursor-pointer items-center gap-2 rounded px-1 py-1.5 transition-colors hover:bg-slate-50"
           >
-            {lot.statut && (
+            {workPackage.status && (
               <span
                 aria-hidden
-                className={`size-2.5 shrink-0 rounded-full ${pastillePhase(lot.statut)}`}
+                className={`size-2.5 shrink-0 rounded-full ${phaseDot(workPackage.status)}`}
               />
             )}
             <span className="min-w-0 flex-1 truncate text-sm text-slate-700">
-              {lot.label}
+              {workPackage.label}
             </span>
-            {lot.statut && (
+            {workPackage.status && (
               <span className="shrink-0 text-xs text-slate-500">
-                {libellePhase(lot.statut)}
+                {phaseLabel(workPackage.status)}
               </span>
             )}
             <ChevronRight

@@ -1,52 +1,52 @@
 "use client";
 
 import type { BoardMemberResponse } from "@/lib/api/generated/model";
-import { useTooltipCurseur } from "@/lib/use-tooltip-curseur";
+import { useCursorTooltip } from "@/lib/use-cursor-tooltip";
 
-/** Au-dela, les pastilles se chevauchent trop pour rester lisibles. */
-const VISIBLES = 4;
+/** Past this, the avatars overlap too much to stay readable. */
+const VISIBLE = 4;
 
 interface MemberAvatarsProps {
-  membres: BoardMemberResponse[];
+  members: BoardMemberResponse[];
 }
 
 /**
- * Intervenants d'une mission, en pastilles d'initiales.
+ * A mission's contributors, as initial avatars.
  *
- * Ce sont les personnes ayant declare du temps dessus, previsionnel compris :
- * savoir qui s'y mettra compte autant que savoir qui y a travaille.
+ * These are the people who declared time on it, forecasts included: knowing who
+ * is about to start counts as much as knowing who has worked on it.
  *
- * Des initiales ne se devinent pas : l'infobulle donne le nom sans attendre,
- * la ou l'attribut `title` natif laisse hesiter une seconde.
+ * Initials cannot be guessed: the tooltip gives the name without delay, where
+ * the native `title` attribute leaves one hesitating for a second.
  */
-export function MemberAvatars({ membres }: MemberAvatarsProps) {
-  const { tooltip, suivre, quitter } = useTooltipCurseur();
+export function MemberAvatars({ members }: MemberAvatarsProps) {
+  const { tooltip, follow, leave } = useCursorTooltip();
 
-  if (membres.length === 0) return null;
+  if (members.length === 0) return null;
 
-  const affiches = membres.slice(0, VISIBLES);
-  const restants = membres.slice(VISIBLES);
+  const shown = members.slice(0, VISIBLE);
+  const remaining = members.slice(VISIBLE);
 
   return (
-    <div className="flex items-center -space-x-1.5" onMouseLeave={quitter}>
-      {affiches.map((membre) => (
+    <div className="flex items-center -space-x-1.5" onMouseLeave={leave}>
+      {shown.map((member) => (
         <span
-          key={membre.id}
-          onMouseMove={(event) => suivre(event, membre.display_name)}
+          key={member.id}
+          onMouseMove={(event) => follow(event, member.display_name)}
           className="flex size-6 items-center justify-center rounded-full border border-white bg-slate-200 text-[10px] font-medium text-slate-700"
         >
-          {membre.initiales}
+          {member.initials}
         </span>
       ))}
 
-      {restants.length > 0 && (
+      {remaining.length > 0 && (
         <span
           onMouseMove={(event) =>
-            suivre(event, restants.map((m) => m.display_name).join(", "))
+            follow(event, remaining.map((m) => m.display_name).join(", "))
           }
           className="flex size-6 items-center justify-center rounded-full border border-white bg-slate-100 text-[10px] font-medium text-slate-500"
         >
-          +{restants.length}
+          +{remaining.length}
         </span>
       )}
 

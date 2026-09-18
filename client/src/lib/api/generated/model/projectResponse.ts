@@ -10,24 +10,24 @@ import type { ProjectPriority } from "./projectPriority";
 import type { ProjectStatus } from "./projectStatus";
 
 /**
- * Une mission du referentiel.
+ * A mission from the reference list.
  */
 export interface ProjectResponse {
   id: number;
   label: string;
   kind: ProjectKind;
-  statut: ProjectStatus | null;
+  status: ProjectStatus | null;
   parent_id: number | null;
-  actif: boolean;
+  is_active: boolean;
   archived_at: string | null;
-  estime_j: number | null;
-  categorie: ProjectCategory | null;
-  priorite: ProjectPriority | null;
-  date_mise_en_service: string | null;
+  estimated_days: number | null;
+  category: ProjectCategory | null;
+  priority: ProjectPriority | null;
+  go_live_date: string | null;
   position: number;
   monday_item_id: string | null;
   monday_subitem_id: string | null;
-  contacts_metier: string | null;
+  business_contacts: string | null;
   description: string | null;
   is_syncable_to_monday: boolean;
   is_deletable: boolean;

@@ -1,4 +1,4 @@
-"""Modele SQLAlchemy du journal d'audit."""
+"""SQLAlchemy model of the audit log."""
 
 from datetime import date, datetime
 
@@ -10,7 +10,7 @@ from src.modules.audit_logs.domain.entities.audit_log import AuditAction
 
 
 class AuditLogModel(Base):
-    """Trace immuable des actions significatives."""
+    """Immutable trace of the actions that matter."""
 
     __tablename__ = "audit_log"
 
@@ -31,7 +31,7 @@ class AuditLogModel(Base):
     project_id: Mapped[int | None] = mapped_column(
         ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    jour: Mapped[date | None] = mapped_column(Date, nullable=True)
+    day: Mapped[date | None] = mapped_column(Date, nullable=True)
     old_value: Mapped[str | None] = mapped_column(String(64), nullable=True)
     new_value: Mapped[str | None] = mapped_column(String(64), nullable=True)
     payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)

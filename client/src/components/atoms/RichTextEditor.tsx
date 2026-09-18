@@ -19,63 +19,63 @@ import {
 import { Markdown, type MarkdownStorage } from "tiptap-markdown";
 
 /**
- * `tiptap-markdown` greffe sa sortie sur le stockage de l'editeur sans
- * l'exposer aux types : on passe par le type qu'il publie plutot que d'ecrire
- * un `any`.
+ * `tiptap-markdown` grafts its output onto the editor storage without exposing
+ * it to the types: we go through the type it publishes rather than writing an
+ * `any`.
  */
 function markdownDe(editor: Editor): string {
-  const stockage = editor.storage as unknown as { markdown: MarkdownStorage };
-  return stockage.markdown.getMarkdown();
+  const storage = editor.storage as unknown as { markdown: MarkdownStorage };
+  return storage.markdown.getMarkdown();
 }
 
 interface RichTextEditorProps {
-  valeur: string;
+  value: string;
   placeholder?: string;
   onChange: (markdown: string) => void;
-  /** Declenche par Cmd+Entree, pour enregistrer sans lacher le clavier. */
+  /** Triggered by Cmd+Enter, to save without leaving the keyboard. */
   onSubmit?: () => void;
-  /** Offre les titres : une fiche s'articule, un point hebdomadaire non. */
-  avecTitres?: boolean;
-  /** Pose le curseur dans la zone de saisie des son apparition. */
+  /** Offers headings: a sheet has structure, a weekly note does not. */
+  withHeadings?: boolean;
+  /** Puts the cursor in the input area as soon as it appears. */
   autoFocus?: boolean;
-  /** Hauteur minimale de la zone de saisie, en classes Tailwind. */
-  hauteur?: string;
+  /** Minimum height of the input area, in Tailwind classes. */
+  minHeight?: string;
   /**
-   * Occupe toute la hauteur laissee par le parent, la zone de saisie
-   * defilant seule. Demande une chaine flex continue au-dessus.
+   * Takes all the height the parent leaves, the input area scrolling on its
+   * own. Requires an unbroken flex chain above.
    */
-  pleineHauteur?: boolean;
+  fullHeight?: boolean;
 }
 
-/** Un bouton de la barre d'outils. */
-function Outil({
+/** One button of the toolbar. */
+function Tool({
   editor,
-  actif,
-  titre,
+  isActive,
+  title,
   onClick,
   children,
 }: {
   editor: Editor;
-  actif: boolean;
-  titre: string;
+  isActive: boolean;
+  title: string;
   onClick: () => void;
   children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
-      title={titre}
-      aria-label={titre}
-      aria-pressed={actif}
-      // `onMouseDown` plutot que `onClick` : le bouton prendrait le focus et
-      // la selection serait perdue avant que la commande ne s'applique.
+      title={title}
+      aria-label={title}
+      aria-pressed={isActive}
+      // `onMouseDown` rather than `onClick`: the button would take focus and
+      // the selection would be lost before the command applied.
       onMouseDown={(event) => {
         event.preventDefault();
         onClick();
         editor.chain().focus().run();
       }}
       className={`cursor-pointer rounded p-1.5 transition-colors ${
-        actif ? "bg-slate-200 text-slate-900" : "text-slate-500 hover:bg-slate-100"
+        isActive ? "bg-slate-200 text-slate-900" : "text-slate-500 hover:bg-slate-100"
       }`}
     >
       {children}
@@ -84,29 +84,30 @@ function Outil({
 }
 
 /**
- * Redaction assistee, qui produit du markdown.
+ * Assisted writing, producing markdown.
  *
- * On ecrit en voyant le resultat, mais c'est du markdown qui part en base :
- * la fiche de service en stocke deja, les mises a jour se lisent avec le meme
- * rendu, et surtout rien n'est du HTML — il n'y a donc rien a assainir a la
- * relecture.
+ * One writes while seeing the result, but it is markdown that goes to the
+ * database: the service sheet already stores some, updates read with the same
+ * rendering, and above all nothing is HTML — so there is nothing to sanitise
+ * when reading back.
  */
 export function RichTextEditor({
-  valeur,
+  value,
   placeholder,
   onChange,
   onSubmit,
-  avecTitres = false,
+  withHeadings = false,
   autoFocus = false,
-  hauteur = "min-h-24",
-  pleineHauteur = false,
+  minHeight = "min-h-24",
+  fullHeight = false,
 }: RichTextEditorProps) {
   const editor = useEditor({
-    // Next rend ce composant sur le serveur : laisser ProseMirror s'installer
-    // au premier rendu ferait diverger le HTML et provoquerait une erreur
-    // d'hydratation.
+    // Next renders this component on the server: letting ProseMirror settle in
+    // on the first render would make the HTML diverge and cause a hydration
+    // error.
     immediatelyRender: false,
-    // « end » et non « start » : on ecrit a la suite de ce qui est deja la.
+    // « end » and not « start »: one writes after what is
+    // already there.
     autofocus: autoFocus ? "end" : false,
     extensions: [
       StarterKit.configure({ heading: { levels: [2, 3] } }),
@@ -114,10 +115,10 @@ export function RichTextEditor({
       Placeholder.configure({ placeholder: placeholder ?? "" }),
       Markdown.configure({ transformPastedText: true }),
     ],
-    content: valeur,
+    content: value,
     editorProps: {
       attributes: {
-        class: `prose prose-sm prose-slate max-w-none ${pleineHauteur ? "h-full" : hauteur} px-3 py-2 focus:outline-none`,
+        class: `prose prose-sm prose-slate max-w-none ${fullHeight ? "h-full" : minHeight} px-3 py-2 focus:outline-none`,
         "aria-label": placeholder ?? "Rédaction",
       },
       handleKeyDown: (_, event) => {
@@ -139,102 +140,102 @@ export function RichTextEditor({
     <div
       className={[
         "overflow-hidden rounded-md border border-slate-300 bg-white focus-within:border-slate-500",
-        pleineHauteur ? "flex min-h-0 flex-1 flex-col" : "",
+        fullHeight ? "flex min-h-0 flex-1 flex-col" : "",
       ].join(" ")}
     >
       <EditorContent
         editor={editor}
-        // La zone de saisie defile seule : la barre d'outils reste sous les
-        // yeux, meme au bas d'une fiche longue.
-        className={pleineHauteur ? "min-h-0 flex-1 overflow-y-auto" : undefined}
+        // The input area scrolls on its own: the toolbar stays before the
+        // eyes, even at the bottom of a long sheet.
+        className={fullHeight ? "min-h-0 flex-1 overflow-y-auto" : undefined}
       />
 
       <div className="flex flex-wrap items-center gap-0.5 border-t border-slate-200 px-1.5 py-1">
-        <Outil
+        <Tool
           editor={editor}
-          titre="Gras"
-          actif={editor.isActive("bold")}
+          title="Gras"
+          isActive={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}
         >
           <Bold className="size-3.5" aria-hidden />
-        </Outil>
-        <Outil
+        </Tool>
+        <Tool
           editor={editor}
-          titre="Italique"
-          actif={editor.isActive("italic")}
+          title="Italique"
+          isActive={editor.isActive("italic")}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         >
           <Italic className="size-3.5" aria-hidden />
-        </Outil>
-        <Outil
+        </Tool>
+        <Tool
           editor={editor}
-          titre="Barré"
-          actif={editor.isActive("strike")}
+          title="Barré"
+          isActive={editor.isActive("strike")}
           onClick={() => editor.chain().focus().toggleStrike().run()}
         >
           <Strikethrough className="size-3.5" aria-hidden />
-        </Outil>
-        <Outil
+        </Tool>
+        <Tool
           editor={editor}
-          titre="Code"
-          actif={editor.isActive("code")}
+          title="Code"
+          isActive={editor.isActive("code")}
           onClick={() => editor.chain().focus().toggleCode().run()}
         >
           <Code className="size-3.5" aria-hidden />
-        </Outil>
+        </Tool>
 
-        {avecTitres && (
+        {withHeadings && (
           <>
             <span aria-hidden className="mx-1 h-4 w-px bg-slate-200" />
-            <Outil
+            <Tool
               editor={editor}
-              titre="Titre"
-              actif={editor.isActive("heading", { level: 2 })}
+              title="Titre"
+              isActive={editor.isActive("heading", { level: 2 })}
               onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             >
               <Heading2 className="size-3.5" aria-hidden />
-            </Outil>
-            <Outil
+            </Tool>
+            <Tool
               editor={editor}
-              titre="Sous-titre"
-              actif={editor.isActive("heading", { level: 3 })}
+              title="Sous-titre"
+              isActive={editor.isActive("heading", { level: 3 })}
               onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             >
               <Heading3 className="size-3.5" aria-hidden />
-            </Outil>
+            </Tool>
           </>
         )}
 
         <span aria-hidden className="mx-1 h-4 w-px bg-slate-200" />
 
-        <Outil
+        <Tool
           editor={editor}
-          titre="Liste à puces"
-          actif={editor.isActive("bulletList")}
+          title="Liste à puces"
+          isActive={editor.isActive("bulletList")}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
         >
           <List className="size-3.5" aria-hidden />
-        </Outil>
-        <Outil
+        </Tool>
+        <Tool
           editor={editor}
-          titre="Liste numérotée"
-          actif={editor.isActive("orderedList")}
+          title="Liste numérotée"
+          isActive={editor.isActive("orderedList")}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
         >
           <ListOrdered className="size-3.5" aria-hidden />
-        </Outil>
-        <Outil
+        </Tool>
+        <Tool
           editor={editor}
-          titre="Citation"
-          actif={editor.isActive("blockquote")}
+          title="Citation"
+          isActive={editor.isActive("blockquote")}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
         >
           <Quote className="size-3.5" aria-hidden />
-        </Outil>
-        <Outil
+        </Tool>
+        <Tool
           editor={editor}
-          titre="Lien"
-          actif={editor.isActive("link")}
+          title="Lien"
+          isActive={editor.isActive("link")}
           onClick={() => {
             if (editor.isActive("link")) {
               editor.chain().focus().unsetLink().run();
@@ -245,7 +246,7 @@ export function RichTextEditor({
           }}
         >
           <Link2 className="size-3.5" aria-hidden />
-        </Outil>
+        </Tool>
       </div>
     </div>
   );

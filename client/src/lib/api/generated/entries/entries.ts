@@ -90,7 +90,7 @@ export const getGetMonthGridUrl = (params: GetMonthGridParams) => {
 };
 
 /**
- * Retourne la matrice d'un mois. Chacun peut consulter le mois de chacun.
+ * Returns a month's grid. Anyone may look at anyone's month.
  * @summary Get Month Grid
  */
 export const getMonthGrid = async (
@@ -258,7 +258,7 @@ export const getSetEntryUrl = (params?: SetEntryParams) => {
 };
 
 /**
- * Enregistre une saisie, pour soi ou pour un collegue.
+ * Records an entry, for oneself or for a colleague.
  * @summary Set Entry
  */
 export const setEntry = async (
@@ -401,7 +401,7 @@ export const getClearEntryUrl = (params: ClearEntryParams) => {
 };
 
 /**
- * Retire une saisie, pour soi ou pour un collegue.
+ * Removes an entry, for oneself or for a colleague.
  * @summary Clear Entry
  */
 export const clearEntry = async (
@@ -521,7 +521,7 @@ export const getRemoveMissionFromMonthUrl = (params: RemoveMissionFromMonthParam
 };
 
 /**
- * Retire une mission d'un mois, avec le temps qu'elle porte.
+ * Removes a mission from a month, with the time it carries.
  * @summary Remove Mission From Month
  */
 export const removeMissionFromMonth = async (

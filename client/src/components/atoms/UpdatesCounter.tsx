@@ -3,52 +3,52 @@
 import { MessageCircle } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { useTooltipCurseur } from "@/lib/use-tooltip-curseur";
+import { useCursorTooltip } from "@/lib/use-cursor-tooltip";
 
 interface UpdatesCounterProps {
-  nombre: number;
+  count: number;
   /**
-   * Ce que montre l'infobulle au survol — le dernier message, mis en forme.
+   * What the tooltip shows on hover — the latest message, formatted.
    *
-   * Il vient du parent et non d'ici : le rendu du markdown est un autre
-   * composant, et un atom n'en compose aucun. Absent, le decompte se montre
-   * sans infobulle.
+   * It comes from the parent and not from here: rendering markdown is another
+   * component, and an atom composes none. Absent, the count shows without a
+   * tooltip.
    */
-  apercu?: ReactNode;
-  /** Mene au fil lui-meme : l'apercu donne envie de repondre. */
+  preview?: ReactNode;
+  /** Leads to the thread itself: the preview makes one want to reply. */
   onOpen: () => void;
 }
 
 /**
- * Le fil de suivi d'une mission, en un nombre.
+ * A mission's follow-up thread, as one number.
  *
- * Savoir qu'il y a trois messages ne dit pas s'il faut les lire : l'infobulle
- * donne le dernier en entier, ce qui epargne le plus souvent l'ouverture du
- * panneau. Quand elle ne suffit pas, le clic mene au fil lui-meme.
+ * Knowing there are three messages does not say whether they need reading: the
+ * tooltip gives the latest in full, which most often saves opening the panel.
+ * When it does not, the click leads to the thread itself.
  *
- * Une mission sans mise a jour ne montre rien : dans un tableau, seul ce qui
- * se lit s'affiche.
+ * A mission with no update shows nothing: in a table, only what can be read is
+ * displayed.
  */
-export function UpdatesCounter({ nombre, apercu, onOpen }: UpdatesCounterProps) {
-  const { tooltip, suivre, quitter } = useTooltipCurseur({ riche: true });
+export function UpdatesCounter({ count, preview, onOpen }: UpdatesCounterProps) {
+  const { tooltip, follow, leave } = useCursorTooltip({ rich: true });
 
-  if (nombre === 0) return null;
+  if (count === 0) return null;
 
   return (
     <button
       type="button"
-      aria-label={`${nombre} ${nombre > 1 ? "mises à jour" : "mise à jour"}`}
-      // La ligne entiere ouvre deja la mission : sans arret, le clic
-      // l'ouvrirait deux fois, et la seconde sur le mauvais onglet.
+      aria-label={`${count} ${count > 1 ? "mises à jour" : "mise à jour"}`}
+      // The whole row already opens the mission: without stopping propagation,
+      // the click would open it twice, the second time on the wrong tab.
       onClick={(event) => {
         event.stopPropagation();
         onOpen();
       }}
-      onMouseMove={(event) => apercu && suivre(event, apercu)}
-      onMouseLeave={quitter}
+      onMouseMove={(event) => preview && follow(event, preview)}
+      onMouseLeave={leave}
       className="inline-flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 text-xs tabular-nums text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
     >
-      {nombre}
+      {count}
       <MessageCircle className="size-3.5 shrink-0" aria-hidden />
       {tooltip}
     </button>

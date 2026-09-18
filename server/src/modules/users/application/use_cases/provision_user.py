@@ -1,4 +1,4 @@
-"""Provisionne un utilisateur a partir de son identite Entra."""
+"""Provisions a user from their Entra identity."""
 
 from datetime import datetime
 
@@ -8,15 +8,14 @@ from src.modules.users.domain.repositories.user_repository import UserRepository
 
 
 class ProvisionUserUseCase:
-    """Retrouve ou cree l'utilisateur correspondant a une identite Entra.
+    """Finds or creates the user matching an Entra identity.
 
-    Le rapprochement se fait d'abord sur l'identifiant Entra, puis sur l'email :
-    c'est ce second cas qui permet au seed de pre-attribuer les roles avant la
-    toute premiere connexion.
+    Matching goes by the Entra id first, then by email: that second case is
+    what lets the seed pre-assign roles before the very first login.
 
-    C'est aussi le seul endroit ou l'API voit passer une identite : c'est donc
-    ici que se date la derniere connexion, sous reserve de la fenetre de
-    fraicheur portee par le domaine.
+    It is also the only place the API sees an identity go by: this is
+    therefore where the last login is stamped, subject to the freshness window
+    the domain holds.
     """
 
     def __init__(self, users: UserRepository) -> None:
@@ -25,11 +24,11 @@ class ProvisionUserUseCase:
     async def execute(
         self, identity: EntraIdentity, now: datetime | None = None
     ) -> User:
-        maintenant = now or datetime.now()
+        now = now or datetime.now()
 
         existing = await self._users.get_by_entra_oid(identity.oid)
         if existing is not None:
-            if existing.enregistrer_connexion(maintenant):
+            if existing.record_login(now):
                 return await self._users.update(existing)
             return existing
 
@@ -37,7 +36,7 @@ class ProvisionUserUseCase:
         if seeded is not None:
             seeded.entra_oid = identity.oid
             seeded.display_name = identity.display_name or seeded.display_name
-            seeded.enregistrer_connexion(maintenant)
+            seeded.record_login(now)
             return await self._users.update(seeded)
 
         return await self._users.add(
@@ -47,6 +46,6 @@ class ProvisionUserUseCase:
                 email=identity.email,
                 display_name=identity.display_name,
                 role=Role.TEAMMATE,
-                derniere_connexion=maintenant,
+                last_login_at=now,
             )
         )

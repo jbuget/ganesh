@@ -1,9 +1,9 @@
 /**
- * Fin de session : le cookie qui porte le jeton Entra est efface.
+ * End of session: the cookie carrying the Entra token is cleared.
  *
- * Le jeton vit cote serveur, dans un cookie `httpOnly` : seul un handler comme
- * celui-ci peut le retirer. La redirection est laissee a l'appelant, qui sait
- * ou renvoyer la personne.
+ * The token lives server-side, in an `httpOnly` cookie: only a handler like
+ * this one can remove it. Redirecting is left to the caller, who knows where to
+ * send the person.
  */
 import { NextResponse } from "next/server";
 

@@ -1,4 +1,4 @@
-"""Routes de saisie du temps."""
+"""Time entry routes."""
 
 from datetime import date
 
@@ -43,18 +43,18 @@ router = APIRouter(prefix="/entries", tags=["entries"])
 
 @router.get("/grid", response_model=MonthGridResponse, operation_id="getMonthGrid")
 async def get_month_grid(
-    mois: date = Query(description="N'importe quel jour du mois demande"),
+    month: date = Query(description="Any day of the month asked for"),
     user_id: int | None = Query(
         default=None,
-        description="Collaborateur consulte. Par defaut, l'utilisateur courant.",
+        description="Teammate being looked at. Defaults to the current user.",
     ),
     current_user: User = Depends(get_current_user),
     use_case: GetMonthGridUseCase = Depends(get_month_grid_use_case),
 ) -> MonthGridResponse:
-    """Retourne la matrice d'un mois. Chacun peut consulter le mois de chacun."""
+    """Returns a month's grid. Anyone may look at anyone's month."""
     target_id = user_id or current_user.id
     assert target_id is not None
-    grid = await use_case.execute(GetMonthGridQuery(user_id=target_id, mois=mois))
+    grid = await use_case.execute(GetMonthGridQuery(user_id=target_id, month=month))
     return to_month_grid_response(grid)
 
 
@@ -63,21 +63,21 @@ async def set_entry(
     payload: SetEntryRequest,
     user_id: int | None = Query(
         default=None,
-        description="Collaborateur dont le mois est modifie.",
+        description="Teammate whose month is changed.",
     ),
     current_user: User = Depends(get_current_user),
     use_case: SetEntryUseCase = Depends(get_set_entry_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> EntryResponse:
-    """Enregistre une saisie, pour soi ou pour un collegue."""
+    """Records an entry, for oneself or for a colleague."""
     assert current_user.id is not None
     entry = await use_case.execute(
         SetEntryCommand(
             actor_id=current_user.id,
             target_user_id=user_id or current_user.id,
             project_id=payload.project_id,
-            jour=payload.jour,
-            valeur=payload.valeur,
+            day=payload.day,
+            value=payload.value,
         )
     )
     await session.commit()
@@ -91,22 +91,22 @@ async def set_entry(
 )
 async def clear_entry(
     project_id: int,
-    jour: date,
+    day: date,
     user_id: int | None = Query(
-        default=None, description="Collaborateur dont le mois est modifie."
+        default=None, description="Teammate whose month is changed."
     ),
     current_user: User = Depends(get_current_user),
     use_case: ClearEntryUseCase = Depends(get_clear_entry_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
-    """Retire une saisie, pour soi ou pour un collegue."""
+    """Removes an entry, for oneself or for a colleague."""
     assert current_user.id is not None
     await use_case.execute(
         ClearEntryCommand(
             actor_id=current_user.id,
             target_user_id=user_id or current_user.id,
             project_id=project_id,
-            jour=jour,
+            day=day,
         )
     )
     await session.commit()
@@ -120,22 +120,22 @@ async def clear_entry(
 )
 async def remove_mission_from_month(
     project_id: int,
-    mois: date = Query(description="N'importe quel jour du mois vise"),
+    month: date = Query(description="Any day of the month aimed at"),
     user_id: int | None = Query(
-        default=None, description="Collaborateur dont le mois est modifie."
+        default=None, description="Teammate whose month is changed."
     ),
     current_user: User = Depends(get_current_user),
     use_case: RemoveMissionFromMonthUseCase = Depends(get_remove_mission_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
-    """Retire une mission d'un mois, avec le temps qu'elle porte."""
+    """Removes a mission from a month, with the time it carries."""
     assert current_user.id is not None
     await use_case.execute(
         RemoveMissionCommand(
             actor_id=current_user.id,
             target_user_id=user_id or current_user.id,
             project_id=project_id,
-            mois=mois,
+            month=month,
         )
     )
     await session.commit()

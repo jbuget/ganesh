@@ -1,29 +1,29 @@
-"""Lien utile attache a une mission."""
+"""A useful link attached to a mission."""
 
 from dataclasses import dataclass
 from enum import StrEnum
 
 from src.shared.exceptions.domain_exceptions import ValidationError
 
-#: Un lien du tableau s'ouvre d'un simple clic : `javascript:` et consorts
-#: n'ont rien a y faire.
-SCHEMAS_AUTORISES = ("http://", "https://")
+#: A link on the board opens with a plain click: `javascript:` and its kin
+#: have no business there.
+ALLOWED_SCHEMES = ("http://", "https://")
 
 
 class LinkIcon(StrEnum):
-    """Famille de lien, annoncee par une icone.
+    """Family of link, announced by an icon.
 
-    Le catalogue est ferme et nomme des usages, non des outils : le jour ou
-    l'equipe quitte Figma pour autre chose, `MAQUETTE` reste juste.
+    The catalogue is closed and names uses, not tools: the day the team leaves
+    Figma for something else, `DESIGN` still holds.
     """
 
-    LIEN = "lien"
-    DEPOT = "depot"
-    MAQUETTE = "maquette"
+    LINK = "link"
+    REPOSITORY = "repository"
+    DESIGN = "design"
     DOCUMENT = "document"
-    TABLEUR = "tableur"
+    SPREADSHEET = "spreadsheet"
     PRESENTATION = "presentation"
-    DOSSIER = "dossier"
+    FOLDER = "folder"
     DISCUSSION = "discussion"
     TICKET = "ticket"
     VIDEO = "video"
@@ -31,27 +31,27 @@ class LinkIcon(StrEnum):
 
 @dataclass
 class ProjectLink:
-    """Une adresse utile, son intitule et l'icone qui l'annonce."""
+    """A useful address, its label, and the icon that announces it."""
 
     id: int | None
     project_id: int
     label: str
     url: str
-    icone: LinkIcon = LinkIcon.LIEN
+    icon: LinkIcon = LinkIcon.LINK
 
     def __post_init__(self) -> None:
         self.url = self.url.strip()
         if not self.url:
-            raise ValidationError("Un lien doit porter une adresse.")
-        if not self.url.startswith(SCHEMAS_AUTORISES):
-            raise ValidationError("Un lien doit commencer par http:// ou https://.")
+            raise ValidationError("A link must carry an address.")
+        if not self.url.startswith(ALLOWED_SCHEMES):
+            raise ValidationError("A link must start with http:// or https://.")
 
-        # Coller une adresse suffit : la nommer reste facultatif.
+        # Pasting an address is enough: naming it stays optional.
         self.label = self.label.strip() or self.url
 
-        # L'ecran doit savoir dessiner ce qu'il recoit : hors du catalogue,
-        # l'icone est refusee plutot que remplacee en silence.
+        # The screen must be able to draw what it receives: outside the
+        # catalogue, an icon is refused rather than silently replaced.
         try:
-            self.icone = LinkIcon(self.icone)
-        except ValueError as erreur:
-            raise ValidationError(f"Icone inconnue : {self.icone}.") from erreur
+            self.icon = LinkIcon(self.icon)
+        except ValueError as error:
+            raise ValidationError(f"Icone inconnue : {self.icon}.") from error

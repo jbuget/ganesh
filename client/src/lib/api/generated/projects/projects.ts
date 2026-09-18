@@ -103,7 +103,7 @@ export const getListProjectsUrl = (params?: ListProjectsParams) => {
 };
 
 /**
- * Liste les missions du referentiel.
+ * Lists the missions in the reference list.
  * @summary List Projects
  */
 export const listProjects = async (
@@ -260,7 +260,7 @@ export const getCreateProjectUrl = () => {
 };
 
 /**
- * Declare une nouvelle mission.
+ * Declares a new mission.
  * @summary Create Project
  */
 export const createProject = async (
@@ -390,7 +390,7 @@ export const getChangeProjectStatusUrl = (projectId: number) => {
 };
 
 /**
- * Fait changer la phase d'une mission.
+ * Moves a mission to another phase.
  * @summary Change Status
  */
 export const changeProjectStatus = async (
@@ -527,7 +527,7 @@ export const getUpdateProjectUrl = (projectId: number) => {
 };
 
 /**
- * Modifie une mission. Seuls les champs fournis sont appliques.
+ * Changes a mission. Only the fields provided are applied.
  * @summary Update Project
  */
 export const updateProject = async (
@@ -661,7 +661,7 @@ export const getDeleteProjectUrl = (projectId: number) => {
 };
 
 /**
- * Supprime une mission jamais utilisee. Sinon, il faut l'archiver.
+ * Deletes a mission never used. Otherwise, it must be archived.
  * @summary Delete Project
  */
 export const deleteProject = async (
@@ -768,7 +768,7 @@ export const getImportProjectsUrl = () => {
 };
 
 /**
- * Importe un referentiel de missions. Reserve aux managers.
+ * Imports a mission reference list. Managers only.
  * @summary Import Projects
  */
 export const importProjects = async (
@@ -909,7 +909,7 @@ export const getGetBoardUrl = (params?: GetBoardParams) => {
 };
 
 /**
- * Tableau de bord des projets, une colonne par phase.
+ * Project board, one column per phase.
  * @summary Get Board
  */
 export const getBoard = async (
@@ -1062,7 +1062,7 @@ export const getMoveProjectUrl = (projectId: number) => {
 };
 
 /**
- * Depose une carte dans une colonne, a un rang donne.
+ * Drops a card into a column, at a given rank.
  * @summary Move Project
  */
 export const moveProject = async (
@@ -1212,7 +1212,7 @@ export const getAssignMemberUrl = (
 };
 
 /**
- * Declare qu'une personne intervient, ou va intervenir, sur la mission.
+ * Declares that someone is working, or about to work, on the mission.
  * @summary Assign Member
  */
 export const assignMember = async (
@@ -1344,7 +1344,7 @@ export const getUnassignMemberUrl = (
 };
 
 /**
- * Retire une personne des intervenants de la mission.
+ * Removes someone from the mission's contributors.
  * @summary Unassign Member
  */
 export const unassignMember = async (
@@ -1460,7 +1460,7 @@ export const getGetProjectDetailUrl = (projectId: number) => {
 };
 
 /**
- * La fiche complete d'une mission.
+ * The full sheet of a mission.
  * @summary Get Project Detail
  */
 export const getProjectDetail = async (
@@ -1620,7 +1620,7 @@ export const getUpdateProjectDetailUrl = (projectId: number) => {
 };
 
 /**
- * Enregistre les departements concernes et les contacts metier.
+ * Saves the departments concerned and the business contacts.
  * @summary Update Project Detail
  */
 export const updateProjectDetail = async (
@@ -1757,7 +1757,7 @@ export const getAddProjectLinkUrl = (projectId: number) => {
 };
 
 /**
- * Attache un lien utile a la mission.
+ * Attaches a useful link to the mission.
  * @summary Add Project Link
  */
 export const addProjectLink = async (
@@ -1891,7 +1891,7 @@ export const getRemoveProjectLinkUrl = (projectId: number, linkId: number) => {
 };
 
 /**
- * Detache un lien de la mission.
+ * Detaches a link from the mission.
  * @summary Remove Project Link
  */
 export const removeProjectLink = async (
@@ -2004,7 +2004,7 @@ export const getUpdateProjectDescriptionUrl = (projectId: number) => {
 };
 
 /**
- * Enregistre la fiche de service, en markdown.
+ * Saves the service sheet, in markdown.
  * @summary Update Project Description
  */
 export const updateProjectDescription = async (
@@ -2145,7 +2145,7 @@ export const getListProjectUpdatesUrl = (projectId: number) => {
 };
 
 /**
- * Le fil de suivi d'une mission, de la plus recente a la plus ancienne.
+ * A mission's follow-up thread, most recent first.
  * @summary List Project Updates
  */
 export const listProjectUpdates = async (
@@ -2307,7 +2307,7 @@ export const getPostProjectUpdateUrl = (projectId: number) => {
 };
 
 /**
- * Publie une mise a jour sur la mission.
+ * Posts an update on the mission.
  * @summary Post Project Update
  */
 export const postProjectUpdate = async (
@@ -2441,7 +2441,7 @@ export const getEditProjectUpdateUrl = (projectId: number, updateId: number) => 
 };
 
 /**
- * Corrige une mise a jour. Seul son auteur le peut.
+ * Corrects an update. Only its author may.
  * @summary Edit Project Update
  */
 export const editProjectUpdate = async (
@@ -2580,7 +2580,7 @@ export const getRemoveProjectUpdateUrl = (projectId: number, updateId: number) =
 };
 
 /**
- * Retire une mise a jour. Elle garde sa place dans le fil.
+ * Withdraws an update. It keeps its place in the thread.
  * @summary Remove Project Update
  */
 export const removeProjectUpdate = async (

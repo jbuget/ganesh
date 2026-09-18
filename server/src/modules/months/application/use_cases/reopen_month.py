@@ -1,4 +1,4 @@
-"""Rouvre un mois valide. Reserve aux managers, et trace."""
+"""Reopens a validated month. Managers only, and traced."""
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
@@ -15,7 +15,7 @@ from src.shared.exceptions.domain_exceptions import (
 
 
 class ReopenMonthUseCase:
-    """Remet un mois valide en saisie."""
+    """Puts a validated month back into entry."""
 
     def __init__(
         self,
@@ -32,9 +32,9 @@ class ReopenMonthUseCase:
         if actor is None:
             raise EntityNotFoundError("Utilisateur inconnu.")
 
-        month = await self._months.get(command.target_user_id, command.mois)
+        month = await self._months.get(command.target_user_id, command.month)
         if month is None:
-            raise ForbiddenActionError("Ce mois n'a jamais ete valide.")
+            raise ForbiddenActionError("This month was never validated.")
 
         month.reopen(by=actor)
         await self._months.save(month)
@@ -43,7 +43,7 @@ class ReopenMonthUseCase:
             AuditLog.month_reopen(
                 actor_id=command.actor_id,
                 target_user_id=command.target_user_id,
-                mois=month.mois,
+                month=month.month,
             )
         )
         return month

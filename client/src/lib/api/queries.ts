@@ -1,11 +1,11 @@
 /**
- * Enveloppes applicatives autour des hooks generes par Orval.
+ * Application wrappers around the hooks Orval generates.
  *
- * Orval type `data` comme l'union du succes et des erreurs declarees dans
- * l'OpenAPI. Or `bffFetcher` leve une `ApiError` des que la reponse n'est pas
- * 2xx : lorsqu'un hook expose des donnees, ce sont donc toujours celles du
- * succes. Ce fichier est le seul endroit ou ce savoir est applique, plutot que
- * de disperser des conversions de type dans les composants.
+ * Orval types `data` as the union of the success and of the errors declared in
+ * the OpenAPI. But `bffFetcher` raises an `ApiError` as soon as the response is
+ * not 2xx: when a hook exposes data, it is always the success data. This file
+ * is the only place that knowledge is applied, rather than scattering type
+ * casts across the components.
  */
 import { useGetMonthGrid } from "@/lib/api/generated/entries/entries";
 import type {
@@ -20,7 +20,7 @@ function successOf<T>(response: { data: unknown } | undefined): T | undefined {
   return response?.data as T | undefined;
 }
 
-/** Meme raisonnement pour le resultat d'une mutation. */
+/** Same reasoning for the result of a mutation. */
 export function mutationResult<T>(response: { data: unknown }): T {
   return response.data as T;
 }
@@ -32,10 +32,10 @@ export function useCurrentUser() {
 }
 
 /**
- * Les collaborateurs.
+ * The teammates.
  *
- * Par defaut, seuls les actifs : partout ailleurs qu'a l'ecran de gestion, un
- * collaborateur desactive n'a plus a etre propose.
+ * Active ones only by default: anywhere other than the management screen, a
+ * deactivated teammate has no business being offered.
  */
 export function useTeammates(includeInactive = false) {
   const query = useListUsers(includeInactive ? { include_inactive: true } : undefined);
@@ -43,14 +43,14 @@ export function useTeammates(includeInactive = false) {
 }
 
 /**
- * Le referentiel des missions, chacune avec qui s'en occupe.
+ * The mission reference list, each with who looks after it.
  *
- * Les affectations viennent de la meme requete que les missions : le
- * referentiel les aligne en colonnes, et une requete par ligne les ferait
- * arriver les unes apres les autres sous les yeux du lecteur.
+ * Assignments come from the same request as the missions: the reference list
+ * lines them up in columns, and one request per row would make them arrive one
+ * after the other before the reader's eyes.
  *
- * Les archivees ne sont demandees que lorsqu'on veut les voir : partout
- * ailleurs, une mission rangee n'a plus a etre proposee.
+ * Archived ones are only asked for when they are wanted: anywhere else, a
+ * mission put away has no business being offered.
  */
 export function useProjects(includeInactive = false) {
   const query = useListProjects(
@@ -60,15 +60,15 @@ export function useProjects(includeInactive = false) {
   return {
     ...query,
     missions,
-    /** Les seules missions, pour les ecrans qui ignorent les affectations. */
+    /** The missions alone, for screens that ignore assignments. */
     projects: missions.map((mission) => mission.project),
   };
 }
 
-/** La matrice d'un mois, pour un collaborateur donne. */
-export function useMonthGrid(mois: string, userId: number | null, enabled: boolean) {
+/** A month's grid, for a given teammate. */
+export function useMonthGrid(month: string, userId: number | null, enabled: boolean) {
   const query = useGetMonthGrid(
-    { mois, ...(userId ? { user_id: userId } : {}) },
+    { month, ...(userId ? { user_id: userId } : {}) },
     { query: { enabled } },
   );
   return { ...query, grid: successOf<MonthGridResponse>(query.data) };

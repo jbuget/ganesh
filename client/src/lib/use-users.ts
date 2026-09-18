@@ -8,43 +8,43 @@ import type { Role } from "@/lib/api/generated/model";
 import { useCurrentUser, useTeammates } from "@/lib/api/queries";
 
 /**
- * Etat et actions de l'ecran des collaborateurs.
+ * State and actions of the teammates screen.
  *
- * Comme partout ailleurs, la coordination vit dans un hook pour que le
- * composant ne porte que le rendu.
+ * As everywhere else, coordination lives in a hook so the component carries
+ * only the rendering.
  */
 export function useUsersScreen() {
   const queryClient = useQueryClient();
   const { user: me } = useCurrentUser();
-  const [avecInactifs, setAvecInactifs] = useState(false);
-  const { teammates, isLoading } = useTeammates(avecInactifs);
+  const [withInactive, setWithInactive] = useState(false);
+  const { teammates, isLoading } = useTeammates(withInactive);
 
   return {
     isLoading,
     isManager: me?.role === "MANAGER",
-    //: Nul ne coupe son propre acces : le compte serait refuse des la requete
-    //: suivante, et plus personne ne pourrait le rouvrir de l'interieur.
-    moiId: me?.id,
-    avecInactifs,
+    //: Nobody cuts off their own access: the account would be turned away on
+    //: the next request, and no one could reopen it from inside.
+    meId: me?.id,
+    withInactive,
 
-    // Un seul instant de reference par rendu : sans cela, deux lignes de la
-    // meme liste se compareraient a deux « maintenant » differents.
-    maintenant: new Date(),
+    // One reference instant per render: without it, two rows of the same list
+    // would compare against two different « now ».
+    now: new Date(),
 
-    basculerInactifs: () => setAvecInactifs((actuel) => !actuel),
+    toggleInactive: () => setWithInactive((actuel) => !actuel),
 
-    /** Par nom, seul ordre qui se retrouve a l'oeil dans une liste d'equipe. */
-    collaborateurs: [...teammates].sort((a, b) =>
+    /** By name, the only order one finds by eye in a team list. */
+    users: [...teammates].sort((a, b) =>
       a.display_name.localeCompare(b.display_name, "fr"),
     ),
 
-    async changerRole(userId: number, role: Role) {
+    async changeRole(userId: number, role: Role) {
       await changeUserRole(userId, { role });
       await queryClient.invalidateQueries();
     },
 
-    async changerActivite(userId: number, actif: boolean) {
-      await setUserActive(userId, { actif });
+    async setActive(userId: number, is_active: boolean) {
+      await setUserActive(userId, { is_active });
       await queryClient.invalidateQueries();
     },
   };

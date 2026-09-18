@@ -1,4 +1,4 @@
-"""Une mise a jour publiee sur une mission."""
+"""An update posted on a mission."""
 
 from datetime import datetime
 
@@ -10,85 +10,85 @@ from src.shared.exceptions.domain_exceptions import (
     ValidationError,
 )
 
-QUAND = datetime(2026, 9, 17, 10, 0)
-AUTEUR = 1
-QUELQUUN_DAUTRE = 2
+WHEN = datetime(2026, 9, 17, 10, 0)
+AUTHOR = 1
+SOMEONE_ELSE = 2
 
 
-def une_maj(texte: str = "Revue de backlog du 11/09.") -> ProjectUpdate:
+def an_update(body: str = "Revue de backlog du 11/09.") -> ProjectUpdate:
     return ProjectUpdate(
-        id=1, project_id=10, author_id=AUTEUR, texte=texte, publiee_le=QUAND
+        id=1, project_id=10, author_id=AUTHOR, body=body, published_at=WHEN
     )
 
 
 def test_an_update_carries_its_text() -> None:
-    assert une_maj().texte == "Revue de backlog du 11/09."
+    assert an_update().body == "Revue de backlog du 11/09."
 
 
 def test_surrounding_blanks_are_trimmed() -> None:
-    assert une_maj("  Deploiement prevu.  ").texte == "Deploiement prevu."
+    assert an_update("  Deploiement prevu.  ").body == "Deploiement prevu."
 
 
 def test_an_empty_update_is_refused() -> None:
     with pytest.raises(ValidationError):
-        une_maj("   \n  ")
+        an_update("   \n  ")
 
 
 def test_the_author_can_rewrite_it() -> None:
-    maj = une_maj()
+    update = an_update()
 
-    maj.reecrire("Corrige : le deploiement est repousse.", par=AUTEUR, a=QUAND)
+    update.rewrite("Corrige : le deploiement est repousse.", by=AUTHOR, at=WHEN)
 
-    assert maj.texte == "Corrige : le deploiement est repousse."
-    assert maj.modifiee_le == QUAND
+    assert update.body == "Corrige : le deploiement est repousse."
+    assert update.edited_at == WHEN
 
 
 def test_nobody_else_can_rewrite_it() -> None:
-    """Un fil de suivi n'est pas un wiki : chacun repond de ses mots."""
-    maj = une_maj()
+    """A follow-up thread is not a wiki: everyone answers for their own words."""
+    update = an_update()
 
     with pytest.raises(ForbiddenActionError):
-        maj.reecrire("Autre chose", par=QUELQUUN_DAUTRE, a=QUAND)
+        update.rewrite("Autre chose", by=SOMEONE_ELSE, at=WHEN)
 
 
 def test_the_author_can_remove_it() -> None:
-    maj = une_maj()
+    update = an_update()
 
-    maj.supprimer(par=AUTEUR, a=QUAND)
+    update.remove(by=AUTHOR, at=WHEN)
 
-    assert maj.est_supprimee
+    assert update.is_deleted
 
 
 def test_nobody_else_can_remove_it() -> None:
-    maj = une_maj()
+    update = an_update()
 
     with pytest.raises(ForbiddenActionError):
-        maj.supprimer(par=QUELQUUN_DAUTRE, a=QUAND)
+        update.remove(by=SOMEONE_ELSE, at=WHEN)
 
 
 def test_a_removed_update_keeps_its_place_but_not_its_words() -> None:
-    """L'ecran affiche « Message supprime » : le fil garde sa chronologie, le
-    texte disparait."""
-    maj = une_maj()
+    """The screen shows « Message supprime »: the thread keeps its
+    order, the text goes."""
+    update = an_update()
 
-    maj.supprimer(par=AUTEUR, a=QUAND)
+    update.remove(by=AUTHOR, at=WHEN)
 
-    assert maj.texte == ""
-    assert maj.publiee_le == QUAND
+    assert update.body == ""
+    assert update.published_at == WHEN
 
 
 def test_a_removed_update_cannot_be_rewritten() -> None:
-    maj = une_maj()
-    maj.supprimer(par=AUTEUR, a=QUAND)
+    update = an_update()
+    update.remove(by=AUTHOR, at=WHEN)
 
     with pytest.raises(ForbiddenActionError):
-        maj.reecrire("Retour en arriere", par=AUTEUR, a=QUAND)
+        update.rewrite("Retour en arriere", by=AUTHOR, at=WHEN)
 
 
 def test_removing_twice_changes_nothing() -> None:
-    maj = une_maj()
-    maj.supprimer(par=AUTEUR, a=QUAND)
+    update = an_update()
+    update.remove(by=AUTHOR, at=WHEN)
 
-    maj.supprimer(par=AUTEUR, a=datetime(2026, 12, 1))
+    update.remove(by=AUTHOR, at=datetime(2026, 12, 1))
 
-    assert maj.supprimee_le == QUAND
+    assert update.deleted_at == WHEN

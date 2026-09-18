@@ -1,4 +1,4 @@
-"""Cablage des use cases du referentiel."""
+"""Wiring of the reference list use cases."""
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -250,13 +250,13 @@ def get_update_description_use_case(
     return UpdateDescriptionUseCase(projects=projects, audit_logs=audit_logs)
 
 
-def _ecriture_du_fil(
+def _thread_write(
     users: UserRepository = Depends(get_user_repository),
     projects: ProjectRepository = Depends(get_project_repository),
     updates: ProjectUpdateRepository = Depends(get_project_update_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> dict[str, object]:
-    """Les quatre depots que partagent les ecritures du fil."""
+    """The four repositories the thread writes share."""
     return {
         "users": users,
         "projects": projects,
@@ -266,21 +266,21 @@ def _ecriture_du_fil(
 
 
 def get_post_update_use_case(
-    depots: dict[str, object] = Depends(_ecriture_du_fil),
+    repositories: dict[str, object] = Depends(_thread_write),
 ) -> PostProjectUpdateUseCase:
-    return PostProjectUpdateUseCase(**depots)  # type: ignore[arg-type]
+    return PostProjectUpdateUseCase(**repositories)  # type: ignore[arg-type]
 
 
 def get_edit_update_use_case(
-    depots: dict[str, object] = Depends(_ecriture_du_fil),
+    repositories: dict[str, object] = Depends(_thread_write),
 ) -> EditProjectUpdateUseCase:
-    return EditProjectUpdateUseCase(**depots)  # type: ignore[arg-type]
+    return EditProjectUpdateUseCase(**repositories)  # type: ignore[arg-type]
 
 
 def get_remove_update_use_case(
-    depots: dict[str, object] = Depends(_ecriture_du_fil),
+    repositories: dict[str, object] = Depends(_thread_write),
 ) -> RemoveProjectUpdateUseCase:
-    return RemoveProjectUpdateUseCase(**depots)  # type: ignore[arg-type]
+    return RemoveProjectUpdateUseCase(**repositories)  # type: ignore[arg-type]
 
 
 def get_list_updates_use_case(

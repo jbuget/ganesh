@@ -6,18 +6,18 @@
  */
 
 /**
- * Phase de vie d'un projet ou d'un lot.
+ * Life-cycle phase of a project or a work package.
  *
- * L'ordre declare ici est l'ordre nominal, et celui des colonnes du tableau de
- * bord. Un projet peut revenir en arriere : aucune transition n'est interdite.
+ * The order declared here is the nominal one, and the order of the board
+ * columns. A project may move backwards: no transition is forbidden.
  */
 export type ProjectStatus = (typeof ProjectStatus)[keyof typeof ProjectStatus];
 
 export const ProjectStatus = {
   exploration: "exploration",
-  cadrage: "cadrage",
-  realisation: "realisation",
+  scoping: "scoping",
+  development: "development",
   validation: "validation",
-  deploiement: "deploiement",
-  exploitation: "exploitation",
+  deployment: "deployment",
+  operations: "operations",
 } as const;

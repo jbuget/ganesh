@@ -6,10 +6,10 @@
  */
 
 /**
- * Un intervenant, tel qu'affiche en pastille sur une carte.
+ * A contributor, as shown by an avatar on a card.
  */
 export interface BoardMemberResponse {
   id: number;
   display_name: string;
-  initiales: string;
+  initials: string;
 }

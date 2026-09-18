@@ -1,7 +1,7 @@
-"""Journal des actions significatives.
+"""Log of the actions that matter.
 
-La transparence est assumee : chacun peut editer le mois ouvert d'un collegue.
-Cette liberte n'a de sens que si chaque geste laisse une trace lisible.
+Transparency is deliberate: anyone may edit a colleague's open month. That
+freedom only makes sense if every move leaves a readable trace.
 """
 
 from dataclasses import dataclass, field
@@ -37,14 +37,14 @@ def _as_text(value: Any | None) -> str | None:
 
 @dataclass
 class AuditLog:
-    """Une ligne du journal d'audit."""
+    """One line of the audit log."""
 
     action: AuditAction
     actor_id: int
     at: datetime = field(default_factory=datetime.now)
     target_user_id: int | None = None
     project_id: int | None = None
-    jour: date | None = None
+    day: date | None = None
     old_value: str | None = None
     new_value: str | None = None
     payload: dict[str, Any] | None = None
@@ -52,7 +52,7 @@ class AuditLog:
 
     @property
     def is_on_behalf_of_someone_else(self) -> bool:
-        """Signale une action faite sur le mois d'un collegue."""
+        """Flags an action taken on a colleague's month."""
         return self.target_user_id is not None and self.target_user_id != self.actor_id
 
     @classmethod
@@ -61,7 +61,7 @@ class AuditLog:
         actor_id: int,
         target_user_id: int,
         project_id: int,
-        jour: date,
+        day: date,
         old_value: float | None,
         new_value: float,
         at: datetime | None = None,
@@ -71,7 +71,7 @@ class AuditLog:
             actor_id=actor_id,
             target_user_id=target_user_id,
             project_id=project_id,
-            jour=jour,
+            day=day,
             old_value=_as_text(old_value),
             new_value=_as_text(new_value),
             at=at or datetime.now(),
@@ -83,7 +83,7 @@ class AuditLog:
         actor_id: int,
         target_user_id: int,
         project_id: int,
-        jour: date,
+        day: date,
         old_value: float | None,
         at: datetime | None = None,
     ) -> "AuditLog":
@@ -92,7 +92,7 @@ class AuditLog:
             actor_id=actor_id,
             target_user_id=target_user_id,
             project_id=project_id,
-            jour=jour,
+            day=day,
             old_value=_as_text(old_value),
             at=at or datetime.now(),
         )
@@ -102,14 +102,14 @@ class AuditLog:
         cls,
         actor_id: int,
         target_user_id: int,
-        mois: date,
+        month: date,
         at: datetime | None = None,
     ) -> "AuditLog":
         return cls(
             action=AuditAction.MONTH_VALIDATE,
             actor_id=actor_id,
             target_user_id=target_user_id,
-            jour=mois,
+            day=month,
             at=at or datetime.now(),
         )
 
@@ -118,14 +118,14 @@ class AuditLog:
         cls,
         actor_id: int,
         target_user_id: int,
-        mois: date,
+        month: date,
         at: datetime | None = None,
     ) -> "AuditLog":
         return cls(
             action=AuditAction.MONTH_REOPEN,
             actor_id=actor_id,
             target_user_id=target_user_id,
-            jour=mois,
+            day=month,
             at=at or datetime.now(),
         )
 
@@ -138,7 +138,7 @@ class AuditLog:
         role: str,
         at: datetime | None = None,
     ) -> "AuditLog":
-        """Un intervenant est declare sur une mission."""
+        """A contributor is declared on a mission."""
         return cls(
             action=AuditAction.PROJECT_ASSIGN,
             actor_id=actor_id,
@@ -157,7 +157,7 @@ class AuditLog:
         role: str,
         at: datetime | None = None,
     ) -> "AuditLog":
-        """Un intervenant n'est plus attendu sur une mission."""
+        """A contributor is no longer expected on a mission."""
         return cls(
             action=AuditAction.PROJECT_UNASSIGN,
             actor_id=actor_id,

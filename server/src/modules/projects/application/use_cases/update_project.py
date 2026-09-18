@@ -1,4 +1,4 @@
-"""Modifie une mission du referentiel."""
+"""Changes a mission in the reference list."""
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
@@ -16,15 +16,15 @@ from src.modules.projects.domain.services.hierarchy import ensure_can_be_parent
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
-#: Champs modifiables, dans l'ordre ou ils sont appliques.
-CHAMPS = (
+#: Editable fields, in the order they are applied.
+EDITABLE_FIELDS = (
     "label",
-    "statut",
-    "estime_j",
-    "categorie",
-    "priorite",
-    "date_mise_en_service",
-    "actif",
+    "status",
+    "estimated_days",
+    "category",
+    "priority",
+    "go_live_date",
+    "is_active",
     "parent_id",
     "monday_item_id",
     "monday_subitem_id",
@@ -32,10 +32,10 @@ CHAMPS = (
 
 
 class UpdateProjectUseCase:
-    """Applique les seuls champs fournis, et trace ce qui a change.
+    """Applies only the fields provided, and traces what changed.
 
-    La modification est ouverte a toute l'equipe, comme la creation : le parti
-    pris est la confiance, la tracabilite le garde-fou.
+    Editing is open to the whole team, as creation is: trust is the stance,
+    traceability the safeguard.
     """
 
     def __init__(
@@ -56,44 +56,44 @@ class UpdateProjectUseCase:
         if project is None:
             raise EntityNotFoundError("Mission inconnue.")
 
-        # `isinstance` ecarte a la fois ABSENT et un detachement volontaire (None).
+        # `isinstance` rules out both ABSENT and a deliberate detach (None).
         parent_id = command.parent_id
         if isinstance(parent_id, int):
             parent = await self._projects.get_by_id(parent_id)
             if parent is None:
-                raise EntityNotFoundError("Le projet parent est introuvable.")
+                raise EntityNotFoundError("The parent project cannot be found.")
             ensure_can_be_parent(parent)
 
-        changements: list[tuple[str, object, object]] = []
-        for champ in CHAMPS:
-            demande = getattr(command, champ)
-            if demande is ABSENT:
+        changes: list[tuple[str, object, object]] = []
+        for field in EDITABLE_FIELDS:
+            requested = getattr(command, field)
+            if requested is ABSENT:
                 continue
-            ancien = getattr(project, champ)
-            if ancien == demande:
+            previous = getattr(project, field)
+            if previous == requested:
                 continue
-            changements.append((champ, ancien, demande))
-            if champ == "actif":
-                # Sortir du referentiel se date, y revenir efface la date :
-                # c'est l'entite qui tient cette regle, pas l'affectation.
-                project.archive() if demande is False else project.unarchive()
+            changes.append((field, previous, requested))
+            if field == "is_active":
+                # Leaving the reference list is dated, coming back clears the
+                # date: the entity holds that rule, not the assignment.
+                project.archive() if requested is False else project.unarchive()
             else:
-                setattr(project, champ, demande)
+                setattr(project, field, requested)
 
-        # Rejoue les invariants de l'entite sur l'etat resultant.
+        # Replays the entity invariants on the resulting state.
         project.__post_init__()
 
         await self._projects.update(project)
 
-        for champ, ancien, nouveau in changements:
+        for field, previous, new_one in changes:
             await self._audit_logs.add(
                 AuditLog(
                     action=AuditAction.PROJECT_UPDATE,
                     actor_id=command.actor_id,
                     project_id=project.id,
-                    old_value=None if ancien is None else str(ancien),
-                    new_value=None if nouveau is None else str(nouveau),
-                    payload={"champ": champ},
+                    old_value=None if previous is None else str(previous),
+                    new_value=None if new_one is None else str(new_one),
+                    payload={"field": field},
                 )
             )
         return project

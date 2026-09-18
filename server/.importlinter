@@ -3,10 +3,10 @@ root_packages =
     src
 include_external_packages = True
 
-# --- Pureté du domaine -------------------------------------------------------
-# Le domaine ne connait ni SQLAlchemy, ni FastAPI, ni aucun framework.
+# --- Domain purity -----------------------------------------------------------
+# The domain knows neither SQLAlchemy, nor FastAPI, nor any framework.
 [importlinter:contract:domain-purity]
-name = Le domaine ne depend d'aucun framework
+name = The domain depends on no framework
 type = forbidden
 source_modules =
     src.modules.*.domain
@@ -18,10 +18,10 @@ forbidden_modules =
     httpx
     starlette
 
-# --- Sens des dependances entre couches -------------------------------------
-# domain/ -> interdit d'importer infrastructure/ ou presentation/
+# --- Which way dependencies run between layers -------------------------------
+# domain/ -> importing infrastructure/ or presentation/ is forbidden
 [importlinter:contract:domain-isolation]
-name = Le domaine n'importe ni infrastructure ni presentation
+name = The domain imports neither infrastructure nor presentation
 type = forbidden
 source_modules =
     src.modules.*.domain
@@ -29,9 +29,9 @@ forbidden_modules =
     src.modules.*.infrastructure
     src.modules.*.presentation
 
-# application/ -> interdit d'importer infrastructure/ ou presentation/
+# application/ -> importing infrastructure/ or presentation/ is forbidden
 [importlinter:contract:application-isolation]
-name = L'application n'importe ni infrastructure ni presentation
+name = The application imports neither infrastructure nor presentation
 type = forbidden
 source_modules =
     src.modules.*.application
@@ -39,30 +39,30 @@ forbidden_modules =
     src.modules.*.infrastructure
     src.modules.*.presentation
 
-# infrastructure/ -> interdit d'importer presentation/
+# infrastructure/ -> importing presentation/ is forbidden
 [importlinter:contract:infrastructure-isolation]
-name = L'infrastructure n'importe pas presentation
+name = The infrastructure does not import presentation
 type = forbidden
 source_modules =
     src.modules.*.infrastructure
 forbidden_modules =
     src.modules.*.presentation
 
-# --- Code partage ------------------------------------------------------------
-# shared/ est un noyau : il ne connait aucun module metier.
+# --- Shared code -------------------------------------------------------------
+# shared/ is a core: it knows no business module.
 [importlinter:contract:shared-purity]
-name = shared/ ne depend d'aucun module metier
+name = shared/ depends on no business module
 type = forbidden
 source_modules =
     src.shared
 forbidden_modules =
     src.modules.*
 
-# --- Frontieres du code transverse -------------------------------------------
-# common/ porte le code technique transverse (handlers, middlewares) : il ne
-# connait aucun module metier.
+# --- Boundaries of cross-cutting code ----------------------------------------
+# common/ carries cross-cutting technical code (handlers, middlewares): it
+# knows no business module.
 [importlinter:contract:common-purity]
-name = common/ ne depend d'aucun module metier
+name = common/ depends on no business module
 type = forbidden
 source_modules =
     src.common

@@ -3,40 +3,40 @@
 import { useMemo } from "react";
 
 import {
-  AUCUN_FILTRE,
-  ecrireFiltres,
-  filtreActif,
-  lireFiltres,
+  NO_FILTER,
+  writeFilters,
+  hasActiveFilter,
+  readFilters,
   type MissionFilters,
 } from "@/lib/mission-filters";
-import { ecrireUrl, useQueryString } from "@/lib/url-state";
+import { writeUrl, useQueryString } from "@/lib/url-state";
 
 /**
- * Les filtres d'un ecran de missions, tenus par l'URL.
+ * The filters of a mission screen, held by the URL.
  *
- * Chaque reglage remplace l'etape courante plutot que d'en ajouter une : on
- * coche trois phases a la suite, et le retour arriere ramene a l'ecran d'avant,
- * pas au troisieme clic.
+ * Every setting replaces the current step rather than adding one: one ticks
+ * three phases in a row, and going back returns to the previous screen, not to
+ * the third click.
  */
 export function useMissionFilters() {
-  const requete = useQueryString();
-  const filtres = useMemo(() => lireFiltres(new URLSearchParams(requete)), [requete]);
+  const query = useQueryString();
+  const filters = useMemo(() => readFilters(new URLSearchParams(query)), [query]);
 
-  function poser(suivants: MissionFilters) {
-    ecrireUrl((params) => ecrireFiltres(params, suivants), "remplacer");
+  function apply(next_ones: MissionFilters) {
+    writeUrl((params) => writeFilters(params, next_ones), "remplacer");
   }
 
   return {
-    filtres,
-    actif: filtreActif(filtres),
+    filters,
+    hasFilter: hasActiveFilter(filters),
 
-    /** Change un seul critere, les autres restent en place. */
-    definir(changement: Partial<MissionFilters>) {
-      poser({ ...filtres, ...changement });
+    /** Changes a single criterion, the others stay put. */
+    set(change: Partial<MissionFilters>) {
+      apply({ ...filters, ...change });
     },
 
-    effacer() {
-      poser(AUCUN_FILTRE);
+    clear() {
+      apply(NO_FILTER);
     },
   };
 }

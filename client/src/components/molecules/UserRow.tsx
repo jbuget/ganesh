@@ -8,39 +8,39 @@ import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { UserAvatar } from "@/components/atoms/UserAvatar";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { Role, UserResponse } from "@/lib/api/generated/model";
-import { depuis } from "@/lib/dates-relatives";
+import { since } from "@/lib/relative-dates";
 
 interface UserRowProps {
   user: UserResponse;
-  /** La gestion des utilisateurs est reservee aux managers. */
+  /** Managing users is reserved for managers. */
   roleModifiable: boolean;
-  /** Faux sur sa propre ligne : nul ne coupe son propre acces. */
-  statutModifiable: boolean;
+  /** False on one's own row: nobody cuts off their own access. */
+  canChangeStatus: boolean;
   onChangeRole: (userId: number, role: Role) => void | Promise<void>;
-  onSetActive: (userId: number, actif: boolean) => void | Promise<void>;
-  /** Injecte : un rendu date par `new Date()` ne se testerait pas. */
-  maintenant: Date;
+  onSetActive: (userId: number, is_active: boolean) => void | Promise<void>;
+  /** Injected: a render dated by `new Date()` could not be tested. */
+  now: Date;
 }
 
-/** Un utilisateur : qui il est, ce qu'il peut faire, quand il est passe. */
+/** A user: who they are, what they may do, when they last came by. */
 export function UserRow({
   user,
   roleModifiable,
-  statutModifiable,
+  canChangeStatus,
   onChangeRole,
   onSetActive,
-  maintenant,
+  now,
 }: UserRowProps) {
-  const [coupureADemander, setCoupureADemander] = useState(false);
+  const [askingDeactivation, setAskingDeactivation] = useState(false);
 
   return (
-    <TableRow className={user.actif ? undefined : "text-slate-400"}>
+    <TableRow className={user.is_active ? undefined : "text-slate-400"}>
       <TableCell className="py-2">
         <span className="flex items-center gap-2.5">
           <UserAvatar
-            initiales={user.initiales}
-            nom={user.display_name}
-            attenue={!user.actif}
+            initials={user.initials}
+            name={user.display_name}
+            dimmed={!user.is_active}
           />
           <span className="min-w-0 truncate font-medium">{user.display_name}</span>
         </span>
@@ -57,10 +57,10 @@ export function UserRow({
       </TableCell>
 
       <TableCell className="py-2 text-slate-500">
-        {/* Un compte jamais venu n'est pas « il y a longtemps » : il n'est jamais venu. */}
-        {user.derniere_connexion ? (
-          <span title={new Date(user.derniere_connexion).toLocaleString("fr-FR")}>
-            {depuis(user.derniere_connexion, maintenant)}
+        {/* An account that never came is not « long ago »: it never came. */}
+        {user.last_login_at ? (
+          <span title={new Date(user.last_login_at).toLocaleString("fr-FR")}>
+            {since(user.last_login_at, now)}
           </span>
         ) : (
           <span className="text-slate-400">Jamais</span>
@@ -69,20 +69,21 @@ export function UserRow({
 
       <TableCell className="py-2">
         <StatusBadge
-          actif={user.actif}
-          modifiable={statutModifiable}
-          // Couper un acces se confirme ; le retablir ne retire rien a personne.
-          onToggle={(actif) =>
-            actif ? onSetActive(user.id, true) : setCoupureADemander(true)
+          is_active={user.is_active}
+          modifiable={canChangeStatus}
+          // Cutting off access is confirmed; restoring it takes nothing from
+          // anyone.
+          onToggle={(is_active) =>
+            is_active ? onSetActive(user.id, true) : setAskingDeactivation(true)
           }
         />
 
         <DeactivateUserDialog
-          open={coupureADemander}
-          onOpenChange={setCoupureADemander}
-          nom={user.display_name}
+          open={askingDeactivation}
+          onOpenChange={setAskingDeactivation}
+          name={user.display_name}
           onConfirm={() => {
-            setCoupureADemander(false);
+            setAskingDeactivation(false);
             return onSetActive(user.id, false);
           }}
         />

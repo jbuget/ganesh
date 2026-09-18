@@ -3,33 +3,33 @@
 import { useMemo } from "react";
 
 import {
-  ecrireTri,
-  lireTri,
-  triSuivant,
-  type ColonneTri,
-  type TriMissions,
+  writeSort,
+  readSort,
+  nextSort,
+  type SortColumn,
+  type MissionSort,
 } from "@/lib/mission-sort";
-import { ecrireUrl, useQueryString } from "@/lib/url-state";
+import { writeUrl, useQueryString } from "@/lib/url-state";
 
 /**
- * L'ordre d'un ecran de missions, tenu par l'URL.
+ * The order of a mission screen, held by the URL.
  *
- * Comme les filtres : un tableau range d'une certaine facon se partage par un
- * lien, et survit a un rechargement. Chaque clic remplace l'etape courante —
- * on cherche le bon ordre par essais successifs, et le retour arriere doit
- * ramener a l'ecran d'avant, pas au clic precedent.
+ * Like the filters: a list arranged a certain way is shared by a link, and
+ * survives a reload. Every click replaces the current step — one looks for the
+ * right order by trying, and going back must return to the previous screen, not
+ * to the previous click.
  */
 export function useMissionSort() {
-  const requete = useQueryString();
-  const tri = useMemo(() => lireTri(new URLSearchParams(requete)), [requete]);
+  const query = useQueryString();
+  const sorted = useMemo(() => readSort(new URLSearchParams(query)), [query]);
 
   return {
-    tri,
+    sorted,
 
-    /** Fait passer une colonne a l'etape suivante de son cycle. */
-    basculer(colonne: ColonneTri) {
-      const suivant: TriMissions = triSuivant(tri, colonne);
-      ecrireUrl((params) => ecrireTri(params, suivant), "remplacer");
+    /** Moves a column to the next step of its cycle. */
+    toggle(column: SortColumn) {
+      const next: MissionSort = nextSort(sorted, column);
+      writeUrl((params) => writeSort(params, next), "remplacer");
     },
   };
 }

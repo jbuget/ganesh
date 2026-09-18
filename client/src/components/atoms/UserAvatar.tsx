@@ -1,22 +1,22 @@
 interface UserAvatarProps {
-  initiales: string;
-  /** Nom complet : des initiales seules ne se devinent pas. */
-  nom: string;
-  /** Un collaborateur desactive s'efface, sans disparaitre. */
-  attenue?: boolean;
+  initials: string;
+  /** Full name: initials alone cannot be guessed. */
+  name: string;
+  /** A deactivated teammate fades, without disappearing. */
+  dimmed?: boolean;
 }
 
-/** Pastille d'initiales identifiant un collaborateur. */
-export function UserAvatar({ initiales, nom, attenue = false }: UserAvatarProps) {
+/** Initial avatar identifying a teammate. */
+export function UserAvatar({ initials, name, dimmed = false }: UserAvatarProps) {
   return (
     <span
-      title={nom}
+      title={name}
       className={[
         "flex size-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-medium text-slate-700",
-        attenue ? "opacity-50" : "",
+        dimmed ? "opacity-50" : "",
       ].join(" ")}
     >
-      {initiales}
+      {initials}
     </span>
   );
 }

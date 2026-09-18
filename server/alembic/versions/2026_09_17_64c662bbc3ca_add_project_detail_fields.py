@@ -97,9 +97,9 @@ def upgrade() -> None:
             nullable=False,
         ),
     )
-    # L'autogenerate ajoute la colonne mais laisse la cle primaire en l'etat :
-    # sans ce remaniement, une personne ne pourrait pas etre a la fois
-    # referente et intervenante d'une meme mission.
+    # Autogenerate adds the column but leaves the primary key as it was:
+    # without this rework, one person could not be both lead and contributor on
+    # the same mission.
     op.drop_constraint("project_assignees_pkey", "project_assignees", type_="primary")
     op.create_primary_key(
         "project_assignees_pkey",

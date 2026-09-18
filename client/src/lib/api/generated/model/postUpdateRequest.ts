@@ -6,9 +6,9 @@
  */
 
 /**
- * Publication ou correction d'une mise a jour.
+ * Posting or correcting an update.
  */
 export interface PostUpdateRequest {
   /** @minLength 1 */
-  texte: string;
+  body: string;
 }

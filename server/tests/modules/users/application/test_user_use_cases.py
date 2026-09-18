@@ -1,4 +1,4 @@
-"""Provisionnement depuis Entra et gestion des roles."""
+"""Provisioning from Entra and managing roles."""
 
 from datetime import datetime
 
@@ -83,7 +83,7 @@ async def test_a_known_identity_is_reused() -> None:
 
 
 async def test_a_seeded_user_keeps_their_role_on_first_login() -> None:
-    """Le seed pre-attribue les roles avant la premiere connexion."""
+    """The seed pre-assigns roles before the first login."""
     seeded = User(
         id=1,
         entra_oid=None,
@@ -143,12 +143,12 @@ async def test_a_new_user_is_stamped_with_their_first_connection() -> None:
         now=datetime(2026, 9, 17, 9, 0),
     )
 
-    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 0)
+    assert user.last_login_at == datetime(2026, 9, 17, 9, 0)
 
 
 async def test_a_returning_user_sees_their_connection_refreshed() -> None:
     teammate = make_teammate()
-    teammate.derniere_connexion = datetime(2026, 9, 16, 9, 0)
+    teammate.last_login_at = datetime(2026, 9, 16, 9, 0)
     provision, _, repo, _, _ = build([teammate])
 
     await provision.execute(
@@ -160,13 +160,13 @@ async def test_a_returning_user_sees_their_connection_refreshed() -> None:
 
     stored = await repo.get_by_id(2)
     assert stored is not None
-    assert stored.derniere_connexion == datetime(2026, 9, 17, 9, 0)
+    assert stored.last_login_at == datetime(2026, 9, 17, 9, 0)
 
 
 async def test_a_busy_user_is_not_written_on_every_request() -> None:
-    """Le jeton est represente a chaque appel : la base n'a pas a le subir."""
+    """The token is presented on every call: the database need not suffer it."""
     teammate = make_teammate()
-    teammate.derniere_connexion = datetime(2026, 9, 17, 9, 0)
+    teammate.last_login_at = datetime(2026, 9, 17, 9, 0)
     provision, _, repo, _, _ = build([teammate])
 
     identity = EntraIdentity(
@@ -182,26 +182,26 @@ async def test_a_manager_deactivates_a_teammate() -> None:
     _, _, repo, _, set_active = build([make_manager(), make_teammate()])
 
     await set_active.execute(
-        SetUserActiveCommand(actor_id=1, target_user_id=2, actif=False)
+        SetUserActiveCommand(actor_id=1, target_user_id=2, is_active=False)
     )
 
     user = await repo.get_by_id(2)
     assert user is not None
-    assert user.actif is False
+    assert user.is_active is False
 
 
 async def test_a_manager_reactivates_a_teammate() -> None:
     teammate = make_teammate()
-    teammate.actif = False
+    teammate.is_active = False
     _, _, repo, _, set_active = build([make_manager(), teammate])
 
     await set_active.execute(
-        SetUserActiveCommand(actor_id=1, target_user_id=2, actif=True)
+        SetUserActiveCommand(actor_id=1, target_user_id=2, is_active=True)
     )
 
     user = await repo.get_by_id(2)
     assert user is not None
-    assert user.actif is True
+    assert user.is_active is True
 
 
 async def test_a_teammate_cannot_deactivate_anyone() -> None:
@@ -209,37 +209,37 @@ async def test_a_teammate_cannot_deactivate_anyone() -> None:
 
     with pytest.raises(ForbiddenActionError):
         await set_active.execute(
-            SetUserActiveCommand(actor_id=2, target_user_id=1, actif=False)
+            SetUserActiveCommand(actor_id=2, target_user_id=1, is_active=False)
         )
 
 
 async def test_a_manager_cannot_deactivate_themselves() -> None:
-    """Sinon le compte est refuse a la porte des la requete suivante."""
+    """Otherwise the account is turned away at the door on the next request."""
     _, _, repo, _, set_active = build([make_manager(), make_teammate()])
 
     with pytest.raises(ForbiddenActionError):
         await set_active.execute(
-            SetUserActiveCommand(actor_id=1, target_user_id=1, actif=False)
+            SetUserActiveCommand(actor_id=1, target_user_id=1, is_active=False)
         )
 
     manager = await repo.get_by_id(1)
     assert manager is not None
-    assert manager.actif is True
+    assert manager.is_active is True
 
 
 async def test_a_manager_can_always_reactivate_themselves_is_pointless_but_allowed() -> (
     None
 ):
-    """Reactiver n'enferme personne dehors : la regle ne vise que la coupure."""
+    """Reactivating locks nobody out: the rule only aims at cutting off."""
     _, _, repo, _, set_active = build([make_manager(), make_teammate()])
 
     await set_active.execute(
-        SetUserActiveCommand(actor_id=1, target_user_id=1, actif=True)
+        SetUserActiveCommand(actor_id=1, target_user_id=1, is_active=True)
     )
 
     manager = await repo.get_by_id(1)
     assert manager is not None
-    assert manager.actif is True
+    assert manager.is_active is True
 
 
 async def test_deactivating_an_unknown_user_is_refused() -> None:
@@ -247,7 +247,7 @@ async def test_deactivating_an_unknown_user_is_refused() -> None:
 
     with pytest.raises(EntityNotFoundError):
         await set_active.execute(
-            SetUserActiveCommand(actor_id=1, target_user_id=99, actif=False)
+            SetUserActiveCommand(actor_id=1, target_user_id=99, is_active=False)
         )
 
 
@@ -255,7 +255,7 @@ async def test_a_deactivation_is_traced() -> None:
     _, _, _, audit, set_active = build([make_manager(), make_teammate()])
 
     await set_active.execute(
-        SetUserActiveCommand(actor_id=1, target_user_id=2, actif=False)
+        SetUserActiveCommand(actor_id=1, target_user_id=2, is_active=False)
     )
 
     log = audit.logs[-1]
@@ -265,11 +265,11 @@ async def test_a_deactivation_is_traced() -> None:
 
 async def test_a_reactivation_is_traced_under_its_own_action() -> None:
     teammate = make_teammate()
-    teammate.actif = False
+    teammate.is_active = False
     _, _, _, audit, set_active = build([make_manager(), teammate])
 
     await set_active.execute(
-        SetUserActiveCommand(actor_id=1, target_user_id=2, actif=True)
+        SetUserActiveCommand(actor_id=1, target_user_id=2, is_active=True)
     )
 
     log = audit.logs[-1]
@@ -277,11 +277,11 @@ async def test_a_reactivation_is_traced_under_its_own_action() -> None:
 
 
 async def test_setting_the_state_it_already_has_traces_nothing() -> None:
-    """Un clic sans effet ne doit pas polluer le journal."""
+    """A click with no effect must not clutter the log."""
     _, _, _, audit, set_active = build([make_manager(), make_teammate()])
 
     await set_active.execute(
-        SetUserActiveCommand(actor_id=1, target_user_id=2, actif=True)
+        SetUserActiveCommand(actor_id=1, target_user_id=2, is_active=True)
     )
 
     assert audit.logs == []

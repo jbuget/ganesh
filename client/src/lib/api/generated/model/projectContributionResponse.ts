@@ -8,10 +8,10 @@ import type { BoardMemberResponse } from "./boardMemberResponse";
 import type { MonthlyShareResponse } from "./monthlyShareResponse";
 
 /**
- * Temps declare par une personne sur la mission.
+ * Time one person declared on the mission.
  */
 export interface ProjectContributionResponse {
   member: BoardMemberResponse;
-  jours: number;
-  par_mois: MonthlyShareResponse[];
+  days: number;
+  by_month: MonthlyShareResponse[];
 }

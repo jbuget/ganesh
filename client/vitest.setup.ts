@@ -1,9 +1,9 @@
 import "@testing-library/jest-dom/vitest";
 
 /**
- * Radix, sur lequel reposent les composants shadcn, s'appuie sur des API que
- * jsdom n'implemente pas. Sans ces bouchons, ouvrir un `Select` ou un `Dialog`
- * leve une erreur dans les tests.
+ * Radix, which the shadcn components rest on, leans on APIs jsdom does not
+ * implement. Without these stubs, opening a `Select` or a `Dialog` raises an
+ * error in the tests.
  */
 if (!Element.prototype.hasPointerCapture) {
   Element.prototype.hasPointerCapture = () => false;

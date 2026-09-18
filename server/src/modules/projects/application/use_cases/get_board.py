@@ -1,4 +1,4 @@
-"""Assemble le tableau de bord des projets, par phase."""
+"""Assembles the project board, phase by phase."""
 
 from dataclasses import dataclass, field
 from datetime import date
@@ -22,46 +22,47 @@ from src.modules.users.domain.repositories.user_repository import UserRepository
 
 @dataclass
 class BoardCard:
-    """Une carte du tableau : la mission et ce qu'on veut lire dessus."""
+    """A board card: the mission, and what one wants to read on it."""
 
     project: Project
-    consomme_j: float
-    intervenants: list[User]
-    #: Mises a jour vivantes du fil de suivi.
-    commentaires: int = 0
-    #: Lots rattaches a la mission.
-    sous_projets: int = 0
-    #: Projet dont la mission releve, quand elle est un lot. Il peut etre
-    #: archive : le lot en releve toujours, et la carte doit pouvoir y mener.
+    consumed_days: float
+    contributors: list[User]
+    #: Live updates in the follow-up thread.
+    comments: int = 0
+    #: Work packages attached to the mission.
+    sub_projects: int = 0
+    #: The project the mission belongs to, when it is a work package. It may
+    #: be archived: the package still belongs to it, and the card must lead
+    #: there.
     parent: Project | None = None
-    #: Le dernier message du fil, pour l'annoncer sans ouvrir le panneau.
-    derniere_maj: LastUpdate | None = None
+    #: The latest message of the thread, to announce it without opening the panel.
+    latest_update: LastUpdate | None = None
 
 
 @dataclass
 class BoardColumn:
-    """Une phase et ses cartes, dans l'ordre choisi par l'equipe."""
+    """A phase and its cards, in the order the team chose."""
 
-    statut: ProjectStatus
-    cartes: list[BoardCard] = field(default_factory=list)
+    status: ProjectStatus
+    cards: list[BoardCard] = field(default_factory=list)
 
 
 @dataclass
 class Board:
-    """Le tableau complet."""
+    """The whole board."""
 
-    colonnes: list[BoardColumn]
+    columns: list[BoardColumn]
 
 
 class GetBoardUseCase:
-    """Construit le tableau de bord.
+    """Builds the board.
 
-    Toutes les phases sont retournees, meme vides : une colonne absente
-    empecherait d'y deposer une carte.
+    Every phase comes back, even empty ones: a missing column would leave
+    nowhere to drop a card.
 
-    Les missions archivees en sont ecartees par defaut : le tableau sert a
-    piloter ce qui tourne. On les redemande pour faire le point, et tout ce
-    qu'une carte annonce — son fil, ses lots — suit alors le meme perimetre.
+    Archived missions are left out by default: the board is there to steer what
+    is running. They are asked for when taking stock, and everything a card
+    announces — its thread, its work packages — then follows the same scope.
     """
 
     def __init__(
@@ -81,77 +82,79 @@ class GetBoardUseCase:
     async def execute(
         self, today: date | None = None, include_inactive: bool = False
     ) -> Board:
-        aujourdhui = today or date.today()
+        today = today or date.today()
 
-        # Les archivees sont lues meme quand on ne les montre pas : un lot
-        # survit a l'archivage de son projet, et sa carte doit continuer a
-        # nommer de quoi elle releve.
-        toutes = await self._projects.list_all(include_inactive=True)
-        par_id = {p.id: p for p in toutes if p.id is not None}
+        # Archived missions are read even when they are not shown: a work
+        # package outlives the archiving of its project, and its card must go
+        # on naming what it belongs to.
+        all_missions = await self._projects.list_all(include_inactive=True)
+        by_id = {p.id: p for p in all_missions if p.id is not None}
         missions = [
-            p for p in toutes if (p.actif or include_inactive) and p.appears_on_board
+            p
+            for p in all_missions
+            if (p.is_active or include_inactive) and p.appears_on_board
         ]
 
-        utilisateurs = {u.id: u for u in await self._users.list_all(True)}
-        affectations = await self._assignees.list_all(ProjectRole.INTERVENANT)
-        commentaires = await self._updates.count_by_project()
-        dernieres = await self._updates.latest_by_project()
+        users = {u.id: u for u in await self._users.list_all(True)}
+        assignments = await self._assignees.list_all(ProjectRole.CONTRIBUTOR)
+        comments = await self._updates.count_by_project()
+        latest_by_project = await self._updates.latest_by_project()
 
-        def derniere(project_id: int) -> LastUpdate | None:
-            maj = dernieres.get(project_id)
-            auteur = utilisateurs.get(maj.author_id) if maj else None
-            # Un auteur desactive puis efface laisserait un texte anonyme :
-            # mieux vaut ne rien annoncer que de le signer d'un blanc.
-            return LastUpdate(update=maj, author=auteur) if maj and auteur else None
+        def latest(project_id: int) -> LastUpdate | None:
+            update = latest_by_project.get(project_id)
+            author = users.get(update.author_id) if update else None
+            # An author deactivated then deleted would leave an anonymous
+            # text: better to announce nothing than to sign it with a blank.
+            return (
+                LastUpdate(update=update, author=author) if update and author else None
+            )
 
-        nb_lots: dict[int, int] = {}
+        work_package_counts: dict[int, int] = {}
         for mission in missions:
             if mission.parent_id is not None:
-                nb_lots[mission.parent_id] = nb_lots.get(mission.parent_id, 0) + 1
+                work_package_counts[mission.parent_id] = (
+                    work_package_counts.get(mission.parent_id, 0) + 1
+                )
 
-        colonnes = [BoardColumn(statut=statut) for statut in ProjectStatus]
-        par_statut = {colonne.statut: colonne for colonne in colonnes}
+        columns = [BoardColumn(status=status) for status in ProjectStatus]
+        by_status = {column.status: column for column in columns}
 
-        # Le libelle departage les rangs egaux : les missions anterieures au
-        # tableau partagent toutes la position 0, et leur ordre serait sinon
-        # arbitraire d'un chargement a l'autre.
+        # The label breaks ties between equal ranks: missions that predate the
+        # board all share position 0, and their order would otherwise be
+        # arbitrary from one load to the next.
         for mission in sorted(missions, key=lambda p: (p.position, p.label)):
-            if mission.statut is None or mission.id is None:
+            if mission.status is None or mission.id is None:
                 continue
-            saisies = await self._entries.list_for_project(mission.id)
+            entries = await self._entries.list_for_project(mission.id)
 
-            consomme = round(
-                sum(float(e.valeur) for e in saisies if not e.is_forecast(aujourdhui)),
+            consumed = round(
+                sum(float(e.value) for e in entries if not e.is_forecast(today)),
                 2,
             )
 
-            # Les intervenants ne se deduisent pas des saisies : une mission peut
-            # tourner des semaines sans en recevoir une seule, puis reclamer une
-            # journee sur un bug. Ce que le tableau montre, c'est qui s'en occupe
-            # ces jours-ci, declare a la main et defait de meme.
-            intervenants = sorted(
-                affectations.get(mission.id, []),
-                key=lambda uid: (
-                    utilisateurs[uid].display_name if uid in utilisateurs else ""
-                ),
+            # Contributors are not deduced from entries: a mission can run for
+            # weeks without a single one, then claim a day on a bug. What the
+            # board shows is who is on it these days, declared by hand and
+            # undone the same way.
+            contributors = sorted(
+                assignments.get(mission.id, []),
+                key=lambda uid: (users[uid].display_name if uid in users else ""),
             )
 
-            par_statut[mission.statut].cartes.append(
+            by_status[mission.status].cards.append(
                 BoardCard(
                     project=mission,
-                    consomme_j=consomme,
-                    intervenants=[
-                        utilisateurs[uid] for uid in intervenants if uid in utilisateurs
-                    ],
-                    commentaires=commentaires.get(mission.id, 0),
-                    derniere_maj=derniere(mission.id),
-                    sous_projets=nb_lots.get(mission.id, 0),
+                    consumed_days=consumed,
+                    contributors=[users[uid] for uid in contributors if uid in users],
+                    comments=comments.get(mission.id, 0),
+                    latest_update=latest(mission.id),
+                    sub_projects=work_package_counts.get(mission.id, 0),
                     parent=(
-                        par_id.get(mission.parent_id)
+                        by_id.get(mission.parent_id)
                         if mission.parent_id is not None
                         else None
                     ),
                 )
             )
 
-        return Board(colonnes=colonnes)
+        return Board(columns=columns)

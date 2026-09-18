@@ -1,6 +1,6 @@
-"""Configuration applicative, chargee depuis l'environnement.
+"""Application settings, loaded from the environment.
 
-Les noms de variables et les conventions d'URL sont alignes sur WAATcher.
+Variable names and URL conventions follow WAATcher.
 """
 
 from functools import lru_cache
@@ -35,5 +35,5 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    """Retourne les parametres, mis en cache pour toute la duree du process."""
+    """Returns the settings, cached for the lifetime of the process."""
     return Settings()

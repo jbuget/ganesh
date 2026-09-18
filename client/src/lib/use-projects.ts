@@ -8,40 +8,40 @@ import type { ImportReportResponse, ProjectKind } from "@/lib/api/generated/mode
 import { mutationResult, useCurrentUser, useProjects } from "@/lib/api/queries";
 import { parseProjectsCsv } from "@/lib/csv-import";
 import {
-  AUCUN_FILTRE,
-  filtrerMissions,
-  inclutLesArchivees,
+  NO_FILTER,
+  filterMissions,
+  includesArchived,
   type MissionFilters,
 } from "@/lib/mission-filters";
-import { AUCUN_TRI, type TriMissions } from "@/lib/mission-sort";
+import { NO_SORT, type MissionSort } from "@/lib/mission-sort";
 import { buildProjectTree, offProjectActivities } from "@/lib/project-tree";
 
 /**
- * Etat et actions de l'ecran du referentiel.
+ * State and actions of the reference list screen.
  *
- * Comme pour la matrice, la coordination vit dans un hook pour que le composant
- * ne porte que le rendu. Le filtrage et le rangement en font partie : l'ecran
- * recoit les criteres et l'ordre, et rend l'arborescence deja reduite et
- * rangee, sans avoir a savoir comment.
+ * As with the grid, coordination lives in a hook so the component carries only
+ * the rendering. Filtering and ordering are part of it: the screen receives the
+ * criteria and the order, and renders the tree already reduced and arranged,
+ * without having to know how.
  */
 export function useProjectsScreen(
-  filtres: MissionFilters = AUCUN_FILTRE,
-  tri: TriMissions = AUCUN_TRI,
+  filters: MissionFilters = NO_FILTER,
+  sorted: MissionSort = NO_SORT,
 ) {
   const queryClient = useQueryClient();
   const { user: me } = useCurrentUser();
-  const { missions, isLoading } = useProjects(inclutLesArchivees(filtres));
-  const retenues = filtrerMissions(missions, filtres);
-  // On retient ce qui est deplie, pas ce qui est replie : le referentiel
-  // s'ouvre sur ses projets, et les sous-projets se demandent. Une mission
-  // creee en cours de route arrive donc repliee, comme les autres.
-  const [deplies, setDeplies] = useState<ReadonlySet<number>>(() => new Set());
+  const { missions, isLoading } = useProjects(includesArchived(filters));
+  const kept = filterMissions(missions, filters);
+  // We remember what is expanded, not what is collapsed: the reference list
+  // opens on its projects, and sub-projects are asked for. A mission created
+  // along the way therefore arrives collapsed, like the others.
+  const [expanded, setExpanded] = useState<ReadonlySet<number>>(() => new Set());
 
-  const basculer = useCallback((id: number) => {
-    setDeplies((actuels) => {
-      const suivants = new Set(actuels);
-      if (!suivants.delete(id)) suivants.add(id);
-      return suivants;
+  const toggle = useCallback((id: number) => {
+    setExpanded((actuels) => {
+      const next_ones = new Set(actuels);
+      if (!next_ones.delete(id)) next_ones.add(id);
+      return next_ones;
     });
   }, []);
 
@@ -52,35 +52,35 @@ export function useProjectsScreen(
   return {
     isLoading,
     isManager: me?.role === "MANAGER",
-    arbre: buildProjectTree(retenues, tri),
-    activites: offProjectActivities(retenues),
+    tree: buildProjectTree(kept, sorted),
+    activities: offProjectActivities(kept),
 
-    /** Missions retenues, et missions que le referentiel porte en tout. */
-    visibles: retenues.length,
+    /** Missions kept, and missions the reference list carries in all. */
+    visible: kept.length,
     total: missions.length,
 
-    /** Si les sous-projets d'une mission se montrent. */
-    estDeplie: (id: number) => deplies.has(id),
-    basculer,
+    /** Whether a mission's sub-projects are showing. */
+    isExpanded: (id: number) => expanded.has(id),
+    toggle,
 
-    /** Relit le referentiel apres une modification faite dans le panneau. */
+    /** Reads the reference list again after a change made in the panel. */
     refresh,
 
     async declare(label: string, kind: ProjectKind, parentId?: number) {
-      const cree = await createProject({
+      const created = await createProject({
         label,
         kind,
-        statut: "exploration",
+        status: "exploration",
         ...(parentId ? { parent_id: parentId } : {}),
       });
       await refresh();
-      return mutationResult(cree);
+      return mutationResult(created);
     },
 
-    async importCsv(contenu: string): Promise<ImportReportResponse> {
-      const rapport = await importProjects({ lignes: parseProjectsCsv(contenu) });
+    async importCsv(content: string): Promise<ImportReportResponse> {
+      const report = await importProjects({ rows: parseProjectsCsv(content) });
       await refresh();
-      return mutationResult<ImportReportResponse>(rapport);
+      return mutationResult<ImportReportResponse>(report);
     },
   };
 }

@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { ROLES, libelleRole } from "./roles";
+import { ROLES, roleLabel } from "./roles";
 
 describe("libelleRole", () => {
-  it("nomme le rôle en français", () => {
-    expect(libelleRole("MANAGER")).toBe("Manager");
-    expect(libelleRole("TEAMMATE")).toBe("Collaborateur");
+  it("names the role in French", () => {
+    expect(roleLabel("MANAGER")).toBe("Manager");
+    expect(roleLabel("TEAMMATE")).toBe("Collaborateur");
   });
 });
 
 describe("ROLES", () => {
-  it("énumère les deux rôles de l'application", () => {
-    expect(ROLES.map((role) => role.valeur)).toEqual(["TEAMMATE", "MANAGER"]);
+  it("lists the two roles of the application", () => {
+    expect(ROLES.map((role) => role.value)).toEqual(["TEAMMATE", "MANAGER"]);
   });
 });

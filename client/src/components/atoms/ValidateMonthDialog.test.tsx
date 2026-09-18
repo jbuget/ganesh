@@ -12,9 +12,9 @@ function renderDialog(props: Partial<Parameters<typeof ValidateMonthDialog>[0]> 
     <ValidateMonthDialog
       open
       onOpenChange={onOpenChange}
-      mois="mars 2026"
-      totalSaisi={20}
-      joursOuvres={22}
+      month="mars 2026"
+      totalEntered={20}
+      workingDays={22}
       onConfirm={onConfirm}
       {...props}
     />,
@@ -24,20 +24,20 @@ function renderDialog(props: Partial<Parameters<typeof ValidateMonthDialog>[0]> 
 }
 
 describe("ValidateMonthDialog", () => {
-  it("annonce le mois concerné", () => {
+  it("announces the month concerned", () => {
     renderDialog();
 
     expect(screen.getByText(/mars 2026/)).toBeInTheDocument();
   });
 
-  it("alerte sur les jours manquants sans bloquer la validation", () => {
-    renderDialog({ totalSaisi: 20, joursOuvres: 22 });
+  it("warns about missing days without blocking validation", () => {
+    renderDialog({ totalEntered: 20, workingDays: 22 });
 
     expect(screen.getByText(/Il manque 2 jour/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Valider" })).toBeEnabled();
   });
 
-  it("valide le mois à la confirmation", async () => {
+  it("validates the month on confirmation", async () => {
     const { onConfirm } = renderDialog();
 
     await userEvent.click(screen.getByRole("button", { name: "Valider" }));
@@ -45,7 +45,7 @@ describe("ValidateMonthDialog", () => {
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
-  it("se referme une fois le mois validé", async () => {
+  it("closes once the month is validated", async () => {
     const { onOpenChange } = renderDialog();
 
     await userEvent.click(screen.getByRole("button", { name: "Valider" }));
@@ -53,12 +53,12 @@ describe("ValidateMonthDialog", () => {
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
 
-  it("reste ouvert tant que la validation n'a pas abouti", async () => {
-    let resoudre: () => void = () => {};
+  it("stays open until validation succeeds", async () => {
+    let release: () => void = () => {};
     const onConfirm = vi.fn(
       () =>
         new Promise<void>((resolve) => {
-          resoudre = resolve;
+          release = resolve;
         }),
     );
     const { onOpenChange } = renderDialog({ onConfirm });
@@ -67,25 +67,25 @@ describe("ValidateMonthDialog", () => {
 
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
 
-    resoudre();
+    release();
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
 
-  it("ne valide qu'une fois même sur double-clic", async () => {
-    let resoudre: () => void = () => {};
+  it("validates only once even on a double click", async () => {
+    let release: () => void = () => {};
     const onConfirm = vi.fn(
       () =>
         new Promise<void>((resolve) => {
-          resoudre = resolve;
+          release = resolve;
         }),
     );
     renderDialog({ onConfirm });
 
-    const bouton = screen.getByRole("button", { name: "Valider" });
-    await userEvent.click(bouton);
-    await userEvent.click(bouton);
+    const button = screen.getByRole("button", { name: "Valider" });
+    await userEvent.click(button);
+    await userEvent.click(button);
 
     expect(onConfirm).toHaveBeenCalledTimes(1);
-    resoudre();
+    release();
   });
 });

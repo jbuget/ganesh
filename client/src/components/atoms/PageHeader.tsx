@@ -1,23 +1,23 @@
 interface PageHeaderProps {
-  titre: string;
-  soustitre: string;
-  /** Actions portant sur l'ecran entier, alignees a droite. */
+  title: string;
+  subtitle: string;
+  /** Actions acting on the whole screen, aligned right. */
   actions?: React.ReactNode;
 }
 
 /**
- * En-tete commun a toutes les vues.
+ * Header shared by every view.
  *
- * Titre et sous-titre a gauche, actions generales a droite, sur toute la
- * largeur : les boutons se trouvent au meme endroit d'un ecran a l'autre, meme
- * quand le contenu en dessous est plus etroit.
+ * Title and subtitle on the left, general actions on the right, across the full
+ * width: the buttons sit in the same place from one screen to the next, even
+ * when the content below is narrower.
  */
-export function PageHeader({ titre, soustitre, actions }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
   return (
     <header className="mb-6 flex items-start justify-between gap-4">
       <div className="min-w-0">
-        <h1 className="text-lg font-semibold">{titre}</h1>
-        <p className="text-sm text-slate-500">{soustitre}</p>
+        <h1 className="text-lg font-semibold">{title}</h1>
+        <p className="text-sm text-slate-500">{subtitle}</p>
       </div>
 
       {actions && <div className="flex shrink-0 items-center gap-3">{actions}</div>}

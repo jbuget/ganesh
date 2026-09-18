@@ -9,99 +9,100 @@ import { PriorityMark } from "@/components/atoms/PriorityMark";
 import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
-import { libellePhase, pastillePhase } from "@/lib/board";
-import { depuis } from "@/lib/dates-relatives";
+import { phaseLabel, phaseDot } from "@/lib/board";
+import { since } from "@/lib/relative-dates";
 
 interface MissionRowProps {
   mission: ProjectListItemResponse;
-  /** Un lot se decale sous son projet, pour que la hierarchie se lise. */
-  estLot?: boolean;
-  /** Combien de sous-projets la mission porte : aucun, rien a plier. */
-  lots?: number;
-  /** Si ses sous-projets sont visibles. Replie par defaut. */
-  deplie?: boolean;
-  /** Montre ou cache les sous-projets. */
-  onBasculer?: () => void;
-  /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
-  maintenant: Date;
+  /** A work package indents under its project, so the hierarchy reads. */
+  isWorkPackage?: boolean;
+  /** How many sub-projects the mission carries: none, nothing to fold. */
+  workPackages?: number;
+  /** Whether its sub-projects are visible. Collapsed by default. */
+  expanded?: boolean;
+  /** Shows or hides the sub-projects. */
+  onToggle?: () => void;
+  /** Freezes the reference time: without it, server and client would diverge. */
+  now: Date;
   onOpen: () => void;
-  /** Ouvre la mission sur son fil, la ou l'apercu s'arrete. */
-  onOpenFil: () => void;
+  /** Opens the mission on its thread, where the preview stops. */
+  onOpenThread: () => void;
 }
 
 /**
- * Une mission du referentiel, colonne par colonne.
+ * A mission from the reference list, column by column.
  *
- * La ligne ne porte toujours aucune action : elle montre de quoi comparer deux
- * missions du regard — ou elles en sont, ce qu'elles pesent, qui s'en occupe —
- * et tout ce qui se modifie continue de se faire dans le panneau, d'un seul
- * endroit.
+ * The row still carries no action: it shows what it takes to compare two
+ * missions at a glance — where they stand, what they weigh, who looks after
+ * them — and everything that changes goes on happening in the panel, from a
+ * single place.
  */
 export function MissionRow({
   mission,
-  estLot = false,
-  lots = 0,
-  deplie = false,
-  onBasculer,
-  maintenant,
+  isWorkPackage = false,
+  workPackages = 0,
+  expanded = false,
+  onToggle,
+  now,
   onOpen,
-  onOpenFil,
+  onOpenThread,
 }: MissionRowProps) {
   const { project } = mission;
-  const derniere = mission.derniere_maj;
+  const latest = mission.latest_update;
 
-  // Le dernier message en entier et mis en forme, comme il se lit dans le fil :
-  // un apercu tronque obligerait a ouvrir le panneau pour la fin d'une phrase.
-  const apercu = derniere && (
+  // The latest message in full and formatted, as it reads in the thread: a
+  // truncated preview would force opening the panel for the end of a sentence.
+  const preview = latest && (
     <>
-      {/* Le trait separe la signature du propos : sans lui, la premiere ligne
-          du message se lit comme la suite de l'entete. Les marges negatives le
-          menent aux bords de la bulle, dont il traverse le rembourrage. */}
+      {/* The rule separates the signature from the words: without it, the first
+          line of the message reads as the continuation of the header. Negative
+          margins carry it to the edges of the bubble, whose padding it
+          crosses. */}
       <p className="-mx-3 mb-2 border-b border-slate-200 px-3 pb-2 text-xs text-slate-500">
-        <span className="font-medium text-slate-700">
-          {derniere.author.display_name}
-        </span>{" "}
-        · {depuis(derniere.publiee_le, maintenant)}
+        <span className="font-medium text-slate-700">{latest.author.display_name}</span>{" "}
+        · {since(latest.published_at, now)}
       </p>
-      <MarkdownView texte={derniere.texte} />
+      <MarkdownView body={latest.body} />
     </>
   );
 
   return (
     <TableRow onClick={onOpen} className="cursor-pointer">
-      <TableCell className={estLot ? "pl-14" : ""}>
+      <TableCell className={isWorkPackage ? "pl-14" : ""}>
         <span className="flex items-center gap-2">
-          {/* Le crochet rattache le lot a son projet : sans lui, l'indentation
-              seule se perd des qu'une ligne longue passe a la suivante. */}
-          {estLot && (
+          {/* The bracket ties the work package to its project: without it,
+              indentation alone gets lost as soon as a long line wraps. */}
+          {isWorkPackage && (
             <span aria-hidden className="-ml-4 text-slate-300">
               └
             </span>
           )}
 
-          {/* Un referentiel de soixante lignes se parcourt mal deplie en
-              entier : le chevron rend le detail d'un projet a la demande. La
-              gouttiere reste meme sans sous-projet, sinon les noms ne
-              tomberaient plus sur la meme verticale d'une ligne a l'autre. */}
-          {!estLot &&
-            (lots > 0 ? (
+          {/* A sixty-row reference list reads poorly fully expanded: the
+              chevron gives a project's detail on demand. The gutter stays even
+              without sub-projects, otherwise the names would no longer fall on
+              the same vertical from one row to the next. */}
+          {!isWorkPackage &&
+            (workPackages > 0 ? (
               <button
                 type="button"
-                aria-expanded={deplie}
-                aria-label={`${deplie ? "Masquer" : "Afficher"} ${
-                  lots > 1 ? `les ${lots} sous-projets` : "le sous-projet"
+                aria-expanded={expanded}
+                aria-label={`${expanded ? "Masquer" : "Afficher"} ${
+                  workPackages > 1
+                    ? `les ${workPackages} sous-projets`
+                    : "le sous-projet"
                 } de ${project.label}`}
-                // La ligne entiere ouvre la mission : sans arret, replier
-                // ouvrirait le panneau par la meme occasion.
+                // The whole row opens the mission: without stopping
+                // propagation, folding would open the panel at the same time.
                 onClick={(event) => {
                   event.stopPropagation();
-                  onBasculer?.();
+                  onToggle?.();
                 }}
                 className="cursor-pointer rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700"
               >
                 <ChevronRight
                   aria-hidden
-                  className={`size-4 transition-transform ${deplie ? "rotate-90" : ""}`}
+                  className={`size-4 transition-transform ${expanded ? "rotate-90" : ""}`}
                 />
               </button>
             ) : (
@@ -109,15 +110,15 @@ export function MissionRow({
             ))}
           <button
             type="button"
-            // La ligne entiere reagit a la souris ; ce bouton donne la meme
-            // ouverture au clavier, sans declencher deux fois l'ouverture.
+            // The whole row responds to the mouse; this button gives the same
+            // opening to the keyboard, without opening twice.
             onClick={(event) => {
               event.stopPropagation();
               onOpen();
             }}
             className={[
               "cursor-pointer text-left",
-              estLot ? "text-slate-600" : "font-medium text-slate-800",
+              isWorkPackage ? "text-slate-600" : "font-medium text-slate-800",
             ].join(" ")}
           >
             {project.label}
@@ -125,56 +126,57 @@ export function MissionRow({
         </span>
       </TableCell>
 
-      {/* Le fil se lit contre le nom de la mission, dont il dit l'activite :
-          plus loin, on ne saurait plus de quelle ligne il parle. L'icone dit
-          deja ce que le nombre compte, d'ou l'en-tete vide. */}
+      {/* The thread reads against the mission name, whose activity it
+          reports: further away, one would no longer know which row it speaks
+          of. The icon already says what the number counts, hence the empty
+          heading. */}
       <TableCell className="w-12 text-right">
         <UpdatesCounter
-          nombre={mission.commentaires}
-          apercu={apercu}
-          onOpen={onOpenFil}
+          count={mission.comments}
+          preview={preview}
+          onOpen={onOpenThread}
         />
       </TableCell>
 
       <TableCell>
-        {project.statut && (
+        {project.status && (
           <span className="flex items-center gap-1.5 text-slate-700">
             <span
               aria-hidden
-              className={`size-2.5 shrink-0 rounded-full ${pastillePhase(project.statut)}`}
+              className={`size-2.5 shrink-0 rounded-full ${phaseDot(project.status)}`}
             />
-            {libellePhase(project.statut)}
+            {phaseLabel(project.status)}
           </span>
         )}
       </TableCell>
 
-      {/* La priorite suit la phase, comme dans la fiche : ou en est la mission,
-          puis ce qu'elle doit passer avant. */}
+      {/* Priority follows phase, as in the sheet: where the mission stands,
+          then what it must come before. */}
       <TableCell>
-        <PriorityMark valeur={project.priorite} />
+        <PriorityMark value={project.priority} />
       </TableCell>
 
       <TableCell>
-        <CategoryMark valeur={project.categorie} />
+        <CategoryMark value={project.category} />
       </TableCell>
 
       <TableCell className="text-right tabular-nums text-slate-600">
-        {project.estime_j != null && `${project.estime_j} jrs.`}
+        {project.estimated_days != null && `${project.estimated_days} jrs.`}
       </TableCell>
 
-      {/* Le realise s'ecrit a cote de l'estime pour qu'on les compare d'un
-          coup d'oeil. Un zero n'est pas une valeur a lire : une mission ou
-          personne n'a encore declare reste vide. */}
+      {/* Delivered sits beside estimated so the two compare at a glance. A
+          zero is not a value to read: a mission nobody has declared on stays
+          empty. */}
       <TableCell className="text-right tabular-nums text-slate-600">
-        {mission.realise_j > 0 && `${mission.realise_j} jrs.`}
+        {mission.delivered_days > 0 && `${mission.delivered_days} jrs.`}
       </TableCell>
 
       <TableCell>
-        <MemberAvatars membres={mission.referents} />
+        <MemberAvatars members={mission.leads} />
       </TableCell>
 
       <TableCell>
-        <MemberAvatars membres={mission.intervenants} />
+        <MemberAvatars members={mission.contributors} />
       </TableCell>
     </TableRow>
   );

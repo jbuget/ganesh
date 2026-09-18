@@ -1,8 +1,8 @@
-"""Traduction des collaborateurs en schemas d'API."""
+"""Translating teammates into API schemas."""
 
 from src.modules.users.domain.entities.user import User
 from src.modules.users.presentation.api.schemas.user_schemas import UserResponse
-from src.shared.utils.initials import initiales
+from src.shared.utils.initials import initials
 
 
 def to_user_response(user: User) -> UserResponse:
@@ -11,8 +11,8 @@ def to_user_response(user: User) -> UserResponse:
         id=user.id,
         email=user.email,
         display_name=user.display_name,
-        initiales=initiales(user.display_name),
+        initials=initials(user.display_name),
         role=user.role,
-        actif=user.actif,
-        derniere_connexion=user.derniere_connexion,
+        is_active=user.is_active,
+        last_login_at=user.last_login_at,
     )

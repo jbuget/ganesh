@@ -8,26 +8,26 @@ interface DayCellProps {
   isOffDay: boolean;
   isFuture: boolean;
   isReadOnly: boolean;
-  /** La derniere ligne ferme le tableau : son trait bas est le trait fort. */
+  /** The last row closes the table: its bottom rule is the strong one. */
   isLastRow?: boolean;
-  /** La derniere colonne de jours porte le trait qui la separe des totaux. */
+  /** The last day column carries the rule that separates it from the totals. */
   isLastDay?: boolean;
-  /** Un jour non ouvre se reduit a une bande, sauf s'il porte une saisie. */
+  /** A non-working day shrinks to a band, unless it carries an entry. */
   isNarrow?: boolean;
   label: string;
   onChange: (next: DayValue) => void;
 }
 
 /**
- * Cellule unitaire de la matrice.
+ * A single cell of the grid.
  *
- * Les bordures sont portees par le `<td>`, jamais par le bouton : le bouton se
- * dessinerait par-dessus le trait.
+ * Borders are carried by the `<td>`, never by the button: the button would draw
+ * over the rule.
  *
- * Les jours non ouvres sont grises et verrouilles, les jours a venir attenues :
- * les premiers pour eviter les saisies par erreur, les seconds parce qu'ils
- * relevent du previsionnel et non du realise. Le jour courant n'est signale que
- * dans l'en-tete de colonne, pour ne pas charger la grille.
+ * Non-working days are greyed and locked, future days dimmed: the first to
+ * avoid entries by mistake, the second because they are forecast and not
+ * delivered. Today is marked only in the column header, so as not to clutter
+ * the grid.
  */
 export function DayCell({
   value,
@@ -40,8 +40,8 @@ export function DayCell({
   label,
   onChange,
 }: DayCellProps) {
-  // Un jour non ouvre ne se saisit jamais. La regle est portee par le domaine,
-  // le verrouillage de la cellule n'en est que le reflet.
+  // A non-working day is never entered on. The rule is carried by the domain,
+  // locking the cell is only its reflection.
   const isLocked = isReadOnly || isOffDay;
 
   const background =

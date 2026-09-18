@@ -1,4 +1,4 @@
-"""Regles metier portees par l'utilisateur."""
+"""Business rules the user carries."""
 
 from datetime import datetime
 
@@ -7,14 +7,14 @@ import pytest
 from src.modules.users.domain.entities.user import Role, User
 
 
-def make_user(role: Role = Role.TEAMMATE, actif: bool = True) -> User:
+def make_user(role: Role = Role.TEAMMATE, is_active: bool = True) -> User:
     return User(
         id=None,
         entra_oid="oid-1",
         email="d.dehe@waat.fr",
         display_name="D. Dehe",
         role=role,
-        actif=actif,
+        is_active=is_active,
     )
 
 
@@ -36,12 +36,12 @@ def test_manager_can_manage_teammates() -> None:
 
 @pytest.mark.parametrize("role", [Role.TEAMMATE, Role.MANAGER])
 def test_any_active_user_can_edit_an_open_month_of_anyone(role: Role) -> None:
-    """Transparence assumee : chacun peut corriger un mois ouvert d'un collegue."""
+    """Transparency is deliberate: anyone may fix a colleague's open month."""
     assert make_user(role).can_edit_open_months() is True
 
 
 def test_a_deactivated_user_can_no_longer_edit_anything() -> None:
-    assert make_user(actif=False).can_edit_open_months() is False
+    assert make_user(is_active=False).can_edit_open_months() is False
 
 
 def test_email_is_normalised_to_lowercase() -> None:
@@ -59,38 +59,38 @@ def test_email_is_normalised_to_lowercase() -> None:
 def test_a_first_connection_is_recorded() -> None:
     user = make_user()
 
-    assert user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0)) is True
-    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 0)
+    assert user.record_login(datetime(2026, 9, 17, 9, 0)) is True
+    assert user.last_login_at == datetime(2026, 9, 17, 9, 0)
 
 
 def test_a_connection_within_the_freshness_window_is_not_rewritten() -> None:
-    """Un jeton porteur est represente a chaque requete.
+    """A bearer token is presented on every request.
 
-    Sans fenetre de fraicheur, la « derniere connexion » ne mesurerait plus que
-    le nombre d'ecritures en base.
+    Without a freshness window, the « last login » would measure
+    nothing but the number of writes to the database.
     """
     user = make_user()
-    user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0))
+    user.record_login(datetime(2026, 9, 17, 9, 0))
 
-    assert user.enregistrer_connexion(datetime(2026, 9, 17, 9, 3)) is False
-    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 0)
+    assert user.record_login(datetime(2026, 9, 17, 9, 3)) is False
+    assert user.last_login_at == datetime(2026, 9, 17, 9, 0)
 
 
 def test_a_connection_after_the_freshness_window_is_recorded() -> None:
     user = make_user()
-    user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0))
+    user.record_login(datetime(2026, 9, 17, 9, 0))
 
-    assert user.enregistrer_connexion(datetime(2026, 9, 17, 9, 20)) is True
-    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 20)
+    assert user.record_login(datetime(2026, 9, 17, 9, 20)) is True
+    assert user.last_login_at == datetime(2026, 9, 17, 9, 20)
 
 
 def test_a_connection_is_never_dated_backwards() -> None:
-    """Deux requetes concurrentes peuvent arriver dans le desordre."""
+    """Two concurrent requests may arrive out of order."""
     user = make_user()
-    user.enregistrer_connexion(datetime(2026, 9, 17, 9, 0))
+    user.record_login(datetime(2026, 9, 17, 9, 0))
 
-    assert user.enregistrer_connexion(datetime(2026, 9, 17, 8, 0)) is False
-    assert user.derniere_connexion == datetime(2026, 9, 17, 9, 0)
+    assert user.record_login(datetime(2026, 9, 17, 8, 0)) is False
+    assert user.last_login_at == datetime(2026, 9, 17, 9, 0)
 
 
 def with_id(user: User, user_id: int) -> User:
@@ -106,7 +106,7 @@ def test_a_manager_can_deactivate_someone_else() -> None:
 
 
 def test_a_manager_cannot_deactivate_themselves() -> None:
-    """Se retirer l'acces, c'est s'enfermer dehors."""
+    """Cutting off one's own access is locking oneself out."""
     manager = with_id(make_user(Role.MANAGER), 1)
 
     assert manager.can_deactivate(manager) is False
@@ -120,7 +120,7 @@ def test_a_teammate_cannot_deactivate_anyone() -> None:
 
 
 def test_a_deactivated_manager_can_no_longer_deactivate_anyone() -> None:
-    manager = with_id(make_user(Role.MANAGER, actif=False), 1)
+    manager = with_id(make_user(Role.MANAGER, is_active=False), 1)
     other = with_id(make_user(Role.TEAMMATE), 2)
 
     assert manager.can_deactivate(other) is False

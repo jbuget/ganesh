@@ -15,53 +15,53 @@ import { Button } from "@/components/ui/button";
 import { formatMonth } from "@/lib/dates";
 import { useTimesheetMonth } from "@/lib/use-timesheet-month";
 
-/** Ecran de saisie : la matrice du mois et sa navigation. */
+/** Entry screen: the month grid and its navigation. */
 export function TimesheetPage() {
-  const mois = useTimesheetMonth();
-  const { grid, cursor } = mois;
+  const month = useTimesheetMonth();
+  const { grid, cursor } = month;
 
-  const [declarationOuverte, setDeclarationOuverte] = useState(false);
-  const [validationOuverte, setValidationOuverte] = useState(false);
-  const [aRetirer, setARetirer] = useState<{
+  const [declareOpen, setDeclareOpen] = useState(false);
+  const [validateOpen, setValidateOpen] = useState(false);
+  const [toRemove, setToRemove] = useState<{
     id: number;
     label: string;
     total: number;
   } | null>(null);
 
   /**
-   * Une ligne vide s'en va sans ceremonie : il n'y a rien a perdre. Des qu'elle
-   * porte du temps, on annonce ce qui sera efface avant de le faire.
+   * An empty row goes without ceremony: there is nothing to lose. As soon as it
+   * carries time, what will be erased is announced before it happens.
    */
-  function demanderLeRetrait(projectId: number) {
-    const ligne = grid?.rows.find((row) => row.project_id === projectId);
-    if (!ligne || ligne.total === 0) {
-      void mois.removeMission(projectId);
+  function askToRemove(projectId: number) {
+    const line = grid?.rows.find((row) => row.project_id === projectId);
+    if (!line || line.total === 0) {
+      void month.removeMission(projectId);
       return;
     }
-    setARetirer({ id: projectId, label: ligne.label, total: ligne.total });
+    setToRemove({ id: projectId, label: line.label, total: line.total });
   }
 
   return (
     <PageLayout
-      entete={
+      header={
         <PageHeader
-          titre="Activité"
-          soustitre="Déclarez votre temps en journées ou demi-journées. Tant que le mois n'est pas validé, tout reste modifiable."
+          title="Activité"
+          subtitle="Déclarez votre temps en journées ou demi-journées. Tant que le mois n'est pas validé, tout reste modifiable."
         />
       }
     >
       {/*
-        Les trois commandes de la matrice, juste au-dessus d'elle : de qui on
-        regarde le mois, quel mois, et la seule action qui l'engage. Les deux
-        cotes prennent la meme part de l'espace restant, ce qui centre le mois
-        quelle que soit la largeur des deux autres.
+        The grid's three controls, right above it: whose month is being looked
+        at, which month, and the one action that commits it. Both sides take the
+        same share of the remaining space, which centres the month whatever the
+        width of the other two.
       */}
       <div className="mb-3 flex flex-wrap items-center gap-4">
         <div className="flex flex-1 justify-start">
           <TeammateSelector
-            teammates={mois.teammates}
-            selectedId={mois.targetUserId}
-            onSelect={mois.viewTeammate}
+            teammates={month.teammates}
+            selectedId={month.targetUserId}
+            onSelect={month.viewTeammate}
           />
         </div>
 
@@ -70,7 +70,7 @@ export function TimesheetPage() {
             variant="outline"
             size="icon"
             aria-label="Mois précédent"
-            onClick={mois.goToPreviousMonth}
+            onClick={month.goToPreviousMonth}
           >
             <ChevronLeft />
           </Button>
@@ -81,20 +81,20 @@ export function TimesheetPage() {
             variant="outline"
             size="icon"
             aria-label="Mois suivant"
-            onClick={mois.goToNextMonth}
+            onClick={month.goToNextMonth}
           >
             <ChevronRight />
           </Button>
         </div>
 
         <div className="flex flex-1 justify-end">
-          {grid?.is_writable && mois.isOwnMonth && (
-            <Button onClick={() => setValidationOuverte(true)}>Valider le mois</Button>
+          {grid?.is_writable && month.isOwnMonth && (
+            <Button onClick={() => setValidateOpen(true)}>Valider le mois</Button>
           )}
         </div>
       </div>
 
-      {!mois.isOwnMonth && (
+      {!month.isOwnMonth && (
         <p className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
           Vous consultez le mois d&apos;un collègue. Toute modification sera enregistrée
           à votre nom.
@@ -104,59 +104,59 @@ export function TimesheetPage() {
       {grid && !grid.is_writable && (
         <p className="mb-4 rounded-md border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-700">
           Ce mois est validé et ne peut plus être modifié. Seul un manager peut le
-          rouvrir.
+          reopen.
         </p>
       )}
 
-      {mois.isLoading && <p className="text-muted-foreground text-sm">Chargement…</p>}
+      {month.isLoading && <p className="text-muted-foreground text-sm">Chargement…</p>}
 
       {grid && (
         <TimesheetGrid
           grid={grid}
-          extraRows={mois.extraRows}
-          today={mois.today}
-          onSetValue={mois.setDayValue}
-          onRemoveMission={grid.is_writable ? demanderLeRetrait : undefined}
-          ajoutDeMission={
+          extraRows={month.extraRows}
+          today={month.today}
+          onSetValue={month.setDayValue}
+          onRemoveMission={grid.is_writable ? askToRemove : undefined}
+          addingMission={
             grid.is_writable ? (
               <MissionSelector
-                projects={mois.projects}
-                excludedIds={mois.displayedProjectIds}
-                onSelect={mois.addMission}
-                onDeclareNew={() => setDeclarationOuverte(true)}
+                projects={month.projects}
+                excludedIds={month.displayedProjectIds}
+                onSelect={month.addMission}
+                onDeclareNew={() => setDeclareOpen(true)}
               />
             ) : null
           }
         />
       )}
 
-      {aRetirer && (
+      {toRemove && (
         <RemoveMissionDialog
           open
-          onOpenChange={(ouvert) => !ouvert && setARetirer(null)}
-          label={aRetirer.label}
-          total={aRetirer.total}
+          onOpenChange={(isOpen) => !isOpen && setToRemove(null)}
+          label={toRemove.label}
+          total={toRemove.total}
           onConfirm={async () => {
-            await mois.removeMission(aRetirer.id);
-            setARetirer(null);
+            await month.removeMission(toRemove.id);
+            setToRemove(null);
           }}
         />
       )}
 
       <DeclareProjectDialog
-        open={declarationOuverte}
-        onOpenChange={setDeclarationOuverte}
-        onConfirm={mois.declareProject}
+        open={declareOpen}
+        onOpenChange={setDeclareOpen}
+        onConfirm={month.declareProject}
       />
 
       {grid && (
         <ValidateMonthDialog
-          open={validationOuverte}
-          onOpenChange={setValidationOuverte}
-          mois={formatMonth(cursor.year, cursor.month)}
-          totalSaisi={grid.total_realise + grid.total_prevu}
-          joursOuvres={grid.working_days}
-          onConfirm={mois.validate}
+          open={validateOpen}
+          onOpenChange={setValidateOpen}
+          month={formatMonth(cursor.year, cursor.month)}
+          totalEntered={grid.actual_total + grid.forecast_total}
+          workingDays={grid.working_days}
+          onConfirm={month.validate}
         />
       )}
     </PageLayout>

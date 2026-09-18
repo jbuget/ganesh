@@ -1,4 +1,4 @@
-"""Implementation SQLAlchemy du port ProjectRepository."""
+"""SQLAlchemy implementation of the ProjectRepository port."""
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,24 +17,24 @@ def to_entity(model: ProjectModel) -> Project:
         id=model.id,
         label=model.label,
         kind=model.kind,
-        statut=model.statut,
+        status=model.status,
         parent_id=model.parent_id,
-        actif=model.actif,
+        is_active=model.is_active,
         archived_at=model.archived_at,
-        estime_j=model.estime_j,
-        categorie=model.categorie,
-        priorite=model.priorite,
-        date_mise_en_service=model.date_mise_en_service,
+        estimated_days=model.estimated_days,
+        category=model.category,
+        priority=model.priority,
+        go_live_date=model.go_live_date,
         position=model.position,
         monday_item_id=model.monday_item_id,
         monday_subitem_id=model.monday_subitem_id,
-        contacts_metier=model.contacts_metier,
+        business_contacts=model.business_contacts,
         description=model.description,
     )
 
 
 class SqlProjectRepository(ProjectRepository):
-    """Persiste le referentiel des missions."""
+    """Persists the mission reference list."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -46,7 +46,7 @@ class SqlProjectRepository(ProjectRepository):
     async def list_all(self, include_inactive: bool = False) -> list[Project]:
         statement = select(ProjectModel).order_by(ProjectModel.label)
         if not include_inactive:
-            statement = statement.where(ProjectModel.actif.is_(True))
+            statement = statement.where(ProjectModel.is_active.is_(True))
         result = await self._session.execute(statement)
         return [to_entity(model) for model in result.scalars().all()]
 
@@ -62,18 +62,18 @@ class SqlProjectRepository(ProjectRepository):
         model = ProjectModel(
             label=project.label,
             kind=project.kind,
-            statut=project.statut,
+            status=project.status,
             parent_id=project.parent_id,
-            actif=project.actif,
+            is_active=project.is_active,
             archived_at=project.archived_at,
-            estime_j=project.estime_j,
-            categorie=project.categorie,
-            priorite=project.priorite,
-            date_mise_en_service=project.date_mise_en_service,
+            estimated_days=project.estimated_days,
+            category=project.category,
+            priority=project.priority,
+            go_live_date=project.go_live_date,
             position=project.position,
             monday_item_id=project.monday_item_id,
             monday_subitem_id=project.monday_subitem_id,
-            contacts_metier=project.contacts_metier,
+            business_contacts=project.business_contacts,
             description=project.description,
         )
         self._session.add(model)
@@ -89,18 +89,18 @@ class SqlProjectRepository(ProjectRepository):
             return project
         model.label = project.label
         model.kind = project.kind
-        model.statut = project.statut
+        model.status = project.status
         model.parent_id = project.parent_id
-        model.actif = project.actif
+        model.is_active = project.is_active
         model.archived_at = project.archived_at
-        model.estime_j = project.estime_j
-        model.categorie = project.categorie
-        model.priorite = project.priorite
-        model.date_mise_en_service = project.date_mise_en_service
+        model.estimated_days = project.estimated_days
+        model.category = project.category
+        model.priority = project.priority
+        model.go_live_date = project.go_live_date
         model.position = project.position
         model.monday_item_id = project.monday_item_id
         model.monday_subitem_id = project.monday_subitem_id
-        model.contacts_metier = project.contacts_metier
+        model.business_contacts = project.business_contacts
         model.description = project.description
         await self._session.flush()
         return project

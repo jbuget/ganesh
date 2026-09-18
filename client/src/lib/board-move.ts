@@ -2,85 +2,84 @@ import { arrayMove } from "@dnd-kit/sortable";
 
 import type { BoardCardResponse, ProjectStatus } from "@/lib/api/generated/model";
 import { PHASES } from "@/lib/board";
-import type { Colonnes } from "@/lib/use-board";
+import type { Columns } from "@/lib/use-board";
 
 /**
- * Deplacements de cartes sur le tableau, independamment du geste qui les
- * declenche.
+ * Card moves on the board, independent of the gesture that triggers them.
  *
- * Le survol et le depot partagent ces calculs : ce qu'on voit pendant le
- * glissement est donc exactement ce qui sera enregistre.
+ * Hovering and dropping share these computations: what one sees during the
+ * drag is therefore exactly what will be saved.
  */
 
-/** Phase et rang d'une carte, ou null si elle n'est pas sur le tableau. */
-export function localiser(
-  colonnes: Colonnes,
+/** Phase and rank of a card, or null if it is not on the board. */
+export function locate(
+  columns: Columns,
   projectId: number,
-): { statut: ProjectStatus; position: number } | null {
-  for (const { statut } of PHASES) {
+): { status: ProjectStatus; position: number } | null {
+  for (const { status } of PHASES) {
     const position =
-      colonnes[statut]?.findIndex((c) => c.project.id === projectId) ?? -1;
-    if (position !== -1) return { statut, position };
+      columns[status]?.findIndex((c) => c.project.id === projectId) ?? -1;
+    if (position !== -1) return { status, position };
   }
   return null;
 }
 
 /**
- * Rang qu'occuperait la carte glissee dans une phase.
+ * The rank the dragged card would take within a phase.
  *
- * `apres` dit si le curseur a depasse la moitie de la carte survolee : on se
- * glisse alors derriere elle plutot que devant.
+ * `after` says whether the cursor went past the middle of the hovered card: it
+ * then slips behind it rather than in front.
  */
-export function indexVise(
-  cartes: BoardCardResponse[],
-  surId: number | null,
-  apres: boolean,
+export function targetIndex(
+  cards: BoardCardResponse[],
+  overId: number | null,
+  after: boolean,
 ): number {
-  if (surId === null) return cartes.length;
-  const index = cartes.findIndex((c) => c.project.id === surId);
-  if (index === -1) return cartes.length;
-  return apres ? index + 1 : index;
+  if (overId === null) return cards.length;
+  const index = cards.findIndex((c) => c.project.id === overId);
+  if (index === -1) return cards.length;
+  return after ? index + 1 : index;
 }
 
 /**
- * Fait passer une carte dans une autre phase.
+ * Moves a card into another phase.
  *
- * Rend null si le deplacement n'a pas lieu d'etre : le survol appelle cette
- * fonction a chaque mouvement de souris, et reecrire un etat identique ferait
- * clignoter le tableau.
+ * Returns null when the move has no reason to happen: hovering calls this
+ * function on every mouse move, and rewriting an identical state would make
+ * the board flicker.
  */
-export function changerDeColonne(
-  colonnes: Colonnes,
+export function moveToColumn(
+  columns: Columns,
   projectId: number,
-  vers: ProjectStatus,
+  to: ProjectStatus,
   index: number,
-): Colonnes | null {
-  const depart = localiser(colonnes, projectId);
-  if (!depart || depart.statut === vers) return null;
+): Columns | null {
+  const origin = locate(columns, projectId);
+  if (!origin || origin.status === to) return null;
 
-  const carte = colonnes[depart.statut][depart.position];
-  const arrivee = colonnes[vers];
-  const rang = Math.max(0, Math.min(index, arrivee.length));
+  const card = columns[origin.status][origin.position];
+  const destination = columns[to];
+  const rank = Math.max(0, Math.min(index, destination.length));
 
   return {
-    ...colonnes,
-    [depart.statut]: colonnes[depart.statut].filter((c) => c.project.id !== projectId),
-    [vers]: [...arrivee.slice(0, rang), carte, ...arrivee.slice(rang)],
+    ...columns,
+    [origin.status]: columns[origin.status].filter((c) => c.project.id !== projectId),
+    [to]: [...destination.slice(0, rank), card, ...destination.slice(rank)],
   };
 }
 
-/** Change le rang d'une carte au sein de sa phase. Null si elle ne bouge pas. */
-export function reordonner(
-  colonnes: Colonnes,
+/** Changes a card's rank within its phase. Null if it does not move. */
+export function reorder(
+  columns: Columns,
   projectId: number,
   index: number,
-): Colonnes | null {
-  const place = localiser(colonnes, projectId);
-  if (!place) return null;
+): Columns | null {
+  const location = locate(columns, projectId);
+  if (!location) return null;
 
-  const cartes = colonnes[place.statut];
-  const rang = Math.max(0, Math.min(index, cartes.length - 1));
-  if (rang === place.position) return null;
+  const cards = columns[location.status];
+  const rank = Math.max(0, Math.min(index, cards.length - 1));
+  if (rank === location.position) return null;
 
-  return { ...colonnes, [place.statut]: arrayMove(cartes, place.position, rang) };
+  return { ...columns, [location.status]: arrayMove(cards, location.position, rank) };
 }

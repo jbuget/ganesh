@@ -6,30 +6,30 @@ import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface MissionMenuProps {
-  /** Si la mission a deja quitte le referentiel. */
-  archivee: boolean;
-  /** Sort la mission du referentiel courant, sans la supprimer. */
-  onArchiver: () => void | Promise<void>;
-  /** La remet au referentiel. */
-  onDesarchiver: () => void | Promise<void>;
+  /** Whether the mission has already left the reference list. */
+  archived: boolean;
+  /** Takes the mission out of the current reference list, without deleting it. */
+  onArchive: () => void | Promise<void>;
+  /** Puts it back into the reference list. */
+  onUnarchive: () => void | Promise<void>;
 }
 
 /**
- * Ce qu'on fait a une mission entiere, replie derriere une icone.
+ * What one does to a whole mission, folded behind an icon.
  *
- * Les onglets editent le contenu de la mission ; ces actions-la portent sur la
- * mission elle-meme. Les tenir a l'ecart evite qu'on archive en visant un
- * onglet, et laisse la place aux suivantes sans redessiner l'en-tete.
+ * The tabs edit the mission's content; these actions act on the mission
+ * itself. Keeping them apart avoids archiving while aiming at a tab, and
+ * leaves room for the next ones without redrawing the header.
  */
-export function MissionMenu({ archivee, onArchiver, onDesarchiver }: MissionMenuProps) {
-  const [ouvert, setOuvert] = useState(false);
+export function MissionMenu({ archived, onArchive, onUnarchive }: MissionMenuProps) {
+  const [isOpen, setOpen] = useState(false);
 
-  // Une seule entree, qui dit dans quel sens elle fait bouger la mission :
-  // proposer les deux laisserait choisir l'etat ou l'on est deja.
-  const Icone = archivee ? ArchiveRestore : Archive;
+  // A single entry, saying which way it moves the mission: offering both would
+  // let one pick the state one is already in.
+  const Icon = archived ? ArchiveRestore : Archive;
 
   return (
-    <Popover open={ouvert} onOpenChange={setOuvert}>
+    <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label="Actions sur la mission"
         className="cursor-pointer rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
@@ -43,13 +43,13 @@ export function MissionMenu({ archivee, onArchiver, onDesarchiver }: MissionMenu
             <button
               type="button"
               onClick={() => {
-                setOuvert(false);
-                void (archivee ? onDesarchiver() : onArchiver());
+                setOpen(false);
+                void (archived ? onUnarchive() : onArchive());
               }}
               className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
             >
-              <Icone className="size-4 shrink-0 text-slate-400" aria-hidden />
-              {archivee ? "Désarchiver" : "Archiver"}
+              <Icon className="size-4 shrink-0 text-slate-400" aria-hidden />
+              {archived ? "Désarchiver" : "Archiver"}
             </button>
           </li>
         </ul>

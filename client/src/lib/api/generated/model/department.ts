@@ -6,22 +6,22 @@
  */
 
 /**
- * Departement de l'entreprise concerne par une mission.
+ * Company department a mission serves.
  *
- * Une mission peut en servir plusieurs : un portail bailleurs qui outille
- * aussi le service client concerne les deux, et le pilotage veut le voir.
+ * A mission may serve several: a landlord portal that also equips customer
+ * service concerns both, and steering wants to see it.
  */
 export type Department = (typeof Department)[keyof typeof Department];
 
 export const Department = {
-  administratif_financier: "administratif_financier",
-  bailleurs: "bailleurs",
-  copropriete: "copropriete",
-  service_client: "service_client",
+  finance_admin: "finance_admin",
+  landlords: "landlords",
+  condominium: "condominium",
+  customer_service: "customer_service",
   operations: "operations",
-  systeme_information: "systeme_information",
-  ressources_humaines: "ressources_humaines",
-  marketing_communication_rse: "marketing_communication_rse",
-  tertiaire: "tertiaire",
-  autre: "autre",
+  information_systems: "information_systems",
+  human_resources: "human_resources",
+  marketing_communication_csr: "marketing_communication_csr",
+  commercial_real_estate: "commercial_real_estate",
+  other: "other",
 } as const;

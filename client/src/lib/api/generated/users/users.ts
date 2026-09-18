@@ -74,7 +74,7 @@ export const getGetMeUrl = () => {
 };
 
 /**
- * L'utilisateur courant, tel que provisionne depuis Entra.
+ * The current user, as provisioned from Entra.
  * @summary Get Me
  */
 export const getMe = async (
@@ -221,7 +221,7 @@ export const getListUsersUrl = (params?: ListUsersParams) => {
 };
 
 /**
- * Liste les collaborateurs. Chacun peut consulter le mois de chacun.
+ * Lists the teammates. Anyone may look at anyone's month.
  * @summary List Users
  */
 export const listUsers = async (
@@ -375,7 +375,7 @@ export const getChangeUserRoleUrl = (userId: number) => {
 };
 
 /**
- * Change le role d'un collaborateur. Reserve aux managers.
+ * Changes a teammate's role. Managers only.
  * @summary Change Role
  */
 export const changeUserRole = async (
@@ -509,7 +509,7 @@ export const getSetUserActiveUrl = (userId: number) => {
 };
 
 /**
- * Coupe ou retablit l'acces d'un collaborateur. Reserve aux managers.
+ * Cuts off or restores a teammate's access. Managers only.
  * @summary Set Active
  */
 export const setUserActive = async (

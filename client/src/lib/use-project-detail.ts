@@ -21,108 +21,108 @@ import {
 } from "@/lib/api/generated/projects/projects";
 
 /**
- * La fiche d'une mission et ses modifications.
+ * A mission's sheet and its changes.
  *
- * Chaque changement est enregistre puis relu depuis le serveur : la fiche
- * s'edite champ par champ, sans bouton « Enregistrer », et l'ecran ne doit
- * jamais montrer autre chose que ce qui est en base.
+ * Every change is saved then read back from the server: the sheet is edited
+ * field by field, with no « Enregistrer » button, and the screen must
+ * never show anything other than what is in the database.
  */
 export function useProjectDetail(
   projectId: number,
-  /** Appele apres chaque ecriture : l'ecran d'ou l'on vient peut en dependre. */
-  onEcriture?: () => void | Promise<void>,
+  /** Called after every write: the screen one came from may depend on it. */
+  onWrite?: () => void | Promise<void>,
 ) {
   const [detail, setDetail] = useState<ProjectDetailResponse | null>(null);
-  const [introuvable, setIntrouvable] = useState(false);
+  const [notFound, setNotFound] = useState(false);
 
-  const recharger = useCallback(async () => {
+  const reload = useCallback(async () => {
     try {
-      const reponse = await getProjectDetail(projectId);
-      setDetail(reponse.data as ProjectDetailResponse);
+      const response = await getProjectDetail(projectId);
+      setDetail(response.data as ProjectDetailResponse);
     } catch {
-      setIntrouvable(true);
+      setNotFound(true);
     }
-    await onEcriture?.();
-  }, [projectId, onEcriture]);
+    await onWrite?.();
+  }, [projectId, onWrite]);
 
   useEffect(() => {
-    // Le garde evite d'ecrire dans un composant deja demonte, quand on quitte
-    // la fiche avant que la reponse ne revienne.
-    let vivant = true;
+    // The guard avoids writing into an already unmounted component, when one
+    // leaves the sheet before the response comes back.
+    let alive = true;
     getProjectDetail(projectId)
-      .then((reponse) => {
-        if (vivant) setDetail(reponse.data as ProjectDetailResponse);
+      .then((response) => {
+        if (alive) setDetail(response.data as ProjectDetailResponse);
       })
       .catch(() => {
-        if (vivant) setIntrouvable(true);
+        if (alive) setNotFound(true);
       });
     return () => {
-      vivant = false;
+      alive = false;
     };
   }, [projectId]);
 
   return {
     detail,
-    introuvable,
-    recharger,
+    notFound,
+    reload,
 
-    async enregistrerFiche(departements: Department[], contactsMetier: string | null) {
+    async saveSheet(departments: Department[], businessContacts: string | null) {
       await updateProjectDetail(projectId, {
-        departements,
-        contacts_metier: contactsMetier,
+        departments,
+        business_contacts: businessContacts,
       });
-      await recharger();
+      await reload();
     },
 
-    async renommer(label: string) {
+    async rename(label: string) {
       await updateProject(projectId, { label });
-      await recharger();
+      await reload();
     },
 
-    async changerPhase(statut: ProjectStatus) {
-      await changeProjectStatus(projectId, { statut });
-      await recharger();
+    async changePhase(status: ProjectStatus) {
+      await changeProjectStatus(projectId, { status });
+      await reload();
     },
 
-    /** Modification partielle : seuls les champs fournis sont appliques. */
-    async changerCaracteristiques(champs: {
-      categorie?: ProjectCategory | null;
-      priorite?: ProjectPriority | null;
-      estime_j?: number | null;
+    /** Partial change: only the fields provided are applied. */
+    async updateFields(fields: {
+      category?: ProjectCategory | null;
+      priority?: ProjectPriority | null;
+      estimated_days?: number | null;
     }) {
-      await updateProject(projectId, champs);
-      await recharger();
+      await updateProject(projectId, fields);
+      await reload();
     },
 
     /**
-     * Sort la mission du referentiel sans rien perdre : le referentiel ne la
-     * liste plus, mais les saisies deja passees dessus restent lisibles.
+     * Takes the mission out of the reference list without losing anything: the
+     * list no longer shows it, but entries already booked stay readable.
      */
-    async archiver() {
-      await updateProject(projectId, { actif: false });
-      await recharger();
+    async archive() {
+      await updateProject(projectId, { is_active: false });
+      await reload();
     },
 
-    /** Remet la mission au referentiel, et oublie la date de sa sortie. */
-    async desarchiver() {
-      await updateProject(projectId, { actif: true });
-      await recharger();
+    /** Puts the mission back into the reference list, forgetting when it left. */
+    async unarchive() {
+      await updateProject(projectId, { is_active: true });
+      await reload();
     },
 
-    async enregistrerDescription(description: string) {
+    async saveDescription(description: string) {
       await updateProjectDescription(projectId, { description });
-      await recharger();
+      await reload();
     },
 
-    /** `icone` a `null` : le serveur la deduit de l'adresse. */
-    async ajouterLien(label: string, url: string, icone: LinkIcon | null) {
-      await addProjectLink(projectId, { label, url, icone });
-      await recharger();
+    /** `icon` at `null`: the server infers it from the address. */
+    async addLink(label: string, url: string, icon: LinkIcon | null) {
+      await addProjectLink(projectId, { label, url, icon });
+      await reload();
     },
 
-    async retirerLien(linkId: number) {
+    async removeLink(linkId: number) {
       await removeProjectLink(projectId, linkId);
-      await recharger();
+      await reload();
     },
   };
 }

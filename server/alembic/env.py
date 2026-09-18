@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from src.core.config import get_settings
 from src.core.database import Base
 
-# Importer ici tous les modeles pour qu'Alembic les voie lors de l'autogenerate.
+# Import every model here so Alembic sees them on autogenerate.
 from src.modules.audit_logs.infrastructure.database.models import (  # noqa: F401, E402
     audit_log_model,
 )
@@ -44,7 +44,7 @@ target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
-    """Genere le SQL sans se connecter a la base."""
+    """Generates the SQL without connecting to the database."""
     context.configure(
         url=config.get_main_option("sqlalchemy.url"),
         target_metadata=target_metadata,
@@ -65,7 +65,7 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_async_migrations() -> None:
-    """Applique les migrations via l'engine asynchrone."""
+    """Applies the migrations through the async engine."""
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",

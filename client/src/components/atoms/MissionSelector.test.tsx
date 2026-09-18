@@ -5,19 +5,19 @@ import { MissionSelector } from "./MissionSelector";
 import type { ProjectResponse } from "@/lib/api/generated/model";
 
 /**
- * Le menu deroulant repose sur Base UI, qui ne s'ouvre pas sous jsdom : son
- * contenu — champ de recherche compris — se verifie dans le navigateur. Le tri
- * des missions, lui, est teste directement dans `lib/missions.test.ts`.
+ * The dropdown rests on Base UI, which does not open under jsdom: its content
+ * — search field included — is checked in the browser. The sorting of missions
+ * is tested directly in `lib/missions.test.ts`.
  */
 const PROJECTS: ProjectResponse[] = [
   {
     id: 1,
     label: "Portail bailleurs",
-    kind: "projet",
-    statut: "cadrage",
+    kind: "project",
+    status: "scoping",
     parent_id: null,
-    actif: true,
-    estime_j: null,
+    is_active: true,
+    estimated_days: null,
     is_syncable_to_monday: false,
   } as ProjectResponse,
 ];
@@ -30,7 +30,7 @@ const baseProps = {
 };
 
 describe("MissionSelector", () => {
-  it("expose un sélecteur nommé", () => {
+  it("exposes a named picker", () => {
     render(<MissionSelector {...baseProps} />);
 
     expect(
@@ -38,13 +38,13 @@ describe("MissionSelector", () => {
     ).toBeInTheDocument();
   });
 
-  it("invite à ajouter une mission", () => {
+  it("invites adding a mission", () => {
     render(<MissionSelector {...baseProps} />);
 
     expect(screen.getByText(/Ajouter une mission/)).toBeInTheDocument();
   });
 
-  it("est désactivé quand le mois est verrouillé", () => {
+  it("is disabled when the month is locked", () => {
     render(<MissionSelector {...baseProps} disabled />);
 
     expect(screen.getByRole("combobox")).toBeDisabled();

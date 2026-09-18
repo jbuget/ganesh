@@ -5,49 +5,49 @@ import { UserMenu } from "./UserMenu";
 import type { UserResponse } from "@/lib/api/generated/model";
 
 /**
- * Le menu repose sur le Popover de Base UI, qui ne s'ouvre pas sous jsdom : son
- * contenu — nom complet, adresse, role, deconnexion — se verifie dans le
- * navigateur. Ce qui suit couvre ce que la barre laterale montre en permanence.
+ * The menu rests on Base UI's Popover, which does not open under jsdom: its
+ * content — full name, address, role, sign out — is checked in the browser.
+ * What follows covers what the sidebar shows at all times.
  */
 const USER: UserResponse = {
   id: 1,
   email: "j.buget@waat.fr",
   display_name: "Jérémy Buget",
-  initiales: "JB",
+  initials: "JB",
   role: "MANAGER",
-  actif: true,
+  is_active: true,
 } as UserResponse;
 
 describe("UserMenu", () => {
-  it("montre le nom et les initiales de la personne connectée", () => {
+  it("shows the name and initials of the signed-in person", () => {
     render(<UserMenu user={USER} onSignOut={vi.fn()} />);
 
     expect(screen.getByText("Jérémy Buget")).toBeInTheDocument();
     expect(screen.getByText("JB")).toBeInTheDocument();
   });
 
-  it("annonce ce que le menu ouvre", () => {
+  it("announces what the menu opens", () => {
     render(<UserMenu user={USER} onSignOut={vi.fn()} />);
 
     expect(screen.getByRole("button", { name: /Jérémy Buget/ })).toBeInTheDocument();
   });
 
-  it("signale le rôle de manager sous le nom", () => {
+  it("flags the manager role under the name", () => {
     render(<UserMenu user={USER} onSignOut={vi.fn()} />);
 
     expect(screen.getByText("Manager")).toBeInTheDocument();
   });
 
-  it("n'affiche aucun rôle sous le nom d'un collaborateur", () => {
+  it("shows no role under a teammate's name", () => {
     render(<UserMenu user={{ ...USER, role: "TEAMMATE" }} onSignOut={vi.fn()} />);
 
     expect(screen.queryByText("Collaborateur")).toBeNull();
   });
 
-  it("réduit le bloc aux initiales quand la barre est repliée", () => {
-    render(<UserMenu user={USER} onSignOut={vi.fn()} repliee />);
+  it("shrinks the block to initials when the bar is folded", () => {
+    render(<UserMenu user={USER} onSignOut={vi.fn()} collapsed />);
 
-    // Le nom quitte l'oeil, jamais l'arbre d'accessibilite.
+    // The name leaves the eye, never the accessibility tree.
     expect(screen.getByRole("button", { name: /Jérémy Buget/ })).toBeInTheDocument();
     expect(screen.getByText("JB")).toBeInTheDocument();
   });

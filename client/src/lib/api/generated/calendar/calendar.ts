@@ -66,7 +66,7 @@ export const getGetMonthCalendarUrl = (year: number, month: number) => {
 };
 
 /**
- * Les jours du mois et leur nature.
+ * The days of the month and their kind.
  * @summary Get Month Calendar
  */
 export const getMonthCalendar = async (

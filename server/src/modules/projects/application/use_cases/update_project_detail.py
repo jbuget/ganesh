@@ -1,4 +1,4 @@
-"""Modifie les champs de fiche d'une mission."""
+"""Changes the sheet fields of a mission."""
 
 from dataclasses import dataclass
 
@@ -14,23 +14,23 @@ from src.modules.projects.domain.repositories.project_detail_repository import (
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
-from src.modules.projects.domain.services.link_icons import deviner_icone
+from src.modules.projects.domain.services.link_icons import guess_icon
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 
 @dataclass(frozen=True)
 class UpdateProjectDetailCommand:
-    """Departements et contacts metier d'une mission."""
+    """Departments and business contacts of a mission."""
 
     actor_id: int
     project_id: int
-    departements: list[Department]
-    contacts_metier: str | None
+    departments: list[Department]
+    business_contacts: str | None
 
 
 @dataclass(frozen=True)
 class UpdateDescriptionCommand:
-    """Fiche de service, en markdown."""
+    """Service sheet, in markdown."""
 
     actor_id: int
     project_id: int
@@ -39,20 +39,20 @@ class UpdateDescriptionCommand:
 
 @dataclass(frozen=True)
 class AddLinkCommand:
-    """Ajout d'un lien utile.
+    """Adding a useful link.
 
-    L'icone est facultative : sans choix explicite, l'adresse la designe.
+    The icon is optional: without an explicit choice, the address names it.
     """
 
     actor_id: int
     project_id: int
     label: str
     url: str
-    icone: LinkIcon | None = None
+    icon: LinkIcon | None = None
 
 
 class UpdateProjectDetailUseCase:
-    """Enregistre les departements et les contacts d'une mission."""
+    """Saves the departments and contacts of a mission."""
 
     def __init__(
         self,
@@ -69,38 +69,38 @@ class UpdateProjectDetailUseCase:
         if mission is None:
             raise EntityNotFoundError("Mission inconnue.")
 
-        anciens_departements = await self._details.list_departments(command.project_id)
-        contacts = (command.contacts_metier or "").strip() or None
-        ancien = mission.contacts_metier
-        mission.contacts_metier = contacts
+        previous_departments = await self._details.list_departments(command.project_id)
+        contacts = (command.business_contacts or "").strip() or None
+        previous = mission.business_contacts
+        mission.business_contacts = contacts
         await self._projects.update(mission)
-        await self._details.set_departments(command.project_id, command.departements)
+        await self._details.set_departments(command.project_id, command.departments)
 
-        # Une trace par champ, comme le fait deja la modification d'une mission.
-        for champ, avant, apres in (
-            ("contacts_metier", ancien, contacts),
+        # One trace per field, as editing a mission already does.
+        for field, before, after in (
+            ("contacts_metier", previous, contacts),
             (
                 "departements",
-                ", ".join(sorted(d.value for d in anciens_departements)),
-                ", ".join(sorted(d.value for d in command.departements)),
+                ", ".join(sorted(d.value for d in previous_departments)),
+                ", ".join(sorted(d.value for d in command.departments)),
             ),
         ):
-            if avant == apres:
+            if before == after:
                 continue
             await self._audit_logs.add(
                 AuditLog(
                     action=AuditAction.PROJECT_UPDATE,
                     actor_id=command.actor_id,
                     project_id=command.project_id,
-                    old_value=avant,
-                    new_value=apres,
-                    payload={"champ": champ},
+                    old_value=before,
+                    new_value=after,
+                    payload={"field": field},
                 )
             )
 
 
 class AddProjectLinkUseCase:
-    """Attache un lien utile a une mission."""
+    """Attaches a useful link to a mission."""
 
     def __init__(
         self,
@@ -119,13 +119,13 @@ class AddProjectLinkUseCase:
                 project_id=command.project_id,
                 label=command.label,
                 url=command.url,
-                icone=command.icone or deviner_icone(command.url),
+                icon=command.icon or guess_icon(command.url),
             )
         )
 
 
 class RemoveProjectLinkUseCase:
-    """Detache un lien d'une mission."""
+    """Detaches a link from a mission."""
 
     def __init__(self, details: ProjectDetailRepository) -> None:
         self._details = details
@@ -135,11 +135,11 @@ class RemoveProjectLinkUseCase:
 
 
 class UpdateDescriptionUseCase:
-    """Enregistre la fiche de service d'une mission.
+    """Saves the service sheet of a mission.
 
-    La trace ne retient pas les deux versions du texte : une fiche fait des
-    pages, et l'audit sert a savoir qui a touche a quoi, pas a rejouer les
-    revisions. Le champ suffit.
+    The trace does not keep both versions of the text: a sheet runs to pages,
+    and the audit log is there to know who touched what, not to replay
+    revisions. The field name is enough.
     """
 
     def __init__(
@@ -166,6 +166,6 @@ class UpdateDescriptionUseCase:
                 action=AuditAction.PROJECT_UPDATE,
                 actor_id=command.actor_id,
                 project_id=command.project_id,
-                payload={"champ": "description"},
+                payload={"field": "description"},
             )
         )

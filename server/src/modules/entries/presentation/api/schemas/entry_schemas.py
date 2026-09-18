@@ -1,4 +1,4 @@
-"""Schemas d'entree et de sortie des saisies."""
+"""Input and output schemas for entries."""
 
 from datetime import date
 
@@ -8,61 +8,61 @@ from src.modules.projects.domain.entities.project import ProjectKind
 
 
 class SetEntryRequest(BaseModel):
-    """Demande d'ecriture d'une saisie."""
+    """Request to write an entry."""
 
     project_id: int
-    jour: date
-    valeur: float = Field(description="0.5 pour une demi-journee, 1 pour une journee")
+    day: date
+    value: float = Field(description="0.5 for a half day, 1 for a full day")
 
 
 class EntryResponse(BaseModel):
-    """Une saisie enregistree."""
+    """A recorded entry."""
 
     project_id: int
-    jour: date
-    valeur: float
+    day: date
+    value: float
 
 
 class CalendarDayResponse(BaseModel):
-    """Un jour du mois et sa nature."""
+    """A day of the month and its kind."""
 
-    jour: date
+    day: date
     kind: str
     label: str | None = None
     is_off_day: bool
 
 
 class GridRowResponse(BaseModel):
-    """Une ligne de la matrice : une mission et ses saisies."""
+    """One grid row: a mission and its entries."""
 
     project_id: int
     label: str
     kind: ProjectKind
-    estime_j: float | None
+    estimated_days: float | None
     values: dict[date, float]
-    total_realise: float
-    total_prevu: float
+    actual_total: float
+    forecast_total: float
     total: float
-    consomme_total_j: float
+    total_consumed_days: float
 
 
 class DayTotalResponse(BaseModel):
-    """Total saisi sur une journee."""
+    """Total entered on one day."""
 
-    jour: date
+    day: date
     total: float
     exceeds_capacity: bool
 
 
 class MonthGridResponse(BaseModel):
-    """La matrice complete d'un mois."""
+    """The complete grid for a month."""
 
     user_id: int
-    mois: date
+    month: date
     days: list[CalendarDayResponse]
     rows: list[GridRowResponse]
     day_totals: list[DayTotalResponse]
     working_days: int
     is_writable: bool
-    total_realise: float
-    total_prevu: float
+    actual_total: float
+    forecast_total: float

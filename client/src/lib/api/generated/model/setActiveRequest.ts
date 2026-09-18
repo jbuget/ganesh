@@ -6,8 +6,8 @@
  */
 
 /**
- * Coupure ou retablissement de l'acces d'un collaborateur.
+ * Cutting off or restoring a teammate's access.
  */
 export interface SetActiveRequest {
-  actif: boolean;
+  is_active: boolean;
 }

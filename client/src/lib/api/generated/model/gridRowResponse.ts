@@ -8,16 +8,16 @@ import type { GridRowResponseValues } from "./gridRowResponseValues";
 import type { ProjectKind } from "./projectKind";
 
 /**
- * Une ligne de la matrice : une mission et ses saisies.
+ * One grid row: a mission and its entries.
  */
 export interface GridRowResponse {
   project_id: number;
   label: string;
   kind: ProjectKind;
-  estime_j: number | null;
+  estimated_days: number | null;
   values: GridRowResponseValues;
-  total_realise: number;
-  total_prevu: number;
+  actual_total: number;
+  forecast_total: number;
   total: number;
-  consomme_total_j: number;
+  total_consumed_days: number;
 }

@@ -1,4 +1,4 @@
-"""Supprime une mission jamais utilisee."""
+"""Deletes a mission that was never used."""
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
@@ -15,10 +15,10 @@ from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 
 class DeleteProjectUseCase:
-    """Retire du referentiel une mission qui n'a jamais servi.
+    """Takes a mission that never served out of the reference list.
 
-    Des qu'une mission porte du temps, la suppression est refusee au profit de
-    l'archivage : le referentiel se nettoie sans jamais perdre de declaration.
+    As soon as a mission carries time, deletion is refused in favour of
+    archiving: the reference list is tidied without ever losing a declaration.
     """
 
     def __init__(
@@ -41,9 +41,9 @@ class DeleteProjectUseCase:
         if project is None:
             raise EntityNotFoundError("Mission inconnue.")
 
-        saisies = (await self._entries.count_by_project()).get(command.project_id, 0)
-        sous_projets = len(await self._projects.list_children(command.project_id))
-        ensure_can_be_deleted(project, saisies=saisies, sous_projets=sous_projets)
+        entries = (await self._entries.count_by_project()).get(command.project_id, 0)
+        sub_projects = len(await self._projects.list_children(command.project_id))
+        ensure_can_be_deleted(project, entries=entries, sub_projects=sub_projects)
 
         await self._projects.delete(command.project_id)
         await self._audit_logs.add(

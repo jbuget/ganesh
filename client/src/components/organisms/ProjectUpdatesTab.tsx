@@ -9,42 +9,41 @@ import { useProjectUpdates } from "@/lib/use-project-updates";
 
 interface ProjectUpdatesTabProps {
   projectId: number;
-  /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
-  maintenant: Date;
-  /** Previent l'ecran d'ou l'on vient : il annonce le fil sans l'ouvrir. */
+  /** Freezes the reference time: without it, server and client would diverge. */
+  now: Date;
+  /** Tells the screen one came from: it announces the thread without opening it. */
   onChange?: () => void | Promise<void>;
-  /** Pose le curseur dans la redaction des l'ouverture. */
-  focusRedaction?: boolean;
+  /** Puts the cursor in the composer as soon as it opens. */
+  focusComposer?: boolean;
 }
 
 /**
- * Le fil de suivi d'une mission.
+ * A mission's follow-up thread.
  *
- * La redaction est en haut et le fil antechronologique en dessous : on vient
- * pour lire ce qui est arrive depuis la derniere fois, et pour ajouter sa
- * pierre.
+ * The composer is at the top and the reverse-chronological thread below: one
+ * comes to read what has happened since last time, and to add one's own piece.
  */
 export function ProjectUpdatesTab({
   projectId,
-  maintenant,
+  now,
   onChange,
-  focusRedaction = false,
+  focusComposer = false,
 }: ProjectUpdatesTabProps) {
-  const suivi = useProjectUpdates(projectId, onChange);
-  const [texte, setTexte] = useState("");
-  const [enCours, setEnCours] = useState(false);
-  // Remonter la cle vide l'editeur : son contenu vit dans ProseMirror, pas
-  // dans React, et il ne se reinitialise pas en changeant une propriete.
-  const [cleDeRedaction, setCleDeRedaction] = useState(0);
+  const thread = useProjectUpdates(projectId, onChange);
+  const [body, setBody] = useState("");
+  const [busy, setBusy] = useState(false);
+  // Bumping the key empties the editor: its content lives in ProseMirror, not
+  // in React, and it does not reset by changing a prop.
+  const [composerKey, setComposerKey] = useState(0);
 
-  async function publier() {
-    setEnCours(true);
+  async function publish() {
+    setBusy(true);
     try {
-      await suivi.publier(texte);
-      setTexte("");
-      setCleDeRedaction((cle) => cle + 1);
+      await thread.publish(body);
+      setBody("");
+      setComposerKey((key) => key + 1);
     } finally {
-      setEnCours(false);
+      setBusy(false);
     }
   }
 
@@ -52,26 +51,26 @@ export function ProjectUpdatesTab({
     <div className="space-y-4">
       <div className="space-y-2">
         <RichTextEditor
-          key={cleDeRedaction}
-          valeur=""
+          key={composerKey}
+          value=""
           placeholder="Rédigez une mise à jour…"
-          autoFocus={focusRedaction}
-          onChange={setTexte}
+          autoFocus={focusComposer}
+          onChange={setBody}
           onSubmit={() => {
-            if (texte.trim()) void publier();
+            if (body.trim()) void publish();
           }}
         />
-        {texte.trim() && (
+        {body.trim() && (
           <div className="flex items-center gap-2">
-            <Button size="sm" disabled={enCours} onClick={() => void publier()}>
+            <Button size="sm" disabled={busy} onClick={() => void publish()}>
               Publier
             </Button>
             <Button
               size="sm"
               variant="ghost"
               onClick={() => {
-                setTexte("");
-                setCleDeRedaction((cle) => cle + 1);
+                setBody("");
+                setComposerKey((key) => key + 1);
               }}
             >
               Annuler
@@ -81,22 +80,22 @@ export function ProjectUpdatesTab({
         )}
       </div>
 
-      {suivi.fil === null && <p className="text-sm text-slate-400">Chargement…</p>}
+      {thread.thread === null && <p className="text-sm text-slate-400">Chargement…</p>}
 
-      {suivi.fil?.length === 0 && (
+      {thread.thread?.length === 0 && (
         <p className="py-6 text-center text-sm text-slate-400">
           Aucune mise à jour. Racontez où en est la mission.
         </p>
       )}
 
       <div className="space-y-2">
-        {suivi.fil?.map((maj) => (
+        {thread.thread?.map((update) => (
           <ProjectUpdateCard
-            key={maj.id}
-            maj={maj}
-            maintenant={maintenant}
-            onEdit={(texte) => suivi.corriger(maj.id, texte)}
-            onRemove={() => suivi.retirer(maj.id)}
+            key={update.id}
+            update={update}
+            now={now}
+            onEdit={(body) => thread.edit(update.id, body)}
+            onRemove={() => thread.remove(update.id)}
           />
         ))}
       </div>

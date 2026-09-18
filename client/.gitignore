@@ -40,6 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Garder les modeles de configuration versionnes
+# Keep the configuration templates under version control
 !.env.example
 .vitest/

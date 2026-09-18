@@ -11,57 +11,56 @@ import {
 } from "@/lib/api/generated/projects/projects";
 
 /**
- * Le fil de suivi d'une mission.
+ * A mission's follow-up thread.
  *
- * Chaque ecriture est relue depuis le serveur : c'est lui qui decide de la
- * chronologie, de ce qui reste visible d'une mise a jour retiree, et de qui a
- * le droit de la toucher.
+ * Every write is read back from the server: it decides the order, what stays
+ * visible of a withdrawn update, and who is allowed to touch it.
  */
 export function useProjectUpdates(
   projectId: number,
   /**
-   * Appele apres chaque ecriture : le fil ne se lit pas qu'ici. Le referentiel
-   * et le kanban annoncent son decompte et son dernier message, et resteraient
-   * sur ce qu'ils savaient a l'ouverture du panneau.
+   * Called after every write: the thread is not read here alone. The reference
+   * list and the kanban announce its count and its latest message, and would
+   * otherwise sit on what they knew when the panel opened.
    */
-  onEcriture?: () => void | Promise<void>,
+  onWrite?: () => void | Promise<void>,
 ) {
-  const [fil, setFil] = useState<ProjectUpdateResponse[] | null>(null);
+  const [thread, setThread] = useState<ProjectUpdateResponse[] | null>(null);
 
-  const recharger = useCallback(async () => {
-    const reponse = await listProjectUpdates(projectId);
-    setFil(reponse.data as ProjectUpdateResponse[]);
+  const reload = useCallback(async () => {
+    const response = await listProjectUpdates(projectId);
+    setThread(response.data as ProjectUpdateResponse[]);
   }, [projectId]);
 
   useEffect(() => {
-    let vivant = true;
-    listProjectUpdates(projectId).then((reponse) => {
-      if (vivant) setFil(reponse.data as ProjectUpdateResponse[]);
+    let alive = true;
+    listProjectUpdates(projectId).then((response) => {
+      if (alive) setThread(response.data as ProjectUpdateResponse[]);
     });
     return () => {
-      vivant = false;
+      alive = false;
     };
   }, [projectId]);
 
   return {
-    fil,
+    thread,
 
-    async publier(texte: string) {
-      await postProjectUpdate(projectId, { texte });
-      await recharger();
-      await onEcriture?.();
+    async publish(body: string) {
+      await postProjectUpdate(projectId, { body });
+      await reload();
+      await onWrite?.();
     },
 
-    async corriger(updateId: number, texte: string) {
-      await editProjectUpdate(projectId, updateId, { texte });
-      await recharger();
-      await onEcriture?.();
+    async edit(updateId: number, body: string) {
+      await editProjectUpdate(projectId, updateId, { body });
+      await reload();
+      await onWrite?.();
     },
 
-    async retirer(updateId: number) {
+    async remove(updateId: number) {
       await removeProjectUpdate(projectId, updateId);
-      await recharger();
-      await onEcriture?.();
+      await reload();
+      await onWrite?.();
     },
   };
 }

@@ -4,7 +4,7 @@ import { render, screen } from "@testing-library/react";
 import { ArchivedCallout } from "./ArchivedCallout";
 
 describe("ArchivedCallout", () => {
-  it("dit quand la mission a quitté le référentiel", () => {
+  it("says when the mission left the reference list", () => {
     render(<ArchivedCallout archivedAt="2026-09-18T00:36:07.943722" />);
 
     expect(screen.getByRole("status")).toHaveTextContent(
@@ -12,7 +12,7 @@ describe("ArchivedCallout", () => {
     );
   });
 
-  it("annonce l'archivage même sans date connue", () => {
+  it("announces archiving even with no known date", () => {
     render(<ArchivedCallout archivedAt={null} />);
 
     expect(screen.getByRole("status")).toHaveTextContent("Cette mission est archivée.");

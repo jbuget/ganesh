@@ -5,49 +5,49 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 
 import { SortableProjectCard } from "@/components/molecules/SortableProjectCard";
 import type { BoardCardResponse, ProjectStatus } from "@/lib/api/generated/model";
-import { libellePhase, pastillePhase } from "@/lib/board";
+import { phaseLabel, phaseDot } from "@/lib/board";
 
 interface BoardColumnProps {
-  statut: ProjectStatus;
-  cartes: BoardCardResponse[];
-  /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
-  maintenant: Date;
-  onIntervenantsChange?: () => void | Promise<void>;
+  status: ProjectStatus;
+  cards: BoardCardResponse[];
+  /** Freezes the reference time: without it, server and client would diverge. */
+  now: Date;
+  onContributorsChange?: () => void | Promise<void>;
   onOpen?: (projectId: number) => void;
-  /** Le tableau est filtre : les cartes se lisent, mais ne se rangent plus. */
-  figees?: boolean;
+  /** The board is filtered: cards can be read, but no longer arranged. */
+  frozen?: boolean;
 }
 
 /**
- * Une phase et ses cartes, zone de depot du glisser-deposer.
+ * A phase and its cards, the drop zone of the drag and drop.
  *
- * Le titre et les cartes tiennent dans un meme bloc : une colonne se lit alors
- * comme une unite, et non comme un intitule flottant au-dessus d'une liste.
+ * Title and cards sit in one block: a column then reads as a unit, and not as
+ * a heading floating above a list.
  *
- * La colonne occupe toute la hauteur et ce sont ses cartes qui defilent : une
- * phase chargee n'allonge plus le tableau entier, et l'intitule de chaque
- * colonne reste en vis-a-vis de celui des autres.
+ * The column takes the full height and it is its cards that scroll: a busy
+ * phase no longer stretches the whole board, and every column's heading stays
+ * level with the others.
  */
 export function BoardColumn({
-  statut,
-  cartes,
-  maintenant,
-  onIntervenantsChange,
+  status,
+  cards,
+  now,
+  onContributorsChange,
   onOpen,
-  figees,
+  frozen,
 }: BoardColumnProps) {
-  const { setNodeRef, isOver } = useDroppable({ id: statut });
+  const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
     <section
-      aria-label={libellePhase(statut)}
-      // Les six phases se partagent la largeur disponible plutot que d'imposer
-      // un defilement des qu'un ecran n'atteint pas 1600 px. En deca de la
-      // largeur minimale, le conteneur reprend le defilement horizontal.
+      aria-label={phaseLabel(status)}
+      // The six phases share the available width rather than forcing a scroll
+      // as soon as a screen falls short of 1600 px. Below the minimum width,
+      // the container takes horizontal scrolling back.
       className={[
-        // Une bordure, et non un `ring` : celui-ci se dessine hors de la boite,
-        // et le conteneur de defilement rognait alors le bord gauche de la
-        // premiere colonne et le bord droit de la derniere.
+        // A border, not a `ring`: a ring draws outside the box, and the
+        // scrolling container then clipped the left edge of the first column
+        // and the right edge of the last.
         "flex h-full min-w-72 max-w-96 flex-1 flex-col rounded-xl border transition-colors",
         isOver ? "border-sky-300 bg-sky-50" : "border-slate-300 bg-slate-100",
       ].join(" ")}
@@ -56,11 +56,11 @@ export function BoardColumn({
         <h2 className="flex items-center gap-2 text-sm font-medium text-slate-700">
           <span
             aria-hidden
-            className={`size-2.5 shrink-0 rounded-full ${pastillePhase(statut)}`}
+            className={`size-2.5 shrink-0 rounded-full ${phaseDot(status)}`}
           />
-          {libellePhase(statut)}
+          {phaseLabel(status)}
         </h2>
-        <span className="text-xs tabular-nums text-slate-400">{cartes.length}</span>
+        <span className="text-xs tabular-nums text-slate-400">{cards.length}</span>
       </header>
 
       <ul
@@ -68,25 +68,25 @@ export function BoardColumn({
         className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2"
       >
         <SortableContext
-          items={cartes.map((carte) => carte.project.id)}
+          items={cards.map((card) => card.project.id)}
           strategy={verticalListSortingStrategy}
         >
-          {cartes.map((carte) => (
+          {cards.map((card) => (
             <SortableProjectCard
-              key={carte.project.id}
-              carte={carte}
-              maintenant={maintenant}
-              onIntervenantsChange={onIntervenantsChange}
+              key={card.project.id}
+              card={card}
+              now={now}
+              onContributorsChange={onContributorsChange}
               onOpen={onOpen}
-              figee={figees}
+              frozen={frozen}
             />
           ))}
         </SortableContext>
 
-        {/* Un <ul> n'admet que des <li> : un <p> nu casserait l'hydratation. */}
-        {cartes.length === 0 && (
+        {/* A <ul> only takes <li>: a bare <p> would break hydration. */}
+        {cards.length === 0 && (
           <li className="px-1 py-6 text-center text-xs text-slate-400">
-            {figees ? "Aucune mission ne répond aux filtres" : "Aucune mission"}
+            {frozen ? "Aucune mission ne répond aux filtres" : "Aucune mission"}
           </li>
         )}
       </ul>

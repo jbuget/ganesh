@@ -7,14 +7,14 @@
 import type { Role } from "./role";
 
 /**
- * Un collaborateur.
+ * A teammate.
  */
 export interface UserResponse {
   id: number;
   email: string;
   display_name: string;
-  initiales: string;
+  initials: string;
   role: Role;
-  actif: boolean;
-  derniere_connexion?: string | null;
+  is_active: boolean;
+  last_login_at?: string | null;
 }

@@ -1,8 +1,8 @@
-"""Fixtures partagees par les tests d'integration.
+"""Fixtures shared by the integration tests.
 
-Les tests marques `db` touchent une vraie base PostgreSQL : le schema est cree
-par les migrations Alembic, jamais par `create_all`, afin de tester exactement
-ce qui tournera en production.
+Tests marked `db` hit a real PostgreSQL database: the schema is created by the
+Alembic migrations, never by `create_all`, so that what runs in production is
+exactly what gets tested.
 """
 
 import os
@@ -23,7 +23,7 @@ TEST_DATABASE_URL = os.environ.get(
 
 @pytest.fixture(scope="session")
 def migrated_database() -> str:
-    """Applique les migrations sur la base de test, une fois par session."""
+    """Applies the migrations to the test database, once per session."""
     config = Config("alembic.ini")
     config.set_main_option("sqlalchemy.url", TEST_DATABASE_URL)
     command.downgrade(config, "base")
@@ -33,7 +33,7 @@ def migrated_database() -> str:
 
 @pytest_asyncio.fixture
 async def db_session(migrated_database: str) -> AsyncGenerator[AsyncSession, None]:
-    """Une session isolee par test : tout est annule a la fin."""
+    """One isolated session per test: everything is rolled back at the end."""
     engine = create_async_engine(migrated_database)
     factory = async_sessionmaker(
         bind=engine, class_=AsyncSession, expire_on_commit=False

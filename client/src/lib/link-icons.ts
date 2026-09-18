@@ -3,7 +3,7 @@ import {
   Folder,
   Frame,
   GitBranch,
-  Link as LinkGenerique,
+  Link as PlainLink,
   MessagesSquare,
   Presentation,
   Table2,
@@ -15,37 +15,37 @@ import {
 import type { LinkIcon } from "@/lib/api/generated/model";
 
 /**
- * Les familles de liens du referentiel, et la forme qu'elles prennent a l'ecran.
+ * The families of links in the reference list, and the shape they take on screen.
  *
- * Le catalogue vient du serveur : ce fichier ne fait que lui donner un dessin
- * et un nom lisible. L'ordre est celui du selecteur — le lien generique en
- * tete, puis les familles de la plus courante a la plus rare.
+ * The catalogue comes from the server: this file only gives it a drawing and a
+ * readable name. The order is that of the picker — the plain link first, then
+ * the families from the most common to the rarest.
  */
-export const ICONES_DE_LIEN: {
-  valeur: LinkIcon;
-  libelle: string;
-  Dessin: LucideIcon;
+export const LINK_ICONS: {
+  value: LinkIcon;
+  label: string;
+  glyph: LucideIcon;
 }[] = [
-  { valeur: "lien", libelle: "Lien", Dessin: LinkGenerique },
-  { valeur: "document", libelle: "Document", Dessin: FileText },
-  { valeur: "tableur", libelle: "Tableur", Dessin: Table2 },
-  { valeur: "presentation", libelle: "Présentation", Dessin: Presentation },
-  { valeur: "dossier", libelle: "Dossier", Dessin: Folder },
-  { valeur: "maquette", libelle: "Maquette", Dessin: Frame },
-  { valeur: "depot", libelle: "Dépôt de code", Dessin: GitBranch },
-  { valeur: "ticket", libelle: "Ticket", Dessin: Ticket },
-  { valeur: "discussion", libelle: "Discussion", Dessin: MessagesSquare },
-  { valeur: "video", libelle: "Vidéo", Dessin: Video },
+  { value: "link", label: "Lien", glyph: PlainLink },
+  { value: "document", label: "Document", glyph: FileText },
+  { value: "spreadsheet", label: "Tableur", glyph: Table2 },
+  { value: "presentation", label: "Présentation", glyph: Presentation },
+  { value: "folder", label: "Dossier", glyph: Folder },
+  { value: "design", label: "Maquette", glyph: Frame },
+  { value: "repository", label: "Dépôt de code", glyph: GitBranch },
+  { value: "ticket", label: "Ticket", glyph: Ticket },
+  { value: "discussion", label: "Discussion", glyph: MessagesSquare },
+  { value: "video", label: "Vidéo", glyph: Video },
 ];
 
-const PAR_VALEUR = new Map(ICONES_DE_LIEN.map((icone) => [icone.valeur, icone]));
+const BY_VALUE = new Map(LINK_ICONS.map((icon) => [icon.value, icon]));
 
-/** Le dessin d'une icone. Une valeur inconnue retombe sur le lien generique. */
-export function dessinIcone(valeur: LinkIcon): LucideIcon {
-  return PAR_VALEUR.get(valeur)?.Dessin ?? LinkGenerique;
+/** The drawing of an icon. An unknown value falls back to the plain link. */
+export function iconGlyph(value: LinkIcon): LucideIcon {
+  return BY_VALUE.get(value)?.glyph ?? PlainLink;
 }
 
-/** Le nom lisible d'une icone, pour les lecteurs d'ecran et le selecteur. */
-export function libelleIcone(valeur: LinkIcon): string {
-  return PAR_VALEUR.get(valeur)?.libelle ?? "Lien";
+/** The readable name of an icon, for screen readers and the picker. */
+export function iconLabel(value: LinkIcon): string {
+  return BY_VALUE.get(value)?.label ?? "Lien";
 }

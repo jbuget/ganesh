@@ -4,14 +4,14 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MemberAvatars } from "./MemberAvatars";
 import type { BoardMemberResponse } from "@/lib/api/generated/model";
 
-const membre = (id: number, nom: string, initiales: string): BoardMemberResponse =>
-  ({ id, display_name: nom, initiales }) as BoardMemberResponse;
+const member = (id: number, name: string, initials: string): BoardMemberResponse =>
+  ({ id, display_name: name, initials }) as BoardMemberResponse;
 
 describe("MemberAvatars", () => {
-  it("affiche les initiales de chaque intervenant", () => {
+  it("shows the initials of each contributor", () => {
     render(
       <MemberAvatars
-        membres={[membre(1, "Léa Chen", "LC"), membre(2, "David Dehe", "DD")]}
+        members={[member(1, "Léa Chen", "LC"), member(2, "David Dehe", "DD")]}
       />,
     );
 
@@ -19,44 +19,44 @@ describe("MemberAvatars", () => {
     expect(screen.getByText("DD")).toBeInTheDocument();
   });
 
-  it("donne le nom complet au survol, sans attendre", () => {
-    render(<MemberAvatars membres={[membre(1, "Léa Chen", "LC")]} />);
+  it("gives the full name on hover, without delay", () => {
+    render(<MemberAvatars members={[member(1, "Léa Chen", "LC")]} />);
 
     fireEvent.mouseMove(screen.getByText("LC"), { clientX: 10, clientY: 10 });
 
     expect(screen.getByRole("tooltip")).toHaveTextContent("Léa Chen");
   });
 
-  it("retire l'infobulle quand la souris quitte les pastilles", () => {
-    render(<MemberAvatars membres={[membre(1, "Léa Chen", "LC")]} />);
-    const pastille = screen.getByText("LC");
+  it("removes the tooltip when the mouse leaves the avatars", () => {
+    render(<MemberAvatars members={[member(1, "Léa Chen", "LC")]} />);
+    const dot = screen.getByText("LC");
 
-    fireEvent.mouseMove(pastille, { clientX: 10, clientY: 10 });
-    fireEvent.mouseLeave(pastille.parentElement!);
+    fireEvent.mouseMove(dot, { clientX: 10, clientY: 10 });
+    fireEvent.mouseLeave(dot.parentElement!);
 
     expect(screen.queryByRole("tooltip")).toBeNull();
   });
 
-  it("n'affiche rien quand personne n'a encore saisi", () => {
-    const { container } = render(<MemberAvatars membres={[]} />);
+  it("shows nothing while nobody has declared anything", () => {
+    const { container } = render(<MemberAvatars members={[]} />);
 
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("résume les intervenants au-delà de quatre", () => {
-    const membres = Array.from({ length: 7 }, (_, i) =>
-      membre(i, `Personne ${i}`, `P${i}`),
+  it("summarises contributors past four", () => {
+    const members = Array.from({ length: 7 }, (_, i) =>
+      member(i, `Personne ${i}`, `P${i}`),
     );
-    render(<MemberAvatars membres={membres} />);
+    render(<MemberAvatars members={members} />);
 
     expect(screen.getByText("+3")).toBeInTheDocument();
   });
 
-  it("nomme dans l'infobulle ceux qui sont résumés", () => {
-    const membres = Array.from({ length: 6 }, (_, i) =>
-      membre(i, `Personne ${i}`, `P${i}`),
+  it("names in the tooltip those that are summarised", () => {
+    const members = Array.from({ length: 6 }, (_, i) =>
+      member(i, `Personne ${i}`, `P${i}`),
     );
-    render(<MemberAvatars membres={membres} />);
+    render(<MemberAvatars members={members} />);
 
     fireEvent.mouseMove(screen.getByText("+2"), { clientX: 10, clientY: 10 });
 

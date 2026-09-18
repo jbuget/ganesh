@@ -7,8 +7,8 @@
 import type { BoardColumnResponse } from "./boardColumnResponse";
 
 /**
- * Le tableau complet, toutes phases confondues.
+ * The whole board, every phase together.
  */
 export interface BoardResponse {
-  colonnes: BoardColumnResponse[];
+  columns: BoardColumnResponse[];
 }

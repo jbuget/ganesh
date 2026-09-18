@@ -1,4 +1,4 @@
-"""Port d'acces aux utilisateurs."""
+"""Port for users."""
 
 from abc import ABC, abstractmethod
 
@@ -6,7 +6,7 @@ from src.modules.users.domain.entities.user import User
 
 
 class UserRepository(ABC):
-    """Contrat de persistance des utilisateurs."""
+    """Persistence contract for users."""
 
     @abstractmethod
     async def get_by_id(self, user_id: int) -> User | None: ...

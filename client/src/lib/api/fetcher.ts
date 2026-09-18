@@ -1,12 +1,11 @@
 /**
- * Client HTTP unique du front, injecte dans le code genere par Orval.
+ * The front end's single HTTP client, injected into the code Orval generates.
  *
- * Toutes les requetes passent par le BFF (`/api/v1/...`), jamais directement
- * par FastAPI : le jeton Entra reste cote serveur, dans une session httpOnly.
+ * Every request goes through the BFF (`/api/v1/...`), never straight to
+ * FastAPI: the Entra token stays server-side, in an httpOnly session.
  *
- * Orval attend une reponse de la forme `{ data, status, headers }`. Les erreurs
- * HTTP sont converties en exception, sans quoi React Query les prendrait pour
- * des succes.
+ * Orval expects a response shaped `{ data, status, headers }`. HTTP errors are
+ * turned into exceptions, otherwise React Query would take them for successes.
  */
 export class ApiError extends Error {
   constructor(

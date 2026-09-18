@@ -2,7 +2,7 @@
 
 import { ArchivedCallout } from "@/components/atoms/ArchivedCallout";
 import { MissionMenu } from "@/components/atoms/MissionMenu";
-import { ProjectPilotageTab } from "@/components/organisms/ProjectPilotageTab";
+import { ProjectSteeringTab } from "@/components/organisms/ProjectSteeringTab";
 import { ProjectSheetTab } from "@/components/organisms/ProjectSheetTab";
 import { ProjectUpdatesTab } from "@/components/organisms/ProjectUpdatesTab";
 import { useState } from "react";
@@ -18,68 +18,68 @@ import type {
 
 interface ProjectTabsProps {
   detail: ProjectDetailResponse;
-  /** Sur quel onglet s'ouvrir ; le pilotage a defaut. */
-  ongletInitial?: string | null;
+  /** Which tab to open on; steering by default. */
+  initialTab?: string | null;
   onChange: () => void | Promise<void>;
-  enregistrerFiche: (
-    departements: Department[],
-    contactsMetier: string | null,
+  saveSheet: (
+    departments: Department[],
+    businessContacts: string | null,
   ) => Promise<void>;
-  enregistrerDescription: (texte: string) => Promise<void>;
-  changerPhase: (statut: ProjectStatus) => Promise<void>;
-  changerCaracteristiques: (champs: {
-    categorie?: ProjectCategory | null;
-    estime_j?: number | null;
+  saveDescription: (body: string) => Promise<void>;
+  changePhase: (status: ProjectStatus) => Promise<void>;
+  updateFields: (fields: {
+    category?: ProjectCategory | null;
+    estimated_days?: number | null;
   }) => Promise<void>;
-  ajouterLien: (label: string, url: string, icone: LinkIcon | null) => Promise<void>;
-  retirerLien: (linkId: number) => Promise<void>;
-  archiver: () => Promise<void>;
-  desarchiver: () => Promise<void>;
+  addLink: (label: string, url: string, icon: LinkIcon | null) => Promise<void>;
+  removeLink: (linkId: number) => Promise<void>;
+  archive: () => Promise<void>;
+  unarchive: () => Promise<void>;
 }
 
-/** Ce qui reste a construire, annonce plutot que laisse vide. */
-function Chantier({ quoi }: { quoi: string }) {
-  return <p className="py-8 text-center text-sm text-slate-400">{quoi}</p>;
+/** What is still to be built, announced rather than left blank. */
+function ToCome({ text }: { text: string }) {
+  return <p className="py-8 text-center text-sm text-slate-400">{text}</p>;
 }
 
 /**
- * Les quatre facettes d'une mission.
+ * The four facets of a mission.
  *
- * Partagees par le panneau lateral et la fiche en pleine page : deux montages
- * du meme contenu, pour qu'ils ne divergent pas.
+ * Shared by the side panel and the full-page sheet: two arrangements of the
+ * same content, so they do not drift apart.
  */
 export function ProjectTabs({
   detail,
-  ongletInitial,
+  initialTab,
   onChange,
-  enregistrerFiche,
-  enregistrerDescription,
-  changerPhase,
-  changerCaracteristiques,
-  ajouterLien,
-  retirerLien,
-  archiver,
-  desarchiver,
+  saveSheet,
+  saveDescription,
+  changePhase,
+  updateFields,
+  addLink,
+  removeLink,
+  archive,
+  unarchive,
 }: ProjectTabsProps) {
-  // Fige l'heure de reference le temps de la consultation : « il y a 3 min »
-  // ne doit pas se recalculer a chaque rendu, et le fil n'est de toute facon
-  // charge qu'apres le montage — rien n'est rendu cote serveur.
-  const [maintenant] = useState(() => new Date());
+  // Freezes the reference time for the duration of the visit: « il y a 3
+  // min » must not recompute on every render, and the thread is only
+  // loaded after mounting anyway — nothing is rendered server-side.
+  const [now] = useState(() => new Date());
 
   return (
     <Tabs
-      defaultValue={ongletInitial ?? "pilotage"}
+      defaultValue={initialTab ?? "pilotage"}
       className="flex min-h-0 flex-1 flex-col gap-4"
     >
-      {/* Au-dessus des onglets, donc lu avant eux : l'etat de la mission
-          conditionne tout ce qu'on s'apprete a faire dessus. */}
-      {!detail.project.actif && (
+      {/* Above the tabs, therefore read before them: the state of the mission
+          governs everything one is about to do to it. */}
+      {!detail.project.is_active && (
         <ArchivedCallout archivedAt={detail.project.archived_at} />
       )}
 
-      {/* Le menu se tient au bout des onglets, du cote ou le regard s'arrete :
-          on choisit d'abord quoi lire, et ce qui agit sur la mission entiere
-          attend a l'ecart. */}
+      {/* The menu sits at the end of the tabs, on the side where the eye
+          stops: one first picks what to read, and what acts on the whole
+          mission waits aside. */}
       <div className="flex shrink-0 items-center gap-2">
         <TabsList className="min-w-0 flex-1">
           <TabsTrigger value="pilotage">Pilotage</TabsTrigger>
@@ -89,44 +89,45 @@ export function ProjectTabs({
         </TabsList>
 
         <MissionMenu
-          archivee={!detail.project.actif}
-          onArchiver={archiver}
-          onDesarchiver={desarchiver}
+          archived={!detail.project.is_active}
+          onArchive={archive}
+          onUnarchive={unarchive}
         />
       </div>
 
       <TabsContent value="pilotage">
-        <ProjectPilotageTab
+        <ProjectSteeringTab
           detail={detail}
           onChange={onChange}
-          enregistrerFiche={enregistrerFiche}
-          changerPhase={changerPhase}
-          changerCaracteristiques={changerCaracteristiques}
-          ajouterLien={ajouterLien}
-          retirerLien={retirerLien}
+          saveSheet={saveSheet}
+          changePhase={changePhase}
+          updateFields={updateFields}
+          addLink={addLink}
+          removeLink={removeLink}
         />
       </TabsContent>
 
       <TabsContent value="updates">
         <ProjectUpdatesTab
           projectId={detail.project.id}
-          maintenant={maintenant}
+          now={now}
           onChange={onChange}
-          // Venu du decompte, on vient ecrire : le curseur attend deja dans
-          // l'editeur. Venu du panneau, on vient d'abord lire.
-          focusRedaction={ongletInitial === "updates"}
+          // Coming from the counter, one comes to write: the cursor is already
+          // waiting in the editor. Coming from the panel, one comes to read
+          // first.
+          focusComposer={initialTab === "updates"}
         />
       </TabsContent>
 
       <TabsContent value="fiche" className="min-h-0 flex-1">
         <ProjectSheetTab
           description={detail.project.description}
-          onSave={enregistrerDescription}
+          onSave={saveDescription}
         />
       </TabsContent>
 
       <TabsContent value="audit">
-        <Chantier quoi="Le journal arrive." />
+        <ToCome text="Le journal arrive." />
       </TabsContent>
     </Tabs>
   );

@@ -1,4 +1,4 @@
-"""Saisie d'une demi-journee ou d'une journee sur une mission."""
+"""Entry of a half day or a full day on a mission."""
 
 from dataclasses import dataclass
 from datetime import date
@@ -6,44 +6,44 @@ from datetime import date
 from src.modules.projects.domain.entities.project import ProjectStatus
 from src.shared.exceptions.domain_exceptions import ValidationError
 
-#: Valeurs saisissables. Une cellule vide n'est pas une saisie : elle n'existe pas.
+#: Values that can be entered. An empty cell is not an entry: it does not exist.
 ALLOWED_VALUES: tuple[float, ...] = (0.5, 1.0)
 
 
 class DayValue(float):
-    """Valeur d'une saisie : une demi-journee ou une journee complete."""
+    """The value of an entry: a half day or a full day."""
 
     def __new__(cls, value: float) -> "DayValue":
         if float(value) not in ALLOWED_VALUES:
             raise ValidationError(
-                f"Une saisie vaut 0.5 ou 1.0, pas {value}.",
+                f"An entry is 0.5 or 1.0, not {value}.",
             )
         return super().__new__(cls, value)
 
 
 @dataclass
 class Entry:
-    """Le temps declare par un utilisateur, sur une mission, un jour donne.
+    """The time a user declared, on a mission, on a given day.
 
-    La saisie memorise le statut du projet au moment ou elle est ecrite, ce qui
-    permet de mesurer le temps consomme par phase.
+    An entry remembers the project status at the moment it is written, which
+    makes it possible to measure time consumed per phase.
     """
 
     id: int | None
     user_id: int
     project_id: int
-    jour: date
-    valeur: DayValue
-    statut_at_entry: ProjectStatus | None = None
+    day: date
+    value: DayValue
+    status_at_entry: ProjectStatus | None = None
 
     def __post_init__(self) -> None:
-        if not isinstance(self.valeur, DayValue):
-            self.valeur = DayValue(self.valeur)
+        if not isinstance(self.value, DayValue):
+            self.value = DayValue(self.value)
 
     def is_forecast(self, today: date) -> bool:
-        """Une saisie posee sur un jour a venir est du previsionnel.
+        """An entry set on a future day is a forecast.
 
-        Le previsionnel ne doit jamais etre remonte vers Monday comme du temps
-        passe. Le jour courant, lui, compte comme realise.
+        Forecasts must never be pushed to Monday as time spent. Today itself
+        counts as delivered.
         """
-        return self.jour > today
+        return self.day > today

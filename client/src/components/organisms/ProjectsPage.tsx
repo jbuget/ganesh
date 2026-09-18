@@ -19,45 +19,45 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useMissionOuverte } from "@/lib/mission-ouverte";
+import { useOpenedMission } from "@/lib/opened-mission";
 import { useMissionFilters } from "@/lib/use-mission-filters";
 import { useMissionSort } from "@/lib/use-mission-sort";
 import { useProjectsScreen } from "@/lib/use-projects";
 
 /**
- * Le referentiel des missions.
+ * The mission reference list.
  *
- * Les colonnes disent d'un coup d'oeil ou en est chaque mission, ce qu'elle
- * pese et qui s'en occupe — ce qu'on vient comparer ici. Elles ne s'editent
- * pas : la ligne n'ouvre toujours qu'une chose, le panneau de la mission,
- * celui-la meme que le kanban. Une liste qui editerait en place multiplierait
- * les chemins vers la meme donnee, et les ferait diverger.
+ * The columns say at a glance where each mission stands, what it weighs and who
+ * looks after it — what one comes here to compare. They do not edit: a row
+ * still opens one thing only, the mission panel, the very same one the kanban
+ * opens. A list that edited in place would multiply the paths to the same data,
+ * and make them drift apart.
  */
 export function ProjectsPage() {
-  // Les memes criteres que le kanban, tenus par la meme adresse : on filtre
-  // d'un ecran, on ouvre l'autre, et la question posee reste la meme.
-  const { filtres, actif, definir, effacer } = useMissionFilters();
-  // Le rangement suit le meme chemin que les filtres : l'adresse le porte, et
-  // le hook d'ecran rend l'arborescence deja dans l'ordre demande.
-  const { tri, basculer: trierPar } = useMissionSort();
-  const ecran = useProjectsScreen(filtres, tri);
-  // Une seule heure de reference pour toutes les lignes : « il y a 3 h » ne
-  // doit pas dependre du moment ou chacune se rend.
-  const maintenant = useMemo(() => new Date(), []);
-  const panneau = useMissionOuverte();
-  const [declaration, setDeclaration] = useState(false);
-  const [importation, setImportation] = useState(false);
+  // The same criteria as the kanban, held by the same address: one filters from
+  // one screen, opens the other, and the question asked stays the same.
+  const { filters, hasFilter, set, clear } = useMissionFilters();
+  // Ordering follows the same path as the filters: the address carries it, and
+  // the screen hook renders the tree already in the order asked for.
+  const { sorted, toggle: sortBy } = useMissionSort();
+  const screen = useProjectsScreen(filters, sorted);
+  // One reference time for every row: « il y a 3 h » must not depend
+  // on when each one renders.
+  const now = useMemo(() => new Date(), []);
+  const panel = useOpenedMission();
+  const [declaring, setDeclaration] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   return (
     <PageLayout
-      entete={
+      header={
         <PageHeader
-          titre="Projets"
-          soustitre="Gestion des projets et sous-projets"
+          title="Projets"
+          subtitle="Gestion des projets et sous-projets"
           actions={
             <>
-              {ecran.isManager && (
-                <Button variant="outline" onClick={() => setImportation(true)}>
+              {screen.isManager && (
+                <Button variant="outline" onClick={() => setImporting(true)}>
                   <Upload />
                   Importer
                 </Button>
@@ -71,111 +71,114 @@ export function ProjectsPage() {
         />
       }
     >
-      {/* Assez large pour neuf colonnes, pas au point d'etirer les noms. */}
+      {/* Wide enough for nine columns, not so wide as to stretch the names. */}
       <div className="max-w-[1300px]">
         <MissionFilters
-          filtres={filtres}
-          actif={actif}
-          onChange={definir}
-          onEffacer={effacer}
-          visibles={ecran.visibles}
-          total={ecran.total}
+          filters={filters}
+          hasFilter={hasFilter}
+          onChange={set}
+          onClear={clear}
+          visible={screen.visible}
+          total={screen.total}
         />
 
-        {ecran.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
+        {screen.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
-        {ecran.arbre.length === 0 && !ecran.isLoading && (
+        {screen.tree.length === 0 && !screen.isLoading && (
           <p className="py-8 text-center text-sm text-slate-500">
-            {actif
+            {hasFilter
               ? "Aucune mission ne répond aux filtres."
               : "Aucun projet. Déclarez-en un ou importez votre référentiel."}
           </p>
         )}
 
-        {ecran.arbre.length > 0 && (
-          // Le conteneur de shadcn ouvre un contexte de defilement qui
-          // retiendrait l'en-tete a l'interieur du tableau : on le neutralise
-          // pour que le `sticky` se cale sur la zone defilante de la page.
+        {screen.tree.length > 0 && (
+          // The shadcn container opens a scrolling context that would hold the
+          // header inside the table: we neutralise it so the `sticky` latches
+          // onto the page's scrolling area.
           <div className="[&_[data-slot=table-container]]:overflow-visible">
             <Table>
-              {/* Soixante lignes passent sous l'en-tete : sans lui, on ne sait
-                  plus quelle colonne on lit arrive en bas. Le fond se pose sur
-                  les cellules et non sur la rangee : dans un tableau, celui de
-                  la rangee se peint sous les lignes qui defilent. */}
+              {/* Sixty rows pass under the header: without it, one no longer
+                  knows which column one is reading by the time one reaches the
+                  bottom. The background sits on the cells and not on the row:
+                  in a table, a row's background paints under the lines that
+                  scroll. */}
               <TableHeader className="sticky top-0 z-10 [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50">
                 <TableRow>
                   <SortableColumnHeader
-                    colonne="projet"
-                    libelle="Projet"
-                    tri={tri}
-                    onBasculer={trierPar}
+                    column="project"
+                    label="Projet"
+                    sorted={sorted}
+                    onToggle={sortBy}
                   />
-                  {/* Le fil de suivi : son icone porte le sens, pas un titre. */}
+                  {/* The follow-up thread: its icon carries the meaning, not a title. */}
                   <TableHead />
                   <SortableColumnHeader
-                    colonne="phase"
-                    libelle="Phase"
-                    tri={tri}
-                    onBasculer={trierPar}
+                    column="phase"
+                    label="Phase"
+                    sorted={sorted}
+                    onToggle={sortBy}
                   />
                   <SortableColumnHeader
-                    colonne="priorite"
-                    libelle="Priorité"
-                    tri={tri}
-                    onBasculer={trierPar}
+                    column="priority"
+                    label="Priorité"
+                    sorted={sorted}
+                    onToggle={sortBy}
                   />
                   <SortableColumnHeader
-                    colonne="categorie"
-                    libelle="Catégorie"
-                    tri={tri}
-                    onBasculer={trierPar}
+                    column="category"
+                    label="Catégorie"
+                    sorted={sorted}
+                    onToggle={sortBy}
                   />
                   <SortableColumnHeader
-                    colonne="estime"
-                    libelle="Estimé"
-                    tri={tri}
-                    onBasculer={trierPar}
-                    aDroite
+                    column="estimated"
+                    label="Estimé"
+                    sorted={sorted}
+                    onToggle={sortBy}
+                    alignRight
                   />
                   <SortableColumnHeader
-                    colonne="realise"
-                    libelle="Réalisé"
-                    tri={tri}
-                    onBasculer={trierPar}
-                    aDroite
+                    column="delivered"
+                    label="Réalisé"
+                    sorted={sorted}
+                    onToggle={sortBy}
+                    alignRight
                   />
-                  {/* Qui s'en occupe ne se range pas : une colonne de jetons
-                      n'a pas d'ordre que le lecteur aurait en tete. */}
+                  {/* Who looks after it does not sort: a column of badges has no
+                      order the reader would have in mind. */}
                   <TableHead>Référents</TableHead>
                   <TableHead>Intervenants</TableHead>
                 </TableRow>
               </TableHeader>
 
               <TableBody>
-                {ecran.arbre.map(({ mission, lots }) => {
-                  const deplie = ecran.estDeplie(mission.project.id);
+                {screen.tree.map(({ mission, workPackages }) => {
+                  const expanded = screen.isExpanded(mission.project.id);
 
                   return (
                     <Fragment key={mission.project.id}>
                       <MissionRow
                         mission={mission}
-                        estLot={mission.project.kind === "lot"}
-                        lots={lots.length}
-                        deplie={deplie}
-                        onBasculer={() => ecran.basculer(mission.project.id)}
-                        maintenant={maintenant}
-                        onOpen={() => panneau.ouvrir(mission.project.id)}
-                        onOpenFil={() => panneau.ouvrir(mission.project.id, "updates")}
+                        isWorkPackage={mission.project.kind === "work_package"}
+                        workPackages={workPackages.length}
+                        expanded={expanded}
+                        onToggle={() => screen.toggle(mission.project.id)}
+                        now={now}
+                        onOpen={() => panel.open(mission.project.id)}
+                        onOpenThread={() => panel.open(mission.project.id, "updates")}
                       />
-                      {deplie &&
-                        lots.map((lot) => (
+                      {expanded &&
+                        workPackages.map((workPackage) => (
                           <MissionRow
-                            key={lot.project.id}
-                            mission={lot}
-                            estLot
-                            maintenant={maintenant}
-                            onOpen={() => panneau.ouvrir(lot.project.id)}
-                            onOpenFil={() => panneau.ouvrir(lot.project.id, "updates")}
+                            key={workPackage.project.id}
+                            mission={workPackage}
+                            isWorkPackage
+                            now={now}
+                            onOpen={() => panel.open(workPackage.project.id)}
+                            onOpenThread={() =>
+                              panel.open(workPackage.project.id, "updates")
+                            }
                           />
                         ))}
                     </Fragment>
@@ -186,7 +189,7 @@ export function ProjectsPage() {
           </div>
         )}
 
-        {ecran.activites.length > 0 && (
+        {screen.activities.length > 0 && (
           <section className="mt-8">
             <h2 className="mb-2 text-sm font-medium text-slate-600">
               Activités hors projet
@@ -196,12 +199,12 @@ export function ProjectsPage() {
               Sans elles, les jours ouvrés se reporteraient sur les projets.
             </p>
             <ul className="flex flex-wrap gap-2">
-              {ecran.activites.map((activite) => (
+              {screen.activities.map((activity) => (
                 <li
-                  key={activite.project.id}
+                  key={activity.project.id}
                   className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm"
                 >
-                  {activite.project.label}
+                  {activity.project.label}
                 </li>
               ))}
             </ul>
@@ -210,28 +213,28 @@ export function ProjectsPage() {
       </div>
 
       <DeclareProjectDialog
-        open={declaration}
+        open={declaring}
         onOpenChange={setDeclaration}
         onConfirm={async (label) => {
-          await ecran.declare(label, "projet");
+          await screen.declare(label, "project");
         }}
       />
 
       <ImportProjectsDialog
-        open={importation}
-        onOpenChange={setImportation}
-        onImport={ecran.importCsv}
+        open={importing}
+        onOpenChange={setImporting}
+        onImport={screen.importCsv}
       />
 
-      {panneau.missionOuverte && (
+      {panel.openedMission && (
         <ProjectPanel
-          // L'onglet fait partie de la cle : rouvrir la meme mission sur son
-          // fil doit remonter le panneau, qui choisit son onglet a l'ouverture.
-          key={`${panneau.missionOuverte}:${panneau.ongletOuvert ?? ""}`}
-          projectId={panneau.missionOuverte}
-          onglet={panneau.ongletOuvert}
-          onClose={panneau.fermer}
-          onMissionChanged={ecran.refresh}
+          // The tab is part of the key: reopening the same mission on its
+          // thread must remount the panel, which picks its tab on opening.
+          key={`${panel.openedMission}:${panel.openTab ?? ""}`}
+          projectId={panel.openedMission}
+          tab={panel.openTab}
+          onClose={panel.close}
+          onMissionChanged={screen.refresh}
         />
       )}
     </PageLayout>

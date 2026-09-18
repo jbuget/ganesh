@@ -1,4 +1,4 @@
-"""Commandes portant sur le referentiel des missions."""
+"""Commands acting on the mission reference list."""
 
 from dataclasses import dataclass, field
 from datetime import date
@@ -14,43 +14,44 @@ from src.modules.projects.domain.entities.project import (
 
 @dataclass(frozen=True)
 class CreateProjectCommand:
-    """Creation d'un projet, d'un lot ou d'une activite hors projet."""
+    """Creating a project, a work package or off-project work."""
 
     actor_id: int
     label: str
     kind: ProjectKind
-    statut: ProjectStatus | None = None
+    status: ProjectStatus | None = None
     parent_id: int | None = None
-    estime_j: float | None = None
+    estimated_days: float | None = None
 
 
 @dataclass(frozen=True)
 class ChangeProjectStatusCommand:
-    """Changement de phase. Ouvert a toute l'equipe, mais trace."""
+    """Phase change. Open to the whole team, but traced."""
 
     actor_id: int
     project_id: int
-    statut: ProjectStatus
+    status: ProjectStatus
 
 
-#: Marque un champ absent de la commande, pour le distinguer d'une valeur nulle
-#: volontaire : `estime_j=None` efface l'estime, `estime_j` omis ne le touche pas.
+#: Marks a field absent from the command, to tell it from a deliberate null:
+#: `estimated_days=None` clears the estimate, an omitted `estimated_days`
+#: leaves it alone.
 ABSENT: Any = object()
 
 
 @dataclass(frozen=True)
 class UpdateProjectCommand:
-    """Modification d'une mission. Seuls les champs fournis sont appliques."""
+    """Changing a mission. Only the fields provided are applied."""
 
     actor_id: int
     project_id: int
     label: str | Any = ABSENT
-    statut: ProjectStatus | None | Any = ABSENT
-    estime_j: float | None | Any = ABSENT
-    categorie: ProjectCategory | None | Any = ABSENT
-    priorite: ProjectPriority | None | Any = ABSENT
-    date_mise_en_service: date | None | Any = ABSENT
-    actif: bool | Any = ABSENT
+    status: ProjectStatus | None | Any = ABSENT
+    estimated_days: float | None | Any = ABSENT
+    category: ProjectCategory | None | Any = ABSENT
+    priority: ProjectPriority | None | Any = ABSENT
+    go_live_date: date | None | Any = ABSENT
+    is_active: bool | Any = ABSENT
     parent_id: int | None | Any = ABSENT
     monday_item_id: str | None | Any = ABSENT
     monday_subitem_id: str | None | Any = ABSENT
@@ -58,41 +59,40 @@ class UpdateProjectCommand:
 
 @dataclass(frozen=True)
 class ProjectImportLine:
-    """Une ligne d'un import, telle qu'elle sort d'un tableur.
+    """One line of an import, as it comes out of a spreadsheet.
 
-    Le parent est designe par son libelle : un export Monday ne connait pas nos
-    identifiants.
+    The parent is named by its label: a Monday export knows nothing of our ids.
     """
 
     label: str
-    kind: ProjectKind = ProjectKind.PROJET
-    statut: ProjectStatus | None = ProjectStatus.EXPLORATION
+    kind: ProjectKind = ProjectKind.PROJECT
+    status: ProjectStatus | None = ProjectStatus.EXPLORATION
     parent_label: str | None = None
-    estime_j: float | None = None
+    estimated_days: float | None = None
     monday_item_id: str | None = None
     monday_subitem_id: str | None = None
 
 
 @dataclass(frozen=True)
 class ImportProjectsCommand:
-    """Import en masse du referentiel. Reserve aux managers."""
+    """Bulk import of the reference list. Managers only."""
 
     actor_id: int
-    lignes: list[ProjectImportLine]
+    rows: list[ProjectImportLine]
 
 
 @dataclass
 class ImportReport:
-    """Ce que l'import a fait, ligne par ligne."""
+    """What the import did, line by line."""
 
-    crees: int = 0
-    ignores: int = 0
-    erreurs: list[str] = field(default_factory=list)
+    created: int = 0
+    skipped: int = 0
+    errors: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
 class DeleteProjectCommand:
-    """Suppression d'une mission jamais utilisee."""
+    """Deleting a mission that was never used."""
 
     actor_id: int
     project_id: int
@@ -100,9 +100,9 @@ class DeleteProjectCommand:
 
 @dataclass(frozen=True)
 class MoveProjectCommand:
-    """Deplacement d'une carte sur le tableau de bord."""
+    """Moving a card on the board."""
 
     actor_id: int
     project_id: int
-    statut: ProjectStatus
+    status: ProjectStatus
     position: int

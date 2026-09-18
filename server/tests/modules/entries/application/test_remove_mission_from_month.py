@@ -1,4 +1,4 @@
-"""Retrait d'une mission entiere d'un mois."""
+"""Removing a whole mission from a month."""
 
 from datetime import date
 
@@ -30,7 +30,7 @@ ALICE = User(
     display_name="L. Chen",
     role=Role.TEAMMATE,
 )
-MOIS = date(2026, 9, 1)
+MONTH = date(2026, 9, 1)
 
 
 def build(entries: list[Entry] | None = None, months: list[Month] | None = None):
@@ -47,46 +47,46 @@ def build(entries: list[Entry] | None = None, months: list[Month] | None = None)
 
 
 def an_entry(
-    jour: int, valeur: float = 1.0, project_id: int = 10, entry_id: int = 1
+    day: int, value: float = 1.0, project_id: int = 10, entry_id: int = 1
 ) -> Entry:
     return Entry(
         id=entry_id,
         user_id=1,
         project_id=project_id,
-        jour=date(2026, 9, jour),
-        valeur=DayValue(valeur),
-        statut_at_entry=ProjectStatus.CADRAGE,
+        day=date(2026, 9, day),
+        value=DayValue(value),
+        status_at_entry=ProjectStatus.SCOPING,
     )
 
 
 def a_command(project_id: int = 10) -> RemoveMissionCommand:
     return RemoveMissionCommand(
-        actor_id=1, target_user_id=1, project_id=project_id, mois=MOIS
+        actor_id=1, target_user_id=1, project_id=project_id, month=MONTH
     )
 
 
 async def test_every_entry_of_the_mission_is_removed() -> None:
     use_case, entries, _ = build(
-        [an_entry(14, entry_id=1), an_entry(15, valeur=0.5, entry_id=2)]
+        [an_entry(14, entry_id=1), an_entry(15, value=0.5, entry_id=2)]
     )
 
     await use_case.execute(a_command())
 
-    assert await entries.list_for_month(1, MOIS) == []
+    assert await entries.list_for_month(1, MONTH) == []
 
 
 async def test_the_other_missions_of_the_month_are_left_alone() -> None:
-    autre = an_entry(14, project_id=11, entry_id=2)
-    use_case, entries, _ = build([an_entry(14, entry_id=1), autre])
+    other = an_entry(14, project_id=11, entry_id=2)
+    use_case, entries, _ = build([an_entry(14, entry_id=1), other])
 
     await use_case.execute(a_command())
 
-    assert await entries.list_for_month(1, MOIS) == [autre]
+    assert await entries.list_for_month(1, MONTH) == [other]
 
 
 async def test_the_removed_days_are_counted_back() -> None:
-    """L'ecran annonce ce qui sera perdu : le compte doit venir du domaine."""
-    use_case, _, _ = build([an_entry(14), an_entry(15, valeur=0.5, entry_id=2)])
+    """The screen announces what will be lost: the count must come from the domain."""
+    use_case, _, _ = build([an_entry(14), an_entry(15, value=0.5, entry_id=2)])
 
     assert await use_case.execute(a_command()) == 1.5
 
@@ -99,7 +99,7 @@ async def test_removing_a_mission_without_entries_is_harmless() -> None:
 
 
 async def test_each_removal_is_traced_with_its_previous_value() -> None:
-    use_case, _, audit = build([an_entry(14), an_entry(15, valeur=0.5, entry_id=2)])
+    use_case, _, audit = build([an_entry(14), an_entry(15, value=0.5, entry_id=2)])
 
     await use_case.execute(a_command())
 
@@ -108,14 +108,14 @@ async def test_each_removal_is_traced_with_its_previous_value() -> None:
 
 
 async def test_a_validated_month_refuses_the_removal() -> None:
-    month = Month(user_id=1, mois=MOIS)
+    month = Month(user_id=1, month=MONTH)
     month.validate(by=ALICE)
     use_case, entries, _ = build([an_entry(14)], months=[month])
 
     with pytest.raises(ForbiddenActionError):
         await use_case.execute(a_command())
 
-    assert len(await entries.list_for_month(1, MOIS)) == 1
+    assert len(await entries.list_for_month(1, MONTH)) == 1
 
 
 async def test_an_unknown_actor_is_refused() -> None:
@@ -124,6 +124,6 @@ async def test_an_unknown_actor_is_refused() -> None:
     with pytest.raises(EntityNotFoundError):
         await use_case.execute(
             RemoveMissionCommand(
-                actor_id=99, target_user_id=1, project_id=10, mois=MOIS
+                actor_id=99, target_user_id=1, project_id=10, month=MONTH
             )
         )

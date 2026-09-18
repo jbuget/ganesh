@@ -1,4 +1,4 @@
-"""Routes des collaborateurs."""
+"""Teammate routes."""
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -35,7 +35,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("/me", response_model=UserResponse, operation_id="getMe")
 async def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
-    """L'utilisateur courant, tel que provisionne depuis Entra."""
+    """The current user, as provisioned from Entra."""
     return to_user_response(current_user)
 
 
@@ -45,7 +45,7 @@ async def list_users(
     _: User = Depends(get_current_user),
     use_case: ListUsersUseCase = Depends(get_list_users_use_case),
 ) -> list[UserResponse]:
-    """Liste les collaborateurs. Chacun peut consulter le mois de chacun."""
+    """Lists the teammates. Anyone may look at anyone's month."""
     users = await use_case.execute(include_inactive=include_inactive)
     return [to_user_response(user) for user in users]
 
@@ -60,7 +60,7 @@ async def change_role(
     use_case: ChangeUserRoleUseCase = Depends(get_change_role_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> UserResponse:
-    """Change le role d'un collaborateur. Reserve aux managers."""
+    """Changes a teammate's role. Managers only."""
     assert manager.id is not None
     user = await use_case.execute(
         ChangeRoleCommand(
@@ -81,11 +81,11 @@ async def set_active(
     use_case: SetUserActiveUseCase = Depends(get_set_user_active_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> UserResponse:
-    """Coupe ou retablit l'acces d'un collaborateur. Reserve aux managers."""
+    """Cuts off or restores a teammate's access. Managers only."""
     assert manager.id is not None
     user = await use_case.execute(
         SetUserActiveCommand(
-            actor_id=manager.id, target_user_id=user_id, actif=payload.actif
+            actor_id=manager.id, target_user_id=user_id, is_active=payload.is_active
         )
     )
     await session.commit()

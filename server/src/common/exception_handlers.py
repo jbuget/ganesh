@@ -1,7 +1,7 @@
-"""Traduction des erreurs metier en reponses HTTP.
+"""Turning business errors into HTTP responses.
 
-La couche presentation est seule a connaitre HTTP : le domaine leve des
-exceptions metier, sans jamais savoir comment elles seront restituees.
+The presentation layer alone knows HTTP: the domain raises business
+exceptions, without ever knowing how they will be rendered.
 """
 
 from fastapi import FastAPI, Request, status
@@ -24,7 +24,7 @@ STATUS_BY_ERROR: dict[type[Exception], int] = {
 
 
 def register_domain_exception_handlers(app: FastAPI) -> None:
-    """Branche les exceptions metier sur les codes HTTP correspondants."""
+    """Wires business exceptions to their HTTP status codes."""
 
     async def handle(request: Request, error: Exception) -> JSONResponse:
         http_status = STATUS_BY_ERROR.get(type(error), status.HTTP_400_BAD_REQUEST)

@@ -1,4 +1,4 @@
-"""Modification d'une mission du referentiel."""
+"""Changing a mission in the reference list."""
 
 import pytest
 
@@ -33,9 +33,9 @@ def make_project() -> Project:
     return Project(
         id=10,
         label="Portail",
-        kind=ProjectKind.PROJET,
-        statut=ProjectStatus.CADRAGE,
-        estime_j=20.0,
+        kind=ProjectKind.PROJECT,
+        status=ProjectStatus.SCOPING,
+        estimated_days=20.0,
     )
 
 
@@ -66,32 +66,34 @@ async def test_the_estimate_can_be_adjusted() -> None:
     use_case, repo, _ = build()
 
     await use_case.execute(
-        UpdateProjectCommand(actor_id=1, project_id=10, estime_j=35.0)
+        UpdateProjectCommand(actor_id=1, project_id=10, estimated_days=35.0)
     )
 
     project = await repo.get_by_id(10)
     assert project is not None
-    assert project.estime_j == 35.0
+    assert project.estimated_days == 35.0
 
 
 async def test_a_field_left_out_is_not_touched() -> None:
-    """La commande ne porte que ce qui change : le reste doit survivre."""
+    """The command carries only what changes: the rest must survive."""
     use_case, repo, _ = build()
 
     await use_case.execute(
-        UpdateProjectCommand(actor_id=1, project_id=10, estime_j=5.0)
+        UpdateProjectCommand(actor_id=1, project_id=10, estimated_days=5.0)
     )
 
     project = await repo.get_by_id(10)
     assert project is not None
     assert project.label == "Portail"
-    assert project.statut is ProjectStatus.CADRAGE
+    assert project.status is ProjectStatus.SCOPING
 
 
 async def test_a_project_can_be_archived() -> None:
     use_case, repo, _ = build()
 
-    await use_case.execute(UpdateProjectCommand(actor_id=1, project_id=10, actif=False))
+    await use_case.execute(
+        UpdateProjectCommand(actor_id=1, project_id=10, is_active=False)
+    )
 
     assert await repo.get_by_id(10) is not None
     assert [p.id for p in await repo.list_all()] == []
@@ -109,16 +111,16 @@ async def test_a_project_can_be_linked_to_monday() -> None:
     assert project.is_syncable_to_monday is True
 
 
-async def test_a_project_cannot_be_moved_under_a_lot() -> None:
-    """Deplacer une mission ne doit pas creer un troisieme niveau."""
-    lot = Project(
+async def test_a_project_cannot_be_moved_under_a_work_package() -> None:
+    """Moving a mission must not create a third level."""
+    work_package = Project(
         id=20,
         label="Lot API",
-        kind=ProjectKind.LOT,
-        statut=ProjectStatus.CADRAGE,
+        kind=ProjectKind.WORK_PACKAGE,
+        status=ProjectStatus.SCOPING,
         parent_id=10,
     )
-    use_case, _, _ = build([make_project(), lot])
+    use_case, _, _ = build([make_project(), work_package])
 
     with pytest.raises(ValidationError):
         await use_case.execute(
@@ -162,34 +164,34 @@ async def test_a_priority_can_be_declared() -> None:
 
     await use_case.execute(
         UpdateProjectCommand(
-            actor_id=1, project_id=10, priorite=ProjectPriority.CRITIQUE
+            actor_id=1, project_id=10, priority=ProjectPriority.CRITICAL
         )
     )
 
     project = await repo.get_by_id(10)
     assert project is not None
-    assert project.priorite is ProjectPriority.CRITIQUE
+    assert project.priority is ProjectPriority.CRITICAL
 
 
 async def test_a_priority_can_be_taken_back() -> None:
-    """Une mission peut cesser d'etre situee par rapport aux autres."""
-    projet = make_project()
-    projet.priorite = ProjectPriority.HAUTE
-    use_case, repo, _ = build([projet])
+    """A mission may stop being placed against the others."""
+    project = make_project()
+    project.priority = ProjectPriority.HIGH
+    use_case, repo, _ = build([project])
 
     await use_case.execute(
-        UpdateProjectCommand(actor_id=1, project_id=10, priorite=None)
+        UpdateProjectCommand(actor_id=1, project_id=10, priority=None)
     )
 
     project = await repo.get_by_id(10)
     assert project is not None
-    assert project.priorite is None
+    assert project.priority is None
 
 
 async def test_an_untouched_priority_survives_another_change() -> None:
-    projet = make_project()
-    projet.priorite = ProjectPriority.BASSE
-    use_case, repo, _ = build([projet])
+    project = make_project()
+    project.priority = ProjectPriority.LOW
+    use_case, repo, _ = build([project])
 
     await use_case.execute(
         UpdateProjectCommand(actor_id=1, project_id=10, label="Portail bailleurs")
@@ -197,26 +199,32 @@ async def test_an_untouched_priority_survives_another_change() -> None:
 
     project = await repo.get_by_id(10)
     assert project is not None
-    assert project.priorite is ProjectPriority.BASSE
+    assert project.priority is ProjectPriority.LOW
 
 
 async def test_archiving_a_project_dates_its_exit() -> None:
     use_case, repo, _ = build()
 
-    await use_case.execute(UpdateProjectCommand(actor_id=1, project_id=10, actif=False))
+    await use_case.execute(
+        UpdateProjectCommand(actor_id=1, project_id=10, is_active=False)
+    )
 
-    archivee = await repo.get_by_id(10)
-    assert archivee is not None
-    assert archivee.archived_at is not None
+    archived = await repo.get_by_id(10)
+    assert archived is not None
+    assert archived.archived_at is not None
 
 
 async def test_unarchiving_a_project_clears_its_exit_date() -> None:
     use_case, repo, _ = build()
-    await use_case.execute(UpdateProjectCommand(actor_id=1, project_id=10, actif=False))
+    await use_case.execute(
+        UpdateProjectCommand(actor_id=1, project_id=10, is_active=False)
+    )
 
-    await use_case.execute(UpdateProjectCommand(actor_id=1, project_id=10, actif=True))
+    await use_case.execute(
+        UpdateProjectCommand(actor_id=1, project_id=10, is_active=True)
+    )
 
-    rendue = await repo.get_by_id(10)
-    assert rendue is not None
-    assert rendue.actif is True
-    assert rendue.archived_at is None
+    reloaded = await repo.get_by_id(10)
+    assert reloaded is not None
+    assert reloaded.is_active is True
+    assert reloaded.archived_at is None

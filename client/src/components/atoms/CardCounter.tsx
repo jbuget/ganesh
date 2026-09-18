@@ -3,58 +3,57 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { useTooltipCurseur } from "@/lib/use-tooltip-curseur";
+import { useCursorTooltip } from "@/lib/use-cursor-tooltip";
 
 interface CardCounterProps {
-  icone: LucideIcon;
-  nombre: number;
-  /** Ce que l'icone compte, au singulier puis au pluriel. */
-  libelle: [string, string];
-  /** Ce qu'annonce le lecteur d'ecran quand il n'y a rien a compter. */
-  vide: string;
+  icon: LucideIcon;
+  count: number;
+  /** What the icon counts, singular then plural. */
+  label: [string, string];
+  /** What the screen reader announces when there is nothing to count. */
+  empty: string;
   /**
-   * Ce que montre l'infobulle au survol — le dernier message, mis en forme.
+   * What the tooltip shows on hover — the latest message, formatted.
    *
-   * Il vient du parent et non d'ici : le rendu du markdown est un autre
-   * composant, et un atom n'en compose aucun. Absent, le decompte se montre
-   * sans infobulle.
+   * It comes from the parent and not from here: rendering markdown is another
+   * component, and an atom composes none. Absent, the count shows without a
+   * tooltip.
    */
-  apercu?: ReactNode;
+  preview?: ReactNode;
 }
 
 /**
- * Un decompte en pied de carte : une icone, et un nombre quand il y en a un.
+ * A count in a card's footer: an icon, and a number when there is one.
  *
- * L'icone reste en place a zero, sans nombre a cote : la carte garde la meme
- * forme d'une mission a l'autre, et l'absence se lit alors aussi vite qu'un
- * total. C'est le parti pris de Monday, dont les cartes nous servent de
- * reference.
+ * The icon stays put at zero, with no number beside it: the card keeps the same
+ * shape from one mission to the next, and absence then reads as fast as a
+ * total. That is Monday's choice, whose cards serve as our reference.
  *
- * Quand le decompte annonce un fil, l'infobulle en donne le dernier message,
- * comme dans le referentiel : savoir qu'il y a trois messages ne dit pas s'il
- * faut les lire.
+ * When the count announces a thread, the tooltip gives its latest message, as
+ * in the reference list: knowing there are three messages does not say whether
+ * they need reading.
  */
 export function CardCounter({
-  icone: Icone,
-  nombre,
-  libelle,
-  vide,
-  apercu,
+  icon: Icon,
+  count,
+  label,
+  empty,
+  preview,
 }: CardCounterProps) {
-  const [singulier, pluriel] = libelle;
-  const { tooltip, suivre, quitter } = useTooltipCurseur({ riche: true });
+  const [singular, plural] = label;
+  const { tooltip, follow, leave } = useCursorTooltip({ rich: true });
 
   return (
     <span
-      aria-label={nombre === 0 ? vide : `${nombre} ${nombre > 1 ? pluriel : singulier}`}
-      onMouseMove={(event) => apercu && suivre(event, apercu)}
-      onMouseLeave={quitter}
+      aria-label={count === 0 ? empty : `${count} ${count > 1 ? plural : singular}`}
+      onMouseMove={(event) => preview && follow(event, preview)}
+      onMouseLeave={leave}
       className={`flex items-center gap-1 text-xs tabular-nums ${
-        nombre === 0 ? "text-slate-300" : "text-slate-500"
+        count === 0 ? "text-slate-300" : "text-slate-500"
       }`}
     >
-      {nombre > 0 && nombre}
-      <Icone className="size-3.5 shrink-0" aria-hidden />
+      {count > 0 && count}
+      <Icon className="size-3.5 shrink-0" aria-hidden />
       {tooltip}
     </span>
   );

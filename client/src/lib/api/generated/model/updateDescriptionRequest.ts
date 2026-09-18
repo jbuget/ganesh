@@ -6,7 +6,7 @@
  */
 
 /**
- * Fiche de service, en markdown.
+ * Service sheet, in markdown.
  */
 export interface UpdateDescriptionRequest {
   description?: string | null;

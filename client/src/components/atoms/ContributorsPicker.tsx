@@ -9,50 +9,48 @@ import type { BoardMemberResponse, ProjectRole } from "@/lib/api/generated/model
 import { assignMember, unassignMember } from "@/lib/api/generated/projects/projects";
 import { useTeammates } from "@/lib/api/queries";
 
-interface IntervenantsPickerProps {
+interface ContributorsPickerProps {
   projectId: number;
-  intervenants: BoardMemberResponse[];
+  contributors: BoardMemberResponse[];
   onChange: () => void | Promise<void>;
-  /** A quel titre ces personnes sont rattachees a la mission. */
+  /** On what grounds these people are attached to the mission. */
   role?: ProjectRole;
-  /** Invite affichee quand personne n'est encore rattache. */
-  invite?: string;
+  /** Prompt shown when nobody is attached yet. */
+  label?: string;
 }
 
-/** Au-dela, les pastilles se chevauchent trop pour rester lisibles. */
-const VISIBLES = 4;
+/** Past this, the avatars overlap too much to stay readable. */
+const VISIBLE = 4;
 
 /**
- * Qui intervient sur une mission, en lecture et en modification.
+ * Who works on a mission, to read and to change.
  *
- * La liste se remanie deux fois par semaine : on l'ouvre d'un clic sur les
- * pastilles, et chaque nom bascule au clic suivant, sans validation ni
- * fermeture. Enchainer trois personnes ne demande donc que trois clics.
+ * The list is reworked twice a week: it opens with a click on the avatars, and
+ * each name toggles on the next click, with no confirmation and no closing.
+ * Three people in a row therefore take three clicks.
  *
- * Le champ de recherche prend le focus a l'ouverture : sur une equipe entiere,
- * taper trois lettres va plus vite que derouler la liste.
+ * The search field takes focus on opening: across a whole team, typing three
+ * letters beats scrolling the list.
  */
-export function IntervenantsPicker({
+export function ContributorsPicker({
   projectId,
-  intervenants,
+  contributors,
   onChange,
-  role = "intervenant",
-  invite = "Intervenants",
-}: IntervenantsPickerProps) {
+  role = "contributor",
+  label = "Intervenants",
+}: ContributorsPickerProps) {
   const { teammates } = useTeammates();
-  const [ouvert, setOuvert] = useState(false);
-  const [recherche, setRecherche] = useState("");
-  // Le meme filtre que les menus de recherche du reste de l'application :
-  // insensible a la casse comme aux accents.
+  const [isOpen, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  // The same filter as the search menus elsewhere in the application:
+  // insensitive to case and to accents alike.
   const { contains } = useComboboxFilter();
-  const affectes = new Set(intervenants.map((membre) => membre.id));
+  const assigned = new Set(contributors.map((member) => member.id));
 
-  const proposes = teammates.filter((membre) =>
-    contains(membre.display_name, recherche),
-  );
+  const proposes = teammates.filter((member) => contains(member.display_name, search));
 
-  async function basculer(memberId: number) {
-    if (affectes.has(memberId)) {
+  async function toggle(memberId: number) {
+    if (assigned.has(memberId)) {
       await unassignMember(projectId, memberId, { role });
     } else {
       await assignMember(projectId, memberId, { role });
@@ -60,40 +58,40 @@ export function IntervenantsPicker({
     await onChange();
   }
 
-  const visibles = intervenants.slice(0, VISIBLES);
-  const restants = intervenants.slice(VISIBLES);
+  const visible = contributors.slice(0, VISIBLE);
+  const remaining = contributors.slice(VISIBLE);
 
   return (
     <Popover
-      open={ouvert}
-      onOpenChange={(prochain) => {
-        setOuvert(prochain);
-        if (!prochain) setRecherche("");
+      open={isOpen}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setSearch("");
       }}
     >
       <PopoverTrigger
-        aria-label={`Modifier les ${invite.toLowerCase()}`}
+        aria-label={`Modifier les ${label.toLowerCase()}`}
         className="flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 -mx-1 transition-colors hover:bg-slate-100"
       >
-        {intervenants.length === 0 ? (
+        {contributors.length === 0 ? (
           <span className="flex items-center gap-1 text-sm text-slate-400">
             <Plus className="size-3.5" aria-hidden />
-            {invite}
+            {label}
           </span>
         ) : (
           <span className="flex items-center -space-x-1.5">
-            {visibles.map((membre) => (
+            {visible.map((member) => (
               <span
-                key={membre.id}
-                title={membre.display_name}
+                key={member.id}
+                title={member.display_name}
                 className="flex size-6 items-center justify-center rounded-full border border-white bg-slate-200 text-[10px] font-medium text-slate-700"
               >
-                {membre.initiales}
+                {member.initials}
               </span>
             ))}
-            {restants.length > 0 && (
+            {remaining.length > 0 && (
               <span className="flex size-6 items-center justify-center rounded-full border border-white bg-slate-100 text-[10px] font-medium text-slate-500">
-                +{restants.length}
+                +{remaining.length}
               </span>
             )}
           </span>
@@ -102,18 +100,18 @@ export function IntervenantsPicker({
 
       <PopoverContent align="start" className="w-56 gap-0 p-1">
         {/*
-          Marges negatives : le popover a son propre padding, sans quoi le trait
-          sous le champ s'arreterait avant les bords.
+          Negative margins: the popover has padding of its own, otherwise the
+          rule under the field would stop short of the edges.
         */}
         <div className="-mx-1 flex items-center gap-2 border-b border-border px-2.5">
           <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />
           <input
             type="text"
             autoFocus
-            value={recherche}
-            aria-label={`Rechercher parmi les ${invite.toLowerCase()}`}
+            value={search}
+            aria-label={`Rechercher parmi les ${label.toLowerCase()}`}
             placeholder="Rechercher…"
-            onChange={(event) => setRecherche(event.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
             className="h-8 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
@@ -124,21 +122,21 @@ export function IntervenantsPicker({
           </p>
         ) : (
           <ul className="max-h-64 overflow-y-auto overscroll-contain pt-1">
-            {proposes.map((membre) => {
-              const present = affectes.has(membre.id);
+            {proposes.map((member) => {
+              const present = assigned.has(member.id);
               return (
-                <li key={membre.id}>
+                <li key={member.id}>
                   <button
                     type="button"
                     aria-pressed={present}
-                    onClick={() => void basculer(membre.id)}
+                    onClick={() => void toggle(member.id)}
                     className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
                   >
                     <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-700">
-                      {membre.initiales}
+                      {member.initials}
                     </span>
                     <span className="min-w-0 flex-1 truncate">
-                      {membre.display_name}
+                      {member.display_name}
                     </span>
                     {present && (
                       <Check className="size-4 shrink-0 text-sky-600" aria-hidden />

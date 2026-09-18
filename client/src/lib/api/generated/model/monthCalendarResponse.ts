@@ -7,7 +7,7 @@
 import type { CalendarDaySchema } from "./calendarDaySchema";
 
 /**
- * Le calendrier d'un mois.
+ * A month's calendar.
  */
 export interface MonthCalendarResponse {
   year: number;

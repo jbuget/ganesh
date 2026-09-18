@@ -1,4 +1,4 @@
-"""La fiche d'une mission : ce qu'elle rassemble."""
+"""A mission's sheet: what it gathers."""
 
 from datetime import date
 
@@ -39,40 +39,40 @@ NINO = User(
     role=Role.TEAMMATE,
 )
 PROJECT = Project(
-    id=10, label="Portail", kind=ProjectKind.PROJET, statut=ProjectStatus.REALISATION
+    id=10, label="Portail", kind=ProjectKind.PROJECT, status=ProjectStatus.DEVELOPMENT
 )
 
 
-def lot(project_id: int, label: str) -> Project:
+def work_package(project_id: int, label: str) -> Project:
     return Project(
         id=project_id,
         label=label,
-        kind=ProjectKind.LOT,
-        statut=ProjectStatus.CADRAGE,
+        kind=ProjectKind.WORK_PACKAGE,
+        status=ProjectStatus.SCOPING,
         parent_id=10,
     )
 
 
-def saisie(user_id: int, jour: date, valeur: float = 1.0) -> Entry:
+def entry(user_id: int, day: date, value: float = 1.0) -> Entry:
     return Entry(
         id=None,
         user_id=user_id,
         project_id=10,
-        jour=jour,
-        valeur=DayValue(valeur),
-        statut_at_entry=ProjectStatus.REALISATION,
+        day=day,
+        value=DayValue(value),
+        status_at_entry=ProjectStatus.DEVELOPMENT,
     )
 
 
 def build(
     entries: list[Entry] | None = None,
-    affectations=None,
-    lots: list[Project] | None = None,
+    assignments=None,
+    work_packages: list[Project] | None = None,
 ):
     return GetProjectDetailUseCase(
-        projects=InMemoryProjectRepository([PROJECT, *(lots or [])]),
+        projects=InMemoryProjectRepository([PROJECT, *(work_packages or [])]),
         details=InMemoryProjectDetailRepository(),
-        assignees=InMemoryProjectAssigneeRepository(affectations or {}),
+        assignees=InMemoryProjectAssigneeRepository(assignments or {}),
         entries=InMemoryEntryRepository(entries or []),
         users=InMemoryUserRepository([ALICE, NINO]),
     )
@@ -86,78 +86,81 @@ async def test_an_unknown_mission_is_refused() -> None:
 async def test_the_biggest_contributor_comes_first() -> None:
     detail = await build(
         [
-            saisie(1, date(2026, 9, 14)),
-            saisie(2, date(2026, 9, 14)),
-            saisie(2, date(2026, 9, 15)),
+            entry(1, date(2026, 9, 14)),
+            entry(2, date(2026, 9, 14)),
+            entry(2, date(2026, 9, 15)),
         ]
     ).execute(10)
 
     assert [c.user.display_name for c in detail.contributions] == ["N. Garo", "L. Chen"]
-    assert [c.jours for c in detail.contributions] == [2.0, 1.0]
+    assert [c.days for c in detail.contributions] == [2.0, 1.0]
 
 
 async def test_a_contribution_is_split_by_month() -> None:
     detail = await build(
         [
-            saisie(1, date(2026, 8, 31), 0.5),
-            saisie(1, date(2026, 9, 14)),
-            saisie(1, date(2026, 9, 15), 0.5),
+            entry(1, date(2026, 8, 31), 0.5),
+            entry(1, date(2026, 9, 14)),
+            entry(1, date(2026, 9, 15), 0.5),
         ]
     ).execute(10)
 
-    assert detail.contributions[0].par_mois == [
+    assert detail.contributions[0].by_month == [
         (date(2026, 9, 1), 1.5),
         (date(2026, 8, 1), 0.5),
     ]
 
 
 async def test_the_most_recent_month_comes_first() -> None:
-    """On lit d'abord ce qui vient de se passer."""
+    """What just happened is read first."""
     detail = await build(
-        [saisie(1, date(2026, 7, 1)), saisie(1, date(2026, 12, 1))]
+        [entry(1, date(2026, 7, 1)), entry(1, date(2026, 12, 1))]
     ).execute(10)
 
-    assert [mois for mois, _ in detail.contributions[0].par_mois] == [
+    assert [month for month, _ in detail.contributions[0].by_month] == [
         date(2026, 12, 1),
         date(2026, 7, 1),
     ]
 
 
 async def test_someone_who_never_declared_time_is_absent() -> None:
-    """Etre affecte ne suffit pas a figurer dans la consommation."""
-    detail = await build(affectations={(10, ProjectRole.INTERVENANT): [1, 2]}).execute(
+    """Being assigned is not enough to appear in the consumption."""
+    detail = await build(assignments={(10, ProjectRole.CONTRIBUTOR): [1, 2]}).execute(
         10
     )
 
     assert detail.contributions == []
-    assert len(detail.intervenants) == 2
+    assert len(detail.contributors) == 2
 
 
-async def test_referents_and_intervenants_are_told_apart() -> None:
+async def test_leads_and_contributors_are_told_apart() -> None:
     detail = await build(
-        affectations={
-            (10, ProjectRole.REFERENT): [1],
-            (10, ProjectRole.INTERVENANT): [2],
+        assignments={
+            (10, ProjectRole.LEAD): [1],
+            (10, ProjectRole.CONTRIBUTOR): [2],
         }
     ).execute(10)
 
-    assert [u.display_name for u in detail.referents] == ["L. Chen"]
-    assert [u.display_name for u in detail.intervenants] == ["N. Garo"]
+    assert [u.display_name for u in detail.leads] == ["L. Chen"]
+    assert [u.display_name for u in detail.contributors] == ["N. Garo"]
 
 
 async def test_a_mission_without_children_has_no_sub_project() -> None:
     detail = await build().execute(10)
 
-    assert detail.sous_projets == []
+    assert detail.sub_projects == []
 
 
 async def test_the_children_of_a_mission_are_listed_in_alphabetical_order() -> None:
-    """On cherche un lot par son nom : la liste doit se parcourir comme un index."""
+    """One looks a work package up by name: the list must read like an index."""
     detail = await build(
-        lots=[lot(12, "Reprise de donnees"), lot(11, "Authentification")]
+        work_packages=[
+            work_package(12, "Reprise de donnees"),
+            work_package(11, "Authentification"),
+        ]
     ).execute(10)
 
-    assert [m.label for m in detail.sous_projets] == [
+    assert [m.label for m in detail.sub_projects] == [
         "Authentification",
         "Reprise de donnees",
     ]

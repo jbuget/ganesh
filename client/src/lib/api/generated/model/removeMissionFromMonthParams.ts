@@ -8,11 +8,11 @@
 export type RemoveMissionFromMonthParams = {
   project_id: number;
   /**
-   * N'importe quel jour du mois vise
+   * Any day of the month aimed at
    */
-  mois: string;
+  month: string;
   /**
-   * Collaborateur dont le mois est modifie.
+   * Teammate whose month is changed.
    */
   user_id?: number | null;
 };

@@ -10,42 +10,42 @@ import { useProjectDetail } from "@/lib/use-project-detail";
 
 interface ProjectPanelProps {
   projectId: number;
-  /** Sur quoi s'ouvrir : la fiche par defaut, le fil si c'est lui qu'on visait. */
-  onglet?: string | null;
+  /** What to open on: the sheet by default, the thread when that is what was aimed at. */
+  tab?: string | null;
   onClose: () => void;
-  /** Previent le tableau : une phase changee ici y deplace une carte. */
+  /** Tells the board: a phase changed here moves a card there. */
   onMissionChanged: () => void | Promise<void>;
 }
 
 /**
- * La mission ouverte a cote du tableau.
+ * The mission opened beside the board.
  *
- * Le kanban reste visible et utilisable derriere : on consulte une mission sans
- * perdre de vue la colonne d'ou elle vient, ni l'endroit ou on comptait la
- * deposer ensuite.
+ * The kanban stays visible and usable behind: one looks at a mission without
+ * losing sight of the column it comes from, nor of where one meant to drop it
+ * next.
  */
 export function ProjectPanel({
   projectId,
-  onglet,
+  tab,
   onClose,
   onMissionChanged,
 }: ProjectPanelProps) {
-  const fiche = useProjectDetail(projectId, onMissionChanged);
-  const detail = fiche.detail;
+  const sheet = useProjectDetail(projectId, onMissionChanged);
+  const detail = sheet.detail;
 
   useEffect(() => {
-    const fermerSurEchap = (event: KeyboardEvent) => {
+    const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
-    window.addEventListener("keydown", fermerSurEchap);
-    return () => window.removeEventListener("keydown", fermerSurEchap);
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
   }, [onClose]);
 
   return (
     <>
       {/*
-        Le voile ferme au clic mais ne masque pas : le tableau doit rester
-        lisible, c'est tout l'interet d'un panneau plutot que d'une page.
+        The veil closes on click but does not hide: the board must stay
+        readable, which is the whole point of a panel rather than a page.
       */}
       <div
         aria-hidden
@@ -60,12 +60,12 @@ export function ProjectPanel({
         <header className="flex items-center gap-2 border-b border-slate-200 px-5 py-4">
           <EditableTitle
             label={detail?.project.label ?? "Chargement…"}
-            invite="Renommer la mission"
-            onRename={detail ? fiche.renommer : undefined}
+            hint="Renommer la mission"
+            onRename={detail ? sheet.rename : undefined}
           />
 
           <Link
-            href={`/projets/${projectId}`}
+            href={`/projects/${projectId}`}
             aria-label="Ouvrir en pleine page"
             className="cursor-pointer rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
           >
@@ -82,26 +82,27 @@ export function ProjectPanel({
         </header>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4">
-          {fiche.introuvable && (
+          {sheet.notFound && (
             <p className="text-sm text-slate-500">Cette mission n&apos;existe pas.</p>
           )}
           {detail && (
             <ProjectTabs
               detail={detail}
-              ongletInitial={onglet}
-              onChange={fiche.recharger}
-              enregistrerFiche={fiche.enregistrerFiche}
-              enregistrerDescription={fiche.enregistrerDescription}
-              changerPhase={fiche.changerPhase}
-              changerCaracteristiques={fiche.changerCaracteristiques}
-              ajouterLien={fiche.ajouterLien}
-              retirerLien={fiche.retirerLien}
-              // Le panneau reste ouvert apres l'archivage, bien que la mission
-              // quitte la liste derriere : le fermer sur un clic malheureux
-              // laisserait sans recours, la ligne ayant disparu du referentiel.
-              // Le bandeau et « Desarchiver » gardent le retour a portee.
-              archiver={fiche.archiver}
-              desarchiver={fiche.desarchiver}
+              initialTab={tab}
+              onChange={sheet.reload}
+              saveSheet={sheet.saveSheet}
+              saveDescription={sheet.saveDescription}
+              changePhase={sheet.changePhase}
+              updateFields={sheet.updateFields}
+              addLink={sheet.addLink}
+              removeLink={sheet.removeLink}
+              // The panel stays open after archiving, even though the mission
+              // leaves the list behind: closing it on an unlucky click would
+              // leave no way back, the row having gone from the reference
+              // list. The banner and « Desarchiver » keep the return
+              // within reach.
+              archive={sheet.archive}
+              unarchive={sheet.unarchive}
             />
           )}
         </div>

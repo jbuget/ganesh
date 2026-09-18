@@ -4,9 +4,9 @@ import { render, screen } from "@testing-library/react";
 import { PageLayout } from "./PageLayout";
 
 describe("PageLayout", () => {
-  it("affiche l'en-tête et le contenu", () => {
+  it("shows the header and the content", () => {
     render(
-      <PageLayout entete={<h1>Référentiel</h1>}>
+      <PageLayout header={<h1>Référentiel</h1>}>
         <p>Une mission</p>
       </PageLayout>,
     );
@@ -15,18 +15,18 @@ describe("PageLayout", () => {
     expect(screen.getByText("Une mission")).toBeInTheDocument();
   });
 
-  it("garde l'en-tête hors de la zone qui défile", () => {
-    // C'est toute la raison d'etre du squelette : si l'en-tete partageait le
-    // conteneur defilant, il s'en irait avec le contenu.
+  it("keeps the header out of the scrolling area", () => {
+    // That is the whole point of the skeleton: were the header to share the
+    // scrolling container, it would go off with the content.
     render(
-      <PageLayout entete={<h1>Référentiel</h1>}>
+      <PageLayout header={<h1>Référentiel</h1>}>
         <p>Une mission</p>
       </PageLayout>,
     );
 
-    const defilante = screen.getByText("Une mission").closest(".overflow-y-auto");
+    const scroller = screen.getByText("Une mission").closest(".overflow-y-auto");
 
-    expect(defilante).not.toBeNull();
-    expect(defilante).not.toContainElement(screen.getByRole("heading"));
+    expect(scroller).not.toBeNull();
+    expect(scroller).not.toContainElement(screen.getByRole("heading"));
   });
 });

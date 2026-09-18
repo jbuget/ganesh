@@ -1,28 +1,28 @@
 "use client";
 
 import type { ProjectPriority } from "@/lib/api/generated/model";
-import { priorite } from "@/lib/board";
+import { priority } from "@/lib/board";
 
 interface PriorityMarkProps {
-  valeur: ProjectPriority | null | undefined;
+  value: ProjectPriority | null | undefined;
 }
 
 /**
- * L'urgence d'une mission : une jauge coloree, un libelle ordinaire.
+ * A mission's urgency: a coloured gauge, an ordinary label.
  *
- * Le remplissage de la jauge porte l'echelle autant que la teinte — quatre
- * barres, puis trois, deux, une — de sorte qu'elle se lise sans la couleur.
+ * How full the gauge is carries the scale as much as the shade does — four
+ * bars, then three, two, one — so that it reads without the colour.
  */
-export function PriorityMark({ valeur }: PriorityMarkProps) {
-  const urgence = priorite(valeur);
-  if (!urgence) return null;
+export function PriorityMark({ value }: PriorityMarkProps) {
+  const urgency = priority(value);
+  if (!urgency) return null;
 
-  const Icone = urgence.icone;
+  const Icon = urgency.icon;
 
   return (
     <span className="flex items-center gap-1.5 text-slate-700">
-      <Icone className={`size-4 shrink-0 ${urgence.couleur}`} aria-hidden />
-      {urgence.libelle}
+      <Icon className={`size-4 shrink-0 ${urgency.colour}`} aria-hidden />
+      {urgency.label}
     </span>
   );
 }
