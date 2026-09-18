@@ -40,6 +40,15 @@ class ProjectDetailRepository(ABC):
     ) -> dict[ProjectStatus, date]: ...
 
     @abstractmethod
+    async def list_dates_reached(self, status: ProjectStatus) -> dict[int, date]:
+        """The day each mission entered a phase, read in one go.
+
+        The reference list lines up dozens of missions: asking for their
+        history one by one would make them arrive one after the other.
+        """
+        ...
+
+    @abstractmethod
     async def mark_phase_reached(
         self, project_id: int, status: ProjectStatus, reached_at: date
     ) -> None:

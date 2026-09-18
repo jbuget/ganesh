@@ -153,6 +153,19 @@ class InMemoryEntryRepository(EntryRepository):
             )
         return totals
 
+    async def sum_realised_by_project_and_status(
+        self, today: date, since: date | None = None
+    ) -> dict[int, dict[ProjectStatus | None, float]]:
+        sums: dict[int, dict[ProjectStatus | None, float]] = {}
+        for entry in self._entries:
+            if entry.is_forecast(today) or (since is not None and entry.day < since):
+                continue
+            par_statut = sums.setdefault(entry.project_id, {})
+            par_statut[entry.status_at_entry] = round(
+                par_statut.get(entry.status_at_entry, 0.0) + float(entry.value), 2
+            )
+        return sums
+
     async def upsert(self, entry: Entry) -> Entry:
         existing = await self.get(entry.user_id, entry.project_id, entry.day)
         if existing is not None:
@@ -275,6 +288,13 @@ class InMemoryProjectDetailRepository(ProjectDetailRepository):
 
     async def list_phases_reached(self, project_id: int) -> dict[ProjectStatus, date]:
         return dict(self._phases.get(project_id, {}))
+
+    async def list_dates_reached(self, status: ProjectStatus) -> dict[int, date]:
+        return {
+            project_id: phases[status]
+            for project_id, phases in self._phases.items()
+            if status in phases
+        }
 
     async def mark_phase_reached(
         self, project_id: int, status: ProjectStatus, reached_at: date

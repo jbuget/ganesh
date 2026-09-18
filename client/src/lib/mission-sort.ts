@@ -3,7 +3,7 @@ import { PRIORITIES, phaseRank } from "@/lib/board";
 
 /** The reference list columns the list can be ordered by. */
 export type SortColumn =
-  "project" | "phase" | "priority" | "category" | "estimated" | "delivered";
+  "project" | "phase" | "priority" | "category" | "build" | "run";
 
 export type SortDirection = "asc" | "desc";
 
@@ -20,8 +20,8 @@ const COLUMNS: SortColumn[] = [
   "phase",
   "priority",
   "category",
-  "estimated",
-  "delivered",
+  "build",
+  "run",
 ];
 
 const PARAMETERS = { column: "sort", direction: "direction" } as const;
@@ -42,8 +42,10 @@ const VALUES: Record<SortColumn, (m: Mission) => string | number | null> = {
   priority: (m) =>
     m.project.priority ? (PRIORITY_RANKS.get(m.project.priority) ?? null) : null,
   category: (m) => m.project.category,
-  estimated: (m) => m.project.estimated_days ?? null,
-  delivered: (m) => m.delivered_days,
+  // Sorting reads what the row shows: a folded parent carries its work
+  // packages, so the tree is what gets compared.
+  build: (m) => m.tree_cost.build_days || null,
+  run: (m) => m.tree_cost.run_days || null,
 };
 
 function byLabel(a: Mission, b: Mission): number {

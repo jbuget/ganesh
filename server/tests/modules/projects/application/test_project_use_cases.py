@@ -66,6 +66,7 @@ def build(projects: list[Project] | None = None):
             assignees=InMemoryProjectAssigneeRepository(),
             users=users,
             updates=InMemoryProjectUpdateRepository(),
+            details=InMemoryProjectDetailRepository(),
         ),
         repo,
         audit,

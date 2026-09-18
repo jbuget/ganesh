@@ -62,6 +62,23 @@ class LastUpdateResponse(BaseModel):
     published_at: datetime
 
 
+class ProjectCostResponse(BaseModel):
+    """What a mission cost, the build kept apart from the run.
+
+    The estimate covers the build alone, so only the build is compared to it.
+    The run is read as a total and as a pace, which is the only way to compare
+    two services of different ages.
+    """
+
+    build_days: float
+    run_days: float
+    estimated_days: float | None
+    #: Days a month the mission costs to keep alive, once it has run long
+    #: enough for the figure to mean something.
+    monthly_run_rate: float | None
+    has_overrun: bool
+
+
 class ProjectListItemResponse(BaseModel):
     """A mission from the reference list, with who looks after it."""
 
@@ -70,6 +87,10 @@ class ProjectListItemResponse(BaseModel):
     contributors: list["BoardMemberResponse"]
     #: Jours declares, previsionnel exclu.
     delivered_days: float
+    #: Ce que la mission a coute, seule.
+    cost: ProjectCostResponse
+    #: Le meme compte, augmente de ce que ses lots ont coute.
+    tree_cost: ProjectCostResponse
     #: Live updates in the follow-up thread.
     comments: int
     #: The latest of them, absent while there is nothing to read.
@@ -144,6 +165,8 @@ class BoardCardResponse(BaseModel):
 
     project: ProjectResponse
     consumed_days: float
+    #: Jours de construction seuls : c'est ce que l'estime couvre.
+    build_days: float
     contributors: list[BoardMemberResponse]
     comments: int
     #: The latest message of the thread, absent while there is nothing to read.

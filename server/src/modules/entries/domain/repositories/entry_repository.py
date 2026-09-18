@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from datetime import date
 
 from src.modules.entries.domain.entities.entry import Entry
+from src.modules.projects.domain.entities.project import ProjectStatus
 
 
 class EntryRepository(ABC):
@@ -32,6 +33,18 @@ class EntryRepository(ABC):
 
         Summed in one go: the reference list lines up dozens of missions, and
         one query per row would make them arrive one after the other.
+        """
+        ...
+
+    @abstractmethod
+    async def sum_realised_by_project_and_status(
+        self, today: date, since: date | None = None
+    ) -> dict[int, dict[ProjectStatus | None, float]]:
+        """Delivered days per mission, kept apart by the phase they were spent in.
+
+        The phase each entry carries is raw data, not a reading: telling build
+        from run is the domain's business, and this port only hands over the
+        sums. `since` narrows the window, which is how a recent pace is read.
         """
         ...
 

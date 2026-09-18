@@ -1,5 +1,7 @@
 """Translating projects into API schemas."""
 
+from datetime import date
+
 from src.modules.projects.application.dtos.last_update import LastUpdate
 from src.modules.projects.application.use_cases.get_board import Board
 from src.modules.projects.application.use_cases.get_project_detail import ProjectDetail
@@ -7,6 +9,7 @@ from src.modules.projects.application.use_cases.list_projects import ListedProje
 from src.modules.projects.application.use_cases.project_updates import SignedUpdate
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.services.phase_history import transition_label
+from src.modules.projects.domain.services.project_cost import ProjectCost
 from src.modules.projects.presentation.api.schemas.project_schemas import (
     BoardCardResponse,
     BoardColumnResponse,
@@ -17,6 +20,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     MonthlyShareResponse,
     PhaseReachedResponse,
     ProjectContributionResponse,
+    ProjectCostResponse,
     ProjectDetailResponse,
     ProjectLinkResponse,
     ProjectListItemResponse,
@@ -74,12 +78,27 @@ def to_latest_update(latest: LastUpdate | None) -> LastUpdateResponse | None:
     )
 
 
-def to_listed_project_response(listed: ListedProject) -> ProjectListItemResponse:
+def to_cost_response(cost: ProjectCost, today: date) -> ProjectCostResponse:
+    return ProjectCostResponse(
+        build_days=cost.build_days,
+        run_days=cost.run_days,
+        estimated_days=cost.estimated_days,
+        monthly_run_rate=cost.monthly_run_rate(today),
+        has_overrun=cost.has_overrun,
+    )
+
+
+def to_listed_project_response(
+    listed: ListedProject, today: date | None = None
+) -> ProjectListItemResponse:
+    day = today or date.today()
     return ProjectListItemResponse(
         project=to_project_response(listed.project, is_deletable=listed.is_deletable),
         leads=[to_member(u) for u in listed.leads],
         contributors=[to_member(u) for u in listed.contributors],
         delivered_days=listed.delivered_days,
+        cost=to_cost_response(listed.cost, day),
+        tree_cost=to_cost_response(listed.tree_cost, day),
         comments=listed.comments,
         latest_update=to_latest_update(listed.latest_update),
     )
@@ -94,6 +113,7 @@ def to_board_response(board: Board) -> BoardResponse:
                     BoardCardResponse(
                         project=to_project_response(card.project),
                         consumed_days=card.consumed_days,
+                        build_days=card.build_days,
                         contributors=[
                             BoardMemberResponse(
                                 id=membre.id or 0,

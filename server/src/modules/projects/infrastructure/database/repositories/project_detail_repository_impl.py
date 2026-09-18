@@ -89,6 +89,15 @@ class SqlProjectDetailRepository(ProjectDetailRepository):
         )
         return dict(result.all())  # type: ignore[arg-type]
 
+    async def list_dates_reached(self, status: ProjectStatus) -> dict[int, date]:
+        result = await self._session.execute(
+            select(
+                ProjectPhaseReachedModel.project_id,
+                ProjectPhaseReachedModel.reached_at,
+            ).where(ProjectPhaseReachedModel.status == status)
+        )
+        return dict(result.all())  # type: ignore[arg-type]
+
     async def mark_phase_reached(
         self, project_id: int, status: ProjectStatus, reached_at: date
     ) -> None:

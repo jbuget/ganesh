@@ -6,6 +6,7 @@
  */
 import type { BoardMemberResponse } from "./boardMemberResponse";
 import type { LastUpdateResponse } from "./lastUpdateResponse";
+import type { ProjectCostResponse } from "./projectCostResponse";
 import type { ProjectResponse } from "./projectResponse";
 
 /**
@@ -16,6 +17,8 @@ export interface ProjectListItemResponse {
   leads: BoardMemberResponse[];
   contributors: BoardMemberResponse[];
   delivered_days: number;
+  cost: ProjectCostResponse;
+  tree_cost: ProjectCostResponse;
   comments: number;
   latest_update: LastUpdateResponse | null;
 }

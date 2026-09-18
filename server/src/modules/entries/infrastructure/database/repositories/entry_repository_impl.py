@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.entries.infrastructure.database.models.entry_model import EntryModel
+from src.modules.projects.domain.entities.project import ProjectStatus
 
 
 def to_entity(model: EntryModel) -> Entry:
@@ -88,6 +89,26 @@ class SqlEntryRepository(EntryRepository):
             .group_by(EntryModel.project_id)
         )
         return {project_id: float(total) for project_id, total in result.all()}
+
+    async def sum_realised_by_project_and_status(
+        self, today: date, since: date | None = None
+    ) -> dict[int, dict[ProjectStatus | None, float]]:
+        query = (
+            select(
+                EntryModel.project_id,
+                EntryModel.status_at_entry,
+                func.sum(EntryModel.value),
+            )
+            .where(EntryModel.day <= today)
+            .group_by(EntryModel.project_id, EntryModel.status_at_entry)
+        )
+        if since is not None:
+            query = query.where(EntryModel.day >= since)
+
+        sums: dict[int, dict[ProjectStatus | None, float]] = {}
+        for project_id, status, total in (await self._session.execute(query)).all():
+            sums.setdefault(project_id, {})[status] = float(total)
+        return sums
 
     async def upsert(self, entry: Entry) -> Entry:
         model = await self._get_model(entry.user_id, entry.project_id, entry.day)
