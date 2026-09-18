@@ -21,12 +21,12 @@ interface MissionRowProps {
   /** Whether its sub-projects are visible. Collapsed by default. */
   expanded?: boolean;
   /** Shows or hides the sub-projects. */
-  onBasculer?: () => void;
+  onToggle?: () => void;
   /** Freezes the reference time: without it, server and client would diverge. */
   now: Date;
   onOpen: () => void;
   /** Opens the mission on its thread, where the preview stops. */
-  onOpenFil: () => void;
+  onOpenThread: () => void;
 }
 
 /**
@@ -42,10 +42,10 @@ export function MissionRow({
   isWorkPackage = false,
   workPackages = 0,
   expanded = false,
-  onBasculer,
+  onToggle,
   now,
   onOpen,
-  onOpenFil,
+  onOpenThread,
 }: MissionRowProps) {
   const { project } = mission;
   const latest = mission.latest_update;
@@ -96,7 +96,7 @@ export function MissionRow({
                 // propagation, folding would open the panel at the same time.
                 onClick={(event) => {
                   event.stopPropagation();
-                  onBasculer?.();
+                  onToggle?.();
                 }}
                 className="cursor-pointer rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700"
               >
@@ -131,7 +131,11 @@ export function MissionRow({
           of. The icon already says what the number counts, hence the empty
           heading. */}
       <TableCell className="w-12 text-right">
-        <UpdatesCounter count={mission.comments} preview={preview} onOpen={onOpenFil} />
+        <UpdatesCounter
+          count={mission.comments}
+          preview={preview}
+          onOpen={onOpenThread}
+        />
       </TableCell>
 
       <TableCell>

@@ -109,7 +109,7 @@ export function ProjectsPage() {
                     column="project"
                     label="Projet"
                     sorted={sorted}
-                    onBasculer={trierPar}
+                    onToggle={trierPar}
                   />
                   {/* The follow-up thread: its icon carries the meaning, not a title. */}
                   <TableHead />
@@ -117,32 +117,32 @@ export function ProjectsPage() {
                     column="phase"
                     label="Phase"
                     sorted={sorted}
-                    onBasculer={trierPar}
+                    onToggle={trierPar}
                   />
                   <SortableColumnHeader
                     column="priority"
                     label="Priorité"
                     sorted={sorted}
-                    onBasculer={trierPar}
+                    onToggle={trierPar}
                   />
                   <SortableColumnHeader
                     column="category"
                     label="Catégorie"
                     sorted={sorted}
-                    onBasculer={trierPar}
+                    onToggle={trierPar}
                   />
                   <SortableColumnHeader
                     column="estimated"
                     label="Estimé"
                     sorted={sorted}
-                    onBasculer={trierPar}
+                    onToggle={trierPar}
                     aDroite
                   />
                   <SortableColumnHeader
                     column="delivered"
                     label="Réalisé"
                     sorted={sorted}
-                    onBasculer={trierPar}
+                    onToggle={trierPar}
                     aDroite
                   />
                   {/* Who looks after it does not sort: a column of badges has no
@@ -154,7 +154,7 @@ export function ProjectsPage() {
 
               <TableBody>
                 {screen.tree.map(({ mission, workPackages }) => {
-                  const expanded = screen.estDeplie(mission.project.id);
+                  const expanded = screen.isExpanded(mission.project.id);
 
                   return (
                     <Fragment key={mission.project.id}>
@@ -163,10 +163,10 @@ export function ProjectsPage() {
                         isWorkPackage={mission.project.kind === "work_package"}
                         workPackages={workPackages.length}
                         expanded={expanded}
-                        onBasculer={() => screen.toggle(mission.project.id)}
+                        onToggle={() => screen.toggle(mission.project.id)}
                         now={now}
                         onOpen={() => panel.open(mission.project.id)}
-                        onOpenFil={() => panel.open(mission.project.id, "updates")}
+                        onOpenThread={() => panel.open(mission.project.id, "updates")}
                       />
                       {expanded &&
                         workPackages.map((workPackage) => (
@@ -176,7 +176,7 @@ export function ProjectsPage() {
                             isWorkPackage
                             now={now}
                             onOpen={() => panel.open(workPackage.project.id)}
-                            onOpenFil={() =>
+                            onOpenThread={() =>
                               panel.open(workPackage.project.id, "updates")
                             }
                           />
@@ -230,9 +230,9 @@ export function ProjectsPage() {
         <ProjectPanel
           // The tab is part of the key: reopening the same mission on its
           // thread must remount the panel, which picks its tab on opening.
-          key={`${panel.openedMission}:${panel.ongletOuvert ?? ""}`}
+          key={`${panel.openedMission}:${panel.openTab ?? ""}`}
           projectId={panel.openedMission}
-          tab={panel.ongletOuvert}
+          tab={panel.openTab}
           onClose={panel.close}
           onMissionChanged={screen.refresh}
         />

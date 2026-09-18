@@ -35,10 +35,10 @@ class SqlProjectAssigneeRepository(ProjectAssigneeRepository):
                 ProjectAssigneeModel.role == role
             )
         )
-        par_projet: dict[int, list[int]] = {}
+        by_project: dict[int, list[int]] = {}
         for project_id, user_id in result.all():
-            par_projet.setdefault(project_id, []).append(user_id)
-        return par_projet
+            by_project.setdefault(project_id, []).append(user_id)
+        return by_project
 
     async def assign(self, project_id: int, user_id: int, role: ProjectRole) -> None:
         # The primary key carries both columns: letting the database ignore

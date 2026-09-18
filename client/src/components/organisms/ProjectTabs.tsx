@@ -19,7 +19,7 @@ import type {
 interface ProjectTabsProps {
   detail: ProjectDetailResponse;
   /** Which tab to open on; steering by default. */
-  ongletInitial?: string | null;
+  initialTab?: string | null;
   onChange: () => void | Promise<void>;
   saveSheet: (
     departments: Department[],
@@ -50,7 +50,7 @@ function Chantier({ quoi }: { quoi: string }) {
  */
 export function ProjectTabs({
   detail,
-  ongletInitial,
+  initialTab,
   onChange,
   saveSheet,
   saveDescription,
@@ -68,7 +68,7 @@ export function ProjectTabs({
 
   return (
     <Tabs
-      defaultValue={ongletInitial ?? "pilotage"}
+      defaultValue={initialTab ?? "pilotage"}
       className="flex min-h-0 flex-1 flex-col gap-4"
     >
       {/* Above the tabs, therefore read before them: the state of the mission
@@ -83,7 +83,7 @@ export function ProjectTabs({
       <div className="flex shrink-0 items-center gap-2">
         <TabsList className="min-w-0 flex-1">
           <TabsTrigger value="pilotage">Pilotage</TabsTrigger>
-          <TabsTrigger value="updates">Mises à day</TabsTrigger>
+          <TabsTrigger value="updates">Mises à jour</TabsTrigger>
           <TabsTrigger value="fiche">Fiche service</TabsTrigger>
           <TabsTrigger value="audit">Journal</TabsTrigger>
         </TabsList>
@@ -115,7 +115,7 @@ export function ProjectTabs({
           // Coming from the counter, one comes to write: the cursor is already
           // waiting in the editor. Coming from the panel, one comes to read
           // first.
-          focusRedaction={ongletInitial === "updates"}
+          focusRedaction={initialTab === "updates"}
         />
       </TabsContent>
 

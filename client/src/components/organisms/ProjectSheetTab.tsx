@@ -38,7 +38,7 @@ function Redaction({
     <div className="flex h-full min-h-0 flex-col gap-3">
       <RichTextEditor
         value={value}
-        avecTitres
+        withHeadings
         fullHeight
         placeholder="Le problème, la solution, ce que le service couvre…"
         onChange={setTexte}

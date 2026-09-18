@@ -19,14 +19,14 @@ interface PhasePickerProps {
  * corrects it without having to find its card again.
  */
 export function PhasePicker({ status, onChange }: PhasePickerProps) {
-  const [isOpen, setOuvert] = useState(false);
+  const [isOpen, setOpen] = useState(false);
 
   if (status === null) {
     return <span className="text-sm text-slate-400">Hors projet</span>;
   }
 
   return (
-    <Popover open={isOpen} onOpenChange={setOuvert}>
+    <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label="Changer la phase"
         className="-mx-1 flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-sm text-slate-700 transition-colors hover:bg-slate-100"
@@ -43,7 +43,7 @@ export function PhasePicker({ status, onChange }: PhasePickerProps) {
                 type="button"
                 aria-pressed={phase.status === status}
                 onClick={() => {
-                  setOuvert(false);
+                  setOpen(false);
                   if (phase.status !== status) void onChange(phase.status);
                 }}
                 className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"

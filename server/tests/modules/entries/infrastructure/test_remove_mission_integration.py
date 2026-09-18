@@ -72,7 +72,7 @@ async def seed(session: AsyncSession) -> tuple[int, int, int]:
     return user.id, target.id, epargne.id
 
 
-async def une_saisie(
+async def an_entry(
     session: AsyncSession, user_id: int, project_id: int, day: int, value: float
 ) -> None:
     await SqlEntryRepository(session).upsert(
@@ -100,9 +100,9 @@ async def test_the_mission_leaves_the_month_and_its_neighbours_stay(
     db_session: AsyncSession,
 ) -> None:
     user_id, target, epargne = await seed(db_session)
-    await une_saisie(db_session, user_id, target, 14, 1.0)
-    await une_saisie(db_session, user_id, target, 15, 0.5)
-    await une_saisie(db_session, user_id, epargne, 14, 1.0)
+    await an_entry(db_session, user_id, target, 14, 1.0)
+    await an_entry(db_session, user_id, target, 15, 0.5)
+    await an_entry(db_session, user_id, epargne, 14, 1.0)
 
     retires = await build(db_session).execute(
         RemoveMissionCommand(
@@ -119,7 +119,7 @@ async def test_a_month_without_the_mission_is_left_untouched(
     db_session: AsyncSession,
 ) -> None:
     user_id, target, epargne = await seed(db_session)
-    await une_saisie(db_session, user_id, epargne, 14, 1.0)
+    await an_entry(db_session, user_id, epargne, 14, 1.0)
 
     retires = await build(db_session).execute(
         RemoveMissionCommand(

@@ -44,7 +44,7 @@ interface ProjectPilotageTabProps {
  * top to bottom, and a constant heading width gives that scan something to lean
  * on.
  */
-function Ligne({ title, children }: { title: string; children: React.ReactNode }) {
+function Row({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-3 py-1.5">
       <span className="w-36 shrink-0 pt-0.5 text-sm text-slate-500">{title}</span>
@@ -60,7 +60,7 @@ function Ligne({ title, children }: { title: string; children: React.ReactNode }
  * out from their content, otherwise one no longer sees where one stops and the
  * next begins. The rule gives the break, the weight gives the level.
  */
-function TitreSection({ children }: { children: React.ReactNode }) {
+function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h3 className="border-b border-slate-200 pb-1.5 text-sm font-semibold text-slate-900">
       {children}
@@ -93,44 +93,44 @@ export function ProjectPilotageTab({
   return (
     <div className="space-y-6">
       <section className="space-y-2">
-        <TitreSection>Informations</TitreSection>
+        <SectionTitle>Informations</SectionTitle>
 
         <div className="divide-y divide-slate-100">
-          <Ligne title="Phase">
+          <Row title="Phase">
             <PhasePicker status={project.status} onChange={changePhase} />
-          </Ligne>
+          </Row>
 
-          <Ligne title="Priorité">
+          <Row title="Priorité">
             <PriorityPicker
               value={project.priority}
               onChange={(priority) => updateFields({ priority })}
             />
-          </Ligne>
+          </Row>
 
-          <Ligne title="Catégorie">
+          <Row title="Catégorie">
             <CategoryPicker
               value={project.category}
               onChange={(category) => updateFields({ category })}
             />
-          </Ligne>
+          </Row>
 
-          <Ligne title="Départements">
+          <Row title="Départements">
             <DepartmentPicker
               values={detail.departments}
               onChange={(values) => saveSheet(values, contacts.trim() || null)}
             />
-          </Ligne>
+          </Row>
 
-          <Ligne title="Estimé (build)">
+          <Row title="Estimé (build)">
             <InlineNumberField
               value={project.estimated_days}
               suffixe="jrs."
               invite="Estimer"
               onChange={(estimated_days) => updateFields({ estimated_days })}
             />
-          </Ligne>
+          </Row>
 
-          <Ligne title="Référents projet">
+          <Row title="Référents projet">
             <ContributorsPicker
               projectId={project.id}
               contributors={detail.leads}
@@ -138,18 +138,18 @@ export function ProjectPilotageTab({
               invite="Référents"
               onChange={onChange}
             />
-          </Ligne>
+          </Row>
 
-          <Ligne title="Intervenants">
+          <Row title="Intervenants">
             <ContributorsPicker
               projectId={project.id}
               contributors={detail.contributors}
               invite="Intervenants"
               onChange={onChange}
             />
-          </Ligne>
+          </Row>
 
-          <Ligne title="Contacts métier">
+          <Row title="Contacts métier">
             <input
               type="text"
               value={contacts}
@@ -167,25 +167,25 @@ export function ProjectPilotageTab({
               }}
               className="-mx-1 w-full rounded px-1 py-0.5 text-sm transition-colors hover:bg-slate-100 focus:bg-white focus:ring-1 focus:ring-slate-400 focus:outline-none"
             />
-          </Ligne>
+          </Row>
 
-          <Ligne title="Liens">
+          <Row title="Liens">
             <ProjectLinksEditor
               links={detail.links}
               onAdd={addLink}
               onRemove={removeLink}
             />
-          </Ligne>
+          </Row>
         </div>
       </section>
 
       <section className="space-y-2">
-        <TitreSection>Sous-projets</TitreSection>
+        <SectionTitle>Sous-projets</SectionTitle>
         <ProjectSubProjects subProjects={detail.sub_projects} />
       </section>
 
       <section className="space-y-2">
-        <TitreSection>Consommation</TitreSection>
+        <SectionTitle>Consommation</SectionTitle>
         <ProjectContributions
           contributions={detail.contributions}
           total={detail.consumed_days}

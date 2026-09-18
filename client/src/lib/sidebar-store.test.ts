@@ -16,21 +16,21 @@ describe("fold preference", () => {
 
   it("toggles from one call to the next", () => {
     const { result } = renderHook(() => useBarreLateraleRepliee());
-    const depart = result.current;
+    const origin = result.current;
 
     act(() => toggleSidebar());
 
-    expect(result.current).toBe(!depart);
+    expect(result.current).toBe(!origin);
   });
 
   it("keeps the choice in local storage", () => {
     const { result } = renderHook(() => useBarreLateraleRepliee());
-    const attendu = !result.current;
+    const expected = !result.current;
 
     act(() => toggleSidebar());
 
     expect(window.localStorage.getItem("timesheet.sidebar-repliee")).toBe(
-      attendu ? "1" : "0",
+      expected ? "1" : "0",
     );
   });
 

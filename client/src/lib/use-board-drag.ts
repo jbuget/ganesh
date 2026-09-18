@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 import { PHASES } from "@/lib/board";
 import { moveToColumn, targetIndex, locate, reorder } from "@/lib/board-move";
-import type { Colonnes, useBoard } from "@/lib/use-board";
+import type { Columns, useBoard } from "@/lib/use-board";
 
 /**
  * Dragging a card, from the first hover to the save.
@@ -20,16 +20,16 @@ import type { Colonnes, useBoard } from "@/lib/use-board";
  * hovers, React has not necessarily replayed the component.
  */
 export function useBoardDrag(board: ReturnType<typeof useBoard>) {
-  const [isDragging, setEnDeplacement] = useState<BoardCardResponse | null>(null);
-  const gesture = useRef<{ depart: Colonnes; alive: Colonnes } | null>(null);
+  const [isDragging, setIsDragging] = useState<BoardCardResponse | null>(null);
+  const gesture = useRef<{ origin: Columns; alive: Columns } | null>(null);
 
-  function apply(next_ones: Colonnes) {
+  function apply(next_ones: Columns) {
     gesture.current!.alive = next_ones;
     board.preview(next_ones);
   }
 
   /** The phase aimed at: one hovers either a column or a card. */
-  function targetColumn(columns: Colonnes, overId: string | number) {
+  function targetColumn(columns: Columns, overId: string | number) {
     const phase = PHASES.find(({ status }) => status === overId);
     if (phase) return phase.status;
     return locate(columns, Number(overId))?.status ?? null;
@@ -53,10 +53,10 @@ export function useBoardDrag(board: ReturnType<typeof useBoard>) {
     onDragStart(event: DragStartEvent) {
       if (!board.columns) return;
       const id = Number(event.active.id);
-      const place = locate(board.columns, id);
-      if (!place) return;
-      gesture.current = { depart: board.columns, alive: board.columns };
-      setEnDeplacement(board.columns[place.status][place.position]);
+      const location = locate(board.columns, id);
+      if (!location) return;
+      gesture.current = { origin: board.columns, alive: board.columns };
+      setIsDragging(board.columns[location.status][location.position]);
     },
 
     onDragOver(event: DragOverEvent) {
@@ -79,40 +79,43 @@ export function useBoardDrag(board: ReturnType<typeof useBoard>) {
       // Already in the right phase: the rank goes on following the cursor,
       // otherwise the slot would stay frozen where one entered the column.
       if (overId === null || overId === id) return;
-      const vise = locate(alive, overId);
-      if (!vise) return;
-      const sorted = reorder(alive, id, vise.position);
+      const hovered = locate(alive, overId);
+      if (!hovered) return;
+      const sorted = reorder(alive, id, hovered.position);
       if (sorted) apply(sorted);
     },
 
     async onDragEnd(event: DragEndEvent) {
-      setEnDeplacement(null);
-      const encours = gesture.current;
+      setIsDragging(null);
+      const ongoing = gesture.current;
       gesture.current = null;
-      if (!encours) return;
+      if (!ongoing) return;
 
       const id = Number(event.active.id);
-      const depart = locate(encours.depart, id);
-      if (!depart) return;
+      const origin = locate(ongoing.origin, id);
+      if (!origin) return;
 
       // Nothing to recompute: hovering has already placed the card, and the
       // dotted slot showed exactly where it would land. Dropping confirms what
       // one was looking at.
-      const finales = encours.alive;
-      const arrivee = locate(finales, id);
-      if (!arrivee) return;
-      if (arrivee.status === depart.status && arrivee.position === depart.position) {
+      const finales = ongoing.alive;
+      const destination = locate(finales, id);
+      if (!destination) return;
+      if (
+        destination.status === origin.status &&
+        destination.position === origin.position
+      ) {
         // Nothing moved: the screen goes back as it was, with no server call.
-        board.preview(encours.depart);
+        board.preview(ongoing.origin);
         return;
       }
 
-      await board.move(id, arrivee.status, arrivee.position, finales);
+      await board.move(id, destination.status, destination.position, finales);
     },
 
     onDragCancel() {
-      setEnDeplacement(null);
-      if (gesture.current) board.preview(gesture.current.depart);
+      setIsDragging(null);
+      if (gesture.current) board.preview(gesture.current.origin);
       gesture.current = null;
     },
   };

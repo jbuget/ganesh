@@ -22,10 +22,10 @@ interface UserMenuProps {
  * — and the one command that goes nowhere else.
  */
 export function UserMenu({ user, onSignOut, repliee = false }: UserMenuProps) {
-  const [isOpen, setOuvert] = useState(false);
+  const [isOpen, setOpen] = useState(false);
 
   return (
-    <Popover open={isOpen} onOpenChange={setOuvert}>
+    <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label={`Compte de ${user.display_name}`}
         className={[
@@ -61,7 +61,7 @@ export function UserMenu({ user, onSignOut, repliee = false }: UserMenuProps) {
           <button
             type="button"
             onClick={() => {
-              setOuvert(false);
+              setOpen(false);
               void onSignOut();
             }}
             className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"

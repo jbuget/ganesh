@@ -80,16 +80,16 @@ export function ProjectUpdatesTab({
         )}
       </div>
 
-      {suivi.fil === null && <p className="text-sm text-slate-400">Chargement…</p>}
+      {suivi.thread === null && <p className="text-sm text-slate-400">Chargement…</p>}
 
-      {suivi.fil?.length === 0 && (
+      {suivi.thread?.length === 0 && (
         <p className="py-6 text-center text-sm text-slate-400">
-          Aucune mise à day. Racontez où en est la mission.
+          Aucune mise à jour. Racontez où en est la mission.
         </p>
       )}
 
       <div className="space-y-2">
-        {suivi.fil?.map((maj) => (
+        {suivi.thread?.map((maj) => (
           <ProjectUpdateCard
             key={maj.id}
             maj={maj}

@@ -14,8 +14,8 @@ export const DEPARTEMENTS: { value: Department; label: string }[] = [
   { value: "other", label: "Autre" },
 ];
 
-const PAR_VALEUR = new Map(DEPARTEMENTS.map((d) => [d.value, d.label]));
+const BY_VALUE = new Map(DEPARTEMENTS.map((d) => [d.value, d.label]));
 
 export function departmentLabel(value: Department): string {
-  return PAR_VALEUR.get(value) ?? value;
+  return BY_VALUE.get(value) ?? value;
 }

@@ -3,7 +3,7 @@
 import { writeUrl, useQueryString } from "@/lib/url-state";
 
 const PARAMETRE = "mission";
-const ONGLET = "onglet";
+const TAB = "tab";
 
 /**
  * The mission open in the side panel, held by the URL.
@@ -22,22 +22,22 @@ export function useOpenedMission() {
 
   return {
     openedMission: Number(value) || null,
-    ongletOuvert: params.get(ONGLET),
+    openTab: params.get(TAB),
 
     open(projectId: number, tab?: string) {
       writeUrl((params) => {
         params.set(PARAMETRE, String(projectId));
         // Without clearing it, the tab of a previous opening would apply to
         // the next mission.
-        if (tab) params.set(ONGLET, tab);
-        else params.delete(ONGLET);
+        if (tab) params.set(TAB, tab);
+        else params.delete(TAB);
       });
     },
 
     close() {
       writeUrl((params) => {
         params.delete(PARAMETRE);
-        params.delete(ONGLET);
+        params.delete(TAB);
       });
     },
   };

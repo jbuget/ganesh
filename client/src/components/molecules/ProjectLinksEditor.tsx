@@ -29,14 +29,14 @@ export function ProjectLinksEditor({
   onAdd,
   onRemove,
 }: ProjectLinksEditorProps) {
-  const [isOpen, setOuvert] = useState(false);
+  const [isOpen, setOpen] = useState(false);
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
   const [icon, setIcone] = useState<LinkIcon | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
 
   function toggleExpanded(value: boolean) {
-    setOuvert(value);
+    setOpen(value);
     // Closing, in any way at all, resets the form.
     if (!value) {
       setLabel("");

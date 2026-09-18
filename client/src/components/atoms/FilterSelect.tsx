@@ -27,7 +27,7 @@ interface FilterSelectProps {
  * are kept, so the bar says what it filters once folded.
  */
 export function FilterSelect({ label, options, values, onChange }: FilterSelectProps) {
-  const [isOpen, setOuvert] = useState(false);
+  const [isOpen, setOpen] = useState(false);
   const chosen = new Set(values);
 
   function toggle(value: string) {
@@ -40,7 +40,7 @@ export function FilterSelect({ label, options, values, onChange }: FilterSelectP
   }
 
   return (
-    <Popover open={isOpen} onOpenChange={setOuvert}>
+    <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger
         className={`flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm transition-colors ${
           values.length > 0

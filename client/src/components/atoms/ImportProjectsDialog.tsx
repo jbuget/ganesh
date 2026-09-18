@@ -63,7 +63,7 @@ export function ImportProjectsDialog({
 
         <div className="grid gap-2">
           <Label htmlFor="csv">
-            Colonnes reconnues : {Object.keys(COLUMNS).join(", ")}
+            Columns reconnues : {Object.keys(COLUMNS).join(", ")}
           </Label>
           <textarea
             id="csv"

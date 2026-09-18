@@ -17,7 +17,7 @@ from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 #: Editable fields, in the order they are applied.
-CHAMPS = (
+EDITABLE_FIELDS = (
     "label",
     "status",
     "estimated_days",
@@ -65,7 +65,7 @@ class UpdateProjectUseCase:
             ensure_can_be_parent(parent)
 
         changements: list[tuple[str, object, object]] = []
-        for field in CHAMPS:
+        for field in EDITABLE_FIELDS:
             demande = getattr(command, field)
             if demande is ABSENT:
                 continue

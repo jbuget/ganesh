@@ -14,8 +14,8 @@ export const ROLES: { value: Role; label: string; description: string }[] = [
   },
 ];
 
-const PAR_VALEUR = new Map(ROLES.map((role) => [role.value, role.label]));
+const BY_VALUE = new Map(ROLES.map((role) => [role.value, role.label]));
 
 export function roleLabel(value: Role): string {
-  return PAR_VALEUR.get(value) ?? value;
+  return BY_VALUE.get(value) ?? value;
 }

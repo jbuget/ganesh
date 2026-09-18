@@ -23,11 +23,11 @@ export const PHASES: { status: ProjectStatus; label: string; dot: string }[] = [
   { status: "operations", label: "Exploitation", dot: "bg-emerald-500" },
 ];
 
-const PHASES_PAR_STATUT = new Map(PHASES.map((p) => [p.status, p]));
+const PHASES_BY_STATUS = new Map(PHASES.map((p) => [p.status, p]));
 
 /** Colour of a phase's dot. */
 export function phaseDot(status: ProjectStatus): string {
-  return PHASES_PAR_STATUT.get(status)?.dot ?? "bg-slate-300";
+  return PHASES_BY_STATUS.get(status)?.dot ?? "bg-slate-300";
 }
 
 const RANGS_PHASES = new Map(PHASES.map((phase, rang) => [phase.status, rang]));
@@ -83,10 +83,10 @@ export const CATEGORIES: {
   },
 ];
 
-const CATEGORIES_PAR_VALEUR = new Map(CATEGORIES.map((c) => [c.value, c]));
+const CATEGORIES_BY_VALUE = new Map(CATEGORIES.map((c) => [c.value, c]));
 
 export function category(value: ProjectCategory | null | undefined) {
-  return value ? (CATEGORIES_PAR_VALEUR.get(value) ?? null) : null;
+  return value ? (CATEGORIES_BY_VALUE.get(value) ?? null) : null;
 }
 
 /**
@@ -120,10 +120,10 @@ export const PRIORITIES: {
   { value: "low", label: "Basse", icon: SignalLow, colour: "text-slate-400" },
 ];
 
-const PRIORITES_PAR_VALEUR = new Map(PRIORITIES.map((p) => [p.value, p]));
+const PRIORITIES_BY_VALUE = new Map(PRIORITIES.map((p) => [p.value, p]));
 
 export function priority(value: ProjectPriority | null | undefined) {
-  return value ? (PRIORITES_PAR_VALEUR.get(value) ?? null) : null;
+  return value ? (PRIORITIES_BY_VALUE.get(value) ?? null) : null;
 }
 
 /** How far along a mission is against its estimate. */

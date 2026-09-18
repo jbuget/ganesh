@@ -16,7 +16,7 @@ import { useCurrentUser, useTeammates } from "@/lib/api/queries";
 export function useUsersScreen() {
   const queryClient = useQueryClient();
   const { user: me } = useCurrentUser();
-  const [withInactive, setAvecInactifs] = useState(false);
+  const [withInactive, setWithInactive] = useState(false);
   const { teammates, isLoading } = useTeammates(withInactive);
 
   return {
@@ -31,7 +31,7 @@ export function useUsersScreen() {
     // would compare against two different « now ».
     now: new Date(),
 
-    toggleInactive: () => setAvecInactifs((actuel) => !actuel),
+    toggleInactive: () => setWithInactive((actuel) => !actuel),
 
     /** By name, the only order one finds by eye in a team list. */
     collaborateurs: [...teammates].sort((a, b) =>

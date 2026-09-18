@@ -22,12 +22,12 @@ export function InlineNumberField({
   invite,
   onChange,
 }: InlineNumberFieldProps) {
-  const [entry, setSaisie] = useState<string | null>(null);
+  const [entry, setEntry] = useState<string | null>(null);
 
   function validate() {
     if (entry === null) return;
     const propre = entry.trim().replace(",", ".");
-    setSaisie(null);
+    setEntry(null);
     const count = propre === "" ? null : Number(propre);
     if (count !== null && (Number.isNaN(count) || count < 0)) return;
     if (count !== (value ?? null)) void onChange(count);
@@ -41,11 +41,11 @@ export function InlineNumberField({
         autoFocus
         value={entry}
         aria-label={invite}
-        onChange={(event) => setSaisie(event.target.value)}
+        onChange={(event) => setEntry(event.target.value)}
         onBlur={validate}
         onKeyDown={(event) => {
           if (event.key === "Enter") validate();
-          if (event.key === "Escape") setSaisie(null);
+          if (event.key === "Escape") setEntry(null);
         }}
         className="w-24 rounded border border-slate-400 px-1.5 py-0.5 text-sm focus:outline-none"
       />
@@ -57,7 +57,7 @@ export function InlineNumberField({
       type="button"
       aria-label={invite}
       onClick={() =>
-        setSaisie(value === null || value === undefined ? "" : String(value))
+        setEntry(value === null || value === undefined ? "" : String(value))
       }
       className="-mx-1 cursor-pointer rounded px-1 py-0.5 text-sm transition-colors hover:bg-slate-100"
     >

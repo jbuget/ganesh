@@ -168,11 +168,11 @@ const PARAMETERS = {
   state: "etat",
 } as const;
 
-const PHASES_CONNUES = new Set<string>(PHASES.map((p) => p.status));
-const CATEGORIES_CONNUES = new Set<string>(CATEGORIES.map((c) => c.value));
-const PRIORITES_CONNUES = new Set<string>(PRIORITIES.map((p) => p.value));
-const TYPES_CONNUS = new Set<string>(MISSION_KINDS.map((t) => t.value));
-const ETATS_CONNUS = new Set<string>(MISSION_STATES.map((e) => e.value));
+const KNOWN_PHASES = new Set<string>(PHASES.map((p) => p.status));
+const KNOWN_CATEGORIES = new Set<string>(CATEGORIES.map((c) => c.value));
+const KNOWN_PRIORITIES = new Set<string>(PRIORITIES.map((p) => p.value));
+const KNOWN_KINDS = new Set<string>(MISSION_KINDS.map((t) => t.value));
+const KNOWN_STATES = new Set<string>(MISSION_STATES.map((e) => e.value));
 
 /** Keeps from a parameter only the values we know how to read. */
 function valeursConnues<T extends string>(
@@ -192,23 +192,23 @@ function valeursConnues<T extends string>(
 export function readFilters(params: URLSearchParams): MissionFilters {
   return {
     name: params.get(PARAMETERS.name) ?? "",
-    phases: valeursConnues<ProjectStatus>(params, PARAMETERS.phase, PHASES_CONNUES),
+    phases: valeursConnues<ProjectStatus>(params, PARAMETERS.phase, KNOWN_PHASES),
     categories: valeursConnues<ProjectCategory>(
       params,
       PARAMETERS.category,
-      CATEGORIES_CONNUES,
+      KNOWN_CATEGORIES,
     ),
     priorities: valeursConnues<ProjectPriority>(
       params,
       PARAMETERS.priority,
-      PRIORITES_CONNUES,
+      KNOWN_PRIORITIES,
     ),
     contributors: params
       .getAll(PARAMETERS.contributor)
       .map(Number)
       .filter((id) => Number.isInteger(id) && id > 0),
-    types: valeursConnues<ProjectKind>(params, PARAMETERS.type, TYPES_CONNUS),
-    states: valeursConnues<EtatMission>(params, PARAMETERS.state, ETATS_CONNUS),
+    types: valeursConnues<ProjectKind>(params, PARAMETERS.type, KNOWN_KINDS),
+    states: valeursConnues<EtatMission>(params, PARAMETERS.state, KNOWN_STATES),
   };
 }
 

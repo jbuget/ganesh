@@ -59,7 +59,7 @@ export function MissionSelector({
   disabled = false,
 }: MissionSelectorProps) {
   const { projets, horsProjet } = availableMissions(projects, excludedIds);
-  const [isOpen, setOuvert] = useState(false);
+  const [isOpen, setOpen] = useState(false);
 
   const groupes: MissionGroup[] = [];
   if (projets.length > 0) {
@@ -74,7 +74,7 @@ export function MissionSelector({
       items={groupes}
       value={null}
       open={isOpen}
-      onOpenChange={setOuvert}
+      onOpenChange={setOpen}
       disabled={disabled}
       onValueChange={(mission) => {
         if (mission) onSelect((mission as MissionItem).value);
@@ -111,7 +111,7 @@ export function MissionSelector({
           <button
             type="button"
             onClick={() => {
-              setOuvert(false);
+              setOpen(false);
               onDeclareNew();
             }}
             className="w-full cursor-pointer rounded-md px-1.5 py-1 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground"

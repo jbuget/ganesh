@@ -46,7 +46,7 @@ export function buildProjectTree(
   return [...noeuds, ...orphelins];
 }
 
-/** Activites hors projet, listees a part : elles n'ont ni lot ni estime. */
+/** Off-project work, listed apart: it has neither package nor estimate. */
 export function offProjectActivities(
   missions: ProjectListItemResponse[],
 ): ProjectListItemResponse[] {

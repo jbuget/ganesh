@@ -14,11 +14,11 @@ interface CategoryPickerProps {
 
 /** A mission's strategic axis. One, or none. */
 export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
-  const [isOpen, setOuvert] = useState(false);
+  const [isOpen, setOpen] = useState(false);
   const axis = category(value);
 
   return (
-    <Popover open={isOpen} onOpenChange={setOuvert}>
+    <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label="Changer la catégorie"
         className="-mx-1 flex cursor-pointer items-center rounded px-1 py-0.5 transition-colors hover:bg-slate-100"
@@ -47,7 +47,7 @@ export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
                 type="button"
                 aria-pressed={choice.value === value}
                 onClick={() => {
-                  setOuvert(false);
+                  setOpen(false);
                   // Clicking the current axis again removes it: the only way
                   // back to « no category ».
                   void onChange(choice.value === value ? null : choice.value);

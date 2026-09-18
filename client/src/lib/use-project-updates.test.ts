@@ -20,16 +20,16 @@ beforeEach(() => {
   api.removeProjectUpdate.mockResolvedValue({ data: {} });
 });
 
-async function fil(onEcriture?: () => void | Promise<void>) {
+async function thread(onEcriture?: () => void | Promise<void>) {
   const { result } = renderHook(() => useProjectUpdates(7, onEcriture));
-  await waitFor(() => expect(result.current.fil).not.toBeNull());
+  await waitFor(() => expect(result.current.thread).not.toBeNull());
   return result;
 }
 
 describe("useProjectUpdates", () => {
   it("tells the screen one came from when an update is posted", async () => {
     const notify = vi.fn();
-    const result = await fil(notify);
+    const result = await thread(notify);
 
     await act(async () => {
       await result.current.publier("Cadrage lancé");
@@ -41,7 +41,7 @@ describe("useProjectUpdates", () => {
 
   it("tells it about a correction too", async () => {
     const notify = vi.fn();
-    const result = await fil(notify);
+    const result = await thread(notify);
 
     await act(async () => {
       await result.current.corriger(3, "Cadrage relancé");
@@ -52,7 +52,7 @@ describe("useProjectUpdates", () => {
 
   it("tells it about a withdrawal, which also changes what the list announces", async () => {
     const notify = vi.fn();
-    const result = await fil(notify);
+    const result = await thread(notify);
 
     await act(async () => {
       await result.current.remove(3);
@@ -62,7 +62,7 @@ describe("useProjectUpdates", () => {
   });
 
   it("does without when nobody is listening", async () => {
-    const result = await fil();
+    const result = await thread();
 
     await act(async () => {
       await result.current.publier("Seul au monde");
@@ -73,7 +73,7 @@ describe("useProjectUpdates", () => {
 
   it("tells nobody when the thread is merely read", async () => {
     const notify = vi.fn();
-    await fil(notify);
+    await thread(notify);
 
     expect(notify).not.toHaveBeenCalled();
   });

@@ -19,7 +19,7 @@ interface DepartmentPickerProps {
  * both, and steering wants to see it on both sides.
  */
 export function DepartmentPicker({ values, onChange }: DepartmentPickerProps) {
-  const [isOpen, setOuvert] = useState(false);
+  const [isOpen, setOpen] = useState(false);
   const chosen = new Set(values);
 
   function toggle(value: Department) {
@@ -32,7 +32,7 @@ export function DepartmentPicker({ values, onChange }: DepartmentPickerProps) {
   }
 
   return (
-    <Popover open={isOpen} onOpenChange={setOuvert}>
+    <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label="Modifier les départements"
         className="-mx-1 flex cursor-pointer flex-wrap items-center gap-1 rounded px-1 py-0.5 transition-colors hover:bg-slate-100"

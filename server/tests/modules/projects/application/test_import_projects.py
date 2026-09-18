@@ -159,9 +159,9 @@ async def test_estimate_and_monday_link_are_carried_over() -> None:
         )
     )
 
-    projet = (await repo.list_all())[0]
-    assert projet.estimated_days == 20.0
-    assert projet.is_syncable_to_monday is True
+    project = (await repo.list_all())[0]
+    assert project.estimated_days == 20.0
+    assert project.is_syncable_to_monday is True
 
 
 async def test_a_bad_line_does_not_stop_the_others() -> None:

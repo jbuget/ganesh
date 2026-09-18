@@ -30,7 +30,7 @@ export function EditableTitle({
   onRename,
   niveau = 2,
 }: EditableTitleProps) {
-  const [entry, setSaisie] = useState<string | null>(null);
+  const [entry, setEntry] = useState<string | null>(null);
   const [enCours, setEnCours] = useState(false);
   const [hasError, setEnErreur] = useState(false);
 
@@ -38,7 +38,7 @@ export function EditableTitle({
   const valide = propre.length > 0;
 
   function abandonner() {
-    setSaisie(null);
+    setEntry(null);
     setEnErreur(false);
   }
 
@@ -72,7 +72,7 @@ export function EditableTitle({
             disabled={enCours}
             aria-label={invite}
             aria-invalid={hasError || undefined}
-            onChange={(event) => setSaisie(event.target.value)}
+            onChange={(event) => setEntry(event.target.value)}
             onKeyDown={(event) => {
               // The panel closes on Escape: without this, giving up on the
               // input would close the sheet at the same time.
@@ -113,21 +113,21 @@ export function EditableTitle({
     );
   }
 
-  const Titre = niveau === 1 ? "h1" : "h2";
+  const Title = niveau === 1 ? "h1" : "h2";
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-1.5">
-      <Titre
+      <Title
         className={`truncate font-semibold ${niveau === 1 ? "text-xl" : "text-base"}`}
       >
         {label}
-      </Titre>
+      </Title>
 
       {onRename && (
         <button
           type="button"
           aria-label={invite}
-          onClick={() => setSaisie(label)}
+          onClick={() => setEntry(label)}
           className="cursor-pointer rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
         >
           <Pencil className="size-3.5" aria-hidden />

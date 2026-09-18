@@ -11,7 +11,7 @@ from src.modules.projects.domain.entities.project_link import LinkIcon
 
 #: Known services, by domain. A subdomain inherits from its own: a team's
 #: Slack space lives under `<team>.slack.com`.
-_ICONE_PAR_DOMAINE = {
+_ICON_BY_DOMAIN = {
     "github.com": LinkIcon.REPOSITORY,
     "gitlab.com": LinkIcon.REPOSITORY,
     "bitbucket.org": LinkIcon.REPOSITORY,
@@ -34,7 +34,7 @@ _ICONE_PAR_DOMAINE = {
 }
 
 #: Google serves three tools from `docs.google.com`: only the path tells them apart.
-_ICONE_PAR_CHEMIN_GOOGLE = {
+_ICON_BY_GOOGLE_PATH = {
     "document": LinkIcon.DOCUMENT,
     "spreadsheets": LinkIcon.SPREADSHEET,
     "presentation": LinkIcon.PRESENTATION,
@@ -48,9 +48,9 @@ def guess_icon(url: str) -> LinkIcon:
 
     if _matches(host, "docs.google.com"):
         premier_segment = adresse.path.lstrip("/").split("/")[0]
-        return _ICONE_PAR_CHEMIN_GOOGLE.get(premier_segment, LinkIcon.DOCUMENT)
+        return _ICON_BY_GOOGLE_PATH.get(premier_segment, LinkIcon.DOCUMENT)
 
-    for domaine, icon in _ICONE_PAR_DOMAINE.items():
+    for domaine, icon in _ICON_BY_DOMAIN.items():
         if _matches(host, domaine):
             return icon
 

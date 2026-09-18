@@ -35,7 +35,7 @@ TEAMMATE = User(
 )
 
 
-def projet(id_: int = 10, kind: ProjectKind = ProjectKind.PROJECT) -> Project:
+def project(id_: int = 10, kind: ProjectKind = ProjectKind.PROJECT) -> Project:
     return Project(
         id=id_,
         label=f"Mission {id_}",
@@ -57,7 +57,7 @@ def entry(project_id: int) -> Entry:
 
 
 def build(projects: list[Project] | None = None, entries: list[Entry] | None = None):
-    repo = InMemoryProjectRepository(projects if projects is not None else [projet()])
+    repo = InMemoryProjectRepository(projects if projects is not None else [project()])
     audit = InMemoryAuditLogRepository()
     use_case = DeleteProjectUseCase(
         users=InMemoryUserRepository([TEAMMATE]),
@@ -86,7 +86,7 @@ async def test_a_mission_carrying_time_is_refused() -> None:
 
 
 async def test_a_project_carrying_sub_projects_is_refused() -> None:
-    use_case, repo, _ = build([projet(), projet(11, ProjectKind.WORK_PACKAGE)])
+    use_case, repo, _ = build([project(), project(11, ProjectKind.WORK_PACKAGE)])
 
     with pytest.raises(ForbiddenActionError, match="sub-project"):
         await use_case.execute(DeleteProjectCommand(actor_id=1, project_id=10))
@@ -95,7 +95,7 @@ async def test_a_project_carrying_sub_projects_is_refused() -> None:
 
 
 async def test_a_sub_project_never_used_is_deleted() -> None:
-    use_case, repo, _ = build([projet(), projet(11, ProjectKind.WORK_PACKAGE)])
+    use_case, repo, _ = build([project(), project(11, ProjectKind.WORK_PACKAGE)])
 
     await use_case.execute(DeleteProjectCommand(actor_id=1, project_id=11))
 
@@ -104,7 +104,7 @@ async def test_a_sub_project_never_used_is_deleted() -> None:
 
 async def test_time_on_another_mission_does_not_block() -> None:
     """The count must cover the mission aimed at, not the whole reference list."""
-    use_case, repo, _ = build([projet(), projet(11)], entries=[entry(11)])
+    use_case, repo, _ = build([project(), project(11)], entries=[entry(11)])
 
     await use_case.execute(DeleteProjectCommand(actor_id=1, project_id=10))
 

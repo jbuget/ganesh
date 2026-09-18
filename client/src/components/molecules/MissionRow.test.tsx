@@ -47,7 +47,7 @@ describe("MissionRow", () => {
         mission={mission()}
         now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
@@ -62,7 +62,7 @@ describe("MissionRow", () => {
         mission={mission({ priority: "critical" })}
         now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
@@ -75,7 +75,7 @@ describe("MissionRow", () => {
         mission={mission({ priority: null })}
         now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
@@ -95,7 +95,7 @@ describe("MissionRow", () => {
         mission={consommee}
         now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
@@ -108,7 +108,7 @@ describe("MissionRow", () => {
         mission={mission()}
         now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
@@ -119,7 +119,12 @@ describe("MissionRow", () => {
     const suivie = { ...mission(), comments: 3 } as ProjectListItemResponse;
 
     line(
-      <MissionRow mission={suivie} now={NOW} onOpen={() => {}} onOpenFil={() => {}} />,
+      <MissionRow
+        mission={suivie}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
     );
 
     expect(screen.getByLabelText("3 mises à jour")).toHaveTextContent("3");
@@ -137,7 +142,12 @@ describe("MissionRow", () => {
     } as ProjectListItemResponse;
 
     line(
-      <MissionRow mission={suivie} now={NOW} onOpen={() => {}} onOpenFil={() => {}} />,
+      <MissionRow
+        mission={suivie}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
     );
     fireEvent.mouseMove(screen.getByLabelText("2 mises à jour"));
 
@@ -161,7 +171,12 @@ describe("MissionRow", () => {
     } as ProjectListItemResponse;
 
     line(
-      <MissionRow mission={suivie} now={NOW} onOpen={() => {}} onOpenFil={() => {}} />,
+      <MissionRow
+        mission={suivie}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
     );
     fireEvent.mouseMove(screen.getByLabelText("1 mise à jour"));
 
@@ -174,7 +189,7 @@ describe("MissionRow", () => {
     const suivie = { ...mission(), comments: 2 } as ProjectListItemResponse;
 
     line(
-      <MissionRow mission={suivie} now={NOW} onOpen={open} onOpenFil={openThread} />,
+      <MissionRow mission={suivie} now={NOW} onOpen={open} onOpenThread={openThread} />,
     );
     fireEvent.click(screen.getByLabelText("2 mises à jour"));
 
@@ -189,7 +204,7 @@ describe("MissionRow", () => {
         mission={mission()}
         now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
@@ -199,7 +214,12 @@ describe("MissionRow", () => {
   it("opens the mission on a click on its name", () => {
     const open = vi.fn();
     line(
-      <MissionRow mission={mission()} now={NOW} onOpen={open} onOpenFil={() => {}} />,
+      <MissionRow
+        mission={mission()}
+        now={NOW}
+        onOpen={open}
+        onOpenThread={() => {}}
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Portail" }));
@@ -208,7 +228,7 @@ describe("MissionRow", () => {
   });
 
   it("tells leads from contributors", () => {
-    const avecMonde = {
+    const withWorld = {
       ...mission(),
       leads: [member(1, "Léa Chen")],
       contributors: [member(2, "Nino Garo")],
@@ -216,10 +236,10 @@ describe("MissionRow", () => {
 
     line(
       <MissionRow
-        mission={avecMonde}
+        mission={withWorld}
         now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
@@ -233,7 +253,7 @@ describe("MissionRow", () => {
         mission={mission({ category: null, estimated_days: null })}
         now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
@@ -248,7 +268,7 @@ describe("MissionRow", () => {
         isWorkPackage
         now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
@@ -261,7 +281,7 @@ describe("MissionRow", () => {
         mission={mission()}
         now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
@@ -276,15 +296,15 @@ describe("MissionRow", () => {
         expanded
         now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
-        onBasculer={() => {}}
+        onOpenThread={() => {}}
+        onToggle={() => {}}
       />,
     );
 
-    const bascule = screen.getByRole("button", {
+    const toggle = screen.getByRole("button", {
       name: "Masquer les 2 sous-projets de Portail",
     });
-    expect(bascule).toHaveAttribute("aria-expanded", "true");
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
   });
 
   it("offers to unfold a project whose sub-projects are hidden", () => {
@@ -295,15 +315,15 @@ describe("MissionRow", () => {
         expanded={false}
         now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
-        onBasculer={() => {}}
+        onOpenThread={() => {}}
+        onToggle={() => {}}
       />,
     );
 
-    const bascule = screen.getByRole("button", {
+    const toggle = screen.getByRole("button", {
       name: "Afficher les 2 sous-projets de Portail",
     });
-    expect(bascule).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
   });
 
   it("toggles the sub-projects without opening the mission", () => {
@@ -317,8 +337,8 @@ describe("MissionRow", () => {
         expanded
         now={NOW}
         onOpen={open}
-        onOpenFil={() => {}}
-        onBasculer={toggle}
+        onOpenThread={() => {}}
+        onToggle={toggle}
       />,
     );
     fireEvent.click(
@@ -335,7 +355,7 @@ describe("MissionRow", () => {
         mission={mission()}
         now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 
@@ -350,7 +370,7 @@ describe("MissionRow", () => {
         mission={mission({ kind: "off_project", status: null, estimated_days: null })}
         now={NOW}
         onOpen={() => {}}
-        onOpenFil={() => {}}
+        onOpenThread={() => {}}
       />,
     );
 

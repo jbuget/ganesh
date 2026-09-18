@@ -175,9 +175,9 @@ async def test_a_priority_can_be_declared() -> None:
 
 async def test_a_priority_can_be_taken_back() -> None:
     """A mission may stop being placed against the others."""
-    projet = make_project()
-    projet.priority = ProjectPriority.HIGH
-    use_case, repo, _ = build([projet])
+    project = make_project()
+    project.priority = ProjectPriority.HIGH
+    use_case, repo, _ = build([project])
 
     await use_case.execute(
         UpdateProjectCommand(actor_id=1, project_id=10, priority=None)
@@ -189,9 +189,9 @@ async def test_a_priority_can_be_taken_back() -> None:
 
 
 async def test_an_untouched_priority_survives_another_change() -> None:
-    projet = make_project()
-    projet.priority = ProjectPriority.LOW
-    use_case, repo, _ = build([projet])
+    project = make_project()
+    project.priority = ProjectPriority.LOW
+    use_case, repo, _ = build([project])
 
     await use_case.execute(
         UpdateProjectCommand(actor_id=1, project_id=10, label="Portail bailleurs")

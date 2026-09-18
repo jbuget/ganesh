@@ -11,13 +11,13 @@ from src.shared.exceptions.domain_exceptions import (
 )
 
 QUAND = datetime(2026, 9, 17, 10, 0)
-AUTEUR = 1
+AUTHOR = 1
 QUELQUUN_DAUTRE = 2
 
 
 def une_maj(body: str = "Revue de backlog du 11/09.") -> ProjectUpdate:
     return ProjectUpdate(
-        id=1, project_id=10, author_id=AUTEUR, body=body, published_at=QUAND
+        id=1, project_id=10, author_id=AUTHOR, body=body, published_at=QUAND
     )
 
 
@@ -37,7 +37,7 @@ def test_an_empty_update_is_refused() -> None:
 def test_the_author_can_rewrite_it() -> None:
     update = une_maj()
 
-    update.rewrite("Corrige : le deploiement est repousse.", by=AUTEUR, at=QUAND)
+    update.rewrite("Corrige : le deploiement est repousse.", by=AUTHOR, at=QUAND)
 
     assert update.body == "Corrige : le deploiement est repousse."
     assert update.edited_at == QUAND
@@ -54,7 +54,7 @@ def test_nobody_else_can_rewrite_it() -> None:
 def test_the_author_can_remove_it() -> None:
     update = une_maj()
 
-    update.remove(by=AUTEUR, at=QUAND)
+    update.remove(by=AUTHOR, at=QUAND)
 
     assert update.is_deleted
 
@@ -71,7 +71,7 @@ def test_a_removed_update_keeps_its_place_but_not_its_words() -> None:
     order, the text goes."""
     update = une_maj()
 
-    update.remove(by=AUTEUR, at=QUAND)
+    update.remove(by=AUTHOR, at=QUAND)
 
     assert update.body == ""
     assert update.published_at == QUAND
@@ -79,16 +79,16 @@ def test_a_removed_update_keeps_its_place_but_not_its_words() -> None:
 
 def test_a_removed_update_cannot_be_rewritten() -> None:
     update = une_maj()
-    update.remove(by=AUTEUR, at=QUAND)
+    update.remove(by=AUTHOR, at=QUAND)
 
     with pytest.raises(ForbiddenActionError):
-        update.rewrite("Retour en arriere", by=AUTEUR, at=QUAND)
+        update.rewrite("Retour en arriere", by=AUTHOR, at=QUAND)
 
 
 def test_removing_twice_changes_nothing() -> None:
     update = une_maj()
-    update.remove(by=AUTEUR, at=QUAND)
+    update.remove(by=AUTHOR, at=QUAND)
 
-    update.remove(by=AUTEUR, at=datetime(2026, 12, 1))
+    update.remove(by=AUTHOR, at=datetime(2026, 12, 1))
 
     assert update.deleted_at == QUAND

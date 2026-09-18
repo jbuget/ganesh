@@ -78,13 +78,13 @@ class ListProjectsUseCase:
         # Assignments are read in two queries, not two per mission: the
         # reference list lines up dozens of them on a single screen.
         users = {u.id: u for u in await self._users.list_all(True)}
-        par_role = {role: await self._assignees.list_all(role) for role in ProjectRole}
+        by_role = {role: await self._assignees.list_all(role) for role in ProjectRole}
 
         def people(project_id: int, role: ProjectRole) -> list[User]:
-            connus = [
-                users[uid] for uid in par_role[role].get(project_id, []) if uid in users
+            known = [
+                users[uid] for uid in by_role[role].get(project_id, []) if uid in users
             ]
-            return sorted(connus, key=lambda u: u.display_name)
+            return sorted(known, key=lambda u: u.display_name)
 
         def latest(project_id: int) -> LastUpdate | None:
             update = latest_by_project.get(project_id)

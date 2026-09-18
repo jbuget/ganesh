@@ -6,7 +6,7 @@ interface PhaseTimelineProps {
 }
 
 /** Date en toutes lettres, abregee : « 17 sept. 2026 ». */
-const MOIS = [
+const MONTH = [
   "janv.",
   "févr.",
   "mars",
@@ -23,7 +23,7 @@ const MOIS = [
 
 function formatDate(iso: string): string {
   const [year, month, day] = iso.split("-").map(Number);
-  return `${day} ${MOIS[month - 1]} ${year}`;
+  return `${day} ${MONTH[month - 1]} ${year}`;
 }
 
 /**

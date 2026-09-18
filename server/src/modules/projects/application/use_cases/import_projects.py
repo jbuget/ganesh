@@ -48,19 +48,19 @@ class ImportProjectsUseCase:
             raise ForbiddenActionError("Only a manager can import a reference list.")
 
         report = ImportReport()
-        connus = {p.label: p for p in await self._projects.list_all(True)}
+        known = {p.label: p for p in await self._projects.list_all(True)}
 
         for line in command.rows:
             label = line.label.strip()
-            if label in connus:
+            if label in known:
                 report.skipped += 1
                 continue
             try:
-                projet = await self._create(line, connus)
+                project = await self._create(line, known)
             except DomainError as error:
                 report.errors.append(f"{label or '(unnamed)'}: {error}")
                 continue
-            connus[projet.label] = projet
+            known[project.label] = project
             report.created += 1
 
         await self._audit_logs.add(
@@ -73,11 +73,11 @@ class ImportProjectsUseCase:
         return report
 
     async def _create(
-        self, line: ProjectImportLine, connus: dict[str, Project]
+        self, line: ProjectImportLine, known: dict[str, Project]
     ) -> Project:
         parent_id = None
         if line.kind is ProjectKind.WORK_PACKAGE:
-            parent = connus.get((line.parent_label or "").strip())
+            parent = known.get((line.parent_label or "").strip())
             if parent is None:
                 raise EntityNotFoundError(
                     f"parent project « {line.parent_label} » not found."

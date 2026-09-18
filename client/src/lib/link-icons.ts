@@ -38,14 +38,14 @@ export const LINK_ICONS: {
   { value: "video", label: "Vidéo", glyph: Video },
 ];
 
-const PAR_VALEUR = new Map(LINK_ICONS.map((icon) => [icon.value, icon]));
+const BY_VALUE = new Map(LINK_ICONS.map((icon) => [icon.value, icon]));
 
 /** The drawing of an icon. An unknown value falls back to the plain link. */
 export function iconGlyph(value: LinkIcon): LucideIcon {
-  return PAR_VALEUR.get(value)?.glyph ?? PlainLink;
+  return BY_VALUE.get(value)?.glyph ?? PlainLink;
 }
 
 /** The readable name of an icon, for screen readers and the picker. */
 export function iconLabel(value: LinkIcon): string {
-  return PAR_VALEUR.get(value)?.label ?? "Lien";
+  return BY_VALUE.get(value)?.label ?? "Lien";
 }

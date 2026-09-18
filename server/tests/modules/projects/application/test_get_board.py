@@ -101,9 +101,9 @@ async def test_cards_land_in_their_phase() -> None:
         ]
     ).execute(today=AUJOURDHUI)
 
-    par_phase = {c.status: [m.project.id for m in c.cards] for c in board.columns}
-    assert par_phase[ProjectStatus.SCOPING] == [1]
-    assert par_phase[ProjectStatus.DEPLOYMENT] == [2]
+    by_phase = {c.status: [m.project.id for m in c.cards] for c in board.columns}
+    assert by_phase[ProjectStatus.SCOPING] == [1]
+    assert by_phase[ProjectStatus.DEPLOYMENT] == [2]
 
 
 async def test_cards_keep_the_order_chosen_by_the_team() -> None:
@@ -244,9 +244,9 @@ async def test_a_card_counts_the_updates_posted_on_it() -> None:
 
     board = await build([card(1), card(2)], updates=updates).execute(today=AUJOURDHUI)
 
-    par_mission = {c.project.id: c for c in board.columns[1].cards}
-    assert par_mission[1].comments == 2
-    assert par_mission[2].comments == 0
+    by_mission = {c.project.id: c for c in board.columns[1].cards}
+    assert by_mission[1].comments == 2
+    assert by_mission[2].comments == 0
 
 
 async def test_a_removed_update_no_longer_counts() -> None:
@@ -277,9 +277,9 @@ async def test_a_card_counts_its_sub_projects() -> None:
         ]
     ).execute(today=AUJOURDHUI)
 
-    par_mission = {c.project.id: c for c in board.columns[1].cards}
-    assert par_mission[1].sub_projects == 2
-    assert par_mission[2].sub_projects == 0
+    by_mission = {c.project.id: c for c in board.columns[1].cards}
+    assert by_mission[1].sub_projects == 2
+    assert by_mission[2].sub_projects == 0
 
 
 async def test_a_sub_project_card_names_its_parent() -> None:
@@ -288,10 +288,10 @@ async def test_a_sub_project_card_names_its_parent() -> None:
         [card(1), card(2, parent_id=1, kind=ProjectKind.WORK_PACKAGE)]
     ).execute(today=AUJOURDHUI)
 
-    par_mission = {c.project.id: c for c in board.columns[1].cards}
-    assert par_mission[2].parent is not None
-    assert par_mission[2].parent.id == 1
-    assert par_mission[1].parent is None
+    by_mission = {c.project.id: c for c in board.columns[1].cards}
+    assert by_mission[2].parent is not None
+    assert by_mission[2].parent.id == 1
+    assert by_mission[1].parent is None
 
 
 async def test_an_inactive_parent_is_still_named() -> None:
@@ -362,12 +362,12 @@ async def test_a_card_carries_its_latest_update() -> None:
 
     board = await build([card(1), card(2)], updates=updates).execute(today=AUJOURDHUI)
 
-    par_mission = {c.project.id: c for c in board.columns[1].cards}
-    latest = par_mission[1].latest_update
+    by_mission = {c.project.id: c for c in board.columns[1].cards}
+    latest = by_mission[1].latest_update
     assert latest is not None
     assert latest.update.body == "Relecture"
     assert latest.author == BOB
-    assert par_mission[2].latest_update is None
+    assert by_mission[2].latest_update is None
 
 
 async def test_a_removed_update_is_no_longer_announced() -> None:

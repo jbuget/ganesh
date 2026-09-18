@@ -12,7 +12,7 @@ describe("useMissionOuverte", () => {
     const { result } = renderHook(() => useOpenedMission());
 
     expect(result.current.openedMission).toBeNull();
-    expect(result.current.ongletOuvert).toBeNull();
+    expect(result.current.openTab).toBeNull();
   });
 
   it("opens a mission on its panel", () => {
@@ -21,7 +21,7 @@ describe("useMissionOuverte", () => {
     act(() => result.current.open(29));
 
     expect(result.current.openedMission).toBe(29);
-    expect(result.current.ongletOuvert).toBeNull();
+    expect(result.current.openTab).toBeNull();
   });
 
   it("opens a mission straight onto a tab", () => {
@@ -30,7 +30,7 @@ describe("useMissionOuverte", () => {
     act(() => result.current.open(29, "updates"));
 
     expect(result.current.openedMission).toBe(29);
-    expect(result.current.ongletOuvert).toBe("updates");
+    expect(result.current.openTab).toBe("updates");
   });
 
   it("forgets the tab of a previous opening", () => {
@@ -39,7 +39,7 @@ describe("useMissionOuverte", () => {
     act(() => result.current.open(29, "updates"));
     act(() => result.current.open(30));
 
-    expect(result.current.ongletOuvert).toBeNull();
+    expect(result.current.openTab).toBeNull();
   });
 
   it("closes the panel without leaving its tab behind", () => {
@@ -49,7 +49,7 @@ describe("useMissionOuverte", () => {
     act(() => result.current.close());
 
     expect(result.current.openedMission).toBeNull();
-    expect(window.location.search).not.toContain("onglet");
+    expect(window.location.search).not.toContain("tab");
   });
 
   it("leaves the screen's other parameters untouched", () => {

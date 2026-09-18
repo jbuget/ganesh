@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { SortableColumnHeader } from "./SortableColumnHeader";
 import { NO_SORT, type MissionSort } from "@/lib/mission-sort";
 
-function show(sorted: MissionSort, onBasculer = vi.fn()) {
+function show(sorted: MissionSort, onToggle = vi.fn()) {
   render(
     <table>
       <thead>
@@ -13,22 +13,22 @@ function show(sorted: MissionSort, onBasculer = vi.fn()) {
             column="estimated"
             label="Estimé"
             sorted={sorted}
-            onBasculer={onBasculer}
+            onToggle={onToggle}
           />
         </tr>
       </thead>
     </table>,
   );
-  return onBasculer;
+  return onToggle;
 }
 
 describe("SortableColumnHeader", () => {
   it("asks for ordering by its column when clicked", () => {
-    const onBasculer = show(NO_SORT);
+    const onToggle = show(NO_SORT);
 
     fireEvent.click(screen.getByRole("button", { name: /Estimé/ }));
 
-    expect(onBasculer).toHaveBeenCalledWith("estimated");
+    expect(onToggle).toHaveBeenCalledWith("estimated");
   });
 
   it("announces no order while the column does not order the list", () => {

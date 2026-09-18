@@ -2,7 +2,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 
 import type { BoardCardResponse, ProjectStatus } from "@/lib/api/generated/model";
 import { PHASES } from "@/lib/board";
-import type { Colonnes } from "@/lib/use-board";
+import type { Columns } from "@/lib/use-board";
 
 /**
  * Card moves on the board, independent of the gesture that triggers them.
@@ -13,7 +13,7 @@ import type { Colonnes } from "@/lib/use-board";
 
 /** Phase and rank of a card, or null if it is not on the board. */
 export function locate(
-  columns: Colonnes,
+  columns: Columns,
   projectId: number,
 ): { status: ProjectStatus; position: number } | null {
   for (const { status } of PHASES) {
@@ -49,37 +49,37 @@ export function targetIndex(
  * the board flicker.
  */
 export function moveToColumn(
-  columns: Colonnes,
+  columns: Columns,
   projectId: number,
   vers: ProjectStatus,
   index: number,
-): Colonnes | null {
-  const depart = locate(columns, projectId);
-  if (!depart || depart.status === vers) return null;
+): Columns | null {
+  const origin = locate(columns, projectId);
+  if (!origin || origin.status === vers) return null;
 
-  const card = columns[depart.status][depart.position];
-  const arrivee = columns[vers];
-  const rang = Math.max(0, Math.min(index, arrivee.length));
+  const card = columns[origin.status][origin.position];
+  const destination = columns[vers];
+  const rang = Math.max(0, Math.min(index, destination.length));
 
   return {
     ...columns,
-    [depart.status]: columns[depart.status].filter((c) => c.project.id !== projectId),
-    [vers]: [...arrivee.slice(0, rang), card, ...arrivee.slice(rang)],
+    [origin.status]: columns[origin.status].filter((c) => c.project.id !== projectId),
+    [vers]: [...destination.slice(0, rang), card, ...destination.slice(rang)],
   };
 }
 
 /** Changes a card's rank within its phase. Null if it does not move. */
 export function reorder(
-  columns: Colonnes,
+  columns: Columns,
   projectId: number,
   index: number,
-): Colonnes | null {
-  const place = locate(columns, projectId);
-  if (!place) return null;
+): Columns | null {
+  const location = locate(columns, projectId);
+  if (!location) return null;
 
-  const cards = columns[place.status];
+  const cards = columns[location.status];
   const rang = Math.max(0, Math.min(index, cards.length - 1));
-  if (rang === place.position) return null;
+  if (rang === location.position) return null;
 
-  return { ...columns, [place.status]: arrayMove(cards, place.position, rang) };
+  return { ...columns, [location.status]: arrayMove(cards, location.position, rang) };
 }

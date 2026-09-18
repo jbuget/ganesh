@@ -88,7 +88,7 @@ export function ProjectPanel({
           {detail && (
             <ProjectTabs
               detail={detail}
-              ongletInitial={tab}
+              initialTab={tab}
               onChange={fiche.reload}
               saveSheet={fiche.saveSheet}
               saveDescription={fiche.saveDescription}

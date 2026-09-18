@@ -60,7 +60,7 @@ export function useProjectsScreen(
     total: missions.length,
 
     /** Whether a mission's sub-projects are showing. */
-    estDeplie: (id: number) => expanded.has(id),
+    isExpanded: (id: number) => expanded.has(id),
     toggle,
 
     /** Reads the reference list again after a change made in the panel. */

@@ -13,17 +13,17 @@ import { useCurrentUser } from "@/lib/api/queries";
 import { useEffect } from "react";
 
 /** Columns indexed by phase, a handy shape for drag and drop. */
-export type Colonnes = Record<ProjectStatus, BoardCardResponse[]>;
+export type Columns = Record<ProjectStatus, BoardCardResponse[]>;
 
 /** Archived ones are only asked for when they are wanted. */
 function scope(inclureArchivees: boolean) {
   return inclureArchivees ? { include_inactive: true } : undefined;
 }
 
-function versColonnes(board: BoardResponse): Colonnes {
+function toColumns(board: BoardResponse): Columns {
   return Object.fromEntries(
     board.columns.map((column) => [column.status, column.cards]),
-  ) as Colonnes;
+  ) as Columns;
 }
 
 /**
@@ -40,13 +40,13 @@ function versColonnes(board: BoardResponse): Colonnes {
 export function useBoard(inclureArchivees = false) {
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();
-  const [columns, setColonnes] = useState<Colonnes | null>(null);
+  const [columns, setColumns] = useState<Columns | null>(null);
   const [hasError, setEnErreur] = useState(false);
 
   useEffect(() => {
     let alive = true;
     getBoard(scope(inclureArchivees)).then((response) => {
-      if (alive) setColonnes(versColonnes(response.data as BoardResponse));
+      if (alive) setColumns(toColumns(response.data as BoardResponse));
     });
     return () => {
       alive = false;
@@ -55,7 +55,7 @@ export function useBoard(inclureArchivees = false) {
 
   async function reload() {
     const response = await getBoard(scope(inclureArchivees));
-    setColonnes(versColonnes(response.data as BoardResponse));
+    setColumns(toColumns(response.data as BoardResponse));
     await queryClient.invalidateQueries();
   }
 
@@ -70,7 +70,7 @@ export function useBoard(inclureArchivees = false) {
      * That is what happens during a drag: columns open and close under the
      * cursor, but nothing is written until the card is released.
      */
-    preview: setColonnes,
+    preview: setColumns,
 
     /** Takes the server's truth back, after a change made outside a drag. */
     reload,
@@ -80,9 +80,9 @@ export function useBoard(inclureArchivees = false) {
       projectId: number,
       versStatut: ProjectStatus,
       versPosition: number,
-      nextColumns: Colonnes,
+      nextColumns: Columns,
     ) {
-      setColonnes(nextColumns);
+      setColumns(nextColumns);
       setEnErreur(false);
       try {
         await moveProject(projectId, {

@@ -11,7 +11,7 @@ from src.modules.projects.domain.services.hierarchy import ensure_can_be_parent
 from src.shared.exceptions.domain_exceptions import ValidationError
 
 
-def projet() -> Project:
+def project() -> Project:
     return Project(
         id=1, label="Portail", kind=ProjectKind.PROJECT, status=ProjectStatus.SCOPING
     )
@@ -32,7 +32,7 @@ def activite() -> Project:
 
 
 def test_a_project_can_carry_lots() -> None:
-    ensure_can_be_parent(projet())
+    ensure_can_be_parent(project())
 
 
 def test_a_lot_cannot_carry_another_lot() -> None:

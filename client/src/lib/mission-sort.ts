@@ -73,22 +73,22 @@ function parPhasePuisLabel(a: Mission, b: Mission): number {
 export function sortComparator(sorted: MissionSort) {
   if (sorted.column === null) return parPhasePuisLabel;
 
-  const valeurDe = VALUES[sorted.column];
+  const valueOf = VALUES[sorted.column];
   const signe = sorted.direction === "desc" ? -1 : 1;
 
   return (a: Mission, b: Mission): number => {
-    const gauche = valeurDe(a);
-    const droite = valeurDe(b);
+    const left = valueOf(a);
+    const right = valueOf(b);
 
-    if (gauche === null || droite === null) {
-      if (gauche === droite) return byLabel(a, b);
-      return gauche === null ? 1 : -1;
+    if (left === null || right === null) {
+      if (left === right) return byLabel(a, b);
+      return left === null ? 1 : -1;
     }
 
     const ecart =
-      typeof gauche === "string" && typeof droite === "string"
-        ? gauche.localeCompare(droite, "fr")
-        : Number(gauche) - Number(droite);
+      typeof left === "string" && typeof right === "string"
+        ? left.localeCompare(right, "fr")
+        : Number(left) - Number(right);
 
     return ecart !== 0 ? signe * ecart : byLabel(a, b);
   };

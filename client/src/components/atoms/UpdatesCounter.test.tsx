@@ -3,31 +3,31 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import { UpdatesCounter } from "./UpdatesCounter";
 
-const APERCU = <p>Le cadrage commence lundi</p>;
+const PREVIEW = <p>Le cadrage commence lundi</p>;
 
 describe("UpdatesCounter", () => {
   it("shows nothing while the thread is empty", () => {
     const { container } = render(
-      <UpdatesCounter count={0} preview={APERCU} onOpen={() => {}} />,
+      <UpdatesCounter count={0} preview={PREVIEW} onOpen={() => {}} />,
     );
 
     expect(container).toBeEmptyDOMElement();
   });
 
   it("counts the thread's updates", () => {
-    render(<UpdatesCounter count={3} preview={APERCU} onOpen={() => {}} />);
+    render(<UpdatesCounter count={3} preview={PREVIEW} onOpen={() => {}} />);
 
     expect(screen.getByLabelText("3 mises à jour")).toHaveTextContent("3");
   });
 
   it("agrees the count in the singular", () => {
-    render(<UpdatesCounter count={1} preview={APERCU} onOpen={() => {}} />);
+    render(<UpdatesCounter count={1} preview={PREVIEW} onOpen={() => {}} />);
 
     expect(screen.getByLabelText("1 mise à jour")).toBeInTheDocument();
   });
 
   it("shows the preview on hover", () => {
-    render(<UpdatesCounter count={1} preview={APERCU} onOpen={() => {}} />);
+    render(<UpdatesCounter count={1} preview={PREVIEW} onOpen={() => {}} />);
 
     fireEvent.mouseMove(screen.getByLabelText("1 mise à jour"));
 
@@ -36,7 +36,7 @@ describe("UpdatesCounter", () => {
 
   it("leads to the thread on click", () => {
     const open = vi.fn();
-    render(<UpdatesCounter count={1} preview={APERCU} onOpen={open} />);
+    render(<UpdatesCounter count={1} preview={PREVIEW} onOpen={open} />);
 
     fireEvent.click(screen.getByLabelText("1 mise à jour"));
 
@@ -44,7 +44,7 @@ describe("UpdatesCounter", () => {
   });
 
   it("closes the tooltip when the mouse leaves the count", () => {
-    render(<UpdatesCounter count={1} preview={APERCU} onOpen={() => {}} />);
+    render(<UpdatesCounter count={1} preview={PREVIEW} onOpen={() => {}} />);
     const counter = screen.getByLabelText("1 mise à jour");
 
     fireEvent.mouseMove(counter);

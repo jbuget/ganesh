@@ -130,11 +130,11 @@ def test_archiving_a_project_dates_its_exit() -> None:
 def test_archiving_an_already_archived_project_keeps_the_first_date() -> None:
     project = make_project()
     project.archive()
-    premiere_sortie = project.archived_at
+    first_exit = project.archived_at
 
     project.archive()
 
-    assert project.archived_at == premiere_sortie
+    assert project.archived_at == first_exit
 
 
 def test_unarchiving_a_project_clears_its_exit_date() -> None:

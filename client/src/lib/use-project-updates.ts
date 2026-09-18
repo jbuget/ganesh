@@ -25,17 +25,17 @@ export function useProjectUpdates(
    */
   onEcriture?: () => void | Promise<void>,
 ) {
-  const [fil, setFil] = useState<ProjectUpdateResponse[] | null>(null);
+  const [thread, setThread] = useState<ProjectUpdateResponse[] | null>(null);
 
   const reload = useCallback(async () => {
     const response = await listProjectUpdates(projectId);
-    setFil(response.data as ProjectUpdateResponse[]);
+    setThread(response.data as ProjectUpdateResponse[]);
   }, [projectId]);
 
   useEffect(() => {
     let alive = true;
     listProjectUpdates(projectId).then((response) => {
-      if (alive) setFil(response.data as ProjectUpdateResponse[]);
+      if (alive) setThread(response.data as ProjectUpdateResponse[]);
     });
     return () => {
       alive = false;
@@ -43,7 +43,7 @@ export function useProjectUpdates(
   }, [projectId]);
 
   return {
-    fil,
+    thread,
 
     async publier(body: string) {
       await postProjectUpdate(projectId, { body });

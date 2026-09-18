@@ -78,8 +78,8 @@ class GetProjectDetailUseCase:
 
         async def people(role: ProjectRole) -> list[User]:
             ids = await self._assignees.list_for_project(project_id, role)
-            connus = [users[uid] for uid in ids if uid in users]
-            return sorted(connus, key=lambda u: u.display_name)
+            known = [users[uid] for uid in ids if uid in users]
+            return sorted(known, key=lambda u: u.display_name)
 
         entries = await self._entries.list_for_project(project_id)
 

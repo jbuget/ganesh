@@ -4,7 +4,7 @@ import { MessageCircle } from "lucide-react";
 
 import { CardCounter } from "./CardCounter";
 
-const APERCU = <p>Le cadrage commence lundi</p>;
+const PREVIEW = <p>Le cadrage commence lundi</p>;
 
 const counter = (count: number, preview?: React.ReactNode) => (
   <CardCounter
@@ -44,7 +44,7 @@ describe("CardCounter", () => {
   });
 
   it("shows the preview on hover", () => {
-    render(counter(2, APERCU));
+    render(counter(2, PREVIEW));
 
     fireEvent.mouseMove(screen.getByLabelText("2 commentaires"));
 
@@ -52,7 +52,7 @@ describe("CardCounter", () => {
   });
 
   it("closes the preview when the mouse leaves the count", () => {
-    render(counter(2, APERCU));
+    render(counter(2, PREVIEW));
     const decompte = screen.getByLabelText("2 commentaires");
 
     fireEvent.mouseMove(decompte);

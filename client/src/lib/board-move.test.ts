@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { moveToColumn, targetIndex, locate, reorder } from "./board-move";
 import type { BoardCardResponse, ProjectStatus } from "@/lib/api/generated/model";
-import type { Colonnes } from "@/lib/use-board";
+import type { Columns } from "@/lib/use-board";
 import { PHASES } from "@/lib/board";
 
 const card = (id: number): BoardCardResponse =>
@@ -13,10 +13,10 @@ const card = (id: number): BoardCardResponse =>
   }) as unknown as BoardCardResponse;
 
 /** Empty columns, filled in by those a test describes. */
-const columns = (garnies: Partial<Record<ProjectStatus, number[]>>): Colonnes =>
+const columns = (garnies: Partial<Record<ProjectStatus, number[]>>): Columns =>
   Object.fromEntries(
     PHASES.map(({ status }) => [status, (garnies[status] ?? []).map(card)]),
-  ) as Colonnes;
+  ) as Columns;
 
 const ids = (cards: BoardCardResponse[]) => cards.map((c) => c.project.id);
 

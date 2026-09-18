@@ -9,7 +9,7 @@ interface SortableColumnHeaderProps {
   column: SortColumn;
   label: string;
   sorted: MissionSort;
-  onBasculer: (column: SortColumn) => void;
+  onToggle: (column: SortColumn) => void;
   /** Les colonnes de nombres s'alignent a droite, en-tete compris. */
   aDroite?: boolean;
 }
@@ -25,7 +25,7 @@ export function SortableColumnHeader({
   column,
   label,
   sorted,
-  onBasculer,
+  onToggle,
   aDroite = false,
 }: SortableColumnHeaderProps) {
   const is_active = sorted.column === column;
@@ -38,7 +38,7 @@ export function SortableColumnHeader({
     >
       <button
         type="button"
-        onClick={() => onBasculer(column)}
+        onClick={() => onToggle(column)}
         className={`group -mx-1 flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 transition-colors hover:bg-slate-200 ${
           aDroite ? "ml-auto" : ""
         }`}

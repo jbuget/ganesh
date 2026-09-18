@@ -35,7 +35,7 @@ interface RichTextEditorProps {
   /** Triggered by Cmd+Enter, to save without leaving the keyboard. */
   onSubmit?: () => void;
   /** Offers headings: a sheet has structure, a weekly note does not. */
-  avecTitres?: boolean;
+  withHeadings?: boolean;
   /** Puts the cursor in the input area as soon as it appears. */
   autoFocus?: boolean;
   /** Minimum height of the input area, in Tailwind classes. */
@@ -96,7 +96,7 @@ export function RichTextEditor({
   placeholder,
   onChange,
   onSubmit,
-  avecTitres = false,
+  withHeadings = false,
   autoFocus = false,
   hauteur = "min-h-24",
   fullHeight = false,
@@ -184,7 +184,7 @@ export function RichTextEditor({
           <Code className="size-3.5" aria-hidden />
         </Outil>
 
-        {avecTitres && (
+        {withHeadings && (
           <>
             <span aria-hidden className="mx-1 h-4 w-px bg-slate-200" />
             <Outil
