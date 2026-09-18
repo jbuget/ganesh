@@ -4,10 +4,10 @@ const HEURE = 60 * MINUTE;
 const JOUR = 24 * HEURE;
 
 /**
- * \u00ab a l'instant \u00bb, \u00ab il y a 3 h \u00bb, \u00ab le 11 sept. \u00bb.
+ * « a l'instant », « il y a 3 h », « le 11 sept. ».
  *
  * Past a week, the exact date says more than a number of days: one gets one's
- * bearings from \u00ab le 11 septembre \u00bb, not from \u00ab il y a 23 jours \u00bb.
+ * bearings from « le 11 septembre », not from « il y a 23 jours ».
  */
 export function depuis(iso: string, maintenant: Date): string {
   const ecoule = maintenant.getTime() - new Date(iso).getTime();

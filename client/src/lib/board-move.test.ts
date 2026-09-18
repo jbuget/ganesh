@@ -21,34 +21,34 @@ const columns = (garnies: Partial<Record<ProjectStatus, number[]>>): Colonnes =>
 const ids = (cards: BoardCardResponse[]) => cards.map((c) => c.project.id);
 
 describe("localiser", () => {
-  it("rend la phase et le rang d'une carte", () => {
+  it("returns the phase and rank of a card", () => {
     const state = columns({ scoping: [1, 2], development: [3] });
 
     expect(locate(state, 2)).toEqual({ status: "scoping", position: 1 });
     expect(locate(state, 3)).toEqual({ status: "development", position: 0 });
   });
 
-  it("rend null pour une carte absente du tableau", () => {
+  it("returns null for a card absent from the board", () => {
     expect(locate(columns({ scoping: [1] }), 99)).toBeNull();
   });
 });
 
 describe("indexVise", () => {
-  it("insère avant la carte survolée", () => {
+  it("inserts before the hovered card", () => {
     expect(targetIndex(columns({ scoping: [1, 2, 3] }).scoping, 2, false)).toBe(1);
   });
 
-  it("insère après la carte survolée quand on la dépasse", () => {
+  it("inserts after the hovered card once past it", () => {
     expect(targetIndex(columns({ scoping: [1, 2, 3] }).scoping, 2, true)).toBe(2);
   });
 
-  it("vise la fin quand aucune carte n'est survolée", () => {
+  it("aims at the end when no card is hovered", () => {
     expect(targetIndex(columns({ scoping: [1, 2, 3] }).scoping, null, false)).toBe(3);
   });
 });
 
 describe("changerDeColonne", () => {
-  it("retire la carte de sa phase et l'insère dans la nouvelle", () => {
+  it("removes the card from its phase and inserts it into the new one", () => {
     const state = columns({ scoping: [1, 2], development: [3, 4] });
 
     const apres = moveToColumn(state, 1, "development", 1);
@@ -57,22 +57,22 @@ describe("changerDeColonne", () => {
     expect(ids(apres!.development)).toEqual([3, 1, 4]);
   });
 
-  it("accueille une carte dans une phase vide", () => {
+  it("takes a card into an empty phase", () => {
     const apres = moveToColumn(columns({ scoping: [1] }), 1, "validation", 0);
 
     expect(ids(apres!.scoping)).toEqual([]);
     expect(ids(apres!.validation)).toEqual([1]);
   });
 
-  it("ne rend rien quand la carte est déjà dans cette phase", () => {
+  it("returns nothing when the card is already in that phase", () => {
     expect(moveToColumn(columns({ scoping: [1, 2] }), 1, "scoping", 1)).toBeNull();
   });
 
-  it("ne rend rien pour une carte inconnue", () => {
+  it("returns nothing for an unknown card", () => {
     expect(moveToColumn(columns({ scoping: [1] }), 99, "scoping", 0)).toBeNull();
   });
 
-  it("laisse les autres phases intactes", () => {
+  it("leaves the other phases untouched", () => {
     const state = columns({ scoping: [1], development: [2], operations: [3] });
 
     const apres = moveToColumn(state, 1, "development", 0)!;
@@ -82,19 +82,19 @@ describe("changerDeColonne", () => {
 });
 
 describe("reordonner", () => {
-  it("déplace la carte au rang visé dans sa phase", () => {
+  it("moves the card to the rank aimed at within its phase", () => {
     const apres = reorder(columns({ scoping: [1, 2, 3] }), 1, 2);
 
     expect(ids(apres!.scoping)).toEqual([2, 3, 1]);
   });
 
-  it("remonte une carte vers le haut de la phase", () => {
+  it("lifts a card towards the top of the phase", () => {
     const apres = reorder(columns({ scoping: [1, 2, 3] }), 3, 0);
 
     expect(ids(apres!.scoping)).toEqual([3, 1, 2]);
   });
 
-  it("ne rend rien quand la carte ne bouge pas", () => {
+  it("returns nothing when the card does not move", () => {
     expect(reorder(columns({ scoping: [1, 2, 3] }), 2, 1)).toBeNull();
   });
 });

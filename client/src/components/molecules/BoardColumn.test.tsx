@@ -27,7 +27,7 @@ const card = (id: number, label: string): BoardCardResponse =>
     contributors: [{ id: 1, display_name: "Léa Chen", initials: "LC" }],
   }) as BoardCardResponse;
 
-/** Heure de reference figee : les apercus ne dependent pas de l'heure du run. */
+/** Frozen reference time: previews do not depend on when the run happens. */
 const MAINTENANT = new Date("2026-09-16T11:00:00Z");
 
 /** Les capteurs de @dnd-kit exigent un contexte englobant. */
@@ -44,7 +44,7 @@ const afficher = (cards: BoardCardResponse[], frozen = false) =>
   );
 
 describe("BoardColumn", () => {
-  it("annonce la phase et compte ses missions", () => {
+  it("announces the phase and counts its missions", () => {
     afficher([card(1, "Portail bailleurs"), card(2, "Refonte extranet")]);
 
     const column = screen.getByRole("region", { name: "Réalisation" });
@@ -54,7 +54,7 @@ describe("BoardColumn", () => {
     expect(within(column).getByText("2")).toBeInTheDocument();
   });
 
-  it("affiche une carte par mission, dans l'ordre reçu", () => {
+  it("shows one card per mission, in the order received", () => {
     afficher([card(1, "Portail bailleurs"), card(2, "Refonte extranet")]);
 
     const titres = screen.getAllByRole("heading", { level: 3 });
@@ -64,26 +64,26 @@ describe("BoardColumn", () => {
     ]);
   });
 
-  it("invite au dépôt quand la phase est vide", () => {
+  it("invites a drop when the phase is empty", () => {
     afficher([]);
 
     expect(screen.getByText("Aucune mission")).toBeInTheDocument();
     expect(screen.queryAllByRole("heading", { level: 3 })).toHaveLength(0);
   });
 
-  it("distingue la phase par une pastille de couleur", () => {
+  it("tells the phase apart by a coloured dot", () => {
     afficher([]);
 
     const titre = screen.getByRole("heading", { level: 2 });
     const dot = titre.querySelector("span");
     expect(dot).toHaveClass("bg-blue-500");
-    // Decorative : elle double le titre, elle ne l'annonce pas deux fois.
+    // Decorative: it doubles the title, it does not announce it twice.
     expect(dot).toHaveAttribute("aria-hidden");
   });
 
-  it("garde son intitulé hors de la liste qui défile", () => {
-    // Chaque colonne defile pour elle-meme : son titre doit rester en
-    // vis-a-vis de celui des autres, quelle que soit sa pile de cartes.
+  it("keeps its heading out of the scrolling list", () => {
+    // Each column scrolls on its own: its title must stay level with the
+    // others', whatever its stack of cards.
     afficher([card(1, "Portail bailleurs")]);
 
     const defilante = screen.getByRole("list");
@@ -92,13 +92,13 @@ describe("BoardColumn", () => {
     expect(defilante).not.toContainElement(screen.getByRole("heading", { level: 2 }));
   });
 
-  it("n'affiche l'invite que sur une phase vide", () => {
+  it("shows the prompt only on an empty phase", () => {
     afficher([card(1, "Portail bailleurs")]);
 
     expect(screen.queryByText("Aucune mission")).not.toBeInTheDocument();
   });
 
-  it("ne place que des <li> dans la liste, sous peine de casser l'hydratation", () => {
+  it("puts only <li> in the list, on pain of breaking hydration", () => {
     afficher([]);
 
     const liste = screen.getByRole("list");
@@ -107,14 +107,14 @@ describe("BoardColumn", () => {
   });
 });
 
-describe("colonne figée par un filtre", () => {
-  it("retire la poignée : une carte filtrée ne se range plus", () => {
+describe("a column frozen by a filter", () => {
+  it("removes the handle: a filtered card no longer arranges", () => {
     afficher([card(1, "Portail bailleurs")], true);
 
     expect(screen.queryByRole("button", { name: /Déplacer/ })).toBeNull();
   });
 
-  it("garde sa poignée hors filtre", () => {
+  it("keeps its handle when unfiltered", () => {
     afficher([card(1, "Portail bailleurs")]);
 
     expect(
@@ -122,7 +122,7 @@ describe("colonne figée par un filtre", () => {
     ).toBeInTheDocument();
   });
 
-  it("explique un vide dû aux filtres plutôt qu'un vide tout court", () => {
+  it("explains an emptiness caused by filters rather than a plain emptiness", () => {
     afficher([], true);
 
     expect(

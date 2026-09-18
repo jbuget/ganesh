@@ -13,8 +13,8 @@ interface TotalCellProps {
 /**
  * A total cell, at the foot of a column or the end of a row.
  *
- * A total is written in decimal, \u00ab 14,5 \u00bb, where an entry cell keeps
- * \u00ab ½ \u00bb: the fraction does say a half day set on a day, but it reads
+ * A total is written in decimal, « 14,5 », where an entry cell keeps
+ * « ½ »: the fraction does say a half day set on a day, but it reads
  * poorly as soon as it follows a number, and a running total compares by its
  * figure.
  *

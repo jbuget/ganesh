@@ -4,14 +4,14 @@ import { render, screen } from "@testing-library/react";
 import { PageHeader } from "./PageHeader";
 
 describe("PageHeader", () => {
-  it("annonce le titre de la page", () => {
+  it("announces the page title", () => {
     render(<PageHeader titre="Kanban" soustitre="Glissez une mission." />);
 
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Kanban");
     expect(screen.getByText("Glissez une mission.")).toBeInTheDocument();
   });
 
-  it("accueille les actions générales", () => {
+  it("hosts the general actions", () => {
     render(
       <PageHeader
         titre="Projets"
@@ -23,7 +23,7 @@ describe("PageHeader", () => {
     expect(screen.getByRole("button", { name: "Importer" })).toBeInTheDocument();
   });
 
-  it("se passe d'actions quand la page n'en a pas", () => {
+  it("does without actions when the page has none", () => {
     const { container } = render(<PageHeader titre="Kanban" soustitre="…" />);
 
     expect(container.querySelectorAll("header > div")).toHaveLength(1);

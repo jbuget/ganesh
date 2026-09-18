@@ -17,25 +17,25 @@ const counter = (count: number, apercu?: React.ReactNode) => (
 );
 
 describe("CardCounter", () => {
-  it("annonce le nombre au pluriel", () => {
+  it("announces the number in the plural", () => {
     render(counter(3));
 
     expect(screen.getByLabelText("3 commentaires")).toHaveTextContent("3");
   });
 
-  it("accorde au singulier", () => {
+  it("agrees in the singular", () => {
     render(counter(1));
 
     expect(screen.getByLabelText("1 commentaire")).toBeInTheDocument();
   });
 
-  it("garde l'icône sans nombre quand il n'y a rien à compter", () => {
+  it("keeps the icon without a number when there is nothing to count", () => {
     render(counter(0));
 
     expect(screen.getByLabelText("Aucun commentaire")).toHaveTextContent("");
   });
 
-  it("atténue l'icône quand le décompte est nul", () => {
+  it("dims the icon when the count is nil", () => {
     render(counter(0));
 
     expect(screen.getByLabelText("Aucun commentaire").className).toContain(
@@ -43,7 +43,7 @@ describe("CardCounter", () => {
     );
   });
 
-  it("montre l'aperçu au survol", () => {
+  it("shows the preview on hover", () => {
     render(counter(2, APERCU));
 
     fireEvent.mouseMove(screen.getByLabelText("2 commentaires"));
@@ -51,7 +51,7 @@ describe("CardCounter", () => {
     expect(screen.getByRole("tooltip")).toHaveTextContent("Le cadrage commence lundi");
   });
 
-  it("referme l'aperçu quand la souris quitte le décompte", () => {
+  it("closes the preview when the mouse leaves the count", () => {
     render(counter(2, APERCU));
     const decompte = screen.getByLabelText("2 commentaires");
 
@@ -61,7 +61,7 @@ describe("CardCounter", () => {
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 
-  it("compte sans infobulle quand il n'y a rien à montrer", () => {
+  it("counts without a tooltip when there is nothing to show", () => {
     render(counter(2));
 
     fireEvent.mouseMove(screen.getByLabelText("2 commentaires"));

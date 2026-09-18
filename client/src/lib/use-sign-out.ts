@@ -4,13 +4,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 /**
- * Fin de session, vue du navigateur.
+ * End of session, as the browser sees it.
  *
- * Le cookie part cote serveur, mais l'ecran garde en memoire ce qu'il a deja
- * charge : vider le cache evite de reafficher, ne serait-ce qu'un instant, les
- * donnees de quelqu'un qui vient de partir.
+ * The cookie goes server-side, but the screen keeps in memory what it has
+ * already loaded: clearing the cache avoids showing again, even for a moment,
+ * the data of someone who has just left.
  */
-export function useDeconnexion(): () => Promise<void> {
+export function useSignOut(): () => Promise<void> {
   const router = useRouter();
   const queryClient = useQueryClient();
 

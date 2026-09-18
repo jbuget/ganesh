@@ -30,7 +30,7 @@ const baseProps = {
 };
 
 describe("MissionSelector", () => {
-  it("expose un sélecteur nommé", () => {
+  it("exposes a named picker", () => {
     render(<MissionSelector {...baseProps} />);
 
     expect(
@@ -38,13 +38,13 @@ describe("MissionSelector", () => {
     ).toBeInTheDocument();
   });
 
-  it("invite à ajouter une mission", () => {
+  it("invites adding a mission", () => {
     render(<MissionSelector {...baseProps} />);
 
     expect(screen.getByText(/Ajouter une mission/)).toBeInTheDocument();
   });
 
-  it("est désactivé quand le mois est verrouillé", () => {
+  it("is disabled when the month is locked", () => {
     render(<MissionSelector {...baseProps} disabled />);
 
     expect(screen.getByRole("combobox")).toBeDisabled();

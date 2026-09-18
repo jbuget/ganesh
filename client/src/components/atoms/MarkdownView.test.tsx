@@ -4,20 +4,20 @@ import { render, screen } from "@testing-library/react";
 import { MarkdownView } from "./MarkdownView";
 
 describe("MarkdownView", () => {
-  it("rend les titres", () => {
+  it("renders headings", () => {
     render(<MarkdownView body={"## Problème\n\nDu texte."} />);
 
     expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Problème");
   });
 
-  it("rend les listes et le code", () => {
+  it("renders lists and code", () => {
     render(<MarkdownView body={"- import du CSV\n- via `WeasyPrint`"} />);
 
     expect(screen.getAllByRole("listitem")).toHaveLength(2);
     expect(screen.getByText("WeasyPrint").tagName).toBe("CODE");
   });
 
-  it("rend les tableaux, que remark-gfm apporte", () => {
+  it("renders tables, which remark-gfm brings", () => {
     render(
       <MarkdownView body={"| Étape | Durée |\n| --- | --- |\n| Import | 2 s |"} />,
     );
@@ -26,7 +26,7 @@ describe("MarkdownView", () => {
     expect(screen.getByRole("columnheader", { name: "Étape" })).toBeInTheDocument();
   });
 
-  it("ignore le HTML plutôt que de l'injecter", () => {
+  it("ignores HTML rather than injecting it", () => {
     // Without `rehype-raw`, a tag written in the markdown stays text: nothing
     // is executed, so there is nothing to sanitise.
     const { container } = render(
@@ -37,7 +37,7 @@ describe("MarkdownView", () => {
     expect(container).toHaveTextContent("Bonjour");
   });
 
-  it("garde les liens cliquables", () => {
+  it("keeps the links clickable", () => {
     render(<MarkdownView body="[La doc](https://waat.fr/doc)" />);
 
     expect(screen.getByRole("link", { name: "La doc" })).toHaveAttribute(

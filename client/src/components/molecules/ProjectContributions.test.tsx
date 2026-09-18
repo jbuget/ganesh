@@ -19,13 +19,13 @@ const contribution = (
   }) as ProjectContributionResponse;
 
 describe("ProjectContributions", () => {
-  it("annonce qu'aucun temps n'est déclaré", () => {
+  it("announces that no time is declared", () => {
     render(<ProjectContributions contributions={[]} total={0} />);
 
     expect(screen.getByText("Aucun temps déclaré")).toBeInTheDocument();
   });
 
-  it("déplie le détail mensuel d'un intervenant", () => {
+  it("unfolds a contributor's monthly detail", () => {
     render(
       <ProjectContributions contributions={[contribution(1, "Léa", 4)]} total={4} />,
     );
@@ -35,7 +35,7 @@ describe("ProjectContributions", () => {
     expect(screen.getByText("septembre 2026")).toBeInTheDocument();
   });
 
-  it("garde les autres intervenants ouverts", () => {
+  it("keeps the other contributors open", () => {
     // Two people are expanded precisely to set their months side by side.
     render(
       <ProjectContributions
@@ -50,7 +50,7 @@ describe("ProjectContributions", () => {
     expect(screen.getAllByText("septembre 2026")).toHaveLength(2);
   });
 
-  it("referme une ligne sans toucher aux autres", () => {
+  it("closes one row without touching the others", () => {
     render(
       <ProjectContributions
         contributions={[contribution(1, "Léa", 4), contribution(2, "Nino", 2)]}

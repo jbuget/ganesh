@@ -80,7 +80,7 @@ class ImportProjectsUseCase:
             parent = connus.get((line.parent_label or "").strip())
             if parent is None:
                 raise EntityNotFoundError(
-                    f"parent project \u00ab {line.parent_label} \u00bb not found."
+                    f"parent project « {line.parent_label} » not found."
                 )
             ensure_can_be_parent(parent)
             parent_id = parent.id

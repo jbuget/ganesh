@@ -2,20 +2,20 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { useMissionFilters } from "./use-mission-filters";
-import { useOpenedMission } from "./mission-ouverte";
+import { useOpenedMission } from "./opened-mission";
 
 beforeEach(() => {
   window.history.replaceState(null, "", "/kanban");
 });
 
 describe("useMissionFilters", () => {
-  it("part d'un tableau sans filtre", () => {
+  it("starts from an unfiltered board", () => {
     const { result } = renderHook(() => useMissionFilters());
 
     expect(result.current.hasFilter).toBe(false);
   });
 
-  it("relit dans l'URL le critère qu'on vient de poser", () => {
+  it("reads back from the URL the criterion just set", () => {
     const { result } = renderHook(() => useMissionFilters());
 
     act(() => result.current.set({ phases: ["development"] }));
@@ -24,7 +24,7 @@ describe("useMissionFilters", () => {
     expect(window.location.search).toContain("phase=development");
   });
 
-  it("garde les autres critères en changeant l'un d'eux", () => {
+  it("keeps the other criteria when changing one of them", () => {
     const { result } = renderHook(() => useMissionFilters());
 
     act(() => result.current.set({ phases: ["scoping"] }));
@@ -36,7 +36,7 @@ describe("useMissionFilters", () => {
     });
   });
 
-  it("n'ajoute aucune étape d'historique : régler un filtre n'est pas naviguer", () => {
+  it("adds no history step: setting a filter is not navigating", () => {
     const profondeur = window.history.length;
     const { result } = renderHook(() => useMissionFilters());
 
@@ -46,7 +46,7 @@ describe("useMissionFilters", () => {
     expect(window.history.length).toBe(profondeur);
   });
 
-  it("rend le tableau entier une fois effacé", () => {
+  it("returns the whole board once cleared", () => {
     const { result } = renderHook(() => useMissionFilters());
 
     act(() => result.current.set({ phases: ["scoping"], name: "portail" }));
@@ -57,8 +57,8 @@ describe("useMissionFilters", () => {
   });
 });
 
-describe("cohabitation avec le panneau mission", () => {
-  it("ouvrir une mission ne perd pas les filtres posés", () => {
+describe("living alongside the mission panel", () => {
+  it("opening a mission does not lose the filters set", () => {
     const { result: filters } = renderHook(() => useMissionFilters());
     const { result: panel } = renderHook(() => useOpenedMission());
 
@@ -69,7 +69,7 @@ describe("cohabitation avec le panneau mission", () => {
     expect(filters.current.filters.phases).toEqual(["scoping"]);
   });
 
-  it("refermer le panneau laisse les filtres en place", () => {
+  it("closing the panel leaves the filters in place", () => {
     const { result: filters } = renderHook(() => useMissionFilters());
     const { result: panel } = renderHook(() => useOpenedMission());
 

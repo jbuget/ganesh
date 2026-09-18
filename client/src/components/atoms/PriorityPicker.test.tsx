@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { PriorityPicker } from "./PriorityPicker";
 
 describe("PriorityPicker", () => {
-  it("invite à situer une mission qui ne l'est pas", () => {
+  it("invites placing a mission that is not placed", () => {
     render(<PriorityPicker value={null} onChange={vi.fn()} />);
 
     expect(
@@ -12,7 +12,7 @@ describe("PriorityPicker", () => {
     ).toHaveTextContent("Priorité");
   });
 
-  it("affiche l'urgence déclarée", () => {
+  it("shows the declared urgency", () => {
     render(<PriorityPicker value="high" onChange={vi.fn()} />);
 
     expect(
@@ -20,7 +20,7 @@ describe("PriorityPicker", () => {
     ).toHaveTextContent("Haute");
   });
 
-  it("propose les quatre urgences, de la plus forte à la plus faible", () => {
+  it("offers the four urgencies, from strongest to weakest", () => {
     render(<PriorityPicker value={null} onChange={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Changer la priorité" }));
@@ -32,7 +32,7 @@ describe("PriorityPicker", () => {
     expect(choice).toEqual(["Critique", "Haute", "Normale", "Basse"]);
   });
 
-  it("déclare l'urgence choisie", () => {
+  it("declares the chosen urgency", () => {
     const onChange = vi.fn();
     render(<PriorityPicker value={null} onChange={onChange} />);
 

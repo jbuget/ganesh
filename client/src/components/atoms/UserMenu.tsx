@@ -15,11 +15,11 @@ interface UserMenuProps {
 }
 
 /**
- * Qui est connecte, et de quoi en sortir.
+ * Who is signed in, and the way out.
  *
- * Le pied de barre affiche deja le nom : le menu ajoute ce qu'on ne consulte
- * qu'en cas de doute — l'adresse exacte, le role qui ouvre ou ferme les
- * actions — et la seule commande qui ne va nulle part ailleurs.
+ * The foot of the sidebar already shows the name: the menu adds what one only
+ * looks up in doubt — the exact address, the role that opens or closes actions
+ * — and the one command that goes nowhere else.
  */
 export function UserMenu({ user, onSignOut, repliee = false }: UserMenuProps) {
   const [ouvert, setOuvert] = useState(false);

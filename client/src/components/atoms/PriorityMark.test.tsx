@@ -4,13 +4,13 @@ import { render, screen } from "@testing-library/react";
 import { PriorityMark } from "./PriorityMark";
 
 describe("PriorityMark", () => {
-  it("écrit le niveau en toutes lettres", () => {
+  it("spells the level out in full", () => {
     render(<PriorityMark value="high" />);
 
     expect(screen.getByText("Haute")).toBeInTheDocument();
   });
 
-  it("donne à chaque niveau un dessin distinct, et pas qu'une teinte", () => {
+  it("gives each level a distinct drawing, and not just a shade", () => {
     // Without colour — colour blindness, print, a poorly calibrated screen — it
     // is how full the gauge is that must carry the scale.
     const formes = (["critical", "high", "normal", "low"] as const).map((niveau) => {
@@ -24,7 +24,7 @@ describe("PriorityMark", () => {
     expect(new Set(formes).size).toBe(4);
   });
 
-  it("ne marque rien sans priorité", () => {
+  it("marks nothing without a priority", () => {
     const { container } = render(<PriorityMark value={null} />);
 
     expect(container).toBeEmptyDOMElement();

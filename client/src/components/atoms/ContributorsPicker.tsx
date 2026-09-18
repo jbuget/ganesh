@@ -9,7 +9,7 @@ import type { BoardMemberResponse, ProjectRole } from "@/lib/api/generated/model
 import { assignMember, unassignMember } from "@/lib/api/generated/projects/projects";
 import { useTeammates } from "@/lib/api/queries";
 
-interface IntervenantsPickerProps {
+interface ContributorsPickerProps {
   projectId: number;
   contributors: BoardMemberResponse[];
   onChange: () => void | Promise<void>;
@@ -32,13 +32,13 @@ const VISIBLES = 4;
  * The search field takes focus on opening: across a whole team, typing three
  * letters beats scrolling the list.
  */
-export function IntervenantsPicker({
+export function ContributorsPicker({
   projectId,
   contributors,
   onChange,
   role = "contributor",
   invite = "Intervenants",
-}: IntervenantsPickerProps) {
+}: ContributorsPickerProps) {
   const { teammates } = useTeammates();
   const [ouvert, setOuvert] = useState(false);
   const [search, setRecherche] = useState("");

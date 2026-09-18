@@ -3,36 +3,35 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { useCursorTooltip } from "@/lib/use-tooltip-curseur";
+import { useCursorTooltip } from "@/lib/use-cursor-tooltip";
 
 interface CardCounterProps {
   icon: LucideIcon;
   count: number;
   /** Ce que l'icone compte, au singulier puis au pluriel. */
   label: [string, string];
-  /** Ce qu'annonce le lecteur d'ecran quand il n'y a rien a compter. */
+  /** What the screen reader announces when there is nothing to count. */
   empty: string;
   /**
-   * Ce que montre l'infobulle au survol — le dernier message, mis en forme.
+   * What the tooltip shows on hover — the latest message, formatted.
    *
-   * Il vient du parent et non d'ici : le rendu du markdown est un autre
-   * composant, et un atom n'en compose aucun. Absent, le decompte se montre
-   * sans infobulle.
+   * It comes from the parent and not from here: rendering markdown is another
+   * component, and an atom composes none. Absent, the count shows without a
+   * tooltip.
    */
   apercu?: ReactNode;
 }
 
 /**
- * Un decompte en pied de carte : une icone, et un nombre quand il y en a un.
+ * A count in a card's footer: an icon, and a number when there is one.
  *
- * L'icone reste en place a zero, sans nombre a cote : la carte garde la meme
- * forme d'une mission a l'autre, et l'absence se lit alors aussi vite qu'un
- * total. C'est le parti pris de Monday, dont les cartes nous servent de
- * reference.
+ * The icon stays put at zero, with no number beside it: the card keeps the same
+ * shape from one mission to the next, and absence then reads as fast as a
+ * total. That is Monday's choice, whose cards serve as our reference.
  *
- * Quand le decompte annonce un fil, l'infobulle en donne le dernier message,
- * comme dans le referentiel : savoir qu'il y a trois messages ne dit pas s'il
- * faut les lire.
+ * When the count announces a thread, the tooltip gives its latest message, as
+ * in the reference list: knowing there are three messages does not say whether
+ * they need reading.
  */
 export function CardCounter({
   icon: Icone,

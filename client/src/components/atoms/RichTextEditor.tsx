@@ -106,7 +106,7 @@ export function RichTextEditor({
     // on the first render would make the HTML diverge and cause a hydration
     // error.
     immediatelyRender: false,
-    // \u00ab end \u00bb and not \u00ab start \u00bb: one writes after what is
+    // « end » and not « start »: one writes after what is
     // already there.
     autofocus: autoFocus ? "end" : false,
     extensions: [

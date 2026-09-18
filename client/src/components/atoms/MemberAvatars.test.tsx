@@ -8,7 +8,7 @@ const member = (id: number, name: string, initials: string): BoardMemberResponse
   ({ id, display_name: name, initials }) as BoardMemberResponse;
 
 describe("MemberAvatars", () => {
-  it("affiche les initiales de chaque intervenant", () => {
+  it("shows the initials of each contributor", () => {
     render(
       <MemberAvatars
         members={[member(1, "Léa Chen", "LC"), member(2, "David Dehe", "DD")]}
@@ -19,7 +19,7 @@ describe("MemberAvatars", () => {
     expect(screen.getByText("DD")).toBeInTheDocument();
   });
 
-  it("donne le nom complet au survol, sans attendre", () => {
+  it("gives the full name on hover, without delay", () => {
     render(<MemberAvatars members={[member(1, "Léa Chen", "LC")]} />);
 
     fireEvent.mouseMove(screen.getByText("LC"), { clientX: 10, clientY: 10 });
@@ -27,7 +27,7 @@ describe("MemberAvatars", () => {
     expect(screen.getByRole("tooltip")).toHaveTextContent("Léa Chen");
   });
 
-  it("retire l'infobulle quand la souris quitte les pastilles", () => {
+  it("removes the tooltip when the mouse leaves the avatars", () => {
     render(<MemberAvatars members={[member(1, "Léa Chen", "LC")]} />);
     const dot = screen.getByText("LC");
 
@@ -43,7 +43,7 @@ describe("MemberAvatars", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("résume les intervenants au-delà de quatre", () => {
+  it("summarises contributors past four", () => {
     const members = Array.from({ length: 7 }, (_, i) =>
       member(i, `Personne ${i}`, `P${i}`),
     );
@@ -52,7 +52,7 @@ describe("MemberAvatars", () => {
     expect(screen.getByText("+3")).toBeInTheDocument();
   });
 
-  it("nomme dans l'infobulle ceux qui sont résumés", () => {
+  it("names in the tooltip those that are summarised", () => {
     const members = Array.from({ length: 6 }, (_, i) =>
       member(i, `Personne ${i}`, `P${i}`),
     );

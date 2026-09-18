@@ -8,13 +8,13 @@ const lot = (id: number, label: string, status = "scoping"): ProjectResponse =>
   ({ id, label, status, kind: "work_package", parent_id: 10 }) as ProjectResponse;
 
 describe("ProjectSubProjects", () => {
-  it("annonce qu'aucun sous-projet n'est rattaché", () => {
+  it("announces that no sub-project is attached", () => {
     render(<ProjectSubProjects sousProjets={[]} />);
 
     expect(screen.getByText("Aucun sous-projet")).toBeInTheDocument();
   });
 
-  it("mène à la fiche de chaque sous-projet", () => {
+  it("leads to the sheet of each sub-project", () => {
     render(<ProjectSubProjects sousProjets={[lot(11, "Authentification")]} />);
 
     expect(screen.getByRole("link", { name: /Authentification/ })).toHaveAttribute(
@@ -23,7 +23,7 @@ describe("ProjectSubProjects", () => {
     );
   });
 
-  it("dit la phase de chaque sous-projet", () => {
+  it("says the phase of each sub-project", () => {
     render(
       <ProjectSubProjects
         sousProjets={[lot(11, "Authentification"), lot(12, "Reprise", "development")]}

@@ -14,10 +14,10 @@ import {
 import { useUsersScreen } from "@/lib/use-users";
 
 /**
- * La liste des collaborateurs.
+ * The list of teammates.
  *
- * Chacun la consulte : savoir qui compose l'equipe et qui peut rouvrir un mois
- * validé n'est pas un secret de manager. Seul le changement de role l'est.
+ * Anyone may look at it: knowing who makes up the team and who can reopen a
+ * validated month is no manager's secret. Only changing a role is.
  */
 export function UsersPage() {
   const screen = useUsersScreen();
@@ -40,7 +40,7 @@ export function UsersPage() {
         />
       }
     >
-      {/* La liste reste etroite : quatre colonnes etalees sur 2000 px ne se lisent plus. */}
+      {/* The list stays narrow: four columns spread over 2000 px stop being readable. */}
       <div className="max-w-[900px]">
         {screen.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
@@ -51,9 +51,9 @@ export function UsersPage() {
         )}
 
         {screen.collaborateurs.length > 0 && (
-          // Meme reglage que le referentiel : le conteneur de shadcn ouvre un
-          // contexte de defilement qui retiendrait l'en-tete a l'interieur du
-          // tableau, et le fond se pose sur les cellules, non sur la rangee.
+          // The same setting as the reference list: the shadcn container opens
+          // a scrolling context that would hold the header inside the table,
+          // and the background sits on the cells, not on the row.
           <div className="[&_[data-slot=table-container]]:overflow-visible">
             <Table>
               <TableHeader className="sticky top-0 z-10 [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50">

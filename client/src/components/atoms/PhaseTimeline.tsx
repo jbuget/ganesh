@@ -29,7 +29,7 @@ function formatDate(iso: string): string {
 /**
  * The steps a mission has passed, in order.
  *
- * Each date is named by what it completes — \u00ab Validé le 12 mai \u00bb — and
+ * Each date is named by what it completes — « Validé le 12 mai » — and
  * not by the phase being entered: that is how people talk about it.
  */
 export function PhaseTimeline({ phases }: PhaseTimelineProps) {

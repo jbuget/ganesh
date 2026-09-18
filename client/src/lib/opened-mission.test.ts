@@ -1,21 +1,21 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { useOpenedMission } from "./mission-ouverte";
+import { useOpenedMission } from "./opened-mission";
 
 beforeEach(() => {
   window.history.replaceState(null, "", "/projets");
 });
 
 describe("useMissionOuverte", () => {
-  it("part d'un écran sans panneau", () => {
+  it("starts from a screen with no panel", () => {
     const { result } = renderHook(() => useOpenedMission());
 
     expect(result.current.openedMission).toBeNull();
     expect(result.current.ongletOuvert).toBeNull();
   });
 
-  it("ouvre une mission sur son panneau", () => {
+  it("opens a mission on its panel", () => {
     const { result } = renderHook(() => useOpenedMission());
 
     act(() => result.current.open(29));
@@ -24,7 +24,7 @@ describe("useMissionOuverte", () => {
     expect(result.current.ongletOuvert).toBeNull();
   });
 
-  it("ouvre une mission directement sur un onglet", () => {
+  it("opens a mission straight onto a tab", () => {
     const { result } = renderHook(() => useOpenedMission());
 
     act(() => result.current.open(29, "updates"));
@@ -33,7 +33,7 @@ describe("useMissionOuverte", () => {
     expect(result.current.ongletOuvert).toBe("updates");
   });
 
-  it("oublie l'onglet d'une ouverture précédente", () => {
+  it("forgets the tab of a previous opening", () => {
     const { result } = renderHook(() => useOpenedMission());
 
     act(() => result.current.open(29, "updates"));
@@ -42,7 +42,7 @@ describe("useMissionOuverte", () => {
     expect(result.current.ongletOuvert).toBeNull();
   });
 
-  it("referme le panneau sans laisser son onglet derrière lui", () => {
+  it("closes the panel without leaving its tab behind", () => {
     const { result } = renderHook(() => useOpenedMission());
 
     act(() => result.current.open(29, "updates"));
@@ -52,7 +52,7 @@ describe("useMissionOuverte", () => {
     expect(window.location.search).not.toContain("onglet");
   });
 
-  it("laisse intacts les autres paramètres de l'écran", () => {
+  it("leaves the screen's other parameters untouched", () => {
     window.history.replaceState(null, "", "/kanban?phase=development");
     const { result } = renderHook(() => useOpenedMission());
 

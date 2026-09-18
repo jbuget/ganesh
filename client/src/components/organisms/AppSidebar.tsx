@@ -12,7 +12,7 @@ import { usePathname } from "next/navigation";
 
 import { UserMenu } from "@/components/atoms/UserMenu";
 import { Button } from "@/components/ui/button";
-import { useDeconnexion } from "@/lib/use-deconnexion";
+import { useSignOut } from "@/lib/use-sign-out";
 import { useCurrentUser } from "@/lib/api/queries";
 import { basculerBarreLaterale, useBarreLateraleRepliee } from "@/lib/sidebar-store";
 
@@ -24,26 +24,26 @@ const ONGLETS = [
 ] as const;
 
 /**
- * Barre laterale : navigation en haut, utilisateur courant en bas.
+ * Sidebar: navigation at the top, current user at the bottom.
  *
- * Elle se replie en une bande d'icones pour rendre sa largeur au tableau, sur
- * les ecrans ou le mois est a l'etroit. Le nom reste visible des qu'elle est
- * depliee : chacun pouvant saisir le mois d'un collegue, savoir sous quelle
- * identite on agit n'est pas un detail.
+ * It folds into a band of icons to give its width back to the grid, on screens
+ * where the month is cramped. The name stays visible as soon as it is
+ * unfolded: since anyone may enter a colleague's month, knowing which identity
+ * one acts under is no detail.
  */
 export function AppSidebar() {
   const pathname = usePathname();
   const { user } = useCurrentUser();
   const repliee = useBarreLateraleRepliee();
-  const seDeconnecter = useDeconnexion();
+  const seDeconnecter = useSignOut();
 
   return (
     <aside
       className={[
-        // `min-w-0` est indispensable : un enfant flex a `min-width: auto` et refuse
-        // sinon de devenir plus etroit que son contenu, annulant le repli.
-        // Pas de transition sur la largeur : `transition-[width]` figeait la barre a
-        // sa largeur de depart, le repli n'avait aucun effet visible.
+        // `min-w-0` is essential: a flex child has `min-width: auto` and
+        // otherwise refuses to become narrower than its content, cancelling
+        // the fold. No transition on the width: `transition-[width]` froze the
+        // bar at its starting width, and folding had no visible effect.
         "flex min-w-0 shrink-0 flex-col overflow-hidden border-r border-slate-300 bg-white",
         repliee ? "w-14" : "w-56",
       ].join(" ")}
@@ -96,7 +96,7 @@ export function AppSidebar() {
                   ].join(" ")}
                 >
                   <Icone className="size-4 shrink-0" />
-                  {/* Replie, le libelle reste lu par les lecteurs d'ecran. */}
+                  {/* Folded, the label is still read by screen readers. */}
                   <span className={repliee ? "sr-only" : undefined}>{label}</span>
                 </Link>
               </li>

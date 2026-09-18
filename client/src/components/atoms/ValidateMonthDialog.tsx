@@ -42,8 +42,8 @@ export function ValidateMonthDialog({
   const [enCours, setEnCours] = useState(false);
 
   /**
-   * Le dialogue se referme lui-meme une fois le mois verrouille : rien dans la
-   * confirmation ne ferme la fenetre, et l'echec doit rester sous les yeux.
+   * The dialog closes itself once the month is locked: nothing in the
+   * confirmation closes the window, and a failure must stay before the eyes.
    */
   async function confirmer() {
     if (enCours) return;

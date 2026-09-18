@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDecimalDays } from "@/lib/dates";
-import { useCursorTooltip } from "@/lib/use-tooltip-curseur";
+import { useCursorTooltip } from "@/lib/use-cursor-tooltip";
 
 interface MissionLabelProps {
   label: string;

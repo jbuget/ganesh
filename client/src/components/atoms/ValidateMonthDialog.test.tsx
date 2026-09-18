@@ -24,20 +24,20 @@ function renderDialog(props: Partial<Parameters<typeof ValidateMonthDialog>[0]> 
 }
 
 describe("ValidateMonthDialog", () => {
-  it("annonce le mois concerné", () => {
+  it("announces the month concerned", () => {
     renderDialog();
 
     expect(screen.getByText(/mars 2026/)).toBeInTheDocument();
   });
 
-  it("alerte sur les jours manquants sans bloquer la validation", () => {
+  it("warns about missing days without blocking validation", () => {
     renderDialog({ totalSaisi: 20, joursOuvres: 22 });
 
     expect(screen.getByText(/Il manque 2 jour/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Valider" })).toBeEnabled();
   });
 
-  it("valide le mois à la confirmation", async () => {
+  it("validates the month on confirmation", async () => {
     const { onConfirm } = renderDialog();
 
     await userEvent.click(screen.getByRole("button", { name: "Valider" }));
@@ -45,7 +45,7 @@ describe("ValidateMonthDialog", () => {
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
-  it("se referme une fois le mois validé", async () => {
+  it("closes once the month is validated", async () => {
     const { onOpenChange } = renderDialog();
 
     await userEvent.click(screen.getByRole("button", { name: "Valider" }));
@@ -53,7 +53,7 @@ describe("ValidateMonthDialog", () => {
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
 
-  it("reste ouvert tant que la validation n'a pas abouti", async () => {
+  it("stays open until validation succeeds", async () => {
     let resoudre: () => void = () => {};
     const onConfirm = vi.fn(
       () =>
@@ -71,7 +71,7 @@ describe("ValidateMonthDialog", () => {
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
 
-  it("ne valide qu'une fois même sur double-clic", async () => {
+  it("validates only once even on a double click", async () => {
     let resoudre: () => void = () => {};
     const onConfirm = vi.fn(
       () =>

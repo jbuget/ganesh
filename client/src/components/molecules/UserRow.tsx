@@ -8,21 +8,21 @@ import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { UserAvatar } from "@/components/atoms/UserAvatar";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { Role, UserResponse } from "@/lib/api/generated/model";
-import { depuis } from "@/lib/dates-relatives";
+import { depuis } from "@/lib/relative-dates";
 
 interface UserRowProps {
   user: UserResponse;
-  /** La gestion des utilisateurs est reservee aux managers. */
+  /** Managing users is reserved for managers. */
   roleModifiable: boolean;
-  /** Faux sur sa propre ligne : nul ne coupe son propre acces. */
+  /** False on one's own row: nobody cuts off their own access. */
   statutModifiable: boolean;
   onChangeRole: (userId: number, role: Role) => void | Promise<void>;
   onSetActive: (userId: number, is_active: boolean) => void | Promise<void>;
-  /** Injecte : un rendu date par `new Date()` ne se testerait pas. */
+  /** Injected: a render dated by `new Date()` could not be tested. */
   maintenant: Date;
 }
 
-/** Un utilisateur : qui il est, ce qu'il peut faire, quand il est passe. */
+/** A user: who they are, what they may do, when they last came by. */
 export function UserRow({
   user,
   roleModifiable,
@@ -57,7 +57,7 @@ export function UserRow({
       </TableCell>
 
       <TableCell className="py-2 text-slate-500">
-        {/* Un compte jamais venu n'est pas « il y a longtemps » : il n'est jamais venu. */}
+        {/* An account that never came is not « long ago »: it never came. */}
         {user.last_login_at ? (
           <span title={new Date(user.last_login_at).toLocaleString("fr-FR")}>
             {depuis(user.last_login_at, maintenant)}
@@ -71,7 +71,8 @@ export function UserRow({
         <StatusBadge
           is_active={user.is_active}
           modifiable={statutModifiable}
-          // Couper un acces se confirme ; le retablir ne retire rien a personne.
+          // Cutting off access is confirmed; restoring it takes nothing from
+          // anyone.
           onToggle={(is_active) =>
             is_active ? onSetActive(user.id, true) : setCoupureADemander(true)
           }

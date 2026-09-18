@@ -12,19 +12,19 @@ interface ProjectContributionsProps {
 }
 
 /**
- * Qui a consomme quoi sur une mission.
+ * Who consumed what on a mission.
  *
- * Une liste plutot qu'un tableau : on est deux a six sur une mission, et ce
- * qu'on y lit est une part, pas une grille de chiffres. Le detail mensuel se
- * deplie sous la ligne plutot que d'ouvrir un ecran : les autres contributeurs
- * restent sous les yeux, et c'est a eux qu'on se compare.
+ * A list rather than a table: two to six people are on a mission, and what one
+ * reads there is a share, not a grid of figures. The monthly detail unfolds
+ * under the row rather than opening a screen: the other contributors stay
+ * before the eyes, and they are what one compares against.
  */
 export function ProjectContributions({
   contributions,
   total,
 }: ProjectContributionsProps) {
-  // Plusieurs lignes restent ouvertes a la fois : on deplie deux intervenants
-  // justement pour confronter leurs mois.
+  // Several rows stay open at once: two contributors are expanded precisely to
+  // set their months side by side.
   const [deplies, setDeplies] = useState<ReadonlySet<number>>(new Set());
 
   function toggle(memberId: number) {

@@ -67,7 +67,7 @@ def test_nobody_else_can_remove_it() -> None:
 
 
 def test_a_removed_update_keeps_its_place_but_not_its_words() -> None:
-    """The screen shows \u00ab Message supprime \u00bb: the thread keeps its
+    """The screen shows « Message supprime »: the thread keeps its
     order, the text goes."""
     update = une_maj()
 

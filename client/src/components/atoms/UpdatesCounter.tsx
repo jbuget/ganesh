@@ -3,7 +3,7 @@
 import { MessageCircle } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { useCursorTooltip } from "@/lib/use-tooltip-curseur";
+import { useCursorTooltip } from "@/lib/use-cursor-tooltip";
 
 interface UpdatesCounterProps {
   count: number;

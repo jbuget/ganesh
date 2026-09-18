@@ -37,16 +37,16 @@ interface ProjectTabsProps {
   desarchiver: () => Promise<void>;
 }
 
-/** Ce qui reste a construire, annonce plutot que laisse vide. */
+/** What is still to be built, announced rather than left blank. */
 function Chantier({ quoi }: { quoi: string }) {
   return <p className="py-8 text-center text-sm text-slate-400">{quoi}</p>;
 }
 
 /**
- * Les quatre facettes d'une mission.
+ * The four facets of a mission.
  *
- * Partagees par le panneau lateral et la fiche en pleine page : deux montages
- * du meme contenu, pour qu'ils ne divergent pas.
+ * Shared by the side panel and the full-page sheet: two arrangements of the
+ * same content, so they do not drift apart.
  */
 export function ProjectTabs({
   detail,
@@ -61,9 +61,9 @@ export function ProjectTabs({
   archiver,
   desarchiver,
 }: ProjectTabsProps) {
-  // Fige l'heure de reference le temps de la consultation : « il y a 3 min »
-  // ne doit pas se recalculer a chaque rendu, et le fil n'est de toute facon
-  // charge qu'apres le montage — rien n'est rendu cote serveur.
+  // Freezes the reference time for the duration of the visit: « il y a 3
+  // min » must not recompute on every render, and the thread is only
+  // loaded after mounting anyway — nothing is rendered server-side.
   const [maintenant] = useState(() => new Date());
 
   return (
@@ -71,15 +71,15 @@ export function ProjectTabs({
       defaultValue={ongletInitial ?? "pilotage"}
       className="flex min-h-0 flex-1 flex-col gap-4"
     >
-      {/* Au-dessus des onglets, donc lu avant eux : l'etat de la mission
-          conditionne tout ce qu'on s'apprete a faire dessus. */}
+      {/* Above the tabs, therefore read before them: the state of the mission
+          governs everything one is about to do to it. */}
       {!detail.project.is_active && (
         <ArchivedCallout archivedAt={detail.project.archived_at} />
       )}
 
-      {/* Le menu se tient au bout des onglets, du cote ou le regard s'arrete :
-          on choisit d'abord quoi lire, et ce qui agit sur la mission entiere
-          attend a l'ecart. */}
+      {/* The menu sits at the end of the tabs, on the side where the eye
+          stops: one first picks what to read, and what acts on the whole
+          mission waits aside. */}
       <div className="flex shrink-0 items-center gap-2">
         <TabsList className="min-w-0 flex-1">
           <TabsTrigger value="pilotage">Pilotage</TabsTrigger>
@@ -112,8 +112,9 @@ export function ProjectTabs({
           projectId={detail.project.id}
           maintenant={maintenant}
           onChange={onChange}
-          // Venu du decompte, on vient ecrire : le curseur attend deja dans
-          // l'editeur. Venu du panneau, on vient d'abord lire.
+          // Coming from the counter, one comes to write: the cursor is already
+          // waiting in the editor. Coming from the panel, one comes to read
+          // first.
           focusRedaction={ongletInitial === "updates"}
         />
       </TabsContent>

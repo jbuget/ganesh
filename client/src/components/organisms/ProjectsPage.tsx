@@ -19,30 +19,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useOpenedMission } from "@/lib/mission-ouverte";
+import { useOpenedMission } from "@/lib/opened-mission";
 import { useMissionFilters } from "@/lib/use-mission-filters";
 import { useMissionSort } from "@/lib/use-mission-sort";
 import { useProjectsScreen } from "@/lib/use-projects";
 
 /**
- * Le referentiel des missions.
+ * The mission reference list.
  *
- * Les colonnes disent d'un coup d'oeil ou en est chaque mission, ce qu'elle
- * pese et qui s'en occupe — ce qu'on vient comparer ici. Elles ne s'editent
- * pas : la ligne n'ouvre toujours qu'une chose, le panneau de la mission,
- * celui-la meme que le kanban. Une liste qui editerait en place multiplierait
- * les chemins vers la meme donnee, et les ferait diverger.
+ * The columns say at a glance where each mission stands, what it weighs and who
+ * looks after it — what one comes here to compare. They do not edit: a row
+ * still opens one thing only, the mission panel, the very same one the kanban
+ * opens. A list that edited in place would multiply the paths to the same data,
+ * and make them drift apart.
  */
 export function ProjectsPage() {
-  // Les memes criteres que le kanban, tenus par la meme adresse : on filtre
-  // d'un ecran, on ouvre l'autre, et la question posee reste la meme.
+  // The same criteria as the kanban, held by the same address: one filters from
+  // one screen, opens the other, and the question asked stays the same.
   const { filters, hasFilter, set, clear } = useMissionFilters();
-  // Le rangement suit le meme chemin que les filtres : l'adresse le porte, et
-  // le hook d'ecran rend l'arborescence deja dans l'ordre demande.
+  // Ordering follows the same path as the filters: the address carries it, and
+  // the screen hook renders the tree already in the order asked for.
   const { sorted, toggle: trierPar } = useMissionSort();
   const screen = useProjectsScreen(filters, sorted);
-  // Une seule heure de reference pour toutes les lignes : « il y a 3 h » ne
-  // doit pas dependre du moment ou chacune se rend.
+  // One reference time for every row: « il y a 3 h » must not depend
+  // on when each one renders.
   const maintenant = useMemo(() => new Date(), []);
   const panel = useOpenedMission();
   const [declaring, setDeclaration] = useState(false);
@@ -71,7 +71,7 @@ export function ProjectsPage() {
         />
       }
     >
-      {/* Assez large pour neuf colonnes, pas au point d'etirer les noms. */}
+      {/* Wide enough for nine columns, not so wide as to stretch the names. */}
       <div className="max-w-[1300px]">
         <MissionFilters
           filters={filters}
@@ -93,15 +93,16 @@ export function ProjectsPage() {
         )}
 
         {screen.tree.length > 0 && (
-          // Le conteneur de shadcn ouvre un contexte de defilement qui
-          // retiendrait l'en-tete a l'interieur du tableau : on le neutralise
-          // pour que le `sticky` se cale sur la zone defilante de la page.
+          // The shadcn container opens a scrolling context that would hold the
+          // header inside the table: we neutralise it so the `sticky` latches
+          // onto the page's scrolling area.
           <div className="[&_[data-slot=table-container]]:overflow-visible">
             <Table>
-              {/* Soixante lignes passent sous l'en-tete : sans lui, on ne sait
-                  plus quelle colonne on lit arrive en bas. Le fond se pose sur
-                  les cellules et non sur la rangee : dans un tableau, celui de
-                  la rangee se peint sous les lignes qui defilent. */}
+              {/* Sixty rows pass under the header: without it, one no longer
+                  knows which column one is reading by the time one reaches the
+                  bottom. The background sits on the cells and not on the row:
+                  in a table, a row's background paints under the lines that
+                  scroll. */}
               <TableHeader className="sticky top-0 z-10 [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50">
                 <TableRow>
                   <SortableColumnHeader
@@ -110,7 +111,7 @@ export function ProjectsPage() {
                     sorted={sorted}
                     onBasculer={trierPar}
                   />
-                  {/* Le fil de suivi : son icone porte le sens, pas un titre. */}
+                  {/* The follow-up thread: its icon carries the meaning, not a title. */}
                   <TableHead />
                   <SortableColumnHeader
                     column="phase"
@@ -144,8 +145,8 @@ export function ProjectsPage() {
                     onBasculer={trierPar}
                     aDroite
                   />
-                  {/* Qui s'en occupe ne se range pas : une colonne de jetons
-                      n'a pas d'ordre que le lecteur aurait en tete. */}
+                  {/* Who looks after it does not sort: a column of badges has no
+                      order the reader would have in mind. */}
                   <TableHead>Référents</TableHead>
                   <TableHead>Intervenants</TableHead>
                 </TableRow>
@@ -225,8 +226,8 @@ export function ProjectsPage() {
 
       {panel.openedMission && (
         <ProjectPanel
-          // L'onglet fait partie de la cle : rouvrir la meme mission sur son
-          // fil doit remonter le panneau, qui choisit son onglet a l'ouverture.
+          // The tab is part of the key: reopening the same mission on its
+          // thread must remount the panel, which picks its tab on opening.
           key={`${panel.openedMission}:${panel.ongletOuvert ?? ""}`}
           projectId={panel.openedMission}
           onglet={panel.ongletOuvert}

@@ -24,7 +24,7 @@ import {
  * A mission's sheet and its changes.
  *
  * Every change is saved then read back from the server: the sheet is edited
- * field by field, with no \u00ab Enregistrer \u00bb button, and the screen must
+ * field by field, with no « Enregistrer » button, and the screen must
  * never show anything other than what is in the database.
  */
 export function useProjectDetail(

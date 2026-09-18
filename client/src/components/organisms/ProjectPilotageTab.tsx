@@ -5,7 +5,7 @@ import { useState } from "react";
 import { CategoryPicker } from "@/components/atoms/CategoryPicker";
 import { DepartmentPicker } from "@/components/atoms/DepartmentPicker";
 import { InlineNumberField } from "@/components/atoms/InlineNumberField";
-import { IntervenantsPicker } from "@/components/atoms/IntervenantsPicker";
+import { ContributorsPicker } from "@/components/atoms/ContributorsPicker";
 import { PhasePicker } from "@/components/atoms/PhasePicker";
 import { PriorityPicker } from "@/components/atoms/PriorityPicker";
 import { ProjectContributions } from "@/components/molecules/ProjectContributions";
@@ -38,11 +38,11 @@ interface ProjectPilotageTabProps {
 }
 
 /**
- * Une ligne de la fiche : son intitule a gauche, sa valeur a droite.
+ * One row of the sheet: its heading on the left, its value on the right.
  *
- * Les champs s'empilent plutot que de se ranger en colonnes : on parcourt une
- * fiche du regard de haut en bas, et une largeur d'intitule constante donne un
- * point d'appui a ce parcours.
+ * Fields stack rather than arrange themselves in columns: a sheet is scanned
+ * top to bottom, and a constant heading width gives that scan something to lean
+ * on.
  */
 function Ligne({ titre, children }: { titre: string; children: React.ReactNode }) {
   return (
@@ -54,11 +54,11 @@ function Ligne({ titre, children }: { titre: string; children: React.ReactNode }
 }
 
 /**
- * L'intitule d'une section de la fiche.
+ * The heading of a section of the sheet.
  *
- * Trois blocs se suivent dans la meme colonne : leur titre doit trancher sur
- * leur contenu, sinon on ne voit plus ou l'un s'arrete et ou le suivant
- * commence. Le filet donne la coupure, la graisse donne le niveau.
+ * Three blocks follow one another in the same column: their title must stand
+ * out from their content, otherwise one no longer sees where one stops and the
+ * next begins. The rule gives the break, the weight gives the level.
  */
 function TitreSection({ children }: { children: React.ReactNode }) {
   return (
@@ -69,11 +69,11 @@ function TitreSection({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Ce qu'il faut savoir pour piloter une mission.
+ * What one needs to steer a mission.
  *
- * Les caracteristiques en haut, la consommation en bas : on regarde d'abord ou
- * en est la mission et qui s'en occupe, puis ce qu'elle couvre, puis ce qu'elle
- * a coute.
+ * Characteristics at the top, consumption at the bottom: one looks first at
+ * where the mission stands and who looks after it, then at what it covers, then
+ * at what it has cost.
  */
 export function ProjectPilotageTab({
   detail,
@@ -84,8 +84,8 @@ export function ProjectPilotageTab({
   ajouterLien,
   retirerLien,
 }: ProjectPilotageTabProps) {
-  // Tant qu'on n'a rien tape, le champ affiche ce que dit le serveur : pas de
-  // copie locale a resynchroniser a chaque rechargement.
+  // Until anything is typed, the field shows what the server says: no local
+  // copy to resynchronise on every reload.
   const [draft, setBrouillon] = useState<string | null>(null);
   const { project } = detail;
   const contacts = draft ?? project.business_contacts ?? "";
@@ -131,7 +131,7 @@ export function ProjectPilotageTab({
           </Ligne>
 
           <Ligne titre="Référents projet">
-            <IntervenantsPicker
+            <ContributorsPicker
               projectId={project.id}
               contributors={detail.leads}
               role="lead"
@@ -141,7 +141,7 @@ export function ProjectPilotageTab({
           </Ligne>
 
           <Ligne titre="Intervenants">
-            <IntervenantsPicker
+            <ContributorsPicker
               projectId={project.id}
               contributors={detail.contributors}
               invite="Intervenants"
@@ -156,7 +156,7 @@ export function ProjectPilotageTab({
               placeholder="Qui appeler côté métier…"
               aria-label="Contacts métier"
               onChange={(event) => setBrouillon(event.target.value)}
-              // Enregistre a la sortie du champ : on n'ecrit pas a chaque frappe.
+              // Saved on leaving the field: nothing is written on every keystroke.
               onBlur={() => {
                 if (draft === null) return;
                 setBrouillon(null);

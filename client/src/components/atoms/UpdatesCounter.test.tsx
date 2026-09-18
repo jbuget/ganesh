@@ -6,7 +6,7 @@ import { UpdatesCounter } from "./UpdatesCounter";
 const APERCU = <p>Le cadrage commence lundi</p>;
 
 describe("UpdatesCounter", () => {
-  it("n'affiche rien tant que le fil est vide", () => {
+  it("shows nothing while the thread is empty", () => {
     const { container } = render(
       <UpdatesCounter count={0} apercu={APERCU} onOpen={() => {}} />,
     );
@@ -14,19 +14,19 @@ describe("UpdatesCounter", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("compte les mises à jour du fil", () => {
+  it("counts the thread's updates", () => {
     render(<UpdatesCounter count={3} apercu={APERCU} onOpen={() => {}} />);
 
     expect(screen.getByLabelText("3 mises à jour")).toHaveTextContent("3");
   });
 
-  it("accorde le décompte au singulier", () => {
+  it("agrees the count in the singular", () => {
     render(<UpdatesCounter count={1} apercu={APERCU} onOpen={() => {}} />);
 
     expect(screen.getByLabelText("1 mise à jour")).toBeInTheDocument();
   });
 
-  it("montre l'aperçu au survol", () => {
+  it("shows the preview on hover", () => {
     render(<UpdatesCounter count={1} apercu={APERCU} onOpen={() => {}} />);
 
     fireEvent.mouseMove(screen.getByLabelText("1 mise à jour"));
@@ -34,7 +34,7 @@ describe("UpdatesCounter", () => {
     expect(screen.getByRole("tooltip")).toHaveTextContent("Le cadrage commence lundi");
   });
 
-  it("mène au fil au clic", () => {
+  it("leads to the thread on click", () => {
     const open = vi.fn();
     render(<UpdatesCounter count={1} apercu={APERCU} onOpen={open} />);
 
@@ -43,7 +43,7 @@ describe("UpdatesCounter", () => {
     expect(open).toHaveBeenCalledTimes(1);
   });
 
-  it("referme l'infobulle quand la souris quitte le décompte", () => {
+  it("closes the tooltip when the mouse leaves the count", () => {
     render(<UpdatesCounter count={1} apercu={APERCU} onOpen={() => {}} />);
     const counter = screen.getByLabelText("1 mise à jour");
 
@@ -53,7 +53,7 @@ describe("UpdatesCounter", () => {
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 
-  it("compte sans infobulle quand il n'y a rien à montrer", () => {
+  it("counts without a tooltip when there is nothing to show", () => {
     render(<UpdatesCounter count={2} onOpen={() => {}} />);
 
     fireEvent.mouseMove(screen.getByLabelText("2 mises à jour"));

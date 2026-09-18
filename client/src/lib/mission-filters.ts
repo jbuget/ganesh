@@ -74,7 +74,7 @@ export const MISSION_STATES: { value: EtatMission; label: string }[] = [
   { value: "archivee", label: "Archivées" },
 ];
 
-/** Lowercase and unaccented: searching \u00ab copropriete \u00bb finds \u00ab copropriété \u00bb. */
+/** Lowercase and unaccented: searching « copropriete » finds « copropriété ». */
 function normalise(body: string): string {
   return body
     .normalize("NFD")
@@ -98,8 +98,8 @@ export function filtreActif(filters: MissionFilters): boolean {
  * Does a card pass the criteria?
  *
  * An empty criterion takes nothing away; several values within one criterion
- * add up, and criteria stack with each other. \u00ab Réalisation \u00bb and
- * \u00ab Nino \u00bb therefore shows what is in development *and* carried by Nino.
+ * add up, and criteria stack with each other. « Réalisation » and
+ * « Nino » therefore shows what is in development *and* carried by Nino.
  *
  * Filtering on a phase empties the other columns without removing them: the
  * board keeps its six phases from one filter to the next, and one goes on

@@ -10,7 +10,7 @@ import { phaseLabel, phaseDot } from "@/lib/board";
 interface BoardColumnProps {
   status: ProjectStatus;
   cards: BoardCardResponse[];
-  /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
+  /** Freezes the reference time: without it, server and client would diverge. */
   maintenant: Date;
   onIntervenantsChange?: () => void | Promise<void>;
   onOpen?: (projectId: number) => void;

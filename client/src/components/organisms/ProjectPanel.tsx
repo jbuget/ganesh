@@ -13,16 +13,16 @@ interface ProjectPanelProps {
   /** Sur quoi s'ouvrir : la fiche par defaut, le fil si c'est lui qu'on visait. */
   onglet?: string | null;
   onClose: () => void;
-  /** Previent le tableau : une phase changee ici y deplace une carte. */
+  /** Tells the board: a phase changed here moves a card there. */
   onMissionChanged: () => void | Promise<void>;
 }
 
 /**
- * La mission ouverte a cote du tableau.
+ * The mission opened beside the board.
  *
- * Le kanban reste visible et utilisable derriere : on consulte une mission sans
- * perdre de vue la colonne d'ou elle vient, ni l'endroit ou on comptait la
- * deposer ensuite.
+ * The kanban stays visible and usable behind: one looks at a mission without
+ * losing sight of the column it comes from, nor of where one meant to drop it
+ * next.
  */
 export function ProjectPanel({
   projectId,
@@ -44,8 +44,8 @@ export function ProjectPanel({
   return (
     <>
       {/*
-        Le voile ferme au clic mais ne masque pas : le tableau doit rester
-        lisible, c'est tout l'interet d'un panneau plutot que d'une page.
+        The veil closes on click but does not hide: the board must stay
+        readable, which is the whole point of a panel rather than a page.
       */}
       <div
         aria-hidden
@@ -96,10 +96,11 @@ export function ProjectPanel({
               changerCaracteristiques={fiche.changerCaracteristiques}
               ajouterLien={fiche.ajouterLien}
               retirerLien={fiche.retirerLien}
-              // Le panneau reste ouvert apres l'archivage, bien que la mission
-              // quitte la liste derriere : le fermer sur un clic malheureux
-              // laisserait sans recours, la ligne ayant disparu du referentiel.
-              // Le bandeau et « Desarchiver » gardent le retour a portee.
+              // The panel stays open after archiving, even though the mission
+              // leaves the list behind: closing it on an unlucky click would
+              // leave no way back, the row having gone from the reference
+              // list. The banner and « Desarchiver » keep the return
+              // within reach.
               archiver={fiche.archiver}
               desarchiver={fiche.desarchiver}
             />

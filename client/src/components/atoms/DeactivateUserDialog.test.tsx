@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { DeactivateUserDialog } from "./DeactivateUserDialog";
 
 describe("DeactivateUserDialog", () => {
-  it("nomme la personne dont l'accès est coupé", () => {
+  it("names the person whose access is cut off", () => {
     render(
       <DeactivateUserDialog
         open
@@ -18,7 +18,7 @@ describe("DeactivateUserDialog", () => {
     expect(screen.getByText(/L\. Chen/)).toBeInTheDocument();
   });
 
-  it("annonce que les saisies passées sont conservées", () => {
+  it("announces that past entries are kept", () => {
     // Cutting off access erases nothing: saying so saves hesitating over it.
     render(
       <DeactivateUserDialog
@@ -32,7 +32,7 @@ describe("DeactivateUserDialog", () => {
     expect(screen.getByText(/entries/)).toBeInTheDocument();
   });
 
-  it("coupe l'accès à la confirmation", async () => {
+  it("cuts off access on confirmation", async () => {
     const onConfirm = vi.fn();
     render(
       <DeactivateUserDialog

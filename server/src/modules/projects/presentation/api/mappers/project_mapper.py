@@ -64,7 +64,7 @@ def to_member(user: User) -> BoardMemberResponse:
 
 
 def to_latest_update(latest: LastUpdate | None) -> LastUpdateResponse | None:
-    """Le dernier message d'un fil, tel qu'une ligne ou une carte l'annonce."""
+    """The latest message of a thread, as a row or a card announces it."""
     if latest is None:
         return None
     return LastUpdateResponse(
@@ -157,7 +157,9 @@ def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
             )
             for contribution in detail.contributions
         ],
-        sub_projects=[to_project_response(work_package) for work_package in detail.sub_projects],
+        sub_projects=[
+            to_project_response(work_package) for work_package in detail.sub_projects
+        ],
     )
 
 

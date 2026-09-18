@@ -29,8 +29,8 @@ export function TimesheetPage() {
   } | null>(null);
 
   /**
-   * Une ligne vide s'en va sans ceremonie : il n'y a rien a perdre. Des qu'elle
-   * porte du temps, on annonce ce qui sera efface avant de le faire.
+   * An empty row goes without ceremony: there is nothing to lose. As soon as it
+   * carries time, what will be erased is announced before it happens.
    */
   function demanderLeRetrait(projectId: number) {
     const line = grid?.rows.find((row) => row.project_id === projectId);
@@ -51,10 +51,10 @@ export function TimesheetPage() {
       }
     >
       {/*
-        Les trois commandes de la matrice, juste au-dessus d'elle : de qui on
-        regarde le mois, quel mois, et la seule action qui l'engage. Les deux
-        cotes prennent la meme part de l'espace restant, ce qui centre le mois
-        quelle que soit la largeur des deux autres.
+        The grid's three controls, right above it: whose month is being looked
+        at, which month, and the one action that commits it. Both sides take the
+        same share of the remaining space, which centres the month whatever the
+        width of the other two.
       */}
       <div className="mb-3 flex flex-wrap items-center gap-4">
         <div className="flex flex-1 justify-start">

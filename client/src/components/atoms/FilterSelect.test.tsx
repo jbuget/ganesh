@@ -9,7 +9,7 @@ const OPTIONS = [
 ];
 
 describe("FilterSelect", () => {
-  it("annonce le critère quand rien n'est retenu", () => {
+  it("announces the criterion when nothing is kept", () => {
     render(
       <FilterSelect label="Phase" options={OPTIONS} values={[]} onChange={vi.fn()} />,
     );
@@ -17,7 +17,7 @@ describe("FilterSelect", () => {
     expect(screen.getByRole("button", { name: /Phase/ })).toBeInTheDocument();
   });
 
-  it("compte les valeurs retenues sur le déclencheur", () => {
+  it("counts the values kept on the trigger", () => {
     render(
       <FilterSelect
         label="Phase"
@@ -30,7 +30,7 @@ describe("FilterSelect", () => {
     expect(screen.getByRole("button", { name: /Phase/ })).toHaveTextContent("2");
   });
 
-  it("ajoute une valeur au clic", () => {
+  it("adds a value on click", () => {
     const onChange = vi.fn();
     render(
       <FilterSelect label="Phase" options={OPTIONS} values={[]} onChange={onChange} />,
@@ -42,7 +42,7 @@ describe("FilterSelect", () => {
     expect(onChange).toHaveBeenCalledWith(["scoping"]);
   });
 
-  it("retire une valeur déjà retenue", () => {
+  it("removes a value already kept", () => {
     const onChange = vi.fn();
     render(
       <FilterSelect
@@ -59,7 +59,7 @@ describe("FilterSelect", () => {
     expect(onChange).toHaveBeenCalledWith([]);
   });
 
-  it("rend les valeurs dans l'ordre des options, quel que soit l'ordre des clics", () => {
+  it("returns the values in the order of the options, whatever the order of the clicks", () => {
     const onChange = vi.fn();
     render(
       <FilterSelect

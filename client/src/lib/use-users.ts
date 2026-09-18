@@ -28,7 +28,7 @@ export function useUsersScreen() {
     avecInactifs,
 
     // One reference instant per render: without it, two rows of the same list
-    // would compare against two different \u00ab now \u00bb.
+    // would compare against two different « now ».
     maintenant: new Date(),
 
     basculerInactifs: () => setAvecInactifs((actuel) => !actuel),

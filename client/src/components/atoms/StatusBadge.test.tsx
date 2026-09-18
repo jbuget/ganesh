@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { StatusBadge } from "./StatusBadge";
 
 describe("StatusBadge", () => {
-  it("nomme les deux états, plutôt que de n'en signaler qu'un", () => {
+  it("names both states, rather than flagging only one", () => {
     const { rerender } = render(
       <StatusBadge is_active modifiable={false} onToggle={vi.fn()} />,
     );
@@ -15,13 +15,13 @@ describe("StatusBadge", () => {
     expect(screen.getByText("Désactivé")).toBeInTheDocument();
   });
 
-  it("n'offre aucun bouton sans droit de gestion", () => {
+  it("offers no button without management rights", () => {
     render(<StatusBadge is_active modifiable={false} onToggle={vi.fn()} />);
 
     expect(screen.queryByRole("button")).toBeNull();
   });
 
-  it("demande la coupure d'accès d'un compte actif", async () => {
+  it("asks to cut off an active account", async () => {
     const onToggle = vi.fn();
     render(<StatusBadge is_active modifiable onToggle={onToggle} />);
 
@@ -30,7 +30,7 @@ describe("StatusBadge", () => {
     expect(onToggle).toHaveBeenCalledWith(false);
   });
 
-  it("demande le rétablissement d'un compte désactivé", async () => {
+  it("asks to restore a deactivated account", async () => {
     const onToggle = vi.fn();
     render(<StatusBadge is_active={false} modifiable onToggle={onToggle} />);
 

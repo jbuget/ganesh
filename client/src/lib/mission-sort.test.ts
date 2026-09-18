@@ -36,8 +36,8 @@ const mission = (
 const labels = (missions: ProjectListItemResponse[], sorted: MissionSort) =>
   [...missions].sort(comparateurDeTri(sorted)).map((m) => m.project.label);
 
-describe("l'ordre du référentiel", () => {
-  it("range par phase puis par nom quand aucune colonne n'est demandée", () => {
+describe("the reference list order", () => {
+  it("arranges by phase then by name when no column is asked for", () => {
     const missions = [
       mission("Zèbre", { status: "exploration" }),
       mission("Alpha", { status: "operations" }),
@@ -47,7 +47,7 @@ describe("l'ordre du référentiel", () => {
     expect(labels(missions, NO_SORT)).toEqual(["Bravo", "Zèbre", "Alpha"]);
   });
 
-  it("range par nom, accents compris", () => {
+  it("arranges by name, accents included", () => {
     const missions = [mission("Zèbre"), mission("Éclair"), mission("Alpha")];
 
     expect(labels(missions, { column: "project", direction: "asc" })).toEqual([
@@ -57,7 +57,7 @@ describe("l'ordre du référentiel", () => {
     ]);
   });
 
-  it("renverse l'ordre en sens descendant", () => {
+  it("reverses the order when descending", () => {
     const missions = [mission("Alpha"), mission("Zèbre")];
 
     expect(labels(missions, { column: "project", direction: "desc" })).toEqual([
@@ -66,7 +66,7 @@ describe("l'ordre du référentiel", () => {
     ]);
   });
 
-  it("range les phases dans leur ordre de vie, pas dans l'alphabet", () => {
+  it("arranges phases in life-cycle order, not alphabetically", () => {
     const missions = [
       mission("Zèbre", { status: "operations" }),
       mission("Alpha", { status: "scoping" }),
@@ -80,7 +80,7 @@ describe("l'ordre du référentiel", () => {
     ]);
   });
 
-  it("range les priorités de la plus forte à la plus faible", () => {
+  it("arranges priorities from strongest to weakest", () => {
     const missions = [
       mission("Basse", { priority: "low" }),
       mission("Critique", { priority: "critical" }),
@@ -94,7 +94,7 @@ describe("l'ordre du référentiel", () => {
     ]);
   });
 
-  it("range les estimés par valeur, et non par leur écriture", () => {
+  it("arranges estimates by value, not by how they are written", () => {
     const missions = [
       mission("Neuf", { estimated_days: 9 }),
       mission("Dix", { estimated_days: 10 }),
@@ -106,7 +106,7 @@ describe("l'ordre du référentiel", () => {
     ]);
   });
 
-  it("range les réalisés par valeur", () => {
+  it("arranges delivered days by value", () => {
     const missions = [mission("Beaucoup", {}, 12), mission("Peu", {}, 3)];
 
     expect(labels(missions, { column: "delivered", direction: "asc" })).toEqual([
@@ -115,7 +115,7 @@ describe("l'ordre du référentiel", () => {
     ]);
   });
 
-  it("laisse les valeurs manquantes en fin de liste, dans les deux sens", () => {
+  it("leaves missing values at the end of the list, in both directions", () => {
     // A missing estimate is not a small estimate: it has nothing to say, and
     // must not sit at the top when one is looking for the big jobs.
     const missions = [
@@ -133,7 +133,7 @@ describe("l'ordre du référentiel", () => {
     ]);
   });
 
-  it("départage par le nom deux missions que la colonne égalise", () => {
+  it("settles by name two missions the column ties", () => {
     const missions = [
       mission("Zèbre", { estimated_days: 5 }),
       mission("Alpha", { estimated_days: 5 }),
@@ -146,28 +146,28 @@ describe("l'ordre du référentiel", () => {
   });
 });
 
-describe("le cycle d'une colonne", () => {
-  it("part en ordre croissant au premier clic", () => {
+describe("the cycle of a column", () => {
+  it("starts ascending on the first click", () => {
     expect(triSuivant(NO_SORT, "estimated")).toEqual({
       column: "estimated",
       direction: "asc",
     });
   });
 
-  it("passe en décroissant au deuxième", () => {
+  it("moves to descending on the second", () => {
     expect(triSuivant({ column: "estimated", direction: "asc" }, "estimated")).toEqual({
       column: "estimated",
       direction: "desc",
     });
   });
 
-  it("revient à l'ordre du référentiel au troisième", () => {
+  it("returns to the reference list order on the third", () => {
     expect(triSuivant({ column: "estimated", direction: "desc" }, "estimated")).toEqual(
       NO_SORT,
     );
   });
 
-  it("repart en croissant quand on change de colonne", () => {
+  it("starts ascending again when the column changes", () => {
     expect(triSuivant({ column: "estimated", direction: "desc" }, "phase")).toEqual({
       column: "phase",
       direction: "asc",
@@ -175,39 +175,39 @@ describe("le cycle d'une colonne", () => {
   });
 });
 
-describe("le tri dans l'adresse", () => {
-  it("ne lit aucun tri dans une adresse nue", () => {
+describe("the sort in the address", () => {
+  it("reads no sort from a bare address", () => {
     expect(readSort(new URLSearchParams())).toEqual(NO_SORT);
   });
 
-  it("relit le tri qu'il a écrit", () => {
+  it("reads back the sort it wrote", () => {
     const params = new URLSearchParams();
     writeSort(params, { column: "priority", direction: "desc" });
 
     expect(readSort(params)).toEqual({ column: "priority", direction: "desc" });
   });
 
-  it("efface le tri de l'adresse quand on revient à l'ordre par défaut", () => {
+  it("clears the sort from the address when the default order returns", () => {
     const params = new URLSearchParams("sort=phase&direction=desc");
     writeSort(params, NO_SORT);
 
     expect(params.toString()).toBe("");
   });
 
-  it("ignore une colonne inconnue plutôt que de trier au hasard", () => {
+  it("ignores an unknown column rather than sorting at random", () => {
     expect(readSort(new URLSearchParams("sort=licorne&direction=asc"))).toEqual(
       NO_SORT,
     );
   });
 
-  it("retient l'ordre croissant quand le sens est illisible", () => {
+  it("keeps ascending order when the direction is unreadable", () => {
     expect(readSort(new URLSearchParams("sort=phase&direction=lateral"))).toEqual({
       column: "phase",
       direction: "asc",
     });
   });
 
-  it("laisse les autres paramètres de l'adresse en place", () => {
+  it("leaves the address's other parameters in place", () => {
     const params = new URLSearchParams("phase=scoping");
     writeSort(params, { column: "project", direction: "asc" });
 

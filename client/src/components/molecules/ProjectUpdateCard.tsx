@@ -7,7 +7,7 @@ import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { RichTextEditor } from "@/components/atoms/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import type { ProjectUpdateResponse } from "@/lib/api/generated/model";
-import { depuis } from "@/lib/dates-relatives";
+import { depuis } from "@/lib/relative-dates";
 
 interface ProjectUpdateCardProps {
   maj: ProjectUpdateResponse;
@@ -17,11 +17,11 @@ interface ProjectUpdateCardProps {
 }
 
 /**
- * Une mise a jour du fil.
+ * One update from the thread.
  *
- * Retiree, elle garde sa place et sa signature : le fil raconte qu'il s'est
- * passe quelque chose, et les reponses qu'elle a suscitees gardent leur
- * contexte. Seul son texte disparait.
+ * Withdrawn, it keeps its place and its signature: the thread still tells that
+ * something happened, and the replies it drew keep their context. Only its text
+ * goes.
  */
 export function ProjectUpdateCard({
   maj,
@@ -85,7 +85,7 @@ export function ProjectUpdateCard({
   );
 }
 
-/** Correction d'une mise a jour, en place dans le fil. */
+/** Correcting an update, in place in the thread. */
 function Correction({
   value,
   onSave,

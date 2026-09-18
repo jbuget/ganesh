@@ -339,7 +339,7 @@ async def test_archived_sub_projects_are_counted_only_when_shown() -> None:
 
 
 async def test_a_card_carries_its_latest_update() -> None:
-    """La carte annonce le dernier message, pour le lire sans ouvrir le fil."""
+    """The card announces the latest message, to read it without opening the thread."""
     updates = InMemoryProjectUpdateRepository()
     await updates.add(
         ProjectUpdate(

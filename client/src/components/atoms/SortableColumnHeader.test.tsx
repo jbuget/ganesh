@@ -23,7 +23,7 @@ function afficher(sorted: MissionSort, onBasculer = vi.fn()) {
 }
 
 describe("SortableColumnHeader", () => {
-  it("demande le rangement sur sa colonne quand on la clique", () => {
+  it("asks for ordering by its column when clicked", () => {
     const onBasculer = afficher(NO_SORT);
 
     fireEvent.click(screen.getByRole("button", { name: /Estimé/ }));
@@ -31,28 +31,28 @@ describe("SortableColumnHeader", () => {
     expect(onBasculer).toHaveBeenCalledWith("estimated");
   });
 
-  it("n'annonce aucun ordre tant que la colonne ne range pas la liste", () => {
+  it("announces no order while the column does not order the list", () => {
     afficher(NO_SORT);
 
     expect(screen.getByRole("columnheader")).toHaveAttribute("aria-sort", "none");
     expect(screen.queryByLabelText("Ordre croissant")).not.toBeInTheDocument();
   });
 
-  it("montre le sens croissant quand elle range la liste", () => {
+  it("shows the ascending direction when it orders the list", () => {
     afficher({ column: "estimated", direction: "asc" });
 
     expect(screen.getByRole("columnheader")).toHaveAttribute("aria-sort", "ascending");
     expect(screen.getByLabelText("Ordre croissant")).toBeInTheDocument();
   });
 
-  it("montre le sens décroissant", () => {
+  it("shows the descending direction", () => {
     afficher({ column: "estimated", direction: "desc" });
 
     expect(screen.getByRole("columnheader")).toHaveAttribute("aria-sort", "descending");
     expect(screen.getByLabelText("Ordre décroissant")).toBeInTheDocument();
   });
 
-  it("reste muette quand c'est une autre colonne qui range la liste", () => {
+  it("stays silent when another column orders the list", () => {
     // Two arrows shown at once would no longer say which one orders the list.
     afficher({ column: "phase", direction: "asc" });
 

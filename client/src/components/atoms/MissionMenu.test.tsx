@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { MissionMenu } from "./MissionMenu";
 
 describe("MissionMenu", () => {
-  it("garde ses actions repliées tant qu'on ne les demande pas", () => {
+  it("keeps its actions folded until they are asked for", () => {
     render(
       <MissionMenu archivee={false} onArchiver={vi.fn()} onDesarchiver={vi.fn()} />,
     );
@@ -16,7 +16,7 @@ describe("MissionMenu", () => {
     expect(screen.queryByRole("button", { name: "Archiver" })).toBeNull();
   });
 
-  it("propose d'archiver la mission", async () => {
+  it("offers to archive the mission", async () => {
     render(
       <MissionMenu archivee={false} onArchiver={vi.fn()} onDesarchiver={vi.fn()} />,
     );
@@ -28,7 +28,7 @@ describe("MissionMenu", () => {
     expect(screen.getByRole("button", { name: "Archiver" })).toBeInTheDocument();
   });
 
-  it("archive la mission au choix de l'action", async () => {
+  it("archives the mission when the action is chosen", async () => {
     const archiver = vi.fn();
     render(
       <MissionMenu archivee={false} onArchiver={archiver} onDesarchiver={vi.fn()} />,
@@ -42,7 +42,7 @@ describe("MissionMenu", () => {
     expect(archiver).toHaveBeenCalledTimes(1);
   });
 
-  it("referme le menu une fois l'action choisie", async () => {
+  it("closes the menu once the action is chosen", async () => {
     render(
       <MissionMenu archivee={false} onArchiver={vi.fn()} onDesarchiver={vi.fn()} />,
     );
@@ -54,7 +54,7 @@ describe("MissionMenu", () => {
 
     expect(screen.queryByRole("button", { name: "Archiver" })).toBeNull();
   });
-  it("propose de désarchiver une mission déjà sortie du référentiel", async () => {
+  it("offers to unarchive a mission already out of the reference list", async () => {
     render(<MissionMenu archivee onArchiver={vi.fn()} onDesarchiver={vi.fn()} />);
 
     await userEvent.click(
@@ -65,7 +65,7 @@ describe("MissionMenu", () => {
     expect(screen.queryByRole("button", { name: "Archiver" })).toBeNull();
   });
 
-  it("remet la mission au référentiel au choix de l'action", async () => {
+  it("puts the mission back in the reference list when the action is chosen", async () => {
     const desarchiver = vi.fn();
     render(<MissionMenu archivee onArchiver={vi.fn()} onDesarchiver={desarchiver} />);
 

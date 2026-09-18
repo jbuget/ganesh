@@ -110,7 +110,7 @@ def test_changing_status_of_an_off_project_activity_is_rejected() -> None:
 
 
 def test_status_can_move_backwards() -> None:
-    """Un projet peut revenir en arriere : cadrage apres realisation, par exemple."""
+    """A project may move backwards: scoping after development, for instance."""
     project = make_project(status=ProjectStatus.VALIDATION)
 
     project.change_status(ProjectStatus.SCOPING)

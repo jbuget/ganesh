@@ -11,7 +11,7 @@ interface StatusBadgeProps {
  * A user's access: open, or cut off.
  *
  * Both states are named. Flagging only the exception left an empty cell one
- * could not tell meant \u00ab active \u00bb or \u00ab not loaded yet \u00bb.
+ * could not tell meant « active » or « not loaded yet ».
  */
 export function StatusBadge({ is_active, modifiable, onToggle }: StatusBadgeProps) {
   const dot = is_active

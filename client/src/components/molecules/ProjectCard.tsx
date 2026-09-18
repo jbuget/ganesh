@@ -8,13 +8,13 @@ import {
 } from "lucide-react";
 
 import { CardCounter } from "@/components/atoms/CardCounter";
-import { IntervenantsPicker } from "@/components/atoms/IntervenantsPicker";
+import { ContributorsPicker } from "@/components/atoms/ContributorsPicker";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 import { progress } from "@/lib/board";
 import { formatDecimalDays } from "@/lib/dates";
-import { depuis } from "@/lib/dates-relatives";
+import { depuis } from "@/lib/relative-dates";
 
 /** Teinte du rapport consomme/estime selon l'etat d'avancement. */
 const SHADES: Record<ReturnType<typeof progress>, string> = {
@@ -26,7 +26,7 @@ const SHADES: Record<ReturnType<typeof progress>, string> = {
 
 interface ProjectCardProps {
   card: BoardCardResponse;
-  /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
+  /** Freezes the reference time: without it, server and client would diverge. */
   maintenant: Date;
   /**
    * Drag handle, provided by the sorting layer. `null` shows none: a card that
@@ -54,14 +54,15 @@ export function ProjectCard({
   const state = progress(card.consumed_days, project.estimated_days);
   const derniere = card.latest_update;
 
-  // Le dernier message en entier et mis en forme, comme dans le referentiel :
-  // la carte dit combien de messages porte le fil, l'apercu dit s'il faut
-  // l'ouvrir.
+  // The latest message in full and formatted, as in the reference list: the
+  // card says how many messages the thread carries, the preview says whether
+  // it needs opening.
   const apercu = derniere && (
     <>
-      {/* Le trait separe la signature du propos : sans lui, la premiere ligne
-          du message se lit comme la suite de l'entete. Les marges negatives le
-          menent aux bords de la bulle, dont il traverse le rembourrage. */}
+      {/* The rule separates the signature from the words: without it, the first
+          line of the message reads as the continuation of the header. Negative
+          margins carry it to the edges of the bubble, whose padding it
+          crosses. */}
       <p className="-mx-3 mb-2 border-b border-slate-200 px-3 pb-2 text-xs text-slate-500">
         <span className="font-medium text-slate-700">
           {derniere.author.display_name}
@@ -177,7 +178,7 @@ export function ProjectCard({
           {isDragging || !onIntervenantsChange ? (
             <MemberAvatars members={card.contributors} />
           ) : (
-            <IntervenantsPicker
+            <ContributorsPicker
               projectId={project.id}
               contributors={card.contributors}
               onChange={onIntervenantsChange}
@@ -191,8 +192,8 @@ export function ProjectCard({
             count={card.comments}
             label={["commentaire", "commentaires"]}
             empty="Aucun commentaire"
-            // La copie qui suit le curseur n'annonce rien : une bulle ouverte
-            // sous la carte en plein deplacement masquerait la ou elle tombe.
+            // The copy following the cursor announces nothing: a bubble opened
+            // under the card mid-drag would hide where it lands.
             apercu={isDragging ? undefined : apercu}
           />
           <CardCounter

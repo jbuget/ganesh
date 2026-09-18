@@ -15,32 +15,32 @@ function survoler(element: HTMLElement, x = 100, y = 200) {
 }
 
 describe("MissionLabel", () => {
-  it("affiche le libellé de la mission", () => {
+  it("shows the mission label", () => {
     renderLabel();
 
     expect(screen.getByText("Portail bailleurs")).toBeInTheDocument();
   });
 
-  it("n'affiche aucune infobulle tant que la souris est ailleurs", () => {
+  it("shows no tooltip while the mouse is elsewhere", () => {
     renderLabel();
 
     expect(screen.queryByRole("tooltip")).toBeNull();
   });
 
-  it("place le consommé et l'estimé dans l'infobulle", () => {
+  it("puts consumed and estimated in the tooltip", () => {
     survoler(renderLabel());
 
     expect(screen.getByRole("tooltip")).toHaveTextContent("3/20 jrs. estimés");
   });
 
-  it("redonne le nom complet dans l'infobulle, car il peut être tronqué", () => {
+  it("gives the full name back in the tooltip, since it may be truncated", () => {
     const name = "Automatisation du reporting de la direction financière";
     survoler(renderLabel({ label: name }));
 
     expect(screen.getByRole("tooltip")).toHaveTextContent(name);
   });
 
-  it("suit le curseur", () => {
+  it("follows the cursor", () => {
     const element = renderLabel();
 
     survoler(element, 100, 200);
@@ -50,7 +50,7 @@ describe("MissionLabel", () => {
     expect(screen.getByRole("tooltip").style.left).not.toBe(premierePosition);
   });
 
-  it("se place à côté du curseur, sans le masquer", () => {
+  it("sits beside the cursor, without hiding it", () => {
     survoler(renderLabel(), 100, 200);
 
     const tooltip = screen.getByRole("tooltip");
@@ -58,7 +58,7 @@ describe("MissionLabel", () => {
     expect(Number.parseInt(tooltip.style.top)).toBeGreaterThan(200);
   });
 
-  it("disparaît quand la souris quitte la cellule", () => {
+  it("disappears when the mouse leaves the cell", () => {
     const element = renderLabel();
     survoler(element);
 
@@ -67,13 +67,13 @@ describe("MissionLabel", () => {
     expect(screen.queryByRole("tooltip")).toBeNull();
   });
 
-  it("n'affiche aucun ratio pour une activité sans estimé", () => {
+  it("shows no ratio for work with no estimate", () => {
     survoler(renderLabel({ label: "Absences", estimeJ: null }));
 
     expect(screen.getByRole("tooltip")).not.toHaveTextContent("estimés");
   });
 
-  it("affiche un consommé nul comme zéro", () => {
+  it("shows a null consumption as zero", () => {
     survoler(renderLabel({ label: "Support", consommeJ: 0, estimeJ: 5 }));
 
     expect(screen.getByRole("tooltip")).toHaveTextContent("0/5 jrs. estimés");

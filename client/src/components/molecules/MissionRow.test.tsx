@@ -41,7 +41,7 @@ function line(content: React.ReactNode) {
 }
 
 describe("MissionRow", () => {
-  it("affiche la phase, la catégorie et l'estimé", () => {
+  it("shows the phase, the category and the estimate", () => {
     line(
       <MissionRow
         mission={mission()}
@@ -56,7 +56,7 @@ describe("MissionRow", () => {
     expect(screen.getByText("12 jrs.")).toBeInTheDocument();
   });
 
-  it("porte la priorité déclarée", () => {
+  it("carries the declared priority", () => {
     line(
       <MissionRow
         mission={mission({ priority: "critical" })}
@@ -69,7 +69,7 @@ describe("MissionRow", () => {
     expect(screen.getByText("Critique")).toBeInTheDocument();
   });
 
-  it("laisse la colonne vide quand la mission n'est pas située", () => {
+  it("leaves the column empty when the mission is not placed", () => {
     line(
       <MissionRow
         mission={mission({ priority: null })}
@@ -84,7 +84,7 @@ describe("MissionRow", () => {
     });
   });
 
-  it("montre le réalisé à côté de l'estimé", () => {
+  it("shows delivered beside estimated", () => {
     const consommee = {
       ...mission(),
       delivered_days: 4.5,
@@ -102,7 +102,7 @@ describe("MissionRow", () => {
     expect(screen.getByText("4.5 jrs.")).toBeInTheDocument();
   });
 
-  it("laisse le réalisé vide tant que rien n'est déclaré", () => {
+  it("leaves delivered empty while nothing is declared", () => {
     line(
       <MissionRow
         mission={mission()}
@@ -115,7 +115,7 @@ describe("MissionRow", () => {
     expect(screen.getAllByText(/jrs\./)).toHaveLength(1);
   });
 
-  it("porte le décompte du fil de suivi de sa mission", () => {
+  it("carries the count of its mission's follow-up thread", () => {
     const suivie = { ...mission(), comments: 3 } as ProjectListItemResponse;
 
     line(
@@ -130,7 +130,7 @@ describe("MissionRow", () => {
     expect(screen.getByLabelText("3 mises à jour")).toHaveTextContent("3");
   });
 
-  it("montre au survol le dernier message, signé, daté et mis en forme", () => {
+  it("shows on hover the latest message, signed, dated and formatted", () => {
     const suivie = {
       ...mission(),
       comments: 2,
@@ -158,7 +158,7 @@ describe("MissionRow", () => {
     expect(infobulle.querySelector("strong")).toHaveTextContent("recette");
   });
 
-  it("donne le message en entier, sans le tronquer", () => {
+  it("gives the message in full, without truncating it", () => {
     const long = `${"mot ".repeat(200)}fin`;
     const suivie = {
       ...mission(),
@@ -183,7 +183,7 @@ describe("MissionRow", () => {
     expect(screen.getByRole("tooltip")).toHaveTextContent("fin");
   });
 
-  it("ouvre le fil de la mission au clic sur son décompte", () => {
+  it("opens the mission's thread on a click on its count", () => {
     const ouvrirFil = vi.fn();
     const open = vi.fn();
     const suivie = { ...mission(), comments: 2 } as ProjectListItemResponse;
@@ -203,7 +203,7 @@ describe("MissionRow", () => {
     expect(open).not.toHaveBeenCalled();
   });
 
-  it("n'affiche rien tant que le fil est vide", () => {
+  it("shows nothing while the thread is empty", () => {
     line(
       <MissionRow
         mission={mission()}
@@ -216,7 +216,7 @@ describe("MissionRow", () => {
     expect(screen.queryByLabelText(/mise/)).not.toBeInTheDocument();
   });
 
-  it("ouvre la mission au clic sur son nom", () => {
+  it("opens the mission on a click on its name", () => {
     const open = vi.fn();
     line(
       <MissionRow
@@ -232,7 +232,7 @@ describe("MissionRow", () => {
     expect(open).toHaveBeenCalledTimes(1);
   });
 
-  it("distingue les référents des intervenants", () => {
+  it("tells leads from contributors", () => {
     const avecMonde = {
       ...mission(),
       leads: [member(1, "Léa Chen")],
@@ -252,7 +252,7 @@ describe("MissionRow", () => {
     expect(screen.getByText("NI")).toBeInTheDocument();
   });
 
-  it("laisse les colonnes vides plutôt que d'inventer une valeur", () => {
+  it("leaves the columns empty rather than inventing a value", () => {
     line(
       <MissionRow
         mission={mission({ category: null, estimated_days: null })}
@@ -266,7 +266,7 @@ describe("MissionRow", () => {
     expect(screen.getByText("Réalisation")).toBeInTheDocument();
   });
 
-  it("rattache visuellement un sous-projet à son parent", () => {
+  it("visually ties a sub-project to its parent", () => {
     line(
       <MissionRow
         mission={mission()}
@@ -280,7 +280,7 @@ describe("MissionRow", () => {
     expect(screen.getByText("\u2514")).toBeInTheDocument();
   });
 
-  it("ne marque pas un projet de premier niveau", () => {
+  it("does not mark a first-level project", () => {
     line(
       <MissionRow
         mission={mission()}
@@ -293,7 +293,7 @@ describe("MissionRow", () => {
     expect(screen.queryByText("\u2514")).not.toBeInTheDocument();
   });
 
-  it("propose de replier un projet qui porte des sous-projets", () => {
+  it("offers to fold a project carrying sub-projects", () => {
     line(
       <MissionRow
         mission={mission()}
@@ -312,7 +312,7 @@ describe("MissionRow", () => {
     expect(bascule).toHaveAttribute("aria-expanded", "true");
   });
 
-  it("propose de déplier un projet dont les sous-projets sont cachés", () => {
+  it("offers to unfold a project whose sub-projects are hidden", () => {
     line(
       <MissionRow
         mission={mission()}
@@ -331,7 +331,7 @@ describe("MissionRow", () => {
     expect(bascule).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("bascule les sous-projets sans ouvrir la mission", () => {
+  it("toggles the sub-projects without opening the mission", () => {
     const toggle = vi.fn();
     const open = vi.fn();
 
@@ -354,7 +354,7 @@ describe("MissionRow", () => {
     expect(open).not.toHaveBeenCalled();
   });
 
-  it("n'offre aucune bascule à un projet sans sous-projet", () => {
+  it("offers no toggle to a project with no sub-project", () => {
     line(
       <MissionRow
         mission={mission()}
@@ -369,7 +369,7 @@ describe("MissionRow", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("annonce une activité hors projet, qui n'a pas de phase", () => {
+  it("announces off-project work, which has no phase", () => {
     line(
       <MissionRow
         mission={mission({ kind: "off_project", status: null, estimated_days: null })}

@@ -15,9 +15,9 @@ interface TimesheetGridProps {
   extraRows: ProjectResponse[];
   today: string;
   onSetValue: (projectId: number, day: string, value: DayValue) => void;
-  /** Selecteur de mission, loge dans la derniere ligne. Absent si le mois est clos. */
+  /** Mission picker, housed in the last row. Absent when the month is closed. */
   ajoutDeMission?: React.ReactNode;
-  /** Retrait d'une mission. Absent si le mois est clos. */
+  /** Removing a mission. Absent when the month is closed. */
   onRemoveMission?: (projectId: number) => void;
 }
 
@@ -33,10 +33,10 @@ interface DisplayRow {
 }
 
 /**
- * La matrice de saisie : missions en lignes, jours du mois en colonnes.
+ * The entry grid: missions as rows, days of the month as columns.
  *
- * Les lignes ajoutees mais encore vides sont conservees localement : sans cela,
- * une mission choisie disparaitrait tant qu'aucune valeur n'y est saisie.
+ * Rows added but still empty are kept locally: without that, a chosen mission
+ * would disappear until a value was entered on it.
  */
 export function TimesheetGrid({
   grid,
@@ -75,15 +75,15 @@ export function TimesheetGrid({
   const totalByDate = new Map(grid.day_totals.map((total) => [total.day, total]));
 
   /**
-   * La ligne d'ajout ferme le tableau quand elle est la : c'est elle qui porte
-   * alors le trait fort du bas, et les missions se separent d'un trait faible.
+   * The add row closes the table when it is there: it then carries the strong
+   * bottom rule, and the missions are separated by a light one.
    */
   const fermeLeTableau = (rowIndex: number) =>
     !ajoutDeMission && rowIndex === rows.length - 1;
 
   /**
-   * Un jour non ouvre se reduit a une bande, sauf s'il porte deja une saisie :
-   * une donnee heritee doit rester visible et corrigeable, jamais escamotee.
+   * A non-working day shrinks to a band, unless it already carries an entry:
+   * inherited data must stay visible and correctable, never spirited away.
    */
   const estReduit = (day: string, isOffDay: boolean) =>
     isOffDay && (totalByDate.get(day)?.total ?? 0) === 0;
@@ -118,9 +118,9 @@ export function TimesheetGrid({
               <span className="sr-only">Total du mois</span>
             </th>
             {onRemoveMission && (
-              // Hors du cadre : cette colonne porte une action, pas une donnee.
-              // C'est pourquoi le trait du haut est porte par les cellules et
-              // non par la table, qui l'aurait prolonge jusqu'ici.
+              // Outside the frame: this column carries an action, not data.
+              // That is why the top rule is carried by the cells and not by the
+              // table, which would have run it all the way here.
               <th scope="col" className="w-10">
                 <span className="sr-only">Retirer la mission</span>
               </th>
@@ -162,7 +162,8 @@ export function TimesheetGrid({
             <tr>
               <td
                 colSpan={grid.days.length + 2}
-                // Seule ligne du corps : elle ferme le tableau en bas et a droite.
+                // The only row in the body: it closes the table at the bottom
+                // and on the right.
                 className="border-r border-b border-r-slate-500 border-b-slate-500 bg-white px-3 py-6 text-center text-sm text-slate-500"
               >
                 Aucune mission pour ce mois. Ajoutez-en une pour commencer à saisir.
@@ -223,7 +224,7 @@ export function TimesheetGrid({
             <tr>
               <th
                 scope="row"
-                // Ferme le tableau en bas, comme le faisait la derniere mission.
+                // Closes the table at the bottom, as the last mission did.
                 className="sticky left-0 z-10 w-56 border-r border-b border-r-slate-500 border-b-slate-500 bg-white px-3 py-1.5 text-left font-normal"
               >
                 {ajoutDeMission}

@@ -47,7 +47,7 @@ const enItems = (projects: ProjectResponse[]): MissionItem[] =>
  *
  * The reference list runs to dozens of projects and work packages: the search
  * field at the top of the menu saves scanning the whole list for the one being
- * looked for. \u00ab Declarer un nouveau projet \u00bb stays at the foot of the
+ * looked for. « Declarer un nouveau projet » stays at the foot of the
  * menu, outside the filter: it is precisely when no mission matches that one
  * needs it.
  */

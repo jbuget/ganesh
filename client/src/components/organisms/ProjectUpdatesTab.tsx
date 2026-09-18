@@ -11,18 +11,17 @@ interface ProjectUpdatesTabProps {
   projectId: number;
   /** Freezes the reference time: without it, server and client would diverge. */
   maintenant: Date;
-  /** Previent l'ecran d'ou l'on vient : il annonce le fil sans l'ouvrir. */
+  /** Tells the screen one came from: it announces the thread without opening it. */
   onChange?: () => void | Promise<void>;
-  /** Pose le curseur dans la redaction des l'ouverture. */
+  /** Puts the cursor in the composer as soon as it opens. */
   focusRedaction?: boolean;
 }
 
 /**
- * Le fil de suivi d'une mission.
+ * A mission's follow-up thread.
  *
- * La redaction est en haut et le fil antechronologique en dessous : on vient
- * pour lire ce qui est arrive depuis la derniere fois, et pour ajouter sa
- * pierre.
+ * The composer is at the top and the reverse-chronological thread below: one
+ * comes to read what has happened since last time, and to add one's own piece.
  */
 export function ProjectUpdatesTab({
   projectId,
@@ -33,8 +32,8 @@ export function ProjectUpdatesTab({
   const suivi = useProjectUpdates(projectId, onChange);
   const [body, setTexte] = useState("");
   const [enCours, setEnCours] = useState(false);
-  // Remonter la cle vide l'editeur : son contenu vit dans ProseMirror, pas
-  // dans React, et il ne se reinitialise pas en changeant une propriete.
+  // Bumping the key empties the editor: its content lives in ProseMirror, not
+  // in React, and it does not reset by changing a prop.
   const [cleDeRedaction, setCleDeRedaction] = useState(0);
 
   async function publier() {

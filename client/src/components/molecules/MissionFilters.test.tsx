@@ -37,7 +37,7 @@ const barre = (over: Partial<Criteres> = {}, props: Record<string, unknown> = {}
 };
 
 describe("MissionFilters", () => {
-  it("propose les cinq critères", () => {
+  it("offers the five criteria", () => {
     barre();
 
     expect(screen.getByLabelText("Rechercher une mission")).toBeInTheDocument();
@@ -50,7 +50,7 @@ describe("MissionFilters", () => {
     );
   });
 
-  it("remonte la recherche saisie", () => {
+  it("reports the search typed", () => {
     const { onChange } = barre();
 
     fireEvent.change(screen.getByLabelText("Rechercher une mission"), {
@@ -60,7 +60,7 @@ describe("MissionFilters", () => {
     expect(onChange).toHaveBeenCalledWith({ name: "portail" });
   });
 
-  it("remonte une phase cochée", () => {
+  it("reports a ticked phase", () => {
     const { onChange } = barre();
 
     fireEvent.click(screen.getByRole("button", { name: /Phase/ }));
@@ -69,7 +69,7 @@ describe("MissionFilters", () => {
     expect(onChange).toHaveBeenCalledWith({ phases: ["development"] });
   });
 
-  it("remonte un intervenant coché, par son identifiant", () => {
+  it("reports a ticked contributor, by their id", () => {
     const { onChange } = barre();
 
     fireEvent.click(screen.getByRole("button", { name: /Intervenant/ }));
@@ -78,7 +78,7 @@ describe("MissionFilters", () => {
     expect(onChange).toHaveBeenCalledWith({ contributors: [3] });
   });
 
-  it("distingue les projets des sous-projets", () => {
+  it("tells projects from sub-projects", () => {
     const { onChange } = barre();
 
     fireEvent.click(screen.getByRole("button", { name: /Type/ }));
@@ -87,7 +87,7 @@ describe("MissionFilters", () => {
     expect(onChange).toHaveBeenCalledWith({ types: ["work_package"] });
   });
 
-  it("remonte une priorité cochée", () => {
+  it("reports a ticked priority", () => {
     const { onChange } = barre();
 
     fireEvent.click(screen.getByRole("button", { name: /Priorité/ }));
@@ -96,7 +96,7 @@ describe("MissionFilters", () => {
     expect(onChange).toHaveBeenCalledWith({ priorities: ["critical"] });
   });
 
-  it("propose de consulter les missions archivées", () => {
+  it("offers to look at archived missions", () => {
     const { onChange } = barre();
 
     fireEvent.click(screen.getByRole("button", { name: /État/ }));
@@ -105,13 +105,13 @@ describe("MissionFilters", () => {
     expect(onChange).toHaveBeenCalledWith({ states: ["archivee"] });
   });
 
-  it("n'offre d'effacer que lorsqu'il y a quelque chose à effacer", () => {
+  it("offers to clear only when there is something to clear", () => {
     barre();
 
     expect(screen.queryByRole("button", { name: "Effacer" })).toBeNull();
   });
 
-  it("efface tous les critères d'un clic", () => {
+  it("clears every criterion in one click", () => {
     const { onEffacer } = barre({ name: "portail" });
 
     fireEvent.click(screen.getByRole("button", { name: "Effacer" }));
@@ -119,13 +119,13 @@ describe("MissionFilters", () => {
     expect(onEffacer).toHaveBeenCalledTimes(1);
   });
 
-  it("dit ce qu'on voit sur ce que l'écran porte", () => {
+  it("says what is seen against what the screen carries", () => {
     barre({ phases: ["scoping"] });
 
     expect(screen.getByRole("status")).toHaveTextContent("3 missions sur 12");
   });
 
-  it("s'annonce comme un groupe de recherche", () => {
+  it("announces itself as a search group", () => {
     barre();
 
     expect(

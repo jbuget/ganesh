@@ -10,7 +10,7 @@ import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 import { phaseLabel, phaseDot } from "@/lib/board";
-import { depuis } from "@/lib/dates-relatives";
+import { depuis } from "@/lib/relative-dates";
 
 interface MissionRowProps {
   mission: ProjectListItemResponse;

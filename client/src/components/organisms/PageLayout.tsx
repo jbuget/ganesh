@@ -1,25 +1,23 @@
 "use client";
 
 interface PageLayoutProps {
-  /** L'en-tete de l'ecran, qui ne defile pas. */
+  /** The screen header, which does not scroll. */
   entete: React.ReactNode;
   /**
-   * Pour un ecran qui organise lui-meme son defilement — le kanban et ses
-   * colonnes — au lieu de le laisser a la page entiere.
+   * For a screen that arranges its own scrolling — the kanban and its columns —
+   * instead of leaving it to the whole page.
    */
   defilementInterne?: boolean;
   children: React.ReactNode;
 }
 
 /**
- * Le squelette commun a toutes les vues : un en-tete fixe, un contenu qui
- * defile dessous.
+ * The skeleton shared by every view: a fixed header, content scrolling beneath.
  *
- * L'ecran tient dans la fenetre et c'est le contenu seul qui bouge : le titre
- * et les actions restent sous les yeux, quelle que soit la longueur de la
- * liste. C'est aussi ce qui permet aux en-tetes de tableau de se figer, faute
- * de quoi ils se caleraient sur la fenetre et passeraient sous celui de la
- * page.
+ * The screen fits the window and only the content moves: the title and the
+ * actions stay before the eyes, however long the list. It is also what lets
+ * table headers stick, failing which they would latch onto the window and slip
+ * under the page's own header.
  */
 export function PageLayout({
   entete,

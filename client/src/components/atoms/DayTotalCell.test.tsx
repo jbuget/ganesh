@@ -19,33 +19,33 @@ function renderCell(props: Partial<React.ComponentProps<typeof DayTotalCell>>) {
 }
 
 describe("DayTotalCell", () => {
-  it("affiche une journée complète en vert", () => {
+  it("shows a full day in green", () => {
     expect(renderCell({ value: 1 }).className).toContain("bg-emerald-100");
   });
 
-  it("signale une journée incomplète", () => {
+  it("flags an incomplete day", () => {
     expect(renderCell({ value: 0.5 })).toHaveAttribute("data-alert", "true");
   });
 
-  it("signale une journée en dépassement", () => {
+  it("flags a day gone over", () => {
     expect(renderCell({ value: 1.5 })).toHaveAttribute("data-alert", "true");
   });
 
-  it("ne signale rien pour une journée complète", () => {
+  it("flags nothing for a full day", () => {
     expect(renderCell({ value: 1 })).not.toHaveAttribute("data-alert");
   });
 
-  it("laisse une journée vide en blanc", () => {
+  it("leaves an empty day blank", () => {
     expect(renderCell({ value: 0 }).className).toContain("bg-white");
   });
 
-  it("grise un jour non ouvré sans saisie", () => {
+  it("greys a non-working day with no entry", () => {
     expect(renderCell({ value: 0, isOffDay: true }).className).toContain(
       "bg-slate-100",
     );
   });
 
-  it("la valeur prime sur un jour non ouvré", () => {
+  it("the value wins over a non-working day", () => {
     expect(renderCell({ value: 1, isOffDay: true }).className).toContain(
       "bg-emerald-100",
     );

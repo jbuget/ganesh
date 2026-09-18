@@ -18,11 +18,11 @@ interface ProjectLinksEditorProps {
 }
 
 /**
- * Les liens utiles d'une mission : autant qu'on veut, chacun avec son icone.
+ * A mission's useful links: as many as wanted, each with its icon.
  *
- * La saisie vit dans un popover ancre au bouton, comme les autres champs de la
- * fiche : les liens restent une valeur parmi d'autres, et la fiche ne disparait
- * pas derriere un voile pour trois champs.
+ * Input lives in a popover anchored to the button, like the other fields of the
+ * sheet: links stay one value among others, and the sheet does not vanish
+ * behind a veil for three fields.
  */
 export function ProjectLinksEditor({
   links,
@@ -37,7 +37,7 @@ export function ProjectLinksEditor({
 
   function changerOuverture(value: boolean) {
     setOuvert(value);
-    // Refermer, de quelque maniere que ce soit, remet le formulaire a neuf.
+    // Closing, in any way at all, resets the form.
     if (!value) {
       setLabel("");
       setUrl("");
@@ -79,8 +79,8 @@ export function ProjectLinksEditor({
                 type="button"
                 aria-label={`Retirer ${link.label}`}
                 onClick={() => void onRemove(link.id)}
-                // Toujours visible, et pas seulement au survol : la croix doit
-                // s'atteindre au doigt comme a la souris.
+                // Always visible, and not only on hover: the cross must be
+                // reachable by finger as well as by mouse.
                 className="cursor-pointer rounded p-0.5 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
               >
                 <X className="size-3.5" aria-hidden />

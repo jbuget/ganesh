@@ -3,18 +3,18 @@ import { act, renderHook } from "@testing-library/react";
 
 import { basculerBarreLaterale, useBarreLateraleRepliee } from "./sidebar-store";
 
-describe("préférence de repli", () => {
+describe("fold preference", () => {
   beforeEach(() => {
     window.localStorage.clear();
   });
 
-  it("laisse la barre dépliée par défaut", () => {
+  it("leaves the bar unfolded by default", () => {
     const { result } = renderHook(() => useBarreLateraleRepliee());
 
     expect(result.current).toBe(false);
   });
 
-  it("bascule d'un appel à l'autre", () => {
+  it("toggles from one call to the next", () => {
     const { result } = renderHook(() => useBarreLateraleRepliee());
     const depart = result.current;
 
@@ -23,7 +23,7 @@ describe("préférence de repli", () => {
     expect(result.current).toBe(!depart);
   });
 
-  it("retient le choix dans le stockage local", () => {
+  it("keeps the choice in local storage", () => {
     const { result } = renderHook(() => useBarreLateraleRepliee());
     const attendu = !result.current;
 
@@ -34,7 +34,7 @@ describe("préférence de repli", () => {
     );
   });
 
-  it("applique une préférence déjà enregistrée dès le premier rendu client", async () => {
+  it("applies an already saved preference from the first client render", async () => {
     window.localStorage.setItem("timesheet.sidebar-repliee", "1");
 
     const { result } = renderHook(() => useBarreLateraleRepliee());
@@ -45,7 +45,7 @@ describe("préférence de repli", () => {
     expect(result.current).toBe(true);
   });
 
-  it("prévient tous les abonnés", () => {
+  it("notifies every subscriber", () => {
     const premier = renderHook(() => useBarreLateraleRepliee());
     const second = renderHook(() => useBarreLateraleRepliee());
 

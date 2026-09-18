@@ -26,7 +26,7 @@ const mission = (
   }) as unknown as ProjectListItemResponse;
 
 describe("buildProjectTree", () => {
-  it("rattache chaque lot à son projet", () => {
+  it("attaches each work package to its project", () => {
     const tree = buildProjectTree([
       mission(1, "Portail", "project"),
       mission(2, "Lot API", "work_package", 1),
@@ -37,7 +37,7 @@ describe("buildProjectTree", () => {
     expect(tree[0].lots.map((l) => l.project.label)).toEqual(["Lot API", "Lot Front"]);
   });
 
-  it("classe les projets et les lots par ordre alphabétique", () => {
+  it("ranks projects and work packages alphabetically", () => {
     const tree = buildProjectTree([
       mission(1, "Zeta", "project"),
       mission(2, "Alpha", "project"),
@@ -46,7 +46,7 @@ describe("buildProjectTree", () => {
     expect(tree.map((n) => n.mission.project.label)).toEqual(["Alpha", "Zeta"]);
   });
 
-  it("range les projets par phase, dans l'ordre des colonnes du kanban", () => {
+  it("arranges projects by phase, in kanban column order", () => {
     const tree = buildProjectTree([
       mission(1, "Alpha", "project", null, "operations"),
       mission(2, "Beta", "project", null, "exploration"),
@@ -60,7 +60,7 @@ describe("buildProjectTree", () => {
     ]);
   });
 
-  it("classe par ordre alphabétique à phase égale", () => {
+  it("ranks alphabetically at equal phase", () => {
     const tree = buildProjectTree([
       mission(1, "Zeta", "project", null, "scoping"),
       mission(2, "Alpha", "project", null, "scoping"),
@@ -69,7 +69,7 @@ describe("buildProjectTree", () => {
     expect(tree.map((n) => n.mission.project.label)).toEqual(["Alpha", "Zeta"]);
   });
 
-  it("range de même les lots sous leur projet", () => {
+  it("arranges the work packages under their project the same way", () => {
     const tree = buildProjectTree([
       mission(1, "Portail", "project", null, "scoping"),
       mission(2, "Lot livré", "work_package", 1, "operations"),
@@ -82,7 +82,7 @@ describe("buildProjectTree", () => {
     ]);
   });
 
-  it("remonte un lot dont le parent est absent plutôt que de le perdre", () => {
+  it("lifts a work package whose parent is missing rather than losing it", () => {
     const tree = buildProjectTree([
       mission(1, "Portail", "project"),
       mission(9, "Lot orphelin", "work_package", 404),
@@ -94,13 +94,13 @@ describe("buildProjectTree", () => {
     ]);
   });
 
-  it("remonte aussi un lot sans parent déclaré", () => {
+  it("also lifts a work package with no declared parent", () => {
     const tree = buildProjectTree([mission(9, "Lot seul", "work_package", null)]);
 
     expect(tree.map((n) => n.mission.project.label)).toEqual(["Lot seul"]);
   });
 
-  it("écarte les activités hors projet de l'arborescence", () => {
+  it("keeps off-project work out of the tree", () => {
     const tree = buildProjectTree([
       mission(1, "Portail", "project"),
       mission(2, "Absences", "off_project"),
@@ -109,7 +109,7 @@ describe("buildProjectTree", () => {
     expect(tree.map((n) => n.mission.project.label)).toEqual(["Portail"]);
   });
 
-  it("ne perd aucun projet quand il n'y a aucun lot", () => {
+  it("loses no project when there is no work package", () => {
     const tree = buildProjectTree([mission(1, "Portail", "project")]);
 
     expect(tree[0].lots).toEqual([]);
@@ -117,7 +117,7 @@ describe("buildProjectTree", () => {
 });
 
 describe("offProjectActivities", () => {
-  it("ne retient que les activités hors projet, triées", () => {
+  it("keeps only off-project work, sorted", () => {
     const activities = offProjectActivities([
       mission(1, "Portail", "project"),
       mission(3, "Formation", "off_project"),
@@ -128,8 +128,8 @@ describe("offProjectActivities", () => {
   });
 });
 
-describe("buildProjectTree, rangé sur une colonne", () => {
-  it("applique le tri aux projets", () => {
+describe("buildProjectTree, arranged on a column", () => {
+  it("applies the sort to the projects", () => {
     const tree = buildProjectTree(
       [
         mission(1, "Alpha", "project", null, "exploration"),
@@ -141,7 +141,7 @@ describe("buildProjectTree, rangé sur une colonne", () => {
     expect(tree.map((n) => n.mission.project.label)).toEqual(["Bravo", "Alpha"]);
   });
 
-  it("garde chaque lot sous son projet", () => {
+  it("keeps each work package under its project", () => {
     // Sorting must never lift a sub-project to the first level: the list gets
     // ordered, the tree does not move.
     const tree = buildProjectTree(

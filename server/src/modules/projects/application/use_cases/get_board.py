@@ -1,4 +1,4 @@
-"""Assemble le tableau de bord des projets, par phase."""
+"""Assembles the project board, phase by phase."""
 
 from dataclasses import dataclass, field
 from datetime import date
@@ -22,7 +22,7 @@ from src.modules.users.domain.repositories.user_repository import UserRepository
 
 @dataclass
 class BoardCard:
-    """Une carte du tableau : la mission et ce qu'on veut lire dessus."""
+    """A board card: the mission, and what one wants to read on it."""
 
     project: Project
     consumed_days: float
@@ -40,7 +40,7 @@ class BoardCard:
 
 @dataclass
 class BoardColumn:
-    """Une phase et ses cartes, dans l'ordre choisi par l'equipe."""
+    """A phase and its cards, in the order the team chose."""
 
     status: ProjectStatus
     cards: list[BoardCard] = field(default_factory=list)
@@ -54,14 +54,14 @@ class Board:
 
 
 class GetBoardUseCase:
-    """Construit le tableau de bord.
+    """Builds the board.
 
-    Toutes les phases sont retournees, meme vides : une colonne absente
-    empecherait d'y deposer une carte.
+    Every phase comes back, even empty ones: a missing column would leave
+    nowhere to drop a card.
 
-    Les missions archivees en sont ecartees par defaut : le tableau sert a
-    piloter ce qui tourne. On les redemande pour faire le point, et tout ce
-    qu'une carte annonce — son fil, ses lots — suit alors le meme perimetre.
+    Archived missions are left out by default: the board is there to steer what
+    is running. They are asked for when taking stock, and everything a card
+    announces — its thread, its work packages — then follows the same scope.
     """
 
     def __init__(

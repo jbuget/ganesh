@@ -35,7 +35,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("/me", response_model=UserResponse, operation_id="getMe")
 async def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
-    """L'utilisateur courant, tel que provisionne depuis Entra."""
+    """The current user, as provisioned from Entra."""
     return to_user_response(current_user)
 
 

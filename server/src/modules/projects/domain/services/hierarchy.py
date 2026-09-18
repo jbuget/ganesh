@@ -13,11 +13,10 @@ def ensure_can_be_parent(parent: Project) -> None:
     """
     if parent.kind is ProjectKind.WORK_PACKAGE:
         raise ValidationError(
-            f"\u00ab {parent.label} \u00bb is already a sub-project: "
+            f"« {parent.label} » is already a sub-project: "
             "the hierarchy stops at two levels."
         )
     if parent.kind is ProjectKind.OFF_PROJECT:
         raise ValidationError(
-            f"\u00ab {parent.label} \u00bb is off-project work: "
-            "it cannot carry a sub-project."
+            f"« {parent.label} » is off-project work: " "it cannot carry a sub-project."
         )

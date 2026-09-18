@@ -36,7 +36,7 @@ def test_manager_can_manage_teammates() -> None:
 
 @pytest.mark.parametrize("role", [Role.TEAMMATE, Role.MANAGER])
 def test_any_active_user_can_edit_an_open_month_of_anyone(role: Role) -> None:
-    """Transparence assumee : chacun peut corriger un mois ouvert d'un collegue."""
+    """Transparency is deliberate: anyone may fix a colleague's open month."""
     assert make_user(role).can_edit_open_months() is True
 
 
@@ -66,7 +66,7 @@ def test_a_first_connection_is_recorded() -> None:
 def test_a_connection_within_the_freshness_window_is_not_rewritten() -> None:
     """A bearer token is presented on every request.
 
-    Without a freshness window, the \u00ab last login \u00bb would measure
+    Without a freshness window, the « last login » would measure
     nothing but the number of writes to the database.
     """
     user = make_user()

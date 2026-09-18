@@ -38,28 +38,28 @@ const vue = vi.hoisted(() => ({
 vi.mock("@/lib/use-users", () => ({ useUsersScreen: () => vue }));
 
 describe("UsersPage", () => {
-  it("liste les collaborateurs", () => {
+  it("lists the teammates", () => {
     render(<UsersPage />);
 
     expect(screen.getByText("Jérémy Buget")).toBeInTheDocument();
     expect(screen.getByText("L. Chen")).toBeInTheDocument();
   });
 
-  it("n'offre pas de changer un rôle à un collaborateur", () => {
+  it("does not offer a teammate changing a role", () => {
     vue.isManager = false;
     render(<UsersPage />);
 
     expect(screen.queryByRole("button", { name: /Changer le rôle/ })).toBeNull();
   });
 
-  it("laisse un manager changer les rôles", () => {
+  it("lets a manager change the roles", () => {
     vue.isManager = true;
     render(<UsersPage />);
 
     expect(screen.getAllByRole("button", { name: /Changer le rôle/ })).toHaveLength(2);
   });
 
-  it("permet de faire apparaître les comptes désactivés", async () => {
+  it("makes it possible to bring up deactivated accounts", async () => {
     vue.avecInactifs = false;
     render(<UsersPage />);
 
@@ -70,7 +70,7 @@ describe("UsersPage", () => {
     expect(vue.basculerInactifs).toHaveBeenCalledTimes(1);
   });
 
-  it("donne la dernière connexion de chacun", () => {
+  it("gives everyone's last login", () => {
     render(<UsersPage />);
 
     expect(
@@ -80,16 +80,16 @@ describe("UsersPage", () => {
     expect(screen.getByText("Jamais")).toBeInTheDocument();
   });
 
-  it("nomme le statut de chaque compte", () => {
+  it("names the status of each account", () => {
     vue.isManager = false;
     render(<UsersPage />);
 
     expect(screen.getAllByText("Actif")).toHaveLength(2);
   });
 
-  it("laisse un manager couper l'accès d'un autre, jamais le sien", () => {
-    // Se desactiver soi-meme, c'est s'enfermer dehors : l'API le refuse, et
-    // l'ecran n'a pas a proposer un geste qui sera rejete.
+  it("lets a manager cut off another's access, never their own", () => {
+    // Deactivating oneself is locking oneself out: the API refuses it, and the
+    // screen has no business offering a move that will be rejected.
     vue.isManager = true;
     vue.moiId = 1;
     render(<UsersPage />);
@@ -98,7 +98,7 @@ describe("UsersPage", () => {
     expect(boutons).toHaveLength(1);
   });
 
-  it("annonce une liste vide plutôt qu'un tableau sans ligne", () => {
+  it("announces an empty list rather than a table with no rows", () => {
     vue.collaborateurs = [];
     render(<UsersPage />);
 

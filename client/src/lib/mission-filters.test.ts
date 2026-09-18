@@ -44,38 +44,38 @@ const filters = (over: Partial<MissionFilters> = {}): MissionFilters => ({
 });
 
 describe("filtreActif", () => {
-  it("ne voit aucun filtre sur des critères vides", () => {
+  it("sees no filter on empty criteria", () => {
     expect(filtreActif(NO_FILTER)).toBe(false);
   });
 
-  it("ignore un nom fait d'espaces", () => {
+  it("ignores a name made of spaces", () => {
     expect(filtreActif(filters({ name: "   " }))).toBe(false);
   });
 
-  it("se déclenche dès qu'un critère est posé", () => {
+  it("triggers as soon as a criterion is set", () => {
     expect(filtreActif(filters({ phases: ["scoping"] }))).toBe(true);
     expect(filtreActif(filters({ name: "portail" }))).toBe(true);
   });
 });
 
-describe("recherche par nom", () => {
-  it("retient une mission dont le nom contient la recherche", () => {
+describe("searching by name", () => {
+  it("keeps a mission whose name contains the search", () => {
     expect(filtrerMissions([card()], filters({ name: "bailleurs" }))).toHaveLength(1);
   });
 
-  it("ignore la casse et les accents", () => {
+  it("ignores case and accents", () => {
     const cards = [card({ project: { label: "Refonte extranet copropriété" } })];
 
     expect(filtrerMissions(cards, filters({ name: "COPROPRIETE" }))).toHaveLength(1);
   });
 
-  it("écarte ce qui ne correspond pas", () => {
+  it("rules out what does not match", () => {
     expect(filtrerMissions([card()], filters({ name: "facturation" }))).toHaveLength(0);
   });
 });
 
-describe("critères à choix multiples", () => {
-  it("retient les missions de l'une des catégories choisies", () => {
+describe("multiple-choice criteria", () => {
+  it("keeps the missions of one of the chosen categories", () => {
     const cards = [
       card({ project: { id: 1, category: "innovate_differentiate" } }),
       card({ project: { id: 2, category: "structure_platform" } }),
@@ -90,7 +90,7 @@ describe("critères à choix multiples", () => {
     expect(kept.map((c) => c.project.id)).toEqual([1, 2]);
   });
 
-  it("retient les missions de l'une des priorités choisies", () => {
+  it("keeps the missions of one of the chosen priorities", () => {
     const cards = [
       card({ project: { id: 1, priority: "critical" } }),
       card({ project: { id: 2, priority: "low" } }),
@@ -102,7 +102,7 @@ describe("critères à choix multiples", () => {
     expect(kept.map((c) => c.project.id)).toEqual([1]);
   });
 
-  it("retient les missions portées par l'un des intervenants choisis", () => {
+  it("keeps the missions carried by one of the chosen contributors", () => {
     const cards = [
       card({ project: { id: 1 }, contributors: [{ id: 7 } as never] }),
       card({ project: { id: 2 }, contributors: [] }),
@@ -113,7 +113,7 @@ describe("critères à choix multiples", () => {
     expect(kept.map((c) => c.project.id)).toEqual([1]);
   });
 
-  it("distingue les projets de leurs sous-projets", () => {
+  it("tells projects from their sub-projects", () => {
     const cards = [
       card({ project: { id: 1, kind: "project" } }),
       card({ project: { id: 2, kind: "work_package", parent_id: 1 } }),
@@ -129,7 +129,7 @@ describe("critères à choix multiples", () => {
     ).toHaveLength(2);
   });
 
-  it("combine les critères : tous doivent être satisfaits", () => {
+  it("combines the criteria: all must be satisfied", () => {
     const cards = [
       card({
         project: { id: 1, label: "Portail", category: "innovate_differentiate" },
@@ -148,37 +148,37 @@ describe("critères à choix multiples", () => {
   });
 });
 
-describe("missions archivées", () => {
+describe("archived missions", () => {
   const cards = [
     card({ project: { id: 1, is_active: true } }),
     card({ project: { id: 2, is_active: false } }),
   ];
 
-  it("les écarte tant qu'on ne les demande pas", () => {
+  it("rules them out until they are asked for", () => {
     const kept = filtrerMissions(cards, NO_FILTER);
 
     expect(kept.map((c) => c.project.id)).toEqual([1]);
   });
 
-  it("ne montre qu'elles quand on ne demande qu'elles", () => {
+  it("shows only them when only they are asked for", () => {
     const kept = filtrerMissions(cards, filters({ states: ["archivee"] }));
 
     expect(kept.map((c) => c.project.id)).toEqual([2]);
   });
 
-  it("montre les deux quand les deux états sont cochés", () => {
+  it("shows both when both states are ticked", () => {
     const kept = filtrerMissions(cards, filters({ states: ["active", "archivee"] }));
 
     expect(kept.map((c) => c.project.id)).toEqual([1, 2]);
   });
 
-  it("ne les redemande au serveur que si elles sont voulues", () => {
+  it("asks the server for them again only when they are wanted", () => {
     expect(inclutLesArchivees(NO_FILTER)).toBe(false);
     expect(inclutLesArchivees(filters({ states: ["active"] }))).toBe(false);
     expect(inclutLesArchivees(filters({ states: ["archivee"] }))).toBe(true);
   });
 
-  it("compte comme un filtre : le tableau n'est plus la vue de pilotage", () => {
+  it("counts as a filter: the board is no longer the steering view", () => {
     expect(filtreActif(filters({ states: ["archivee"] }))).toBe(true);
   });
 });
@@ -189,19 +189,19 @@ describe("filtrage par phase", () => {
     card({ project: { id: 2, status: "scoping" } }),
   ];
 
-  it("garde toutes les missions quand aucune phase n'est choisie", () => {
+  it("keeps every mission when no phase is chosen", () => {
     expect(filtrerMissions(cards, NO_FILTER)).toHaveLength(2);
   });
 
-  it("ne garde que les missions des phases choisies", () => {
+  it("keeps only the missions of the chosen phases", () => {
     const kept = filtrerMissions(cards, filters({ phases: ["development"] }));
 
     expect(kept.map((c) => c.project.id)).toEqual([1]);
   });
 });
 
-describe("filtres portés par l'URL", () => {
-  it("relit ce qu'il a écrit", () => {
+describe("filters held by the URL", () => {
+  it("reads back what it wrote", () => {
     const chosen = filters({
       name: "portail",
       phases: ["scoping", "development"],
@@ -218,14 +218,14 @@ describe("filtres portés par l'URL", () => {
     expect(lireFiltres(params)).toEqual(chosen);
   });
 
-  it("n'écrit rien quand aucun filtre n'est posé", () => {
+  it("writes nothing when no filter is set", () => {
     const params = new URLSearchParams("mission=12");
     ecrireFiltres(params, NO_FILTER);
 
     expect(params.toString()).toBe("mission=12");
   });
 
-  it("laisse les autres paramètres en place", () => {
+  it("leaves the other parameters in place", () => {
     const params = new URLSearchParams("mission=12&phase=scoping");
     ecrireFiltres(params, filters({ phases: ["development"] }));
 
@@ -233,7 +233,7 @@ describe("filtres portés par l'URL", () => {
     expect(params.getAll("phase")).toEqual(["development"]);
   });
 
-  it("ignore une valeur inconnue plutôt que de vider l'écran", () => {
+  it("ignores an unknown value rather than emptying the screen", () => {
     const params = new URLSearchParams("phase=sieste&contributor=abc");
 
     expect(lireFiltres(params)).toEqual(NO_FILTER);

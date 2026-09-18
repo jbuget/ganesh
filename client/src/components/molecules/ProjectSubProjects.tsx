@@ -11,11 +11,11 @@ interface ProjectSubProjectsProps {
 }
 
 /**
- * Les lots rattaches a une mission.
+ * The work packages attached to a mission.
  *
- * Chaque ligne mene a la fiche du lot plutot que de la deplier ici : un lot se
- * pilote comme une mission a part entiere, avec ses propres intervenants et sa
- * propre consommation, et n'a pas sa place en resume dans la fiche du parent.
+ * Each row leads to the package's sheet rather than unfolding it here: a work
+ * package is steered like a mission in its own right, with its own contributors
+ * and its own consumption, and has no place summarised in the parent's sheet.
  */
 export function ProjectSubProjects({ sousProjets }: ProjectSubProjectsProps) {
   if (sousProjets.length === 0) {

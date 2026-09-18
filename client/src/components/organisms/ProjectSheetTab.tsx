@@ -12,7 +12,7 @@ interface ProjectSheetTabProps {
   onSave: (body: string) => Promise<void>;
 }
 
-/** Redaction de la fiche, avec les titres qui l'articulent. */
+/** Writing the sheet, with the headings that structure it. */
 function Redaction({
   value,
   onSave,
@@ -58,12 +58,12 @@ function Redaction({
 }
 
 /**
- * La fiche de service d'une mission.
+ * A mission's service sheet.
  *
- * On la lit bien plus souvent qu'on ne l'ecrit : elle s'affiche rendue, et
- * l'editeur ne s'ouvre qu'a la demande. Il montre la mise en forme pendant la
- * frappe, mais ce qui part en base reste du markdown — c'est lui qui nourrira
- * les fiches publiques.
+ * It is read far more often than it is written: it shows rendered, and the
+ * editor only opens on demand. The editor shows the formatting while typing,
+ * but what goes to the database stays markdown — that is what will feed the
+ * public pages.
  */
 export function ProjectSheetTab({ description, onSave }: ProjectSheetTabProps) {
   const [enEdition, setEnEdition] = useState(false);

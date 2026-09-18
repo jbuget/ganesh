@@ -26,7 +26,7 @@ function renderInRow(ui: React.ReactElement) {
 }
 
 describe("DayCell", () => {
-  it("est une cellule de tableau, pas un bouton nu dans la ligne", () => {
+  it("is a table cell, not a bare button in the row", () => {
     renderInRow(<DayCell {...baseProps} value={0} onChange={vi.fn()} />);
 
     const cell = screen.getByRole("cell");
@@ -34,7 +34,7 @@ describe("DayCell", () => {
     expect(within(cell).getByRole("button")).toBeInTheDocument();
   });
 
-  it("notifie la valeur suivante au clic", async () => {
+  it("notifies the next value on click", async () => {
     const onChange = vi.fn();
     renderInRow(<DayCell {...baseProps} value={0} onChange={onChange} />);
 
@@ -43,19 +43,19 @@ describe("DayCell", () => {
     expect(onChange).toHaveBeenCalledWith(1);
   });
 
-  it("affiche une demi-journée de façon lisible", () => {
+  it("shows a half day readably", () => {
     renderInRow(<DayCell {...baseProps} value={0.5} onChange={vi.fn()} />);
 
     expect(screen.getByRole("button")).toHaveTextContent("½");
   });
 
-  it("n'affiche rien quand la cellule est vide", () => {
+  it("shows nothing when the cell is empty", () => {
     renderInRow(<DayCell {...baseProps} value={0} onChange={vi.fn()} />);
 
     expect(screen.getByRole("button")).toHaveTextContent("");
   });
 
-  it("n'est pas cliquable quand le mois est verrouillé", async () => {
+  it("is not clickable when the month is locked", async () => {
     const onChange = vi.fn();
     render(<DayCell {...baseProps} value={1} isReadOnly onChange={onChange} />);
 
@@ -64,7 +64,7 @@ describe("DayCell", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it("verrouille un jour non ouvré resté vide", async () => {
+  it("locks a non-working day left empty", async () => {
     const onChange = vi.fn();
     renderInRow(<DayCell {...baseProps} value={0} isOffDay onChange={onChange} />);
 
@@ -73,7 +73,7 @@ describe("DayCell", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it("verrouille un jour non ouvré même s'il porte une valeur", async () => {
+  it("locks a non-working day even when it carries a value", async () => {
     const onChange = vi.fn();
     renderInRow(<DayCell {...baseProps} value={1} isOffDay onChange={onChange} />);
 
@@ -82,7 +82,7 @@ describe("DayCell", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it("porte un libellé accessible", () => {
+  it("carries an accessible label", () => {
     renderInRow(<DayCell {...baseProps} value={1} onChange={vi.fn()} />);
 
     expect(screen.getByRole("button", { name: "15 septembre" })).toBeInTheDocument();

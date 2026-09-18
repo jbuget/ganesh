@@ -65,7 +65,7 @@ const baseProps = {
 };
 
 describe("TimesheetGrid", () => {
-  it("affiche une ligne par mission", () => {
+  it("shows one row per mission", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     expect(
@@ -73,10 +73,10 @@ describe("TimesheetGrid", () => {
     ).toBeInTheDocument();
   });
 
-  it("compare le consommé du projet à son estimé, pas le réalisé du mois", () => {
+  it("compares the project's consumption against its estimate, not the month's delivered days", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
-    // Le ratio vit dans l'infobulle de la mission, qui suit le curseur.
+    // The ratio lives in the mission's tooltip, which follows the cursor.
     fireEvent.mouseMove(screen.getByText("Portail bailleurs"), {
       clientX: 50,
       clientY: 80,
@@ -85,7 +85,7 @@ describe("TimesheetGrid", () => {
     expect(screen.getByRole("tooltip")).toHaveTextContent("7/20 jrs. estimés");
   });
 
-  it("notifie la valeur suivante quand on clique une cellule vide", async () => {
+  it("notifies the next value when an empty cell is clicked", async () => {
     const onSetValue = vi.fn();
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} onSetValue={onSetValue} />);
 
@@ -96,7 +96,7 @@ describe("TimesheetGrid", () => {
     expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-14", 1);
   });
 
-  it("fait tourner une journée pleine vers une demi-journée", async () => {
+  it("cycles a full day to a half day", async () => {
     const onSetValue = vi.fn();
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} onSetValue={onSetValue} />);
 
@@ -107,32 +107,32 @@ describe("TimesheetGrid", () => {
     expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-15", 0.5);
   });
 
-  it("garde une ligne ajoutée mais encore vide", () => {
+  it("keeps a row added but still empty", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} extraRows={PROJECTS} />);
 
     expect(screen.getByRole("rowheader", { name: /Absences/ })).toBeInTheDocument();
   });
 
-  it("verrouille toutes les cellules quand le mois est validé", () => {
+  it("locks every cell when the month is validated", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid({ is_writable: false })} />);
 
     const cells = screen.getAllByRole("button", { name: /Portail bailleurs/ });
     expect(cells.every((cell) => cell.hasAttribute("disabled"))).toBe(true);
   });
 
-  it("affiche un message quand le mois ne contient aucune mission", () => {
+  it("shows a message when the month holds no mission", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid({ rows: [] })} />);
 
     expect(screen.getByText(/Aucune mission pour ce mois/)).toBeInTheDocument();
   });
 
-  it("n'affiche pas ce message dès qu'une mission est présente", () => {
+  it("does not show that message as soon as a mission is there", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     expect(screen.queryByText(/Aucune mission pour ce mois/)).toBeNull();
   });
 
-  it("ferme le tableau d'un trait fort même sans aucune mission", () => {
+  it("closes the table with a strong rule even with no mission", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid({ rows: [] })} />);
 
     const cellule = screen.getByText(/Aucune mission pour ce mois/);
@@ -140,7 +140,7 @@ describe("TimesheetGrid", () => {
     expect(cellule.className).toContain("border-r-slate-500");
   });
 
-  it("garde la ligne d'ajout en dernière position", () => {
+  it("keeps the add row in last place", () => {
     render(
       <TimesheetGrid
         {...baseProps}
@@ -153,7 +153,7 @@ describe("TimesheetGrid", () => {
     expect(within(lines.at(-1)!).getByText("Ajouter une mission")).toBeInTheDocument();
   });
 
-  it("laisse la ligne d'ajout fermer le tableau d'un trait fort", () => {
+  it("lets the add row close the table with a strong rule", () => {
     render(
       <TimesheetGrid
         {...baseProps}
@@ -165,12 +165,12 @@ describe("TimesheetGrid", () => {
     const lines = screen.getAllByRole("row");
     const cells = within(lines.at(-1)!).getAllByRole("rowheader");
     expect(cells[0].className).toContain("border-b-slate-500");
-    // La mission qui precede ne ferme plus rien : un trait faible l'en separe.
+    // The mission before no longer closes anything: a light rule separates it.
     const mission = screen.getByRole("rowheader", { name: /Portail bailleurs/ });
     expect(mission.className).toContain("border-b-slate-300");
   });
 
-  it("propose d'ajouter une mission plutôt que d'annoncer le vide", () => {
+  it("offers to add a mission rather than announcing emptiness", () => {
     render(
       <TimesheetGrid
         {...baseProps}
@@ -183,7 +183,7 @@ describe("TimesheetGrid", () => {
     expect(screen.getByText("Ajouter une mission")).toBeInTheDocument();
   });
 
-  it("offre de retirer chaque mission, hors du cadre du tableau", () => {
+  it("offers to remove each mission, outside the table frame", () => {
     const onRemoveMission = vi.fn();
     render(
       <TimesheetGrid
@@ -198,40 +198,40 @@ describe("TimesheetGrid", () => {
     expect(onRemoveMission).toHaveBeenCalledWith(10);
   });
 
-  it("arrête le trait du haut à la dernière colonne de données", () => {
+  it("stops the top rule at the last data column", () => {
     render(
       <TimesheetGrid {...baseProps} grid={makeGrid()} onRemoveMission={vi.fn()} />,
     );
 
     const action = screen.getByText("Retirer la mission").closest("th")!;
     expect(action.className).not.toContain("border-t");
-    // La colonne des totaux, elle, le porte : le cadre s'arrete a elle.
+    // The totals column does carry it: the frame stops there.
     const totaux = screen.getByText("Total du mois").closest("th")!;
     expect(totaux.className).toContain("border-t-slate-500");
   });
 
-  it("n'offre aucun retrait quand le mois est clos", () => {
+  it("offers no removal when the month is closed", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid({ is_writable: false })} />);
 
     expect(screen.queryByRole("button", { name: /^Retirer/ })).toBeNull();
   });
 
-  it("réduit un week-end sans saisie à une simple bande", () => {
+  it("shrinks a weekend with no entry to a plain band", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     const entete = screen.getByRole("columnheader", { name: /S 19/ });
     expect(entete.className).toContain("w-2.5");
   });
 
-  it("garde sa largeur à un jour ouvré", () => {
+  it("keeps its width on a working day", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     const entete = screen.getByRole("columnheader", { name: /M 15/ });
     expect(entete.className).toContain("w-9");
   });
 
-  it("garde sa largeur à un week-end portant une saisie héritée", () => {
-    // Une donnee posee avant l'interdiction doit rester visible et corrigeable.
+  it("keeps its width on a weekend carrying an inherited entry", () => {
+    // Data set before the ban must stay visible and correctable.
     const grid = makeGrid({
       days: [{ day: "2026-09-19", kind: "weekend", label: null, is_off_day: true }],
       day_totals: [{ day: "2026-09-19", total: 1, exceeds_capacity: false }],
@@ -244,14 +244,14 @@ describe("TimesheetGrid", () => {
     expect(entete.className).not.toContain("w-2.5");
   });
 
-  it("affiche un total par jour", () => {
+  it("shows one total per day", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     const footer = screen.getByRole("row", { name: /jrs\. ouvrés/ });
     expect(within(footer).getAllByRole("cell").at(-1)).toHaveTextContent("2");
   });
 
-  it("place la ligne des totaux juste sous l'en-tête des jours", () => {
+  it("puts the totals row right under the day header", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     const rows = screen.getAllByRole("row");
@@ -260,7 +260,7 @@ describe("TimesheetGrid", () => {
     expect(rows[2]).toHaveTextContent("Portail bailleurs");
   });
 
-  it("colore en vert une journée complète", () => {
+  it("colours a full day green", () => {
     const grid = makeGrid({
       day_totals: [{ day: "2026-09-15", total: 1, exceeds_capacity: false }],
       days: [{ day: "2026-09-15", kind: "ouvre", label: null, is_off_day: false }],
@@ -274,7 +274,7 @@ describe("TimesheetGrid", () => {
     );
   });
 
-  it("signale une journée incomplète dans la ligne des totaux", () => {
+  it("flags an incomplete day in the totals row", () => {
     const grid = makeGrid({
       day_totals: [{ day: "2026-09-15", total: 0.5, exceeds_capacity: false }],
       days: [{ day: "2026-09-15", kind: "ouvre", label: null, is_off_day: false }],

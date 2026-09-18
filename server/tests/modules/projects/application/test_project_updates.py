@@ -138,7 +138,7 @@ async def test_nobody_corrects_the_words_of_another() -> None:
 
 
 async def test_a_removed_update_keeps_its_place() -> None:
-    """The thread keeps its order: the screen will show \u00ab Message supprime \u00bb there."""
+    """The thread keeps its order: the screen will show « Message supprime » there."""
     publier, _, retirer, lister, _ = build()
     update = await poster(publier)
 

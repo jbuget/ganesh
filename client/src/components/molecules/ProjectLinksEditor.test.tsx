@@ -21,20 +21,20 @@ function saisir(placeholder: string, value: string) {
 }
 
 describe("ProjectLinksEditor", () => {
-  it("n'offre que l'ajout quand la mission n'a aucun lien", () => {
+  it("offers only adding when the mission has no link", () => {
     render(<ProjectLinksEditor links={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
 
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Ajouter un lien" })).toBeInTheDocument();
   });
 
-  it("garde le formulaire ferme tant qu'on ne le demande pas", () => {
+  it("keeps the form closed until it is asked for", () => {
     render(<ProjectLinksEditor links={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
 
     expect(screen.queryByPlaceholderText("https://…")).not.toBeInTheDocument();
   });
 
-  it("liste tous les liens de la mission", () => {
+  it("lists every link of the mission", () => {
     render(
       <ProjectLinksEditor
         links={[link(1, "Le dépôt", "repository"), link(2, "Maquettes", "design")]}
@@ -62,7 +62,7 @@ describe("ProjectLinksEditor", () => {
     expect(screen.getByLabelText("Dépôt de code")).toBeInTheDocument();
   });
 
-  it("laisse l'adresse décider de l'icône par défaut", async () => {
+  it("lets the address decide the default icon", async () => {
     const onAdd = vi.fn().mockResolvedValue(undefined);
     render(<ProjectLinksEditor links={[]} onAdd={onAdd} onRemove={vi.fn()} />);
 
@@ -76,7 +76,7 @@ describe("ProjectLinksEditor", () => {
     );
   });
 
-  it("transmet l'icône choisie à la main", async () => {
+  it("passes on the icon chosen by hand", async () => {
     const onAdd = vi.fn().mockResolvedValue(undefined);
     render(<ProjectLinksEditor links={[]} onAdd={onAdd} onRemove={vi.fn()} />);
 
@@ -99,7 +99,7 @@ describe("ProjectLinksEditor", () => {
     expect(screen.getByRole("button", { name: "Ajouter" })).toBeDisabled();
   });
 
-  it("explique une adresse refusée par le serveur", async () => {
+  it("explains an address the server refused", async () => {
     const onAdd = vi.fn().mockRejectedValue(new Error("400"));
     render(<ProjectLinksEditor links={[]} onAdd={onAdd} onRemove={vi.fn()} />);
 
@@ -110,7 +110,7 @@ describe("ProjectLinksEditor", () => {
     expect(await screen.findByText(/n'est pas valide/)).toBeInTheDocument();
   });
 
-  it("repart d'un formulaire vierge apres un ajout", async () => {
+  it("starts from a blank form after an add", async () => {
     const onAdd = vi.fn().mockResolvedValue(undefined);
     render(<ProjectLinksEditor links={[]} onAdd={onAdd} onRemove={vi.fn()} />);
 
@@ -123,7 +123,7 @@ describe("ProjectLinksEditor", () => {
     expect(screen.getByPlaceholderText("https://…")).toHaveValue("");
   });
 
-  it("detache un lien", () => {
+  it("detaches a link", () => {
     const onRemove = vi.fn().mockResolvedValue(undefined);
     render(
       <ProjectLinksEditor
@@ -138,8 +138,8 @@ describe("ProjectLinksEditor", () => {
     expect(onRemove).toHaveBeenCalledWith(7);
   });
 
-  it("offre le retrait de chaque lien sans attendre un survol", () => {
-    // La croix ne doit pas se meriter : au doigt, il n'y a pas de survol.
+  it("offers removal of each link without waiting for a hover", () => {
+    // The cross must not have to be earned: on a touch screen there is no hover.
     render(
       <ProjectLinksEditor
         links={[link(1, "Le dépôt", "repository"), link(2, "Maquettes", "design")]}

@@ -24,7 +24,7 @@ def test_the_first_phase_has_nothing_before_it() -> None:
 
 
 def test_a_passage_is_named_after_what_it_achieves() -> None:
-    """\u00ab Valide le \u00bb reads better than \u00ab entre en deploiement le \u00bb."""
+    """« Valide le » reads better than « entre en deploiement le »."""
     assert transition_label(ProjectStatus.DEPLOYMENT) == "Validé"
     assert transition_label(ProjectStatus.OPERATIONS) == "Déployé"
 
@@ -44,6 +44,6 @@ def test_phases_are_ordered_as_declared() -> None:
 
 
 def test_a_date_marks_the_entry_into_a_phase() -> None:
-    """The \u00ab Valide \u00bb date is the one of entering Deployment."""
+    """The « Valide » date is the one of entering Deployment."""
     start = date(2026, 9, 17)
     assert (transition_label(ProjectStatus.DEPLOYMENT), start) == ("Validé", start)

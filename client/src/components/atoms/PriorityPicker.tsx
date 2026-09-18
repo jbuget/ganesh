@@ -46,7 +46,7 @@ export function PriorityPicker({ value, onChange }: PriorityPickerProps) {
                 onClick={() => {
                   setOuvert(false);
                   // Clicking the current urgency again removes it: the only
-                  // way back to \u00ab no priority \u00bb.
+                  // way back to « no priority ».
                   void onChange(choice.value === value ? null : choice.value);
                 }}
                 className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"

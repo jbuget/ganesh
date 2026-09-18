@@ -14,7 +14,7 @@ interface ProjectDetailPageProps {
   projectId: number;
 }
 
-/** Le chemin du retour, au meme endroit dans tous les etats de la fiche. */
+/** The way back, in the same place in every state of the sheet. */
 function RetourKanban() {
   return (
     <Link
@@ -28,10 +28,10 @@ function RetourKanban() {
 }
 
 /**
- * La mission en pleine page.
+ * The mission on a full page.
  *
- * Meme contenu que le panneau lateral, au large : pour lire une fiche service
- * ou parcourir un journal, l'espace compte.
+ * The same content as the side panel, with room to breathe: to read a service
+ * sheet or go through a log, space counts.
  */
 export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
   const fiche = useProjectDetail(projectId);

@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { ProjectCard } from "./ProjectCard";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 
-/** Heure de reference figee : « il y a 2 h » doit rester stable d'un run a l'autre. */
+/** Frozen reference time: « il y a 2 h » must stay stable between runs. */
 const MAINTENANT = new Date("2026-09-16T11:00:00Z");
 
 const card = (over: Record<string, unknown> = {}): BoardCardResponse =>
@@ -36,25 +36,25 @@ const card = (over: Record<string, unknown> = {}): BoardCardResponse =>
   }) as BoardCardResponse;
 
 describe("ProjectCard", () => {
-  it("affiche le nom de la mission", () => {
+  it("shows the mission name", () => {
     render(<ProjectCard maintenant={MAINTENANT} card={card()} />);
 
     expect(screen.getByRole("heading")).toHaveTextContent("Portail bailleurs");
   });
 
-  it("compare le consommé à l'estimé", () => {
+  it("compares consumption against the estimate", () => {
     render(<ProjectCard maintenant={MAINTENANT} card={card()} />);
 
     expect(screen.getByText("5/20 jrs. estimés")).toBeInTheDocument();
   });
 
-  it("écrit les demi-journées en décimal plutôt qu'en fraction", () => {
+  it("writes half days in decimal rather than as a fraction", () => {
     render(<ProjectCard maintenant={MAINTENANT} card={card({ consumed_days: 7.5 })} />);
 
     expect(screen.getByText("7,5/20 jrs. estimés")).toBeInTheDocument();
   });
 
-  it("se contente du consommé quand aucun estimé n'existe", () => {
+  it("settles for consumption when no estimate exists", () => {
     render(
       <ProjectCard
         maintenant={MAINTENANT}
@@ -65,25 +65,25 @@ describe("ProjectCard", () => {
     expect(screen.getByText("5 jrs. consommés")).toBeInTheDocument();
   });
 
-  it("ne charge pas la carte de la date de mise en service", () => {
+  it("does not burden the card with the go-live date", () => {
     render(<ProjectCard maintenant={MAINTENANT} card={card()} />);
 
     expect(screen.queryByText(/Mise en service/)).toBeNull();
   });
 
-  it("affiche les intervenants", () => {
+  it("shows the contributors", () => {
     render(<ProjectCard maintenant={MAINTENANT} card={card()} />);
 
     expect(screen.getByText("LC")).toBeInTheDocument();
   });
 
-  it("signale un dépassement du budget", () => {
+  it("flags going over the budget", () => {
     render(<ProjectCard maintenant={MAINTENANT} card={card({ consumed_days: 25 })} />);
 
     expect(screen.getByText("25/20 jrs. estimés").className).toContain("text-red-700");
   });
 
-  it("alerte à l'approche du budget", () => {
+  it("warns as the budget draws near", () => {
     render(<ProjectCard maintenant={MAINTENANT} card={card({ consumed_days: 17 })} />);
 
     expect(screen.getByText("17/20 jrs. estimés").className).toContain(
@@ -91,7 +91,7 @@ describe("ProjectCard", () => {
     );
   });
 
-  it("reste discret loin du budget", () => {
+  it("stays quiet far from the budget", () => {
     render(<ProjectCard maintenant={MAINTENANT} card={card({ consumed_days: 3 })} />);
 
     expect(screen.getByText("3/20 jrs. estimés").className).not.toContain(
@@ -100,11 +100,11 @@ describe("ProjectCard", () => {
   });
 });
 
-describe("ce que la carte ne dit pas", () => {
-  // Le tableau sert a piloter : ou en est une mission, ce qu'elle a coute, qui
-  // s'en occupe. L'urgence et l'axe strategique se lisent dans la fiche et
-  // dans le referentiel, qui sont faits pour comparer.
-  it("laisse l'urgence et l'axe hors de la carte", () => {
+describe("what the card does not say", () => {
+  // The board is there to steer: where a mission stands, what it has cost, who
+  // looks after it. Urgency and strategic axis read in the sheet and in the
+  // reference list, which are made for comparing.
+  it("leaves urgency and axis off the card", () => {
     render(
       <ProjectCard
         maintenant={MAINTENANT}
@@ -117,8 +117,8 @@ describe("ce que la carte ne dit pas", () => {
   });
 });
 
-describe("mission archivée", () => {
-  it("se signale d'un coup d'œil", () => {
+describe("an archived mission", () => {
+  it("flags itself at a glance", () => {
     render(
       <ProjectCard
         maintenant={MAINTENANT}
@@ -129,35 +129,35 @@ describe("mission archivée", () => {
     expect(screen.getByText("Archivée")).toBeInTheDocument();
   });
 
-  it("ne marque rien sur une mission active", () => {
+  it("marks nothing on an active mission", () => {
     render(<ProjectCard maintenant={MAINTENANT} card={card()} />);
 
     expect(screen.queryByText("Archivée")).toBeNull();
   });
 });
 
-describe("ce que la carte porte en pied", () => {
-  it("compte les commentaires du fil de suivi", () => {
+describe("what the card carries in its footer", () => {
+  it("counts the follow-up thread's comments", () => {
     render(<ProjectCard maintenant={MAINTENANT} card={card({ comments: 2 })} />);
 
     expect(screen.getByLabelText("2 commentaires")).toHaveTextContent("2");
   });
 
-  it("accorde le libellé au singulier", () => {
+  it("agrees the label in the singular", () => {
     render(<ProjectCard maintenant={MAINTENANT} card={card({ comments: 1 })} />);
 
     expect(screen.getByLabelText("1 commentaire")).toBeInTheDocument();
   });
 
-  it("compte les sous-projets", () => {
+  it("counts the sub-projects", () => {
     render(<ProjectCard maintenant={MAINTENANT} card={card({ sub_projects: 11 })} />);
 
     expect(screen.getByLabelText("11 sous-projets")).toHaveTextContent("11");
   });
 
-  it("garde les repères sans rien compter quand la mission est nue", () => {
-    // Monday laisse les icones en place, sans nombre : la carte garde sa forme
-    // d'une mission a l'autre, et l'absence se lit aussi vite qu'un total.
+  it("keeps the markers without counting anything when the mission is bare", () => {
+    // Monday leaves the icons in place, with no number: the card keeps its
+    // shape from one mission to the next, and absence reads as fast as a total.
     render(<ProjectCard maintenant={MAINTENANT} card={card()} />);
 
     expect(screen.getByLabelText("Aucun commentaire")).toHaveTextContent("");
@@ -165,8 +165,8 @@ describe("ce que la carte porte en pied", () => {
   });
 });
 
-describe("rattachement à un projet parent", () => {
-  it("nomme le projet dont le sous-projet relève", () => {
+describe("attachment to a parent project", () => {
+  it("names the project the sub-project belongs to", () => {
     render(
       <ProjectCard
         maintenant={MAINTENANT}
@@ -177,7 +177,7 @@ describe("rattachement à un projet parent", () => {
     expect(screen.getByText("Refonte du SI")).toBeInTheDocument();
   });
 
-  it("ouvre le parent sans ouvrir la mission elle-même", () => {
+  it("opens the parent without opening the mission itself", () => {
     const onOpen = vi.fn();
     render(
       <ProjectCard
@@ -193,15 +193,15 @@ describe("rattachement à un projet parent", () => {
     expect(onOpen).toHaveBeenCalledWith(7);
   });
 
-  it("ne montre aucun parent à un projet racine", () => {
+  it("shows no parent for a root project", () => {
     render(<ProjectCard maintenant={MAINTENANT} card={card()} />);
 
     expect(screen.queryByText(/↳/)).toBeNull();
   });
 
-  it("fige le lien pendant le glissement", () => {
-    // La copie qui suit le curseur represente un geste en cours : un lien
-    // cliquable dessus n'aurait aucune cible.
+  it("freezes the link during the drag", () => {
+    // The copy following the cursor stands for a gesture under way: a
+    // clickable link on it would have no target.
     render(
       <ProjectCard
         maintenant={MAINTENANT}
@@ -216,8 +216,8 @@ describe("rattachement à un projet parent", () => {
   });
 });
 
-describe("ouverture de la mission", () => {
-  it("ouvre la mission au clic n'importe où sur la carte", () => {
+describe("opening the mission", () => {
+  it("opens the mission on a click anywhere on the card", () => {
     const onOpen = vi.fn();
     render(<ProjectCard maintenant={MAINTENANT} card={card()} onOpen={onOpen} />);
 
@@ -226,7 +226,7 @@ describe("ouverture de la mission", () => {
     expect(onOpen).toHaveBeenCalledWith(1);
   });
 
-  it("ouvre aussi depuis le titre, atteignable au clavier", () => {
+  it("opens from the title too, reachable by keyboard", () => {
     const onOpen = vi.fn();
     render(<ProjectCard maintenant={MAINTENANT} card={card()} onOpen={onOpen} />);
 
@@ -235,9 +235,9 @@ describe("ouverture de la mission", () => {
     expect(onOpen).toHaveBeenCalledTimes(1);
   });
 
-  it("laisse leur clic aux contrôles que la carte porte", () => {
-    // La poignee de glissement et les pastilles d'intervenants ne doivent pas
-    // ouvrir la mission sous le doigt de celui qui les visait.
+  it("leaves their click to the controls the card carries", () => {
+    // The drag handle and the contributor avatars must not open the mission
+    // under the finger of whoever was aiming at them.
     const onOpen = vi.fn();
     render(
       <ProjectCard
@@ -253,7 +253,7 @@ describe("ouverture de la mission", () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
-  it("ne montre aucune poignée quand la carte ne se déplace pas", () => {
+  it("shows no handle when the card does not move", () => {
     const { rerender } = render(<ProjectCard maintenant={MAINTENANT} card={card()} />);
     expect(document.querySelector("svg.lucide-grip-vertical")).not.toBeNull();
 
@@ -262,8 +262,8 @@ describe("ouverture de la mission", () => {
     expect(document.querySelector("svg.lucide-grip-vertical")).toBeNull();
   });
 
-  it("n'ouvre rien quand la carte suit le curseur", () => {
-    // La copie qui suit la souris represente un geste en cours, pas une cible.
+  it("opens nothing while the card follows the cursor", () => {
+    // The copy following the mouse stands for a gesture under way, not a target.
     const onOpen = vi.fn();
     render(
       <ProjectCard maintenant={MAINTENANT} card={card()} onOpen={onOpen} isDragging />,
@@ -274,7 +274,7 @@ describe("ouverture de la mission", () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
-  it("montre le dernier message au survol du décompte de commentaires", () => {
+  it("shows the latest message when hovering the comment count", () => {
     render(
       <ProjectCard
         maintenant={MAINTENANT}
@@ -297,7 +297,7 @@ describe("ouverture de la mission", () => {
     expect(apercu).toHaveTextContent("Le cadrage commence lundi");
   });
 
-  it("ne montre aucun aperçu quand le fil est vide", () => {
+  it("shows no preview when the thread is empty", () => {
     render(<ProjectCard maintenant={MAINTENANT} card={card({ comments: 0 })} />);
 
     fireEvent.mouseMove(screen.getByLabelText("Aucun commentaire"));

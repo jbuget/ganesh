@@ -27,7 +27,7 @@ async function fil(onEcriture?: () => void | Promise<void>) {
 }
 
 describe("useProjectUpdates", () => {
-  it("prévient l'écran d'où l'on vient quand une mise à jour est publiée", async () => {
+  it("tells the screen one came from when an update is posted", async () => {
     const notify = vi.fn();
     const result = await fil(notify);
 
@@ -39,7 +39,7 @@ describe("useProjectUpdates", () => {
     expect(notify).toHaveBeenCalledTimes(1);
   });
 
-  it("le prévient aussi d'une correction", async () => {
+  it("tells it about a correction too", async () => {
     const notify = vi.fn();
     const result = await fil(notify);
 
@@ -50,7 +50,7 @@ describe("useProjectUpdates", () => {
     expect(notify).toHaveBeenCalledTimes(1);
   });
 
-  it("le prévient d'un retrait, qui change aussi ce que la liste annonce", async () => {
+  it("tells it about a withdrawal, which also changes what the list announces", async () => {
     const notify = vi.fn();
     const result = await fil(notify);
 
@@ -61,7 +61,7 @@ describe("useProjectUpdates", () => {
     expect(notify).toHaveBeenCalledTimes(1);
   });
 
-  it("s'en passe quand personne n'écoute", async () => {
+  it("does without when nobody is listening", async () => {
     const result = await fil();
 
     await act(async () => {
@@ -71,7 +71,7 @@ describe("useProjectUpdates", () => {
     expect(api.postProjectUpdate).toHaveBeenCalledOnce();
   });
 
-  it("ne prévient personne à la simple lecture du fil", async () => {
+  it("tells nobody when the thread is merely read", async () => {
     const notify = vi.fn();
     await fil(notify);
 

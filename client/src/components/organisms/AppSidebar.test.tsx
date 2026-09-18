@@ -33,12 +33,12 @@ vi.mock("next/navigation", () => ({ usePathname: () => pathname.value }));
 vi.mock("@/lib/api/queries", () => ({
   useCurrentUser: () => ({ user: user.value }),
 }));
-// La fin de session est verifiee dans `lib/use-deconnexion.test.ts` : ici, seule
-// compte la barre qui la propose.
-vi.mock("@/lib/use-deconnexion", () => ({ useDeconnexion: () => vi.fn() }));
+// Ending the session is checked in `lib/use-deconnexion.test.ts`: here, only
+// the bar that offers it matters.
+vi.mock("@/lib/use-sign-out", () => ({ useSignOut: () => vi.fn() }));
 
 describe("AppSidebar", () => {
-  it("propose de replier la barre", () => {
+  it("offers to fold the bar", () => {
     render(<AppSidebar />);
 
     expect(
@@ -46,21 +46,21 @@ describe("AppSidebar", () => {
     ).toBeInTheDocument();
   });
 
-  it("garde les libellés lisibles aux lecteurs d'écran une fois repliée", async () => {
+  it("keeps the labels readable to screen readers once folded", async () => {
     render(<AppSidebar />);
 
     await userEvent.click(
       screen.getByRole("button", { name: "Replier la barre latérale" }),
     );
 
-    // Les intitulés disparaissent à l'œil, jamais de l'arbre d'accessibilité.
+    // The labels disappear to the eye, never from the accessibility tree.
     expect(screen.getByRole("link", { name: /Activité/ })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Déplier la barre latérale" }),
     ).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("propose tous les écrans", () => {
+  it("offers every screen", () => {
     render(<AppSidebar />);
 
     expect(screen.getByRole("link", { name: /Activité/ })).toBeInTheDocument();
@@ -68,7 +68,7 @@ describe("AppSidebar", () => {
     expect(screen.getByRole("link", { name: /Utilisateurs/ })).toBeInTheDocument();
   });
 
-  it("signale l'écran courant aux lecteurs d'écran", () => {
+  it("flags the current screen to screen readers", () => {
     pathname.value = "/";
     render(<AppSidebar />);
 
@@ -81,7 +81,7 @@ describe("AppSidebar", () => {
     );
   });
 
-  it("suit la page affichée", () => {
+  it("follows the page shown", () => {
     pathname.value = "/projets";
     render(<AppSidebar />);
 
@@ -97,14 +97,14 @@ describe("AppSidebar", () => {
     expect(screen.getByText("Jérémy Buget")).toBeInTheDocument();
   });
 
-  it("signale le rôle de manager", () => {
+  it("flags the manager role", () => {
     user.value = JEREMY;
     render(<AppSidebar />);
 
     expect(screen.getByText("Manager")).toBeInTheDocument();
   });
 
-  it("n'affiche aucun rôle pour un collaborateur", () => {
+  it("shows no role for a teammate", () => {
     user.value = {
       display_name: "L. Chen",
       email: "l.chen@waat.fr",
@@ -117,14 +117,14 @@ describe("AppSidebar", () => {
     expect(screen.getByText("L. Chen")).toBeInTheDocument();
   });
 
-  it("réduit le nom à ses initiales dans la pastille", () => {
+  it("shrinks the name to its initials in the avatar", () => {
     user.value = { ...JEREMY, role: "TEAMMATE" };
     render(<AppSidebar />);
 
     expect(screen.getByText("JB")).toBeInTheDocument();
   });
 
-  it("ne montre aucun bloc utilisateur tant que l'identité n'est pas connue", () => {
+  it("shows no user block while the identity is unknown", () => {
     user.value = undefined;
     render(<AppSidebar />);
 

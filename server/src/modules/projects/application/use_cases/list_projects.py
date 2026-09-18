@@ -1,4 +1,4 @@
-"""Liste le referentiel des missions."""
+"""Lists the mission reference list."""
 
 from dataclasses import dataclass, field
 from datetime import date
@@ -22,7 +22,7 @@ from src.modules.users.domain.repositories.user_repository import UserRepository
 
 @dataclass
 class ListedProject:
-    """Une mission et ce que l'interface doit savoir pour proposer ses actions."""
+    """A mission, and what the interface needs to offer its actions."""
 
     project: Project
     entries: int
@@ -40,12 +40,12 @@ class ListedProject:
 
     @property
     def is_deletable(self) -> bool:
-        """Une mission qui n'a jamais servi peut disparaitre ; les autres s'archivent."""
+        """A mission that never served may disappear; the others get archived."""
         return self.entries == 0 and self.sub_projects == 0
 
 
 class ListProjectsUseCase:
-    """Retourne les missions, actives par defaut."""
+    """Returns the missions, active ones by default."""
 
     def __init__(
         self,

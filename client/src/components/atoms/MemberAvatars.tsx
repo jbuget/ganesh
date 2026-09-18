@@ -1,7 +1,7 @@
 "use client";
 
 import type { BoardMemberResponse } from "@/lib/api/generated/model";
-import { useCursorTooltip } from "@/lib/use-tooltip-curseur";
+import { useCursorTooltip } from "@/lib/use-cursor-tooltip";
 
 /** Past this, the avatars overlap too much to stay readable. */
 const VISIBLES = 4;

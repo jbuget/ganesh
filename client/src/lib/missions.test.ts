@@ -22,27 +22,27 @@ const PROJECTS = [
 ];
 
 describe("availableMissions", () => {
-  it("sépare les projets et les lots des activités hors projet", () => {
+  it("separates projects and work packages from off-project work", () => {
     const { projets, horsProjet } = availableMissions(PROJECTS, []);
 
     expect(projets.map((p) => p.label)).toEqual(["Portail bailleurs", "Lot 1"]);
     expect(horsProjet.map((p) => p.label)).toEqual(["Absences"]);
   });
 
-  it("écarte les missions déjà présentes dans la matrice", () => {
+  it("rules out missions already in the grid", () => {
     const { projets } = availableMissions(PROJECTS, [1]);
 
     expect(projets.map((p) => p.label)).toEqual(["Lot 1"]);
   });
 
-  it("peut ne plus rien avoir à proposer", () => {
+  it("may have nothing left to offer", () => {
     const { projets, horsProjet } = availableMissions(PROJECTS, [1, 2, 3]);
 
     expect(projets).toEqual([]);
     expect(horsProjet).toEqual([]);
   });
 
-  it("ne modifie pas la liste reçue", () => {
+  it("does not change the list received", () => {
     const copie = [...PROJECTS];
     availableMissions(PROJECTS, [1]);
 

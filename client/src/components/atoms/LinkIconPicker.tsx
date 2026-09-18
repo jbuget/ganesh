@@ -16,7 +16,7 @@ interface LinkIconPickerProps {
 /**
  * The icon of a link.
  *
- * \u00ab Automatique \u00bb comes first and stays the default: pasting a known
+ * « Automatique » comes first and stays the default: pasting a known
  * address is usually enough, and the server decides. The picker is only there
  * for the cases where it would get it wrong.
  */

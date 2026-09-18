@@ -13,11 +13,11 @@ def ensure_can_be_deleted(project: Project, entries: int, sub_projects: int) -> 
     """
     if sub_projects > 0:
         raise ForbiddenActionError(
-            f"\u00ab {project.label} \u00bb carries {sub_projects} sub-project(s): "
+            f"« {project.label} » carries {sub_projects} sub-project(s): "
             "deal with those first."
         )
     if entries > 0:
         raise ForbiddenActionError(
-            f"\u00ab {project.label} \u00bb already carries {entries} time entry/entries: "
+            f"« {project.label} » already carries {entries} time entry/entries: "
             "you can archive it, not delete it."
         )

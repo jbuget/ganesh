@@ -11,7 +11,7 @@ const baseProps = {
 };
 
 describe("EditableTitle", () => {
-  it("affiche le titre, au niveau demandé", () => {
+  it("shows the title, at the level asked for", () => {
     render(<EditableTitle {...baseProps} niveau={1} />);
 
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
@@ -19,7 +19,7 @@ describe("EditableTitle", () => {
     );
   });
 
-  it("ouvre un champ pré-rempli au clic sur le crayon", async () => {
+  it("opens a pre-filled field on a click on the pencil", async () => {
     render(<EditableTitle {...baseProps} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Renommer la mission" }));
@@ -27,7 +27,7 @@ describe("EditableTitle", () => {
     expect(screen.getByRole("textbox")).toHaveValue("Portail bailleurs");
   });
 
-  it("enregistre le nouveau titre", async () => {
+  it("saves the new title", async () => {
     const onRename = vi.fn();
     render(<EditableTitle {...baseProps} onRename={onRename} />);
 
@@ -39,7 +39,7 @@ describe("EditableTitle", () => {
     expect(onRename).toHaveBeenCalledWith("Extranet copropriété");
   });
 
-  it("enregistre aussi à la touche Entrée", async () => {
+  it("saves on the Enter key too", async () => {
     const onRename = vi.fn();
     render(<EditableTitle {...baseProps} onRename={onRename} />);
 
@@ -50,7 +50,7 @@ describe("EditableTitle", () => {
     expect(onRename).toHaveBeenCalledWith("Extranet");
   });
 
-  it("abandonne la saisie à l'annulation", async () => {
+  it("gives up the input on cancel", async () => {
     const onRename = vi.fn();
     render(<EditableTitle {...baseProps} onRename={onRename} />);
 
@@ -62,7 +62,7 @@ describe("EditableTitle", () => {
     expect(screen.getByRole("heading")).toHaveTextContent("Portail bailleurs");
   });
 
-  it("abandonne aussi à la touche Échap", async () => {
+  it("gives up on the Escape key too", async () => {
     const onRename = vi.fn();
     render(<EditableTitle {...baseProps} onRename={onRename} />);
 
@@ -73,7 +73,7 @@ describe("EditableTitle", () => {
     expect(screen.getByRole("heading")).toBeInTheDocument();
   });
 
-  it("n'écrit rien quand le titre n'a pas changé", async () => {
+  it("writes nothing when the title has not changed", async () => {
     const onRename = vi.fn();
     render(<EditableTitle {...baseProps} onRename={onRename} />);
 
@@ -84,7 +84,7 @@ describe("EditableTitle", () => {
     expect(screen.getByRole("heading")).toBeInTheDocument();
   });
 
-  it("refuse un titre vide", async () => {
+  it("refuses an empty title", async () => {
     const onRename = vi.fn();
     render(<EditableTitle {...baseProps} onRename={onRename} />);
 
@@ -94,7 +94,7 @@ describe("EditableTitle", () => {
     expect(screen.getByRole("button", { name: "Enregistrer" })).toBeDisabled();
   });
 
-  it("garde la saisie et prévient quand l'enregistrement échoue", async () => {
+  it("keeps the input and warns when saving fails", async () => {
     const onRename = vi.fn().mockRejectedValue(new Error("boom"));
     render(<EditableTitle {...baseProps} onRename={onRename} />);
 
@@ -108,7 +108,7 @@ describe("EditableTitle", () => {
     expect(screen.getByRole("button", { name: "Enregistrer" })).toBeEnabled();
   });
 
-  it("ne propose pas le crayon quand le renommage n'est pas permis", () => {
+  it("does not offer the pencil when renaming is not allowed", () => {
     render(<EditableTitle {...baseProps} onRename={undefined} />);
 
     expect(

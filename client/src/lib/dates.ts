@@ -22,7 +22,7 @@ export function firstDayOfMonth(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, "0")}-01`;
 }
 
-/** Readable month label, for instance \u00ab septembre 2026 \u00bb. */
+/** Readable month label, for instance « septembre 2026 ». */
 export function formatMonth(year: number, month: number): string {
   return `${MONTH_NAMES[month - 1]} ${year}`;
 }
@@ -49,10 +49,10 @@ export function weekdayInitial(isoDate: string): string {
 }
 
 /**
- * Formats a number of days inside a cell: 1 → \u00ab 1 \u00bb, 0.5 → \u00ab ½ \u00bb.
+ * Formats a number of days inside a cell: 1 → « 1 », 0.5 → « ½ ».
  *
- * A null value shows nothing: in the grid, an empty cell means \u00ab nothing
- * entered \u00bb, and filling it with zeros would make the grid unreadable.
+ * A null value shows nothing: in the grid, an empty cell means « nothing
+ * entered », and filling it with zeros would make the grid unreadable.
  */
 export function formatDays(value: number): string {
   if (value === 0) return "";
@@ -63,9 +63,9 @@ export function formatDays(value: number): string {
 }
 
 /**
- * Formats a number of days inside a total: 0 → \u00ab 0 \u00bb.
+ * Formats a number of days inside a total: 0 → « 0 ».
  *
- * Unlike a cell, a null total is information: \u00ab 0 j réalisé \u00bb must not
+ * Unlike a cell, a null total is information: « 0 j réalisé » must not
  * show up blank.
  */
 export function formatTotal(value: number): string {
@@ -73,11 +73,11 @@ export function formatTotal(value: number): string {
 }
 
 /**
- * A number of days in decimal: 7.5 → \u00ab 7,5 \u00bb, 26 → \u00ab 26 \u00bb.
+ * A number of days in decimal: 7.5 → « 7,5 », 26 → « 26 ».
  *
- * The grid prefers \u00ab ½ \u00bb, which fits a narrow cell. On a board card,
+ * The grid prefers « ½ », which fits a narrow cell. On a board card,
  * where what is consumed reads against a whole estimate, the decimal speaks
- * faster: \u00ab 7,5/20 \u00bb compares at a glance, \u00ab 7½/20 \u00bb does not.
+ * faster: « 7,5/20 » compares at a glance, « 7½/20 » does not.
  *
  * Formatted by hand rather than through `toLocaleString`: the server render and
  * the browser must produce the same string, without depending on the locale
@@ -88,7 +88,7 @@ export function formatDecimalDays(value: number): string {
 }
 
 /**
- * An ISO date as \u00ab 18/09/2026 \u00bb.
+ * An ISO date as « 18/09/2026 ».
  *
  * Splits the string rather than going through `Date`: a naive timestamp read as
  * UTC would slip back a day in the evening, and the date shown would no longer

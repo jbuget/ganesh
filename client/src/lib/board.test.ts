@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { progress, category, phaseLabel, PHASES, phaseRank } from "./board";
 
 describe("PHASES", () => {
-  it("suit le cycle de vie d'un projet", () => {
+  it("follows the life cycle of a project", () => {
     expect(PHASES.map((p) => p.status)).toEqual([
       "exploration",
       "scoping",
@@ -14,50 +14,50 @@ describe("PHASES", () => {
     ]);
   });
 
-  it("nomme chaque phase en français", () => {
+  it("names each phase in French", () => {
     expect(phaseLabel("deployment")).toBe("Déploiement");
   });
 });
 
 describe("phaseRank", () => {
-  it("classe les phases dans l'ordre des colonnes du kanban", () => {
+  it("ranks the phases in kanban column order", () => {
     expect(phaseRank("scoping")).toBeLessThan(phaseRank("development"));
     expect(phaseRank("development")).toBeLessThan(phaseRank("operations"));
   });
 
-  it("renvoie en fin de liste ce qui ne porte pas de phase", () => {
+  it("sends what carries no phase to the end of the list", () => {
     expect(phaseRank(null)).toBeGreaterThan(phaseRank("operations"));
   });
 });
 
 describe("categorie", () => {
-  it("donne le libellé et la teinte d'un axe", () => {
+  it("gives the label and the shade of an axis", () => {
     expect(category("innovate_differentiate")?.label).toBe("Innover & différencier");
   });
 
-  it("ne renvoie rien pour une mission sans axe", () => {
+  it("returns nothing for a mission with no axis", () => {
     expect(category(null)).toBeNull();
   });
 });
 
 describe("avancement", () => {
-  it("ne juge pas une mission sans estimé", () => {
+  it("passes no judgement on a mission with no estimate", () => {
     expect(progress(12, null)).toBe("sans-estime");
   });
 
-  it("reste discret tant qu'on est loin du budget", () => {
+  it("stays quiet while the budget is far off", () => {
     expect(progress(5, 20)).toBe("en-cours");
   });
 
-  it("alerte quand on approche du budget", () => {
+  it("warns when the budget draws near", () => {
     expect(progress(16, 20)).toBe("proche");
   });
 
-  it("signale un dépassement", () => {
+  it("flags an overrun", () => {
     expect(progress(21, 20)).toBe("depasse");
   });
 
-  it("considère le budget atteint comme encore tenu", () => {
+  it("treats a budget just reached as still held", () => {
     expect(progress(20, 20)).toBe("proche");
   });
 });
