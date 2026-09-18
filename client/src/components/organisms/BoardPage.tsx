@@ -23,7 +23,7 @@ import { MissionFilters } from "@/components/molecules/MissionFilters";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { ProjectCard } from "@/components/molecules/ProjectCard";
 import { PHASES } from "@/lib/board";
-import { filtrerMissions, inclutLesArchivees } from "@/lib/mission-filters";
+import { filterMissions, inclutLesArchivees } from "@/lib/mission-filters";
 import { useBoard } from "@/lib/use-board";
 import { useBoardDrag } from "@/lib/use-board-drag";
 import { useMissionFilters } from "@/lib/use-mission-filters";
@@ -80,12 +80,12 @@ export function BoardPage() {
   //
   // The columns are computed once: the bar's count and each column's must
   // speak of the same cards.
-  const colonnesAffichees = PHASES.map(({ status }) => ({
+  const visibleColumns = PHASES.map(({ status }) => ({
     status,
-    cards: filtrerMissions(board.columns?.[status] ?? [], filters),
+    cards: filterMissions(board.columns?.[status] ?? [], filters),
   }));
 
-  const visible = colonnesAffichees.reduce((total, c) => total + c.cards.length, 0);
+  const visible = visibleColumns.reduce((total, c) => total + c.cards.length, 0);
   const total = PHASES.reduce(
     (somme, { status }) => somme + (board.columns?.[status]?.length ?? 0),
     0,
@@ -108,8 +108,8 @@ export function BoardPage() {
       defilementInterne
       entete={
         <PageHeader
-          titre="Kanban"
-          soustitre={
+          title="Kanban"
+          subtitle={
             // Under a filter, the list shown is no longer the list arranged: a
             // drop would aim at a rank that does not exist. The cards freeze,
             // and the header says why rather than leaving one to wonder.
@@ -148,7 +148,7 @@ export function BoardPage() {
             onDragCancel={drag.onDragCancel}
           >
             <div className="flex min-h-0 flex-1 gap-4 overflow-x-auto pb-4">
-              {colonnesAffichees.map(({ status, cards }) => (
+              {visibleColumns.map(({ status, cards }) => (
                 <BoardColumn
                   key={status}
                   status={status}

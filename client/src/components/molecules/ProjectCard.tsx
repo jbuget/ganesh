@@ -16,7 +16,7 @@ import { progress } from "@/lib/board";
 import { formatDecimalDays } from "@/lib/dates";
 import { depuis } from "@/lib/relative-dates";
 
-/** Teinte du rapport consomme/estime selon l'etat d'avancement. */
+/** Shade of the consumed/estimated ratio, by how far along it is. */
 const SHADES: Record<ReturnType<typeof progress>, string> = {
   "sans-estime": "text-slate-500",
   "en-cours": "text-slate-600",
@@ -36,7 +36,7 @@ interface ProjectCardProps {
   isDragging?: boolean;
   /** Reloads the board after a change of contributors. */
   onIntervenantsChange?: () => void | Promise<void>;
-  /** Ouvre la mission a cote du tableau. */
+  /** Opens the mission beside the board. */
   onOpen?: (projectId: number) => void;
 }
 
@@ -52,24 +52,22 @@ export function ProjectCard({
   const { project, parent } = card;
   const archivee = !project.is_active;
   const state = progress(card.consumed_days, project.estimated_days);
-  const derniere = card.latest_update;
+  const latest = card.latest_update;
 
   // The latest message in full and formatted, as in the reference list: the
   // card says how many messages the thread carries, the preview says whether
   // it needs opening.
-  const apercu = derniere && (
+  const apercu = latest && (
     <>
       {/* The rule separates the signature from the words: without it, the first
           line of the message reads as the continuation of the header. Negative
           margins carry it to the edges of the bubble, whose padding it
           crosses. */}
       <p className="-mx-3 mb-2 border-b border-slate-200 px-3 pb-2 text-xs text-slate-500">
-        <span className="font-medium text-slate-700">
-          {derniere.author.display_name}
-        </span>{" "}
-        · {depuis(derniere.published_at, maintenant)}
+        <span className="font-medium text-slate-700">{latest.author.display_name}</span>{" "}
+        · {depuis(latest.published_at, maintenant)}
       </p>
-      <MarkdownView body={derniere.body} />
+      <MarkdownView body={latest.body} />
     </>
   );
 

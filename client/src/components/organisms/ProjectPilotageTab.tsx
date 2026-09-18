@@ -23,18 +23,18 @@ import type {
 interface ProjectPilotageTabProps {
   detail: ProjectDetailResponse;
   onChange: () => void | Promise<void>;
-  enregistrerFiche: (
+  saveSheet: (
     departments: Department[],
     contactsMetier: string | null,
   ) => Promise<void>;
-  changerPhase: (status: ProjectStatus) => Promise<void>;
-  changerCaracteristiques: (champs: {
+  changePhase: (status: ProjectStatus) => Promise<void>;
+  updateFields: (champs: {
     category?: ProjectCategory | null;
     priority?: ProjectPriority | null;
     estimated_days?: number | null;
   }) => Promise<void>;
-  ajouterLien: (label: string, url: string, icon: LinkIcon | null) => Promise<void>;
-  retirerLien: (linkId: number) => Promise<void>;
+  addLink: (label: string, url: string, icon: LinkIcon | null) => Promise<void>;
+  removeLink: (linkId: number) => Promise<void>;
 }
 
 /**
@@ -44,10 +44,10 @@ interface ProjectPilotageTabProps {
  * top to bottom, and a constant heading width gives that scan something to lean
  * on.
  */
-function Ligne({ titre, children }: { titre: string; children: React.ReactNode }) {
+function Ligne({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-3 py-1.5">
-      <span className="w-36 shrink-0 pt-0.5 text-sm text-slate-500">{titre}</span>
+      <span className="w-36 shrink-0 pt-0.5 text-sm text-slate-500">{title}</span>
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
@@ -78,11 +78,11 @@ function TitreSection({ children }: { children: React.ReactNode }) {
 export function ProjectPilotageTab({
   detail,
   onChange,
-  enregistrerFiche,
-  changerPhase,
-  changerCaracteristiques,
-  ajouterLien,
-  retirerLien,
+  saveSheet,
+  changePhase,
+  updateFields,
+  addLink,
+  removeLink,
 }: ProjectPilotageTabProps) {
   // Until anything is typed, the field shows what the server says: no local
   // copy to resynchronise on every reload.
@@ -96,41 +96,41 @@ export function ProjectPilotageTab({
         <TitreSection>Informations</TitreSection>
 
         <div className="divide-y divide-slate-100">
-          <Ligne titre="Phase">
-            <PhasePicker status={project.status} onChange={changerPhase} />
+          <Ligne title="Phase">
+            <PhasePicker status={project.status} onChange={changePhase} />
           </Ligne>
 
-          <Ligne titre="Priorité">
+          <Ligne title="Priorité">
             <PriorityPicker
               value={project.priority}
-              onChange={(priority) => changerCaracteristiques({ priority })}
+              onChange={(priority) => updateFields({ priority })}
             />
           </Ligne>
 
-          <Ligne titre="Catégorie">
+          <Ligne title="Catégorie">
             <CategoryPicker
               value={project.category}
-              onChange={(category) => changerCaracteristiques({ category })}
+              onChange={(category) => updateFields({ category })}
             />
           </Ligne>
 
-          <Ligne titre="Départements">
+          <Ligne title="Départements">
             <DepartmentPicker
               values={detail.departments}
-              onChange={(values) => enregistrerFiche(values, contacts.trim() || null)}
+              onChange={(values) => saveSheet(values, contacts.trim() || null)}
             />
           </Ligne>
 
-          <Ligne titre="Estimé (build)">
+          <Ligne title="Estimé (build)">
             <InlineNumberField
               value={project.estimated_days}
               suffixe="jrs."
               invite="Estimer"
-              onChange={(estimated_days) => changerCaracteristiques({ estimated_days })}
+              onChange={(estimated_days) => updateFields({ estimated_days })}
             />
           </Ligne>
 
-          <Ligne titre="Référents projet">
+          <Ligne title="Référents projet">
             <ContributorsPicker
               projectId={project.id}
               contributors={detail.leads}
@@ -140,7 +140,7 @@ export function ProjectPilotageTab({
             />
           </Ligne>
 
-          <Ligne titre="Intervenants">
+          <Ligne title="Intervenants">
             <ContributorsPicker
               projectId={project.id}
               contributors={detail.contributors}
@@ -149,7 +149,7 @@ export function ProjectPilotageTab({
             />
           </Ligne>
 
-          <Ligne titre="Contacts métier">
+          <Ligne title="Contacts métier">
             <input
               type="text"
               value={contacts}
@@ -160,7 +160,7 @@ export function ProjectPilotageTab({
               onBlur={() => {
                 if (draft === null) return;
                 setBrouillon(null);
-                void enregistrerFiche(detail.departments, draft.trim() || null);
+                void saveSheet(detail.departments, draft.trim() || null);
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter") event.currentTarget.blur();
@@ -169,11 +169,11 @@ export function ProjectPilotageTab({
             />
           </Ligne>
 
-          <Ligne titre="Liens">
+          <Ligne title="Liens">
             <ProjectLinksEditor
               links={detail.links}
-              onAdd={ajouterLien}
-              onRemove={retirerLien}
+              onAdd={addLink}
+              onRemove={removeLink}
             />
           </Ligne>
         </div>
@@ -181,7 +181,7 @@ export function ProjectPilotageTab({
 
       <section className="space-y-2">
         <TitreSection>Sous-projets</TitreSection>
-        <ProjectSubProjects sousProjets={detail.sub_projects} />
+        <ProjectSubProjects subProjects={detail.sub_projects} />
       </section>
 
       <section className="space-y-2">

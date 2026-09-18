@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Department } from "@/lib/api/generated/model";
-import { DEPARTEMENTS, libelleDepartement } from "@/lib/departments";
+import { DEPARTEMENTS, departmentLabel } from "@/lib/departments";
 
 interface DepartmentPickerProps {
   values: Department[];
@@ -48,7 +48,7 @@ export function DepartmentPicker({ values, onChange }: DepartmentPickerProps) {
               key={value}
               className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-700"
             >
-              {libelleDepartement(value)}
+              {departmentLabel(value)}
             </span>
           ))
         )}

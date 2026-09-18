@@ -231,7 +231,7 @@ class UpdateProjectDetailRequest(BaseModel):
 
 
 class UpdateDescriptionRequest(BaseModel):
-    """Fiche de service, en markdown."""
+    """Service sheet, in markdown."""
 
     description: str | None = None
 

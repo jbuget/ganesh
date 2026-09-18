@@ -8,7 +8,7 @@ const vue = vi.hoisted(() => ({
   isLoading: false,
   isManager: false,
   avecInactifs: false,
-  basculerInactifs: vi.fn(),
+  toggleInactive: vi.fn(),
   collaborateurs: [
     {
       id: 1,
@@ -29,8 +29,8 @@ const vue = vi.hoisted(() => ({
       last_login_at: null,
     },
   ],
-  changerRole: vi.fn(),
-  changerActivite: vi.fn(),
+  changeRole: vi.fn(),
+  setActive: vi.fn(),
   moiId: 1,
   maintenant: new Date("2026-09-17T12:00:00"),
 }));
@@ -67,7 +67,7 @@ describe("UsersPage", () => {
       screen.getByRole("button", { name: "Afficher les inactifs" }),
     );
 
-    expect(vue.basculerInactifs).toHaveBeenCalledTimes(1);
+    expect(vue.toggleInactive).toHaveBeenCalledTimes(1);
   });
 
   it("gives everyone's last login", () => {

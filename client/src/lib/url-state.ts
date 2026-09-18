@@ -19,7 +19,7 @@ function query(): string {
 }
 
 /** Server-side the address is unknown: no parameters. */
-function surLeServeur(): string {
+function onServer(): string {
   return "";
 }
 
@@ -39,7 +39,7 @@ function subscribe(callback: () => void) {
 
 /** The current parameters, as the address carries them. */
 export function useQueryString(): string {
-  return useSyncExternalStore(subscribe, query, surLeServeur);
+  return useSyncExternalStore(subscribe, query, onServer);
 }
 
 /**

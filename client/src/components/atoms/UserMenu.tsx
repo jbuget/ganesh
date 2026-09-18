@@ -5,12 +5,12 @@ import { useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { UserResponse } from "@/lib/api/generated/model";
-import { libelleRole } from "@/lib/roles";
+import { roleLabel } from "@/lib/roles";
 
 interface UserMenuProps {
   user: UserResponse;
   onSignOut: () => void | Promise<void>;
-  /** Repliee, la barre ne laisse place qu'a la pastille. */
+  /** Folded, the bar leaves room for the avatar alone. */
   repliee?: boolean;
 }
 
@@ -42,9 +42,7 @@ export function UserMenu({ user, onSignOut, repliee = false }: UserMenuProps) {
         <span className={repliee ? "sr-only" : "min-w-0 text-left"}>
           <span className="block truncate text-sm">{user.display_name}</span>
           {user.role === "MANAGER" && (
-            <span className="block text-xs text-slate-500">
-              {libelleRole(user.role)}
-            </span>
+            <span className="block text-xs text-slate-500">{roleLabel(user.role)}</span>
           )}
         </span>
       </PopoverTrigger>
@@ -56,7 +54,7 @@ export function UserMenu({ user, onSignOut, repliee = false }: UserMenuProps) {
         </div>
 
         <p className="border-t border-slate-200 px-3 py-2.5 text-sm text-slate-600">
-          {libelleRole(user.role)}
+          {roleLabel(user.role)}
         </p>
 
         <div className="border-t border-slate-200 p-1">

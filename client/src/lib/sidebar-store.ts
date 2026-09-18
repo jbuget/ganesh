@@ -41,15 +41,15 @@ function subscribe(callback: () => void) {
 }
 
 /** Server-side the sidebar is always expanded: that is the default state. */
-function surLeServeur() {
+function onServer() {
   return false;
 }
 
-export function basculerBarreLaterale() {
+export function toggleSidebar() {
   window.localStorage.setItem(CLE, read() ? "0" : "1");
   notify();
 }
 
 export function useBarreLateraleRepliee(): boolean {
-  return useSyncExternalStore(subscribe, read, surLeServeur);
+  return useSyncExternalStore(subscribe, read, onServer);
 }

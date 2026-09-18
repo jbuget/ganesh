@@ -30,8 +30,8 @@ const card = (id: number, label: string): BoardCardResponse =>
 /** Frozen reference time: previews do not depend on when the run happens. */
 const MAINTENANT = new Date("2026-09-16T11:00:00Z");
 
-/** Les capteurs de @dnd-kit exigent un contexte englobant. */
-const afficher = (cards: BoardCardResponse[], frozen = false) =>
+/** The @dnd-kit sensors require an enclosing context. */
+const show = (cards: BoardCardResponse[], frozen = false) =>
   render(
     <DndContext>
       <BoardColumn
@@ -45,7 +45,7 @@ const afficher = (cards: BoardCardResponse[], frozen = false) =>
 
 describe("BoardColumn", () => {
   it("announces the phase and counts its missions", () => {
-    afficher([card(1, "Portail bailleurs"), card(2, "Refonte extranet")]);
+    show([card(1, "Portail bailleurs"), card(2, "Refonte extranet")]);
 
     const column = screen.getByRole("region", { name: "Réalisation" });
     expect(within(column).getByRole("heading", { level: 2 })).toHaveTextContent(
@@ -55,27 +55,27 @@ describe("BoardColumn", () => {
   });
 
   it("shows one card per mission, in the order received", () => {
-    afficher([card(1, "Portail bailleurs"), card(2, "Refonte extranet")]);
+    show([card(1, "Portail bailleurs"), card(2, "Refonte extranet")]);
 
     const titres = screen.getAllByRole("heading", { level: 3 });
-    expect(titres.map((titre) => titre.textContent)).toEqual([
+    expect(titres.map((title) => title.textContent)).toEqual([
       "Portail bailleurs",
       "Refonte extranet",
     ]);
   });
 
   it("invites a drop when the phase is empty", () => {
-    afficher([]);
+    show([]);
 
     expect(screen.getByText("Aucune mission")).toBeInTheDocument();
     expect(screen.queryAllByRole("heading", { level: 3 })).toHaveLength(0);
   });
 
   it("tells the phase apart by a coloured dot", () => {
-    afficher([]);
+    show([]);
 
-    const titre = screen.getByRole("heading", { level: 2 });
-    const dot = titre.querySelector("span");
+    const title = screen.getByRole("heading", { level: 2 });
+    const dot = title.querySelector("span");
     expect(dot).toHaveClass("bg-blue-500");
     // Decorative: it doubles the title, it does not announce it twice.
     expect(dot).toHaveAttribute("aria-hidden");
@@ -84,7 +84,7 @@ describe("BoardColumn", () => {
   it("keeps its heading out of the scrolling list", () => {
     // Each column scrolls on its own: its title must stay level with the
     // others', whatever its stack of cards.
-    afficher([card(1, "Portail bailleurs")]);
+    show([card(1, "Portail bailleurs")]);
 
     const defilante = screen.getByRole("list");
 
@@ -93,13 +93,13 @@ describe("BoardColumn", () => {
   });
 
   it("shows the prompt only on an empty phase", () => {
-    afficher([card(1, "Portail bailleurs")]);
+    show([card(1, "Portail bailleurs")]);
 
     expect(screen.queryByText("Aucune mission")).not.toBeInTheDocument();
   });
 
   it("puts only <li> in the list, on pain of breaking hydration", () => {
-    afficher([]);
+    show([]);
 
     const liste = screen.getByRole("list");
     const intrus = [...liste.children].filter((noeud) => noeud.tagName !== "LI");
@@ -109,13 +109,13 @@ describe("BoardColumn", () => {
 
 describe("a column frozen by a filter", () => {
   it("removes the handle: a filtered card no longer arranges", () => {
-    afficher([card(1, "Portail bailleurs")], true);
+    show([card(1, "Portail bailleurs")], true);
 
     expect(screen.queryByRole("button", { name: /Déplacer/ })).toBeNull();
   });
 
   it("keeps its handle when unfiltered", () => {
-    afficher([card(1, "Portail bailleurs")]);
+    show([card(1, "Portail bailleurs")]);
 
     expect(
       screen.getByRole("button", { name: "Déplacer Portail bailleurs" }),
@@ -123,7 +123,7 @@ describe("a column frozen by a filter", () => {
   });
 
   it("explains an emptiness caused by filters rather than a plain emptiness", () => {
-    afficher([], true);
+    show([], true);
 
     expect(
       screen.getByText("Aucune mission ne répond aux filtres"),

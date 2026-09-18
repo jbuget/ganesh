@@ -166,7 +166,7 @@ export function TimesheetGrid({
                 // and on the right.
                 className="border-r border-b border-r-slate-500 border-b-slate-500 bg-white px-3 py-6 text-center text-sm text-slate-500"
               >
-                Aucune mission pour ce mois. Ajoutez-en une pour commencer à saisir.
+                Aucune mission pour ce mois. Ajoutez-en une pour commencer à enter.
               </td>
             </tr>
           )}

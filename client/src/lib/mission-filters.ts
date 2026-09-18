@@ -40,7 +40,7 @@ export interface MissionFilters {
   states: EtatMission[];
 }
 
-/** Le tableau entier : aucun critere pose. */
+/** The whole board: no criterion set. */
 export const NO_FILTER: MissionFilters = {
   name: "",
   phases: [],
@@ -82,7 +82,7 @@ function normalise(body: string): string {
     .toLowerCase();
 }
 
-export function filtreActif(filters: MissionFilters): boolean {
+export function hasActiveFilter(filters: MissionFilters): boolean {
   return (
     filters.name.trim() !== "" ||
     filters.phases.length > 0 ||
@@ -141,7 +141,7 @@ function kept(mission: FilterableMission, filters: MissionFilters): boolean {
   return true;
 }
 
-export function filtrerMissions<T extends FilterableMission>(
+export function filterMissions<T extends FilterableMission>(
   missions: T[],
   filters: MissionFilters,
 ): T[] {
@@ -189,7 +189,7 @@ function valeursConnues<T extends string>(
  * An unknown value is ignored: a mistyped address must show the board, not an
  * empty screen with no explanation.
  */
-export function lireFiltres(params: URLSearchParams): MissionFilters {
+export function readFilters(params: URLSearchParams): MissionFilters {
   return {
     name: params.get(PARAMETERS.name) ?? "",
     phases: valeursConnues<ProjectStatus>(params, PARAMETERS.phase, PHASES_CONNUES),
@@ -213,7 +213,7 @@ export function lireFiltres(params: URLSearchParams): MissionFilters {
 }
 
 /** Writes the filters into the URL, leaving the other parameters alone. */
-export function ecrireFiltres(params: URLSearchParams, filters: MissionFilters): void {
+export function writeFilters(params: URLSearchParams, filters: MissionFilters): void {
   Object.values(PARAMETERS).forEach((name) => params.delete(name));
 
   if (filters.name.trim()) params.set(PARAMETERS.name, filters.name.trim());

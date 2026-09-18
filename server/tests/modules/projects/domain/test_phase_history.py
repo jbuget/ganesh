@@ -24,7 +24,7 @@ def test_the_first_phase_has_nothing_before_it() -> None:
 
 
 def test_a_passage_is_named_after_what_it_achieves() -> None:
-    """« Valide le » reads better than « entre en deploiement le »."""
+    """« Validé le » reads better than « entré en déploiement le »."""
     assert transition_label(ProjectStatus.DEPLOYMENT) == "Validé"
     assert transition_label(ProjectStatus.OPERATIONS) == "Déployé"
 

@@ -29,9 +29,9 @@ describe("MissionMenu", () => {
   });
 
   it("archives the mission when the action is chosen", async () => {
-    const archiver = vi.fn();
+    const archive = vi.fn();
     render(
-      <MissionMenu archivee={false} onArchiver={archiver} onDesarchiver={vi.fn()} />,
+      <MissionMenu archivee={false} onArchiver={archive} onDesarchiver={vi.fn()} />,
     );
 
     await userEvent.click(
@@ -39,7 +39,7 @@ describe("MissionMenu", () => {
     );
     await userEvent.click(screen.getByRole("button", { name: "Archiver" }));
 
-    expect(archiver).toHaveBeenCalledTimes(1);
+    expect(archive).toHaveBeenCalledTimes(1);
   });
 
   it("closes the menu once the action is chosen", async () => {

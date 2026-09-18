@@ -1,4 +1,4 @@
-"""Cycle de vie d'un mois : ouvert, valide, rouvert."""
+"""Life cycle of a month: open, validated, reopened."""
 
 from datetime import date
 

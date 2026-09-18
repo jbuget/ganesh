@@ -48,7 +48,7 @@ class BoardColumn:
 
 @dataclass
 class Board:
-    """Le tableau complet."""
+    """The whole board."""
 
     columns: list[BoardColumn]
 

@@ -1,4 +1,4 @@
-"""Lecture de l'identite portee par un jeton Entra."""
+"""Reading the identity an Entra token carries."""
 
 import pytest
 

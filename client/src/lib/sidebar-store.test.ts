@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
-import { basculerBarreLaterale, useBarreLateraleRepliee } from "./sidebar-store";
+import { toggleSidebar, useBarreLateraleRepliee } from "./sidebar-store";
 
 describe("fold preference", () => {
   beforeEach(() => {
@@ -18,7 +18,7 @@ describe("fold preference", () => {
     const { result } = renderHook(() => useBarreLateraleRepliee());
     const depart = result.current;
 
-    act(() => basculerBarreLaterale());
+    act(() => toggleSidebar());
 
     expect(result.current).toBe(!depart);
   });
@@ -27,7 +27,7 @@ describe("fold preference", () => {
     const { result } = renderHook(() => useBarreLateraleRepliee());
     const attendu = !result.current;
 
-    act(() => basculerBarreLaterale());
+    act(() => toggleSidebar());
 
     expect(window.localStorage.getItem("timesheet.sidebar-repliee")).toBe(
       attendu ? "1" : "0",
@@ -46,11 +46,11 @@ describe("fold preference", () => {
   });
 
   it("notifies every subscriber", () => {
-    const premier = renderHook(() => useBarreLateraleRepliee());
+    const first = renderHook(() => useBarreLateraleRepliee());
     const second = renderHook(() => useBarreLateraleRepliee());
 
-    act(() => basculerBarreLaterale());
+    act(() => toggleSidebar());
 
-    expect(second.result.current).toBe(premier.result.current);
+    expect(second.result.current).toBe(first.result.current);
   });
 });

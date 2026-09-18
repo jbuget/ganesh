@@ -371,7 +371,7 @@ async def test_a_card_carries_its_latest_update() -> None:
 
 
 async def test_a_removed_update_is_no_longer_announced() -> None:
-    """Un message retire disparait aussi de l'preview."""
+    """A withdrawn message disappears from the preview too."""
     updates = InMemoryProjectUpdateRepository()
     update = await updates.add(
         ProjectUpdate(

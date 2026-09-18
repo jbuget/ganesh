@@ -8,7 +8,7 @@ interface DayCellProps {
   isOffDay: boolean;
   isFuture: boolean;
   isReadOnly: boolean;
-  /** La derniere ligne ferme le tableau : son trait bas est le trait fort. */
+  /** The last row closes the table: its bottom rule is the strong one. */
   isLastRow?: boolean;
   /** The last day column carries the rule that separates it from the totals. */
   isLastDay?: boolean;

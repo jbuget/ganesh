@@ -48,23 +48,21 @@ export function MissionRow({
   onOpenFil,
 }: MissionRowProps) {
   const { project } = mission;
-  const derniere = mission.latest_update;
+  const latest = mission.latest_update;
 
   // The latest message in full and formatted, as it reads in the thread: a
   // truncated preview would force opening the panel for the end of a sentence.
-  const apercu = derniere && (
+  const apercu = latest && (
     <>
       {/* The rule separates the signature from the words: without it, the first
           line of the message reads as the continuation of the header. Negative
           margins carry it to the edges of the bubble, whose padding it
           crosses. */}
       <p className="-mx-3 mb-2 border-b border-slate-200 px-3 pb-2 text-xs text-slate-500">
-        <span className="font-medium text-slate-700">
-          {derniere.author.display_name}
-        </span>{" "}
-        · {depuis(derniere.published_at, maintenant)}
+        <span className="font-medium text-slate-700">{latest.author.display_name}</span>{" "}
+        · {depuis(latest.published_at, maintenant)}
       </p>
-      <MarkdownView body={derniere.body} />
+      <MarkdownView body={latest.body} />
     </>
   );
 

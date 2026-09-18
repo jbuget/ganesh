@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { ROLES, libelleRole } from "./roles";
+import { ROLES, roleLabel } from "./roles";
 
 describe("libelleRole", () => {
   it("names the role in French", () => {
-    expect(libelleRole("MANAGER")).toBe("Manager");
-    expect(libelleRole("TEAMMATE")).toBe("Collaborateur");
+    expect(roleLabel("MANAGER")).toBe("Manager");
+    expect(roleLabel("TEAMMATE")).toBe("Collaborateur");
   });
 });
 

@@ -24,7 +24,7 @@ export function InlineNumberField({
 }: InlineNumberFieldProps) {
   const [entry, setSaisie] = useState<string | null>(null);
 
-  function valider() {
+  function validate() {
     if (entry === null) return;
     const propre = entry.trim().replace(",", ".");
     setSaisie(null);
@@ -42,9 +42,9 @@ export function InlineNumberField({
         value={entry}
         aria-label={invite}
         onChange={(event) => setSaisie(event.target.value)}
-        onBlur={valider}
+        onBlur={validate}
         onKeyDown={(event) => {
-          if (event.key === "Enter") valider();
+          if (event.key === "Enter") validate();
           if (event.key === "Escape") setSaisie(null);
         }}
         className="w-24 rounded border border-slate-400 px-1.5 py-0.5 text-sm focus:outline-none"

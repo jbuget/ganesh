@@ -18,8 +18,8 @@ interface ValidateMonthDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   month: string;
-  totalSaisi: number;
-  joursOuvres: number;
+  totalEntered: number;
+  workingDays: number;
   onConfirm: () => Promise<void>;
 }
 
@@ -34,11 +34,11 @@ export function ValidateMonthDialog({
   open,
   onOpenChange,
   month,
-  totalSaisi,
-  joursOuvres,
+  totalEntered,
+  workingDays,
   onConfirm,
 }: ValidateMonthDialogProps) {
-  const manquant = Math.max(0, joursOuvres - totalSaisi);
+  const manquant = Math.max(0, workingDays - totalEntered);
   const [enCours, setEnCours] = useState(false);
 
   /**
@@ -63,15 +63,15 @@ export function ValidateMonthDialog({
           <AlertDialogTitle className="capitalize">Valider {month} ?</AlertDialogTitle>
           <AlertDialogDescription>
             Après validation, vous ne pourrez plus modifier ce mois. Seul un manager
-            pourra le rouvrir.
+            pourra le reopen.
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
           <dt className="text-muted-foreground">Total saisi</dt>
-          <dd className="text-right font-medium">{formatTotal(totalSaisi)} day(s)</dd>
+          <dd className="text-right font-medium">{formatTotal(totalEntered)} day(s)</dd>
           <dt className="text-muted-foreground">Jours ouvrés</dt>
-          <dd className="text-right font-medium">{joursOuvres} days</dd>
+          <dd className="text-right font-medium">{workingDays} days</dd>
         </dl>
 
         {manquant > 0 && (

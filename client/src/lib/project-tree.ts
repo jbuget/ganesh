@@ -1,5 +1,5 @@
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
-import { NO_SORT, comparateurDeTri, type MissionSort } from "@/lib/mission-sort";
+import { NO_SORT, sortComparator, type MissionSort } from "@/lib/mission-sort";
 
 /** A mission and, if it is a project, the work packages under it. */
 export interface ProjectNode {
@@ -24,7 +24,7 @@ export function buildProjectTree(
   missions: ProjectListItemResponse[],
   sorted: MissionSort = NO_SORT,
 ): ProjectNode[] {
-  const ordre = comparateurDeTri(sorted);
+  const ordre = sortComparator(sorted);
   const projets = missions.filter((m) => m.project.kind === "project");
   const lots = missions.filter((m) => m.project.kind === "work_package");
   const idsPresents = new Set(projets.map((m) => m.project.id));
@@ -50,5 +50,5 @@ export function offProjectActivities(
 ): ProjectListItemResponse[] {
   return missions
     .filter((m) => m.project.kind === HORS_PROJET)
-    .sort(comparateurDeTri(NO_SORT));
+    .sort(sortComparator(NO_SORT));
 }

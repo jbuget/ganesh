@@ -46,6 +46,6 @@ export function iconGlyph(value: LinkIcon): LucideIcon {
 }
 
 /** The readable name of an icon, for screen readers and the picker. */
-export function libelleIcone(value: LinkIcon): string {
+export function iconLabel(value: LinkIcon): string {
   return PAR_VALEUR.get(value)?.label ?? "Lien";
 }

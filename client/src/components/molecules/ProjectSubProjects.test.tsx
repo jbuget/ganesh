@@ -9,13 +9,13 @@ const lot = (id: number, label: string, status = "scoping"): ProjectResponse =>
 
 describe("ProjectSubProjects", () => {
   it("announces that no sub-project is attached", () => {
-    render(<ProjectSubProjects sousProjets={[]} />);
+    render(<ProjectSubProjects subProjects={[]} />);
 
     expect(screen.getByText("Aucun sous-projet")).toBeInTheDocument();
   });
 
   it("leads to the sheet of each sub-project", () => {
-    render(<ProjectSubProjects sousProjets={[lot(11, "Authentification")]} />);
+    render(<ProjectSubProjects subProjects={[lot(11, "Authentification")]} />);
 
     expect(screen.getByRole("link", { name: /Authentification/ })).toHaveAttribute(
       "href",
@@ -26,7 +26,7 @@ describe("ProjectSubProjects", () => {
   it("says the phase of each sub-project", () => {
     render(
       <ProjectSubProjects
-        sousProjets={[lot(11, "Authentification"), lot(12, "Reprise", "development")]}
+        subProjects={[lot(11, "Authentification"), lot(12, "Reprise", "development")]}
       />,
     );
 

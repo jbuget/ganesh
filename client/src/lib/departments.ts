@@ -16,6 +16,6 @@ export const DEPARTEMENTS: { value: Department; label: string }[] = [
 
 const PAR_VALEUR = new Map(DEPARTEMENTS.map((d) => [d.value, d.label]));
 
-export function libelleDepartement(value: Department): string {
+export function departmentLabel(value: Department): string {
   return PAR_VALEUR.get(value) ?? value;
 }

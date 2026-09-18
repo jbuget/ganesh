@@ -74,21 +74,20 @@ function Bubble({
 }
 
 /**
- * Infobulle qui parait au curseur.
+ * A tooltip that appears at the cursor.
  *
- * Elle parait des le survol, la ou l'infobulle native du navigateur se fait
- * attendre une seconde, et elle est montee dans un portail sur `body` : rendue
- * a l'interieur d'une cellule `sticky`, qui porte son propre contexte
- * d'empilement, elle passait sous la cellule de la ligne suivante et se
- * trouvait rognee.
+ * It appears on hover, where the browser's native tooltip keeps one waiting a
+ * second, and it is mounted in a portal on `body`: rendered inside a `sticky`
+ * cell, which carries its own stacking context, it slipped under the next
+ * row's cell and got clipped.
  *
- * Le contenu est donne au survol et non a l'appel : une meme infobulle sert
- * ainsi plusieurs elements voisins, comme les pastilles d'intervenants.
+ * The content is given on hover and not at the call: one tooltip thus serves
+ * several neighbouring elements, such as contributor avatars.
  *
- * `riche` la fait passer du bandeau sombre d'un nom a une carte claire, ou du
- * contenu mis en forme se rend tel qu'il s'ecrit. Elle s'y fige a la premiere
- * apparition plutot que de suivre le curseur : un paragraphe qu'on lit ne doit
- * pas bouger sous les yeux.
+ * `rich` turns it from the dark banner of a name into a light card, where
+ * formatted content renders as it is written. It freezes there on first
+ * appearance rather than following the cursor: a paragraph being read must not
+ * move before one's eyes.
  */
 export function useCursorTooltip({ rich = false }: { rich?: boolean } = {}) {
   const [state, setState] = useState<State | null>(null);
@@ -106,7 +105,7 @@ export function useCursorTooltip({ rich = false }: { rich?: boolean } = {}) {
     tooltip,
     follow: (event: MouseEvent, content: ReactNode) => {
       const position = { x: event.clientX, y: event.clientY, content };
-      setState((precedent) => (rich && precedent ? precedent : position));
+      setState((previous) => (rich && previous ? previous : position));
     },
     leave: () => setState(null),
   };

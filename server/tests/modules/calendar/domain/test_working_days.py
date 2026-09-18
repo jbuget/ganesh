@@ -33,7 +33,7 @@ def test_christmas_is_a_holiday() -> None:
 
 
 def test_a_holiday_falling_on_a_weekend_is_reported_as_a_holiday() -> None:
-    """Le 15 aout 2026 tombe un samedi : la nature feriee prime a l'affichage."""
+    """15 August 2026 falls on a Saturday: the holiday kind wins on screen."""
     assert classify_day(date(2026, 8, 15)) is DayKind.FERIE
 
 

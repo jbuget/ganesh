@@ -6,7 +6,7 @@ interface UserAvatarProps {
   attenue?: boolean;
 }
 
-/** Pastille d'initiales identifiant un collaborateur. */
+/** Initial avatar identifying a teammate. */
 export function UserAvatar({ initials, name, attenue = false }: UserAvatarProps) {
   return (
     <span

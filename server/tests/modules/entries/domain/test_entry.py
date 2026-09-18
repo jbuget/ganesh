@@ -1,4 +1,4 @@
-"""Invariants de la saisie de temps."""
+"""Invariants of time entry."""
 
 from datetime import date
 

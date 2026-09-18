@@ -92,13 +92,13 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
         <ProjectTabs
           detail={detail}
           onChange={fiche.reload}
-          enregistrerFiche={fiche.enregistrerFiche}
-          enregistrerDescription={fiche.enregistrerDescription}
-          changerPhase={fiche.changerPhase}
-          changerCaracteristiques={fiche.changerCaracteristiques}
-          ajouterLien={fiche.ajouterLien}
-          retirerLien={fiche.retirerLien}
-          archiver={fiche.archiver}
+          saveSheet={fiche.saveSheet}
+          saveDescription={fiche.saveDescription}
+          changePhase={fiche.changePhase}
+          updateFields={fiche.updateFields}
+          addLink={fiche.addLink}
+          removeLink={fiche.removeLink}
+          archive={fiche.archive}
           desarchiver={fiche.desarchiver}
         />
       </div>

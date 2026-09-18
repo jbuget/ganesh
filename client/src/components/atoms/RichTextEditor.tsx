@@ -38,34 +38,34 @@ interface RichTextEditorProps {
   avecTitres?: boolean;
   /** Puts the cursor in the input area as soon as it appears. */
   autoFocus?: boolean;
-  /** Hauteur minimale de la zone de saisie, en classes Tailwind. */
+  /** Minimum height of the input area, in Tailwind classes. */
   hauteur?: string;
   /**
    * Takes all the height the parent leaves, the input area scrolling on its
    * own. Requires an unbroken flex chain above.
    */
-  pleineHauteur?: boolean;
+  fullHeight?: boolean;
 }
 
-/** Un bouton de la barre d'outils. */
+/** One button of the toolbar. */
 function Outil({
   editor,
   isActive,
-  titre,
+  title,
   onClick,
   children,
 }: {
   editor: Editor;
   isActive: boolean;
-  titre: string;
+  title: string;
   onClick: () => void;
   children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
-      title={titre}
-      aria-label={titre}
+      title={title}
+      aria-label={title}
       aria-pressed={isActive}
       // `onMouseDown` rather than `onClick`: the button would take focus and
       // the selection would be lost before the command applied.
@@ -99,7 +99,7 @@ export function RichTextEditor({
   avecTitres = false,
   autoFocus = false,
   hauteur = "min-h-24",
-  pleineHauteur = false,
+  fullHeight = false,
 }: RichTextEditorProps) {
   const editor = useEditor({
     // Next renders this component on the server: letting ProseMirror settle in
@@ -118,7 +118,7 @@ export function RichTextEditor({
     content: value,
     editorProps: {
       attributes: {
-        class: `prose prose-sm prose-slate max-w-none ${pleineHauteur ? "h-full" : hauteur} px-3 py-2 focus:outline-none`,
+        class: `prose prose-sm prose-slate max-w-none ${fullHeight ? "h-full" : hauteur} px-3 py-2 focus:outline-none`,
         "aria-label": placeholder ?? "Rédaction",
       },
       handleKeyDown: (_, event) => {
@@ -140,20 +140,20 @@ export function RichTextEditor({
     <div
       className={[
         "overflow-hidden rounded-md border border-slate-300 bg-white focus-within:border-slate-500",
-        pleineHauteur ? "flex min-h-0 flex-1 flex-col" : "",
+        fullHeight ? "flex min-h-0 flex-1 flex-col" : "",
       ].join(" ")}
     >
       <EditorContent
         editor={editor}
         // The input area scrolls on its own: the toolbar stays before the
         // eyes, even at the bottom of a long sheet.
-        className={pleineHauteur ? "min-h-0 flex-1 overflow-y-auto" : undefined}
+        className={fullHeight ? "min-h-0 flex-1 overflow-y-auto" : undefined}
       />
 
       <div className="flex flex-wrap items-center gap-0.5 border-t border-slate-200 px-1.5 py-1">
         <Outil
           editor={editor}
-          titre="Gras"
+          title="Gras"
           isActive={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}
         >
@@ -161,7 +161,7 @@ export function RichTextEditor({
         </Outil>
         <Outil
           editor={editor}
-          titre="Italique"
+          title="Italique"
           isActive={editor.isActive("italic")}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         >
@@ -169,7 +169,7 @@ export function RichTextEditor({
         </Outil>
         <Outil
           editor={editor}
-          titre="Barré"
+          title="Barré"
           isActive={editor.isActive("strike")}
           onClick={() => editor.chain().focus().toggleStrike().run()}
         >
@@ -177,7 +177,7 @@ export function RichTextEditor({
         </Outil>
         <Outil
           editor={editor}
-          titre="Code"
+          title="Code"
           isActive={editor.isActive("code")}
           onClick={() => editor.chain().focus().toggleCode().run()}
         >
@@ -189,7 +189,7 @@ export function RichTextEditor({
             <span aria-hidden className="mx-1 h-4 w-px bg-slate-200" />
             <Outil
               editor={editor}
-              titre="Titre"
+              title="Titre"
               isActive={editor.isActive("heading", { level: 2 })}
               onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             >
@@ -197,7 +197,7 @@ export function RichTextEditor({
             </Outil>
             <Outil
               editor={editor}
-              titre="Sous-titre"
+              title="Sous-titre"
               isActive={editor.isActive("heading", { level: 3 })}
               onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             >
@@ -210,7 +210,7 @@ export function RichTextEditor({
 
         <Outil
           editor={editor}
-          titre="Liste à puces"
+          title="Liste à puces"
           isActive={editor.isActive("bulletList")}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
         >
@@ -218,7 +218,7 @@ export function RichTextEditor({
         </Outil>
         <Outil
           editor={editor}
-          titre="Liste numérotée"
+          title="Liste numérotée"
           isActive={editor.isActive("orderedList")}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
         >
@@ -226,7 +226,7 @@ export function RichTextEditor({
         </Outil>
         <Outil
           editor={editor}
-          titre="Citation"
+          title="Citation"
           isActive={editor.isActive("blockquote")}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
         >
@@ -234,7 +234,7 @@ export function RichTextEditor({
         </Outil>
         <Outil
           editor={editor}
-          titre="Lien"
+          title="Lien"
           isActive={editor.isActive("link")}
           onClick={() => {
             if (editor.isActive("link")) {

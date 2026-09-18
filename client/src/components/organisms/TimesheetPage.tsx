@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { formatMonth } from "@/lib/dates";
 import { useTimesheetMonth } from "@/lib/use-timesheet-month";
 
-/** Ecran de saisie : la matrice du mois et sa navigation. */
+/** Entry screen: the month grid and its navigation. */
 export function TimesheetPage() {
   const month = useTimesheetMonth();
   const { grid, cursor } = month;
@@ -45,8 +45,8 @@ export function TimesheetPage() {
     <PageLayout
       entete={
         <PageHeader
-          titre="Activité"
-          soustitre="Déclarez votre temps en journées ou demi-journées. Tant que le mois n'est pas validé, tout reste modifiable."
+          title="Activité"
+          subtitle="Déclarez votre temps en journées ou demi-journées. Tant que le mois n'est pas validé, tout reste modifiable."
         />
       }
     >
@@ -104,7 +104,7 @@ export function TimesheetPage() {
       {grid && !grid.is_writable && (
         <p className="mb-4 rounded-md border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-700">
           Ce month est validé et ne peut plus être modifié. Seul un manager peut le
-          rouvrir.
+          reopen.
         </p>
       )}
 
@@ -154,8 +154,8 @@ export function TimesheetPage() {
           open={validationOuverte}
           onOpenChange={setValidationOuverte}
           month={formatMonth(cursor.year, cursor.month)}
-          totalSaisi={grid.actual_total + grid.forecast_total}
-          joursOuvres={grid.working_days}
+          totalEntered={grid.actual_total + grid.forecast_total}
+          workingDays={grid.working_days}
           onConfirm={month.validate}
         />
       )}

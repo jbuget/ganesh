@@ -9,7 +9,7 @@ import { mutationResult, useCurrentUser, useProjects } from "@/lib/api/queries";
 import { parseProjectsCsv } from "@/lib/csv-import";
 import {
   NO_FILTER,
-  filtrerMissions,
+  filterMissions,
   inclutLesArchivees,
   type MissionFilters,
 } from "@/lib/mission-filters";
@@ -31,7 +31,7 @@ export function useProjectsScreen(
   const queryClient = useQueryClient();
   const { user: me } = useCurrentUser();
   const { missions, isLoading } = useProjects(inclutLesArchivees(filters));
-  const kept = filtrerMissions(missions, filters);
+  const kept = filterMissions(missions, filters);
   // We remember what is expanded, not what is collapsed: the reference list
   // opens on its projects, and sub-projects are asked for. A mission created
   // along the way therefore arrives collapsed, like the others.

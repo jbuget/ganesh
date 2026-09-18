@@ -13,7 +13,7 @@ interface ContributorsPickerProps {
   projectId: number;
   contributors: BoardMemberResponse[];
   onChange: () => void | Promise<void>;
-  /** A quel titre ces personnes sont rattachees a la mission. */
+  /** On what grounds these people are attached to the mission. */
   role?: ProjectRole;
   /** Prompt shown when nobody is attached yet. */
   invite?: string;

@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import {
   writeSort,
   readSort,
-  triSuivant,
+  nextSort,
   type SortColumn,
   type MissionSort,
 } from "@/lib/mission-sort";
@@ -28,8 +28,8 @@ export function useMissionSort() {
 
     /** Moves a column to the next step of its cycle. */
     toggle(column: SortColumn) {
-      const suivant: MissionSort = triSuivant(sorted, column);
-      writeUrl((params) => writeSort(params, suivant), "remplacer");
+      const next: MissionSort = nextSort(sorted, column);
+      writeUrl((params) => writeSort(params, next), "remplacer");
     },
   };
 }

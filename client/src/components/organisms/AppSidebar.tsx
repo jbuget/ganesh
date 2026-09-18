@@ -14,7 +14,7 @@ import { UserMenu } from "@/components/atoms/UserMenu";
 import { Button } from "@/components/ui/button";
 import { useSignOut } from "@/lib/use-sign-out";
 import { useCurrentUser } from "@/lib/api/queries";
-import { basculerBarreLaterale, useBarreLateraleRepliee } from "@/lib/sidebar-store";
+import { toggleSidebar, useBarreLateraleRepliee } from "@/lib/sidebar-store";
 
 const ONGLETS = [
   { href: "/", label: "Activité", Icone: CalendarDays },
@@ -71,7 +71,7 @@ export function AppSidebar() {
           }
           aria-pressed={repliee}
           title={repliee ? "Déplier la barre latérale" : "Replier la barre latérale"}
-          onClick={basculerBarreLaterale}
+          onClick={toggleSidebar}
         >
           <PanelLeft />
         </Button>

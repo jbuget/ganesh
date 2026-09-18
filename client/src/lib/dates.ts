@@ -95,6 +95,6 @@ export function formatDecimalDays(value: number): string {
  * be the one the server recorded.
  */
 export function formatDateCourte(iso: string): string {
-  const [annee, month, day] = iso.slice(0, 10).split("-");
-  return `${day}/${month}/${annee}`;
+  const [year, month, day] = iso.slice(0, 10).split("-");
+  return `${day}/${month}/${year}`;
 }

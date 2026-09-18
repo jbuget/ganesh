@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   NO_FILTER,
-  ecrireFiltres,
-  filtreActif,
-  filtrerMissions,
+  writeFilters,
+  hasActiveFilter,
+  filterMissions,
   inclutLesArchivees,
-  lireFiltres,
+  readFilters,
   type MissionFilters,
 } from "./mission-filters";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
@@ -45,32 +45,32 @@ const filters = (over: Partial<MissionFilters> = {}): MissionFilters => ({
 
 describe("filtreActif", () => {
   it("sees no filter on empty criteria", () => {
-    expect(filtreActif(NO_FILTER)).toBe(false);
+    expect(hasActiveFilter(NO_FILTER)).toBe(false);
   });
 
   it("ignores a name made of spaces", () => {
-    expect(filtreActif(filters({ name: "   " }))).toBe(false);
+    expect(hasActiveFilter(filters({ name: "   " }))).toBe(false);
   });
 
   it("triggers as soon as a criterion is set", () => {
-    expect(filtreActif(filters({ phases: ["scoping"] }))).toBe(true);
-    expect(filtreActif(filters({ name: "portail" }))).toBe(true);
+    expect(hasActiveFilter(filters({ phases: ["scoping"] }))).toBe(true);
+    expect(hasActiveFilter(filters({ name: "portail" }))).toBe(true);
   });
 });
 
 describe("searching by name", () => {
   it("keeps a mission whose name contains the search", () => {
-    expect(filtrerMissions([card()], filters({ name: "bailleurs" }))).toHaveLength(1);
+    expect(filterMissions([card()], filters({ name: "bailleurs" }))).toHaveLength(1);
   });
 
   it("ignores case and accents", () => {
     const cards = [card({ project: { label: "Refonte extranet copropriété" } })];
 
-    expect(filtrerMissions(cards, filters({ name: "COPROPRIETE" }))).toHaveLength(1);
+    expect(filterMissions(cards, filters({ name: "COPROPRIETE" }))).toHaveLength(1);
   });
 
   it("rules out what does not match", () => {
-    expect(filtrerMissions([card()], filters({ name: "facturation" }))).toHaveLength(0);
+    expect(filterMissions([card()], filters({ name: "facturation" }))).toHaveLength(0);
   });
 });
 
@@ -82,7 +82,7 @@ describe("multiple-choice criteria", () => {
       card({ project: { id: 3, category: null } }),
     ];
 
-    const kept = filtrerMissions(
+    const kept = filterMissions(
       cards,
       filters({ categories: ["innovate_differentiate", "structure_platform"] }),
     );
@@ -97,7 +97,7 @@ describe("multiple-choice criteria", () => {
       card({ project: { id: 3, priority: null } }),
     ];
 
-    const kept = filtrerMissions(cards, filters({ priorities: ["critical"] }));
+    const kept = filterMissions(cards, filters({ priorities: ["critical"] }));
 
     expect(kept.map((c) => c.project.id)).toEqual([1]);
   });
@@ -108,7 +108,7 @@ describe("multiple-choice criteria", () => {
       card({ project: { id: 2 }, contributors: [] }),
     ];
 
-    const kept = filtrerMissions(cards, filters({ contributors: [7] }));
+    const kept = filterMissions(cards, filters({ contributors: [7] }));
 
     expect(kept.map((c) => c.project.id)).toEqual([1]);
   });
@@ -120,12 +120,12 @@ describe("multiple-choice criteria", () => {
     ];
 
     expect(
-      filtrerMissions(cards, filters({ types: ["work_package"] })).map(
+      filterMissions(cards, filters({ types: ["work_package"] })).map(
         (c) => c.project.id,
       ),
     ).toEqual([2]);
     expect(
-      filtrerMissions(cards, filters({ types: ["project", "work_package"] })),
+      filterMissions(cards, filters({ types: ["project", "work_package"] })),
     ).toHaveLength(2);
   });
 
@@ -139,7 +139,7 @@ describe("multiple-choice criteria", () => {
       }),
     ];
 
-    const kept = filtrerMissions(
+    const kept = filterMissions(
       cards,
       filters({ name: "portail", categories: ["structure_platform"] }),
     );
@@ -155,19 +155,19 @@ describe("archived missions", () => {
   ];
 
   it("rules them out until they are asked for", () => {
-    const kept = filtrerMissions(cards, NO_FILTER);
+    const kept = filterMissions(cards, NO_FILTER);
 
     expect(kept.map((c) => c.project.id)).toEqual([1]);
   });
 
   it("shows only them when only they are asked for", () => {
-    const kept = filtrerMissions(cards, filters({ states: ["archivee"] }));
+    const kept = filterMissions(cards, filters({ states: ["archivee"] }));
 
     expect(kept.map((c) => c.project.id)).toEqual([2]);
   });
 
   it("shows both when both states are ticked", () => {
-    const kept = filtrerMissions(cards, filters({ states: ["active", "archivee"] }));
+    const kept = filterMissions(cards, filters({ states: ["active", "archivee"] }));
 
     expect(kept.map((c) => c.project.id)).toEqual([1, 2]);
   });
@@ -179,7 +179,7 @@ describe("archived missions", () => {
   });
 
   it("counts as a filter: the board is no longer the steering view", () => {
-    expect(filtreActif(filters({ states: ["archivee"] }))).toBe(true);
+    expect(hasActiveFilter(filters({ states: ["archivee"] }))).toBe(true);
   });
 });
 
@@ -190,11 +190,11 @@ describe("filtrage par phase", () => {
   ];
 
   it("keeps every mission when no phase is chosen", () => {
-    expect(filtrerMissions(cards, NO_FILTER)).toHaveLength(2);
+    expect(filterMissions(cards, NO_FILTER)).toHaveLength(2);
   });
 
   it("keeps only the missions of the chosen phases", () => {
-    const kept = filtrerMissions(cards, filters({ phases: ["development"] }));
+    const kept = filterMissions(cards, filters({ phases: ["development"] }));
 
     expect(kept.map((c) => c.project.id)).toEqual([1]);
   });
@@ -213,21 +213,21 @@ describe("filters held by the URL", () => {
     });
 
     const params = new URLSearchParams();
-    ecrireFiltres(params, chosen);
+    writeFilters(params, chosen);
 
-    expect(lireFiltres(params)).toEqual(chosen);
+    expect(readFilters(params)).toEqual(chosen);
   });
 
   it("writes nothing when no filter is set", () => {
     const params = new URLSearchParams("mission=12");
-    ecrireFiltres(params, NO_FILTER);
+    writeFilters(params, NO_FILTER);
 
     expect(params.toString()).toBe("mission=12");
   });
 
   it("leaves the other parameters in place", () => {
     const params = new URLSearchParams("mission=12&phase=scoping");
-    ecrireFiltres(params, filters({ phases: ["development"] }));
+    writeFilters(params, filters({ phases: ["development"] }));
 
     expect(params.get("mission")).toBe("12");
     expect(params.getAll("phase")).toEqual(["development"]);
@@ -236,6 +236,6 @@ describe("filters held by the URL", () => {
   it("ignores an unknown value rather than emptying the screen", () => {
     const params = new URLSearchParams("phase=sieste&contributor=abc");
 
-    expect(lireFiltres(params)).toEqual(NO_FILTER);
+    expect(readFilters(params)).toEqual(NO_FILTER);
   });
 });

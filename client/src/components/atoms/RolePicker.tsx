@@ -5,11 +5,11 @@ import { useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Role } from "@/lib/api/generated/model";
-import { ROLES, libelleRole } from "@/lib/roles";
+import { ROLES, roleLabel } from "@/lib/roles";
 
 interface RolePickerProps {
   role: Role;
-  /** Seul un manager promeut ou retrograde un collaborateur. */
+  /** Only a manager promotes or demotes a teammate. */
   modifiable: boolean;
   onChange: (role: Role) => void | Promise<void>;
 }
@@ -24,16 +24,16 @@ export function RolePicker({ role, modifiable, onChange }: RolePickerProps) {
   const [ouvert, setOuvert] = useState(false);
 
   if (!modifiable) {
-    return <span className="text-sm text-slate-600">{libelleRole(role)}</span>;
+    return <span className="text-sm text-slate-600">{roleLabel(role)}</span>;
   }
 
   return (
     <Popover open={ouvert} onOpenChange={setOuvert}>
       <PopoverTrigger
-        aria-label={`Changer le rôle, actuellement ${libelleRole(role)}`}
+        aria-label={`Changer le rôle, actuellement ${roleLabel(role)}`}
         className="-mx-1 flex cursor-pointer items-center rounded px-1 py-0.5 text-sm text-slate-700 transition-colors hover:bg-slate-100"
       >
-        {libelleRole(role)}
+        {roleLabel(role)}
       </PopoverTrigger>
 
       <PopoverContent align="start" className="w-72 p-1">

@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 import {
   NO_SORT,
-  comparateurDeTri,
+  sortComparator,
   writeSort,
   readSort,
-  triSuivant,
+  nextSort,
   type MissionSort,
 } from "@/lib/mission-sort";
 
@@ -34,7 +34,7 @@ const mission = (
   }) as ProjectListItemResponse;
 
 const labels = (missions: ProjectListItemResponse[], sorted: MissionSort) =>
-  [...missions].sort(comparateurDeTri(sorted)).map((m) => m.project.label);
+  [...missions].sort(sortComparator(sorted)).map((m) => m.project.label);
 
 describe("the reference list order", () => {
   it("arranges by phase then by name when no column is asked for", () => {
@@ -148,27 +148,27 @@ describe("the reference list order", () => {
 
 describe("the cycle of a column", () => {
   it("starts ascending on the first click", () => {
-    expect(triSuivant(NO_SORT, "estimated")).toEqual({
+    expect(nextSort(NO_SORT, "estimated")).toEqual({
       column: "estimated",
       direction: "asc",
     });
   });
 
   it("moves to descending on the second", () => {
-    expect(triSuivant({ column: "estimated", direction: "asc" }, "estimated")).toEqual({
+    expect(nextSort({ column: "estimated", direction: "asc" }, "estimated")).toEqual({
       column: "estimated",
       direction: "desc",
     });
   });
 
   it("returns to the reference list order on the third", () => {
-    expect(triSuivant({ column: "estimated", direction: "desc" }, "estimated")).toEqual(
+    expect(nextSort({ column: "estimated", direction: "desc" }, "estimated")).toEqual(
       NO_SORT,
     );
   });
 
   it("starts ascending again when the column changes", () => {
-    expect(triSuivant({ column: "estimated", direction: "desc" }, "phase")).toEqual({
+    expect(nextSort({ column: "estimated", direction: "desc" }, "phase")).toEqual({
       column: "phase",
       direction: "asc",
     });

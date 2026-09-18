@@ -75,14 +75,14 @@ export function useBoard(inclureArchivees = false) {
     /** Takes the server's truth back, after a change made outside a drag. */
     reload,
 
-    /** Applique le deplacement a l'ecran, puis l'enregistre. */
+    /** Applies the move on screen, then saves it. */
     async move(
       projectId: number,
       versStatut: ProjectStatus,
       versPosition: number,
-      colonnesApres: Colonnes,
+      nextColumns: Colonnes,
     ) {
-      setColonnes(colonnesApres);
+      setColonnes(nextColumns);
       setEnErreur(false);
       try {
         await moveProject(projectId, {

@@ -21,7 +21,7 @@ import {
 import type { DayValue } from "@/lib/day-value";
 import { firstDayOfMonth, nextMonth, previousMonth } from "@/lib/dates";
 
-/** Date du jour en heure locale : `toISOString` renverrait la veille en soiree. */
+/** Today's date in local time: `toISOString` would return yesterday in the evening. */
 export function todayIso(): string {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, "0");

@@ -10,11 +10,11 @@ const link = (
   icon: ProjectLinkResponse["icon"] = "link",
 ): ProjectLinkResponse => ({ id, label, url: `https://waat.fr/${id}`, icon });
 
-function ouvrirLeFormulaire() {
+function openForm() {
   fireEvent.click(screen.getByRole("button", { name: "Ajouter un lien" }));
 }
 
-function saisir(placeholder: string, value: string) {
+function enter(placeholder: string, value: string) {
   fireEvent.change(screen.getByPlaceholderText(placeholder), {
     target: { value: value },
   });
@@ -66,9 +66,9 @@ describe("ProjectLinksEditor", () => {
     const onAdd = vi.fn().mockResolvedValue(undefined);
     render(<ProjectLinksEditor links={[]} onAdd={onAdd} onRemove={vi.fn()} />);
 
-    ouvrirLeFormulaire();
-    saisir("Intitulé (facultatif)", "Le dépôt");
-    saisir("https://…", "https://github.com/waat/x");
+    openForm();
+    enter("Intitulé (facultatif)", "Le dépôt");
+    enter("https://…", "https://github.com/waat/x");
     fireEvent.click(screen.getByRole("button", { name: "Ajouter" }));
 
     await waitFor(() =>
@@ -80,10 +80,10 @@ describe("ProjectLinksEditor", () => {
     const onAdd = vi.fn().mockResolvedValue(undefined);
     render(<ProjectLinksEditor links={[]} onAdd={onAdd} onRemove={vi.fn()} />);
 
-    ouvrirLeFormulaire();
+    openForm();
     fireEvent.click(screen.getByRole("button", { name: "Choisir l'icône du lien" }));
     fireEvent.click(screen.getByRole("button", { name: /Tableur/ }));
-    saisir("https://…", "https://waat.fr/budget");
+    enter("https://…", "https://waat.fr/budget");
     fireEvent.click(screen.getByRole("button", { name: "Ajouter" }));
 
     await waitFor(() =>
@@ -94,7 +94,7 @@ describe("ProjectLinksEditor", () => {
   it("refuse d'ajouter tant qu'aucune adresse n'est saisie", () => {
     render(<ProjectLinksEditor links={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
 
-    ouvrirLeFormulaire();
+    openForm();
 
     expect(screen.getByRole("button", { name: "Ajouter" })).toBeDisabled();
   });
@@ -103,8 +103,8 @@ describe("ProjectLinksEditor", () => {
     const onAdd = vi.fn().mockRejectedValue(new Error("400"));
     render(<ProjectLinksEditor links={[]} onAdd={onAdd} onRemove={vi.fn()} />);
 
-    ouvrirLeFormulaire();
-    saisir("https://…", "ftp://waat.fr");
+    openForm();
+    enter("https://…", "ftp://waat.fr");
     fireEvent.click(screen.getByRole("button", { name: "Ajouter" }));
 
     expect(await screen.findByText(/n'est pas valide/)).toBeInTheDocument();
@@ -114,12 +114,12 @@ describe("ProjectLinksEditor", () => {
     const onAdd = vi.fn().mockResolvedValue(undefined);
     render(<ProjectLinksEditor links={[]} onAdd={onAdd} onRemove={vi.fn()} />);
 
-    ouvrirLeFormulaire();
-    saisir("https://…", "https://waat.fr/x");
+    openForm();
+    enter("https://…", "https://waat.fr/x");
     fireEvent.click(screen.getByRole("button", { name: "Ajouter" }));
 
     await waitFor(() => expect(onAdd).toHaveBeenCalled());
-    ouvrirLeFormulaire();
+    openForm();
     expect(screen.getByPlaceholderText("https://…")).toHaveValue("");
   });
 

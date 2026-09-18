@@ -66,7 +66,7 @@ export function useProjectDetail(
     introuvable,
     reload,
 
-    async enregistrerFiche(departments: Department[], contactsMetier: string | null) {
+    async saveSheet(departments: Department[], contactsMetier: string | null) {
       await updateProjectDetail(projectId, {
         departments,
         business_contacts: contactsMetier,
@@ -79,13 +79,13 @@ export function useProjectDetail(
       await reload();
     },
 
-    async changerPhase(status: ProjectStatus) {
+    async changePhase(status: ProjectStatus) {
       await changeProjectStatus(projectId, { status });
       await reload();
     },
 
     /** Partial change: only the fields provided are applied. */
-    async changerCaracteristiques(champs: {
+    async updateFields(champs: {
       category?: ProjectCategory | null;
       priority?: ProjectPriority | null;
       estimated_days?: number | null;
@@ -98,29 +98,29 @@ export function useProjectDetail(
      * Takes the mission out of the reference list without losing anything: the
      * list no longer shows it, but entries already booked stay readable.
      */
-    async archiver() {
+    async archive() {
       await updateProject(projectId, { is_active: false });
       await reload();
     },
 
-    /** Remet la mission au referentiel, et oublie la date de sa sortie. */
+    /** Puts the mission back into the reference list, forgetting when it left. */
     async desarchiver() {
       await updateProject(projectId, { is_active: true });
       await reload();
     },
 
-    async enregistrerDescription(description: string) {
+    async saveDescription(description: string) {
       await updateProjectDescription(projectId, { description });
       await reload();
     },
 
-    /** `icone` a `null` : le serveur la deduit de l'adresse. */
-    async ajouterLien(label: string, url: string, icon: LinkIcon | null) {
+    /** `icon` at `null`: the server infers it from the address. */
+    async addLink(label: string, url: string, icon: LinkIcon | null) {
       await addProjectLink(projectId, { label, url, icon });
       await reload();
     },
 
-    async retirerLien(linkId: number) {
+    async removeLink(linkId: number) {
       await removeProjectLink(projectId, linkId);
       await reload();
     },

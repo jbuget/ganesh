@@ -18,22 +18,22 @@ import type {
 
 interface ProjectTabsProps {
   detail: ProjectDetailResponse;
-  /** Sur quel onglet s'ouvrir ; le pilotage a defaut. */
+  /** Which tab to open on; steering by default. */
   ongletInitial?: string | null;
   onChange: () => void | Promise<void>;
-  enregistrerFiche: (
+  saveSheet: (
     departments: Department[],
     contactsMetier: string | null,
   ) => Promise<void>;
-  enregistrerDescription: (body: string) => Promise<void>;
-  changerPhase: (status: ProjectStatus) => Promise<void>;
-  changerCaracteristiques: (champs: {
+  saveDescription: (body: string) => Promise<void>;
+  changePhase: (status: ProjectStatus) => Promise<void>;
+  updateFields: (champs: {
     category?: ProjectCategory | null;
     estimated_days?: number | null;
   }) => Promise<void>;
-  ajouterLien: (label: string, url: string, icon: LinkIcon | null) => Promise<void>;
-  retirerLien: (linkId: number) => Promise<void>;
-  archiver: () => Promise<void>;
+  addLink: (label: string, url: string, icon: LinkIcon | null) => Promise<void>;
+  removeLink: (linkId: number) => Promise<void>;
+  archive: () => Promise<void>;
   desarchiver: () => Promise<void>;
 }
 
@@ -52,13 +52,13 @@ export function ProjectTabs({
   detail,
   ongletInitial,
   onChange,
-  enregistrerFiche,
-  enregistrerDescription,
-  changerPhase,
-  changerCaracteristiques,
-  ajouterLien,
-  retirerLien,
-  archiver,
+  saveSheet,
+  saveDescription,
+  changePhase,
+  updateFields,
+  addLink,
+  removeLink,
+  archive,
   desarchiver,
 }: ProjectTabsProps) {
   // Freezes the reference time for the duration of the visit: « il y a 3
@@ -83,14 +83,14 @@ export function ProjectTabs({
       <div className="flex shrink-0 items-center gap-2">
         <TabsList className="min-w-0 flex-1">
           <TabsTrigger value="pilotage">Pilotage</TabsTrigger>
-          <TabsTrigger value="updates">Mises à jour</TabsTrigger>
+          <TabsTrigger value="updates">Mises à day</TabsTrigger>
           <TabsTrigger value="fiche">Fiche service</TabsTrigger>
           <TabsTrigger value="audit">Journal</TabsTrigger>
         </TabsList>
 
         <MissionMenu
           archivee={!detail.project.is_active}
-          onArchiver={archiver}
+          onArchiver={archive}
           onDesarchiver={desarchiver}
         />
       </div>
@@ -99,11 +99,11 @@ export function ProjectTabs({
         <ProjectPilotageTab
           detail={detail}
           onChange={onChange}
-          enregistrerFiche={enregistrerFiche}
-          changerPhase={changerPhase}
-          changerCaracteristiques={changerCaracteristiques}
-          ajouterLien={ajouterLien}
-          retirerLien={retirerLien}
+          saveSheet={saveSheet}
+          changePhase={changePhase}
+          updateFields={updateFields}
+          addLink={addLink}
+          removeLink={removeLink}
         />
       </TabsContent>
 
@@ -122,7 +122,7 @@ export function ProjectTabs({
       <TabsContent value="fiche" className="min-h-0 flex-1">
         <ProjectSheetTab
           description={detail.project.description}
-          onSave={enregistrerDescription}
+          onSave={saveDescription}
         />
       </TabsContent>
 

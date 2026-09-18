@@ -1,4 +1,4 @@
-"""Construction de la matrice de saisie d'un mois."""
+"""Building a month's entry grid."""
 
 from datetime import date
 

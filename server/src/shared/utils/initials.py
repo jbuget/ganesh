@@ -1,4 +1,4 @@
-"""Initiales affichees en pastille."""
+"""Initials shown in an avatar."""
 
 
 def initials(nom: str) -> str:

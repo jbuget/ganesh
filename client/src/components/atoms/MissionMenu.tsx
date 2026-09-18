@@ -10,7 +10,7 @@ interface MissionMenuProps {
   archivee: boolean;
   /** Takes the mission out of the current reference list, without deleting it. */
   onArchiver: () => void | Promise<void>;
-  /** La remet au referentiel. */
+  /** Puts it back into the reference list. */
   onDesarchiver: () => void | Promise<void>;
 }
 

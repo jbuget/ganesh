@@ -3,7 +3,7 @@ import { Archive } from "lucide-react";
 import { formatDateCourte } from "@/lib/dates";
 
 interface ArchivedCalloutProps {
-  /** Quand la mission a quitte le referentiel, si la date est connue. */
+  /** When the mission left the reference list, if the date is known. */
   archivedAt: string | null | undefined;
 }
 

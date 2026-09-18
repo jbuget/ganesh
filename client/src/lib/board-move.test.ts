@@ -12,7 +12,7 @@ const card = (id: number): BoardCardResponse =>
     contributors: [],
   }) as unknown as BoardCardResponse;
 
-/** Colonnes vides, completees par celles qu'un test decrit. */
+/** Empty columns, filled in by those a test describes. */
 const columns = (garnies: Partial<Record<ProjectStatus, number[]>>): Colonnes =>
   Object.fromEntries(
     PHASES.map(({ status }) => [status, (garnies[status] ?? []).map(card)]),

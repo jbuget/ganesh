@@ -26,14 +26,14 @@ export function UsersPage() {
     <PageLayout
       entete={
         <PageHeader
-          titre="Utilisateurs"
-          soustitre={
+          title="Utilisateurs"
+          subtitle={
             screen.isManager
               ? "Vous pouvez promouvoir un utilisateur. Chaque changement est tracé."
               : "Consultable par toute l'équipe. Seul un manager change un rôle."
           }
           actions={
-            <Button variant="outline" onClick={screen.basculerInactifs}>
+            <Button variant="outline" onClick={screen.toggleInactive}>
               {screen.avecInactifs ? "Masquer les inactifs" : "Afficher les inactifs"}
             </Button>
           }
@@ -74,8 +74,8 @@ export function UsersPage() {
                     statutModifiable={
                       screen.isManager && collaborateur.id !== screen.moiId
                     }
-                    onChangeRole={screen.changerRole}
-                    onSetActive={screen.changerActivite}
+                    onChangeRole={screen.changeRole}
+                    onSetActive={screen.setActive}
                     maintenant={screen.maintenant}
                   />
                 ))}

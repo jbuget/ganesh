@@ -8,7 +8,7 @@ import { useCursorTooltip } from "@/lib/use-cursor-tooltip";
 interface CardCounterProps {
   icon: LucideIcon;
   count: number;
-  /** Ce que l'icone compte, au singulier puis au pluriel. */
+  /** What the icon counts, singular then plural. */
   label: [string, string];
   /** What the screen reader announces when there is nothing to count. */
   empty: string;

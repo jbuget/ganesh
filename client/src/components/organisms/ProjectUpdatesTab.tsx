@@ -84,7 +84,7 @@ export function ProjectUpdatesTab({
 
       {suivi.fil?.length === 0 && (
         <p className="py-6 text-center text-sm text-slate-400">
-          Aucune mise à jour. Racontez où en est la mission.
+          Aucune mise à day. Racontez où en est la mission.
         </p>
       )}
 
@@ -95,7 +95,7 @@ export function ProjectUpdatesTab({
             maj={maj}
             maintenant={maintenant}
             onEdit={(body) => suivi.corriger(maj.id, body)}
-            onRemove={() => suivi.retirer(maj.id)}
+            onRemove={() => suivi.remove(maj.id)}
           />
         ))}
       </div>

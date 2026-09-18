@@ -42,7 +42,7 @@ export function EditableTitle({
     setEnErreur(false);
   }
 
-  async function valider() {
+  async function validate() {
     if (!valide || enCours) return;
     if (propre === label) {
       abandonner();
@@ -80,7 +80,7 @@ export function EditableTitle({
                 event.stopPropagation();
                 abandonner();
               }
-              if (event.key === "Enter") void valider();
+              if (event.key === "Enter") void validate();
             }}
             className="text-sm"
           />
@@ -97,7 +97,7 @@ export function EditableTitle({
           <Button
             size="sm"
             disabled={!valide || enCours}
-            onClick={() => void valider()}
+            onClick={() => void validate()}
             className="cursor-pointer"
           >
             Enregistrer
@@ -106,7 +106,7 @@ export function EditableTitle({
 
         {hasError && (
           <p role="alert" className="mt-1 text-xs text-red-700">
-            Le nouveau titre n&apos;a pas pu être enregistré.
+            Le nouveau title n&apos;a pas pu être enregistré.
           </p>
         )}
       </div>

@@ -4,9 +4,9 @@ import { useMemo } from "react";
 
 import {
   NO_FILTER,
-  ecrireFiltres,
-  filtreActif,
-  lireFiltres,
+  writeFilters,
+  hasActiveFilter,
+  readFilters,
   type MissionFilters,
 } from "@/lib/mission-filters";
 import { writeUrl, useQueryString } from "@/lib/url-state";
@@ -20,15 +20,15 @@ import { writeUrl, useQueryString } from "@/lib/url-state";
  */
 export function useMissionFilters() {
   const query = useQueryString();
-  const filters = useMemo(() => lireFiltres(new URLSearchParams(query)), [query]);
+  const filters = useMemo(() => readFilters(new URLSearchParams(query)), [query]);
 
   function apply(next_ones: MissionFilters) {
-    writeUrl((params) => ecrireFiltres(params, next_ones), "remplacer");
+    writeUrl((params) => writeFilters(params, next_ones), "remplacer");
   }
 
   return {
     filters,
-    hasFilter: filtreActif(filters),
+    hasFilter: hasActiveFilter(filters),
 
     /** Changes a single criterion, the others stay put. */
     set(change: Partial<MissionFilters>) {

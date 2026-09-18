@@ -13,8 +13,8 @@ function renderDialog(props: Partial<Parameters<typeof ValidateMonthDialog>[0]> 
       open
       onOpenChange={onOpenChange}
       month="mars 2026"
-      totalSaisi={20}
-      joursOuvres={22}
+      totalEntered={20}
+      workingDays={22}
       onConfirm={onConfirm}
       {...props}
     />,
@@ -31,7 +31,7 @@ describe("ValidateMonthDialog", () => {
   });
 
   it("warns about missing days without blocking validation", () => {
-    renderDialog({ totalSaisi: 20, joursOuvres: 22 });
+    renderDialog({ totalEntered: 20, workingDays: 22 });
 
     expect(screen.getByText(/Il manque 2 jour/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Valider" })).toBeEnabled();

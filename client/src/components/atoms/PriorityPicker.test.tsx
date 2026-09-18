@@ -43,7 +43,7 @@ describe("PriorityPicker", () => {
   });
 
   it("retire l'urgence quand on reclique dessus", () => {
-    // C'est le seul moyen de revenir a « aucune priorite ».
+    // The only way back to « no priority ».
     const onChange = vi.fn();
     render(<PriorityPicker value="low" onChange={onChange} />);
 

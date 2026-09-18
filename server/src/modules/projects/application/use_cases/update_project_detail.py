@@ -30,7 +30,7 @@ class UpdateProjectDetailCommand:
 
 @dataclass(frozen=True)
 class UpdateDescriptionCommand:
-    """Fiche de service, en markdown."""
+    """Service sheet, in markdown."""
 
     actor_id: int
     project_id: int

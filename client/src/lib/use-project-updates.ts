@@ -57,7 +57,7 @@ export function useProjectUpdates(
       await onEcriture?.();
     },
 
-    async retirer(updateId: number) {
+    async remove(updateId: number) {
       await removeProjectUpdate(projectId, updateId);
       await reload();
       await onEcriture?.();

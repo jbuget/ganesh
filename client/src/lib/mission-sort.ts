@@ -70,7 +70,7 @@ function parPhasePuisLabel(a: Mission, b: Mission): number {
  * settled by their name. Without that, reversing the direction would bring the
  * gaps to the top, and the order of ties would change on every render.
  */
-export function comparateurDeTri(sorted: MissionSort) {
+export function sortComparator(sorted: MissionSort) {
   if (sorted.column === null) return parPhasePuisLabel;
 
   const valeurDe = VALUES[sorted.column];
@@ -99,7 +99,7 @@ export function comparateurDeTri(sorted: MissionSort) {
  * The third click gives the reference list its own order back, without having
  * to hunt for how to find it again.
  */
-export function triSuivant(sorted: MissionSort, column: SortColumn): MissionSort {
+export function nextSort(sorted: MissionSort, column: SortColumn): MissionSort {
   if (sorted.column !== column) return { column, direction: "asc" };
   if (sorted.direction === "asc") return { column, direction: "desc" };
   return NO_SORT;

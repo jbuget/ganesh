@@ -31,19 +31,19 @@ export function useUsersScreen() {
     // would compare against two different « now ».
     maintenant: new Date(),
 
-    basculerInactifs: () => setAvecInactifs((actuel) => !actuel),
+    toggleInactive: () => setAvecInactifs((actuel) => !actuel),
 
     /** By name, the only order one finds by eye in a team list. */
     collaborateurs: [...teammates].sort((a, b) =>
       a.display_name.localeCompare(b.display_name, "fr"),
     ),
 
-    async changerRole(userId: number, role: Role) {
+    async changeRole(userId: number, role: Role) {
       await changeUserRole(userId, { role });
       await queryClient.invalidateQueries();
     },
 
-    async changerActivite(userId: number, is_active: boolean) {
+    async setActive(userId: number, is_active: boolean) {
       await setUserActive(userId, { is_active });
       await queryClient.invalidateQueries();
     },

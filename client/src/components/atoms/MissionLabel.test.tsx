@@ -44,10 +44,10 @@ describe("MissionLabel", () => {
     const element = renderLabel();
 
     survoler(element, 100, 200);
-    const premierePosition = screen.getByRole("tooltip").style.left;
+    const firstPosition = screen.getByRole("tooltip").style.left;
     survoler(element, 300, 200);
 
-    expect(screen.getByRole("tooltip").style.left).not.toBe(premierePosition);
+    expect(screen.getByRole("tooltip").style.left).not.toBe(firstPosition);
   });
 
   it("sits beside the cursor, without hiding it", () => {

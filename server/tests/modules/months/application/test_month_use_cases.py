@@ -1,4 +1,4 @@
-"""Validation et reouverture d'un mois."""
+"""Validating and reopening a month."""
 
 from datetime import date
 

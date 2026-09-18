@@ -55,7 +55,7 @@ describe("useProjectUpdates", () => {
     const result = await fil(notify);
 
     await act(async () => {
-      await result.current.retirer(3);
+      await result.current.remove(3);
     });
 
     expect(notify).toHaveBeenCalledTimes(1);

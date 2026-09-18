@@ -10,8 +10,8 @@ import { useProjectDetail } from "@/lib/use-project-detail";
 
 interface ProjectPanelProps {
   projectId: number;
-  /** Sur quoi s'ouvrir : la fiche par defaut, le fil si c'est lui qu'on visait. */
-  onglet?: string | null;
+  /** What to open on: the sheet by default, the thread when that is what was aimed at. */
+  tab?: string | null;
   onClose: () => void;
   /** Tells the board: a phase changed here moves a card there. */
   onMissionChanged: () => void | Promise<void>;
@@ -26,7 +26,7 @@ interface ProjectPanelProps {
  */
 export function ProjectPanel({
   projectId,
-  onglet,
+  tab,
   onClose,
   onMissionChanged,
 }: ProjectPanelProps) {
@@ -34,11 +34,11 @@ export function ProjectPanel({
   const detail = fiche.detail;
 
   useEffect(() => {
-    const fermerSurEchap = (event: KeyboardEvent) => {
+    const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
-    window.addEventListener("keydown", fermerSurEchap);
-    return () => window.removeEventListener("keydown", fermerSurEchap);
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
   }, [onClose]);
 
   return (
@@ -88,20 +88,20 @@ export function ProjectPanel({
           {detail && (
             <ProjectTabs
               detail={detail}
-              ongletInitial={onglet}
+              ongletInitial={tab}
               onChange={fiche.reload}
-              enregistrerFiche={fiche.enregistrerFiche}
-              enregistrerDescription={fiche.enregistrerDescription}
-              changerPhase={fiche.changerPhase}
-              changerCaracteristiques={fiche.changerCaracteristiques}
-              ajouterLien={fiche.ajouterLien}
-              retirerLien={fiche.retirerLien}
+              saveSheet={fiche.saveSheet}
+              saveDescription={fiche.saveDescription}
+              changePhase={fiche.changePhase}
+              updateFields={fiche.updateFields}
+              addLink={fiche.addLink}
+              removeLink={fiche.removeLink}
               // The panel stays open after archiving, even though the mission
               // leaves the list behind: closing it on an unlucky click would
               // leave no way back, the row having gone from the reference
               // list. The banner and « Desarchiver » keep the return
               // within reach.
-              archiver={fiche.archiver}
+              archive={fiche.archive}
               desarchiver={fiche.desarchiver}
             />
           )}

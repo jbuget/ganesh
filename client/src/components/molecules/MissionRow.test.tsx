@@ -184,7 +184,7 @@ describe("MissionRow", () => {
   });
 
   it("opens the mission's thread on a click on its count", () => {
-    const ouvrirFil = vi.fn();
+    const openThread = vi.fn();
     const open = vi.fn();
     const suivie = { ...mission(), comments: 2 } as ProjectListItemResponse;
 
@@ -193,12 +193,12 @@ describe("MissionRow", () => {
         mission={suivie}
         maintenant={MAINTENANT}
         onOpen={open}
-        onOpenFil={ouvrirFil}
+        onOpenFil={openThread}
       />,
     );
     fireEvent.click(screen.getByLabelText("2 mises à jour"));
 
-    expect(ouvrirFil).toHaveBeenCalledTimes(1);
+    expect(openThread).toHaveBeenCalledTimes(1);
     // The whole row opens the mission: the counter must not do both.
     expect(open).not.toHaveBeenCalled();
   });

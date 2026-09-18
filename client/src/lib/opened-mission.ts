@@ -24,12 +24,12 @@ export function useOpenedMission() {
     openedMission: Number(value) || null,
     ongletOuvert: params.get(ONGLET),
 
-    open(projectId: number, onglet?: string) {
+    open(projectId: number, tab?: string) {
       writeUrl((params) => {
         params.set(PARAMETRE, String(projectId));
         // Without clearing it, the tab of a previous opening would apply to
         // the next mission.
-        if (onglet) params.set(ONGLET, onglet);
+        if (tab) params.set(ONGLET, tab);
         else params.delete(ONGLET);
       });
     },

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { LinkIcon, ProjectLinkResponse } from "@/lib/api/generated/model";
-import { iconGlyph, libelleIcone } from "@/lib/link-icons";
+import { iconGlyph, iconLabel } from "@/lib/link-icons";
 
 interface ProjectLinksEditorProps {
   links: ProjectLinkResponse[];
@@ -35,7 +35,7 @@ export function ProjectLinksEditor({
   const [icon, setIcone] = useState<LinkIcon | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
 
-  function changerOuverture(value: boolean) {
+  function toggleExpanded(value: boolean) {
     setOuvert(value);
     // Closing, in any way at all, resets the form.
     if (!value) {
@@ -46,11 +46,11 @@ export function ProjectLinksEditor({
     }
   }
 
-  async function ajouter() {
+  async function add() {
     setErreur(null);
     try {
       await onAdd(label, url, icon);
-      changerOuverture(false);
+      toggleExpanded(false);
     } catch {
       setErreur("Cette adresse n'est pas valide. Elle doit commencer par http://.");
     }
@@ -71,7 +71,7 @@ export function ProjectLinksEditor({
               >
                 <Glyph
                   className="size-3.5 shrink-0"
-                  aria-label={libelleIcone(link.icon)}
+                  aria-label={iconLabel(link.icon)}
                 />
                 <span className="truncate">{link.label}</span>
               </a>
@@ -90,7 +90,7 @@ export function ProjectLinksEditor({
         })}
       </ul>
 
-      <Popover open={ouvert} onOpenChange={changerOuverture}>
+      <Popover open={ouvert} onOpenChange={toggleExpanded}>
         <PopoverTrigger className="flex cursor-pointer items-center gap-1 text-sm text-slate-400 transition-colors hover:text-slate-600">
           <Plus className="size-3.5" aria-hidden />
           Ajouter un lien
@@ -112,15 +112,15 @@ export function ProjectLinksEditor({
             placeholder="https://…"
             className="h-8 text-sm"
             onKeyDown={(event) => {
-              if (event.key === "Enter" && url.trim()) void ajouter();
+              if (event.key === "Enter" && url.trim()) void add();
             }}
           />
           {erreur && <p className="text-xs text-red-700">{erreur}</p>}
           <div className="flex gap-2">
-            <Button size="sm" onClick={() => void ajouter()} disabled={!url.trim()}>
+            <Button size="sm" onClick={() => void add()} disabled={!url.trim()}>
               Ajouter
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => changerOuverture(false)}>
+            <Button size="sm" variant="ghost" onClick={() => toggleExpanded(false)}>
               Annuler
             </Button>
           </div>

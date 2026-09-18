@@ -7,7 +7,7 @@ import type { ProjectResponse } from "@/lib/api/generated/model";
 import { phaseLabel, phaseDot } from "@/lib/board";
 
 interface ProjectSubProjectsProps {
-  sousProjets: ProjectResponse[];
+  subProjects: ProjectResponse[];
 }
 
 /**
@@ -17,14 +17,14 @@ interface ProjectSubProjectsProps {
  * package is steered like a mission in its own right, with its own contributors
  * and its own consumption, and has no place summarised in the parent's sheet.
  */
-export function ProjectSubProjects({ sousProjets }: ProjectSubProjectsProps) {
-  if (sousProjets.length === 0) {
+export function ProjectSubProjects({ subProjects }: ProjectSubProjectsProps) {
+  if (subProjects.length === 0) {
     return <p className="text-sm text-slate-400">Aucun sous-projet</p>;
   }
 
   return (
     <ul className="space-y-0.5">
-      {sousProjets.map((lot) => (
+      {subProjects.map((lot) => (
         <li key={lot.id}>
           <Link
             href={`/projets/${lot.id}`}

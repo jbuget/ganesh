@@ -22,8 +22,8 @@ const MOIS = [
 ];
 
 function formatDate(iso: string): string {
-  const [annee, month, day] = iso.split("-").map(Number);
-  return `${day} ${MOIS[month - 1]} ${annee}`;
+  const [year, month, day] = iso.split("-").map(Number);
+  return `${day} ${MOIS[month - 1]} ${year}`;
 }
 
 /**

@@ -25,7 +25,7 @@ function Redaction({
   const [body, setTexte] = useState(value);
   const [enCours, setEnCours] = useState(false);
 
-  async function enregistrer() {
+  async function save() {
     setEnCours(true);
     try {
       await onSave(body);
@@ -39,19 +39,19 @@ function Redaction({
       <RichTextEditor
         value={value}
         avecTitres
-        pleineHauteur
+        fullHeight
         placeholder="Le problème, la solution, ce que le service couvre…"
         onChange={setTexte}
-        onSubmit={() => void enregistrer()}
+        onSubmit={() => void save()}
       />
       <div className="flex shrink-0 items-center gap-2">
-        <Button size="sm" disabled={enCours} onClick={() => void enregistrer()}>
+        <Button size="sm" disabled={enCours} onClick={() => void save()}>
           Enregistrer
         </Button>
         <Button size="sm" variant="ghost" onClick={onCancel}>
           Annuler
         </Button>
-        <span className="text-xs text-slate-400">⌘↵ pour enregistrer</span>
+        <span className="text-xs text-slate-400">⌘↵ pour save</span>
       </div>
     </div>
   );

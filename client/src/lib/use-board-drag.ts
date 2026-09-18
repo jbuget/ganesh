@@ -39,7 +39,7 @@ export function useBoardDrag(board: ReturnType<typeof useBoard>) {
   const hoveredCard = (overId: string | number) =>
     typeof overId === "number" ? overId : null;
 
-  /** Le curseur a-t-il depasse le milieu de la carte survolee ? */
+  /** Has the cursor gone past the middle of the hovered card? */
   function pastHalfway(event: DragOverEvent | DragEndEvent) {
     const glissee = event.active.rect.current.translated;
     const survolee = event.over?.rect;

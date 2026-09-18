@@ -52,8 +52,8 @@ export function ProjectsPage() {
     <PageLayout
       entete={
         <PageHeader
-          titre="Projets"
-          soustitre="Gestion des projets et sous-projets"
+          title="Projets"
+          subtitle="Gestion des projets et sous-projets"
           actions={
             <>
               {screen.isManager && (
@@ -230,7 +230,7 @@ export function ProjectsPage() {
           // thread must remount the panel, which picks its tab on opening.
           key={`${panel.openedMission}:${panel.ongletOuvert ?? ""}`}
           projectId={panel.openedMission}
-          onglet={panel.ongletOuvert}
+          tab={panel.ongletOuvert}
           onClose={panel.close}
           onMissionChanged={screen.refresh}
         />
