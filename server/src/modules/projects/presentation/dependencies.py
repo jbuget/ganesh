@@ -266,21 +266,21 @@ def _thread_write(
 
 
 def get_post_update_use_case(
-    depots: dict[str, object] = Depends(_thread_write),
+    repositories: dict[str, object] = Depends(_thread_write),
 ) -> PostProjectUpdateUseCase:
-    return PostProjectUpdateUseCase(**depots)  # type: ignore[arg-type]
+    return PostProjectUpdateUseCase(**repositories)  # type: ignore[arg-type]
 
 
 def get_edit_update_use_case(
-    depots: dict[str, object] = Depends(_thread_write),
+    repositories: dict[str, object] = Depends(_thread_write),
 ) -> EditProjectUpdateUseCase:
-    return EditProjectUpdateUseCase(**depots)  # type: ignore[arg-type]
+    return EditProjectUpdateUseCase(**repositories)  # type: ignore[arg-type]
 
 
 def get_remove_update_use_case(
-    depots: dict[str, object] = Depends(_thread_write),
+    repositories: dict[str, object] = Depends(_thread_write),
 ) -> RemoveProjectUpdateUseCase:
-    return RemoveProjectUpdateUseCase(**depots)  # type: ignore[arg-type]
+    return RemoveProjectUpdateUseCase(**repositories)  # type: ignore[arg-type]
 
 
 def get_list_updates_use_case(

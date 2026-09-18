@@ -30,19 +30,19 @@ export function DeclareProjectDialog({
   title = "Déclarer un projet",
 }: DeclareProjectDialogProps) {
   const [label, setLabel] = useState("");
-  const [enCours, setEnCours] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  const valide = label.trim().length > 0;
+  const isValid = label.trim().length > 0;
 
-  async function confirmer() {
-    if (!valide) return;
-    setEnCours(true);
+  async function confirm() {
+    if (!isValid) return;
+    setBusy(true);
     try {
       await onConfirm(label.trim());
       setLabel("");
       onOpenChange(false);
     } finally {
-      setEnCours(false);
+      setBusy(false);
     }
   }
 
@@ -66,7 +66,7 @@ export function DeclareProjectDialog({
             placeholder="Refonte extranet copropriété"
             onChange={(event) => setLabel(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter") confirmer();
+              if (event.key === "Enter") confirm();
             }}
           />
         </div>
@@ -75,7 +75,7 @@ export function DeclareProjectDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Annuler
           </Button>
-          <Button onClick={confirmer} disabled={!valide || enCours}>
+          <Button onClick={confirm} disabled={!isValid || busy}>
             Déclarer
           </Button>
         </DialogFooter>

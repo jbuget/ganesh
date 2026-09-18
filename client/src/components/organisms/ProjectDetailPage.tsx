@@ -15,7 +15,7 @@ interface ProjectDetailPageProps {
 }
 
 /** The way back, in the same place in every state of the sheet. */
-function RetourKanban() {
+function BackToBoard() {
   return (
     <Link
       href="/kanban"
@@ -34,12 +34,12 @@ function RetourKanban() {
  * sheet or go through a log, space counts.
  */
 export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
-  const fiche = useProjectDetail(projectId);
-  const detail = fiche.detail;
+  const sheet = useProjectDetail(projectId);
+  const detail = sheet.detail;
 
-  if (fiche.introuvable) {
+  if (sheet.notFound) {
     return (
-      <PageLayout header={<RetourKanban />}>
+      <PageLayout header={<BackToBoard />}>
         <p className="text-sm text-slate-500">Cette mission n&apos;existe pas.</p>
       </PageLayout>
     );
@@ -47,7 +47,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
 
   if (!detail) {
     return (
-      <PageLayout header={<RetourKanban />}>
+      <PageLayout header={<BackToBoard />}>
         <p className="text-sm text-slate-500">Chargement…</p>
       </PageLayout>
     );
@@ -59,14 +59,14 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
     <PageLayout
       header={
         <>
-          <RetourKanban />
+          <BackToBoard />
 
           <header className="mb-6">
             <EditableTitle
               label={project.label}
-              invite="Renommer la mission"
-              onRename={fiche.renommer}
-              niveau={1}
+              hint="Renommer la mission"
+              onRename={sheet.rename}
+              level={1}
             />
             <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
               {project.status && (
@@ -91,15 +91,15 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
       <div className="max-w-[900px]">
         <ProjectTabs
           detail={detail}
-          onChange={fiche.reload}
-          saveSheet={fiche.saveSheet}
-          saveDescription={fiche.saveDescription}
-          changePhase={fiche.changePhase}
-          updateFields={fiche.updateFields}
-          addLink={fiche.addLink}
-          removeLink={fiche.removeLink}
-          archive={fiche.archive}
-          desarchiver={fiche.desarchiver}
+          onChange={sheet.reload}
+          saveSheet={sheet.saveSheet}
+          saveDescription={sheet.saveDescription}
+          changePhase={sheet.changePhase}
+          updateFields={sheet.updateFields}
+          addLink={sheet.addLink}
+          removeLink={sheet.removeLink}
+          archive={sheet.archive}
+          unarchive={sheet.unarchive}
         />
       </div>
     </PageLayout>

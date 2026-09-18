@@ -7,7 +7,7 @@ from src.shared.exceptions.domain_exceptions import ValidationError
 
 #: A link on the board opens with a plain click: `javascript:` and its kin
 #: have no business there.
-SCHEMAS_AUTORISES = ("http://", "https://")
+ALLOWED_SCHEMES = ("http://", "https://")
 
 
 class LinkIcon(StrEnum):
@@ -43,7 +43,7 @@ class ProjectLink:
         self.url = self.url.strip()
         if not self.url:
             raise ValidationError("A link must carry an address.")
-        if not self.url.startswith(SCHEMAS_AUTORISES):
+        if not self.url.startswith(ALLOWED_SCHEMES):
             raise ValidationError("A link must start with http:// or https://.")
 
         # Pasting an address is enough: naming it stays optional.
@@ -53,5 +53,5 @@ class ProjectLink:
         # catalogue, an icon is refused rather than silently replaced.
         try:
             self.icon = LinkIcon(self.icon)
-        except ValueError as erreur:
-            raise ValidationError(f"Icone inconnue : {self.icon}.") from erreur
+        except ValueError as error:
+            raise ValidationError(f"Icone inconnue : {self.icon}.") from error

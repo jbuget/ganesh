@@ -38,21 +38,21 @@ export function ValidateMonthDialog({
   workingDays,
   onConfirm,
 }: ValidateMonthDialogProps) {
-  const manquant = Math.max(0, workingDays - totalEntered);
-  const [enCours, setEnCours] = useState(false);
+  const missing = Math.max(0, workingDays - totalEntered);
+  const [busy, setBusy] = useState(false);
 
   /**
    * The dialog closes itself once the month is locked: nothing in the
    * confirmation closes the window, and a failure must stay before the eyes.
    */
-  async function confirmer() {
-    if (enCours) return;
-    setEnCours(true);
+  async function confirm() {
+    if (busy) return;
+    setBusy(true);
     try {
       await onConfirm();
       onOpenChange(false);
     } finally {
-      setEnCours(false);
+      setBusy(false);
     }
   }
 
@@ -74,15 +74,15 @@ export function ValidateMonthDialog({
           <dd className="text-right font-medium">{workingDays} days</dd>
         </dl>
 
-        {manquant > 0 && (
+        {missing > 0 && (
           <p className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            Il manque {formatTotal(manquant)} jour(s) pour couvrir le mois.
+            Il manque {formatTotal(missing)} jour(s) pour couvrir le mois.
           </p>
         )}
 
         <AlertDialogFooter>
           <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={confirmer} disabled={enCours}>
+          <AlertDialogAction onClick={confirm} disabled={busy}>
             Valider
           </AlertDialogAction>
         </AlertDialogFooter>

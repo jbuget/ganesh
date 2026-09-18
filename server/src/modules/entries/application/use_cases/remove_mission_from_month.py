@@ -58,7 +58,7 @@ class RemoveMissionFromMonthUseCase:
             if entry.project_id == command.project_id
         ]
 
-        retires = 0.0
+        removed = 0.0
         for entry in entries:
             await self._entries.delete(
                 command.target_user_id, command.project_id, entry.day
@@ -72,5 +72,5 @@ class RemoveMissionFromMonthUseCase:
                     old_value=float(entry.value),
                 )
             )
-            retires += float(entry.value)
-        return retires
+            removed += float(entry.value)
+        return removed

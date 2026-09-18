@@ -7,10 +7,10 @@ import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { RichTextEditor } from "@/components/atoms/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import type { ProjectUpdateResponse } from "@/lib/api/generated/model";
-import { depuis } from "@/lib/relative-dates";
+import { since } from "@/lib/relative-dates";
 
 interface ProjectUpdateCardProps {
-  maj: ProjectUpdateResponse;
+  update: ProjectUpdateResponse;
   now: Date;
   onEdit: (body: string) => Promise<void>;
   onRemove: () => Promise<void>;
@@ -24,7 +24,7 @@ interface ProjectUpdateCardProps {
  * goes.
  */
 export function ProjectUpdateCard({
-  maj,
+  update,
   now,
   onEdit,
   onRemove,
@@ -35,17 +35,17 @@ export function ProjectUpdateCard({
     <article className="rounded-lg border border-slate-300 bg-white p-3">
       <header className="mb-2 flex items-center gap-2">
         <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-700">
-          {maj.author.initials}
+          {update.author.initials}
         </span>
         <span className="text-sm font-medium text-slate-800">
-          {maj.author.display_name}
+          {update.author.display_name}
         </span>
         <span className="text-xs text-slate-400">
-          {depuis(maj.published_at, now)}
-          {maj.edited_at && !maj.is_deleted && " · modifiée"}
+          {since(update.published_at, now)}
+          {update.edited_at && !update.is_deleted && " · modifiée"}
         </span>
 
-        {maj.is_mine && !maj.is_deleted && !enEdition && (
+        {update.is_mine && !update.is_deleted && !enEdition && (
           <span className="ml-auto flex items-center gap-0.5">
             <button
               type="button"
@@ -67,11 +67,11 @@ export function ProjectUpdateCard({
         )}
       </header>
 
-      {maj.is_deleted ? (
+      {update.is_deleted ? (
         <p className="text-sm text-slate-400 italic">Message supprimé</p>
       ) : enEdition ? (
         <Correction
-          value={maj.body}
+          value={update.body}
           onCancel={() => setEnEdition(false)}
           onSave={async (body) => {
             await onEdit(body);
@@ -79,7 +79,7 @@ export function ProjectUpdateCard({
           }}
         />
       ) : (
-        <MarkdownView body={maj.body} />
+        <MarkdownView body={update.body} />
       )}
     </article>
   );
@@ -95,13 +95,13 @@ function Correction({
   onSave: (body: string) => Promise<void>;
   onCancel: () => void;
 }) {
-  const [body, setTexte] = useState(value);
+  const [body, setBody] = useState(value);
 
   return (
     <div className="space-y-2">
       <RichTextEditor
         value={value}
-        onChange={setTexte}
+        onChange={setBody}
         onSubmit={() => void onSave(body)}
       />
       <div className="flex items-center gap-2">

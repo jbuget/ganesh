@@ -189,9 +189,11 @@ async def update_project(
 ) -> ProjectResponse:
     """Changes a mission. Only the fields provided are applied."""
     assert current_user.id is not None
-    fournis = payload.model_dump(exclude_unset=True)
+    provided = payload.model_dump(exclude_unset=True)
     project = await use_case.execute(
-        UpdateProjectCommand(actor_id=current_user.id, project_id=project_id, **fournis)
+        UpdateProjectCommand(
+            actor_id=current_user.id, project_id=project_id, **provided
+        )
     )
     await session.commit()
     return to_project_response(project)
@@ -479,7 +481,7 @@ async def post_project_update(
     payload: PostUpdateRequest,
     current_user: User = Depends(get_current_user),
     use_case: PostProjectUpdateUseCase = Depends(get_post_update_use_case),
-    lecture: ListProjectUpdatesUseCase = Depends(get_list_updates_use_case),
+    list_updates: ListProjectUpdatesUseCase = Depends(get_list_updates_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectUpdateResponse:
     """Posts an update on the mission."""
@@ -491,7 +493,7 @@ async def post_project_update(
     )
     await session.commit()
     signed = next(
-        s for s in await lecture.execute(project_id) if s.update.id == update.id
+        s for s in await list_updates.execute(project_id) if s.update.id == update.id
     )
     return to_project_update_response(signed, current_user.id)
 

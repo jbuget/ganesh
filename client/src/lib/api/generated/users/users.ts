@@ -74,7 +74,7 @@ export const getGetMeUrl = () => {
 };
 
 /**
- * L'utilisateur courant, tel que provisionne depuis Entra.
+ * The current user, as provisioned from Entra.
  * @summary Get Me
  */
 export const getMe = async (

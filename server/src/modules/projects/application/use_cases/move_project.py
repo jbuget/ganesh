@@ -51,7 +51,7 @@ class MoveProjectUseCase:
         if not mission.appears_on_board:
             raise ValidationError("Off-project work does not appear on the board.")
 
-        ancienne_phase = mission.status
+        previous_phase = mission.status
         missions = await self._projects.list_all(include_inactive=False)
 
         mission.status = command.status
@@ -71,14 +71,14 @@ class MoveProjectUseCase:
             if p.status is command.status and p.appears_on_board and p.id != mission.id
         ]
         destination.append(mission)
-        reorder_column(destination, deplacee=mission, vers=command.position)
+        reorder_column(destination, moved=mission, to=command.position)
 
         # The column left behind would keep a gap where the card used to be.
-        if ancienne_phase is not command.status:
+        if previous_phase is not command.status:
             origin = [
                 p
                 for p in missions
-                if p.status is ancienne_phase
+                if p.status is previous_phase
                 and p.appears_on_board
                 and p.id != mission.id
             ]
@@ -92,12 +92,12 @@ class MoveProjectUseCase:
         for rangee in destination:
             await self._projects.update(rangee)
 
-        if ancienne_phase is not command.status:
+        if previous_phase is not command.status:
             await self._audit_logs.add(
                 AuditLog.project_status_change(
                     actor_id=command.actor_id,
                     project_id=mission.id,
-                    old_status=ancienne_phase.value if ancienne_phase else None,
+                    old_status=previous_phase.value if previous_phase else None,
                     new_status=command.status.value,
                 )
             )

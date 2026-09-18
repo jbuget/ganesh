@@ -7,11 +7,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 interface MissionMenuProps {
   /** Whether the mission has already left the reference list. */
-  archivee: boolean;
+  archived: boolean;
   /** Takes the mission out of the current reference list, without deleting it. */
-  onArchiver: () => void | Promise<void>;
+  onArchive: () => void | Promise<void>;
   /** Puts it back into the reference list. */
-  onDesarchiver: () => void | Promise<void>;
+  onUnarchive: () => void | Promise<void>;
 }
 
 /**
@@ -21,12 +21,12 @@ interface MissionMenuProps {
  * itself. Keeping them apart avoids archiving while aiming at a tab, and
  * leaves room for the next ones without redrawing the header.
  */
-export function MissionMenu({ archivee, onArchiver, onDesarchiver }: MissionMenuProps) {
+export function MissionMenu({ archived, onArchive, onUnarchive }: MissionMenuProps) {
   const [isOpen, setOpen] = useState(false);
 
   // A single entry, saying which way it moves the mission: offering both would
   // let one pick the state one is already in.
-  const Icone = archivee ? ArchiveRestore : Archive;
+  const Icon = archived ? ArchiveRestore : Archive;
 
   return (
     <Popover open={isOpen} onOpenChange={setOpen}>
@@ -44,12 +44,12 @@ export function MissionMenu({ archivee, onArchiver, onDesarchiver }: MissionMenu
               type="button"
               onClick={() => {
                 setOpen(false);
-                void (archivee ? onDesarchiver() : onArchiver());
+                void (archived ? onUnarchive() : onArchive());
               }}
               className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
             >
-              <Icone className="size-4 shrink-0 text-slate-400" aria-hidden />
-              {archivee ? "Désarchiver" : "Archiver"}
+              <Icon className="size-4 shrink-0 text-slate-400" aria-hidden />
+              {archived ? "Désarchiver" : "Archiver"}
             </button>
           </li>
         </ul>

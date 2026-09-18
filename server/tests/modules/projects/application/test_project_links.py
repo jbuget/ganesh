@@ -109,8 +109,8 @@ async def test_an_unknown_mission_is_rejected() -> None:
 
 
 async def test_a_link_can_be_detached() -> None:
-    ajout, details = build()
-    link = await ajout.execute(
+    add_link, details = build()
+    link = await add_link.execute(
         AddLinkCommand(
             actor_id=1, project_id=10, label="Maquettes", url="https://figma.com/x"
         )

@@ -6,13 +6,13 @@ import { EditableTitle } from "./EditableTitle";
 
 const baseProps = {
   label: "Portail bailleurs",
-  invite: "Renommer la mission",
+  hint: "Renommer la mission",
   onRename: vi.fn(),
 };
 
 describe("EditableTitle", () => {
   it("shows the title, at the level asked for", () => {
-    render(<EditableTitle {...baseProps} niveau={1} />);
+    render(<EditableTitle {...baseProps} level={1} />);
 
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
       "Portail bailleurs",

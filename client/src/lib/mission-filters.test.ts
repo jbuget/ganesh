@@ -5,7 +5,7 @@ import {
   writeFilters,
   hasActiveFilter,
   filterMissions,
-  inclutLesArchivees,
+  includesArchived,
   readFilters,
   type MissionFilters,
 } from "./mission-filters";
@@ -161,25 +161,25 @@ describe("archived missions", () => {
   });
 
   it("shows only them when only they are asked for", () => {
-    const kept = filterMissions(cards, filters({ states: ["archivee"] }));
+    const kept = filterMissions(cards, filters({ states: ["archived"] }));
 
     expect(kept.map((c) => c.project.id)).toEqual([2]);
   });
 
   it("shows both when both states are ticked", () => {
-    const kept = filterMissions(cards, filters({ states: ["active", "archivee"] }));
+    const kept = filterMissions(cards, filters({ states: ["active", "archived"] }));
 
     expect(kept.map((c) => c.project.id)).toEqual([1, 2]);
   });
 
   it("asks the server for them again only when they are wanted", () => {
-    expect(inclutLesArchivees(NO_FILTER)).toBe(false);
-    expect(inclutLesArchivees(filters({ states: ["active"] }))).toBe(false);
-    expect(inclutLesArchivees(filters({ states: ["archivee"] }))).toBe(true);
+    expect(includesArchived(NO_FILTER)).toBe(false);
+    expect(includesArchived(filters({ states: ["active"] }))).toBe(false);
+    expect(includesArchived(filters({ states: ["archived"] }))).toBe(true);
   });
 
   it("counts as a filter: the board is no longer the steering view", () => {
-    expect(hasActiveFilter(filters({ states: ["archivee"] }))).toBe(true);
+    expect(hasActiveFilter(filters({ states: ["archived"] }))).toBe(true);
   });
 });
 
@@ -209,7 +209,7 @@ describe("filters held by the URL", () => {
       priorities: ["high"],
       contributors: [3, 7],
       types: ["work_package"],
-      states: ["archivee"],
+      states: ["archived"],
     });
 
     const params = new URLSearchParams();

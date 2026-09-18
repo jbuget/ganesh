@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { useOpenedMission } from "./opened-mission";
 
 beforeEach(() => {
-  window.history.replaceState(null, "", "/projets");
+  window.history.replaceState(null, "", "/projects");
 });
 
 describe("useMissionOuverte", () => {

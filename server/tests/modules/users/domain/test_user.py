@@ -1,4 +1,4 @@
-"""Regles metier portees par l'utilisateur."""
+"""Business rules the user carries."""
 
 from datetime import datetime
 

@@ -17,11 +17,11 @@ export function PriorityMark({ value }: PriorityMarkProps) {
   const urgency = priority(value);
   if (!urgency) return null;
 
-  const Icone = urgency.icon;
+  const Icon = urgency.icon;
 
   return (
     <span className="flex items-center gap-1.5 text-slate-700">
-      <Icone className={`size-4 shrink-0 ${urgency.colour}`} aria-hidden />
+      <Icon className={`size-4 shrink-0 ${urgency.colour}`} aria-hidden />
       {urgency.label}
     </span>
   );

@@ -62,7 +62,7 @@ class _UpdateUseCase:
     async def _load(self, update_id: int) -> ProjectUpdate:
         update = await self._updates.get(update_id)
         if update is None:
-            raise EntityNotFoundError("Mise a jour inconnue.")
+            raise EntityNotFoundError("Unknown update.")
         return update
 
 

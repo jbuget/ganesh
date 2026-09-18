@@ -4,7 +4,7 @@ import type { BoardMemberResponse } from "@/lib/api/generated/model";
 import { useCursorTooltip } from "@/lib/use-cursor-tooltip";
 
 /** Past this, the avatars overlap too much to stay readable. */
-const VISIBLES = 4;
+const VISIBLE = 4;
 
 interface MemberAvatarsProps {
   members: BoardMemberResponse[];
@@ -24,8 +24,8 @@ export function MemberAvatars({ members }: MemberAvatarsProps) {
 
   if (members.length === 0) return null;
 
-  const shown = members.slice(0, VISIBLES);
-  const remaining = members.slice(VISIBLES);
+  const shown = members.slice(0, VISIBLE);
+  const remaining = members.slice(VISIBLE);
 
   return (
     <div className="flex items-center -space-x-1.5" onMouseLeave={leave}>

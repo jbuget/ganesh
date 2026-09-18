@@ -105,7 +105,7 @@ async def test_a_new_project_is_not_linked_to_monday() -> None:
     assert project.is_syncable_to_monday is False
 
 
-async def test_a_lot_must_reference_an_existing_parent() -> None:
+async def test_a_work_package_must_reference_an_existing_parent() -> None:
     create, _, _, _, _ = build()
 
     with pytest.raises(EntityNotFoundError):
@@ -120,7 +120,7 @@ async def test_a_lot_must_reference_an_existing_parent() -> None:
         )
 
 
-async def test_a_lot_is_attached_to_its_parent() -> None:
+async def test_a_work_package_is_attached_to_its_parent() -> None:
     create, _, _, repo, _ = build()
 
     work_package = await create.execute(
@@ -137,7 +137,7 @@ async def test_a_lot_is_attached_to_its_parent() -> None:
     assert [p.id for p in await repo.list_children(10)] == [work_package.id]
 
 
-async def test_a_lot_cannot_be_attached_to_another_lot() -> None:
+async def test_a_work_package_cannot_be_attached_to_another_one() -> None:
     """La hierarchie s'arrete a deux niveaux."""
     parent = make_portail()
     work_package = Project(
@@ -161,11 +161,11 @@ async def test_a_lot_cannot_be_attached_to_another_lot() -> None:
         )
 
 
-async def test_a_lot_cannot_hang_under_an_off_project_activity() -> None:
-    activite = Project(
+async def test_a_work_package_cannot_hang_under_an_off_project_activity() -> None:
+    activity = Project(
         id=30, label="Absences", kind=ProjectKind.OFF_PROJECT, status=None
     )
-    create, _, _, _, _ = build(projects=[activite])
+    create, _, _, _, _ = build(projects=[activity])
 
     with pytest.raises(ValidationError):
         await create.execute(

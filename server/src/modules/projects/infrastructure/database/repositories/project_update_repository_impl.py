@@ -58,7 +58,7 @@ class SqlProjectUpdateRepository(ProjectUpdateRepository):
     async def latest_by_project(self) -> dict[int, ProjectUpdate]:
         # Withdrawn ones are ruled out before sorting, not after: the latest
         # readable update of a thread is not always the last one written.
-        vivantes = (
+        live = (
             select(ProjectUpdateModel)
             .where(ProjectUpdateModel.deleted_at.is_(None))
             .order_by(
@@ -68,7 +68,7 @@ class SqlProjectUpdateRepository(ProjectUpdateRepository):
             )
             .distinct(ProjectUpdateModel.project_id)
         )
-        result = await self._session.execute(vivantes)
+        result = await self._session.execute(live)
         return {model.project_id: _to_entity(model) for model in result.scalars().all()}
 
     async def add(self, update: ProjectUpdate) -> ProjectUpdate:

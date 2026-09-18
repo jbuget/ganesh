@@ -27,11 +27,11 @@ class ListedProject:
     project: Project
     entries: int
     sub_projects: int
-    #: Qui repond de la mission, par ordre alphabetique.
+    #: Who answers for the mission, in alphabetical order.
     leads: list[User] = field(default_factory=list)
-    #: Qui y travaille, par ordre alphabetique.
+    #: Who works on it, in alphabetical order.
     contributors: list[User] = field(default_factory=list)
-    #: Jours declares, previsionnel exclu.
+    #: Days declared, forecast excluded.
     delivered_days: float = 0.0
     #: Live updates in the follow-up thread.
     comments: int = 0
@@ -70,10 +70,10 @@ class ListProjectsUseCase:
         comments = await self._updates.count_by_project()
         latest_by_project = await self._updates.latest_by_project()
 
-        enfants: dict[int, int] = {}
+        children: dict[int, int] = {}
         for mission in await self._projects.list_all(include_inactive=True):
             if mission.parent_id is not None:
-                enfants[mission.parent_id] = enfants.get(mission.parent_id, 0) + 1
+                children[mission.parent_id] = children.get(mission.parent_id, 0) + 1
 
         # Assignments are read in two queries, not two per mission: the
         # reference list lines up dozens of them on a single screen.
@@ -99,7 +99,7 @@ class ListProjectsUseCase:
             ListedProject(
                 project=mission,
                 entries=entries.get(mission.id or 0, 0),
-                sub_projects=enfants.get(mission.id or 0, 0),
+                sub_projects=children.get(mission.id or 0, 0),
                 leads=people(mission.id or 0, ProjectRole.LEAD),
                 contributors=people(mission.id or 0, ProjectRole.CONTRIBUTOR),
                 delivered_days=delivered.get(mission.id or 0, 0.0),

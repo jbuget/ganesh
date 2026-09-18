@@ -14,14 +14,14 @@ import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 import { progress } from "@/lib/board";
 import { formatDecimalDays } from "@/lib/dates";
-import { depuis } from "@/lib/relative-dates";
+import { since } from "@/lib/relative-dates";
 
 /** Shade of the consumed/estimated ratio, by how far along it is. */
 const SHADES: Record<ReturnType<typeof progress>, string> = {
-  "sans-estime": "text-slate-500",
-  "en-cours": "text-slate-600",
-  proche: "text-amber-700",
-  depasse: "text-red-700",
+  "no-estimate": "text-slate-500",
+  ongoing: "text-slate-600",
+  close: "text-amber-700",
+  over: "text-red-700",
 };
 
 interface ProjectCardProps {
@@ -35,7 +35,7 @@ interface ProjectCardProps {
   handle?: React.ReactNode | null;
   isDragging?: boolean;
   /** Reloads the board after a change of contributors. */
-  onIntervenantsChange?: () => void | Promise<void>;
+  onContributorsChange?: () => void | Promise<void>;
   /** Opens the mission beside the board. */
   onOpen?: (projectId: number) => void;
 }
@@ -46,11 +46,11 @@ export function ProjectCard({
   now,
   handle,
   isDragging,
-  onIntervenantsChange,
+  onContributorsChange,
   onOpen,
 }: ProjectCardProps) {
   const { project, parent } = card;
-  const archivee = !project.is_active;
+  const archived = !project.is_active;
   const state = progress(card.consumed_days, project.estimated_days);
   const latest = card.latest_update;
 
@@ -65,7 +65,7 @@ export function ProjectCard({
           crosses. */}
       <p className="-mx-3 mb-2 border-b border-slate-200 px-3 pb-2 text-xs text-slate-500">
         <span className="font-medium text-slate-700">{latest.author.display_name}</span>{" "}
-        · {depuis(latest.published_at, now)}
+        · {since(latest.published_at, now)}
       </p>
       <MarkdownView body={latest.body} />
     </>
@@ -86,7 +86,7 @@ export function ProjectCard({
         // An archived mission is no longer steered: it reads set back, so that
         // a board mixing both can be scanned without confusing what is running
         // with what has been put away.
-        archivee ? "bg-slate-50" : "bg-white",
+        archived ? "bg-slate-50" : "bg-white",
         onOpen && !isDragging ? "cursor-pointer" : "",
         isDragging
           ? "border-sky-400 shadow-lg"
@@ -96,7 +96,7 @@ export function ProjectCard({
       <div className="flex items-start gap-1.5">
         <h3
           className={`min-w-0 flex-1 text-sm font-medium ${
-            archivee ? "text-slate-500" : "text-slate-900"
+            archived ? "text-slate-500" : "text-slate-900"
           }`}
         >
           {/*
@@ -145,7 +145,7 @@ export function ProjectCard({
         </p>
       )}
 
-      {archivee && (
+      {archived && (
         <span className="mt-2 mr-1 inline-block rounded bg-slate-200 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">
           Archivée
         </span>
@@ -173,13 +173,13 @@ export function ProjectCard({
           click started on it could not open a menu mid-drag.
         */}
         <div className="min-w-0 flex-1">
-          {isDragging || !onIntervenantsChange ? (
+          {isDragging || !onContributorsChange ? (
             <MemberAvatars members={card.contributors} />
           ) : (
             <ContributorsPicker
               projectId={project.id}
               contributors={card.contributors}
-              onChange={onIntervenantsChange}
+              onChange={onContributorsChange}
             />
           )}
         </div>

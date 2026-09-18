@@ -7,7 +7,7 @@ from src.shared.exceptions.domain_exceptions import ValidationError
 
 LABELS: dict[DayKind, str] = {
     DayKind.WEEKEND: "a weekend",
-    DayKind.FERIE: "a public holiday",
+    DayKind.HOLIDAY: "a public holiday",
 }
 
 
@@ -19,7 +19,7 @@ def ensure_day_is_workable(day: date) -> None:
     whoever the caller is.
     """
     kind = classify_day(day)
-    if kind is DayKind.OUVRE:
+    if kind is DayKind.WORKING:
         return
     raise ValidationError(
         f"{day.isoformat()} is {LABELS[kind]}: no entry is possible there."

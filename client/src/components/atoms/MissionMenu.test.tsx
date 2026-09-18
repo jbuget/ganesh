@@ -6,9 +6,7 @@ import { MissionMenu } from "./MissionMenu";
 
 describe("MissionMenu", () => {
   it("keeps its actions folded until they are asked for", () => {
-    render(
-      <MissionMenu archivee={false} onArchiver={vi.fn()} onDesarchiver={vi.fn()} />,
-    );
+    render(<MissionMenu archived={false} onArchive={vi.fn()} onUnarchive={vi.fn()} />);
 
     expect(
       screen.getByRole("button", { name: "Actions sur la mission" }),
@@ -17,9 +15,7 @@ describe("MissionMenu", () => {
   });
 
   it("offers to archive the mission", async () => {
-    render(
-      <MissionMenu archivee={false} onArchiver={vi.fn()} onDesarchiver={vi.fn()} />,
-    );
+    render(<MissionMenu archived={false} onArchive={vi.fn()} onUnarchive={vi.fn()} />);
 
     await userEvent.click(
       screen.getByRole("button", { name: "Actions sur la mission" }),
@@ -30,9 +26,7 @@ describe("MissionMenu", () => {
 
   it("archives the mission when the action is chosen", async () => {
     const archive = vi.fn();
-    render(
-      <MissionMenu archivee={false} onArchiver={archive} onDesarchiver={vi.fn()} />,
-    );
+    render(<MissionMenu archived={false} onArchive={archive} onUnarchive={vi.fn()} />);
 
     await userEvent.click(
       screen.getByRole("button", { name: "Actions sur la mission" }),
@@ -43,9 +37,7 @@ describe("MissionMenu", () => {
   });
 
   it("closes the menu once the action is chosen", async () => {
-    render(
-      <MissionMenu archivee={false} onArchiver={vi.fn()} onDesarchiver={vi.fn()} />,
-    );
+    render(<MissionMenu archived={false} onArchive={vi.fn()} onUnarchive={vi.fn()} />);
 
     await userEvent.click(
       screen.getByRole("button", { name: "Actions sur la mission" }),
@@ -55,7 +47,7 @@ describe("MissionMenu", () => {
     expect(screen.queryByRole("button", { name: "Archiver" })).toBeNull();
   });
   it("offers to unarchive a mission already out of the reference list", async () => {
-    render(<MissionMenu archivee onArchiver={vi.fn()} onDesarchiver={vi.fn()} />);
+    render(<MissionMenu archived onArchive={vi.fn()} onUnarchive={vi.fn()} />);
 
     await userEvent.click(
       screen.getByRole("button", { name: "Actions sur la mission" }),
@@ -66,14 +58,14 @@ describe("MissionMenu", () => {
   });
 
   it("puts the mission back in the reference list when the action is chosen", async () => {
-    const desarchiver = vi.fn();
-    render(<MissionMenu archivee onArchiver={vi.fn()} onDesarchiver={desarchiver} />);
+    const unarchive = vi.fn();
+    render(<MissionMenu archived onArchive={vi.fn()} onUnarchive={unarchive} />);
 
     await userEvent.click(
       screen.getByRole("button", { name: "Actions sur la mission" }),
     );
     await userEvent.click(screen.getByRole("button", { name: "Désarchiver" }));
 
-    expect(desarchiver).toHaveBeenCalledTimes(1);
+    expect(unarchive).toHaveBeenCalledTimes(1);
   });
 });

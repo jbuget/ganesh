@@ -12,7 +12,7 @@ interface BoardColumnProps {
   cards: BoardCardResponse[];
   /** Freezes the reference time: without it, server and client would diverge. */
   now: Date;
-  onIntervenantsChange?: () => void | Promise<void>;
+  onContributorsChange?: () => void | Promise<void>;
   onOpen?: (projectId: number) => void;
   /** The board is filtered: cards can be read, but no longer arranged. */
   frozen?: boolean;
@@ -32,7 +32,7 @@ export function BoardColumn({
   status,
   cards,
   now,
-  onIntervenantsChange,
+  onContributorsChange,
   onOpen,
   frozen,
 }: BoardColumnProps) {
@@ -76,7 +76,7 @@ export function BoardColumn({
               key={card.project.id}
               card={card}
               now={now}
-              onIntervenantsChange={onIntervenantsChange}
+              onContributorsChange={onContributorsChange}
               onOpen={onOpen}
               frozen={frozen}
             />

@@ -85,14 +85,14 @@ describe("MissionRow", () => {
   });
 
   it("shows delivered beside estimated", () => {
-    const consommee = {
+    const consumed = {
       ...mission(),
       delivered_days: 4.5,
     } as ProjectListItemResponse;
 
     line(
       <MissionRow
-        mission={consommee}
+        mission={consumed}
         now={NOW}
         onOpen={() => {}}
         onOpenThread={() => {}}
@@ -116,11 +116,11 @@ describe("MissionRow", () => {
   });
 
   it("carries the count of its mission's follow-up thread", () => {
-    const suivie = { ...mission(), comments: 3 } as ProjectListItemResponse;
+    const withComments = { ...mission(), comments: 3 } as ProjectListItemResponse;
 
     line(
       <MissionRow
-        mission={suivie}
+        mission={withComments}
         now={NOW}
         onOpen={() => {}}
         onOpenThread={() => {}}
@@ -131,7 +131,7 @@ describe("MissionRow", () => {
   });
 
   it("shows on hover the latest message, signed, dated and formatted", () => {
-    const suivie = {
+    const withComments = {
       ...mission(),
       comments: 2,
       latest_update: {
@@ -143,7 +143,7 @@ describe("MissionRow", () => {
 
     line(
       <MissionRow
-        mission={suivie}
+        mission={withComments}
         now={NOW}
         onOpen={() => {}}
         onOpenThread={() => {}}
@@ -151,16 +151,16 @@ describe("MissionRow", () => {
     );
     fireEvent.mouseMove(screen.getByLabelText("2 mises à jour"));
 
-    const infobulle = screen.getByRole("tooltip");
-    expect(infobulle).toHaveTextContent("Léa Chen");
-    expect(infobulle).toHaveTextContent("il y a 3 h");
-    expect(infobulle).toHaveTextContent("La recette commence lundi");
-    expect(infobulle.querySelector("strong")).toHaveTextContent("recette");
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip).toHaveTextContent("Léa Chen");
+    expect(tooltip).toHaveTextContent("il y a 3 h");
+    expect(tooltip).toHaveTextContent("La recette commence lundi");
+    expect(tooltip.querySelector("strong")).toHaveTextContent("recette");
   });
 
   it("gives the message in full, without truncating it", () => {
     const long = `${"mot ".repeat(200)}fin`;
-    const suivie = {
+    const withComments = {
       ...mission(),
       comments: 1,
       latest_update: {
@@ -172,7 +172,7 @@ describe("MissionRow", () => {
 
     line(
       <MissionRow
-        mission={suivie}
+        mission={withComments}
         now={NOW}
         onOpen={() => {}}
         onOpenThread={() => {}}
@@ -186,10 +186,15 @@ describe("MissionRow", () => {
   it("opens the mission's thread on a click on its count", () => {
     const openThread = vi.fn();
     const open = vi.fn();
-    const suivie = { ...mission(), comments: 2 } as ProjectListItemResponse;
+    const withComments = { ...mission(), comments: 2 } as ProjectListItemResponse;
 
     line(
-      <MissionRow mission={suivie} now={NOW} onOpen={open} onOpenThread={openThread} />,
+      <MissionRow
+        mission={withComments}
+        now={NOW}
+        onOpen={open}
+        onOpenThread={openThread}
+      />,
     );
     fireEvent.click(screen.getByLabelText("2 mises à jour"));
 

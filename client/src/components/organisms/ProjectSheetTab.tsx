@@ -13,7 +13,7 @@ interface ProjectSheetTabProps {
 }
 
 /** Writing the sheet, with the headings that structure it. */
-function Redaction({
+function Composer({
   value,
   onSave,
   onCancel,
@@ -22,15 +22,15 @@ function Redaction({
   onSave: (body: string) => Promise<void>;
   onCancel: () => void;
 }) {
-  const [body, setTexte] = useState(value);
-  const [enCours, setEnCours] = useState(false);
+  const [body, setBody] = useState(value);
+  const [busy, setBusy] = useState(false);
 
   async function save() {
-    setEnCours(true);
+    setBusy(true);
     try {
       await onSave(body);
     } finally {
-      setEnCours(false);
+      setBusy(false);
     }
   }
 
@@ -41,17 +41,17 @@ function Redaction({
         withHeadings
         fullHeight
         placeholder="Le problème, la solution, ce que le service couvre…"
-        onChange={setTexte}
+        onChange={setBody}
         onSubmit={() => void save()}
       />
       <div className="flex shrink-0 items-center gap-2">
-        <Button size="sm" disabled={enCours} onClick={() => void save()}>
+        <Button size="sm" disabled={busy} onClick={() => void save()}>
           Enregistrer
         </Button>
         <Button size="sm" variant="ghost" onClick={onCancel}>
           Annuler
         </Button>
-        <span className="text-xs text-slate-400">⌘↵ pour save</span>
+        <span className="text-xs text-slate-400">⌘↵ pour enregistrer</span>
       </div>
     </div>
   );
@@ -70,7 +70,7 @@ export function ProjectSheetTab({ description, onSave }: ProjectSheetTabProps) {
 
   if (enEdition) {
     return (
-      <Redaction
+      <Composer
         value={description ?? ""}
         onCancel={() => setEnEdition(false)}
         onSave={async (body) => {

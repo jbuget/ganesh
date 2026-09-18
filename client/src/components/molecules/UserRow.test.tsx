@@ -23,7 +23,7 @@ const onSetActive = vi.fn();
 function renderRow(
   user: UserResponse,
   roleModifiable = false,
-  statutModifiable = false,
+  canChangeStatus = false,
 ) {
   return render(
     <Table>
@@ -31,7 +31,7 @@ function renderRow(
         <UserRow
           user={user}
           roleModifiable={roleModifiable}
-          statutModifiable={statutModifiable}
+          canChangeStatus={canChangeStatus}
           onChangeRole={vi.fn()}
           onSetActive={onSetActive}
           now={NOW}

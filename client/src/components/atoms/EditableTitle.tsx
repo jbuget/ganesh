@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input";
 interface EditableTitleProps {
   label: string;
   /** What the pencil button announces to screen readers. */
-  invite: string;
+  hint: string;
   /** Absent when renaming is not allowed: the pencil then disappears. */
   onRename?: (label: string) => void | Promise<void>;
   /** `1` on a full page, `2` in a panel: the title follows its context. */
-  niveau?: 1 | 2;
+  level?: 1 | 2;
 }
 
 /**
@@ -26,39 +26,39 @@ interface EditableTitleProps {
  */
 export function EditableTitle({
   label,
-  invite,
+  hint,
   onRename,
-  niveau = 2,
+  level = 2,
 }: EditableTitleProps) {
   const [entry, setEntry] = useState<string | null>(null);
-  const [enCours, setEnCours] = useState(false);
-  const [hasError, setEnErreur] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
-  const propre = entry?.trim() ?? "";
-  const valide = propre.length > 0;
+  const trimmed = entry?.trim() ?? "";
+  const isValid = trimmed.length > 0;
 
-  function abandonner() {
+  function cancel() {
     setEntry(null);
-    setEnErreur(false);
+    setHasError(false);
   }
 
   async function validate() {
-    if (!valide || enCours) return;
-    if (propre === label) {
-      abandonner();
+    if (!isValid || busy) return;
+    if (trimmed === label) {
+      cancel();
       return;
     }
-    setEnCours(true);
-    setEnErreur(false);
+    setBusy(true);
+    setHasError(false);
     try {
-      await onRename?.(propre);
-      abandonner();
+      await onRename?.(trimmed);
+      cancel();
     } catch {
       // The input stays on screen: nobody is made to retype a title because
       // the network gave out.
-      setEnErreur(true);
+      setHasError(true);
     } finally {
-      setEnCours(false);
+      setBusy(false);
     }
   }
 
@@ -69,8 +69,8 @@ export function EditableTitle({
           <Input
             autoFocus
             value={entry}
-            disabled={enCours}
-            aria-label={invite}
+            disabled={busy}
+            aria-label={hint}
             aria-invalid={hasError || undefined}
             onChange={(event) => setEntry(event.target.value)}
             onKeyDown={(event) => {
@@ -78,7 +78,7 @@ export function EditableTitle({
               // input would close the sheet at the same time.
               if (event.key === "Escape") {
                 event.stopPropagation();
-                abandonner();
+                cancel();
               }
               if (event.key === "Enter") void validate();
             }}
@@ -88,15 +88,15 @@ export function EditableTitle({
           <Button
             size="sm"
             variant="ghost"
-            disabled={enCours}
-            onClick={abandonner}
+            disabled={busy}
+            onClick={cancel}
             className="cursor-pointer"
           >
             Annuler
           </Button>
           <Button
             size="sm"
-            disabled={!valide || enCours}
+            disabled={!isValid || busy}
             onClick={() => void validate()}
             className="cursor-pointer"
           >
@@ -113,12 +113,12 @@ export function EditableTitle({
     );
   }
 
-  const Title = niveau === 1 ? "h1" : "h2";
+  const Title = level === 1 ? "h1" : "h2";
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-1.5">
       <Title
-        className={`truncate font-semibold ${niveau === 1 ? "text-xl" : "text-base"}`}
+        className={`truncate font-semibold ${level === 1 ? "text-xl" : "text-base"}`}
       >
         {label}
       </Title>
@@ -126,7 +126,7 @@ export function EditableTitle({
       {onRename && (
         <button
           type="button"
-          aria-label={invite}
+          aria-label={hint}
           onClick={() => setEntry(label)}
           className="cursor-pointer rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
         >

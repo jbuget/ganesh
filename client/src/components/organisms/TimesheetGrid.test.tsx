@@ -9,11 +9,11 @@ const TODAY = "2026-09-16";
 
 function makeGrid(overrides: Partial<MonthGridResponse> = {}): MonthGridResponse {
   const days = [
-    { day: "2026-09-14", kind: "ouvre", label: null, is_off_day: false },
-    { day: "2026-09-15", kind: "ouvre", label: null, is_off_day: false },
-    { day: "2026-09-16", kind: "ouvre", label: null, is_off_day: false },
+    { day: "2026-09-14", kind: "working", label: null, is_off_day: false },
+    { day: "2026-09-15", kind: "working", label: null, is_off_day: false },
+    { day: "2026-09-16", kind: "working", label: null, is_off_day: false },
     { day: "2026-09-19", kind: "weekend", label: null, is_off_day: true },
-    { day: "2026-09-25", kind: "ouvre", label: null, is_off_day: false },
+    { day: "2026-09-25", kind: "working", label: null, is_off_day: false },
   ];
   return {
     user_id: 1,
@@ -145,7 +145,7 @@ describe("TimesheetGrid", () => {
       <TimesheetGrid
         {...baseProps}
         grid={makeGrid()}
-        ajoutDeMission={<button>Ajouter une mission</button>}
+        addingMission={<button>Ajouter une mission</button>}
       />,
     );
 
@@ -158,7 +158,7 @@ describe("TimesheetGrid", () => {
       <TimesheetGrid
         {...baseProps}
         grid={makeGrid()}
-        ajoutDeMission={<button>Ajouter une mission</button>}
+        addingMission={<button>Ajouter une mission</button>}
       />,
     );
 
@@ -175,7 +175,7 @@ describe("TimesheetGrid", () => {
       <TimesheetGrid
         {...baseProps}
         grid={makeGrid({ rows: [] })}
-        ajoutDeMission={<button>Ajouter une mission</button>}
+        addingMission={<button>Ajouter une mission</button>}
       />,
     );
 
@@ -206,8 +206,8 @@ describe("TimesheetGrid", () => {
     const action = screen.getByText("Retirer la mission").closest("th")!;
     expect(action.className).not.toContain("border-t");
     // The totals column does carry it: the frame stops there.
-    const totaux = screen.getByText("Total du mois").closest("th")!;
-    expect(totaux.className).toContain("border-t-slate-500");
+    const totals = screen.getByText("Total du mois").closest("th")!;
+    expect(totals.className).toContain("border-t-slate-500");
   });
 
   it("offers no removal when the month is closed", () => {
@@ -263,7 +263,7 @@ describe("TimesheetGrid", () => {
   it("colours a full day green", () => {
     const grid = makeGrid({
       day_totals: [{ day: "2026-09-15", total: 1, exceeds_capacity: false }],
-      days: [{ day: "2026-09-15", kind: "ouvre", label: null, is_off_day: false }],
+      days: [{ day: "2026-09-15", kind: "working", label: null, is_off_day: false }],
       rows: [],
     } as Partial<MonthGridResponse>);
     render(<TimesheetGrid {...baseProps} grid={grid} />);
@@ -277,7 +277,7 @@ describe("TimesheetGrid", () => {
   it("flags an incomplete day in the totals row", () => {
     const grid = makeGrid({
       day_totals: [{ day: "2026-09-15", total: 0.5, exceeds_capacity: false }],
-      days: [{ day: "2026-09-15", kind: "ouvre", label: null, is_off_day: false }],
+      days: [{ day: "2026-09-15", kind: "working", label: null, is_off_day: false }],
       rows: [],
     } as Partial<MonthGridResponse>);
     render(<TimesheetGrid {...baseProps} grid={grid} />);

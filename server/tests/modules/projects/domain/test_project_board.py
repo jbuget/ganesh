@@ -65,18 +65,18 @@ def test_a_negative_rank_is_rejected() -> None:
 
 
 def test_an_off_project_activity_never_appears_on_the_board() -> None:
-    activite = Project(
+    activity = Project(
         id=2, label="Absences", kind=ProjectKind.OFF_PROJECT, status=None
     )
 
-    assert activite.appears_on_board is False
+    assert activity.appears_on_board is False
 
 
 def test_a_project_appears_on_the_board() -> None:
     assert project().appears_on_board is True
 
 
-def test_a_lot_appears_on_the_board_too() -> None:
+def test_a_work_package_appears_on_the_board_too() -> None:
     """A work package is steered like a project: it has its phase and its load."""
     work_package = project(kind=ProjectKind.WORK_PACKAGE, parent_id=9)
 

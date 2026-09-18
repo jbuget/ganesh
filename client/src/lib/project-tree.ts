@@ -7,7 +7,7 @@ export interface ProjectNode {
   workPackages: ProjectListItemResponse[];
 }
 
-const HORS_PROJET = "off_project";
+const OFF_PROJECT = "off_project";
 
 /**
  * Arranges the reference list as a tree: each project followed by its packages.
@@ -24,26 +24,24 @@ export function buildProjectTree(
   missions: ProjectListItemResponse[],
   sorted: MissionSort = NO_SORT,
 ): ProjectNode[] {
-  const ordre = sortComparator(sorted);
-  const projets = missions.filter((m) => m.project.kind === "project");
+  const compare = sortComparator(sorted);
+  const projects = missions.filter((m) => m.project.kind === "project");
   const workPackages = missions.filter((m) => m.project.kind === "work_package");
-  const idsPresents = new Set(projets.map((m) => m.project.id));
+  const presentIds = new Set(projects.map((m) => m.project.id));
 
-  const noeuds: ProjectNode[] = [...projets].sort(ordre).map((mission) => ({
+  const nodes: ProjectNode[] = [...projects].sort(compare).map((mission) => ({
     mission,
     workPackages: workPackages
       .filter((l) => l.project.parent_id === mission.project.id)
-      .sort(ordre),
+      .sort(compare),
   }));
 
-  const orphelins = workPackages
-    .filter(
-      (l) => l.project.parent_id === null || !idsPresents.has(l.project.parent_id),
-    )
-    .sort(ordre)
+  const orphans = workPackages
+    .filter((l) => l.project.parent_id === null || !presentIds.has(l.project.parent_id))
+    .sort(compare)
     .map((workPackage) => ({ mission: workPackage, workPackages: [] }));
 
-  return [...noeuds, ...orphelins];
+  return [...nodes, ...orphans];
 }
 
 /** Off-project work, listed apart: it has neither package nor estimate. */
@@ -51,6 +49,6 @@ export function offProjectActivities(
   missions: ProjectListItemResponse[],
 ): ProjectListItemResponse[] {
   return missions
-    .filter((m) => m.project.kind === HORS_PROJET)
+    .filter((m) => m.project.kind === OFF_PROJECT)
     .sort(sortComparator(NO_SORT));
 }

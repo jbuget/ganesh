@@ -10,7 +10,7 @@ import { parseProjectsCsv } from "@/lib/csv-import";
 import {
   NO_FILTER,
   filterMissions,
-  inclutLesArchivees,
+  includesArchived,
   type MissionFilters,
 } from "@/lib/mission-filters";
 import { NO_SORT, type MissionSort } from "@/lib/mission-sort";
@@ -30,7 +30,7 @@ export function useProjectsScreen(
 ) {
   const queryClient = useQueryClient();
   const { user: me } = useCurrentUser();
-  const { missions, isLoading } = useProjects(inclutLesArchivees(filters));
+  const { missions, isLoading } = useProjects(includesArchived(filters));
   const kept = filterMissions(missions, filters);
   // We remember what is expanded, not what is collapsed: the reference list
   // opens on its projects, and sub-projects are asked for. A mission created
@@ -67,14 +67,14 @@ export function useProjectsScreen(
     refresh,
 
     async declare(label: string, kind: ProjectKind, parentId?: number) {
-      const cree = await createProject({
+      const created = await createProject({
         label,
         kind,
         status: "exploration",
         ...(parentId ? { parent_id: parentId } : {}),
       });
       await refresh();
-      return mutationResult(cree);
+      return mutationResult(created);
     },
 
     async importCsv(content: string): Promise<ImportReportResponse> {

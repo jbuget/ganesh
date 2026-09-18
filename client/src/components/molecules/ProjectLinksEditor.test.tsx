@@ -91,7 +91,7 @@ describe("ProjectLinksEditor", () => {
     );
   });
 
-  it("refuse d'ajouter tant qu'aucune adresse n'est saisie", () => {
+  it("refuses to add until an address is typed", () => {
     render(<ProjectLinksEditor links={[]} onAdd={vi.fn()} onRemove={vi.fn()} />);
 
     openForm();

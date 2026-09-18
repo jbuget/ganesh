@@ -39,7 +39,7 @@ PORTAIL = Project(
 )
 
 
-AUJOURDHUI = date(2026, 9, 17)
+TODAY = date(2026, 9, 17)
 
 
 def entry(day: date, value: float = 1.0) -> Entry:
@@ -81,10 +81,10 @@ async def thread(*bodies: str, withdrawn: int = 0) -> InMemoryProjectUpdateRepos
                 project_id=10,
                 author_id=1,
                 body=body,
-                published_at=datetime(2026, 9, 17, 9, 0) + timedelta(hours=rang),
+                published_at=datetime(2026, 9, 17, 9, 0) + timedelta(hours=rank),
             )
         )
-        for rang, body in enumerate(bodies)
+        for rank, body in enumerate(bodies)
     ]
     for update in posted[len(posted) - withdrawn :] if withdrawn else []:
         update.remove(by=1, at=datetime(2026, 9, 17, 10, 0))
@@ -92,112 +92,112 @@ async def thread(*bodies: str, withdrawn: int = 0) -> InMemoryProjectUpdateRepos
 
 
 async def test_a_mission_without_anyone_assigned_lists_nobody() -> None:
-    listees = await build().execute()
+    listed = await build().execute()
 
-    assert listees[0].leads == []
-    assert listees[0].contributors == []
+    assert listed[0].leads == []
+    assert listed[0].contributors == []
 
 
-async def test_referents_and_intervenants_are_told_apart() -> None:
-    listees = await build(
+async def test_leads_and_contributors_are_told_apart() -> None:
+    listed = await build(
         {
             (10, ProjectRole.LEAD): [1],
             (10, ProjectRole.CONTRIBUTOR): [2],
         }
     ).execute()
 
-    assert [u.display_name for u in listees[0].leads] == ["L. Chen"]
-    assert [u.display_name for u in listees[0].contributors] == ["N. Garo"]
+    assert [u.display_name for u in listed[0].leads] == ["L. Chen"]
+    assert [u.display_name for u in listed[0].contributors] == ["N. Garo"]
 
 
 async def test_the_assigned_are_listed_in_alphabetical_order() -> None:
     """The list is scanned by eye: two columns must line up."""
-    listees = await build({(10, ProjectRole.CONTRIBUTOR): [2, 1]}).execute()
+    listed = await build({(10, ProjectRole.CONTRIBUTOR): [2, 1]}).execute()
 
-    assert [u.display_name for u in listees[0].contributors] == ["L. Chen", "N. Garo"]
+    assert [u.display_name for u in listed[0].contributors] == ["L. Chen", "N. Garo"]
 
 
 async def test_a_mission_nobody_declared_time_on_shows_nothing() -> None:
-    listees = await build().execute(today=AUJOURDHUI)
+    listed = await build().execute(today=TODAY)
 
-    assert listees[0].delivered_days == 0.0
+    assert listed[0].delivered_days == 0.0
 
 
 async def test_the_declared_days_are_summed() -> None:
-    listees = await build(
-        entries=[entry(AUJOURDHUI - timedelta(days=1)), entry(AUJOURDHUI, 0.5)]
-    ).execute(today=AUJOURDHUI)
+    listed = await build(
+        entries=[entry(TODAY - timedelta(days=1)), entry(TODAY, 0.5)]
+    ).execute(today=TODAY)
 
-    assert listees[0].delivered_days == 1.5
+    assert listed[0].delivered_days == 1.5
 
 
 async def test_a_day_to_come_is_forecast_and_stays_out() -> None:
     """Delivered time must never swell with what has not been done yet."""
-    listees = await build(
-        entries=[entry(AUJOURDHUI), entry(AUJOURDHUI + timedelta(days=1))]
-    ).execute(today=AUJOURDHUI)
+    listed = await build(
+        entries=[entry(TODAY), entry(TODAY + timedelta(days=1))]
+    ).execute(today=TODAY)
 
-    assert listees[0].delivered_days == 1.0
+    assert listed[0].delivered_days == 1.0
 
 
 async def test_a_mission_without_any_update_counts_none() -> None:
-    listees = await build().execute()
+    listed = await build().execute()
 
-    assert listees[0].comments == 0
+    assert listed[0].comments == 0
 
 
 async def test_the_live_updates_of_the_thread_are_counted() -> None:
-    listees = await build(
+    listed = await build(
         updates=await thread("Cadrage lance", "Specs validees")
     ).execute()
 
-    assert listees[0].comments == 2
+    assert listed[0].comments == 2
 
 
 async def test_a_removed_update_leaves_the_count() -> None:
     """The reference list announces what can still be read in the thread, not its history."""
-    listees = await build(
+    listed = await build(
         updates=await thread("Cadrage lance", "Ecrite par erreur", withdrawn=1)
     ).execute()
 
-    assert listees[0].comments == 1
+    assert listed[0].comments == 1
 
 
 async def test_a_mission_without_any_update_has_no_last_one() -> None:
-    listees = await build().execute()
+    listed = await build().execute()
 
-    assert listees[0].latest_update is None
+    assert listed[0].latest_update is None
 
 
 async def test_the_most_recent_update_is_the_one_to_show() -> None:
-    listees = await build(
+    listed = await build(
         updates=await thread("Cadrage lance", "Specs validees")
     ).execute()
 
-    assert listees[0].latest_update is not None
-    assert listees[0].latest_update.update.body == "Specs validees"
+    assert listed[0].latest_update is not None
+    assert listed[0].latest_update.update.body == "Specs validees"
 
 
 async def test_the_last_update_is_signed() -> None:
     """The tooltip says who is speaking: the name must travel with the text."""
-    listees = await build(updates=await thread("Cadrage lance")).execute()
+    listed = await build(updates=await thread("Cadrage lance")).execute()
 
-    assert listees[0].latest_update is not None
-    assert listees[0].latest_update.author.display_name == "L. Chen"
+    assert listed[0].latest_update is not None
+    assert listed[0].latest_update.author.display_name == "L. Chen"
 
 
 async def test_a_removed_update_gives_way_to_the_one_before_it() -> None:
-    listees = await build(
+    listed = await build(
         updates=await thread("Cadrage lance", "Ecrite par erreur", withdrawn=1)
     ).execute()
 
-    assert listees[0].latest_update is not None
-    assert listees[0].latest_update.update.body == "Cadrage lance"
+    assert listed[0].latest_update is not None
+    assert listed[0].latest_update.update.body == "Cadrage lance"
 
 
 async def test_a_thread_entirely_removed_shows_nothing() -> None:
-    listees = await build(
+    listed = await build(
         updates=await thread("Ecrite par erreur", withdrawn=1)
     ).execute()
 
-    assert listees[0].latest_update is None
+    assert listed[0].latest_update is None

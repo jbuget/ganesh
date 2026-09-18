@@ -11,7 +11,7 @@ interface UserMenuProps {
   user: UserResponse;
   onSignOut: () => void | Promise<void>;
   /** Folded, the bar leaves room for the avatar alone. */
-  repliee?: boolean;
+  collapsed?: boolean;
 }
 
 /**
@@ -21,7 +21,7 @@ interface UserMenuProps {
  * looks up in doubt — the exact address, the role that opens or closes actions
  * — and the one command that goes nowhere else.
  */
-export function UserMenu({ user, onSignOut, repliee = false }: UserMenuProps) {
+export function UserMenu({ user, onSignOut, collapsed = false }: UserMenuProps) {
   const [isOpen, setOpen] = useState(false);
 
   return (
@@ -30,7 +30,7 @@ export function UserMenu({ user, onSignOut, repliee = false }: UserMenuProps) {
         aria-label={`Compte de ${user.display_name}`}
         className={[
           "flex w-full cursor-pointer items-center gap-2.5 border-t border-slate-200 py-3 transition-colors hover:bg-slate-50",
-          repliee ? "justify-center px-0" : "px-4",
+          collapsed ? "justify-center px-0" : "px-4",
         ].join(" ")}
       >
         <span
@@ -39,7 +39,7 @@ export function UserMenu({ user, onSignOut, repliee = false }: UserMenuProps) {
         >
           {user.initials}
         </span>
-        <span className={repliee ? "sr-only" : "min-w-0 text-left"}>
+        <span className={collapsed ? "sr-only" : "min-w-0 text-left"}>
           <span className="block truncate text-sm">{user.display_name}</span>
           {user.role === "MANAGER" && (
             <span className="block text-xs text-slate-500">{roleLabel(user.role)}</span>

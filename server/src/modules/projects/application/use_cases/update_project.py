@@ -64,34 +64,34 @@ class UpdateProjectUseCase:
                 raise EntityNotFoundError("The parent project cannot be found.")
             ensure_can_be_parent(parent)
 
-        changements: list[tuple[str, object, object]] = []
+        changes: list[tuple[str, object, object]] = []
         for field in EDITABLE_FIELDS:
-            demande = getattr(command, field)
-            if demande is ABSENT:
+            requested = getattr(command, field)
+            if requested is ABSENT:
                 continue
-            ancien = getattr(project, field)
-            if ancien == demande:
+            previous = getattr(project, field)
+            if previous == requested:
                 continue
-            changements.append((field, ancien, demande))
+            changes.append((field, previous, requested))
             if field == "is_active":
                 # Leaving the reference list is dated, coming back clears the
                 # date: the entity holds that rule, not the assignment.
-                project.archive() if demande is False else project.unarchive()
+                project.archive() if requested is False else project.unarchive()
             else:
-                setattr(project, field, demande)
+                setattr(project, field, requested)
 
         # Replays the entity invariants on the resulting state.
         project.__post_init__()
 
         await self._projects.update(project)
 
-        for field, ancien, new_one in changements:
+        for field, previous, new_one in changes:
             await self._audit_logs.add(
                 AuditLog(
                     action=AuditAction.PROJECT_UPDATE,
                     actor_id=command.actor_id,
                     project_id=project.id,
-                    old_value=None if ancien is None else str(ancien),
+                    old_value=None if previous is None else str(previous),
                     new_value=None if new_one is None else str(new_one),
                     payload={"field": field},
                 )

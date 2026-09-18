@@ -24,7 +24,7 @@ export function useUsersScreen() {
     isManager: me?.role === "MANAGER",
     //: Nobody cuts off their own access: the account would be turned away on
     //: the next request, and no one could reopen it from inside.
-    moiId: me?.id,
+    meId: me?.id,
     withInactive,
 
     // One reference instant per render: without it, two rows of the same list
@@ -34,7 +34,7 @@ export function useUsersScreen() {
     toggleInactive: () => setWithInactive((actuel) => !actuel),
 
     /** By name, the only order one finds by eye in a team list. */
-    collaborateurs: [...teammates].sort((a, b) =>
+    users: [...teammates].sort((a, b) =>
       a.display_name.localeCompare(b.display_name, "fr"),
     ),
 

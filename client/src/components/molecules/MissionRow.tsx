@@ -10,7 +10,7 @@ import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 import { phaseLabel, phaseDot } from "@/lib/board";
-import { depuis } from "@/lib/relative-dates";
+import { since } from "@/lib/relative-dates";
 
 interface MissionRowProps {
   mission: ProjectListItemResponse;
@@ -60,7 +60,7 @@ export function MissionRow({
           crosses. */}
       <p className="-mx-3 mb-2 border-b border-slate-200 px-3 pb-2 text-xs text-slate-500">
         <span className="font-medium text-slate-700">{latest.author.display_name}</span>{" "}
-        · {depuis(latest.published_at, now)}
+        · {since(latest.published_at, now)}
       </p>
       <MarkdownView body={latest.body} />
     </>

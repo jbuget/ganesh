@@ -119,9 +119,9 @@ class GetBoardUseCase:
         columns = [BoardColumn(status=status) for status in ProjectStatus]
         by_status = {column.status: column for column in columns}
 
-        # Le libelle departage les rangs egaux : les missions anterieures au
-        # tableau partagent all_missions la position 0, et leur ordre serait sinon
-        # arbitraire d'un chargement a l'autre.
+        # The label breaks ties between equal ranks: missions that predate the
+        # board all share position 0, and their order would otherwise be
+        # arbitrary from one load to the next.
         for mission in sorted(missions, key=lambda p: (p.position, p.label)):
             if mission.status is None or mission.id is None:
                 continue

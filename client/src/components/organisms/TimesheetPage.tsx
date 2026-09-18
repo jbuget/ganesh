@@ -20,9 +20,9 @@ export function TimesheetPage() {
   const month = useTimesheetMonth();
   const { grid, cursor } = month;
 
-  const [declarationOuverte, setDeclarationOuverte] = useState(false);
-  const [validationOuverte, setValidationOuverte] = useState(false);
-  const [aRetirer, setARetirer] = useState<{
+  const [declareOpen, setDeclareOpen] = useState(false);
+  const [validateOpen, setValidateOpen] = useState(false);
+  const [toRemove, setToRemove] = useState<{
     id: number;
     label: string;
     total: number;
@@ -32,13 +32,13 @@ export function TimesheetPage() {
    * An empty row goes without ceremony: there is nothing to lose. As soon as it
    * carries time, what will be erased is announced before it happens.
    */
-  function demanderLeRetrait(projectId: number) {
+  function askToRemove(projectId: number) {
     const line = grid?.rows.find((row) => row.project_id === projectId);
     if (!line || line.total === 0) {
       void month.removeMission(projectId);
       return;
     }
-    setARetirer({ id: projectId, label: line.label, total: line.total });
+    setToRemove({ id: projectId, label: line.label, total: line.total });
   }
 
   return (
@@ -89,7 +89,7 @@ export function TimesheetPage() {
 
         <div className="flex flex-1 justify-end">
           {grid?.is_writable && month.isOwnMonth && (
-            <Button onClick={() => setValidationOuverte(true)}>Valider le mois</Button>
+            <Button onClick={() => setValidateOpen(true)}>Valider le mois</Button>
           )}
         </div>
       </div>
@@ -97,13 +97,13 @@ export function TimesheetPage() {
       {!month.isOwnMonth && (
         <p className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
           Vous consultez le mois d&apos;un collègue. Toute modification sera enregistrée
-          à votre name.
+          à votre nom.
         </p>
       )}
 
       {grid && !grid.is_writable && (
         <p className="mb-4 rounded-md border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-700">
-          Ce month est validé et ne peut plus être modifié. Seul un manager peut le
+          Ce mois est validé et ne peut plus être modifié. Seul un manager peut le
           reopen.
         </p>
       )}
@@ -116,43 +116,43 @@ export function TimesheetPage() {
           extraRows={month.extraRows}
           today={month.today}
           onSetValue={month.setDayValue}
-          onRemoveMission={grid.is_writable ? demanderLeRetrait : undefined}
-          ajoutDeMission={
+          onRemoveMission={grid.is_writable ? askToRemove : undefined}
+          addingMission={
             grid.is_writable ? (
               <MissionSelector
                 projects={month.projects}
                 excludedIds={month.displayedProjectIds}
                 onSelect={month.addMission}
-                onDeclareNew={() => setDeclarationOuverte(true)}
+                onDeclareNew={() => setDeclareOpen(true)}
               />
             ) : null
           }
         />
       )}
 
-      {aRetirer && (
+      {toRemove && (
         <RemoveMissionDialog
           open
-          onOpenChange={(isOpen) => !isOpen && setARetirer(null)}
-          label={aRetirer.label}
-          total={aRetirer.total}
+          onOpenChange={(isOpen) => !isOpen && setToRemove(null)}
+          label={toRemove.label}
+          total={toRemove.total}
           onConfirm={async () => {
-            await month.removeMission(aRetirer.id);
-            setARetirer(null);
+            await month.removeMission(toRemove.id);
+            setToRemove(null);
           }}
         />
       )}
 
       <DeclareProjectDialog
-        open={declarationOuverte}
-        onOpenChange={setDeclarationOuverte}
+        open={declareOpen}
+        onOpenChange={setDeclareOpen}
         onConfirm={month.declareProject}
       />
 
       {grid && (
         <ValidateMonthDialog
-          open={validationOuverte}
-          onOpenChange={setValidationOuverte}
+          open={validateOpen}
+          onOpenChange={setValidateOpen}
           month={formatMonth(cursor.year, cursor.month)}
           totalEntered={grid.actual_total + grid.forecast_total}
           workingDays={grid.working_days}

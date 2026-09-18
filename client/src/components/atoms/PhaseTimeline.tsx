@@ -5,7 +5,7 @@ interface PhaseTimelineProps {
   phases: PhaseReachedResponse[];
 }
 
-/** Date en toutes lettres, abregee : « 17 sept. 2026 ». */
+/** A date spelled out, abbreviated: « 17 sept. 2026 ». */
 const MONTH = [
   "janv.",
   "févr.",

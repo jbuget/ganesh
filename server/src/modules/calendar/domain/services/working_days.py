@@ -18,9 +18,9 @@ SATURDAY = 5
 class DayKind(StrEnum):
     """What kind of day a calendar day is."""
 
-    OUVRE = "ouvre"
+    WORKING = "working"
     WEEKEND = "weekend"
-    FERIE = "ferie"
+    HOLIDAY = "holiday"
 
 
 @dataclass(frozen=True)
@@ -34,7 +34,7 @@ class CalendarDay:
     @property
     def is_off_day(self) -> bool:
         """A non-working day stands out in the entry grid."""
-        return self.kind is not DayKind.OUVRE
+        return self.kind is not DayKind.WORKING
 
 
 @lru_cache(maxsize=16)
@@ -54,10 +54,10 @@ def classify_day(day: date) -> DayKind:
     useful thing to show.
     """
     if holiday_label(day) is not None:
-        return DayKind.FERIE
+        return DayKind.HOLIDAY
     if day.weekday() >= SATURDAY:
         return DayKind.WEEKEND
-    return DayKind.OUVRE
+    return DayKind.WORKING
 
 
 def days_of_month(year: int, month: int) -> list[CalendarDay]:
@@ -75,4 +75,4 @@ def days_of_month(year: int, month: int) -> list[CalendarDay]:
 
 def working_days_count(year: int, month: int) -> int:
     """Number of working days in the month, holidays and weekends excluded."""
-    return sum(1 for day in days_of_month(year, month) if day.kind is DayKind.OUVRE)
+    return sum(1 for day in days_of_month(year, month) if day.kind is DayKind.WORKING)

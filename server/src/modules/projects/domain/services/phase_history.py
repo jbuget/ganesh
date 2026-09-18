@@ -5,7 +5,7 @@ from src.modules.projects.domain.entities.project import ProjectStatus
 #: What entering a phase has just completed. A date is named after the step
 #: passed, not the phase being entered: "Valide le 12 mai" reads better than
 #: "entre en deploiement le 12 mai".
-LIBELLES_DE_PASSAGE: dict[ProjectStatus, str] = {
+PHASE_LABELS: dict[ProjectStatus, str] = {
     ProjectStatus.EXPLORATION: "Ouvert",
     ProjectStatus.SCOPING: "Exploré",
     ProjectStatus.DEVELOPMENT: "Cadré",
@@ -17,7 +17,7 @@ LIBELLES_DE_PASSAGE: dict[ProjectStatus, str] = {
 
 def transition_label(status: ProjectStatus) -> str:
     """What entering this phase has just completed."""
-    return LIBELLES_DE_PASSAGE[status]
+    return PHASE_LABELS[status]
 
 
 def previous_phases(status: ProjectStatus) -> list[ProjectStatus]:

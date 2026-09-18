@@ -17,7 +17,7 @@ describe("UserAvatar", () => {
   });
 
   it("dims the avatar of an inactive teammate", () => {
-    const { container } = render(<UserAvatar initials="LC" name="L. Chen" attenue />);
+    const { container } = render(<UserAvatar initials="LC" name="L. Chen" dimmed />);
 
     expect(container.firstElementChild?.className).toContain("opacity-50");
   });

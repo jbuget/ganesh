@@ -2,8 +2,8 @@ import type { ProjectResponse } from "@/lib/api/generated/model";
 
 /** Missions proposables a l'ajout, reparties par nature. */
 export interface AvailableMissions {
-  projets: ProjectResponse[];
-  horsProjet: ProjectResponse[];
+  projectMissions: ProjectResponse[];
+  offProject: ProjectResponse[];
 }
 
 /**
@@ -17,9 +17,9 @@ export function availableMissions(
   projects: ProjectResponse[],
   excludedIds: number[],
 ): AvailableMissions {
-  const disponibles = projects.filter((p) => !excludedIds.includes(p.id));
+  const available = projects.filter((p) => !excludedIds.includes(p.id));
   return {
-    projets: disponibles.filter((p) => p.kind !== "off_project"),
-    horsProjet: disponibles.filter((p) => p.kind === "off_project"),
+    projectMissions: available.filter((p) => p.kind !== "off_project"),
+    offProject: available.filter((p) => p.kind === "off_project"),
   };
 }

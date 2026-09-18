@@ -5,8 +5,8 @@ import { useState } from "react";
 
 interface InlineNumberFieldProps {
   value: number | null | undefined;
-  suffixe: string;
-  invite: string;
+  suffix: string;
+  label: string;
   onChange: (value: number | null) => void | Promise<void>;
 }
 
@@ -18,17 +18,17 @@ interface InlineNumberFieldProps {
  */
 export function InlineNumberField({
   value,
-  suffixe,
-  invite,
+  suffix,
+  label,
   onChange,
 }: InlineNumberFieldProps) {
   const [entry, setEntry] = useState<string | null>(null);
 
   function validate() {
     if (entry === null) return;
-    const propre = entry.trim().replace(",", ".");
+    const trimmed = entry.trim().replace(",", ".");
     setEntry(null);
-    const count = propre === "" ? null : Number(propre);
+    const count = trimmed === "" ? null : Number(trimmed);
     if (count !== null && (Number.isNaN(count) || count < 0)) return;
     if (count !== (value ?? null)) void onChange(count);
   }
@@ -40,7 +40,7 @@ export function InlineNumberField({
         inputMode="decimal"
         autoFocus
         value={entry}
-        aria-label={invite}
+        aria-label={label}
         onChange={(event) => setEntry(event.target.value)}
         onBlur={validate}
         onKeyDown={(event) => {
@@ -55,7 +55,7 @@ export function InlineNumberField({
   return (
     <button
       type="button"
-      aria-label={invite}
+      aria-label={label}
       onClick={() =>
         setEntry(value === null || value === undefined ? "" : String(value))
       }
@@ -64,11 +64,11 @@ export function InlineNumberField({
       {value === null || value === undefined ? (
         <span className="flex items-center gap-1 text-slate-400">
           <Plus className="size-3.5" aria-hidden />
-          {invite}
+          {label}
         </span>
       ) : (
         <span className="text-slate-700">
-          {value} {suffixe}
+          {value} {suffix}
         </span>
       )}
     </button>

@@ -26,7 +26,7 @@ ALICE = User(
     display_name="L. Chen",
     role=Role.TEAMMATE,
 )
-AUJOURDHUI = date(2026, 9, 17)
+TODAY = date(2026, 9, 17)
 
 
 def build(status: ProjectStatus = ProjectStatus.VALIDATION):
@@ -49,12 +49,10 @@ async def test_entering_a_phase_is_dated() -> None:
         ChangeProjectStatusCommand(
             actor_id=1, project_id=10, status=ProjectStatus.DEPLOYMENT
         ),
-        today=AUJOURDHUI,
+        today=TODAY,
     )
 
-    assert await details.list_phases_reached(10) == {
-        ProjectStatus.DEPLOYMENT: AUJOURDHUI
-    }
+    assert await details.list_phases_reached(10) == {ProjectStatus.DEPLOYMENT: TODAY}
 
 
 async def test_passing_again_keeps_the_first_date() -> None:
@@ -64,7 +62,7 @@ async def test_passing_again_keeps_the_first_date() -> None:
         ChangeProjectStatusCommand(
             actor_id=1, project_id=10, status=ProjectStatus.DEPLOYMENT
         ),
-        today=AUJOURDHUI,
+        today=TODAY,
     )
 
     await use_case.execute(
@@ -74,9 +72,7 @@ async def test_passing_again_keeps_the_first_date() -> None:
         today=date(2026, 12, 1),
     )
 
-    assert (await details.list_phases_reached(10))[
-        ProjectStatus.DEPLOYMENT
-    ] == AUJOURDHUI
+    assert (await details.list_phases_reached(10))[ProjectStatus.DEPLOYMENT] == TODAY
 
 
 async def test_going_back_does_not_erase_what_happened() -> None:
@@ -85,7 +81,7 @@ async def test_going_back_does_not_erase_what_happened() -> None:
         ChangeProjectStatusCommand(
             actor_id=1, project_id=10, status=ProjectStatus.OPERATIONS
         ),
-        today=AUJOURDHUI,
+        today=TODAY,
     )
 
     await use_case.execute(
@@ -95,5 +91,5 @@ async def test_going_back_does_not_erase_what_happened() -> None:
         today=date(2026, 10, 1),
     )
 
-    atteintes = await details.list_phases_reached(10)
-    assert ProjectStatus.OPERATIONS in atteintes
+    reached = await details.list_phases_reached(10)
+    assert ProjectStatus.OPERATIONS in reached

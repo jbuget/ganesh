@@ -24,7 +24,7 @@ from src.modules.users.infrastructure.database.repositories.user_repository_impl
 
 pytestmark = pytest.mark.db
 
-JOUR = date(2026, 9, 15)
+DAY = date(2026, 9, 15)
 
 
 async def seed(session: AsyncSession) -> tuple[int, int]:
@@ -58,13 +58,13 @@ async def test_an_entry_is_persisted_and_read_back(db_session: AsyncSession) -> 
             id=None,
             user_id=user_id,
             project_id=project_id,
-            day=JOUR,
+            day=DAY,
             value=DayValue(0.5),
             status_at_entry=ProjectStatus.DEVELOPMENT,
         )
     )
 
-    saved = await repo.get(user_id, project_id, JOUR)
+    saved = await repo.get(user_id, project_id, DAY)
     assert saved is not None
     assert saved.value == 0.5
     assert saved.status_at_entry is ProjectStatus.DEVELOPMENT
@@ -80,7 +80,7 @@ async def test_upserting_twice_keeps_a_single_row(db_session: AsyncSession) -> N
                 id=None,
                 user_id=user_id,
                 project_id=project_id,
-                day=JOUR,
+                day=DAY,
                 value=DayValue(value),
                 status_at_entry=ProjectStatus.DEVELOPMENT,
             )
@@ -119,15 +119,15 @@ async def test_deleting_an_entry_removes_it(db_session: AsyncSession) -> None:
             id=None,
             user_id=user_id,
             project_id=project_id,
-            day=JOUR,
+            day=DAY,
             value=DayValue(1.0),
             status_at_entry=None,
         )
     )
 
-    await repo.delete(user_id, project_id, JOUR)
+    await repo.delete(user_id, project_id, DAY)
 
-    assert await repo.get(user_id, project_id, JOUR) is None
+    assert await repo.get(user_id, project_id, DAY) is None
 
 
 async def test_the_captured_phase_survives_a_project_status_change(
@@ -142,7 +142,7 @@ async def test_the_captured_phase_survives_a_project_status_change(
             id=None,
             user_id=user_id,
             project_id=project_id,
-            day=JOUR,
+            day=DAY,
             value=DayValue(1.0),
             status_at_entry=ProjectStatus.SCOPING,
         )
@@ -153,6 +153,6 @@ async def test_the_captured_phase_survives_a_project_status_change(
     project.change_status(ProjectStatus.OPERATIONS)
     await projects.update(project)
 
-    saved = await entries.get(user_id, project_id, JOUR)
+    saved = await entries.get(user_id, project_id, DAY)
     assert saved is not None
     assert saved.status_at_entry is ProjectStatus.SCOPING

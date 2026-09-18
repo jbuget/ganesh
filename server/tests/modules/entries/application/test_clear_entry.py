@@ -40,7 +40,7 @@ ALICE = User(
 PROJECT = Project(
     id=10, label="Portail", kind=ProjectKind.PROJECT, status=ProjectStatus.SCOPING
 )
-JOUR = date(2026, 9, 15)
+DAY = date(2026, 9, 15)
 
 
 def build(entries: list[Entry] | None = None, months: list[Month] | None = None):
@@ -61,7 +61,7 @@ def build(entries: list[Entry] | None = None, months: list[Month] | None = None)
     return clear, set_entry, entry_repo, audit
 
 
-def an_entry(day: date = JOUR, value: float = 1.0) -> Entry:
+def an_entry(day: date = DAY, value: float = 1.0) -> Entry:
     return Entry(
         id=1,
         user_id=1,
@@ -76,10 +76,10 @@ async def test_an_entry_is_removed() -> None:
     clear, _, entries, _ = build([an_entry()])
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=JOUR)
+        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
     )
 
-    assert await entries.get(1, 10, JOUR) is None
+    assert await entries.get(1, 10, DAY) is None
 
 
 async def test_clearing_an_empty_cell_is_harmless() -> None:
@@ -87,17 +87,17 @@ async def test_clearing_an_empty_cell_is_harmless() -> None:
     clear, _, entries, _ = build()
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=JOUR)
+        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
     )
 
-    assert await entries.get(1, 10, JOUR) is None
+    assert await entries.get(1, 10, DAY) is None
 
 
 async def test_removal_is_traced_with_the_previous_value() -> None:
     clear, _, _, audit = build([an_entry(value=0.5)])
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=JOUR)
+        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
     )
 
     log = audit.logs[-1]
@@ -109,7 +109,7 @@ async def test_clearing_an_empty_cell_leaves_no_trace() -> None:
     clear, _, _, audit = build()
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=JOUR)
+        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
     )
 
     assert audit.logs == []
@@ -122,10 +122,10 @@ async def test_a_validated_month_refuses_removal() -> None:
 
     with pytest.raises(ForbiddenActionError):
         await clear.execute(
-            ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=JOUR)
+            ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
         )
 
-    assert await entries.get(1, 10, JOUR) is not None
+    assert await entries.get(1, 10, DAY) is not None
 
 
 async def test_an_unknown_actor_is_rejected() -> None:
@@ -133,20 +133,20 @@ async def test_an_unknown_actor_is_rejected() -> None:
 
     with pytest.raises(EntityNotFoundError):
         await clear.execute(
-            ClearEntryCommand(actor_id=99, target_user_id=1, project_id=10, day=JOUR)
+            ClearEntryCommand(actor_id=99, target_user_id=1, project_id=10, day=DAY)
         )
 
 
 async def test_a_non_working_day_can_still_be_cleaned_up() -> None:
     """Entering on a Saturday is forbidden, removing an inherited entry never is."""
-    samedi = date(2026, 9, 12)
-    clear, _, entries, _ = build([an_entry(day=samedi)])
+    saturday = date(2026, 9, 12)
+    clear, _, entries, _ = build([an_entry(day=saturday)])
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=samedi)
+        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=saturday)
     )
 
-    assert await entries.get(1, 10, samedi) is None
+    assert await entries.get(1, 10, saturday) is None
 
 
 async def test_a_full_cycle_returns_the_cell_to_empty() -> None:
@@ -155,12 +155,12 @@ async def test_a_full_cycle_returns_the_cell_to_empty() -> None:
     for value in (0.5, 1.0):
         await set_entry.execute(
             SetEntryCommand(
-                actor_id=1, target_user_id=1, project_id=10, day=JOUR, value=value
+                actor_id=1, target_user_id=1, project_id=10, day=DAY, value=value
             )
         )
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=JOUR)
+        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
     )
 
-    assert await entries.get(1, 10, JOUR) is None
+    assert await entries.get(1, 10, DAY) is None

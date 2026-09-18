@@ -33,12 +33,12 @@ export function locate(
 export function targetIndex(
   cards: BoardCardResponse[],
   overId: number | null,
-  apres: boolean,
+  after: boolean,
 ): number {
   if (overId === null) return cards.length;
   const index = cards.findIndex((c) => c.project.id === overId);
   if (index === -1) return cards.length;
-  return apres ? index + 1 : index;
+  return after ? index + 1 : index;
 }
 
 /**
@@ -51,20 +51,20 @@ export function targetIndex(
 export function moveToColumn(
   columns: Columns,
   projectId: number,
-  vers: ProjectStatus,
+  to: ProjectStatus,
   index: number,
 ): Columns | null {
   const origin = locate(columns, projectId);
-  if (!origin || origin.status === vers) return null;
+  if (!origin || origin.status === to) return null;
 
   const card = columns[origin.status][origin.position];
-  const destination = columns[vers];
-  const rang = Math.max(0, Math.min(index, destination.length));
+  const destination = columns[to];
+  const rank = Math.max(0, Math.min(index, destination.length));
 
   return {
     ...columns,
     [origin.status]: columns[origin.status].filter((c) => c.project.id !== projectId),
-    [vers]: [...destination.slice(0, rang), card, ...destination.slice(rang)],
+    [to]: [...destination.slice(0, rank), card, ...destination.slice(rank)],
   };
 }
 
@@ -78,8 +78,8 @@ export function reorder(
   if (!location) return null;
 
   const cards = columns[location.status];
-  const rang = Math.max(0, Math.min(index, cards.length - 1));
-  if (rang === location.position) return null;
+  const rank = Math.max(0, Math.min(index, cards.length - 1));
+  if (rank === location.position) return null;
 
-  return { ...columns, [location.status]: arrayMove(cards, location.position, rang) };
+  return { ...columns, [location.status]: arrayMove(cards, location.position, rank) };
 }

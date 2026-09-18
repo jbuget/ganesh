@@ -7,7 +7,7 @@ interface PageLayoutProps {
    * For a screen that arranges its own scrolling — the kanban and its columns —
    * instead of leaving it to the whole page.
    */
-  defilementInterne?: boolean;
+  innerScroll?: boolean;
   children: React.ReactNode;
 }
 
@@ -19,11 +19,7 @@ interface PageLayoutProps {
  * table headers stick, failing which they would latch onto the window and slip
  * under the page's own header.
  */
-export function PageLayout({
-  header,
-  defilementInterne = false,
-  children,
-}: PageLayoutProps) {
+export function PageLayout({ header, innerScroll = false, children }: PageLayoutProps) {
   return (
     <main className="flex h-screen flex-col">
       <div className="shrink-0 px-6 pt-6">{header}</div>
@@ -31,7 +27,7 @@ export function PageLayout({
       <div
         className={[
           "min-h-0 flex-1 px-6 pb-6",
-          defilementInterne ? "overflow-hidden" : "overflow-y-auto",
+          innerScroll ? "overflow-hidden" : "overflow-y-auto",
         ].join(" ")}
       >
         {children}

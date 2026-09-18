@@ -23,7 +23,7 @@ import { MissionFilters } from "@/components/molecules/MissionFilters";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { ProjectCard } from "@/components/molecules/ProjectCard";
 import { PHASES } from "@/lib/board";
-import { filterMissions, inclutLesArchivees } from "@/lib/mission-filters";
+import { filterMissions, includesArchived } from "@/lib/mission-filters";
 import { useBoard } from "@/lib/use-board";
 import { useBoardDrag } from "@/lib/use-board-drag";
 import { useMissionFilters } from "@/lib/use-mission-filters";
@@ -63,7 +63,7 @@ export function BoardPage() {
   // The scope asked of the server follows the filter: archived missions only
   // arrive when called for, and the board reloads itself as soon as that
   // choice changes.
-  const board = useBoard(inclutLesArchivees(filters));
+  const board = useBoard(includesArchived(filters));
   const drag = useBoardDrag(board);
 
   // One reference time for the whole board: « il y a 3 h » must not
@@ -105,7 +105,7 @@ export function BoardPage() {
   // without helping anyone read.
   return (
     <PageLayout
-      defilementInterne
+      innerScroll
       header={
         <PageHeader
           title="Kanban"
@@ -125,7 +125,7 @@ export function BoardPage() {
           filters={filters}
           hasFilter={hasFilter}
           onChange={set}
-          onEffacer={clear}
+          onClear={clear}
           visible={visible}
           total={total}
         />
@@ -154,7 +154,7 @@ export function BoardPage() {
                   status={status}
                   cards={cards}
                   now={now}
-                  onIntervenantsChange={board.reload}
+                  onContributorsChange={board.reload}
                   onOpen={panel.open}
                   frozen={hasFilter}
                 />

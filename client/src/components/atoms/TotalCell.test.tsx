@@ -32,7 +32,7 @@ describe("TotalCell", () => {
     expect(screen.getByRole("cell")).toHaveTextContent("3,5");
   });
 
-  it("reste vide quand rien n'est saisi", () => {
+  it("stays empty when nothing is declared", () => {
     renderInTable(<TotalCell value={0} />);
 
     expect(screen.getByRole("cell")).toHaveTextContent("");

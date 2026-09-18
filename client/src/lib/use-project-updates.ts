@@ -23,7 +23,7 @@ export function useProjectUpdates(
    * list and the kanban announce its count and its latest message, and would
    * otherwise sit on what they knew when the panel opened.
    */
-  onEcriture?: () => void | Promise<void>,
+  onWrite?: () => void | Promise<void>,
 ) {
   const [thread, setThread] = useState<ProjectUpdateResponse[] | null>(null);
 
@@ -45,22 +45,22 @@ export function useProjectUpdates(
   return {
     thread,
 
-    async publier(body: string) {
+    async publish(body: string) {
       await postProjectUpdate(projectId, { body });
       await reload();
-      await onEcriture?.();
+      await onWrite?.();
     },
 
-    async corriger(updateId: number, body: string) {
+    async edit(updateId: number, body: string) {
       await editProjectUpdate(projectId, updateId, { body });
       await reload();
-      await onEcriture?.();
+      await onWrite?.();
     },
 
     async remove(updateId: number) {
       await removeProjectUpdate(projectId, updateId);
       await reload();
-      await onEcriture?.();
+      await onWrite?.();
     },
   };
 }

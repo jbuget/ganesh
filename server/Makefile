@@ -1,12 +1,12 @@
 .PHONY: install lint format test test-cov archi check-schema migration migrate seed run
 
-# Repris du .env racine quand on entre par `make -C server` : les ports de
-# l'instance restent decrits a un seul endroit.
+# Taken from the root .env when entering through `make -C server`: the
+# instance's ports stay described in a single place.
 -include ../.env
 
 POSTGRES_PORT ?= 5432
 API_PORT ?= 8000
-# La base de test suit la base de travail : meme conteneur, autre schema.
+# The test database follows the working one: same container, other schema.
 TEST_DATABASE_URL ?= postgresql+asyncpg://timesheet:timesheet@localhost:$(POSTGRES_PORT)/timesheet_test
 
 VENV := .venv
@@ -34,8 +34,8 @@ format:
 archi:
 	$(VENV)/bin/lint-imports --config .importlinter
 
-# Verifie que la base decrite par les migrations est bien celle des modeles.
-# Demande une base a jour : `make migrate` d'abord.
+# Checks that the database the migrations describe is the one the models do.
+# Needs an up-to-date database: run `make migrate` first.
 check-schema:
 	$(VENV)/bin/alembic check
 

@@ -7,7 +7,7 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
 
-  // --- Atomic Design : les regles de composition deviennent des erreurs -------
+  // --- Atomic Design: the composition rules become errors -------------------
   {
     plugins: { boundaries },
     settings: {
@@ -29,9 +29,9 @@ const eslintConfig = defineConfig([
         {
           default: "disallow",
           policies: [
-            // Les paquets npm restent libres.
+            // npm packages stay free.
             { allow: { to: { module: { origin: "external" } } } },
-            // Un fichier de test peut importer le composant qu'il verifie.
+            // A test file may import the component it checks.
             {
               from: { file: { categories: "test" } },
               allow: {
@@ -51,20 +51,20 @@ const eslintConfig = defineConfig([
                 },
               },
             },
-            // Un atom n'importe jamais un autre composant local.
+            // An atom never imports another local component.
             {
               from: { element: { type: "atoms" } },
               allow: { to: { element: { types: { anyOf: ["ui", "lib"] } } } },
             },
-            // Une molecule n'importe que des atoms.
+            // A molecule imports atoms only.
             {
               from: { element: { type: "molecules" } },
               allow: {
                 to: { element: { types: { anyOf: ["atoms", "ui", "lib"] } } },
               },
             },
-            // Un organism peut importer des atoms et des molecules, et composer
-            // un autre organism : une page assemble des sections.
+            // An organism may import atoms and molecules, and compose another
+            // organism: a page assembles sections.
             {
               from: { element: { type: "organisms" } },
               allow: {
@@ -77,7 +77,7 @@ const eslintConfig = defineConfig([
                 },
               },
             },
-            // Les pages n'importent que des organisms.
+            // Pages import organisms only.
             {
               from: { element: { type: "app" } },
               allow: {

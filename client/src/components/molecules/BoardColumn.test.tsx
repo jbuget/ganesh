@@ -52,8 +52,8 @@ describe("BoardColumn", () => {
   it("shows one card per mission, in the order received", () => {
     show([card(1, "Portail bailleurs"), card(2, "Refonte extranet")]);
 
-    const titres = screen.getAllByRole("heading", { level: 3 });
-    expect(titres.map((title) => title.textContent)).toEqual([
+    const headings = screen.getAllByRole("heading", { level: 3 });
+    expect(headings.map((title) => title.textContent)).toEqual([
       "Portail bailleurs",
       "Refonte extranet",
     ]);
@@ -81,10 +81,10 @@ describe("BoardColumn", () => {
     // others', whatever its stack of cards.
     show([card(1, "Portail bailleurs")]);
 
-    const defilante = screen.getByRole("list");
+    const scroller = screen.getByRole("list");
 
-    expect(defilante).toHaveClass("overflow-y-auto");
-    expect(defilante).not.toContainElement(screen.getByRole("heading", { level: 2 }));
+    expect(scroller).toHaveClass("overflow-y-auto");
+    expect(scroller).not.toContainElement(screen.getByRole("heading", { level: 2 }));
   });
 
   it("shows the prompt only on an empty phase", () => {
@@ -96,9 +96,9 @@ describe("BoardColumn", () => {
   it("puts only <li> in the list, on pain of breaking hydration", () => {
     show([]);
 
-    const liste = screen.getByRole("list");
-    const intrus = [...liste.children].filter((noeud) => noeud.tagName !== "LI");
-    expect(intrus).toEqual([]);
+    const list = screen.getByRole("list");
+    const others = [...list.children].filter((noeud) => noeud.tagName !== "LI");
+    expect(others).toEqual([]);
   });
 });
 

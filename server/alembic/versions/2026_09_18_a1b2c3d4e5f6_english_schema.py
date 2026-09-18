@@ -1,11 +1,11 @@
 """english schema
 
-Renomme en anglais les colonnes et les valeurs d'enumeration restees en
-francais. Les noms de tables etaient deja anglais.
+Renames to English the columns and enumeration values that had stayed in
+French. Table names were already English.
 
-Les colonnes `Enum` sont declarees `native_enum=False` : la base y stocke le
-nom du membre Python, pas sa valeur. Renommer les membres du domaine oblige
-donc a reecrire les donnees, d'ou les `UPDATE` qui suivent les renommages.
+`Enum` columns are declared `native_enum=False`: the database stores the name
+of the Python member, not its value. Renaming the domain's members therefore
+forces a rewrite of the data, hence the `UPDATE`s that follow the renames.
 
 Revision ID: a1b2c3d4e5f6
 Revises: c6c51b3985b4
@@ -22,8 +22,8 @@ down_revision: str | None = "c6c51b3985b4"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-#: (table, ancien nom, nouveau nom)
-COLONNES = [
+#: (table, old name, new name)
+COLUMNS = [
     ("audit_log", "jour", "day"),
     ("entries", "jour", "day"),
     ("entries", "valeur", "value"),
@@ -48,11 +48,44 @@ COLONNES = [
     ("users", "derniere_connexion", "last_login_at"),
 ]
 
-#: (ancien index, nouvel index)
+#: (table, old constraint, new constraint)
 #:
-#: Renommer une colonne ne renomme pas l'index qui la porte : le schema
-#: resterait desynchronise des modeles, et `alembic check` le signale.
-#: `ALTER INDEX` suffit — l'index est conserve, pas reconstruit.
+#: PostgreSQL names NOT NULL constraints after the column at creation time,
+#: and renaming the column does not carry them along. They get in the way of
+#: nothing — `alembic check` does not even see them — but a schema whose only
+#: remaining French names are invisible to the tooling is a trap: nobody will
+#: ever fix them, for want of seeing them.
+CONSTRAINTS = [
+    ("entries", "entries_jour_not_null", "entries_day_not_null"),
+    ("entries", "entries_valeur_not_null", "entries_value_not_null"),
+    ("holidays", "holidays_jour_not_null", "holidays_day_not_null"),
+    ("month_status", "month_status_mois_not_null", "month_status_month_not_null"),
+    ("project_links", "project_links_icone_not_null", "project_links_icon_not_null"),
+    (
+        "project_phases_reached",
+        "project_phases_reached_statut_not_null",
+        "project_phases_reached_status_not_null",
+    ),
+    (
+        "project_updates",
+        "project_updates_publiee_le_not_null",
+        "project_updates_published_at_not_null",
+    ),
+    (
+        "project_updates",
+        "project_updates_texte_not_null",
+        "project_updates_body_not_null",
+    ),
+    ("projects", "projects_actif_not_null", "projects_is_active_not_null"),
+    ("user_missions", "user_missions_mois_not_null", "user_missions_month_not_null"),
+    ("users", "users_actif_not_null", "users_is_active_not_null"),
+]
+
+#: (old index, new index)
+#:
+#: Renaming a column does not rename the index that carries it: the schema
+#: would stay out of step with the models, and `alembic check` says so.
+#: `ALTER INDEX` is enough — the index is kept, not rebuilt.
 INDEX = [
     ("ix_entries_jour", "ix_entries_day"),
     ("ix_month_status_mois", "ix_month_status_month"),
@@ -61,8 +94,8 @@ INDEX = [
     ("ix_users_actif", "ix_users_is_active"),
 ]
 
-#: (table, colonne, ancien membre, nouveau membre)
-MEMBRES = [
+#: (table, column, old member, new member)
+MEMBERS = [
     ("projects", "status", "CADRAGE", "SCOPING"),
     ("projects", "status", "REALISATION", "DEVELOPMENT"),
     ("projects", "status", "DEPLOIEMENT", "DEPLOYMENT"),
@@ -112,33 +145,39 @@ MEMBRES = [
 ]
 
 
-def _renommer_les_index(index: list[tuple[str, str]]) -> None:
-    for avant, apres in index:
-        op.execute(f"ALTER INDEX {avant} RENAME TO {apres}")
+def _rename_constraints(constraints: list[tuple[str, str, str]]) -> None:
+    for table, before, after in constraints:
+        op.execute(f"ALTER TABLE {table} RENAME CONSTRAINT {before} TO {after}")
 
 
-def _reecrire(membres: list[tuple[str, str, str, str]]) -> None:
-    for table, colonne, avant, apres in membres:
+def _rename_indexes(index: list[tuple[str, str]]) -> None:
+    for before, after in index:
+        op.execute(f"ALTER INDEX {before} RENAME TO {after}")
+
+
+def _rewrite_members(members: list[tuple[str, str, str, str]]) -> None:
+    for table, column, before, after in members:
         op.execute(
-            f"UPDATE {table} SET {colonne} = '{apres}' WHERE {colonne} = '{avant}'"
+            f"UPDATE {table} SET {column} = '{after}' WHERE {column} = '{before}'"
         )
 
 
 def upgrade() -> None:
-    for table, avant, apres in COLONNES:
-        op.alter_column(table, avant, new_column_name=apres)
+    for table, before, after in COLUMNS:
+        op.alter_column(table, before, new_column_name=after)
 
-    _renommer_les_index(INDEX)
+    _rename_indexes(INDEX)
+    _rename_constraints(CONSTRAINTS)
 
-    # La contrainte porte le nom de la colonne : elle se refait entierement.
+    # The constraint carries the column's name: it is remade in full.
     op.drop_constraint("ck_entry_valeur", "entries", type_="check")
     op.create_check_constraint("ck_entry_value", "entries", "value IN (0.5, 1.0)")
 
-    _reecrire(MEMBRES)
+    _rewrite_members(MEMBERS)
 
-    # Le journal d'audit nomme le champ touche dans son payload : la clef suit
-    # le reste, sans quoi une meme trace se lirait « champ » avant la bascule
-    # et « field » apres.
+    # The audit log names the field it touched in its payload: the key follows
+    # the rest, otherwise one and the same trace would read « champ » before the
+    # switch and « field » after.
     op.execute(
         """
         UPDATE audit_log
@@ -163,15 +202,17 @@ def downgrade() -> None:
         """
     )
 
-    _reecrire([(t, c, apres, avant) for t, c, avant, apres in MEMBRES])
+    _rewrite_members([(t, c, after, before) for t, c, before, after in MEMBERS])
 
-    # La contrainte tombe avant le renommage, et se refait apres : son
-    # expression nomme la colonne, qui n'a pas le meme nom des deux cotes.
+    # The constraint is dropped before the rename and remade after: its
+    # expression names the column, which does not carry the same name on both
+    # sides.
     op.drop_constraint("ck_entry_value", "entries", type_="check")
 
-    _renommer_les_index([(apres, avant) for avant, apres in INDEX])
+    _rename_constraints([(t, after, before) for t, before, after in CONSTRAINTS])
+    _rename_indexes([(after, before) for before, after in INDEX])
 
-    for table, avant, apres in reversed(COLONNES):
-        op.alter_column(table, apres, new_column_name=avant)
+    for table, before, after in reversed(COLUMNS):
+        op.alter_column(table, after, new_column_name=before)
 
     op.create_check_constraint("ck_entry_valeur", "entries", "valeur IN (0.5, 1.0)")

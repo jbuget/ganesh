@@ -45,7 +45,7 @@ describe("UserMenu", () => {
   });
 
   it("shrinks the block to initials when the bar is folded", () => {
-    render(<UserMenu user={USER} onSignOut={vi.fn()} repliee />);
+    render(<UserMenu user={USER} onSignOut={vi.fn()} collapsed />);
 
     // The name leaves the eye, never the accessibility tree.
     expect(screen.getByRole("button", { name: /Jérémy Buget/ })).toBeInTheDocument();

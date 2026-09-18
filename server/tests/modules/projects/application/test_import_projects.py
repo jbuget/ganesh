@@ -77,7 +77,7 @@ async def test_an_existing_project_is_left_alone() -> None:
     assert len(await repo.list_all()) == 1
 
 
-async def test_a_lot_is_attached_to_its_parent_by_label() -> None:
+async def test_a_work_package_is_attached_to_its_parent_by_label() -> None:
     """A Monday export names the parent, it knows nothing of our ids."""
     use_case, repo = build()
 
@@ -99,7 +99,7 @@ async def test_a_lot_is_attached_to_its_parent_by_label() -> None:
     assert projects["Lot 1 — API"].parent_id == projects["Portail bailleurs"].id
 
 
-async def test_a_lot_whose_parent_is_missing_is_reported() -> None:
+async def test_a_work_package_whose_parent_is_missing_is_reported() -> None:
     use_case, repo = build()
 
     report = await use_case.execute(
@@ -118,7 +118,7 @@ async def test_a_lot_whose_parent_is_missing_is_reported() -> None:
     assert await repo.list_all() == []
 
 
-async def test_a_lot_under_a_lot_is_reported() -> None:
+async def test_a_work_package_under_a_work_package_is_reported() -> None:
     """A malformed export must not create a third level."""
     use_case, repo = build()
 

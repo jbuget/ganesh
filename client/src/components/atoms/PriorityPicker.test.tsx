@@ -27,7 +27,7 @@ describe("PriorityPicker", () => {
 
     const choice = screen
       .getAllByRole("button")
-      .map((bouton) => bouton.textContent)
+      .map((button) => button.textContent)
       .filter((body) => body && body !== "Priorité");
     expect(choice).toEqual(["Critique", "Haute", "Normale", "Basse"]);
   });
@@ -42,7 +42,7 @@ describe("PriorityPicker", () => {
     expect(onChange).toHaveBeenCalledWith("critical");
   });
 
-  it("retire l'urgence quand on reclique dessus", () => {
+  it("takes the urgency back when clicked again", () => {
     // The only way back to « no priority ».
     const onChange = vi.fn();
     render(<PriorityPicker value="low" onChange={onChange} />);

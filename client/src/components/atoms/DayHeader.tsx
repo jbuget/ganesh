@@ -26,12 +26,12 @@ export function DayHeader({
   isLastDay = false,
   label,
 }: DayHeaderProps) {
-  const intitule = `${weekdayInitial(day)} ${dayNumber(day)}`;
+  const heading = `${weekdayInitial(day)} ${dayNumber(day)}`;
 
   return (
     <th
       scope="col"
-      title={label ?? intitule}
+      title={label ?? heading}
       className={[
         "h-11 border-t border-r border-b border-t-slate-500 border-b-slate-300 text-xs font-normal",
         isNarrow ? "w-2.5" : "w-9",
@@ -47,7 +47,7 @@ export function DayHeader({
       {isNarrow ? (
         // Shrunk to a band, the column keeps its heading for screen readers:
         // an anonymous column would make the table incomprehensible.
-        <span className="sr-only">{intitule}</span>
+        <span className="sr-only">{heading}</span>
       ) : (
         <>
           <div className="leading-tight">{weekdayInitial(day)}</div>

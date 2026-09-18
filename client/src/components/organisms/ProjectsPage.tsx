@@ -39,14 +39,14 @@ export function ProjectsPage() {
   const { filters, hasFilter, set, clear } = useMissionFilters();
   // Ordering follows the same path as the filters: the address carries it, and
   // the screen hook renders the tree already in the order asked for.
-  const { sorted, toggle: trierPar } = useMissionSort();
+  const { sorted, toggle: sortBy } = useMissionSort();
   const screen = useProjectsScreen(filters, sorted);
   // One reference time for every row: « il y a 3 h » must not depend
   // on when each one renders.
   const now = useMemo(() => new Date(), []);
   const panel = useOpenedMission();
   const [declaring, setDeclaration] = useState(false);
-  const [importing, setImportation] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   return (
     <PageLayout
@@ -57,7 +57,7 @@ export function ProjectsPage() {
           actions={
             <>
               {screen.isManager && (
-                <Button variant="outline" onClick={() => setImportation(true)}>
+                <Button variant="outline" onClick={() => setImporting(true)}>
                   <Upload />
                   Importer
                 </Button>
@@ -77,7 +77,7 @@ export function ProjectsPage() {
           filters={filters}
           hasFilter={hasFilter}
           onChange={set}
-          onEffacer={clear}
+          onClear={clear}
           visible={screen.visible}
           total={screen.total}
         />
@@ -109,7 +109,7 @@ export function ProjectsPage() {
                     column="project"
                     label="Projet"
                     sorted={sorted}
-                    onToggle={trierPar}
+                    onToggle={sortBy}
                   />
                   {/* The follow-up thread: its icon carries the meaning, not a title. */}
                   <TableHead />
@@ -117,33 +117,33 @@ export function ProjectsPage() {
                     column="phase"
                     label="Phase"
                     sorted={sorted}
-                    onToggle={trierPar}
+                    onToggle={sortBy}
                   />
                   <SortableColumnHeader
                     column="priority"
                     label="Priorité"
                     sorted={sorted}
-                    onToggle={trierPar}
+                    onToggle={sortBy}
                   />
                   <SortableColumnHeader
                     column="category"
                     label="Catégorie"
                     sorted={sorted}
-                    onToggle={trierPar}
+                    onToggle={sortBy}
                   />
                   <SortableColumnHeader
                     column="estimated"
                     label="Estimé"
                     sorted={sorted}
-                    onToggle={trierPar}
-                    aDroite
+                    onToggle={sortBy}
+                    alignRight
                   />
                   <SortableColumnHeader
                     column="delivered"
                     label="Réalisé"
                     sorted={sorted}
-                    onToggle={trierPar}
-                    aDroite
+                    onToggle={sortBy}
+                    alignRight
                   />
                   {/* Who looks after it does not sort: a column of badges has no
                       order the reader would have in mind. */}
@@ -222,7 +222,7 @@ export function ProjectsPage() {
 
       <ImportProjectsDialog
         open={importing}
-        onOpenChange={setImportation}
+        onOpenChange={setImporting}
         onImport={screen.importCsv}
       />
 

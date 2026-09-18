@@ -133,7 +133,7 @@ async def test_someone_who_never_declared_time_is_absent() -> None:
     assert len(detail.contributors) == 2
 
 
-async def test_referents_and_intervenants_are_told_apart() -> None:
+async def test_leads_and_contributors_are_told_apart() -> None:
     detail = await build(
         assignments={
             (10, ProjectRole.LEAD): [1],

@@ -14,13 +14,13 @@ import { UserMenu } from "@/components/atoms/UserMenu";
 import { Button } from "@/components/ui/button";
 import { useSignOut } from "@/lib/use-sign-out";
 import { useCurrentUser } from "@/lib/api/queries";
-import { toggleSidebar, useBarreLateraleRepliee } from "@/lib/sidebar-store";
+import { toggleSidebar, useSidebarCollapsed } from "@/lib/sidebar-store";
 
-const ONGLETS = [
-  { href: "/", label: "Activité", Icone: CalendarDays },
-  { href: "/kanban", label: "Kanban", Icone: KanbanSquare },
-  { href: "/projets", label: "Projets", Icone: FolderKanban },
-  { href: "/collaborateurs", label: "Utilisateurs", Icone: Users },
+const TABS = [
+  { href: "/", label: "Activité", Icon: CalendarDays },
+  { href: "/kanban", label: "Kanban", Icon: KanbanSquare },
+  { href: "/projects", label: "Projets", Icon: FolderKanban },
+  { href: "/users", label: "Utilisateurs", Icon: Users },
 ] as const;
 
 /**
@@ -34,7 +34,7 @@ const ONGLETS = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { user } = useCurrentUser();
-  const repliee = useBarreLateraleRepliee();
+  const collapsed = useSidebarCollapsed();
   const seDeconnecter = useSignOut();
 
   return (
@@ -45,16 +45,16 @@ export function AppSidebar() {
         // the fold. No transition on the width: `transition-[width]` froze the
         // bar at its starting width, and folding had no visible effect.
         "flex min-w-0 shrink-0 flex-col overflow-hidden border-r border-slate-300 bg-white",
-        repliee ? "w-14" : "w-56",
+        collapsed ? "w-14" : "w-56",
       ].join(" ")}
     >
       <div
         className={[
           "flex items-center gap-2 px-3 py-4",
-          repliee ? "justify-center" : "justify-between",
+          collapsed ? "justify-center" : "justify-between",
         ].join(" ")}
       >
-        {!repliee && (
+        {!collapsed && (
           <span className="min-w-0">
             <span className="block text-sm font-semibold tracking-tight">
               Timesheet
@@ -67,10 +67,10 @@ export function AppSidebar() {
           variant="ghost"
           size="icon"
           aria-label={
-            repliee ? "Déplier la barre latérale" : "Replier la barre latérale"
+            collapsed ? "Déplier la barre latérale" : "Replier la barre latérale"
           }
-          aria-pressed={repliee}
-          title={repliee ? "Déplier la barre latérale" : "Replier la barre latérale"}
+          aria-pressed={collapsed}
+          title={collapsed ? "Déplier la barre latérale" : "Replier la barre latérale"}
           onClick={toggleSidebar}
         >
           <PanelLeft />
@@ -79,25 +79,25 @@ export function AppSidebar() {
 
       <nav aria-label="Navigation principale" className="flex-1 px-2">
         <ul className="flex flex-col gap-1">
-          {ONGLETS.map(({ href, label, Icone }) => {
+          {TABS.map(({ href, label, Icon }) => {
             const isActive = pathname === href;
             return (
               <li key={href}>
                 <Link
                   href={href}
                   aria-current={isActive ? "page" : undefined}
-                  title={repliee ? label : undefined}
+                  title={collapsed ? label : undefined}
                   className={[
                     "flex items-center gap-2.5 rounded-md py-2 text-sm transition-colors",
-                    repliee ? "justify-center px-0" : "px-3",
+                    collapsed ? "justify-center px-0" : "px-3",
                     isActive
                       ? "bg-slate-100 font-medium text-slate-900"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
                   ].join(" ")}
                 >
-                  <Icone className="size-4 shrink-0" />
+                  <Icon className="size-4 shrink-0" />
                   {/* Folded, the label is still read by screen readers. */}
-                  <span className={repliee ? "sr-only" : undefined}>{label}</span>
+                  <span className={collapsed ? "sr-only" : undefined}>{label}</span>
                 </Link>
               </li>
             );
@@ -105,7 +105,7 @@ export function AppSidebar() {
         </ul>
       </nav>
 
-      {user && <UserMenu user={user} repliee={repliee} onSignOut={seDeconnecter} />}
+      {user && <UserMenu user={user} collapsed={collapsed} onSignOut={seDeconnecter} />}
     </aside>
   );
 }

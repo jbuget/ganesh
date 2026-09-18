@@ -144,14 +144,14 @@ class InMemoryEntryRepository(EntryRepository):
         return counts
 
     async def sum_realised_by_project(self, today: date) -> dict[int, float]:
-        totaux: dict[int, float] = {}
+        totals: dict[int, float] = {}
         for entry in self._entries:
             if entry.is_forecast(today):
                 continue
-            totaux[entry.project_id] = round(
-                totaux.get(entry.project_id, 0.0) + float(entry.value), 2
+            totals[entry.project_id] = round(
+                totals.get(entry.project_id, 0.0) + float(entry.value), 2
             )
-        return totaux
+        return totals
 
     async def upsert(self, entry: Entry) -> Entry:
         existing = await self.get(entry.user_id, entry.project_id, entry.day)
@@ -233,14 +233,14 @@ class InMemoryProjectAssigneeRepository(ProjectAssigneeRepository):
         }
 
     async def assign(self, project_id: int, user_id: int, role: ProjectRole) -> None:
-        membres = self._by_project.setdefault((project_id, role), [])
-        if user_id not in membres:
-            membres.append(user_id)
+        members = self._by_project.setdefault((project_id, role), [])
+        if user_id not in members:
+            members.append(user_id)
 
     async def unassign(self, project_id: int, user_id: int, role: ProjectRole) -> None:
-        membres = self._by_project.get((project_id, role))
-        if membres and user_id in membres:
-            membres.remove(user_id)
+        members = self._by_project.get((project_id, role))
+        if members and user_id in members:
+            members.remove(user_id)
 
 
 class InMemoryProjectDetailRepository(ProjectDetailRepository):

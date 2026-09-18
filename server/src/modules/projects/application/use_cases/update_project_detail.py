@@ -69,31 +69,31 @@ class UpdateProjectDetailUseCase:
         if mission is None:
             raise EntityNotFoundError("Mission inconnue.")
 
-        anciens_departements = await self._details.list_departments(command.project_id)
+        previous_departments = await self._details.list_departments(command.project_id)
         contacts = (command.business_contacts or "").strip() or None
-        ancien = mission.business_contacts
+        previous = mission.business_contacts
         mission.business_contacts = contacts
         await self._projects.update(mission)
         await self._details.set_departments(command.project_id, command.departments)
 
         # One trace per field, as editing a mission already does.
-        for field, avant, apres in (
-            ("contacts_metier", ancien, contacts),
+        for field, before, after in (
+            ("contacts_metier", previous, contacts),
             (
                 "departements",
-                ", ".join(sorted(d.value for d in anciens_departements)),
+                ", ".join(sorted(d.value for d in previous_departments)),
                 ", ".join(sorted(d.value for d in command.departments)),
             ),
         ):
-            if avant == apres:
+            if before == after:
                 continue
             await self._audit_logs.add(
                 AuditLog(
                     action=AuditAction.PROJECT_UPDATE,
                     actor_id=command.actor_id,
                     project_id=command.project_id,
-                    old_value=avant,
-                    new_value=apres,
+                    old_value=before,
+                    new_value=after,
                     payload={"field": field},
                 )
             )

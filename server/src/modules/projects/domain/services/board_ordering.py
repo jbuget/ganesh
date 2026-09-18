@@ -3,7 +3,7 @@
 from src.modules.projects.domain.entities.project import Project
 
 
-def reorder_column(column: list[Project], deplacee: Project, vers: int) -> None:
+def reorder_column(column: list[Project], moved: Project, to: int) -> None:
     """Puts `moved` at rank `to` and renumbers the whole column.
 
     Renumbering every time is deliberate: leaving gaps or equal ranks would
@@ -13,11 +13,11 @@ def reorder_column(column: list[Project], deplacee: Project, vers: int) -> None:
     if not column:
         return
 
-    restantes = [p for p in column if p.id != deplacee.id]
-    restantes.sort(key=lambda p: p.position)
+    remaining = [p for p in column if p.id != moved.id]
+    remaining.sort(key=lambda p: p.position)
 
-    rang = max(0, min(vers, len(restantes)))
-    restantes.insert(rang, deplacee)
+    rank = max(0, min(to, len(remaining)))
+    remaining.insert(rank, moved)
 
-    for position, mission in enumerate(restantes):
+    for position, mission in enumerate(remaining):
         mission.position = position

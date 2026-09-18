@@ -36,7 +36,7 @@ interface MissionGroup {
   items: MissionItem[];
 }
 
-const enItems = (projects: ProjectResponse[]): MissionItem[] =>
+const asItems = (projects: ProjectResponse[]): MissionItem[] =>
   projects.map((project) => ({ value: project.id, label: project.label }));
 
 /**
@@ -58,20 +58,20 @@ export function MissionSelector({
   onDeclareNew,
   disabled = false,
 }: MissionSelectorProps) {
-  const { projets, horsProjet } = availableMissions(projects, excludedIds);
+  const { projectMissions, offProject } = availableMissions(projects, excludedIds);
   const [isOpen, setOpen] = useState(false);
 
-  const groupes: MissionGroup[] = [];
-  if (projets.length > 0) {
-    groupes.push({ value: "Projets et lots", items: enItems(projets) });
+  const groups: MissionGroup[] = [];
+  if (projectMissions.length > 0) {
+    groups.push({ value: "Projets et lots", items: asItems(projectMissions) });
   }
-  if (horsProjet.length > 0) {
-    groupes.push({ value: "Hors projet", items: enItems(horsProjet) });
+  if (offProject.length > 0) {
+    groups.push({ value: "Hors projet", items: asItems(offProject) });
   }
 
   return (
     <Combobox
-      items={groupes}
+      items={groups}
       value={null}
       open={isOpen}
       onOpenChange={setOpen}
@@ -93,9 +93,9 @@ export function MissionSelector({
         <ComboboxEmpty>Aucune mission ne correspond.</ComboboxEmpty>
 
         <ComboboxList>
-          {(groupe: MissionGroup) => (
-            <ComboboxGroup key={groupe.value} items={groupe.items}>
-              <ComboboxGroupLabel>{groupe.value}</ComboboxGroupLabel>
+          {(group: MissionGroup) => (
+            <ComboboxGroup key={group.value} items={group.items}>
+              <ComboboxGroupLabel>{group.value}</ComboboxGroupLabel>
               <ComboboxCollection>
                 {(mission: MissionItem) => (
                   <ComboboxItem key={mission.value} value={mission}>

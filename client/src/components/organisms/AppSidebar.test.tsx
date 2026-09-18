@@ -5,14 +5,14 @@ import userEvent from "@testing-library/user-event";
 import { AppSidebar } from "./AppSidebar";
 
 const pathname = vi.hoisted(() => ({ value: "/" }));
-type Utilisateur = {
+type User = {
   display_name: string;
   email: string;
   initials: string;
   role: string;
 };
 
-const JEREMY: Utilisateur = {
+const JEREMY: User = {
   display_name: "Jérémy Buget",
   email: "j.buget@waat.fr",
   initials: "JB",
@@ -82,7 +82,7 @@ describe("AppSidebar", () => {
   });
 
   it("follows the page shown", () => {
-    pathname.value = "/projets";
+    pathname.value = "/projects";
     render(<AppSidebar />);
 
     expect(screen.getByRole("link", { name: /Projets/ })).toHaveAttribute(
@@ -91,7 +91,7 @@ describe("AppSidebar", () => {
     );
   });
 
-  it("affiche l'utilisateur courant en bas", () => {
+  it("shows the current user at the foot", () => {
     render(<AppSidebar />);
 
     expect(screen.getByText("Jérémy Buget")).toBeInTheDocument();

@@ -30,7 +30,7 @@ export function phaseDot(status: ProjectStatus): string {
   return PHASES_BY_STATUS.get(status)?.dot ?? "bg-slate-300";
 }
 
-const RANGS_PHASES = new Map(PHASES.map((phase, rang) => [phase.status, rang]));
+const PHASE_RANKS = new Map(PHASES.map((phase, rank) => [phase.status, rank]));
 
 /**
  * Rank of a phase in the life cycle.
@@ -40,13 +40,13 @@ const RANGS_PHASES = new Map(PHASES.map((phase, rang) => [phase.status, rang]));
  * the rear rather than leading the way.
  */
 export function phaseRank(status: ProjectStatus | null | undefined): number {
-  return status ? (RANGS_PHASES.get(status) ?? PHASES.length) : PHASES.length;
+  return status ? (PHASE_RANKS.get(status) ?? PHASES.length) : PHASES.length;
 }
 
-const LIBELLES_PHASES = new Map(PHASES.map((p) => [p.status, p.label]));
+const PHASE_LABELS = new Map(PHASES.map((p) => [p.status, p.label]));
 
 export function phaseLabel(status: ProjectStatus): string {
-  return LIBELLES_PHASES.get(status) ?? status;
+  return PHASE_LABELS.get(status) ?? status;
 }
 
 /**
@@ -127,15 +127,15 @@ export function priority(value: ProjectPriority | null | undefined) {
 }
 
 /** How far along a mission is against its estimate. */
-export type Avancement = "sans-estime" | "en-cours" | "proche" | "depasse";
+export type Progress = "no-estimate" | "ongoing" | "close" | "over";
 
 export function progress(
-  consomme: number,
+  consumed: number,
   estimated: number | null | undefined,
-): Avancement {
-  if (!estimated) return "sans-estime";
-  const part = consomme / estimated;
-  if (part > 1) return "depasse";
-  if (part >= 0.8) return "proche";
-  return "en-cours";
+): Progress {
+  if (!estimated) return "no-estimate";
+  const part = consumed / estimated;
+  if (part > 1) return "over";
+  if (part >= 0.8) return "close";
+  return "ongoing";
 }

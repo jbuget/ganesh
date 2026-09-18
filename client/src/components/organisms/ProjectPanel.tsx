@@ -30,8 +30,8 @@ export function ProjectPanel({
   onClose,
   onMissionChanged,
 }: ProjectPanelProps) {
-  const fiche = useProjectDetail(projectId, onMissionChanged);
-  const detail = fiche.detail;
+  const sheet = useProjectDetail(projectId, onMissionChanged);
+  const detail = sheet.detail;
 
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -60,12 +60,12 @@ export function ProjectPanel({
         <header className="flex items-center gap-2 border-b border-slate-200 px-5 py-4">
           <EditableTitle
             label={detail?.project.label ?? "Chargement…"}
-            invite="Renommer la mission"
-            onRename={detail ? fiche.renommer : undefined}
+            hint="Renommer la mission"
+            onRename={detail ? sheet.rename : undefined}
           />
 
           <Link
-            href={`/projets/${projectId}`}
+            href={`/projects/${projectId}`}
             aria-label="Ouvrir en pleine page"
             className="cursor-pointer rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
           >
@@ -82,27 +82,27 @@ export function ProjectPanel({
         </header>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4">
-          {fiche.introuvable && (
+          {sheet.notFound && (
             <p className="text-sm text-slate-500">Cette mission n&apos;existe pas.</p>
           )}
           {detail && (
             <ProjectTabs
               detail={detail}
               initialTab={tab}
-              onChange={fiche.reload}
-              saveSheet={fiche.saveSheet}
-              saveDescription={fiche.saveDescription}
-              changePhase={fiche.changePhase}
-              updateFields={fiche.updateFields}
-              addLink={fiche.addLink}
-              removeLink={fiche.removeLink}
+              onChange={sheet.reload}
+              saveSheet={sheet.saveSheet}
+              saveDescription={sheet.saveDescription}
+              changePhase={sheet.changePhase}
+              updateFields={sheet.updateFields}
+              addLink={sheet.addLink}
+              removeLink={sheet.removeLink}
               // The panel stays open after archiving, even though the mission
               // leaves the list behind: closing it on an unlucky click would
               // leave no way back, the row having gone from the reference
               // list. The banner and « Desarchiver » keep the return
               // within reach.
-              archive={fiche.archive}
-              desarchiver={fiche.desarchiver}
+              archive={sheet.archive}
+              unarchive={sheet.unarchive}
             />
           )}
         </div>

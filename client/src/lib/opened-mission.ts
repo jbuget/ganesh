@@ -2,7 +2,7 @@
 
 import { writeUrl, useQueryString } from "@/lib/url-state";
 
-const PARAMETRE = "mission";
+const PARAM = "mission";
 const TAB = "tab";
 
 /**
@@ -18,7 +18,7 @@ const TAB = "tab";
 export function useOpenedMission() {
   const query = useQueryString();
   const params = new URLSearchParams(query);
-  const value = params.get(PARAMETRE);
+  const value = params.get(PARAM);
 
   return {
     openedMission: Number(value) || null,
@@ -26,7 +26,7 @@ export function useOpenedMission() {
 
     open(projectId: number, tab?: string) {
       writeUrl((params) => {
-        params.set(PARAMETRE, String(projectId));
+        params.set(PARAM, String(projectId));
         // Without clearing it, the tab of a previous opening would apply to
         // the next mission.
         if (tab) params.set(TAB, tab);
@@ -36,7 +36,7 @@ export function useOpenedMission() {
 
     close() {
       writeUrl((params) => {
-        params.delete(PARAMETRE);
+        params.delete(PARAM);
         params.delete(TAB);
       });
     },

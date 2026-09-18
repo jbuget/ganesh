@@ -30,20 +30,20 @@ import {
 export function useProjectDetail(
   projectId: number,
   /** Called after every write: the screen one came from may depend on it. */
-  onEcriture?: () => void | Promise<void>,
+  onWrite?: () => void | Promise<void>,
 ) {
   const [detail, setDetail] = useState<ProjectDetailResponse | null>(null);
-  const [introuvable, setIntrouvable] = useState(false);
+  const [notFound, setNotFound] = useState(false);
 
   const reload = useCallback(async () => {
     try {
       const response = await getProjectDetail(projectId);
       setDetail(response.data as ProjectDetailResponse);
     } catch {
-      setIntrouvable(true);
+      setNotFound(true);
     }
-    await onEcriture?.();
-  }, [projectId, onEcriture]);
+    await onWrite?.();
+  }, [projectId, onWrite]);
 
   useEffect(() => {
     // The guard avoids writing into an already unmounted component, when one
@@ -54,7 +54,7 @@ export function useProjectDetail(
         if (alive) setDetail(response.data as ProjectDetailResponse);
       })
       .catch(() => {
-        if (alive) setIntrouvable(true);
+        if (alive) setNotFound(true);
       });
     return () => {
       alive = false;
@@ -63,18 +63,18 @@ export function useProjectDetail(
 
   return {
     detail,
-    introuvable,
+    notFound,
     reload,
 
-    async saveSheet(departments: Department[], contactsMetier: string | null) {
+    async saveSheet(departments: Department[], businessContacts: string | null) {
       await updateProjectDetail(projectId, {
         departments,
-        business_contacts: contactsMetier,
+        business_contacts: businessContacts,
       });
       await reload();
     },
 
-    async renommer(label: string) {
+    async rename(label: string) {
       await updateProject(projectId, { label });
       await reload();
     },
@@ -104,7 +104,7 @@ export function useProjectDetail(
     },
 
     /** Puts the mission back into the reference list, forgetting when it left. */
-    async desarchiver() {
+    async unarchive() {
       await updateProject(projectId, { is_active: true });
       await reload();
     },

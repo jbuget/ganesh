@@ -30,7 +30,7 @@ describe("phaseRank", () => {
   });
 });
 
-describe("categorie", () => {
+describe("category", () => {
   it("gives the label and the shade of an axis", () => {
     expect(category("innovate_differentiate")?.label).toBe("Innover & différencier");
   });
@@ -42,22 +42,22 @@ describe("categorie", () => {
 
 describe("avancement", () => {
   it("passes no judgement on a mission with no estimate", () => {
-    expect(progress(12, null)).toBe("sans-estime");
+    expect(progress(12, null)).toBe("no-estimate");
   });
 
   it("stays quiet while the budget is far off", () => {
-    expect(progress(5, 20)).toBe("en-cours");
+    expect(progress(5, 20)).toBe("ongoing");
   });
 
   it("warns when the budget draws near", () => {
-    expect(progress(16, 20)).toBe("proche");
+    expect(progress(16, 20)).toBe("close");
   });
 
   it("flags an overrun", () => {
-    expect(progress(21, 20)).toBe("depasse");
+    expect(progress(21, 20)).toBe("over");
   });
 
   it("treats a budget just reached as still held", () => {
-    expect(progress(20, 20)).toBe("proche");
+    expect(progress(20, 20)).toBe("close");
   });
 });

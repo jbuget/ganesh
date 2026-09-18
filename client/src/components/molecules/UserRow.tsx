@@ -8,14 +8,14 @@ import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { UserAvatar } from "@/components/atoms/UserAvatar";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { Role, UserResponse } from "@/lib/api/generated/model";
-import { depuis } from "@/lib/relative-dates";
+import { since } from "@/lib/relative-dates";
 
 interface UserRowProps {
   user: UserResponse;
   /** Managing users is reserved for managers. */
   roleModifiable: boolean;
   /** False on one's own row: nobody cuts off their own access. */
-  statutModifiable: boolean;
+  canChangeStatus: boolean;
   onChangeRole: (userId: number, role: Role) => void | Promise<void>;
   onSetActive: (userId: number, is_active: boolean) => void | Promise<void>;
   /** Injected: a render dated by `new Date()` could not be tested. */
@@ -26,12 +26,12 @@ interface UserRowProps {
 export function UserRow({
   user,
   roleModifiable,
-  statutModifiable,
+  canChangeStatus,
   onChangeRole,
   onSetActive,
   now,
 }: UserRowProps) {
-  const [coupureADemander, setCoupureADemander] = useState(false);
+  const [askingDeactivation, setAskingDeactivation] = useState(false);
 
   return (
     <TableRow className={user.is_active ? undefined : "text-slate-400"}>
@@ -40,7 +40,7 @@ export function UserRow({
           <UserAvatar
             initials={user.initials}
             name={user.display_name}
-            attenue={!user.is_active}
+            dimmed={!user.is_active}
           />
           <span className="min-w-0 truncate font-medium">{user.display_name}</span>
         </span>
@@ -60,7 +60,7 @@ export function UserRow({
         {/* An account that never came is not « long ago »: it never came. */}
         {user.last_login_at ? (
           <span title={new Date(user.last_login_at).toLocaleString("fr-FR")}>
-            {depuis(user.last_login_at, now)}
+            {since(user.last_login_at, now)}
           </span>
         ) : (
           <span className="text-slate-400">Jamais</span>
@@ -70,20 +70,20 @@ export function UserRow({
       <TableCell className="py-2">
         <StatusBadge
           is_active={user.is_active}
-          modifiable={statutModifiable}
+          modifiable={canChangeStatus}
           // Cutting off access is confirmed; restoring it takes nothing from
           // anyone.
           onToggle={(is_active) =>
-            is_active ? onSetActive(user.id, true) : setCoupureADemander(true)
+            is_active ? onSetActive(user.id, true) : setAskingDeactivation(true)
           }
         />
 
         <DeactivateUserDialog
-          open={coupureADemander}
-          onOpenChange={setCoupureADemander}
+          open={askingDeactivation}
+          onOpenChange={setAskingDeactivation}
           name={user.display_name}
           onConfirm={() => {
-            setCoupureADemander(false);
+            setAskingDeactivation(false);
             return onSetActive(user.id, false);
           }}
         />

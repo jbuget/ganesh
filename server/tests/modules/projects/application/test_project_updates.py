@@ -46,11 +46,11 @@ NINO = User(
     display_name="N. Garo",
     role=Role.TEAMMATE,
 )
-QUAND = datetime(2026, 9, 17, 10, 0)
+WHEN = datetime(2026, 9, 17, 10, 0)
 
 
 def build():
-    depot = InMemoryProjectUpdateRepository()
+    updates = InMemoryProjectUpdateRepository()
     audit = InMemoryAuditLogRepository()
     deps = {
         "users": InMemoryUserRepository([ALICE, NINO]),
@@ -64,40 +64,40 @@ def build():
                 )
             ]
         ),
-        "updates": depot,
+        "updates": updates,
         "audit_logs": audit,
     }
     return (
         PostProjectUpdateUseCase(**deps),
         EditProjectUpdateUseCase(**deps),
         RemoveProjectUpdateUseCase(**deps),
-        ListProjectUpdatesUseCase(updates=depot, users=deps["users"]),
+        ListProjectUpdatesUseCase(updates=updates, users=deps["users"]),
         audit,
     )
 
 
 async def post(publish, body: str = "Revue du 11/09.", author: int = 1):
     return await publish.execute(
-        PostUpdateCommand(actor_id=author, project_id=10, body=body), now=QUAND
+        PostUpdateCommand(actor_id=author, project_id=10, body=body), now=WHEN
     )
 
 
 async def test_an_update_joins_the_thread() -> None:
-    publish, _, _, lister, _ = build()
+    publish, _, _, list_updates, _ = build()
 
     await post(publish)
 
-    thread = await lister.execute(10)
+    thread = await list_updates.execute(10)
     assert [update.update.body for update in thread] == ["Revue du 11/09."]
     assert thread[0].author.display_name == "L. Chen"
 
 
 async def test_the_thread_shows_the_newest_first() -> None:
-    publish, _, _, lister, _ = build()
+    publish, _, _, list_updates, _ = build()
     await post(publish, "La premiere")
     await post(publish, "La seconde")
 
-    thread = await lister.execute(10)
+    thread = await list_updates.execute(10)
 
     assert [update.update.body for update in thread] == ["La seconde", "La premiere"]
 
@@ -107,73 +107,73 @@ async def test_an_unknown_mission_refuses_the_update() -> None:
 
     with pytest.raises(EntityNotFoundError):
         await publish.execute(
-            PostUpdateCommand(actor_id=1, project_id=99, body="Coucou"), now=QUAND
+            PostUpdateCommand(actor_id=1, project_id=99, body="Coucou"), now=WHEN
         )
 
 
 async def test_the_author_corrects_his_own_words() -> None:
-    publish, corriger, _, lister, _ = build()
+    publish, edit_update, _, list_updates, _ = build()
     update = await post(publish)
 
     assert update.id is not None
-    await corriger.execute(
-        EditUpdateCommand(actor_id=1, update_id=update.id, body="Corrige."), now=QUAND
+    await edit_update.execute(
+        EditUpdateCommand(actor_id=1, update_id=update.id, body="Corrige."), now=WHEN
     )
 
-    thread = await lister.execute(10)
+    thread = await list_updates.execute(10)
     assert thread[0].update.body == "Corrige."
-    assert thread[0].update.edited_at == QUAND
+    assert thread[0].update.edited_at == WHEN
 
 
 async def test_nobody_corrects_the_words_of_another() -> None:
-    publish, corriger, _, _, _ = build()
+    publish, edit_update, _, _, _ = build()
     update = await post(publish)
 
     assert update.id is not None
     with pytest.raises(ForbiddenActionError):
-        await corriger.execute(
+        await edit_update.execute(
             EditUpdateCommand(actor_id=2, update_id=update.id, body="Autre chose"),
-            now=QUAND,
+            now=WHEN,
         )
 
 
 async def test_a_removed_update_keeps_its_place() -> None:
     """The thread keeps its order: the screen will show « Message supprime » there."""
-    publish, _, retirer, lister, _ = build()
+    publish, _, remove_update, list_updates, _ = build()
     update = await post(publish)
 
     assert update.id is not None
-    await retirer.execute(
-        RemoveUpdateCommand(actor_id=1, update_id=update.id), now=QUAND
+    await remove_update.execute(
+        RemoveUpdateCommand(actor_id=1, update_id=update.id), now=WHEN
     )
 
-    thread = await lister.execute(10)
+    thread = await list_updates.execute(10)
     assert len(thread) == 1
     assert thread[0].update.is_deleted
     assert thread[0].update.body == ""
 
 
 async def test_nobody_removes_the_words_of_another() -> None:
-    publish, _, retirer, _, _ = build()
+    publish, _, remove_update, _, _ = build()
     update = await post(publish)
 
     assert update.id is not None
     with pytest.raises(ForbiddenActionError):
-        await retirer.execute(
-            RemoveUpdateCommand(actor_id=2, update_id=update.id), now=QUAND
+        await remove_update.execute(
+            RemoveUpdateCommand(actor_id=2, update_id=update.id), now=WHEN
         )
 
 
 async def test_every_movement_is_traced() -> None:
-    publish, corriger, retirer, _, audit = build()
+    publish, edit_update, remove_update, _, audit = build()
     update = await post(publish)
     assert update.id is not None
 
-    await corriger.execute(
-        EditUpdateCommand(actor_id=1, update_id=update.id, body="Corrige."), now=QUAND
+    await edit_update.execute(
+        EditUpdateCommand(actor_id=1, update_id=update.id, body="Corrige."), now=WHEN
     )
-    await retirer.execute(
-        RemoveUpdateCommand(actor_id=1, update_id=update.id), now=QUAND
+    await remove_update.execute(
+        RemoveUpdateCommand(actor_id=1, update_id=update.id), now=WHEN
     )
 
     assert [log.action.value for log in audit.logs] == [

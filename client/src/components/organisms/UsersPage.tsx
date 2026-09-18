@@ -44,13 +44,13 @@ export function UsersPage() {
       <div className="max-w-[900px]">
         {screen.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
-        {!screen.isLoading && screen.collaborateurs.length === 0 && (
+        {!screen.isLoading && screen.users.length === 0 && (
           <p className="py-8 text-center text-sm text-slate-500">
-            Aucun user. Les comptes se créent à la première connexion.
+            Aucun utilisateur. Les comptes se créent à la première connexion.
           </p>
         )}
 
-        {screen.collaborateurs.length > 0 && (
+        {screen.users.length > 0 && (
           // The same setting as the reference list: the shadcn container opens
           // a scrolling context that would hold the header inside the table,
           // and the background sits on the cells, not on the row.
@@ -66,14 +66,12 @@ export function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {screen.collaborateurs.map((collaborateur) => (
+                {screen.users.map((teammate) => (
                   <UserRow
-                    key={collaborateur.id}
-                    user={collaborateur}
+                    key={teammate.id}
+                    user={teammate}
                     roleModifiable={screen.isManager}
-                    statutModifiable={
-                      screen.isManager && collaborateur.id !== screen.moiId
-                    }
+                    canChangeStatus={screen.isManager && teammate.id !== screen.meId}
                     onChangeRole={screen.changeRole}
                     onSetActive={screen.setActive}
                     now={screen.now}

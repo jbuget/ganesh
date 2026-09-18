@@ -55,8 +55,8 @@ export function TeammateSelector({
         items={items}
         value={selection}
         isItemEqualToValue={(item, value) => item.value === value.value}
-        onValueChange={(collaborateur) => {
-          if (collaborateur) onSelect((collaborateur as TeammateItem).value);
+        onValueChange={(teammate) => {
+          if (teammate) onSelect((teammate as TeammateItem).value);
         }}
       >
         <ComboboxTrigger id="teammate" className="w-52">
@@ -69,9 +69,9 @@ export function TeammateSelector({
           <ComboboxEmpty>Aucun collaborateur ne correspond.</ComboboxEmpty>
 
           <ComboboxList>
-            {(collaborateur: TeammateItem) => (
-              <ComboboxItem key={collaborateur.value} value={collaborateur}>
-                {collaborateur.label}
+            {(teammate: TeammateItem) => (
+              <ComboboxItem key={teammate.value} value={teammate}>
+                {teammate.label}
               </ComboboxItem>
             )}
           </ComboboxList>

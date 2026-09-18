@@ -1,8 +1,8 @@
 services:
   db:
     image: postgres:18-alpine
-    # Nomme d'apres le projet : deux instances du depot peuvent tourner cote a
-    # cote sans se disputer le nom du conteneur.
+    # Named after the project: two copies of the repository can run side by
+    # side without fighting over the container name.
     container_name: ${COMPOSE_PROJECT_NAME:-timesheet}-db
     environment:
       POSTGRES_USER: timesheet
@@ -11,9 +11,9 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      # Postgres 18 range ses donnees dans `/var/lib/postgresql/18/docker` et
-      # non plus dans `/var/lib/postgresql/data` : on monte le parent, sans quoi
-      # le volume serait ignore et la base repartirait vide a chaque demarrage.
+      # Postgres 18 keeps its data in `/var/lib/postgresql/18/docker` and no
+      # longer in `/var/lib/postgresql/data`: we mount the parent, otherwise the
+      # volume would be ignored and the database would start empty every time.
       - timesheet-db-data:/var/lib/postgresql
       - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:

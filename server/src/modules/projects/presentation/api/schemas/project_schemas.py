@@ -146,7 +146,7 @@ class BoardCardResponse(BaseModel):
     consumed_days: float
     contributors: list[BoardMemberResponse]
     comments: int
-    #: Le dernier message du fil, absent tant que rien ne se lit.
+    #: The latest message of the thread, absent while there is nothing to read.
     latest_update: LastUpdateResponse | None
     sub_projects: int
     parent: BoardParentResponse | None

@@ -13,7 +13,7 @@ import { createPortal } from "react-dom";
 const OFFSET = { x: 14, y: 18 };
 
 /** The breathing room left between the bubble and the window edge. */
-const MARGE = 8;
+const MARGIN = 8;
 
 interface State {
   x: number;
@@ -46,12 +46,12 @@ function Bubble({
     // To the right and below the cursor by default; on the other side when
     // there is no room left, and against the edge if it fits nowhere.
     const left =
-      x + OFFSET.x + width > window.innerWidth - MARGE
-        ? Math.max(MARGE, x - OFFSET.x - width)
+      x + OFFSET.x + width > window.innerWidth - MARGIN
+        ? Math.max(MARGIN, x - OFFSET.x - width)
         : x + OFFSET.x;
     const top =
-      y + OFFSET.y + height > window.innerHeight - MARGE
-        ? Math.max(MARGE, window.innerHeight - MARGE - height)
+      y + OFFSET.y + height > window.innerHeight - MARGIN
+        ? Math.max(MARGIN, window.innerHeight - MARGIN - height)
         : y + OFFSET.y;
 
     setPosition({ left, top });

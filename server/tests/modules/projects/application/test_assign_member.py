@@ -41,9 +41,9 @@ PROJECT = Project(
 )
 
 
-def build(affectes: list[int] | None = None):
+def build(assigned: list[int] | None = None):
     assignees = InMemoryProjectAssigneeRepository(
-        {(10, ProjectRole.CONTRIBUTOR): list(affectes)} if affectes else {}
+        {(10, ProjectRole.CONTRIBUTOR): list(assigned)} if assigned else {}
     )
     audit = InMemoryAuditLogRepository()
     deps = {
@@ -67,9 +67,9 @@ async def test_a_member_joins_the_mission() -> None:
     assert await assignees.list_for_project(10, ProjectRole.CONTRIBUTOR) == [2]
 
 
-async def test_assigning_twice_leaves_a_single_intervenant() -> None:
+async def test_assigning_twice_leaves_a_single_contributor() -> None:
     """Clicking the same person twice must not duplicate them."""
-    assign, _, assignees, _ = build(affectes=[2])
+    assign, _, assignees, _ = build(assigned=[2])
 
     await assign.execute(a_command())
 
@@ -77,7 +77,7 @@ async def test_assigning_twice_leaves_a_single_intervenant() -> None:
 
 
 async def test_a_member_leaves_the_mission() -> None:
-    _, unassign, assignees, _ = build(affectes=[1, 2])
+    _, unassign, assignees, _ = build(assigned=[1, 2])
 
     await unassign.execute(a_command())
 
@@ -85,7 +85,7 @@ async def test_a_member_leaves_the_mission() -> None:
 
 
 async def test_unassigning_an_absent_member_is_harmless() -> None:
-    _, unassign, assignees, _ = build(affectes=[1])
+    _, unassign, assignees, _ = build(assigned=[1])
 
     await unassign.execute(a_command())
 
@@ -120,7 +120,7 @@ async def test_an_unknown_member_is_refused() -> None:
         await assign.execute(a_command(member_id=99))
 
 
-async def test_someone_can_be_both_referent_and_intervenant() -> None:
+async def test_someone_can_be_both_lead_and_contributor() -> None:
     """The lead of a mission often has their own hands in it."""
     assign, _, assignees, _ = build()
 

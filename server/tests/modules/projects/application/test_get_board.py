@@ -35,7 +35,7 @@ BOB = User(
     display_name="D. Dehe",
     role=Role.TEAMMATE,
 )
-AUJOURDHUI = date(2026, 9, 16)
+TODAY = date(2026, 9, 16)
 
 
 def card(
@@ -88,7 +88,7 @@ def build(
 
 async def test_every_phase_has_its_column_even_empty() -> None:
     """A missing column would leave nowhere to drop a card."""
-    board = await build([]).execute(today=AUJOURDHUI)
+    board = await build([]).execute(today=TODAY)
 
     assert [c.status for c in board.columns] == list(ProjectStatus)
 
@@ -99,7 +99,7 @@ async def test_cards_land_in_their_phase() -> None:
             card(1, ProjectStatus.SCOPING),
             card(2, ProjectStatus.DEPLOYMENT),
         ]
-    ).execute(today=AUJOURDHUI)
+    ).execute(today=TODAY)
 
     by_phase = {c.status: [m.project.id for m in c.cards] for c in board.columns}
     assert by_phase[ProjectStatus.SCOPING] == [1]
@@ -113,7 +113,7 @@ async def test_cards_keep_the_order_chosen_by_the_team() -> None:
             card(2, ProjectStatus.SCOPING, position=0),
             card(3, ProjectStatus.SCOPING, position=1),
         ]
-    ).execute(today=AUJOURDHUI)
+    ).execute(today=TODAY)
 
     column = next(c for c in board.columns if c.status is ProjectStatus.SCOPING)
     assert [m.project.id for m in column.cards] == [2, 3, 1]
@@ -138,7 +138,7 @@ async def test_equal_ranks_are_settled_by_label() -> None:
                 position=0,
             ),
         ]
-    ).execute(today=AUJOURDHUI)
+    ).execute(today=TODAY)
 
     column = next(c for c in board.columns if c.status is ProjectStatus.SCOPING)
     assert [m.project.label for m in column.cards] == ["Alpha", "Zeta"]
@@ -148,7 +148,7 @@ async def test_a_card_reports_the_time_consumed() -> None:
     board = await build(
         [card(1)],
         [entry(1, 1, date(2026, 9, 10)), entry(2, 1, date(2026, 9, 11), 0.5)],
-    ).execute(today=AUJOURDHUI)
+    ).execute(today=TODAY)
 
     assert board.columns[1].cards[0].consumed_days == 1.5
 
@@ -157,13 +157,13 @@ async def test_forecast_time_is_excluded_from_what_is_consumed() -> None:
     board = await build(
         [card(1)],
         [entry(1, 1, date(2026, 9, 10)), entry(1, 1, date(2026, 12, 1))],
-    ).execute(today=AUJOURDHUI)
+    ).execute(today=TODAY)
 
     assert board.columns[1].cards[0].consumed_days == 1.0
 
 
 async def test_a_card_lists_the_people_expected_on_it() -> None:
-    board = await build([card(1)], assignments={1: [2, 1]}).execute(today=AUJOURDHUI)
+    board = await build([card(1)], assignments={1: [2, 1]}).execute(today=TODAY)
 
     assert [c.display_name for c in board.columns[1].cards[0].contributors] == [
         "D. Dehe",
@@ -171,7 +171,7 @@ async def test_a_card_lists_the_people_expected_on_it() -> None:
     ]
 
 
-async def test_time_spent_does_not_make_someone_an_intervenant() -> None:
+async def test_time_spent_does_not_make_someone_a_contributor() -> None:
     """A mission may have consumed days with nobody on it any more.
 
     That is the case of a project in operations: the time spent belongs to the
@@ -179,7 +179,7 @@ async def test_time_spent_does_not_make_someone_an_intervenant() -> None:
     """
     board = await build(
         [card(1)], [entry(1, 1, date(2026, 9, 10))], assignments={}
-    ).execute(today=AUJOURDHUI)
+    ).execute(today=TODAY)
 
     assert board.columns[1].cards[0].contributors == []
     assert board.columns[1].cards[0].consumed_days == 1.0
@@ -187,7 +187,7 @@ async def test_time_spent_does_not_make_someone_an_intervenant() -> None:
 
 async def test_someone_expected_soon_counts_without_any_entry() -> None:
     """Nino is declared on a bug before he has entered a single hour."""
-    board = await build([card(1)], assignments={1: [2]}).execute(today=AUJOURDHUI)
+    board = await build([card(1)], assignments={1: [2]}).execute(today=TODAY)
 
     assert [c.display_name for c in board.columns[1].cards[0].contributors] == [
         "D. Dehe"
@@ -203,7 +203,7 @@ async def test_a_card_carries_its_category_and_go_live_date() -> None:
                 go_live_date=date(2026, 11, 15),
             )
         ]
-    ).execute(today=AUJOURDHUI)
+    ).execute(today=TODAY)
 
     mission = board.columns[1].cards[0].project
     assert mission.category is ProjectCategory.INNOVATE
@@ -211,10 +211,10 @@ async def test_a_card_carries_its_category_and_go_live_date() -> None:
 
 
 async def test_off_project_activities_never_appear() -> None:
-    activite = Project(
+    activity = Project(
         id=9, label="Absences", kind=ProjectKind.OFF_PROJECT, status=None
     )
-    board = await build([card(1), activite]).execute(today=AUJOURDHUI)
+    board = await build([card(1), activity]).execute(today=TODAY)
 
     all_missions = [m.project.id for c in board.columns for m in c.cards]
     assert all_missions == [1]
@@ -242,7 +242,7 @@ async def test_a_card_counts_the_updates_posted_on_it() -> None:
         )
     )
 
-    board = await build([card(1), card(2)], updates=updates).execute(today=AUJOURDHUI)
+    board = await build([card(1), card(2)], updates=updates).execute(today=TODAY)
 
     by_mission = {c.project.id: c for c in board.columns[1].cards}
     assert by_mission[1].comments == 2
@@ -263,7 +263,7 @@ async def test_a_removed_update_no_longer_counts() -> None:
     )
     update.remove(by=1, at=datetime(2026, 9, 12, 9, 0))
 
-    board = await build([card(1)], updates=updates).execute(today=AUJOURDHUI)
+    board = await build([card(1)], updates=updates).execute(today=TODAY)
 
     assert board.columns[1].cards[0].comments == 0
 
@@ -275,7 +275,7 @@ async def test_a_card_counts_its_sub_projects() -> None:
             card(2, parent_id=1, kind=ProjectKind.WORK_PACKAGE),
             card(3, parent_id=1, kind=ProjectKind.WORK_PACKAGE),
         ]
-    ).execute(today=AUJOURDHUI)
+    ).execute(today=TODAY)
 
     by_mission = {c.project.id: c for c in board.columns[1].cards}
     assert by_mission[1].sub_projects == 2
@@ -286,7 +286,7 @@ async def test_a_sub_project_card_names_its_parent() -> None:
     """A work package card must say which project it belongs to."""
     board = await build(
         [card(1), card(2, parent_id=1, kind=ProjectKind.WORK_PACKAGE)]
-    ).execute(today=AUJOURDHUI)
+    ).execute(today=TODAY)
 
     by_mission = {c.project.id: c for c in board.columns[1].cards}
     assert by_mission[2].parent is not None
@@ -301,7 +301,7 @@ async def test_an_inactive_parent_is_still_named() -> None:
             card(1, is_active=False),
             card(2, parent_id=1, kind=ProjectKind.WORK_PACKAGE),
         ]
-    ).execute(today=AUJOURDHUI)
+    ).execute(today=TODAY)
 
     cards = {c.project.id: c for c in board.columns[1].cards}
     assert 1 not in cards
@@ -309,7 +309,7 @@ async def test_an_inactive_parent_is_still_named() -> None:
 
 
 async def test_archived_missions_stay_off_the_board_by_default() -> None:
-    board = await build([card(1), card(2, is_active=False)]).execute(today=AUJOURDHUI)
+    board = await build([card(1), card(2, is_active=False)]).execute(today=TODAY)
 
     assert [c.project.id for c in board.columns[1].cards] == [1]
 
@@ -317,7 +317,7 @@ async def test_archived_missions_stay_off_the_board_by_default() -> None:
 async def test_archived_missions_appear_when_asked_for() -> None:
     """Archived missions are looked at to take stock, not to steer them."""
     board = await build([card(1), card(2, is_active=False)]).execute(
-        today=AUJOURDHUI, include_inactive=True
+        today=TODAY, include_inactive=True
     )
 
     assert [c.project.id for c in board.columns[1].cards] == [1, 2]
@@ -331,11 +331,21 @@ async def test_archived_sub_projects_are_counted_only_when_shown() -> None:
         card(3, parent_id=1, kind=ProjectKind.WORK_PACKAGE, is_active=False),
     ]
 
-    sans = await build(missions).execute(today=AUJOURDHUI)
-    avec = await build(missions).execute(today=AUJOURDHUI, include_inactive=True)
+    without_archived = await build(missions).execute(today=TODAY)
+    with_archived = await build(missions).execute(today=TODAY, include_inactive=True)
 
-    assert next(c for c in sans.columns[1].cards if c.project.id == 1).sub_projects == 1
-    assert next(c for c in avec.columns[1].cards if c.project.id == 1).sub_projects == 2
+    assert (
+        next(
+            c for c in without_archived.columns[1].cards if c.project.id == 1
+        ).sub_projects
+        == 1
+    )
+    assert (
+        next(
+            c for c in with_archived.columns[1].cards if c.project.id == 1
+        ).sub_projects
+        == 2
+    )
 
 
 async def test_a_card_carries_its_latest_update() -> None:
@@ -360,7 +370,7 @@ async def test_a_card_carries_its_latest_update() -> None:
         )
     )
 
-    board = await build([card(1), card(2)], updates=updates).execute(today=AUJOURDHUI)
+    board = await build([card(1), card(2)], updates=updates).execute(today=TODAY)
 
     by_mission = {c.project.id: c for c in board.columns[1].cards}
     latest = by_mission[1].latest_update
@@ -384,6 +394,6 @@ async def test_a_removed_update_is_no_longer_announced() -> None:
     )
     update.remove(by=1, at=datetime(2026, 9, 12, 9, 0))
 
-    board = await build([card(1)], updates=updates).execute(today=AUJOURDHUI)
+    board = await build([card(1)], updates=updates).execute(today=TODAY)
 
     assert board.columns[1].cards[0].latest_update is None

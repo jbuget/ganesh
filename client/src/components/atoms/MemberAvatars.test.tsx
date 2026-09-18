@@ -37,7 +37,7 @@ describe("MemberAvatars", () => {
     expect(screen.queryByRole("tooltip")).toBeNull();
   });
 
-  it("n'affiche rien quand personne n'a encore saisi", () => {
+  it("shows nothing while nobody has declared anything", () => {
     const { container } = render(<MemberAvatars members={[]} />);
 
     expect(container).toBeEmptyDOMElement();

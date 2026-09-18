@@ -102,8 +102,8 @@ async def test_the_column_left_behind_is_renumbered() -> None:
         )
     )
 
-    restantes = [p for p in await repo.list_all() if p.status is ProjectStatus.SCOPING]
-    assert sorted(p.position for p in restantes) == [0, 1]
+    remaining = [p for p in await repo.list_all() if p.status is ProjectStatus.SCOPING]
+    assert sorted(p.position for p in remaining) == [0, 1]
 
 
 async def test_a_card_reorders_within_its_own_column() -> None:
@@ -125,10 +125,10 @@ async def test_a_card_reorders_within_its_own_column() -> None:
 
 
 async def test_an_off_project_activity_cannot_be_moved() -> None:
-    activite = Project(
+    activity = Project(
         id=5, label="Absences", kind=ProjectKind.OFF_PROJECT, status=None
     )
-    use_case, _, _ = build([activite])
+    use_case, _, _ = build([activity])
 
     with pytest.raises(ValidationError):
         await use_case.execute(

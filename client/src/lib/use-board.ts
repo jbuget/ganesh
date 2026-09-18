@@ -16,8 +16,8 @@ import { useEffect } from "react";
 export type Columns = Record<ProjectStatus, BoardCardResponse[]>;
 
 /** Archived ones are only asked for when they are wanted. */
-function scope(inclureArchivees: boolean) {
-  return inclureArchivees ? { include_inactive: true } : undefined;
+function scope(includeArchived: boolean) {
+  return includeArchived ? { include_inactive: true } : undefined;
 }
 
 function toColumns(board: BoardResponse): Columns {
@@ -37,24 +37,24 @@ function toColumns(board: BoardResponse): Columns {
  * running, and loading them on every opening would make everyone pay for what
  * is rarely used.
  */
-export function useBoard(inclureArchivees = false) {
+export function useBoard(includeArchived = false) {
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();
   const [columns, setColumns] = useState<Columns | null>(null);
-  const [hasError, setEnErreur] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     let alive = true;
-    getBoard(scope(inclureArchivees)).then((response) => {
+    getBoard(scope(includeArchived)).then((response) => {
       if (alive) setColumns(toColumns(response.data as BoardResponse));
     });
     return () => {
       alive = false;
     };
-  }, [inclureArchivees]);
+  }, [includeArchived]);
 
   async function reload() {
-    const response = await getBoard(scope(inclureArchivees));
+    const response = await getBoard(scope(includeArchived));
     setColumns(toColumns(response.data as BoardResponse));
     await queryClient.invalidateQueries();
   }
@@ -78,21 +78,21 @@ export function useBoard(inclureArchivees = false) {
     /** Applies the move on screen, then saves it. */
     async move(
       projectId: number,
-      versStatut: ProjectStatus,
-      versPosition: number,
+      toStatus: ProjectStatus,
+      toPosition: number,
       nextColumns: Columns,
     ) {
       setColumns(nextColumns);
-      setEnErreur(false);
+      setHasError(false);
       try {
         await moveProject(projectId, {
-          status: versStatut,
-          position: versPosition,
+          status: toStatus,
+          position: toPosition,
         });
         await queryClient.invalidateQueries();
       } catch {
         // The screen must never sit on a state the server knows nothing of.
-        setEnErreur(true);
+        setHasError(true);
         await reload();
       }
     },

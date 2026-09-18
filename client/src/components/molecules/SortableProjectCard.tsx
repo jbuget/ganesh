@@ -11,7 +11,7 @@ interface SortableProjectCardProps {
   card: BoardCardResponse;
   /** Freezes the reference time: without it, server and client would diverge. */
   now: Date;
-  onIntervenantsChange?: () => void | Promise<void>;
+  onContributorsChange?: () => void | Promise<void>;
   onOpen?: (projectId: number) => void;
   /** The board is filtered: the card reads and opens, but no longer arranges. */
   frozen?: boolean;
@@ -26,7 +26,7 @@ interface SortableProjectCardProps {
 export function SortableProjectCard({
   card,
   now,
-  onIntervenantsChange,
+  onContributorsChange,
   onOpen,
   frozen,
 }: SortableProjectCardProps) {
@@ -51,7 +51,7 @@ export function SortableProjectCard({
         <ProjectCard
           card={card}
           now={now}
-          onIntervenantsChange={onIntervenantsChange}
+          onContributorsChange={onContributorsChange}
           onOpen={onOpen}
           handle={
             frozen ? null : (

@@ -19,7 +19,7 @@ describe("ProjectSubProjects", () => {
 
     expect(screen.getByRole("link", { name: /Authentification/ })).toHaveAttribute(
       "href",
-      "/projets/11",
+      "/projects/11",
     );
   });
 

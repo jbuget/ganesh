@@ -111,7 +111,7 @@ async def test_a_project_can_be_linked_to_monday() -> None:
     assert project.is_syncable_to_monday is True
 
 
-async def test_a_project_cannot_be_moved_under_a_lot() -> None:
+async def test_a_project_cannot_be_moved_under_a_work_package() -> None:
     """Moving a mission must not create a third level."""
     work_package = Project(
         id=20,
@@ -209,9 +209,9 @@ async def test_archiving_a_project_dates_its_exit() -> None:
         UpdateProjectCommand(actor_id=1, project_id=10, is_active=False)
     )
 
-    archivee = await repo.get_by_id(10)
-    assert archivee is not None
-    assert archivee.archived_at is not None
+    archived = await repo.get_by_id(10)
+    assert archived is not None
+    assert archived.archived_at is not None
 
 
 async def test_unarchiving_a_project_clears_its_exit_date() -> None:
@@ -224,7 +224,7 @@ async def test_unarchiving_a_project_clears_its_exit_date() -> None:
         UpdateProjectCommand(actor_id=1, project_id=10, is_active=True)
     )
 
-    rendue = await repo.get_by_id(10)
-    assert rendue is not None
-    assert rendue.is_active is True
-    assert rendue.archived_at is None
+    reloaded = await repo.get_by_id(10)
+    assert reloaded is not None
+    assert reloaded.is_active is True
+    assert reloaded.archived_at is None

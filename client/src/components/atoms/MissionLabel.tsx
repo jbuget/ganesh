@@ -5,8 +5,8 @@ import { useCursorTooltip } from "@/lib/use-cursor-tooltip";
 
 interface MissionLabelProps {
   label: string;
-  consommeJ: number;
-  estimeJ: number | null;
+  consumedDays: number;
+  estimatedDays: number | null;
 }
 
 /**
@@ -16,15 +16,19 @@ interface MissionLabelProps {
  * is consumed against the estimate. One tooltip carries both, so as not to
  * compete with the browser's native one.
  */
-export function MissionLabel({ label, consommeJ, estimeJ }: MissionLabelProps) {
+export function MissionLabel({
+  label,
+  consumedDays,
+  estimatedDays,
+}: MissionLabelProps) {
   const { tooltip, follow, leave } = useCursorTooltip();
 
   const content = (
     <>
       <span className="font-medium">{label}</span>
-      {estimeJ !== null && (
+      {estimatedDays !== null && (
         <span className="ml-2 text-slate-300">
-          {formatDecimalDays(consommeJ)}/{estimeJ} jrs. estimés
+          {formatDecimalDays(consumedDays)}/{estimatedDays} jrs. estimés
         </span>
       )}
     </>

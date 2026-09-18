@@ -14,7 +14,7 @@ interface ProjectUpdatesTabProps {
   /** Tells the screen one came from: it announces the thread without opening it. */
   onChange?: () => void | Promise<void>;
   /** Puts the cursor in the composer as soon as it opens. */
-  focusRedaction?: boolean;
+  focusComposer?: boolean;
 }
 
 /**
@@ -27,23 +27,23 @@ export function ProjectUpdatesTab({
   projectId,
   now,
   onChange,
-  focusRedaction = false,
+  focusComposer = false,
 }: ProjectUpdatesTabProps) {
-  const suivi = useProjectUpdates(projectId, onChange);
-  const [body, setTexte] = useState("");
-  const [enCours, setEnCours] = useState(false);
+  const thread = useProjectUpdates(projectId, onChange);
+  const [body, setBody] = useState("");
+  const [busy, setBusy] = useState(false);
   // Bumping the key empties the editor: its content lives in ProseMirror, not
   // in React, and it does not reset by changing a prop.
-  const [cleDeRedaction, setCleDeRedaction] = useState(0);
+  const [composerKey, setComposerKey] = useState(0);
 
-  async function publier() {
-    setEnCours(true);
+  async function publish() {
+    setBusy(true);
     try {
-      await suivi.publier(body);
-      setTexte("");
-      setCleDeRedaction((cle) => cle + 1);
+      await thread.publish(body);
+      setBody("");
+      setComposerKey((key) => key + 1);
     } finally {
-      setEnCours(false);
+      setBusy(false);
     }
   }
 
@@ -51,26 +51,26 @@ export function ProjectUpdatesTab({
     <div className="space-y-4">
       <div className="space-y-2">
         <RichTextEditor
-          key={cleDeRedaction}
+          key={composerKey}
           value=""
           placeholder="Rédigez une mise à jour…"
-          autoFocus={focusRedaction}
-          onChange={setTexte}
+          autoFocus={focusComposer}
+          onChange={setBody}
           onSubmit={() => {
-            if (body.trim()) void publier();
+            if (body.trim()) void publish();
           }}
         />
         {body.trim() && (
           <div className="flex items-center gap-2">
-            <Button size="sm" disabled={enCours} onClick={() => void publier()}>
+            <Button size="sm" disabled={busy} onClick={() => void publish()}>
               Publier
             </Button>
             <Button
               size="sm"
               variant="ghost"
               onClick={() => {
-                setTexte("");
-                setCleDeRedaction((cle) => cle + 1);
+                setBody("");
+                setComposerKey((key) => key + 1);
               }}
             >
               Annuler
@@ -80,22 +80,22 @@ export function ProjectUpdatesTab({
         )}
       </div>
 
-      {suivi.thread === null && <p className="text-sm text-slate-400">Chargement…</p>}
+      {thread.thread === null && <p className="text-sm text-slate-400">Chargement…</p>}
 
-      {suivi.thread?.length === 0 && (
+      {thread.thread?.length === 0 && (
         <p className="py-6 text-center text-sm text-slate-400">
           Aucune mise à jour. Racontez où en est la mission.
         </p>
       )}
 
       <div className="space-y-2">
-        {suivi.thread?.map((maj) => (
+        {thread.thread?.map((update) => (
           <ProjectUpdateCard
-            key={maj.id}
-            maj={maj}
+            key={update.id}
+            update={update}
             now={now}
-            onEdit={(body) => suivi.corriger(maj.id, body)}
-            onRemove={() => suivi.remove(maj.id)}
+            onEdit={(body) => thread.edit(update.id, body)}
+            onRemove={() => thread.remove(update.id)}
           />
         ))}
       </div>

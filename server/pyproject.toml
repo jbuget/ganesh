@@ -34,9 +34,9 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
 ignore = ["E501"]
 
 [tool.ruff.lint.flake8-bugbear]
-# L'injection de dependances de FastAPI passe par des appels dans les valeurs
-# par defaut. C'est le pattern idiomatique du framework, pas le piege que B008
-# cherche a signaler : on garde la regle, en exemptant ces appels.
+# FastAPI's dependency injection goes through calls in default values. That is
+# the framework's idiomatic pattern, not the trap B008 means to flag: we keep
+# the rule, exempting those calls.
 extend-immutable-calls = [
     "fastapi.Depends",
     "fastapi.Query",

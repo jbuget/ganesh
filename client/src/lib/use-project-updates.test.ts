@@ -20,8 +20,8 @@ beforeEach(() => {
   api.removeProjectUpdate.mockResolvedValue({ data: {} });
 });
 
-async function thread(onEcriture?: () => void | Promise<void>) {
-  const { result } = renderHook(() => useProjectUpdates(7, onEcriture));
+async function thread(onWrite?: () => void | Promise<void>) {
+  const { result } = renderHook(() => useProjectUpdates(7, onWrite));
   await waitFor(() => expect(result.current.thread).not.toBeNull());
   return result;
 }
@@ -32,7 +32,7 @@ describe("useProjectUpdates", () => {
     const result = await thread(notify);
 
     await act(async () => {
-      await result.current.publier("Cadrage lancé");
+      await result.current.publish("Cadrage lancé");
     });
 
     expect(api.postProjectUpdate).toHaveBeenCalledWith(7, { body: "Cadrage lancé" });
@@ -44,7 +44,7 @@ describe("useProjectUpdates", () => {
     const result = await thread(notify);
 
     await act(async () => {
-      await result.current.corriger(3, "Cadrage relancé");
+      await result.current.edit(3, "Cadrage relancé");
     });
 
     expect(notify).toHaveBeenCalledTimes(1);
@@ -65,7 +65,7 @@ describe("useProjectUpdates", () => {
     const result = await thread();
 
     await act(async () => {
-      await result.current.publier("Seul au monde");
+      await result.current.publish("Seul au monde");
     });
 
     expect(api.postProjectUpdate).toHaveBeenCalledOnce();

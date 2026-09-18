@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   dayNumber,
   firstDayOfMonth,
-  formatDateCourte,
+  formatShortDate,
   formatDays,
   formatDecimalDays,
   formatTotal,
@@ -119,10 +119,10 @@ describe("formatJoursDecimal", () => {
 
 describe("formatDateCourte", () => {
   it("writes an ISO date as day/month/year", () => {
-    expect(formatDateCourte("2026-09-18")).toBe("18/09/2026");
+    expect(formatShortDate("2026-09-18")).toBe("18/09/2026");
   });
 
   it("ignores the time of a timestamp", () => {
-    expect(formatDateCourte("2026-09-18T00:36:07.943722")).toBe("18/09/2026");
+    expect(formatShortDate("2026-09-18T00:36:07.943722")).toBe("18/09/2026");
   });
 });

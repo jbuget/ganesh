@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Department } from "@/lib/api/generated/model";
-import { DEPARTEMENTS, departmentLabel } from "@/lib/departments";
+import { DEPARTMENTS, departmentLabel } from "@/lib/departments";
 
 interface DepartmentPickerProps {
   values: Department[];
@@ -27,7 +27,7 @@ export function DepartmentPicker({ values, onChange }: DepartmentPickerProps) {
     if (next_ones.has(value)) next_ones.delete(value);
     else next_ones.add(value);
     void onChange(
-      DEPARTEMENTS.filter((d) => next_ones.has(d.value)).map((d) => d.value),
+      DEPARTMENTS.filter((d) => next_ones.has(d.value)).map((d) => d.value),
     );
   }
 
@@ -56,7 +56,7 @@ export function DepartmentPicker({ values, onChange }: DepartmentPickerProps) {
 
       <PopoverContent align="start" className="w-64 p-1">
         <ul>
-          {DEPARTEMENTS.map((departement) => {
+          {DEPARTMENTS.map((departement) => {
             const present = chosen.has(departement.value);
             return (
               <li key={departement.value}>

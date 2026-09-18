@@ -16,7 +16,7 @@ interface TimesheetGridProps {
   today: string;
   onSetValue: (projectId: number, day: string, value: DayValue) => void;
   /** Mission picker, housed in the last row. Absent when the month is closed. */
-  ajoutDeMission?: React.ReactNode;
+  addingMission?: React.ReactNode;
   /** Removing a mission. Absent when the month is closed. */
   onRemoveMission?: (projectId: number) => void;
 }
@@ -43,7 +43,7 @@ export function TimesheetGrid({
   extraRows,
   today,
   onSetValue,
-  ajoutDeMission,
+  addingMission,
   onRemoveMission,
 }: TimesheetGridProps) {
   const rows: DisplayRow[] = [
@@ -78,14 +78,14 @@ export function TimesheetGrid({
    * The add row closes the table when it is there: it then carries the strong
    * bottom rule, and the missions are separated by a light one.
    */
-  const fermeLeTableau = (rowIndex: number) =>
-    !ajoutDeMission && rowIndex === rows.length - 1;
+  const closesTheTable = (rowIndex: number) =>
+    !addingMission && rowIndex === rows.length - 1;
 
   /**
    * A non-working day shrinks to a band, unless it already carries an entry:
    * inherited data must stay visible and correctable, never spirited away.
    */
-  const estReduit = (day: string, isOffDay: boolean) =>
+  const isNarrow = (day: string, isOffDay: boolean) =>
     isOffDay && (totalByDate.get(day)?.total ?? 0) === 0;
 
   return (
@@ -102,7 +102,7 @@ export function TimesheetGrid({
             </th>
             {grid.days.map((day, dayIndex) => (
               <DayHeader
-                isNarrow={estReduit(day.day, day.is_off_day)}
+                isNarrow={isNarrow(day.day, day.is_off_day)}
                 key={day.day}
                 day={day.day}
                 isLastDay={dayIndex === grid.days.length - 1}
@@ -142,7 +142,7 @@ export function TimesheetGrid({
                 key={day.day}
                 value={totalByDate.get(day.day)?.total ?? 0}
                 isOffDay={day.is_off_day}
-                isNarrow={estReduit(day.day, day.is_off_day)}
+                isNarrow={isNarrow(day.day, day.is_off_day)}
                 strongSides={
                   dayIndex === grid.days.length - 1 ? ["right", "bottom"] : ["bottom"]
                 }
@@ -158,7 +158,7 @@ export function TimesheetGrid({
         </thead>
 
         <tbody>
-          {rows.length === 0 && !ajoutDeMission && (
+          {rows.length === 0 && !addingMission && (
             <tr>
               <td
                 colSpan={grid.days.length + 2}
@@ -166,7 +166,7 @@ export function TimesheetGrid({
                 // and on the right.
                 className="border-r border-b border-r-slate-500 border-b-slate-500 bg-white px-3 py-6 text-center text-sm text-slate-500"
               >
-                Aucune mission pour ce mois. Ajoutez-en une pour commencer à enter.
+                Aucune mission pour ce mois. Ajoutez-en une pour commencer à saisir.
               </td>
             </tr>
           )}
@@ -176,15 +176,15 @@ export function TimesheetGrid({
                 scope="row"
                 className={[
                   "sticky left-0 z-10 w-56 border-r border-b border-r-slate-500 bg-white px-3 py-1.5 text-left text-sm font-normal",
-                  fermeLeTableau(rowIndex)
+                  closesTheTable(rowIndex)
                     ? "border-b-slate-500"
                     : "border-b-slate-300",
                 ].join(" ")}
               >
                 <MissionLabel
                   label={row.label}
-                  consommeJ={row.total_consumed_days}
-                  estimeJ={row.estimated_days}
+                  consumedDays={row.total_consumed_days}
+                  estimatedDays={row.estimated_days}
                 />
               </th>
               {grid.days.map((day, dayIndex) => (
@@ -193,10 +193,10 @@ export function TimesheetGrid({
                   isLastDay={dayIndex === grid.days.length - 1}
                   value={(row.values[day.day] ?? 0) as DayValue}
                   isOffDay={day.is_off_day}
-                  isNarrow={estReduit(day.day, day.is_off_day)}
+                  isNarrow={isNarrow(day.day, day.is_off_day)}
                   isFuture={day.day > today}
                   isReadOnly={readOnly}
-                  isLastRow={fermeLeTableau(rowIndex)}
+                  isLastRow={closesTheTable(rowIndex)}
                   label={`${row.label} — ${day.day}`}
                   onChange={(next) => onSetValue(row.project_id, day.day, next)}
                 />
@@ -204,7 +204,7 @@ export function TimesheetGrid({
               <TotalCell
                 value={row.total}
                 isStrong
-                strongSides={fermeLeTableau(rowIndex) ? ["right", "bottom"] : ["right"]}
+                strongSides={closesTheTable(rowIndex) ? ["right", "bottom"] : ["right"]}
               />
               {onRemoveMission && (
                 <td className="w-10 pl-2 align-middle">
@@ -220,14 +220,14 @@ export function TimesheetGrid({
               )}
             </tr>
           ))}
-          {ajoutDeMission && (
+          {addingMission && (
             <tr>
               <th
                 scope="row"
                 // Closes the table at the bottom, as the last mission did.
                 className="sticky left-0 z-10 w-56 border-r border-b border-r-slate-500 border-b-slate-500 bg-white px-3 py-1.5 text-left font-normal"
               >
-                {ajoutDeMission}
+                {addingMission}
               </th>
               <td
                 colSpan={grid.days.length + 1}

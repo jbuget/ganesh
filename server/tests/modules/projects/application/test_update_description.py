@@ -17,7 +17,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryProjectRepository,
 )
 
-FICHE = "## Problème\n\nLes relevés sont faits à la main."
+DESCRIPTION = "## Problème\n\nLes relevés sont faits à la main."
 
 
 def build(description: str | None = None):
@@ -40,11 +40,11 @@ async def test_a_description_is_written() -> None:
     use_case, repo, _ = build()
 
     await use_case.execute(
-        UpdateDescriptionCommand(actor_id=1, project_id=10, description=FICHE)
+        UpdateDescriptionCommand(actor_id=1, project_id=10, description=DESCRIPTION)
     )
 
     mission = await repo.get_by_id(10)
-    assert mission is not None and mission.description == FICHE
+    assert mission is not None and mission.description == DESCRIPTION
 
 
 async def test_edge_whitespace_is_trimmed() -> None:
@@ -54,17 +54,17 @@ async def test_edge_whitespace_is_trimmed() -> None:
 
     await use_case.execute(
         UpdateDescriptionCommand(
-            actor_id=1, project_id=10, description=f"\n\n{FICHE}\n\n"
+            actor_id=1, project_id=10, description=f"\n\n{DESCRIPTION}\n\n"
         )
     )
 
     mission = await repo.get_by_id(10)
-    assert mission is not None and mission.description == FICHE
+    assert mission is not None and mission.description == DESCRIPTION
 
 
 async def test_an_empty_description_clears_the_sheet() -> None:
     """Emptying the field clears the sheet: an empty string is not kept."""
-    use_case, repo, _ = build(description=FICHE)
+    use_case, repo, _ = build(description=DESCRIPTION)
 
     await use_case.execute(
         UpdateDescriptionCommand(actor_id=1, project_id=10, description="   \n")
@@ -78,7 +78,7 @@ async def test_the_change_is_traced() -> None:
     use_case, _, audit = build(description="ancien")
 
     await use_case.execute(
-        UpdateDescriptionCommand(actor_id=1, project_id=10, description=FICHE)
+        UpdateDescriptionCommand(actor_id=1, project_id=10, description=DESCRIPTION)
     )
 
     assert audit.logs[-1].action.value == "project.update"
@@ -87,10 +87,10 @@ async def test_the_change_is_traced() -> None:
 
 async def test_rewriting_the_same_text_leaves_no_trace() -> None:
     """Opening the editor and closing it unchanged is not an event."""
-    use_case, _, audit = build(description=FICHE)
+    use_case, _, audit = build(description=DESCRIPTION)
 
     await use_case.execute(
-        UpdateDescriptionCommand(actor_id=1, project_id=10, description=FICHE)
+        UpdateDescriptionCommand(actor_id=1, project_id=10, description=DESCRIPTION)
     )
 
     assert audit.logs == []
@@ -101,5 +101,5 @@ async def test_an_unknown_mission_is_refused() -> None:
 
     with pytest.raises(EntityNotFoundError):
         await use_case.execute(
-            UpdateDescriptionCommand(actor_id=1, project_id=99, description=FICHE)
+            UpdateDescriptionCommand(actor_id=1, project_id=99, description=DESCRIPTION)
         )

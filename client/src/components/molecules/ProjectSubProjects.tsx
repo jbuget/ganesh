@@ -27,7 +27,7 @@ export function ProjectSubProjects({ subProjects }: ProjectSubProjectsProps) {
       {subProjects.map((workPackage) => (
         <li key={workPackage.id}>
           <Link
-            href={`/projets/${workPackage.id}`}
+            href={`/projects/${workPackage.id}`}
             className="group flex cursor-pointer items-center gap-2 rounded px-1 py-1.5 transition-colors hover:bg-slate-50"
           >
             {workPackage.status && (

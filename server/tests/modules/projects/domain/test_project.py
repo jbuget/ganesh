@@ -51,13 +51,13 @@ def test_a_project_requires_a_phase_status() -> None:
         Project(id=1, label="Portail", kind=ProjectKind.PROJECT, status=None)
 
 
-def test_a_lot_belongs_to_a_parent_project() -> None:
+def test_a_work_package_belongs_to_a_parent_project() -> None:
     work_package = make_project(kind=ProjectKind.WORK_PACKAGE, parent_id=1)
 
     assert work_package.parent_id == 1
 
 
-def test_a_lot_without_parent_is_rejected() -> None:
+def test_a_work_package_without_parent_is_rejected() -> None:
     with pytest.raises(ValidationError):
         make_project(kind=ProjectKind.WORK_PACKAGE, parent_id=None)
 

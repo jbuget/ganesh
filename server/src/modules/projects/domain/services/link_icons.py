@@ -43,12 +43,12 @@ _ICON_BY_GOOGLE_PATH = {
 
 def guess_icon(url: str) -> LinkIcon:
     """Suggests an icon from the address. An unknown address stays neutral."""
-    adresse = urlparse(url.strip())
-    host = (adresse.hostname or "").lower()
+    parsed = urlparse(url.strip())
+    host = (parsed.hostname or "").lower()
 
     if _matches(host, "docs.google.com"):
-        premier_segment = adresse.path.lstrip("/").split("/")[0]
-        return _ICON_BY_GOOGLE_PATH.get(premier_segment, LinkIcon.DOCUMENT)
+        first_segment = parsed.path.lstrip("/").split("/")[0]
+        return _ICON_BY_GOOGLE_PATH.get(first_segment, LinkIcon.DOCUMENT)
 
     for domaine, icon in _ICON_BY_DOMAIN.items():
         if _matches(host, domaine):

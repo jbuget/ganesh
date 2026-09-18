@@ -33,7 +33,7 @@ MANAGER = User(
     display_name="J. Buget",
     role=Role.MANAGER,
 )
-MOIS = date(2026, 9, 1)
+MONTH = date(2026, 9, 1)
 
 
 def build(months: list[Month] | None = None):
@@ -52,10 +52,10 @@ async def test_a_user_validates_their_own_month() -> None:
     validate, _, months, _ = build()
 
     await validate.execute(
-        ValidateMonthCommand(actor_id=1, target_user_id=1, month=MOIS)
+        ValidateMonthCommand(actor_id=1, target_user_id=1, month=MONTH)
     )
 
-    month = await months.get(1, MOIS)
+    month = await months.get(1, MONTH)
     assert month is not None
     assert month.state is MonthState.VALIDATED
 
@@ -64,7 +64,7 @@ async def test_validation_is_traced() -> None:
     validate, _, _, audit = build()
 
     await validate.execute(
-        ValidateMonthCommand(actor_id=1, target_user_id=1, month=MOIS)
+        ValidateMonthCommand(actor_id=1, target_user_id=1, month=MONTH)
     )
 
     assert audit.logs[-1].action.value == "month.validate"
@@ -76,31 +76,31 @@ async def test_a_user_cannot_validate_someone_else_month() -> None:
 
     with pytest.raises(ForbiddenActionError):
         await validate.execute(
-            ValidateMonthCommand(actor_id=1, target_user_id=2, month=MOIS)
+            ValidateMonthCommand(actor_id=1, target_user_id=2, month=MONTH)
         )
 
 
 async def test_a_teammate_cannot_reopen_a_validated_month() -> None:
     validate, reopen, _, _ = build()
     await validate.execute(
-        ValidateMonthCommand(actor_id=1, target_user_id=1, month=MOIS)
+        ValidateMonthCommand(actor_id=1, target_user_id=1, month=MONTH)
     )
 
     with pytest.raises(ForbiddenActionError):
         await reopen.execute(
-            ReopenMonthCommand(actor_id=1, target_user_id=1, month=MOIS)
+            ReopenMonthCommand(actor_id=1, target_user_id=1, month=MONTH)
         )
 
 
 async def test_a_manager_reopens_a_validated_month() -> None:
     validate, reopen, months, _ = build()
     await validate.execute(
-        ValidateMonthCommand(actor_id=1, target_user_id=1, month=MOIS)
+        ValidateMonthCommand(actor_id=1, target_user_id=1, month=MONTH)
     )
 
-    await reopen.execute(ReopenMonthCommand(actor_id=2, target_user_id=1, month=MOIS))
+    await reopen.execute(ReopenMonthCommand(actor_id=2, target_user_id=1, month=MONTH))
 
-    month = await months.get(1, MOIS)
+    month = await months.get(1, MONTH)
     assert month is not None
     assert month.is_writable is True
     assert month.reopened_by == 2
@@ -109,10 +109,10 @@ async def test_a_manager_reopens_a_validated_month() -> None:
 async def test_reopening_is_traced_with_its_author() -> None:
     validate, reopen, _, audit = build()
     await validate.execute(
-        ValidateMonthCommand(actor_id=1, target_user_id=1, month=MOIS)
+        ValidateMonthCommand(actor_id=1, target_user_id=1, month=MONTH)
     )
 
-    await reopen.execute(ReopenMonthCommand(actor_id=2, target_user_id=1, month=MOIS))
+    await reopen.execute(ReopenMonthCommand(actor_id=2, target_user_id=1, month=MONTH))
 
     log = audit.logs[-1]
     assert log.action.value == "month.reopen"

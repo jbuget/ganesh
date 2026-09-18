@@ -54,11 +54,11 @@ describe("ValidateMonthDialog", () => {
   });
 
   it("stays open until validation succeeds", async () => {
-    let resoudre: () => void = () => {};
+    let release: () => void = () => {};
     const onConfirm = vi.fn(
       () =>
         new Promise<void>((resolve) => {
-          resoudre = resolve;
+          release = resolve;
         }),
     );
     const { onOpenChange } = renderDialog({ onConfirm });
@@ -67,25 +67,25 @@ describe("ValidateMonthDialog", () => {
 
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
 
-    resoudre();
+    release();
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
 
   it("validates only once even on a double click", async () => {
-    let resoudre: () => void = () => {};
+    let release: () => void = () => {};
     const onConfirm = vi.fn(
       () =>
         new Promise<void>((resolve) => {
-          resoudre = resolve;
+          release = resolve;
         }),
     );
     renderDialog({ onConfirm });
 
-    const bouton = screen.getByRole("button", { name: "Valider" });
-    await userEvent.click(bouton);
-    await userEvent.click(bouton);
+    const button = screen.getByRole("button", { name: "Valider" });
+    await userEvent.click(button);
+    await userEvent.click(button);
 
     expect(onConfirm).toHaveBeenCalledTimes(1);
-    resoudre();
+    release();
   });
 });

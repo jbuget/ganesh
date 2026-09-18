@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 
-const CLE = "timesheet.sidebar-repliee";
+const KEY = "timesheet.sidebar-collapsed";
 
 /**
  * Whether the sidebar is collapsed.
@@ -18,7 +18,7 @@ const CLE = "timesheet.sidebar-repliee";
 const subscribers = new Set<() => void>();
 
 function read(): boolean {
-  return typeof window !== "undefined" && window.localStorage.getItem(CLE) === "1";
+  return typeof window !== "undefined" && window.localStorage.getItem(KEY) === "1";
 }
 
 function notify() {
@@ -46,10 +46,10 @@ function onServer() {
 }
 
 export function toggleSidebar() {
-  window.localStorage.setItem(CLE, read() ? "0" : "1");
+  window.localStorage.setItem(KEY, read() ? "0" : "1");
   notify();
 }
 
-export function useBarreLateraleRepliee(): boolean {
+export function useSidebarCollapsed(): boolean {
   return useSyncExternalStore(subscribe, read, onServer);
 }

@@ -26,7 +26,7 @@ const COLUMNS: SortColumn[] = [
 
 const PARAMETERS = { column: "sort", direction: "direction" } as const;
 
-const PRIORITY_RANKS = new Map(PRIORITIES.map((p, rang) => [p.value, rang]));
+const PRIORITY_RANKS = new Map(PRIORITIES.map((p, rank) => [p.value, rank]));
 
 type Mission = ProjectListItemResponse;
 
@@ -57,9 +57,9 @@ function byLabel(a: Mission, b: Mission): number {
  * is starting at the top, what is running at the bottom. At equal phase, the
  * alphabet, the only order in which one finds a mission one knows by name.
  */
-function parPhasePuisLabel(a: Mission, b: Mission): number {
-  const ecart = phaseRank(a.project.status) - phaseRank(b.project.status);
-  return ecart !== 0 ? ecart : byLabel(a, b);
+function byPhaseThenLabel(a: Mission, b: Mission): number {
+  const gap = phaseRank(a.project.status) - phaseRank(b.project.status);
+  return gap !== 0 ? gap : byLabel(a, b);
 }
 
 /**
@@ -71,10 +71,10 @@ function parPhasePuisLabel(a: Mission, b: Mission): number {
  * gaps to the top, and the order of ties would change on every render.
  */
 export function sortComparator(sorted: MissionSort) {
-  if (sorted.column === null) return parPhasePuisLabel;
+  if (sorted.column === null) return byPhaseThenLabel;
 
   const valueOf = VALUES[sorted.column];
-  const signe = sorted.direction === "desc" ? -1 : 1;
+  const sign = sorted.direction === "desc" ? -1 : 1;
 
   return (a: Mission, b: Mission): number => {
     const left = valueOf(a);
@@ -85,12 +85,12 @@ export function sortComparator(sorted: MissionSort) {
       return left === null ? 1 : -1;
     }
 
-    const ecart =
+    const gap =
       typeof left === "string" && typeof right === "string"
         ? left.localeCompare(right, "fr")
         : Number(left) - Number(right);
 
-    return ecart !== 0 ? signe * ecart : byLabel(a, b);
+    return gap !== 0 ? sign * gap : byLabel(a, b);
   };
 }
 

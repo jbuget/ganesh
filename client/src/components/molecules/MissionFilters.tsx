@@ -15,15 +15,15 @@ import { CATEGORIES, PHASES, PRIORITIES } from "@/lib/board";
 import {
   MISSION_STATES,
   MISSION_KINDS,
-  type MissionFilters as Criteres,
-  type EtatMission,
+  type MissionFilters as Criteria,
+  type MissionState,
 } from "@/lib/mission-filters";
 
 interface MissionFiltersProps {
-  filters: Criteres;
+  filters: Criteria;
   hasFilter: boolean;
-  onChange: (change: Partial<Criteres>) => void;
-  onEffacer: () => void;
+  onChange: (change: Partial<Criteria>) => void;
+  onClear: () => void;
   /** Missions shown, and missions the screen carries in all. */
   visible: number;
   total: number;
@@ -41,7 +41,7 @@ export function MissionFilters({
   filters,
   hasFilter,
   onChange,
-  onEffacer,
+  onClear,
   visible,
   total,
 }: MissionFiltersProps) {
@@ -98,10 +98,10 @@ export function MissionFilters({
 
       <FilterSelect
         label="Priorité"
-        options={PRIORITIES.map(({ value, label, icon: Icone, colour }) => ({
+        options={PRIORITIES.map(({ value, label, icon: Icon, colour }) => ({
           value,
           label,
-          thumbnail: <Icone className={`size-4 shrink-0 ${colour}`} aria-hidden />,
+          thumbnail: <Icon className={`size-4 shrink-0 ${colour}`} aria-hidden />,
         }))}
         values={filters.priorities}
         onChange={(values) => onChange({ priorities: values as ProjectPriority[] })}
@@ -133,14 +133,14 @@ export function MissionFilters({
         label="État"
         options={MISSION_STATES.map(({ value, label }) => ({ value, label }))}
         values={filters.states}
-        onChange={(values) => onChange({ states: values as EtatMission[] })}
+        onChange={(values) => onChange({ states: values as MissionState[] })}
       />
 
       {hasFilter && (
         <>
           <button
             type="button"
-            onClick={onEffacer}
+            onClick={onClear}
             className="flex cursor-pointer items-center gap-1 rounded-md px-2 py-1.5 text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
           >
             <X className="size-3.5" aria-hidden />

@@ -20,12 +20,12 @@ import type {
   ProjectStatus,
 } from "@/lib/api/generated/model";
 
-interface ProjectPilotageTabProps {
+interface ProjectSteeringTabProps {
   detail: ProjectDetailResponse;
   onChange: () => void | Promise<void>;
   saveSheet: (
     departments: Department[],
-    contactsMetier: string | null,
+    businessContacts: string | null,
   ) => Promise<void>;
   changePhase: (status: ProjectStatus) => Promise<void>;
   updateFields: (fields: {
@@ -75,7 +75,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
  * where the mission stands and who looks after it, then at what it covers, then
  * at what it has cost.
  */
-export function ProjectPilotageTab({
+export function ProjectSteeringTab({
   detail,
   onChange,
   saveSheet,
@@ -83,10 +83,10 @@ export function ProjectPilotageTab({
   updateFields,
   addLink,
   removeLink,
-}: ProjectPilotageTabProps) {
+}: ProjectSteeringTabProps) {
   // Until anything is typed, the field shows what the server says: no local
   // copy to resynchronise on every reload.
-  const [draft, setBrouillon] = useState<string | null>(null);
+  const [draft, setDraft] = useState<string | null>(null);
   const { project } = detail;
   const contacts = draft ?? project.business_contacts ?? "";
 
@@ -124,8 +124,8 @@ export function ProjectPilotageTab({
           <Row title="Estimé (build)">
             <InlineNumberField
               value={project.estimated_days}
-              suffixe="jrs."
-              invite="Estimer"
+              suffix="jrs."
+              label="Estimer"
               onChange={(estimated_days) => updateFields({ estimated_days })}
             />
           </Row>
@@ -135,7 +135,7 @@ export function ProjectPilotageTab({
               projectId={project.id}
               contributors={detail.leads}
               role="lead"
-              invite="Référents"
+              label="Référents"
               onChange={onChange}
             />
           </Row>
@@ -144,7 +144,7 @@ export function ProjectPilotageTab({
             <ContributorsPicker
               projectId={project.id}
               contributors={detail.contributors}
-              invite="Intervenants"
+              label="Intervenants"
               onChange={onChange}
             />
           </Row>
@@ -155,11 +155,11 @@ export function ProjectPilotageTab({
               value={contacts}
               placeholder="Qui appeler côté métier…"
               aria-label="Contacts métier"
-              onChange={(event) => setBrouillon(event.target.value)}
+              onChange={(event) => setDraft(event.target.value)}
               // Saved on leaving the field: nothing is written on every keystroke.
               onBlur={() => {
                 if (draft === null) return;
-                setBrouillon(null);
+                setDraft(null);
                 void saveSheet(detail.departments, draft.trim() || null);
               }}
               onKeyDown={(event) => {

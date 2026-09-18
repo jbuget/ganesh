@@ -41,10 +41,10 @@ export function useBoardDrag(board: ReturnType<typeof useBoard>) {
 
   /** Has the cursor gone past the middle of the hovered card? */
   function pastHalfway(event: DragOverEvent | DragEndEvent) {
-    const glissee = event.active.rect.current.translated;
-    const survolee = event.over?.rect;
-    if (!glissee || !survolee) return false;
-    return glissee.top > survolee.top + survolee.height / 2;
+    const draggedRect = event.active.rect.current.translated;
+    const hoveredRect = event.over?.rect;
+    if (!draggedRect || !hoveredRect) return false;
+    return draggedRect.top > hoveredRect.top + hoveredRect.height / 2;
   }
 
   return {
@@ -98,8 +98,8 @@ export function useBoardDrag(board: ReturnType<typeof useBoard>) {
       // Nothing to recompute: hovering has already placed the card, and the
       // dotted slot showed exactly where it would land. Dropping confirms what
       // one was looking at.
-      const finales = ongoing.alive;
-      const destination = locate(finales, id);
+      const finalColumns = ongoing.alive;
+      const destination = locate(finalColumns, id);
       if (!destination) return;
       if (
         destination.status === origin.status &&
@@ -110,7 +110,7 @@ export function useBoardDrag(board: ReturnType<typeof useBoard>) {
         return;
       }
 
-      await board.move(id, destination.status, destination.position, finales);
+      await board.move(id, destination.status, destination.position, finalColumns);
     },
 
     onDragCancel() {

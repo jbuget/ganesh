@@ -32,8 +32,8 @@ export function ProjectLinksEditor({
   const [isOpen, setOpen] = useState(false);
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
-  const [icon, setIcone] = useState<LinkIcon | null>(null);
-  const [erreur, setErreur] = useState<string | null>(null);
+  const [icon, setIcon] = useState<LinkIcon | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   function toggleExpanded(value: boolean) {
     setOpen(value);
@@ -41,18 +41,18 @@ export function ProjectLinksEditor({
     if (!value) {
       setLabel("");
       setUrl("");
-      setIcone(null);
-      setErreur(null);
+      setIcon(null);
+      setError(null);
     }
   }
 
   async function add() {
-    setErreur(null);
+    setError(null);
     try {
       await onAdd(label, url, icon);
       toggleExpanded(false);
     } catch {
-      setErreur("Cette adresse n'est pas valide. Elle doit commencer par http://.");
+      setError("Cette adresse n'est pas valide. Elle doit commencer par http://.");
     }
   }
 
@@ -98,7 +98,7 @@ export function ProjectLinksEditor({
 
         <PopoverContent align="start" className="w-80 gap-1.5">
           <div className="flex gap-1.5">
-            <LinkIconPicker value={icon} onChange={setIcone} />
+            <LinkIconPicker value={icon} onChange={setIcon} />
             <Input
               value={label}
               onChange={(event) => setLabel(event.target.value)}
@@ -115,7 +115,7 @@ export function ProjectLinksEditor({
               if (event.key === "Enter" && url.trim()) void add();
             }}
           />
-          {erreur && <p className="text-xs text-red-700">{erreur}</p>}
+          {error && <p className="text-xs text-red-700">{error}</p>}
           <div className="flex gap-2">
             <Button size="sm" onClick={() => void add()} disabled={!url.trim()}>
               Ajouter

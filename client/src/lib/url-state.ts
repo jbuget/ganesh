@@ -50,11 +50,11 @@ export function useQueryString(): string {
  * successive touches, and each must not become a step to walk back through.
  */
 export function writeUrl(
-  maj: (params: URLSearchParams) => void,
+  update: (params: URLSearchParams) => void,
   mode: "pousser" | "remplacer" = "pousser",
 ): void {
   const params = new URLSearchParams(window.location.search);
-  maj(params);
+  update(params);
 
   const queryString = params.toString();
   const address = queryString ? `?${queryString}` : window.location.pathname;

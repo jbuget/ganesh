@@ -10,8 +10,8 @@ interface SortableColumnHeaderProps {
   label: string;
   sorted: MissionSort;
   onToggle: (column: SortColumn) => void;
-  /** Les colonnes de nombres s'alignent a droite, en-tete compris. */
-  aDroite?: boolean;
+  /** Number columns align right, heading included. */
+  alignRight?: boolean;
 }
 
 /**
@@ -26,26 +26,26 @@ export function SortableColumnHeader({
   label,
   sorted,
   onToggle,
-  aDroite = false,
+  alignRight = false,
 }: SortableColumnHeaderProps) {
   const is_active = sorted.column === column;
-  const croissant = sorted.direction === "asc";
+  const ascending = sorted.direction === "asc";
 
   return (
     <TableHead
-      aria-sort={is_active ? (croissant ? "ascending" : "descending") : "none"}
-      className={aDroite ? "text-right" : undefined}
+      aria-sort={is_active ? (ascending ? "ascending" : "descending") : "none"}
+      className={alignRight ? "text-right" : undefined}
     >
       <button
         type="button"
         onClick={() => onToggle(column)}
         className={`group -mx-1 flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 transition-colors hover:bg-slate-200 ${
-          aDroite ? "ml-auto" : ""
+          alignRight ? "ml-auto" : ""
         }`}
       >
         {label}
         {is_active ? (
-          croissant ? (
+          ascending ? (
             <ArrowUp className="size-3.5 shrink-0" aria-label="Ordre croissant" />
           ) : (
             <ArrowDown className="size-3.5 shrink-0" aria-label="Ordre décroissant" />

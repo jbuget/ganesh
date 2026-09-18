@@ -40,7 +40,7 @@ export function DeactivateUserDialog({
           <AlertDialogTitle>Désactiver {name} ?</AlertDialogTitle>
           <AlertDialogDescription>
             Ce compte n&apos;aura plus accès à Timesheet, et disparaîtra des listes. Ses
-            entries passées sont conservées. Un manager peut le réactiver à tout moment.
+            saisies passées sont conservées. Un manager peut le réactiver à tout moment.
           </AlertDialogDescription>
         </AlertDialogHeader>
 

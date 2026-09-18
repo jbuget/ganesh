@@ -16,11 +16,11 @@ interface ContributorsPickerProps {
   /** On what grounds these people are attached to the mission. */
   role?: ProjectRole;
   /** Prompt shown when nobody is attached yet. */
-  invite?: string;
+  label?: string;
 }
 
 /** Past this, the avatars overlap too much to stay readable. */
-const VISIBLES = 4;
+const VISIBLE = 4;
 
 /**
  * Who works on a mission, to read and to change.
@@ -37,20 +37,20 @@ export function ContributorsPicker({
   contributors,
   onChange,
   role = "contributor",
-  invite = "Intervenants",
+  label = "Intervenants",
 }: ContributorsPickerProps) {
   const { teammates } = useTeammates();
   const [isOpen, setOpen] = useState(false);
-  const [search, setRecherche] = useState("");
+  const [search, setSearch] = useState("");
   // The same filter as the search menus elsewhere in the application:
   // insensitive to case and to accents alike.
   const { contains } = useComboboxFilter();
-  const affectes = new Set(contributors.map((member) => member.id));
+  const assigned = new Set(contributors.map((member) => member.id));
 
   const proposes = teammates.filter((member) => contains(member.display_name, search));
 
   async function toggle(memberId: number) {
-    if (affectes.has(memberId)) {
+    if (assigned.has(memberId)) {
       await unassignMember(projectId, memberId, { role });
     } else {
       await assignMember(projectId, memberId, { role });
@@ -58,25 +58,25 @@ export function ContributorsPicker({
     await onChange();
   }
 
-  const visible = contributors.slice(0, VISIBLES);
-  const remaining = contributors.slice(VISIBLES);
+  const visible = contributors.slice(0, VISIBLE);
+  const remaining = contributors.slice(VISIBLE);
 
   return (
     <Popover
       open={isOpen}
-      onOpenChange={(prochain) => {
-        setOpen(prochain);
-        if (!prochain) setRecherche("");
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setSearch("");
       }}
     >
       <PopoverTrigger
-        aria-label={`Modifier les ${invite.toLowerCase()}`}
+        aria-label={`Modifier les ${label.toLowerCase()}`}
         className="flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 -mx-1 transition-colors hover:bg-slate-100"
       >
         {contributors.length === 0 ? (
           <span className="flex items-center gap-1 text-sm text-slate-400">
             <Plus className="size-3.5" aria-hidden />
-            {invite}
+            {label}
           </span>
         ) : (
           <span className="flex items-center -space-x-1.5">
@@ -109,9 +109,9 @@ export function ContributorsPicker({
             type="text"
             autoFocus
             value={search}
-            aria-label={`Rechercher parmi les ${invite.toLowerCase()}`}
+            aria-label={`Rechercher parmi les ${label.toLowerCase()}`}
             placeholder="Rechercher…"
-            onChange={(event) => setRecherche(event.target.value)}
+            onChange={(event) => setSearch(event.target.value)}
             className="h-8 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
@@ -123,7 +123,7 @@ export function ContributorsPicker({
         ) : (
           <ul className="max-h-64 overflow-y-auto overscroll-contain pt-1">
             {proposes.map((member) => {
-              const present = affectes.has(member.id);
+              const present = assigned.has(member.id);
               return (
                 <li key={member.id}>
                   <button

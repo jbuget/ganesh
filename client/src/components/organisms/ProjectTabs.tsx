@@ -2,7 +2,7 @@
 
 import { ArchivedCallout } from "@/components/atoms/ArchivedCallout";
 import { MissionMenu } from "@/components/atoms/MissionMenu";
-import { ProjectPilotageTab } from "@/components/organisms/ProjectPilotageTab";
+import { ProjectSteeringTab } from "@/components/organisms/ProjectSteeringTab";
 import { ProjectSheetTab } from "@/components/organisms/ProjectSheetTab";
 import { ProjectUpdatesTab } from "@/components/organisms/ProjectUpdatesTab";
 import { useState } from "react";
@@ -23,7 +23,7 @@ interface ProjectTabsProps {
   onChange: () => void | Promise<void>;
   saveSheet: (
     departments: Department[],
-    contactsMetier: string | null,
+    businessContacts: string | null,
   ) => Promise<void>;
   saveDescription: (body: string) => Promise<void>;
   changePhase: (status: ProjectStatus) => Promise<void>;
@@ -34,12 +34,12 @@ interface ProjectTabsProps {
   addLink: (label: string, url: string, icon: LinkIcon | null) => Promise<void>;
   removeLink: (linkId: number) => Promise<void>;
   archive: () => Promise<void>;
-  desarchiver: () => Promise<void>;
+  unarchive: () => Promise<void>;
 }
 
 /** What is still to be built, announced rather than left blank. */
-function Chantier({ quoi }: { quoi: string }) {
-  return <p className="py-8 text-center text-sm text-slate-400">{quoi}</p>;
+function ToCome({ text }: { text: string }) {
+  return <p className="py-8 text-center text-sm text-slate-400">{text}</p>;
 }
 
 /**
@@ -59,7 +59,7 @@ export function ProjectTabs({
   addLink,
   removeLink,
   archive,
-  desarchiver,
+  unarchive,
 }: ProjectTabsProps) {
   // Freezes the reference time for the duration of the visit: « il y a 3
   // min » must not recompute on every render, and the thread is only
@@ -89,14 +89,14 @@ export function ProjectTabs({
         </TabsList>
 
         <MissionMenu
-          archivee={!detail.project.is_active}
-          onArchiver={archive}
-          onDesarchiver={desarchiver}
+          archived={!detail.project.is_active}
+          onArchive={archive}
+          onUnarchive={unarchive}
         />
       </div>
 
       <TabsContent value="pilotage">
-        <ProjectPilotageTab
+        <ProjectSteeringTab
           detail={detail}
           onChange={onChange}
           saveSheet={saveSheet}
@@ -115,7 +115,7 @@ export function ProjectTabs({
           // Coming from the counter, one comes to write: the cursor is already
           // waiting in the editor. Coming from the panel, one comes to read
           // first.
-          focusRedaction={initialTab === "updates"}
+          focusComposer={initialTab === "updates"}
         />
       </TabsContent>
 
@@ -127,7 +127,7 @@ export function ProjectTabs({
       </TabsContent>
 
       <TabsContent value="audit">
-        <Chantier quoi="Le journal arrive." />
+        <ToCome text="Le journal arrive." />
       </TabsContent>
     </Tabs>
   );

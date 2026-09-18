@@ -24,9 +24,9 @@ describe("PageLayout", () => {
       </PageLayout>,
     );
 
-    const defilante = screen.getByText("Une mission").closest(".overflow-y-auto");
+    const scroller = screen.getByText("Une mission").closest(".overflow-y-auto");
 
-    expect(defilante).not.toBeNull();
-    expect(defilante).not.toContainElement(screen.getByRole("heading"));
+    expect(scroller).not.toBeNull();
+    expect(scroller).not.toContainElement(screen.getByRole("heading"));
   });
 });

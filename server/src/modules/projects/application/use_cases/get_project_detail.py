@@ -93,9 +93,9 @@ class GetProjectDetailUseCase:
                 by_person.get(entry.user_id, 0.0) + float(entry.value), 2
             )
             month = entry.day.replace(day=1)
-            mois_de_la_personne = by_month.setdefault(entry.user_id, {})
-            mois_de_la_personne[month] = round(
-                mois_de_la_personne.get(month, 0.0) + float(entry.value), 2
+            person_months = by_month.setdefault(entry.user_id, {})
+            person_months[month] = round(
+                person_months.get(month, 0.0) + float(entry.value), 2
             )
 
         contributions = sorted(

@@ -13,9 +13,9 @@ const card = (id: number): BoardCardResponse =>
   }) as unknown as BoardCardResponse;
 
 /** Empty columns, filled in by those a test describes. */
-const columns = (garnies: Partial<Record<ProjectStatus, number[]>>): Columns =>
+const columns = (filled: Partial<Record<ProjectStatus, number[]>>): Columns =>
   Object.fromEntries(
-    PHASES.map(({ status }) => [status, (garnies[status] ?? []).map(card)]),
+    PHASES.map(({ status }) => [status, (filled[status] ?? []).map(card)]),
   ) as Columns;
 
 const ids = (cards: BoardCardResponse[]) => cards.map((c) => c.project.id);
@@ -51,17 +51,17 @@ describe("changerDeColonne", () => {
   it("removes the card from its phase and inserts it into the new one", () => {
     const state = columns({ scoping: [1, 2], development: [3, 4] });
 
-    const apres = moveToColumn(state, 1, "development", 1);
+    const after = moveToColumn(state, 1, "development", 1);
 
-    expect(ids(apres!.scoping)).toEqual([2]);
-    expect(ids(apres!.development)).toEqual([3, 1, 4]);
+    expect(ids(after!.scoping)).toEqual([2]);
+    expect(ids(after!.development)).toEqual([3, 1, 4]);
   });
 
   it("takes a card into an empty phase", () => {
-    const apres = moveToColumn(columns({ scoping: [1] }), 1, "validation", 0);
+    const after = moveToColumn(columns({ scoping: [1] }), 1, "validation", 0);
 
-    expect(ids(apres!.scoping)).toEqual([]);
-    expect(ids(apres!.validation)).toEqual([1]);
+    expect(ids(after!.scoping)).toEqual([]);
+    expect(ids(after!.validation)).toEqual([1]);
   });
 
   it("returns nothing when the card is already in that phase", () => {
@@ -75,23 +75,23 @@ describe("changerDeColonne", () => {
   it("leaves the other phases untouched", () => {
     const state = columns({ scoping: [1], development: [2], operations: [3] });
 
-    const apres = moveToColumn(state, 1, "development", 0)!;
+    const after = moveToColumn(state, 1, "development", 0)!;
 
-    expect(apres.operations).toBe(state.operations);
+    expect(after.operations).toBe(state.operations);
   });
 });
 
 describe("reordonner", () => {
   it("moves the card to the rank aimed at within its phase", () => {
-    const apres = reorder(columns({ scoping: [1, 2, 3] }), 1, 2);
+    const after = reorder(columns({ scoping: [1, 2, 3] }), 1, 2);
 
-    expect(ids(apres!.scoping)).toEqual([2, 3, 1]);
+    expect(ids(after!.scoping)).toEqual([2, 3, 1]);
   });
 
   it("lifts a card towards the top of the phase", () => {
-    const apres = reorder(columns({ scoping: [1, 2, 3] }), 3, 0);
+    const after = reorder(columns({ scoping: [1, 2, 3] }), 3, 0);
 
-    expect(ids(apres!.scoping)).toEqual([3, 1, 2]);
+    expect(ids(after!.scoping)).toEqual([3, 1, 2]);
   });
 
   it("returns nothing when the card does not move", () => {

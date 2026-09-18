@@ -34,7 +34,7 @@ interface CardCounterProps {
  * they need reading.
  */
 export function CardCounter({
-  icon: Icone,
+  icon: Icon,
   count,
   label,
   empty,
@@ -53,7 +53,7 @@ export function CardCounter({
       }`}
     >
       {count > 0 && count}
-      <Icone className="size-3.5 shrink-0" aria-hidden />
+      <Icon className="size-3.5 shrink-0" aria-hidden />
       {tooltip}
     </span>
   );

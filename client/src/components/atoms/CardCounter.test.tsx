@@ -53,10 +53,10 @@ describe("CardCounter", () => {
 
   it("closes the preview when the mouse leaves the count", () => {
     render(counter(2, PREVIEW));
-    const decompte = screen.getByLabelText("2 commentaires");
+    const count = screen.getByLabelText("2 commentaires");
 
-    fireEvent.mouseMove(decompte);
-    fireEvent.mouseLeave(decompte);
+    fireEvent.mouseMove(count);
+    fireEvent.mouseLeave(count);
 
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });

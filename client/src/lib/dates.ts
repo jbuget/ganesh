@@ -94,7 +94,7 @@ export function formatDecimalDays(value: number): string {
  * UTC would slip back a day in the evening, and the date shown would no longer
  * be the one the server recorded.
  */
-export function formatDateCourte(iso: string): string {
+export function formatShortDate(iso: string): string {
   const [year, month, day] = iso.slice(0, 10).split("-");
   return `${day}/${month}/${year}`;
 }

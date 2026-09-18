@@ -38,7 +38,7 @@ from src.modules.users.infrastructure.database.repositories.user_repository_impl
 
 pytestmark = pytest.mark.db
 
-MOIS = date(2026, 9, 1)
+MONTH = date(2026, 9, 1)
 
 
 async def seed(session: AsyncSession) -> tuple[int, int, int]:
@@ -104,15 +104,15 @@ async def test_the_mission_leaves_the_month_and_its_neighbours_stay(
     await an_entry(db_session, user_id, target, 15, 0.5)
     await an_entry(db_session, user_id, epargne, 14, 1.0)
 
-    retires = await build(db_session).execute(
+    removed = await build(db_session).execute(
         RemoveMissionCommand(
-            actor_id=user_id, target_user_id=user_id, project_id=target, month=MOIS
+            actor_id=user_id, target_user_id=user_id, project_id=target, month=MONTH
         )
     )
 
-    assert retires == 1.5
-    restantes = await SqlEntryRepository(db_session).list_for_month(user_id, MOIS)
-    assert [entry.project_id for entry in restantes] == [epargne]
+    assert removed == 1.5
+    remaining = await SqlEntryRepository(db_session).list_for_month(user_id, MONTH)
+    assert [entry.project_id for entry in remaining] == [epargne]
 
 
 async def test_a_month_without_the_mission_is_left_untouched(
@@ -121,11 +121,11 @@ async def test_a_month_without_the_mission_is_left_untouched(
     user_id, target, epargne = await seed(db_session)
     await an_entry(db_session, user_id, epargne, 14, 1.0)
 
-    retires = await build(db_session).execute(
+    removed = await build(db_session).execute(
         RemoveMissionCommand(
-            actor_id=user_id, target_user_id=user_id, project_id=target, month=MOIS
+            actor_id=user_id, target_user_id=user_id, project_id=target, month=MONTH
         )
     )
 
-    assert retires == 0
-    assert len(await SqlEntryRepository(db_session).list_for_month(user_id, MOIS)) == 1
+    assert removed == 0
+    assert len(await SqlEntryRepository(db_session).list_for_month(user_id, MONTH)) == 1

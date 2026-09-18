@@ -29,7 +29,7 @@ describe("DeactivateUserDialog", () => {
       />,
     );
 
-    expect(screen.getByText(/entries/)).toBeInTheDocument();
+    expect(screen.getByText(/saisies/)).toBeInTheDocument();
   });
 
   it("cuts off access on confirmation", async () => {

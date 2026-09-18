@@ -24,8 +24,8 @@ import { Markdown, type MarkdownStorage } from "tiptap-markdown";
  * `any`.
  */
 function markdownDe(editor: Editor): string {
-  const stockage = editor.storage as unknown as { markdown: MarkdownStorage };
-  return stockage.markdown.getMarkdown();
+  const storage = editor.storage as unknown as { markdown: MarkdownStorage };
+  return storage.markdown.getMarkdown();
 }
 
 interface RichTextEditorProps {
@@ -39,7 +39,7 @@ interface RichTextEditorProps {
   /** Puts the cursor in the input area as soon as it appears. */
   autoFocus?: boolean;
   /** Minimum height of the input area, in Tailwind classes. */
-  hauteur?: string;
+  minHeight?: string;
   /**
    * Takes all the height the parent leaves, the input area scrolling on its
    * own. Requires an unbroken flex chain above.
@@ -48,7 +48,7 @@ interface RichTextEditorProps {
 }
 
 /** One button of the toolbar. */
-function Outil({
+function Tool({
   editor,
   isActive,
   title,
@@ -98,7 +98,7 @@ export function RichTextEditor({
   onSubmit,
   withHeadings = false,
   autoFocus = false,
-  hauteur = "min-h-24",
+  minHeight = "min-h-24",
   fullHeight = false,
 }: RichTextEditorProps) {
   const editor = useEditor({
@@ -118,7 +118,7 @@ export function RichTextEditor({
     content: value,
     editorProps: {
       attributes: {
-        class: `prose prose-sm prose-slate max-w-none ${fullHeight ? "h-full" : hauteur} px-3 py-2 focus:outline-none`,
+        class: `prose prose-sm prose-slate max-w-none ${fullHeight ? "h-full" : minHeight} px-3 py-2 focus:outline-none`,
         "aria-label": placeholder ?? "Rédaction",
       },
       handleKeyDown: (_, event) => {
@@ -151,88 +151,88 @@ export function RichTextEditor({
       />
 
       <div className="flex flex-wrap items-center gap-0.5 border-t border-slate-200 px-1.5 py-1">
-        <Outil
+        <Tool
           editor={editor}
           title="Gras"
           isActive={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}
         >
           <Bold className="size-3.5" aria-hidden />
-        </Outil>
-        <Outil
+        </Tool>
+        <Tool
           editor={editor}
           title="Italique"
           isActive={editor.isActive("italic")}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         >
           <Italic className="size-3.5" aria-hidden />
-        </Outil>
-        <Outil
+        </Tool>
+        <Tool
           editor={editor}
           title="Barré"
           isActive={editor.isActive("strike")}
           onClick={() => editor.chain().focus().toggleStrike().run()}
         >
           <Strikethrough className="size-3.5" aria-hidden />
-        </Outil>
-        <Outil
+        </Tool>
+        <Tool
           editor={editor}
           title="Code"
           isActive={editor.isActive("code")}
           onClick={() => editor.chain().focus().toggleCode().run()}
         >
           <Code className="size-3.5" aria-hidden />
-        </Outil>
+        </Tool>
 
         {withHeadings && (
           <>
             <span aria-hidden className="mx-1 h-4 w-px bg-slate-200" />
-            <Outil
+            <Tool
               editor={editor}
               title="Titre"
               isActive={editor.isActive("heading", { level: 2 })}
               onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             >
               <Heading2 className="size-3.5" aria-hidden />
-            </Outil>
-            <Outil
+            </Tool>
+            <Tool
               editor={editor}
               title="Sous-titre"
               isActive={editor.isActive("heading", { level: 3 })}
               onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             >
               <Heading3 className="size-3.5" aria-hidden />
-            </Outil>
+            </Tool>
           </>
         )}
 
         <span aria-hidden className="mx-1 h-4 w-px bg-slate-200" />
 
-        <Outil
+        <Tool
           editor={editor}
           title="Liste à puces"
           isActive={editor.isActive("bulletList")}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
         >
           <List className="size-3.5" aria-hidden />
-        </Outil>
-        <Outil
+        </Tool>
+        <Tool
           editor={editor}
           title="Liste numérotée"
           isActive={editor.isActive("orderedList")}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
         >
           <ListOrdered className="size-3.5" aria-hidden />
-        </Outil>
-        <Outil
+        </Tool>
+        <Tool
           editor={editor}
           title="Citation"
           isActive={editor.isActive("blockquote")}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
         >
           <Quote className="size-3.5" aria-hidden />
-        </Outil>
-        <Outil
+        </Tool>
+        <Tool
           editor={editor}
           title="Lien"
           isActive={editor.isActive("link")}
@@ -246,7 +246,7 @@ export function RichTextEditor({
           }}
         >
           <Link2 className="size-3.5" aria-hidden />
-        </Outil>
+        </Tool>
       </div>
     </div>
   );

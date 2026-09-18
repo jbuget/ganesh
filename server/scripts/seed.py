@@ -1,10 +1,10 @@
-"""Amorce la base : collaborateurs, activites hors projet et jours feries.
+"""Seeds the database: teammates, off-project activities and public holidays.
 
-Le script est idempotent : il peut etre rejoue sans creer de doublon.
+The script is idempotent: it can be replayed without creating a duplicate.
 
-Les utilisateurs sont crees sans identifiant Entra. Au premier login, le
-provisionnement les retrouve par leur email et leur rattache leur `oid`, ce qui
-preserve le role pre-attribue ici.
+Users are created without an Entra id. On the first sign-in, provisioning finds
+them by their email and attaches their `oid`, which preserves the role handed
+out here.
 """
 
 import asyncio
@@ -41,8 +41,8 @@ TEAM: list[tuple[str, str, Role]] = [
     ("g.belhadj@waat.fr", "G. Belhadj", Role.TEAMMATE),
 ]
 
-#: Sans ces lignes, les jours ouvres se reporteraient sur les projets et le
-#: consomme serait surevalue.
+#: Without these rows, working days would spill over onto the projects and
+#: what they consumed would read too high.
 OFF_PROJECT_ACTIVITIES: list[str] = [
     "Absences (conges, RTT, maladie)",
     "Formation",

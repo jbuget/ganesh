@@ -15,7 +15,7 @@ import { CATEGORIES, PHASES, PRIORITIES } from "@/lib/board";
  * on it: that is what becomes of a finished or abandoned project, when deleting
  * is no longer possible.
  */
-export type EtatMission = "active" | "archivee";
+export type MissionState = "active" | "archived";
 
 /**
  * Everything that gets filtered: a mission, and who looks after it.
@@ -37,7 +37,7 @@ export interface MissionFilters {
   priorities: ProjectPriority[];
   contributors: number[];
   types: ProjectKind[];
-  states: EtatMission[];
+  states: MissionState[];
 }
 
 /** The whole board: no criterion set. */
@@ -69,9 +69,9 @@ export const MISSION_KINDS: { value: ProjectKind; label: string }[] = [
  * there to steer what is running, and so shows active missions alone until the
  * archived ones are asked for.
  */
-export const MISSION_STATES: { value: EtatMission; label: string }[] = [
+export const MISSION_STATES: { value: MissionState; label: string }[] = [
   { value: "active", label: "Actives" },
-  { value: "archivee", label: "Archivées" },
+  { value: "archived", label: "Archivées" },
 ];
 
 /** Lowercase and unaccented: searching « copropriete » finds « copropriété ». */
@@ -114,7 +114,7 @@ function kept(mission: FilterableMission, filters: MissionFilters): boolean {
     if (!phase || !filters.phases.includes(phase)) return false;
   }
 
-  const state: EtatMission = mission.project.is_active ? "active" : "archivee";
+  const state: MissionState = mission.project.is_active ? "active" : "archived";
   if (!(filters.states.length > 0 ? filters.states : ["active"]).includes(state)) {
     return false;
   }
@@ -134,8 +134,8 @@ function kept(mission: FilterableMission, filters: MissionFilters): boolean {
   }
 
   if (filters.contributors.length > 0) {
-    const porteurs = mission.contributors.map((member) => member.id);
-    if (!filters.contributors.some((id) => porteurs.includes(id))) return false;
+    const holders = mission.contributors.map((member) => member.id);
+    if (!filters.contributors.some((id) => holders.includes(id))) return false;
   }
 
   return true;
@@ -154,18 +154,18 @@ export function filterMissions<T extends FilterableMission>(
  * They only travel on request: loading them to hide them straight away would
  * make every opening of the board pay for what is rarely used.
  */
-export function inclutLesArchivees(filters: MissionFilters): boolean {
-  return filters.states.includes("archivee");
+export function includesArchived(filters: MissionFilters): boolean {
+  return filters.states.includes("archived");
 }
 
 const PARAMETERS = {
   name: "name",
   phase: "phase",
-  category: "categorie",
-  priority: "priorite",
+  category: "category",
+  priority: "priority",
   contributor: "contributor",
   type: "type",
-  state: "etat",
+  state: "state",
 } as const;
 
 const KNOWN_PHASES = new Set<string>(PHASES.map((p) => p.status));
@@ -175,7 +175,7 @@ const KNOWN_KINDS = new Set<string>(MISSION_KINDS.map((t) => t.value));
 const KNOWN_STATES = new Set<string>(MISSION_STATES.map((e) => e.value));
 
 /** Keeps from a parameter only the values we know how to read. */
-function valeursConnues<T extends string>(
+function knownValues<T extends string>(
   params: URLSearchParams,
   name: string,
   known: Set<string>,
@@ -192,13 +192,13 @@ function valeursConnues<T extends string>(
 export function readFilters(params: URLSearchParams): MissionFilters {
   return {
     name: params.get(PARAMETERS.name) ?? "",
-    phases: valeursConnues<ProjectStatus>(params, PARAMETERS.phase, KNOWN_PHASES),
-    categories: valeursConnues<ProjectCategory>(
+    phases: knownValues<ProjectStatus>(params, PARAMETERS.phase, KNOWN_PHASES),
+    categories: knownValues<ProjectCategory>(
       params,
       PARAMETERS.category,
       KNOWN_CATEGORIES,
     ),
-    priorities: valeursConnues<ProjectPriority>(
+    priorities: knownValues<ProjectPriority>(
       params,
       PARAMETERS.priority,
       KNOWN_PRIORITIES,
@@ -207,8 +207,8 @@ export function readFilters(params: URLSearchParams): MissionFilters {
       .getAll(PARAMETERS.contributor)
       .map(Number)
       .filter((id) => Number.isInteger(id) && id > 0),
-    types: valeursConnues<ProjectKind>(params, PARAMETERS.type, KNOWN_KINDS),
-    states: valeursConnues<EtatMission>(params, PARAMETERS.state, KNOWN_STATES),
+    types: knownValues<ProjectKind>(params, PARAMETERS.type, KNOWN_KINDS),
+    states: knownValues<MissionState>(params, PARAMETERS.state, KNOWN_STATES),
   };
 }
 

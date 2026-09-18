@@ -1,7 +1,7 @@
 import type { Department } from "@/lib/api/generated/model";
 
 /** Company departments, in the order the team names them. */
-export const DEPARTEMENTS: { value: Department; label: string }[] = [
+export const DEPARTMENTS: { value: Department; label: string }[] = [
   { value: "finance_admin", label: "Administratif & Financier" },
   { value: "landlords", label: "Bailleurs" },
   { value: "condominium", label: "Copropriété" },
@@ -14,7 +14,7 @@ export const DEPARTEMENTS: { value: Department; label: string }[] = [
   { value: "other", label: "Autre" },
 ];
 
-const BY_VALUE = new Map(DEPARTEMENTS.map((d) => [d.value, d.label]));
+const BY_VALUE = new Map(DEPARTMENTS.map((d) => [d.value, d.label]));
 
 export function departmentLabel(value: Department): string {
   return BY_VALUE.get(value) ?? value;

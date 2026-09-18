@@ -7,7 +7,7 @@ from src.modules.projects.domain.services.link_icons import guess_icon
 
 
 @pytest.mark.parametrize(
-    ("url", "attendue"),
+    ("url", "expected"),
     [
         ("https://github.com/waat/timesheet", "repository"),
         ("https://gitlab.com/waat/timesheet", "repository"),
@@ -20,21 +20,21 @@ from src.modules.projects.domain.services.link_icons import guess_icon
         ("https://www.notion.so/waat/Cadrage", "document"),
     ],
 )
-def test_a_known_service_is_recognised(url: str, attendue: str) -> None:
-    assert guess_icon(url) == attendue
+def test_a_known_service_is_recognised(url: str, expected: str) -> None:
+    assert guess_icon(url) == expected
 
 
 @pytest.mark.parametrize(
-    ("url", "attendue"),
+    ("url", "expected"),
     [
         ("https://docs.google.com/document/d/abc/edit", "document"),
         ("https://docs.google.com/spreadsheets/d/abc/edit", "spreadsheet"),
         ("https://docs.google.com/presentation/d/abc/edit", "presentation"),
     ],
 )
-def test_google_documents_are_told_apart_by_their_path(url: str, attendue: str) -> None:
+def test_google_documents_are_told_apart_by_their_path(url: str, expected: str) -> None:
     """One domain serves three tools: the path is what tells them apart."""
-    assert guess_icon(url) == attendue
+    assert guess_icon(url) == expected
 
 
 def test_a_subdomain_is_recognised_like_its_domain() -> None:

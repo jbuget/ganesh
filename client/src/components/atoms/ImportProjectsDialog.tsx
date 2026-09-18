@@ -27,25 +27,25 @@ export function ImportProjectsDialog({
   onOpenChange,
   onImport,
 }: ImportProjectsDialogProps) {
-  const [content, setContenu] = useState("");
-  const [report, setRapport] = useState<ImportReportResponse | null>(null);
-  const [enCours, setEnCours] = useState(false);
+  const [content, setContent] = useState("");
+  const [report, setReport] = useState<ImportReportResponse | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const lines = parseProjectsCsv(content);
 
-  async function importer() {
-    setEnCours(true);
+  async function runImport() {
+    setBusy(true);
     try {
-      setRapport(await onImport(content));
+      setReport(await onImport(content));
     } finally {
-      setEnCours(false);
+      setBusy(false);
     }
   }
 
   function close(isOpen: boolean) {
     if (!isOpen) {
-      setContenu("");
-      setRapport(null);
+      setContent("");
+      setReport(null);
     }
     onOpenChange(isOpen);
   }
@@ -56,14 +56,14 @@ export function ImportProjectsDialog({
         <DialogHeader>
           <DialogTitle>Importer un référentiel</DialogTitle>
           <DialogDescription>
-            Collez un export tableur. Les missions déjà known sont ignorées,
+            Collez un export tableur. Les missions déjà connues sont ignorées,
             l&apos;import peut donc être rejoué sans risque.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-2">
           <Label htmlFor="csv">
-            Columns reconnues : {Object.keys(COLUMNS).join(", ")}
+            Colonnes reconnues : {Object.keys(COLUMNS).join(", ")}
           </Label>
           <textarea
             id="csv"
@@ -71,8 +71,8 @@ export function ImportProjectsDialog({
             value={content}
             placeholder={"label;kind;parent_label;estime_j\nPortail;projet;;20"}
             onChange={(event) => {
-              setContenu(event.target.value);
-              setRapport(null);
+              setContent(event.target.value);
+              setReport(null);
             }}
             className="w-full rounded-md border border-slate-300 p-2 font-mono text-xs"
           />
@@ -87,8 +87,8 @@ export function ImportProjectsDialog({
             </p>
             {report.errors.length > 0 && (
               <ul className="list-inside list-disc text-red-800">
-                {report.errors.map((erreur) => (
-                  <li key={erreur}>{erreur}</li>
+                {report.errors.map((error) => (
+                  <li key={error}>{error}</li>
                 ))}
               </ul>
             )}
@@ -99,7 +99,7 @@ export function ImportProjectsDialog({
           <Button variant="outline" onClick={() => close(false)}>
             Fermer
           </Button>
-          <Button onClick={importer} disabled={lines.length === 0 || enCours}>
+          <Button onClick={runImport} disabled={lines.length === 0 || busy}>
             Importer {lines.length > 0 && `(${lines.length})`}
           </Button>
         </DialogFooter>

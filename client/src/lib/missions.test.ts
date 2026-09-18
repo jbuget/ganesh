@@ -23,23 +23,23 @@ const PROJECTS = [
 
 describe("availableMissions", () => {
   it("separates projects and work packages from off-project work", () => {
-    const { projets, horsProjet } = availableMissions(PROJECTS, []);
+    const { projectMissions, offProject } = availableMissions(PROJECTS, []);
 
-    expect(projets.map((p) => p.label)).toEqual(["Portail bailleurs", "Lot 1"]);
-    expect(horsProjet.map((p) => p.label)).toEqual(["Absences"]);
+    expect(projectMissions.map((p) => p.label)).toEqual(["Portail bailleurs", "Lot 1"]);
+    expect(offProject.map((p) => p.label)).toEqual(["Absences"]);
   });
 
   it("rules out missions already in the grid", () => {
-    const { projets } = availableMissions(PROJECTS, [1]);
+    const { projectMissions } = availableMissions(PROJECTS, [1]);
 
-    expect(projets.map((p) => p.label)).toEqual(["Lot 1"]);
+    expect(projectMissions.map((p) => p.label)).toEqual(["Lot 1"]);
   });
 
   it("may have nothing left to offer", () => {
-    const { projets, horsProjet } = availableMissions(PROJECTS, [1, 2, 3]);
+    const { projectMissions, offProject } = availableMissions(PROJECTS, [1, 2, 3]);
 
-    expect(projets).toEqual([]);
-    expect(horsProjet).toEqual([]);
+    expect(projectMissions).toEqual([]);
+    expect(offProject).toEqual([]);
   });
 
   it("does not change the list received", () => {
