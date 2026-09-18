@@ -8,26 +8,26 @@ import { useCursorTooltip } from "@/lib/use-tooltip-curseur";
 interface UpdatesCounterProps {
   count: number;
   /**
-   * Ce que montre l'infobulle au survol — le dernier message, mis en forme.
+   * What the tooltip shows on hover — the latest message, formatted.
    *
-   * Il vient du parent et non d'ici : le rendu du markdown est un autre
-   * composant, et un atom n'en compose aucun. Absent, le decompte se montre
-   * sans infobulle.
+   * It comes from the parent and not from here: rendering markdown is another
+   * component, and an atom composes none. Absent, the count shows without a
+   * tooltip.
    */
   apercu?: ReactNode;
-  /** Mene au fil lui-meme : l'apercu donne envie de repondre. */
+  /** Leads to the thread itself: the preview makes one want to reply. */
   onOpen: () => void;
 }
 
 /**
- * Le fil de suivi d'une mission, en un nombre.
+ * A mission's follow-up thread, as one number.
  *
- * Savoir qu'il y a trois messages ne dit pas s'il faut les lire : l'infobulle
- * donne le dernier en entier, ce qui epargne le plus souvent l'ouverture du
- * panneau. Quand elle ne suffit pas, le clic mene au fil lui-meme.
+ * Knowing there are three messages does not say whether they need reading: the
+ * tooltip gives the latest in full, which most often saves opening the panel.
+ * When it does not, the click leads to the thread itself.
  *
- * Une mission sans mise a jour ne montre rien : dans un tableau, seul ce qui
- * se lit s'affiche.
+ * A mission with no update shows nothing: in a table, only what can be read is
+ * displayed.
  */
 export function UpdatesCounter({ count, apercu, onOpen }: UpdatesCounterProps) {
   const { tooltip, follow, leave } = useCursorTooltip({ rich: true });
@@ -38,8 +38,8 @@ export function UpdatesCounter({ count, apercu, onOpen }: UpdatesCounterProps) {
     <button
       type="button"
       aria-label={`${count} ${count > 1 ? "mises à jour" : "mise à jour"}`}
-      // La ligne entiere ouvre deja la mission : sans arret, le clic
-      // l'ouvrirait deux fois, et la seconde sur le mauvais onglet.
+      // The whole row already opens the mission: without stopping propagation,
+      // the click would open it twice, the second time on the wrong tab.
       onClick={(event) => {
         event.stopPropagation();
         onOpen();

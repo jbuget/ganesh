@@ -1,4 +1,4 @@
-"""Regles metier portees par un projet, un lot ou une activite hors projet."""
+"""Business rules carried by a project, a work package or off-project work."""
 
 import pytest
 
@@ -12,7 +12,7 @@ from src.shared.exceptions.domain_exceptions import ValidationError
 
 def make_project(
     kind: ProjectKind = ProjectKind.PROJECT,
-    status: ProjectStatus | None = ProjectStatus.BUILD,
+    status: ProjectStatus | None = ProjectStatus.DEVELOPMENT,
     parent_id: int | None = None,
 ) -> Project:
     return Project(
@@ -25,7 +25,7 @@ def make_project(
 
 
 def test_a_project_carries_a_phase_status() -> None:
-    assert make_project().status is ProjectStatus.BUILD
+    assert make_project().status is ProjectStatus.DEVELOPMENT
 
 
 def test_an_off_project_activity_has_no_phase_status() -> None:
@@ -95,9 +95,9 @@ def test_a_project_without_monday_link_is_not_syncable() -> None:
 def test_changing_status_is_allowed_for_a_project() -> None:
     project = make_project(status=ProjectStatus.SCOPING)
 
-    project.change_status(ProjectStatus.BUILD)
+    project.change_status(ProjectStatus.DEVELOPMENT)
 
-    assert project.status is ProjectStatus.BUILD
+    assert project.status is ProjectStatus.DEVELOPMENT
 
 
 def test_changing_status_of_an_off_project_activity_is_rejected() -> None:

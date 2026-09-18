@@ -24,18 +24,18 @@ interface MissionFiltersProps {
   hasFilter: boolean;
   onChange: (change: Partial<Criteres>) => void;
   onEffacer: () => void;
-  /** Missions affichees, et missions que l'ecran porte en tout. */
+  /** Missions shown, and missions the screen carries in all. */
   visible: number;
   total: number;
 }
 
 /**
- * La barre de filtres d'un ecran de missions.
+ * The filter bar of a mission screen.
  *
- * Un critere vide ne retranche rien : la barre part donc du tableau entier, et
- * chaque choix le reduit. Le decompte a droite dit toujours ce qu'on voit sur
- * ce que l'on pourrait voir, pour qu'un ecran presque vide s'explique de
- * lui-meme.
+ * An empty criterion takes nothing away: the bar therefore starts from the
+ * whole board, and every choice narrows it. The count on the right always says
+ * what is seen against what could be seen, so that a nearly empty screen
+ * explains itself.
  */
 export function MissionFilters({
   filters,
@@ -48,8 +48,8 @@ export function MissionFilters({
   const { teammates } = useTeammates();
 
   return (
-    // Un groupe de recherche annonce : le lecteur d'ecran doit pouvoir sauter
-    // aux criteres, et savoir ce qu'ils gouvernent.
+    // An announced search group: a screen reader must be able to jump to the
+    // criteria, and know what they govern.
     <div
       role="search"
       aria-label="Filtrer les missions"
@@ -148,9 +148,9 @@ export function MissionFilters({
           </button>
 
           {/*
-            Le decompte se dit a voix haute : un filtre qui ne laisse rien ne
-            se voit pas quand on ne regarde pas l'ecran, et `status` l'annonce
-            sans interrompre la frappe.
+            The count is spoken aloud: a filter that leaves nothing cannot be
+            seen when one is not looking at the screen, and `status` announces
+            it without interrupting typing.
           */}
           <p role="status" className="ml-auto text-sm tabular-nums text-slate-500">
             {visible} mission{visible > 1 ? "s" : ""} sur {total}

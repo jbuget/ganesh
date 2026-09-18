@@ -1,6 +1,6 @@
 import { formatDecimalDays } from "@/lib/dates";
 
-/** Cote d'une cellule portant un trait fort plutot que le trait de grille. */
+/** Side of a cell carrying a strong rule rather than the grid line. */
 export type StrongSide = "right" | "bottom";
 
 interface TotalCellProps {
@@ -11,15 +11,16 @@ interface TotalCellProps {
 }
 
 /**
- * Cellule de total, en bas de colonne ou en fin de ligne.
+ * A total cell, at the foot of a column or the end of a row.
  *
- * Un total s'ecrit en decimal, « 14,5 », quand une cellule de saisie garde
- * « ½ » : la fraction dit bien une demi-journee posee sur un jour, mais elle se
- * lit mal des qu'elle suit un nombre, et un cumul se compare par son chiffre.
+ * A total is written in decimal, \u00ab 14,5 \u00bb, where an entry cell keeps
+ * \u00ab ½ \u00bb: the fraction does say a half day set on a day, but it reads
+ * poorly as soon as it follows a number, and a running total compares by its
+ * figure.
  *
- * La couleur de chaque bordure est decidee ici, jamais par une classe ajoutee
- * de l'exterieur : deux classes de couleur concurrentes sur un meme cote
- * laisseraient la feuille Tailwind arbitrer, ce qui n'est pas deterministe.
+ * The colour of each border is decided here, never by a class added from
+ * outside: two competing colour classes on the same side would leave the
+ * Tailwind sheet to arbitrate, which is not deterministic.
  */
 export function TotalCell({
   value,

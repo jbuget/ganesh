@@ -6,7 +6,7 @@
  */
 
 /**
- * Une saisie enregistree.
+ * A recorded entry.
  */
 export interface EntryResponse {
   project_id: number;

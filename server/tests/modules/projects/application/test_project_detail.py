@@ -1,4 +1,4 @@
-"""La fiche d'une mission : ce qu'elle rassemble."""
+"""A mission's sheet: what it gathers."""
 
 from datetime import date
 
@@ -39,7 +39,7 @@ NINO = User(
     role=Role.TEAMMATE,
 )
 PROJECT = Project(
-    id=10, label="Portail", kind=ProjectKind.PROJECT, status=ProjectStatus.BUILD
+    id=10, label="Portail", kind=ProjectKind.PROJECT, status=ProjectStatus.DEVELOPMENT
 )
 
 
@@ -60,7 +60,7 @@ def entry(user_id: int, day: date, value: float = 1.0) -> Entry:
         project_id=10,
         day=day,
         value=DayValue(value),
-        status_at_entry=ProjectStatus.BUILD,
+        status_at_entry=ProjectStatus.DEVELOPMENT,
     )
 
 
@@ -112,7 +112,7 @@ async def test_a_contribution_is_split_by_month() -> None:
 
 
 async def test_the_most_recent_month_comes_first() -> None:
-    """On lit d'abord ce qui vient de se passer."""
+    """What just happened is read first."""
     detail = await build(
         [entry(1, date(2026, 7, 1)), entry(1, date(2026, 12, 1))]
     ).execute(10)
@@ -124,7 +124,7 @@ async def test_the_most_recent_month_comes_first() -> None:
 
 
 async def test_someone_who_never_declared_time_is_absent() -> None:
-    """Etre affecte ne suffit pas a figurer dans la consommation."""
+    """Being assigned is not enough to appear in the consumption."""
     detail = await build(assignments={(10, ProjectRole.CONTRIBUTOR): [1, 2]}).execute(
         10
     )
@@ -152,7 +152,7 @@ async def test_a_mission_without_children_has_no_sub_project() -> None:
 
 
 async def test_the_children_of_a_mission_are_listed_in_alphabetical_order() -> None:
-    """On cherche un lot par son nom : la liste doit se parcourir comme un index."""
+    """One looks a work package up by name: the list must read like an index."""
     detail = await build(
         work_packages=[
             work_package(12, "Reprise de donnees"),

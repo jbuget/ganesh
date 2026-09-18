@@ -1,4 +1,4 @@
-"""Assemblage du tableau de bord des projets."""
+"""Assembling the project board."""
 
 from datetime import date, datetime
 
@@ -87,7 +87,7 @@ def build(
 
 
 async def test_every_phase_has_its_column_even_empty() -> None:
-    """Une colonne absente empecherait d'y deposer une carte."""
+    """A missing column would leave nowhere to drop a card."""
     board = await build([]).execute(today=AUJOURDHUI)
 
     assert [c.status for c in board.columns] == list(ProjectStatus)
@@ -120,7 +120,7 @@ async def test_cards_keep_the_order_chosen_by_the_team() -> None:
 
 
 async def test_equal_ranks_are_settled_by_label() -> None:
-    """Les missions anterieures au tableau partagent toutes le rang 0."""
+    """Missions that predate the board all share rank 0."""
     board = await build(
         [
             Project(
@@ -172,10 +172,10 @@ async def test_a_card_lists_the_people_expected_on_it() -> None:
 
 
 async def test_time_spent_does_not_make_someone_an_intervenant() -> None:
-    """Une mission peut avoir consomme des jours sans que personne n'y soit plus.
+    """A mission may have consumed days with nobody on it any more.
 
-    C'est le cas d'un projet en exploitation : le temps passe appartient au
-    passe, et le tableau ne doit pas laisser croire qu'on y travaille encore.
+    That is the case of a project in operations: the time spent belongs to the
+    past, and the board must not suggest anyone is still working on it.
     """
     board = await build(
         [card(1)], [entry(1, 1, date(2026, 9, 10))], assignments={}
@@ -186,7 +186,7 @@ async def test_time_spent_does_not_make_someone_an_intervenant() -> None:
 
 
 async def test_someone_expected_soon_counts_without_any_entry() -> None:
-    """On declare Nino sur un bug avant meme qu'il n'ait saisi la moindre heure."""
+    """Nino is declared on a bug before he has entered a single hour."""
     board = await build([card(1)], assignments={1: [2]}).execute(today=AUJOURDHUI)
 
     assert [c.display_name for c in board.columns[1].cards[0].contributors] == [
@@ -221,7 +221,7 @@ async def test_off_project_activities_never_appear() -> None:
 
 
 async def test_a_card_counts_the_updates_posted_on_it() -> None:
-    """Le fil de suivi se lit d'un coup d'oeil, sans ouvrir la mission."""
+    """The follow-up thread reads at a glance, without opening the mission."""
     updates = InMemoryProjectUpdateRepository()
     await updates.add(
         ProjectUpdate(
@@ -250,7 +250,7 @@ async def test_a_card_counts_the_updates_posted_on_it() -> None:
 
 
 async def test_a_removed_update_no_longer_counts() -> None:
-    """Un message retire ne gonfle pas le compteur affiche sur la carte."""
+    """A withdrawn message does not inflate the counter shown on the card."""
     updates = InMemoryProjectUpdateRepository()
     update = await updates.add(
         ProjectUpdate(
@@ -261,7 +261,7 @@ async def test_a_removed_update_no_longer_counts() -> None:
             published_at=datetime(2026, 9, 10, 9, 0),
         )
     )
-    update.remove(par=1, a=datetime(2026, 9, 12, 9, 0))
+    update.remove(by=1, at=datetime(2026, 9, 12, 9, 0))
 
     board = await build([card(1)], updates=updates).execute(today=AUJOURDHUI)
 
@@ -283,7 +283,7 @@ async def test_a_card_counts_its_sub_projects() -> None:
 
 
 async def test_a_sub_project_card_names_its_parent() -> None:
-    """Une carte de lot doit dire de quel projet elle releve."""
+    """A work package card must say which project it belongs to."""
     board = await build(
         [card(1), card(2, parent_id=1, kind=ProjectKind.WORK_PACKAGE)]
     ).execute(today=AUJOURDHUI)
@@ -295,7 +295,7 @@ async def test_a_sub_project_card_names_its_parent() -> None:
 
 
 async def test_an_inactive_parent_is_still_named() -> None:
-    """Un lot survit a l'archivage de son parent : le lien doit tenir."""
+    """A work package outlives its parent being archived: the link must hold."""
     board = await build(
         [
             card(1, is_active=False),
@@ -315,7 +315,7 @@ async def test_archived_missions_stay_off_the_board_by_default() -> None:
 
 
 async def test_archived_missions_appear_when_asked_for() -> None:
-    """On consulte les archivees pour faire le point, pas pour les piloter."""
+    """Archived missions are looked at to take stock, not to steer them."""
     board = await build([card(1), card(2, is_active=False)]).execute(
         today=AUJOURDHUI, include_inactive=True
     )
@@ -324,7 +324,7 @@ async def test_archived_missions_appear_when_asked_for() -> None:
 
 
 async def test_archived_sub_projects_are_counted_only_when_shown() -> None:
-    """Le compteur d'une carte dit ce que le tableau montre, rien de plus."""
+    """A card's counter says what the board shows, nothing more."""
     missions = [
         card(1),
         card(2, parent_id=1, kind=ProjectKind.WORK_PACKAGE),
@@ -382,7 +382,7 @@ async def test_a_removed_update_is_no_longer_announced() -> None:
             published_at=datetime(2026, 9, 10, 9, 0),
         )
     )
-    update.remove(par=1, a=datetime(2026, 9, 12, 9, 0))
+    update.remove(by=1, at=datetime(2026, 9, 12, 9, 0))
 
     board = await build([card(1)], updates=updates).execute(today=AUJOURDHUI)
 

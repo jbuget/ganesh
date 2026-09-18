@@ -1,4 +1,4 @@
-"""Modele SQLAlchemy du journal d'audit."""
+"""SQLAlchemy model of the audit log."""
 
 from datetime import date, datetime
 
@@ -10,7 +10,7 @@ from src.modules.audit_logs.domain.entities.audit_log import AuditAction
 
 
 class AuditLogModel(Base):
-    """Trace immuable des actions significatives."""
+    """Immutable trace of the actions that matter."""
 
     __tablename__ = "audit_log"
 

@@ -6,7 +6,7 @@
  */
 
 /**
- * Ce que l'import a fait, ligne par ligne.
+ * What the import did, line by line.
  */
 export interface ImportReportResponse {
   created: number;

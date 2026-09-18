@@ -1,4 +1,4 @@
-"""Port d'acces au referentiel des missions."""
+"""Port for the mission reference list."""
 
 from abc import ABC, abstractmethod
 
@@ -6,7 +6,7 @@ from src.modules.projects.domain.entities.project import Project
 
 
 class ProjectRepository(ABC):
-    """Contrat de persistance des projets, lots et activites hors projet."""
+    """Persistence contract for projects, work packages and off-project work."""
 
     @abstractmethod
     async def get_by_id(self, project_id: int) -> Project | None: ...

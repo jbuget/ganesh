@@ -1,4 +1,4 @@
-"""Modifie les champs de fiche d'une mission."""
+"""Changes the sheet fields of a mission."""
 
 from dataclasses import dataclass
 
@@ -20,7 +20,7 @@ from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 @dataclass(frozen=True)
 class UpdateProjectDetailCommand:
-    """Departements et contacts metier d'une mission."""
+    """Departments and business contacts of a mission."""
 
     actor_id: int
     project_id: int
@@ -39,9 +39,9 @@ class UpdateDescriptionCommand:
 
 @dataclass(frozen=True)
 class AddLinkCommand:
-    """Ajout d'un lien utile.
+    """Adding a useful link.
 
-    L'icone est facultative : sans choix explicite, l'adresse la designe.
+    The icon is optional: without an explicit choice, the address names it.
     """
 
     actor_id: int
@@ -52,7 +52,7 @@ class AddLinkCommand:
 
 
 class UpdateProjectDetailUseCase:
-    """Enregistre les departements et les contacts d'une mission."""
+    """Saves the departments and contacts of a mission."""
 
     def __init__(
         self,
@@ -76,7 +76,7 @@ class UpdateProjectDetailUseCase:
         await self._projects.update(mission)
         await self._details.set_departments(command.project_id, command.departments)
 
-        # Une trace par champ, comme le fait deja la modification d'une mission.
+        # One trace per field, as editing a mission already does.
         for field, avant, apres in (
             ("contacts_metier", ancien, contacts),
             (
@@ -100,7 +100,7 @@ class UpdateProjectDetailUseCase:
 
 
 class AddProjectLinkUseCase:
-    """Attache un lien utile a une mission."""
+    """Attaches a useful link to a mission."""
 
     def __init__(
         self,
@@ -125,7 +125,7 @@ class AddProjectLinkUseCase:
 
 
 class RemoveProjectLinkUseCase:
-    """Detache un lien d'une mission."""
+    """Detaches a link from a mission."""
 
     def __init__(self, details: ProjectDetailRepository) -> None:
         self._details = details
@@ -135,11 +135,11 @@ class RemoveProjectLinkUseCase:
 
 
 class UpdateDescriptionUseCase:
-    """Enregistre la fiche de service d'une mission.
+    """Saves the service sheet of a mission.
 
-    La trace ne retient pas les deux versions du texte : une fiche fait des
-    pages, et l'audit sert a savoir qui a touche a quoi, pas a rejouer les
-    revisions. Le champ suffit.
+    The trace does not keep both versions of the text: a sheet runs to pages,
+    and the audit log is there to know who touched what, not to replay
+    revisions. The field name is enough.
     """
 
     def __init__(

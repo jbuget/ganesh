@@ -8,7 +8,7 @@ import type { GridRowResponseValues } from "./gridRowResponseValues";
 import type { ProjectKind } from "./projectKind";
 
 /**
- * Une ligne de la matrice : une mission et ses saisies.
+ * One grid row: a mission and its entries.
  */
 export interface GridRowResponse {
   project_id: number;

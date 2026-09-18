@@ -30,10 +30,10 @@ export function todayIso(): string {
 }
 
 /**
- * Etat et actions de l'ecran de saisie d'un mois.
+ * State and actions of a month's entry screen.
  *
- * Toute la coordination vit ici — navigation, donnees, ecritures — pour que le
- * composant ne porte plus que le rendu.
+ * All the coordination lives here — navigation, data, writes — so the component
+ * carries nothing but the rendering.
  */
 export function useTimesheetMonth() {
   const today = todayIso();
@@ -76,7 +76,7 @@ export function useTimesheetMonth() {
     currentUserId: me?.id ?? null,
     isOwnMonth: viewedUserId === null || viewedUserId === me?.id,
 
-    /** Missions deja presentes dans la matrice, a ne pas reproposer. */
+    /** Missions already in the grid, not to be offered again. */
     displayedProjectIds: [
       ...(grid?.rows.map((row) => row.project_id) ?? []),
       ...extraRows.map((project) => project.id),
@@ -96,7 +96,7 @@ export function useTimesheetMonth() {
       setViewedUserId(userId === me?.id ? null : userId);
     },
 
-    /** Une valeur nulle retire la saisie ; toute autre valeur l'ecrit. */
+    /** A null value removes the entry; any other value writes it. */
     async setDayValue(projectId: number, day: string, value: DayValue) {
       if (value === 0) {
         await clearEntry({ project_id: projectId, day, ...target });
@@ -112,10 +112,10 @@ export function useTimesheetMonth() {
     },
 
     /**
-     * Retire une mission du mois, avec le temps qu'elle porte.
+     * Removes a mission from the month, with the time it carries.
      *
-     * Une ligne ajoutee mais encore vide n'existe que localement : il n'y a
-     * rien a demander au serveur pour la faire disparaitre.
+     * A row added but still empty exists locally only: there is nothing to ask
+     * the server to make it disappear.
      */
     async removeMission(projectId: number) {
       setExtraRows((rows) => rows.filter((row) => row.id !== projectId));

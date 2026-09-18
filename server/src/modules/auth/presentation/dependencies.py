@@ -1,4 +1,4 @@
-"""Authentification des requetes et resolution de l'utilisateur courant."""
+"""Authenticating requests and resolving the current user."""
 
 import logging
 
@@ -19,7 +19,7 @@ from src.shared.exceptions.domain_exceptions import ForbiddenActionError
 
 logger = logging.getLogger(__name__)
 
-#: Identite utilisee quand l'authentification est desactivee en developpement.
+#: Identity used when authentication is switched off in development.
 DEV_IDENTITY = EntraIdentity(
     oid="dev-local",
     email="j.buget@waat.fr",
@@ -32,11 +32,11 @@ async def get_current_user(
     session: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> User:
-    """Resout l'utilisateur courant, en le provisionnant au besoin.
+    """Resolves the current user, provisioning them if need be.
 
-    Avec `REQUIRE_AUTH=false`, une identite de developpement est utilisee : cela
-    permet de travailler sans avoir declare l'URI de redirection cote Entra.
-    Ce mode ne doit jamais etre actif en production.
+    With `REQUIRE_AUTH=false`, a development identity is used: it allows work
+    without having declared the redirect URI on the Entra side. This mode must
+    never be active in production.
     """
     provision = ProvisionUserUseCase(users=SqlUserRepository(session))
 
@@ -49,7 +49,7 @@ async def get_current_user(
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Jeton d'authentification manquant.",
+            detail="Missing authentication token.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -73,7 +73,7 @@ async def get_current_user(
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Ce compte est desactive.",
+            detail="This account is deactivated.",
         )
     return user
 
@@ -81,10 +81,10 @@ async def get_current_user(
 async def get_current_manager(
     user: User = Depends(get_current_user),
 ) -> User:
-    """Restreint l'acces aux managers."""
+    """Restricts access to managers."""
     if not user.can_manage_teammates():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Cette action est reservee aux managers.",
+            detail="This action is reserved for managers.",
         )
     return user

@@ -9,15 +9,15 @@ import { moveToColumn, targetIndex, locate, reorder } from "@/lib/board-move";
 import type { Colonnes, useBoard } from "@/lib/use-board";
 
 /**
- * Le glissement d'une carte, du premier survol jusqu'a l'enregistrement.
+ * Dragging a card, from the first hover to the save.
  *
- * Un geste est une transaction : on garde l'etat de depart pour pouvoir y
- * revenir, et l'etat vivant est remanie a chaque survol puis affiche. Les
- * colonnes s'ouvrent et se referment donc sous le curseur, et le depot ne fait
- * qu'entériner ce que l'on voyait deja.
+ * A gesture is a transaction: the starting state is kept so it can be returned
+ * to, and the live state is reworked on every hover then displayed. Columns
+ * therefore open and close under the cursor, and dropping only confirms what
+ * one already saw.
  *
- * L'etat vivant est tenu dans une ref, et non lu depuis le rendu : entre deux
- * survols, React n'a pas forcement rejoue le composant.
+ * The live state is held in a ref, not read from the render: between two
+ * hovers, React has not necessarily replayed the component.
  */
 export function useBoardDrag(board: ReturnType<typeof useBoard>) {
   const [isDragging, setEnDeplacement] = useState<BoardCardResponse | null>(null);
@@ -28,14 +28,14 @@ export function useBoardDrag(board: ReturnType<typeof useBoard>) {
     board.preview(next_ones);
   }
 
-  /** La phase visee : on survole soit une colonne, soit une carte. */
+  /** The phase aimed at: one hovers either a column or a card. */
   function targetColumn(columns: Colonnes, overId: string | number) {
     const phase = PHASES.find(({ status }) => status === overId);
     if (phase) return phase.status;
     return locate(columns, Number(overId))?.status ?? null;
   }
 
-  /** L'id de la carte survolee, ou null si c'est le fond d'une colonne. */
+  /** The id of the hovered card, or null when it is a column's background. */
   const hoveredCard = (overId: string | number) =>
     typeof overId === "number" ? overId : null;
 
@@ -76,8 +76,8 @@ export function useBoardDrag(board: ReturnType<typeof useBoard>) {
         return;
       }
 
-      // Deja dans la bonne phase : le rang continue de suivre le curseur, sinon
-      // l'emplacement resterait fige la ou l'on est entre dans la colonne.
+      // Already in the right phase: the rank goes on following the cursor,
+      // otherwise the slot would stay frozen where one entered the column.
       if (overId === null || overId === id) return;
       const vise = locate(alive, overId);
       if (!vise) return;
@@ -95,14 +95,14 @@ export function useBoardDrag(board: ReturnType<typeof useBoard>) {
       const depart = locate(encours.depart, id);
       if (!depart) return;
 
-      // Rien a recalculer : le survol a deja place la carte, et l'emplacement
-      // en pointilles montrait exactement ou elle allait tomber. Deposer, c'est
-      // enteriner ce que l'on voyait.
+      // Nothing to recompute: hovering has already placed the card, and the
+      // dotted slot showed exactly where it would land. Dropping confirms what
+      // one was looking at.
       const finales = encours.alive;
       const arrivee = locate(finales, id);
       if (!arrivee) return;
       if (arrivee.status === depart.status && arrivee.position === depart.position) {
-        // Rien n'a bouge : on remet l'ecran tel qu'il etait, sans appel serveur.
+        // Nothing moved: the screen goes back as it was, with no server call.
         board.preview(encours.depart);
         return;
       }

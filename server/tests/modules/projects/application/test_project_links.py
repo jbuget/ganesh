@@ -1,4 +1,4 @@
-"""Les liens utiles attaches a une mission."""
+"""The useful links attached to a mission."""
 
 import pytest
 
@@ -69,7 +69,7 @@ async def test_a_mission_holds_as_many_links_as_wanted() -> None:
 
 
 async def test_an_icon_is_guessed_from_the_address_when_none_is_given() -> None:
-    """Coller une adresse connue suffit : l'icone suit sans qu'on la choisisse."""
+    """Pasting a known address is enough: the icon follows unasked."""
     use_case, details = build()
 
     await use_case.execute(

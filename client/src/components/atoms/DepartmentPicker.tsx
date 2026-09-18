@@ -13,10 +13,10 @@ interface DepartmentPickerProps {
 }
 
 /**
- * Departements concernes par une mission.
+ * Departments a mission concerns.
  *
- * Plusieurs sont possibles : un outil qui sert les bailleurs et le service
- * client concerne les deux, et le pilotage veut le voir des deux cotes.
+ * Several are possible: a tool serving landlords and customer service concerns
+ * both, and steering wants to see it on both sides.
  */
 export function DepartmentPicker({ values, onChange }: DepartmentPickerProps) {
   const [ouvert, setOuvert] = useState(false);

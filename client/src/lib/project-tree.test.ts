@@ -50,7 +50,7 @@ describe("buildProjectTree", () => {
     const tree = buildProjectTree([
       mission(1, "Alpha", "project", null, "operations"),
       mission(2, "Beta", "project", null, "exploration"),
-      mission(3, "Gamma", "project", null, "build"),
+      mission(3, "Gamma", "project", null, "development"),
     ]);
 
     expect(tree.map((n) => n.mission.project.label)).toEqual([
@@ -73,7 +73,7 @@ describe("buildProjectTree", () => {
     const tree = buildProjectTree([
       mission(1, "Portail", "project", null, "scoping"),
       mission(2, "Lot livré", "work_package", 1, "operations"),
-      mission(3, "Lot en cours", "work_package", 1, "build"),
+      mission(3, "Lot en cours", "work_package", 1, "development"),
     ]);
 
     expect(tree[0].lots.map((l) => l.project.label)).toEqual([
@@ -142,8 +142,8 @@ describe("buildProjectTree, rangé sur une colonne", () => {
   });
 
   it("garde chaque lot sous son projet", () => {
-    // Trier ne doit jamais remonter un sous-projet au premier niveau : la
-    // liste se range, l'arborescence ne bouge pas.
+    // Sorting must never lift a sub-project to the first level: the list gets
+    // ordered, the tree does not move.
     const tree = buildProjectTree(
       [
         mission(1, "Alpha", "project"),

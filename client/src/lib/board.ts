@@ -8,15 +8,16 @@ import type {
 } from "@/lib/api/generated/model";
 
 /**
- * Phases du tableau, dans l'ordre des colonnes.
+ * Board phases, in column order.
  *
- * La pastille suit l'avancement, du gris de ce qui n'est pas commence au vert
- * de ce qui tourne : la couleur situe une colonne avant meme d'en lire le titre.
+ * The dot follows progress, from the grey of what has not started to the green
+ * of what is running: the colour places a column before one even reads its
+ * title.
  */
 export const PHASES: { status: ProjectStatus; label: string; dot: string }[] = [
   { status: "exploration", label: "Exploration", dot: "bg-slate-400" },
   { status: "scoping", label: "Cadrage", dot: "bg-violet-500" },
-  { status: "build", label: "Réalisation", dot: "bg-blue-500" },
+  { status: "development", label: "Réalisation", dot: "bg-blue-500" },
   { status: "validation", label: "Validation", dot: "bg-amber-500" },
   { status: "deployment", label: "Déploiement", dot: "bg-orange-500" },
   { status: "operations", label: "Exploitation", dot: "bg-emerald-500" },
@@ -24,7 +25,7 @@ export const PHASES: { status: ProjectStatus; label: string; dot: string }[] = [
 
 const PHASES_PAR_STATUT = new Map(PHASES.map((p) => [p.status, p]));
 
-/** Couleur de la pastille d'une phase. */
+/** Colour of a phase's dot. */
 export function phaseDot(status: ProjectStatus): string {
   return PHASES_PAR_STATUT.get(status)?.dot ?? "bg-slate-300";
 }
@@ -32,11 +33,11 @@ export function phaseDot(status: ProjectStatus): string {
 const RANGS_PHASES = new Map(PHASES.map((phase, rang) => [phase.status, rang]));
 
 /**
- * Rang d'une phase dans le cycle de vie.
+ * Rank of a phase in the life cycle.
  *
- * Donne aux listes le meme ordre que les colonnes du kanban : on retrouve une
- * mission au meme endroit relatif, quel que soit l'ecran. Ce qui ne porte pas
- * de phase ferme la marche plutot que d'ouvrir le bal.
+ * Gives lists the same order as the kanban columns: a mission turns up in the
+ * same relative place, whatever the screen. What carries no phase brings up
+ * the rear rather than leading the way.
  */
 export function phaseRank(status: ProjectStatus | null | undefined): number {
   return status ? (RANGS_PHASES.get(status) ?? PHASES.length) : PHASES.length;
@@ -49,11 +50,11 @@ export function phaseLabel(status: ProjectStatus): string {
 }
 
 /**
- * Axes strategiques, avec la teinte qui les distingue.
+ * Strategic axes, with the shade that tells them apart.
  *
- * Meme grammaire que les phases et les urgences : une marque coloree, un
- * libelle ordinaire. La marque est carree, la ou celle d'une phase est ronde :
- * deux points de meme forme sur une meme ligne se confondraient.
+ * The same grammar as phases and urgencies: a coloured mark, an ordinary
+ * label. The mark is square where a phase's is round: two marks of the same
+ * shape on one line would blur together.
  */
 export const CATEGORIES: {
   value: ProjectCategory;
@@ -89,16 +90,16 @@ export function category(value: ProjectCategory | null | undefined) {
 }
 
 /**
- * Urgences, de la plus forte a la plus faible.
+ * Urgencies, from the strongest to the weakest.
  *
- * Une marque coloree et un libelle en texte ordinaire, comme les phases : la
- * couleur repere, elle ne remplit pas. Trois surfaces teintees par ligne — une
- * par phase, une par urgence, une par axe — faisaient crier les deux colonnes
- * les moins structurantes plus fort que le nom de la mission.
+ * A coloured mark and a label in ordinary text, as phases have: colour marks,
+ * it does not fill. Three tinted surfaces per row — one for the phase, one for
+ * the urgency, one for the axis — made the two least structuring columns shout
+ * louder than the mission name.
  *
- * L'echelle se lit au remplissage — quatre barres, puis trois, deux, une —
- * et pas seulement a la teinte : elle reste donc lisible pour qui ne distingue
- * pas les couleurs, ou n'en dispose pas.
+ * The scale reads by how full the gauge is — four bars, then three, two, one —
+ * and not by shade alone: it stays readable for whoever cannot tell the colours
+ * apart, or does not have them.
  */
 export const PRIORITIES: {
   value: ProjectPriority;
@@ -114,8 +115,8 @@ export const PRIORITIES: {
     icon: SignalMedium,
     colour: "text-amber-500",
   },
-  // Une priorite basse n'a pas a attirer le regard : le gris la fait reculer,
-  // et l'oeil ne retient que ce qui demande une decision.
+  // A low priority has no business drawing the eye: grey makes it recede, and
+  // the eye keeps only what calls for a decision.
   { value: "low", label: "Basse", icon: SignalLow, colour: "text-slate-400" },
 ];
 
@@ -125,7 +126,7 @@ export function priority(value: ProjectPriority | null | undefined) {
   return value ? (PRIORITES_PAR_VALEUR.get(value) ?? null) : null;
 }
 
-/** Etat d'avancement d'une mission par rapport a son estime. */
+/** How far along a mission is against its estimate. */
 export type Avancement = "sans-estime" | "en-cours" | "proche" | "depasse";
 
 export function progress(

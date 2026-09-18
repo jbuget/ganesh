@@ -16,7 +16,7 @@ export type ProjectStatus = (typeof ProjectStatus)[keyof typeof ProjectStatus];
 export const ProjectStatus = {
   exploration: "exploration",
   scoping: "scoping",
-  build: "build",
+  development: "development",
   validation: "validation",
   deployment: "deployment",
   operations: "operations",

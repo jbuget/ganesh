@@ -1,4 +1,4 @@
-"""Persistance des collections attachees a une mission."""
+"""Persistence of the collections attached to a mission."""
 
 from datetime import date
 
@@ -19,7 +19,7 @@ from src.modules.projects.infrastructure.database.models.project_detail_models i
 
 
 class SqlProjectDetailRepository(ProjectDetailRepository):
-    """Collections du detail, en base."""
+    """Detail collections, in the database."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -92,8 +92,8 @@ class SqlProjectDetailRepository(ProjectDetailRepository):
     async def mark_phase_reached(
         self, project_id: int, status: ProjectStatus, reached_at: date
     ) -> None:
-        # La premiere date fait foi : repasser par une phase ne reecrit pas
-        # l'histoire, et l'on garde la date du premier franchissement.
+        # The first date is the one that counts: passing through a phase again
+        # does not rewrite history, and the first crossing is kept.
         await self._session.execute(
             insert(ProjectPhaseReachedModel)
             .values(project_id=project_id, status=status, reached_at=reached_at)

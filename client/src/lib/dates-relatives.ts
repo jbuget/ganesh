@@ -1,13 +1,13 @@
-/** Depuis quand, en toutes lettres et sans precision inutile. */
+/** How long ago, spelled out and no more precise than it needs to be. */
 const MINUTE = 60_000;
 const HEURE = 60 * MINUTE;
 const JOUR = 24 * HEURE;
 
 /**
- * « a l'instant », « il y a 3 h », « le 11 sept. ».
+ * \u00ab a l'instant \u00bb, \u00ab il y a 3 h \u00bb, \u00ab le 11 sept. \u00bb.
  *
- * Au-dela d'une semaine, la date exacte dit plus que le nombre de jours : on
- * se repere a « le 11 septembre », pas a « il y a 23 jours ».
+ * Past a week, the exact date says more than a number of days: one gets one's
+ * bearings from \u00ab le 11 septembre \u00bb, not from \u00ab il y a 23 jours \u00bb.
  */
 export function depuis(iso: string, maintenant: Date): string {
   const ecoule = maintenant.getTime() - new Date(iso).getTime();

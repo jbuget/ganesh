@@ -27,10 +27,10 @@ function formatDate(iso: string): string {
 }
 
 /**
- * Les etapes franchies par une mission, dans l'ordre.
+ * The steps a mission has passed, in order.
  *
- * Chaque date est nommee par ce qu'elle acheve — « Validé le 12 mai » — et non
- * par la phase ou l'on arrive : c'est ainsi qu'on en parle.
+ * Each date is named by what it completes — \u00ab Validé le 12 mai \u00bb — and
+ * not by the phase being entered: that is how people talk about it.
  */
 export function PhaseTimeline({ phases }: PhaseTimelineProps) {
   if (phases.length === 0) {

@@ -51,7 +51,7 @@ COLONNES = [
 #: (table, colonne, ancien membre, nouveau membre)
 MEMBRES = [
     ("projects", "status", "CADRAGE", "SCOPING"),
-    ("projects", "status", "REALISATION", "BUILD"),
+    ("projects", "status", "REALISATION", "DEVELOPMENT"),
     ("projects", "status", "DEPLOIEMENT", "DEPLOYMENT"),
     ("projects", "status", "EXPLOITATION", "OPERATIONS"),
     ("projects", "kind", "PROJET", "PROJECT"),
@@ -66,11 +66,11 @@ MEMBRES = [
     ("projects", "priority", "NORMALE", "NORMAL"),
     ("projects", "priority", "BASSE", "LOW"),
     ("entries", "status_at_entry", "CADRAGE", "SCOPING"),
-    ("entries", "status_at_entry", "REALISATION", "BUILD"),
+    ("entries", "status_at_entry", "REALISATION", "DEVELOPMENT"),
     ("entries", "status_at_entry", "DEPLOIEMENT", "DEPLOYMENT"),
     ("entries", "status_at_entry", "EXPLOITATION", "OPERATIONS"),
     ("project_phases_reached", "status", "CADRAGE", "SCOPING"),
-    ("project_phases_reached", "status", "REALISATION", "BUILD"),
+    ("project_phases_reached", "status", "REALISATION", "DEVELOPMENT"),
     ("project_phases_reached", "status", "DEPLOIEMENT", "DEPLOYMENT"),
     ("project_phases_reached", "status", "EXPLOITATION", "OPERATIONS"),
     ("month_status", "state", "OUVERT", "OPEN"),

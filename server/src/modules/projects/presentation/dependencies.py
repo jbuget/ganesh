@@ -1,4 +1,4 @@
-"""Cablage des use cases du referentiel."""
+"""Wiring of the reference list use cases."""
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -256,7 +256,7 @@ def _thread_write(
     updates: ProjectUpdateRepository = Depends(get_project_update_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> dict[str, object]:
-    """Les quatre depots que partagent les ecritures du fil."""
+    """The four repositories the thread writes share."""
     return {
         "users": users,
         "projects": projects,

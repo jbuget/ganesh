@@ -21,12 +21,12 @@ interface RemoveMissionDialogProps {
 }
 
 /**
- * Confirmation avant le retrait d'une mission qui porte du temps.
+ * Confirmation before removing a mission that carries time.
  *
- * Le total est annonce avant la decision : retirer la ligne efface les saisies
- * du mois, et rien ne permettrait de les retrouver ensuite.
+ * The total is announced before the decision: removing the row erases the
+ * month's entries, and nothing would bring them back afterwards.
  *
- * Une ligne vide ne passe pas par ici : il n'y a alors rien a perdre.
+ * An empty row does not go through here: there is then nothing to lose.
  */
 export function RemoveMissionDialog({
   open,

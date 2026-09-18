@@ -15,11 +15,11 @@ interface SortableColumnHeaderProps {
 }
 
 /**
- * Un en-tete de colonne sur lequel on range le tableau.
+ * A column header the table gets arranged by.
  *
- * La double fleche ne parait qu'au survol de l'en-tete vise : neuf colonnes
- * qui reclameraient l'attention en meme temps ne diraient plus laquelle ordonne
- * la liste. Celle qui la range, elle, garde sa fleche affichee.
+ * The double arrow only appears when hovering the header aimed at: nine
+ * columns calling for attention at once would no longer say which one orders
+ * the list. The one that does keeps its arrow showing.
  */
 export function SortableColumnHeader({
   column,

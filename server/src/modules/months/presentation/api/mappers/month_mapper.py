@@ -1,4 +1,4 @@
-"""Traduction de l'etat des mois en schemas d'API."""
+"""Translating month state into API schemas."""
 
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.presentation.api.schemas.month_schemas import MonthResponse

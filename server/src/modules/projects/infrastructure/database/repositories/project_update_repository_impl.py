@@ -1,4 +1,4 @@
-"""Persistance du fil de suivi d'une mission."""
+"""Persistence of a mission's follow-up thread."""
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,7 +25,7 @@ def _to_entity(model: ProjectUpdateModel) -> ProjectUpdate:
 
 
 class SqlProjectUpdateRepository(ProjectUpdateRepository):
-    """Le fil, en base."""
+    """The thread, in the database."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -56,8 +56,8 @@ class SqlProjectUpdateRepository(ProjectUpdateRepository):
         return dict(result.tuples().all())
 
     async def latest_by_project(self) -> dict[int, ProjectUpdate]:
-        # Les retirees sont ecartees avant le tri, et non apres : la derniere
-        # lisible d'un fil n'est pas toujours la derniere ecrite.
+        # Withdrawn ones are ruled out before sorting, not after: the latest
+        # readable update of a thread is not always the last one written.
         vivantes = (
             select(ProjectUpdateModel)
             .where(ProjectUpdateModel.deleted_at.is_(None))

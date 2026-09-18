@@ -9,7 +9,7 @@ import { useProjectUpdates } from "@/lib/use-project-updates";
 
 interface ProjectUpdatesTabProps {
   projectId: number;
-  /** Fige l'heure de reference : sans cela, serveur et client divergeraient. */
+  /** Freezes the reference time: without it, server and client would diverge. */
   maintenant: Date;
   /** Previent l'ecran d'ou l'on vient : il annonce le fil sans l'ouvrir. */
   onChange?: () => void | Promise<void>;

@@ -1,7 +1,7 @@
-"""Repositories en memoire pour tester les use cases sans base ni mocks.
+"""In-memory repositories, to test use cases without a database or mocks.
 
-Ils implementent les memes ports que l'infrastructure : un use case qui passe
-ici passe en production, a la persistance pres.
+They implement the same ports as the infrastructure: a use case that passes
+here passes in production, persistence aside.
 """
 
 from datetime import date
@@ -42,8 +42,8 @@ class InMemoryUserRepository(UserRepository):
     def __init__(self, users: list[User] | None = None) -> None:
         self._users: dict[int, User] = {}
         self._next_id = 1
-        #: Nombre d'ecritures subies : la fenetre de fraicheur de la derniere
-        #: connexion ne se verifie qu'en comptant ce que le use case persiste.
+        #: How many writes it took: the freshness window of the last login can
+        #: only be checked by counting what the use case persists.
         self.updates = 0
         for user in users or []:
             self._users[user.id or self._next_id] = user

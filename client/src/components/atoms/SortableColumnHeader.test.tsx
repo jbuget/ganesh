@@ -53,7 +53,7 @@ describe("SortableColumnHeader", () => {
   });
 
   it("reste muette quand c'est une autre colonne qui range la liste", () => {
-    // Deux fleches affichees en meme temps ne diraient plus laquelle ordonne.
+    // Two arrows shown at once would no longer say which one orders the list.
     afficher({ column: "phase", direction: "asc" });
 
     expect(screen.getByRole("columnheader")).toHaveAttribute("aria-sort", "none");

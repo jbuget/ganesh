@@ -1,4 +1,4 @@
-"""Cree une mission dans le referentiel."""
+"""Creates a mission in the reference list."""
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
@@ -15,10 +15,10 @@ from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 
 class CreateProjectUseCase:
-    """Ajoute un projet, un lot ou une activite hors projet.
+    """Adds a project, a work package or off-project work.
 
-    La creation est ouverte a toute l'equipe : la confiance est le parti pris,
-    la tracabilite le garde-fou.
+    Creation is open to the whole team: trust is the stance, traceability the
+    safeguard.
     """
 
     def __init__(
@@ -43,7 +43,9 @@ class CreateProjectUseCase:
                 else None
             )
             if parent is None:
-                raise EntityNotFoundError("Le projet parent du lot est introuvable.")
+                raise EntityNotFoundError(
+                    "The parent project of the work package cannot be found."
+                )
             ensure_can_be_parent(parent)
 
         project = await self._projects.add(

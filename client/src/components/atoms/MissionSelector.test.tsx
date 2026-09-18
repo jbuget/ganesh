@@ -5,9 +5,9 @@ import { MissionSelector } from "./MissionSelector";
 import type { ProjectResponse } from "@/lib/api/generated/model";
 
 /**
- * Le menu deroulant repose sur Base UI, qui ne s'ouvre pas sous jsdom : son
- * contenu — champ de recherche compris — se verifie dans le navigateur. Le tri
- * des missions, lui, est teste directement dans `lib/missions.test.ts`.
+ * The dropdown rests on Base UI, which does not open under jsdom: its content
+ * — search field included — is checked in the browser. The sorting of missions
+ * is tested directly in `lib/missions.test.ts`.
  */
 const PROJECTS: ProjectResponse[] = [
   {

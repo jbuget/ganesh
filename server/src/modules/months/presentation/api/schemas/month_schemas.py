@@ -1,4 +1,4 @@
-"""Schemas de l'etat des mois."""
+"""Month state schemas."""
 
 from datetime import date, datetime
 
@@ -8,7 +8,7 @@ from src.modules.months.domain.entities.month import MonthState
 
 
 class MonthResponse(BaseModel):
-    """Etat de saisie d'un mois."""
+    """Entry state of a month."""
 
     user_id: int
     month: date

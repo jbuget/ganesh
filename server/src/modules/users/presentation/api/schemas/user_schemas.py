@@ -1,4 +1,4 @@
-"""Schemas des collaborateurs."""
+"""Teammate schemas."""
 
 from datetime import datetime
 
@@ -8,7 +8,7 @@ from src.modules.users.domain.entities.user import Role
 
 
 class UserResponse(BaseModel):
-    """Un collaborateur."""
+    """A teammate."""
 
     id: int
     email: str
@@ -16,17 +16,17 @@ class UserResponse(BaseModel):
     initials: str
     role: Role
     is_active: bool
-    #: Null tant que le compte ne s'est jamais connecte.
+    #: Null while the account has never logged in.
     last_login_at: datetime | None = None
 
 
 class ChangeRoleRequest(BaseModel):
-    """Promotion ou retrogradation d'un collaborateur."""
+    """Promoting or demoting a teammate."""
 
     role: Role
 
 
 class SetActiveRequest(BaseModel):
-    """Coupure ou retablissement de l'acces d'un collaborateur."""
+    """Cutting off or restoring a teammate's access."""
 
     is_active: bool

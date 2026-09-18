@@ -8,7 +8,7 @@ import type { ProjectKind } from "./projectKind";
 import type { ProjectStatus } from "./projectStatus";
 
 /**
- * Une ligne d'import, telle qu'elle sort d'un tableur.
+ * One import line, as it comes out of a spreadsheet.
  */
 export interface ImportLineRequest {
   label: string;

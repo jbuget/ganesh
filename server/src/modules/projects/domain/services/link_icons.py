@@ -1,15 +1,16 @@
-"""Ce qu'une adresse laisse deviner de la nature d'un lien.
+"""What an address lets one guess about the nature of a link.
 
-Coller une adresse suffit a poser un lien : plutot que d'obliger a choisir une
-icone, on la propose a partir du service vise. L'auteur garde le dernier mot.
+Pasting an address is enough to add a link: rather than forcing a choice of
+icon, one is suggested from the service it points to. The author has the last
+word.
 """
 
 from urllib.parse import urlparse
 
 from src.modules.projects.domain.entities.project_link import LinkIcon
 
-#: Services reconnus, par domaine. Un sous-domaine herite du sien : l'espace
-#: Slack d'une equipe vit sous `<equipe>.slack.com`.
+#: Known services, by domain. A subdomain inherits from its own: a team's
+#: Slack space lives under `<team>.slack.com`.
 _ICONE_PAR_DOMAINE = {
     "github.com": LinkIcon.REPOSITORY,
     "gitlab.com": LinkIcon.REPOSITORY,
@@ -32,7 +33,7 @@ _ICONE_PAR_DOMAINE = {
     "youtu.be": LinkIcon.VIDEO,
 }
 
-#: Google sert trois outils depuis `docs.google.com` : seul le chemin les separe.
+#: Google serves three tools from `docs.google.com`: only the path tells them apart.
 _ICONE_PAR_CHEMIN_GOOGLE = {
     "document": LinkIcon.DOCUMENT,
     "spreadsheets": LinkIcon.SPREADSHEET,
@@ -41,7 +42,7 @@ _ICONE_PAR_CHEMIN_GOOGLE = {
 
 
 def guess_icon(url: str) -> LinkIcon:
-    """Propose une icone d'apres l'adresse. Une adresse inconnue reste neutre."""
+    """Suggests an icon from the address. An unknown address stays neutral."""
     adresse = urlparse(url.strip())
     host = (adresse.hostname or "").lower()
 
@@ -57,9 +58,9 @@ def guess_icon(url: str) -> LinkIcon:
 
 
 def _matches(host: str, domaine: str) -> bool:
-    """Le domaine lui-meme, ou l'un de ses sous-domaines — et rien d'autre.
+    """The domain itself, or one of its subdomains — and nothing else.
 
-    La comparaison se fait sur un point : sans lui, `monfigma.com` passerait
-    pour Figma.
+    The comparison hinges on a dot: without it, `myfigma.com` would pass for
+    Figma.
     """
     return host == domaine or host.endswith(f".{domaine}")

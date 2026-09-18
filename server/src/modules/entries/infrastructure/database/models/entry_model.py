@@ -1,4 +1,4 @@
-"""Modeles SQLAlchemy des saisies et des missions du mois."""
+"""SQLAlchemy models for entries and the missions of a month."""
 
 from datetime import date, datetime
 
@@ -20,7 +20,7 @@ from src.modules.projects.domain.entities.project import ProjectStatus
 
 
 class EntryModel(Base):
-    """Une saisie : un utilisateur, une mission, un jour."""
+    """An entry: a user, a mission, a day."""
 
     __tablename__ = "entries"
     __table_args__ = (
@@ -38,8 +38,8 @@ class EntryModel(Base):
     day: Mapped[date] = mapped_column(Date, index=True)
     value: Mapped[float] = mapped_column(Float)
 
-    # Photo du statut du projet au moment de la saisie : permet de mesurer le
-    # temps consomme par phase.
+    # Snapshot of the project status at entry time: makes it possible to
+    # measure time consumed per phase.
     status_at_entry: Mapped[ProjectStatus | None] = mapped_column(
         Enum(ProjectStatus, name="project_status", native_enum=False, length=16),
         nullable=True,
@@ -54,7 +54,7 @@ class EntryModel(Base):
 
 
 class UserMissionModel(Base):
-    """Les missions qu'un utilisateur a ajoutees a son mois."""
+    """The missions a user added to their month."""
 
     __tablename__ = "user_missions"
     __table_args__ = (

@@ -1,4 +1,4 @@
-"""Ce qui autorise, ou non, la suppression d'une mission."""
+"""What does, and does not, allow deleting a mission."""
 
 import pytest
 
@@ -22,17 +22,17 @@ def test_a_mission_never_used_can_be_deleted() -> None:
 
 
 def test_a_mission_carrying_time_cannot_be_deleted() -> None:
-    """Supprimer detruirait du temps declare : on archive."""
-    with pytest.raises(ForbiddenActionError, match="archiver"):
+    """Deleting would destroy declared time: we archive instead."""
+    with pytest.raises(ForbiddenActionError, match="archive"):
         ensure_can_be_deleted(projet(), entries=1, sub_projects=0)
 
 
 def test_a_project_carrying_sub_projects_cannot_be_deleted() -> None:
-    """Sans quoi ses lots deviendraient orphelins."""
-    with pytest.raises(ForbiddenActionError, match="sous-projet"):
+    """Otherwise its work packages would be orphaned."""
+    with pytest.raises(ForbiddenActionError, match="sub-project"):
         ensure_can_be_deleted(projet(), entries=0, sub_projects=2)
 
 
 def test_the_message_says_how_much_time_blocks_the_deletion() -> None:
-    with pytest.raises(ForbiddenActionError, match="3 saisie"):
+    with pytest.raises(ForbiddenActionError, match="3 time entr"):
         ensure_can_be_deleted(projet(), entries=3, sub_projects=0)

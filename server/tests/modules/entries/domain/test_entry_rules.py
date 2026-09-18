@@ -1,4 +1,4 @@
-"""Une saisie ne peut pas etre posee sur un jour non ouvre."""
+"""An entry cannot be set on a non-working day."""
 
 from datetime import date
 

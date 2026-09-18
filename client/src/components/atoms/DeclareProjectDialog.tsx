@@ -18,11 +18,11 @@ interface DeclareProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (label: string) => Promise<void>;
-  /** Le meme dialogue sert a declarer un projet ou a lui ajouter un sous-projet. */
+  /** The same dialog declares a project or adds a sub-project to one. */
   titre?: string;
 }
 
-/** Declaration d'un nouveau projet, ouverte a toute l'equipe. */
+/** Declaring a new project, open to the whole team. */
 export function DeclareProjectDialog({
   open,
   onOpenChange,

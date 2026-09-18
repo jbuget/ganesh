@@ -1,4 +1,4 @@
-"""Une mise a jour publiee sur une mission."""
+"""An update posted on a mission."""
 
 from datetime import datetime
 
@@ -37,24 +37,24 @@ def test_an_empty_update_is_refused() -> None:
 def test_the_author_can_rewrite_it() -> None:
     update = une_maj()
 
-    update.rewrite("Corrige : le deploiement est repousse.", par=AUTEUR, a=QUAND)
+    update.rewrite("Corrige : le deploiement est repousse.", by=AUTEUR, at=QUAND)
 
     assert update.body == "Corrige : le deploiement est repousse."
     assert update.edited_at == QUAND
 
 
 def test_nobody_else_can_rewrite_it() -> None:
-    """Un fil de suivi n'est pas un wiki : chacun repond de ses mots."""
+    """A follow-up thread is not a wiki: everyone answers for their own words."""
     update = une_maj()
 
     with pytest.raises(ForbiddenActionError):
-        update.rewrite("Autre chose", par=QUELQUUN_DAUTRE, a=QUAND)
+        update.rewrite("Autre chose", by=QUELQUUN_DAUTRE, at=QUAND)
 
 
 def test_the_author_can_remove_it() -> None:
     update = une_maj()
 
-    update.remove(par=AUTEUR, a=QUAND)
+    update.remove(by=AUTEUR, at=QUAND)
 
     assert update.is_deleted
 
@@ -63,15 +63,15 @@ def test_nobody_else_can_remove_it() -> None:
     update = une_maj()
 
     with pytest.raises(ForbiddenActionError):
-        update.remove(par=QUELQUUN_DAUTRE, a=QUAND)
+        update.remove(by=QUELQUUN_DAUTRE, at=QUAND)
 
 
 def test_a_removed_update_keeps_its_place_but_not_its_words() -> None:
-    """L'ecran affiche « Message supprime » : le fil garde sa chronologie, le
-    texte disparait."""
+    """The screen shows \u00ab Message supprime \u00bb: the thread keeps its
+    order, the text goes."""
     update = une_maj()
 
-    update.remove(par=AUTEUR, a=QUAND)
+    update.remove(by=AUTEUR, at=QUAND)
 
     assert update.body == ""
     assert update.published_at == QUAND
@@ -79,16 +79,16 @@ def test_a_removed_update_keeps_its_place_but_not_its_words() -> None:
 
 def test_a_removed_update_cannot_be_rewritten() -> None:
     update = une_maj()
-    update.remove(par=AUTEUR, a=QUAND)
+    update.remove(by=AUTEUR, at=QUAND)
 
     with pytest.raises(ForbiddenActionError):
-        update.rewrite("Retour en arriere", par=AUTEUR, a=QUAND)
+        update.rewrite("Retour en arriere", by=AUTEUR, at=QUAND)
 
 
 def test_removing_twice_changes_nothing() -> None:
     update = une_maj()
-    update.remove(par=AUTEUR, a=QUAND)
+    update.remove(by=AUTEUR, at=QUAND)
 
-    update.remove(par=AUTEUR, a=datetime(2026, 12, 1))
+    update.remove(by=AUTEUR, at=datetime(2026, 12, 1))
 
     assert update.deleted_at == QUAND

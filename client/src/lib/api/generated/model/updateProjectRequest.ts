@@ -9,7 +9,7 @@ import type { ProjectPriority } from "./projectPriority";
 import type { ProjectStatus } from "./projectStatus";
 
 /**
- * Modification partielle : seuls les champs fournis sont appliques.
+ * Partial change: only the fields provided are applied.
  */
 export interface UpdateProjectRequest {
   label?: string | null;

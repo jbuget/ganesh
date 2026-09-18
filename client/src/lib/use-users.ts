@@ -8,10 +8,10 @@ import type { Role } from "@/lib/api/generated/model";
 import { useCurrentUser, useTeammates } from "@/lib/api/queries";
 
 /**
- * Etat et actions de l'ecran des collaborateurs.
+ * State and actions of the teammates screen.
  *
- * Comme partout ailleurs, la coordination vit dans un hook pour que le
- * composant ne porte que le rendu.
+ * As everywhere else, coordination lives in a hook so the component carries
+ * only the rendering.
  */
 export function useUsersScreen() {
   const queryClient = useQueryClient();
@@ -22,18 +22,18 @@ export function useUsersScreen() {
   return {
     isLoading,
     isManager: me?.role === "MANAGER",
-    //: Nul ne coupe son propre acces : le compte serait refuse des la requete
-    //: suivante, et plus personne ne pourrait le rouvrir de l'interieur.
+    //: Nobody cuts off their own access: the account would be turned away on
+    //: the next request, and no one could reopen it from inside.
     moiId: me?.id,
     avecInactifs,
 
-    // Un seul instant de reference par rendu : sans cela, deux lignes de la
-    // meme liste se compareraient a deux « maintenant » differents.
+    // One reference instant per render: without it, two rows of the same list
+    // would compare against two different \u00ab now \u00bb.
     maintenant: new Date(),
 
     basculerInactifs: () => setAvecInactifs((actuel) => !actuel),
 
-    /** Par nom, seul ordre qui se retrouve a l'oeil dans une liste d'equipe. */
+    /** By name, the only order one finds by eye in a team list. */
     collaborateurs: [...teammates].sort((a, b) =>
       a.display_name.localeCompare(b.display_name, "fr"),
     ),

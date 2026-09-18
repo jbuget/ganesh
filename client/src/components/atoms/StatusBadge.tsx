@@ -2,16 +2,16 @@
 
 interface StatusBadgeProps {
   is_active: boolean;
-  /** Seul un manager coupe ou retablit un acces, et jamais le sien. */
+  /** Only a manager cuts off or restores access, and never their own. */
   modifiable: boolean;
   onToggle: (is_active: boolean) => void | Promise<void>;
 }
 
 /**
- * Acces d'un utilisateur : ouvert, ou coupe.
+ * A user's access: open, or cut off.
  *
- * Les deux etats se nomment. Ne signaler que l'ecart laissait une case vide
- * dont on ne savait pas si elle voulait dire « actif » ou « pas encore charge ».
+ * Both states are named. Flagging only the exception left an empty cell one
+ * could not tell meant \u00ab active \u00bb or \u00ab not loaded yet \u00bb.
  */
 export function StatusBadge({ is_active, modifiable, onToggle }: StatusBadgeProps) {
   const dot = is_active

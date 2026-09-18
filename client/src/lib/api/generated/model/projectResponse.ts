@@ -10,7 +10,7 @@ import type { ProjectPriority } from "./projectPriority";
 import type { ProjectStatus } from "./projectStatus";
 
 /**
- * Une mission du referentiel.
+ * A mission from the reference list.
  */
 export interface ProjectResponse {
   id: number;

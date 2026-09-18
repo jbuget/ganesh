@@ -1,4 +1,4 @@
-"""Traduction des projets en schemas d'API."""
+"""Translating projects into API schemas."""
 
 from src.modules.projects.application.dtos.last_update import LastUpdate
 from src.modules.projects.application.use_cases.get_board import Board
@@ -54,7 +54,7 @@ def to_project_response(
 
 
 def to_member(user: User) -> BoardMemberResponse:
-    """Un collaborateur reduit a ce qu'une pastille affiche."""
+    """A teammate reduced to what an avatar shows."""
     assert user.id is not None
     return BoardMemberResponse(
         id=user.id,
@@ -132,8 +132,8 @@ def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
             for link in detail.links
             if link.id is not None
         ],
-        # Les phases se lisent dans l'ordre nominal, pas dans celui ou la base
-        # les rend : une frise se parcourt du debut a la fin.
+        # Phases read in nominal order, not the order the database returns
+        # them: a timeline is followed from start to finish.
         phases=[
             PhaseReachedResponse(
                 status=status,

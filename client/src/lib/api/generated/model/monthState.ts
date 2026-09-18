@@ -6,7 +6,7 @@
  */
 
 /**
- * Etat de saisie d'un mois.
+ * Entry state of a month.
  */
 export type MonthState = (typeof MonthState)[keyof typeof MonthState];
 

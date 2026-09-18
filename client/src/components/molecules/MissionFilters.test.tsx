@@ -66,7 +66,7 @@ describe("MissionFilters", () => {
     fireEvent.click(screen.getByRole("button", { name: /Phase/ }));
     fireEvent.click(screen.getByRole("button", { name: "Réalisation" }));
 
-    expect(onChange).toHaveBeenCalledWith({ phases: ["build"] });
+    expect(onChange).toHaveBeenCalledWith({ phases: ["development"] });
   });
 
   it("remonte un intervenant coché, par son identifiant", () => {

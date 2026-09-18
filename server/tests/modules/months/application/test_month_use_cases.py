@@ -71,7 +71,7 @@ async def test_validation_is_traced() -> None:
 
 
 async def test_a_user_cannot_validate_someone_else_month() -> None:
-    """On valide son propre mois : valider pour autrui n'a pas de sens."""
+    """One validates one's own month: validating for someone else makes no sense."""
     validate, _, _, _ = build()
 
     with pytest.raises(ForbiddenActionError):

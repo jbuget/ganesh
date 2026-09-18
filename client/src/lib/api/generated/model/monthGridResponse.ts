@@ -9,7 +9,7 @@ import type { DayTotalResponse } from "./dayTotalResponse";
 import type { GridRowResponse } from "./gridRowResponse";
 
 /**
- * La matrice complete d'un mois.
+ * The complete grid for a month.
  */
 export interface MonthGridResponse {
   user_id: number;

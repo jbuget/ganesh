@@ -1,4 +1,4 @@
-"""Routes de validation et de reouverture des mois."""
+"""Routes to validate and reopen months."""
 
 from datetime import date
 
@@ -36,7 +36,7 @@ async def validate_month(
     use_case: ValidateMonthUseCase = Depends(get_validate_month_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> MonthResponse:
-    """Verrouille son propre mois. La validation n'est pas delegable."""
+    """Locks one's own month. Validation cannot be delegated."""
     assert current_user.id is not None
     validated = await use_case.execute(
         ValidateMonthCommand(
@@ -57,7 +57,7 @@ async def reopen_month(
     use_case: ReopenMonthUseCase = Depends(get_reopen_month_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> MonthResponse:
-    """Rouvre le mois valide d'un collaborateur. Reserve aux managers."""
+    """Reopens a teammate's validated month. Managers only."""
     assert manager.id is not None
     reopened = await use_case.execute(
         ReopenMonthCommand(actor_id=manager.id, target_user_id=user_id, month=month)

@@ -1,4 +1,4 @@
-"""Schemas du referentiel des missions."""
+"""Schemas of the mission reference list."""
 
 from datetime import date, datetime
 
@@ -15,7 +15,7 @@ from src.modules.projects.domain.entities.project_link import LinkIcon
 
 
 class CreateProjectRequest(BaseModel):
-    """Creation d'une mission."""
+    """Creating a mission."""
 
     label: str = Field(min_length=1, max_length=255)
     kind: ProjectKind
@@ -25,13 +25,13 @@ class CreateProjectRequest(BaseModel):
 
 
 class ChangeStatusRequest(BaseModel):
-    """Changement de phase d'une mission."""
+    """Changing the phase of a mission."""
 
     status: ProjectStatus
 
 
 class ProjectResponse(BaseModel):
-    """Une mission du referentiel."""
+    """A mission from the reference list."""
 
     id: int
     label: str
@@ -39,7 +39,7 @@ class ProjectResponse(BaseModel):
     status: ProjectStatus | None
     parent_id: int | None
     is_active: bool
-    #: Quand la mission a quitte le referentiel, nulle tant qu'elle y est.
+    #: When the mission left the reference list, null while it is still there.
     archived_at: datetime | None
     estimated_days: float | None
     category: ProjectCategory | None
@@ -55,7 +55,7 @@ class ProjectResponse(BaseModel):
 
 
 class LastUpdateResponse(BaseModel):
-    """De quoi annoncer un fil de suivi sans l'ouvrir."""
+    """Enough to announce a follow-up thread without opening it."""
 
     author: "BoardMemberResponse"
     body: str
@@ -63,21 +63,21 @@ class LastUpdateResponse(BaseModel):
 
 
 class ProjectListItemResponse(BaseModel):
-    """Une mission du referentiel, avec qui s'en occupe."""
+    """A mission from the reference list, with who looks after it."""
 
     project: ProjectResponse
     leads: list["BoardMemberResponse"]
     contributors: list["BoardMemberResponse"]
     #: Jours declares, previsionnel exclu.
     delivered_days: float
-    #: Mises a jour vivantes du fil de suivi.
+    #: Live updates in the follow-up thread.
     comments: int
-    #: La derniere d'entre elles, absente tant que rien ne se lit.
+    #: The latest of them, absent while there is nothing to read.
     latest_update: LastUpdateResponse | None
 
 
 class UpdateProjectRequest(BaseModel):
-    """Modification partielle : seuls les champs fournis sont appliques."""
+    """Partial change: only the fields provided are applied."""
 
     label: str | None = Field(default=None, min_length=1, max_length=255)
     status: ProjectStatus | None = None
@@ -92,7 +92,7 @@ class UpdateProjectRequest(BaseModel):
 
 
 class ImportLineRequest(BaseModel):
-    """Une ligne d'import, telle qu'elle sort d'un tableur."""
+    """One import line, as it comes out of a spreadsheet."""
 
     label: str
     kind: ProjectKind = ProjectKind.PROJECT
@@ -104,13 +104,13 @@ class ImportLineRequest(BaseModel):
 
 
 class ImportProjectsRequest(BaseModel):
-    """Import en masse du referentiel."""
+    """Bulk import of the reference list."""
 
     rows: list[ImportLineRequest]
 
 
 class ImportReportResponse(BaseModel):
-    """Ce que l'import a fait, ligne par ligne."""
+    """What the import did, line by line."""
 
     created: int
     skipped: int
@@ -118,14 +118,14 @@ class ImportReportResponse(BaseModel):
 
 
 class MoveProjectRequest(BaseModel):
-    """Depot d'une carte : colonne d'arrivee et rang voulu."""
+    """Dropping a card: the column it lands in and the rank wanted."""
 
     status: ProjectStatus
     position: int = Field(ge=0)
 
 
 class BoardMemberResponse(BaseModel):
-    """Un intervenant, tel qu'affiche en pastille sur une carte."""
+    """A contributor, as shown by an avatar on a card."""
 
     id: int
     display_name: str
@@ -133,14 +133,14 @@ class BoardMemberResponse(BaseModel):
 
 
 class BoardParentResponse(BaseModel):
-    """Le projet dont un lot releve, tel qu'annonce sur sa carte."""
+    """The project a work package belongs to, as announced on its card."""
 
     id: int
     label: str
 
 
 class BoardCardResponse(BaseModel):
-    """Une carte du tableau de bord."""
+    """A board card."""
 
     project: ProjectResponse
     consumed_days: float
@@ -153,20 +153,20 @@ class BoardCardResponse(BaseModel):
 
 
 class BoardColumnResponse(BaseModel):
-    """Une phase et ses cartes."""
+    """A phase and its cards."""
 
     status: ProjectStatus
     cards: list[BoardCardResponse]
 
 
 class BoardResponse(BaseModel):
-    """Le tableau complet, toutes phases confondues."""
+    """The whole board, every phase together."""
 
     columns: list[BoardColumnResponse]
 
 
 class ProjectLinkResponse(BaseModel):
-    """Un lien utile attache a une mission."""
+    """A useful link attached to a mission."""
 
     id: int
     label: str
@@ -175,10 +175,10 @@ class ProjectLinkResponse(BaseModel):
 
 
 class AddLinkRequest(BaseModel):
-    """Ajout d'un lien : une adresse, un intitule et une icone facultatifs.
+    """Adding a link: an address, an optional label and an optional icon.
 
-    Sans icone, le serveur la deduit de l'adresse : l'ecran n'a pas a connaitre
-    la liste des services reconnus.
+    Without an icon, the server infers it from the address: the screen does not
+    have to know the list of recognised services.
     """
 
     label: str = ""
@@ -187,7 +187,7 @@ class AddLinkRequest(BaseModel):
 
 
 class PhaseReachedResponse(BaseModel):
-    """Date a laquelle une mission est entree dans une phase."""
+    """The date a mission entered a phase."""
 
     status: ProjectStatus
     label: str
@@ -195,14 +195,14 @@ class PhaseReachedResponse(BaseModel):
 
 
 class MonthlyShareResponse(BaseModel):
-    """Temps declare sur un mois donne."""
+    """Time declared over a given month."""
 
     month: date
     days: float
 
 
 class ProjectContributionResponse(BaseModel):
-    """Temps declare par une personne sur la mission."""
+    """Time one person declared on the mission."""
 
     member: BoardMemberResponse
     days: float
@@ -210,7 +210,7 @@ class ProjectContributionResponse(BaseModel):
 
 
 class ProjectDetailResponse(BaseModel):
-    """La fiche complete d'une mission."""
+    """The full sheet of a mission."""
 
     project: ProjectResponse
     departments: list[Department]
@@ -224,7 +224,7 @@ class ProjectDetailResponse(BaseModel):
 
 
 class UpdateProjectDetailRequest(BaseModel):
-    """Departements concernes et interlocuteurs metier."""
+    """Departments concerned and business contacts."""
 
     departments: list[Department] = []
     business_contacts: str | None = None
@@ -237,7 +237,7 @@ class UpdateDescriptionRequest(BaseModel):
 
 
 class ProjectUpdateResponse(BaseModel):
-    """Une mise a jour du fil de suivi."""
+    """One update from the follow-up thread."""
 
     id: int
     author: BoardMemberResponse
@@ -245,11 +245,11 @@ class ProjectUpdateResponse(BaseModel):
     published_at: datetime
     edited_at: datetime | None
     is_deleted: bool
-    #: Vrai si le lecteur courant peut la corriger ou la retirer.
+    #: True if the current reader may correct or withdraw it.
     is_mine: bool
 
 
 class PostUpdateRequest(BaseModel):
-    """Publication ou correction d'une mise a jour."""
+    """Posting or correcting an update."""
 
     body: str = Field(min_length=1)

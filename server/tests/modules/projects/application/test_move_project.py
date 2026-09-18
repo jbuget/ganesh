@@ -1,4 +1,4 @@
-"""Deplacement d'une carte sur le tableau de bord."""
+"""Moving a card on the board."""
 
 import pytest
 
@@ -59,35 +59,35 @@ async def test_a_card_changes_phase() -> None:
 
     await use_case.execute(
         MoveProjectCommand(
-            actor_id=1, project_id=1, status=ProjectStatus.BUILD, position=0
+            actor_id=1, project_id=1, status=ProjectStatus.DEVELOPMENT, position=0
         )
     )
 
     mission = await repo.get_by_id(1)
     assert mission is not None
-    assert mission.status is ProjectStatus.BUILD
+    assert mission.status is ProjectStatus.DEVELOPMENT
 
 
 async def test_a_card_lands_at_the_requested_rank() -> None:
     use_case, repo, _ = build(
         [
-            card(1, ProjectStatus.BUILD, 0),
-            card(2, ProjectStatus.BUILD, 1),
+            card(1, ProjectStatus.DEVELOPMENT, 0),
+            card(2, ProjectStatus.DEVELOPMENT, 1),
             card(9, ProjectStatus.SCOPING, 0),
         ]
     )
 
     await use_case.execute(
         MoveProjectCommand(
-            actor_id=1, project_id=9, status=ProjectStatus.BUILD, position=1
+            actor_id=1, project_id=9, status=ProjectStatus.DEVELOPMENT, position=1
         )
     )
 
-    assert await column(repo, ProjectStatus.BUILD) == [1, 9, 2]
+    assert await column(repo, ProjectStatus.DEVELOPMENT) == [1, 9, 2]
 
 
 async def test_the_column_left_behind_is_renumbered() -> None:
-    """Sans quoi elle garderait un trou a la place de la carte partie."""
+    """Otherwise it would keep a gap where the card used to be."""
     use_case, repo, _ = build(
         [
             card(1, ProjectStatus.SCOPING, 0),
@@ -98,7 +98,7 @@ async def test_the_column_left_behind_is_renumbered() -> None:
 
     await use_case.execute(
         MoveProjectCommand(
-            actor_id=1, project_id=1, status=ProjectStatus.BUILD, position=0
+            actor_id=1, project_id=1, status=ProjectStatus.DEVELOPMENT, position=0
         )
     )
 
@@ -154,17 +154,17 @@ async def test_a_phase_change_is_traced() -> None:
 
     await use_case.execute(
         MoveProjectCommand(
-            actor_id=1, project_id=1, status=ProjectStatus.BUILD, position=0
+            actor_id=1, project_id=1, status=ProjectStatus.DEVELOPMENT, position=0
         )
     )
 
     log = audit.logs[-1]
     assert log.action.value == "project.status_change"
-    assert (log.old_value, log.new_value) == ("scoping", "build")
+    assert (log.old_value, log.new_value) == ("scoping", "development")
 
 
 async def test_a_simple_reorder_leaves_no_phase_trace() -> None:
-    """Ranger ses cartes n'est pas un evenement de pilotage."""
+    """Tidying one's cards is not a steering event."""
     use_case, _, audit = build(
         [
             card(1, ProjectStatus.SCOPING, 0),

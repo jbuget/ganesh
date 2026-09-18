@@ -5,7 +5,7 @@ import { FilterSelect } from "./FilterSelect";
 
 const OPTIONS = [
   { value: "scoping", label: "Cadrage" },
-  { value: "build", label: "Réalisation" },
+  { value: "development", label: "Réalisation" },
 ];
 
 describe("FilterSelect", () => {
@@ -22,7 +22,7 @@ describe("FilterSelect", () => {
       <FilterSelect
         label="Phase"
         options={OPTIONS}
-        values={["scoping", "build"]}
+        values={["scoping", "development"]}
         onChange={vi.fn()}
       />,
     );
@@ -65,7 +65,7 @@ describe("FilterSelect", () => {
       <FilterSelect
         label="Phase"
         options={OPTIONS}
-        values={["build"]}
+        values={["development"]}
         onChange={onChange}
       />,
     );
@@ -73,6 +73,6 @@ describe("FilterSelect", () => {
     fireEvent.click(screen.getByRole("button", { name: /Phase/ }));
     fireEvent.click(screen.getByRole("button", { name: "Cadrage" }));
 
-    expect(onChange).toHaveBeenCalledWith(["scoping", "build"]);
+    expect(onChange).toHaveBeenCalledWith(["scoping", "development"]);
   });
 });

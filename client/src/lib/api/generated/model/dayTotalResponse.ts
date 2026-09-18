@@ -6,7 +6,7 @@
  */
 
 /**
- * Total saisi sur une journee.
+ * Total entered on one day.
  */
 export interface DayTotalResponse {
   day: string;

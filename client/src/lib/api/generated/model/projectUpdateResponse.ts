@@ -7,7 +7,7 @@
 import type { BoardMemberResponse } from "./boardMemberResponse";
 
 /**
- * Une mise a jour du fil de suivi.
+ * One update from the follow-up thread.
  */
 export interface ProjectUpdateResponse {
   id: number;

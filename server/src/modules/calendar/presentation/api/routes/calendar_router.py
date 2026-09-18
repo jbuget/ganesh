@@ -1,4 +1,4 @@
-"""Routes du calendrier : jours ouvres, week-ends et feries."""
+"""Calendar routes: working days, weekends and holidays."""
 
 from fastapi import APIRouter, Depends, Path
 
@@ -25,7 +25,7 @@ async def get_month_calendar(
     month: int = Path(ge=1, le=12),
     _: User = Depends(get_current_user),
 ) -> MonthCalendarResponse:
-    """Les jours du mois et leur nature."""
+    """The days of the month and their kind."""
     return MonthCalendarResponse(
         year=year,
         month=month,

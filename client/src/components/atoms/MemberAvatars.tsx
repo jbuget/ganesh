@@ -3,7 +3,7 @@
 import type { BoardMemberResponse } from "@/lib/api/generated/model";
 import { useCursorTooltip } from "@/lib/use-tooltip-curseur";
 
-/** Au-dela, les pastilles se chevauchent trop pour rester lisibles. */
+/** Past this, the avatars overlap too much to stay readable. */
 const VISIBLES = 4;
 
 interface MemberAvatarsProps {
@@ -11,13 +11,13 @@ interface MemberAvatarsProps {
 }
 
 /**
- * Intervenants d'une mission, en pastilles d'initiales.
+ * A mission's contributors, as initial avatars.
  *
- * Ce sont les personnes ayant declare du temps dessus, previsionnel compris :
- * savoir qui s'y mettra compte autant que savoir qui y a travaille.
+ * These are the people who declared time on it, forecasts included: knowing who
+ * is about to start counts as much as knowing who has worked on it.
  *
- * Des initiales ne se devinent pas : l'infobulle donne le nom sans attendre,
- * la ou l'attribut `title` natif laisse hesiter une seconde.
+ * Initials cannot be guessed: the tooltip gives the name without delay, where
+ * the native `title` attribute leaves one hesitating for a second.
  */
 export function MemberAvatars({ members }: MemberAvatarsProps) {
   const { tooltip, follow, leave } = useCursorTooltip();

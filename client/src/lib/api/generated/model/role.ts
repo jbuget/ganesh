@@ -6,7 +6,7 @@
  */
 
 /**
- * Role fonctionnel d'un utilisateur.
+ * What a user is allowed to do.
  */
 export type Role = (typeof Role)[keyof typeof Role];
 

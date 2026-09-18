@@ -1,4 +1,4 @@
-"""Ce que le referentiel affiche de chaque mission."""
+"""What the reference list shows of each mission."""
 
 from datetime import date, datetime, timedelta
 
@@ -68,9 +68,10 @@ def build(
 
 
 async def thread(*textes: str, retirees: int = 0) -> InMemoryProjectUpdateRepository:
-    """Un fil de suivi sur Portail, du plus ancien au plus recent.
+    """A follow-up thread on Portail, oldest to most recent.
 
-    Les `retirees` dernieres sont supprimees, ce qui laisse lire celles d'avant.
+    The last `withdrawn` ones are deleted, which leaves the earlier ones to be
+    read.
     """
     repo = InMemoryProjectUpdateRepository()
     publiees = [
@@ -86,7 +87,7 @@ async def thread(*textes: str, retirees: int = 0) -> InMemoryProjectUpdateReposi
         for rang, body in enumerate(textes)
     ]
     for update in publiees[len(publiees) - retirees :] if retirees else []:
-        update.remove(par=1, a=datetime(2026, 9, 17, 10, 0))
+        update.remove(by=1, at=datetime(2026, 9, 17, 10, 0))
     return repo
 
 
@@ -110,7 +111,7 @@ async def test_referents_and_intervenants_are_told_apart() -> None:
 
 
 async def test_the_assigned_are_listed_in_alphabetical_order() -> None:
-    """La liste se parcourt du regard : deux colonnes doivent s'aligner."""
+    """The list is scanned by eye: two columns must line up."""
     listees = await build({(10, ProjectRole.CONTRIBUTOR): [2, 1]}).execute()
 
     assert [u.display_name for u in listees[0].contributors] == ["L. Chen", "N. Garo"]
@@ -131,7 +132,7 @@ async def test_the_declared_days_are_summed() -> None:
 
 
 async def test_a_day_to_come_is_forecast_and_stays_out() -> None:
-    """Le realise ne doit jamais grossir de ce qui n'a pas encore ete fait."""
+    """Delivered time must never swell with what has not been done yet."""
     listees = await build(
         entries=[entry(AUJOURDHUI), entry(AUJOURDHUI + timedelta(days=1))]
     ).execute(today=AUJOURDHUI)
@@ -154,7 +155,7 @@ async def test_the_live_updates_of_the_thread_are_counted() -> None:
 
 
 async def test_a_removed_update_leaves_the_count() -> None:
-    """Le referentiel annonce ce qui se lit encore dans le fil, pas son histoire."""
+    """The reference list announces what can still be read in the thread, not its history."""
     listees = await build(
         updates=await thread("Cadrage lance", "Ecrite par erreur", retirees=1)
     ).execute()
@@ -178,7 +179,7 @@ async def test_the_most_recent_update_is_the_one_to_show() -> None:
 
 
 async def test_the_last_update_is_signed() -> None:
-    """L'infobulle annonce qui parle : le nom doit voyager avec le texte."""
+    """The tooltip says who is speaking: the name must travel with the text."""
     listees = await build(updates=await thread("Cadrage lance")).execute()
 
     assert listees[0].latest_update is not None

@@ -1,4 +1,4 @@
-"""Gestion du referentiel des missions, ouverte a toute l'equipe."""
+"""Managing the mission reference list, open to the whole team."""
 
 import pytest
 
@@ -40,7 +40,7 @@ TEAMMATE = User(
 
 
 def make_portail() -> Project:
-    """Une instance neuve par test : les entites sont mutables."""
+    """A fresh instance per test: entities are mutable."""
     return Project(
         id=10, label="Portail", kind=ProjectKind.PROJECT, status=ProjectStatus.SCOPING
     )
@@ -89,7 +89,7 @@ async def test_any_teammate_can_create_a_project() -> None:
 
 
 async def test_a_new_project_is_not_linked_to_monday() -> None:
-    """La V1 est decorrelee de Monday : le rattachement viendra plus tard."""
+    """V1 is decoupled from Monday: the link comes later."""
     create, _, _, _, _ = build(projects=[])
 
     project = await create.execute(
@@ -225,13 +225,13 @@ async def test_anyone_can_change_a_project_status() -> None:
 
     await change.execute(
         ChangeProjectStatusCommand(
-            actor_id=1, project_id=10, status=ProjectStatus.BUILD
+            actor_id=1, project_id=10, status=ProjectStatus.DEVELOPMENT
         )
     )
 
     project = await repo.get_by_id(10)
     assert project is not None
-    assert project.status is ProjectStatus.BUILD
+    assert project.status is ProjectStatus.DEVELOPMENT
 
 
 async def test_a_status_change_records_the_transition() -> None:
@@ -239,13 +239,13 @@ async def test_a_status_change_records_the_transition() -> None:
 
     await change.execute(
         ChangeProjectStatusCommand(
-            actor_id=1, project_id=10, status=ProjectStatus.BUILD
+            actor_id=1, project_id=10, status=ProjectStatus.DEVELOPMENT
         )
     )
 
     log = audit.logs[-1]
     assert log.action.value == "project.status_change"
-    assert (log.old_value, log.new_value) == ("scoping", "build")
+    assert (log.old_value, log.new_value) == ("scoping", "development")
 
 
 async def test_listing_returns_active_projects() -> None:

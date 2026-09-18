@@ -22,10 +22,10 @@ const ids = (cards: BoardCardResponse[]) => cards.map((c) => c.project.id);
 
 describe("localiser", () => {
   it("rend la phase et le rang d'une carte", () => {
-    const state = columns({ scoping: [1, 2], build: [3] });
+    const state = columns({ scoping: [1, 2], development: [3] });
 
     expect(locate(state, 2)).toEqual({ status: "scoping", position: 1 });
-    expect(locate(state, 3)).toEqual({ status: "build", position: 0 });
+    expect(locate(state, 3)).toEqual({ status: "development", position: 0 });
   });
 
   it("rend null pour une carte absente du tableau", () => {
@@ -49,12 +49,12 @@ describe("indexVise", () => {
 
 describe("changerDeColonne", () => {
   it("retire la carte de sa phase et l'insère dans la nouvelle", () => {
-    const state = columns({ scoping: [1, 2], build: [3, 4] });
+    const state = columns({ scoping: [1, 2], development: [3, 4] });
 
-    const apres = moveToColumn(state, 1, "build", 1);
+    const apres = moveToColumn(state, 1, "development", 1);
 
     expect(ids(apres!.scoping)).toEqual([2]);
-    expect(ids(apres!.build)).toEqual([3, 1, 4]);
+    expect(ids(apres!.development)).toEqual([3, 1, 4]);
   });
 
   it("accueille une carte dans une phase vide", () => {
@@ -73,9 +73,9 @@ describe("changerDeColonne", () => {
   });
 
   it("laisse les autres phases intactes", () => {
-    const state = columns({ scoping: [1], build: [2], operations: [3] });
+    const state = columns({ scoping: [1], development: [2], operations: [3] });
 
-    const apres = moveToColumn(state, 1, "build", 0)!;
+    const apres = moveToColumn(state, 1, "development", 0)!;
 
     expect(apres.operations).toBe(state.operations);
   });

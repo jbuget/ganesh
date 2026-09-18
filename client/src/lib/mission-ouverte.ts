@@ -6,15 +6,14 @@ const PARAMETRE = "mission";
 const ONGLET = "onglet";
 
 /**
- * La mission ouverte dans le panneau lateral, tenue par l'URL.
+ * The mission open in the side panel, held by the URL.
  *
- * L'URL est la source : un panneau se partage par un lien, et le retour arriere
- * le referme. L'ouverture pousse donc une etape d'historique, et ne touche
- * qu'a ses parametres : les filtres du tableau doivent survivre a l'aller-retour
- * dans un panneau.
+ * The URL is the source: a panel is shared by a link, and going back closes it.
+ * Opening therefore pushes a history step, and touches only its own
+ * parameters: the board filters must survive a round trip through a panel.
  *
- * L'onglet en fait partie : on ouvre une mission sur sa fiche, mais on l'ouvre
- * sur son fil quand c'est le fil qu'on est alle chercher.
+ * The tab is part of it: a mission opens on its sheet, but it opens on its
+ * thread when the thread is what one went looking for.
  */
 export function useOpenedMission() {
   const query = useQueryString();
@@ -28,8 +27,8 @@ export function useOpenedMission() {
     open(projectId: number, onglet?: string) {
       writeUrl((params) => {
         params.set(PARAMETRE, String(projectId));
-        // Sans effacement, l'onglet d'une ouverture precedente s'appliquerait
-        // a la mission suivante.
+        // Without clearing it, the tab of a previous opening would apply to
+        // the next mission.
         if (onglet) params.set(ONGLET, onglet);
         else params.delete(ONGLET);
       });

@@ -13,10 +13,10 @@ interface PhasePickerProps {
 }
 
 /**
- * Phase d'une mission, changeable depuis sa fiche.
+ * A mission's phase, changeable from its sheet.
  *
- * Le kanban fait deja avancer une mission en la glissant ; depuis la fiche, on
- * la corrige sans avoir a retrouver sa carte.
+ * The kanban already moves a mission along by dragging it; from the sheet, one
+ * corrects it without having to find its card again.
  */
 export function PhasePicker({ status, onChange }: PhasePickerProps) {
   const [ouvert, setOuvert] = useState(false);

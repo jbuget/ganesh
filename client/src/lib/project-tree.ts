@@ -1,7 +1,7 @@
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 import { NO_SORT, comparateurDeTri, type MissionSort } from "@/lib/mission-sort";
 
-/** Une mission et, s'il s'agit d'un projet, les lots qui en dependent. */
+/** A mission and, if it is a project, the work packages under it. */
 export interface ProjectNode {
   mission: ProjectListItemResponse;
   lots: ProjectListItemResponse[];
@@ -10,15 +10,15 @@ export interface ProjectNode {
 const HORS_PROJET = "off_project";
 
 /**
- * Organise le referentiel en arborescence : chaque projet suivi de ses lots.
+ * Arranges the reference list as a tree: each project followed by its packages.
  *
- * Le tri s'applique a chaque niveau separement — les projets entre eux, les
- * lots au sein de leur projet : ranger la liste ne doit pas arracher un
- * sous-projet a son parent.
+ * The sort applies to each level separately — projects among themselves, work
+ * packages within their project: ordering the list must not tear a sub-project
+ * away from its parent.
  *
- * Un lot dont le parent est absent de la liste — filtre, archive — remonte au
- * premier niveau plutot que de disparaitre : une mission invisible serait une
- * mission qu'on croit supprimee.
+ * A work package whose parent is absent from the list — filtered out, archived
+ * — moves up to the first level rather than disappearing: an invisible mission
+ * would be a mission believed deleted.
  */
 export function buildProjectTree(
   missions: ProjectListItemResponse[],

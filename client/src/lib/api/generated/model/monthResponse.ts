@@ -7,7 +7,7 @@
 import type { MonthState } from "./monthState";
 
 /**
- * Etat de saisie d'un mois.
+ * Entry state of a month.
  */
 export interface MonthResponse {
   user_id: number;

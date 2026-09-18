@@ -5,15 +5,15 @@ import { useSyncExternalStore } from "react";
 const CLE = "timesheet.sidebar-repliee";
 
 /**
- * Preference de repli de la barre laterale.
+ * Whether the sidebar is collapsed.
  *
- * Elle vit hors de React et se lit avec `useSyncExternalStore` : initialiser un
- * etat depuis `localStorage` au premier rendu ferait diverger le serveur et le
- * client, et le lire dans un effet imposerait un `setState` que React
- * deconseille.
+ * It lives outside React and is read with `useSyncExternalStore`: seeding state
+ * from `localStorage` on the first render would make server and client
+ * diverge, and reading it in an effect would force a `setState` React advises
+ * against.
  *
- * Aucune valeur n'est mise en cache : `localStorage` est la seule source, ce
- * qui laisse un autre onglet la modifier sans desynchroniser celui-ci.
+ * No value is cached: `localStorage` is the only source, which lets another tab
+ * change it without putting this one out of step.
  */
 const subscribers = new Set<() => void>();
 
@@ -29,9 +29,9 @@ function subscribe(callback: () => void) {
   subscribers.add(callback);
   window.addEventListener("storage", callback);
 
-  // Le serveur rend toujours la barre depliee. Si la preference dit l'inverse,
-  // personne ne previendrait React apres l'hydratation : on le fait ici, au
-  // premier abonnement cote client.
+  // The server always renders the sidebar expanded. If the preference says
+  // otherwise, nobody would tell React after hydration: we do it here, on the
+  // first client-side subscription.
   if (read()) queueMicrotask(callback);
 
   return () => {
@@ -40,7 +40,7 @@ function subscribe(callback: () => void) {
   };
 }
 
-/** Cote serveur, la barre est toujours depliee : c'est l'etat par defaut. */
+/** Server-side the sidebar is always expanded: that is the default state. */
 function surLeServeur() {
   return false;
 }

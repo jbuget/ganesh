@@ -12,11 +12,11 @@ import {
 import { writeUrl, useQueryString } from "@/lib/url-state";
 
 /**
- * Les filtres d'un ecran de missions, tenus par l'URL.
+ * The filters of a mission screen, held by the URL.
  *
- * Chaque reglage remplace l'etape courante plutot que d'en ajouter une : on
- * coche trois phases a la suite, et le retour arriere ramene a l'ecran d'avant,
- * pas au troisieme clic.
+ * Every setting replaces the current step rather than adding one: one ticks
+ * three phases in a row, and going back returns to the previous screen, not to
+ * the third click.
  */
 export function useMissionFilters() {
   const query = useQueryString();
@@ -30,7 +30,7 @@ export function useMissionFilters() {
     filters,
     hasFilter: filtreActif(filters),
 
-    /** Change un seul critere, les autres restent en place. */
+    /** Changes a single criterion, the others stay put. */
     set(change: Partial<MissionFilters>) {
       apply({ ...filters, ...change });
     },

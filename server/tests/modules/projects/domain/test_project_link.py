@@ -1,4 +1,4 @@
-"""Un lien utile attache a une mission."""
+"""A useful link attached to a mission."""
 
 import pytest
 
@@ -23,7 +23,7 @@ def test_surrounding_spaces_are_trimmed() -> None:
 
 
 def test_a_link_without_label_takes_its_address() -> None:
-    """Coller une adresse suffit : on ne force pas a la nommer."""
+    """Pasting an address is enough: naming it is not forced."""
     assert a_link(label="   ").label == "https://waat.fr/cdc"
 
 
@@ -34,7 +34,7 @@ def test_an_empty_address_is_refused() -> None:
 
 @pytest.mark.parametrize("url", ["javascript:alert(1)", "waat.fr", "ftp://waat.fr"])
 def test_only_web_addresses_are_accepted(url: str) -> None:
-    """Un lien s'ouvre d'un clic : il ne doit pas pouvoir executer du script."""
+    """A link opens with a click: it must not be able to run script."""
     with pytest.raises(ValidationError):
         a_link(url=url)
 
@@ -61,7 +61,7 @@ def test_a_link_keeps_the_icon_it_is_given() -> None:
 
 
 def test_an_icon_outside_the_catalogue_is_refused() -> None:
-    """Le catalogue est ferme : l'ecran doit savoir dessiner ce qu'il recoit."""
+    """The catalogue is closed: the screen must be able to draw what it gets."""
     with pytest.raises(ValidationError):
         ProjectLink(
             id=None, project_id=1, label="x", url="https://waat.fr", icon="licorne"

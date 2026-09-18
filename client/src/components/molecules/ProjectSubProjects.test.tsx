@@ -26,7 +26,7 @@ describe("ProjectSubProjects", () => {
   it("dit la phase de chaque sous-projet", () => {
     render(
       <ProjectSubProjects
-        sousProjets={[lot(11, "Authentification"), lot(12, "Reprise", "build")]}
+        sousProjets={[lot(11, "Authentification"), lot(12, "Reprise", "development")]}
       />,
     );
 

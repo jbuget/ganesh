@@ -1,4 +1,4 @@
-"""Regles metier qui conditionnent l'ecriture d'une saisie."""
+"""Business rules that govern writing an entry."""
 
 from datetime import date
 
@@ -6,21 +6,21 @@ from src.modules.calendar.domain.services.working_days import DayKind, classify_
 from src.shared.exceptions.domain_exceptions import ValidationError
 
 LABELS: dict[DayKind, str] = {
-    DayKind.WEEKEND: "un week-end",
-    DayKind.FERIE: "un jour ferie",
+    DayKind.WEEKEND: "a weekend",
+    DayKind.FERIE: "a public holiday",
 }
 
 
 def ensure_day_is_workable(day: date) -> None:
-    """Refuse toute saisie posee sur un jour non ouvre.
+    """Refuses any entry set on a non-working day.
 
-    La regle vit dans le domaine et non dans l'interface : verrouiller la
-    cellule cote client est un confort, pas une garantie. L'API doit refuser la
-    saisie quel que soit l'appelant.
+    The rule lives in the domain, not in the interface: locking the cell on the
+    client is a comfort, not a guarantee. The API must refuse the entry
+    whoever the caller is.
     """
     kind = classify_day(day)
     if kind is DayKind.OUVRE:
         return
     raise ValidationError(
-        f"Le {day.isoformat()} est {LABELS[kind]} : aucune saisie n'y est possible."
+        f"{day.isoformat()} is {LABELS[kind]}: no entry is possible there."
     )

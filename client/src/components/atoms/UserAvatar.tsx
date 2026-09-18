@@ -1,8 +1,8 @@
 interface UserAvatarProps {
   initials: string;
-  /** Nom complet : des initiales seules ne se devinent pas. */
+  /** Full name: initials alone cannot be guessed. */
   name: string;
-  /** Un collaborateur desactive s'efface, sans disparaitre. */
+  /** A deactivated teammate fades, without disappearing. */
   attenue?: boolean;
 }
 

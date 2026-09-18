@@ -9,7 +9,7 @@ import type { LastUpdateResponse } from "./lastUpdateResponse";
 import type { ProjectResponse } from "./projectResponse";
 
 /**
- * Une mission du referentiel, avec qui s'en occupe.
+ * A mission from the reference list, with who looks after it.
  */
 export interface ProjectListItemResponse {
   project: ProjectResponse;

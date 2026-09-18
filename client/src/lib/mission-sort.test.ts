@@ -116,8 +116,8 @@ describe("l'ordre du référentiel", () => {
   });
 
   it("laisse les valeurs manquantes en fin de liste, dans les deux sens", () => {
-    // Un estime absent n'est pas un petit estime : il n'a rien a dire, et ne
-    // doit pas occuper la tete du tableau quand on cherche les gros chantiers.
+    // A missing estimate is not a small estimate: it has nothing to say, and
+    // must not sit at the top when one is looking for the big jobs.
     const missions = [
       mission("Sans", { estimated_days: null }),
       mission("Avec", { estimated_days: 5 }),

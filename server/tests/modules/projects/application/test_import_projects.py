@@ -1,4 +1,4 @@
-"""Import en masse du referentiel, typiquement depuis un export Monday."""
+"""Bulk import of the reference list, typically from a Monday export."""
 
 import pytest
 
@@ -59,7 +59,7 @@ async def test_projects_are_created() -> None:
 
 
 async def test_an_existing_project_is_left_alone() -> None:
-    """Rejouer un import ne doit pas dupliquer le referentiel."""
+    """Replaying an import must not duplicate the reference list."""
     existant = Project(
         id=1,
         label="Portail bailleurs",
@@ -78,7 +78,7 @@ async def test_an_existing_project_is_left_alone() -> None:
 
 
 async def test_a_lot_is_attached_to_its_parent_by_label() -> None:
-    """Un export Monday nomme le parent, il ne connait pas nos identifiants."""
+    """A Monday export names the parent, it knows nothing of our ids."""
     use_case, repo = build()
 
     await use_case.execute(
@@ -114,12 +114,12 @@ async def test_a_lot_whose_parent_is_missing_is_reported() -> None:
     )
 
     assert report.created == 0
-    assert report.errors == ["Lot orphelin : projet parent « Absent » introuvable."]
+    assert report.errors == ["Lot orphelin: parent project « Absent » not found."]
     assert await repo.list_all() == []
 
 
 async def test_a_lot_under_a_lot_is_reported() -> None:
-    """Un export mal forme ne doit pas creer de troisieme niveau."""
+    """A malformed export must not create a third level."""
     use_case, repo = build()
 
     report = await use_case.execute(
@@ -135,7 +135,7 @@ async def test_a_lot_under_a_lot_is_reported() -> None:
 
     assert report.created == 2
     assert len(report.errors) == 1
-    assert "deux niveaux" in report.errors[0]
+    assert "two levels" in report.errors[0]
 
 
 async def test_an_empty_label_is_reported_not_crashed() -> None:

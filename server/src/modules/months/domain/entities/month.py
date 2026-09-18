@@ -1,4 +1,4 @@
-"""Etat de saisie d'un mois pour un utilisateur donne."""
+"""Entry state of a month for a given user."""
 
 from dataclasses import dataclass, field
 from datetime import date, datetime
@@ -9,7 +9,7 @@ from src.shared.exceptions.domain_exceptions import ForbiddenActionError
 
 
 class MonthState(StrEnum):
-    """Etat de saisie d'un mois."""
+    """Entry state of a month."""
 
     OPEN = "open"
     VALIDATED = "validated"
@@ -17,11 +17,11 @@ class MonthState(StrEnum):
 
 @dataclass
 class Month:
-    """Un mois de saisie, pour un utilisateur.
+    """A month of entries, for one user.
 
-    Un mois valide est immuable : plus aucune ecriture n'est possible tant qu'un
-    manager ne l'a pas rouvert. La rigueur vient de la tracabilite du geste, pas
-    d'un verrou definitif.
+    A validated month is immutable: no write is possible until a manager
+    reopens it. The discipline comes from the traceability of the move, not
+    from a permanent lock.
     """
 
     user_id: int
@@ -38,24 +38,26 @@ class Month:
 
     @property
     def is_writable(self) -> bool:
-        """Seul un mois ouvert accepte des saisies."""
+        """Only an open month accepts entries."""
         return self.state is MonthState.OPEN
 
     def validate(self, by: User, at: datetime | None = None) -> None:
-        """Verrouille le mois. Chacun valide son propre mois."""
+        """Locks the month. Everyone validates their own."""
         if self.state is MonthState.VALIDATED:
-            raise ForbiddenActionError("Ce mois est deja valide.")
+            raise ForbiddenActionError("This month is already validated.")
         self.state = MonthState.VALIDATED
         self.validated_by = by.id
         self.validated_at = at or datetime.now()
 
     def reopen(self, by: User, at: datetime | None = None) -> None:
-        """Rouvre un mois valide. Reserve aux managers, et trace."""
+        """Reopens a validated month. Managers only, and traced."""
         if self.state is not MonthState.VALIDATED:
-            raise ForbiddenActionError("Ce mois n'est pas valide, il est deja ouvert.")
+            raise ForbiddenActionError(
+                "This month is not validated, it is already open."
+            )
         if not by.can_reopen_month():
             raise ForbiddenActionError(
-                "Seul un manager peut rouvrir un mois valide.",
+                "Only a manager can reopen a validated month.",
             )
         self.state = MonthState.OPEN
         self.reopened_by = by.id

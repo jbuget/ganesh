@@ -64,10 +64,10 @@ def test_a_first_connection_is_recorded() -> None:
 
 
 def test_a_connection_within_the_freshness_window_is_not_rewritten() -> None:
-    """Un jeton porteur est represente a chaque requete.
+    """A bearer token is presented on every request.
 
-    Sans fenetre de fraicheur, la « derniere connexion » ne mesurerait plus que
-    le nombre d'ecritures en base.
+    Without a freshness window, the \u00ab last login \u00bb would measure
+    nothing but the number of writes to the database.
     """
     user = make_user()
     user.record_login(datetime(2026, 9, 17, 9, 0))
@@ -85,7 +85,7 @@ def test_a_connection_after_the_freshness_window_is_recorded() -> None:
 
 
 def test_a_connection_is_never_dated_backwards() -> None:
-    """Deux requetes concurrentes peuvent arriver dans le desordre."""
+    """Two concurrent requests may arrive out of order."""
     user = make_user()
     user.record_login(datetime(2026, 9, 17, 9, 0))
 
@@ -106,7 +106,7 @@ def test_a_manager_can_deactivate_someone_else() -> None:
 
 
 def test_a_manager_cannot_deactivate_themselves() -> None:
-    """Se retirer l'acces, c'est s'enfermer dehors."""
+    """Cutting off one's own access is locking oneself out."""
     manager = with_id(make_user(Role.MANAGER), 1)
 
     assert manager.can_deactivate(manager) is False

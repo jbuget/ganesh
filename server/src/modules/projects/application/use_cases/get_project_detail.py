@@ -1,4 +1,4 @@
-"""Rassemble tout ce qu'on veut lire sur une mission."""
+"""Gathers everything one wants to read about a mission."""
 
 from dataclasses import dataclass
 from datetime import date
@@ -27,17 +27,17 @@ from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 @dataclass
 class Contribution:
-    """Ce qu'une personne a declare sur la mission."""
+    """What one person declared on the mission."""
 
     user: User
     days: float
-    #: Jours par mois, du plus recent au plus ancien. Le mois est son 1er jour.
+    #: Days per month, most recent first. A month is named by its 1st day.
     by_month: list[tuple[date, float]]
 
 
 @dataclass
 class ProjectDetail:
-    """La fiche complete d'une mission."""
+    """The full sheet of a mission."""
 
     project: Project
     departments: list[Department]
@@ -46,14 +46,14 @@ class ProjectDetail:
     leads: list[User]
     contributors: list[User]
     consumed_days: float
-    #: Temps declare par chacun, du plus gros contributeur au plus petit.
+    #: Time declared by each person, largest contributor first.
     contributions: list[Contribution]
-    #: Les lots rattaches a la mission, par ordre alphabetique.
+    #: Work packages attached to the mission, in alphabetical order.
     sub_projects: list[Project]
 
 
 class GetProjectDetailUseCase:
-    """Lit une mission et tout ce qui s'y rattache."""
+    """Reads a mission and everything attached to it."""
 
     def __init__(
         self,
@@ -83,9 +83,9 @@ class GetProjectDetailUseCase:
 
         entries = await self._entries.list_for_project(project_id)
 
-        # Le temps par personne dit qui a vraiment porte la mission, ce que la
-        # seule liste des intervenants ne raconte pas : quelqu'un peut y avoir
-        # passe des jours sans y etre affecte aujourd'hui.
+        # Time per person tells who really carried the mission, which the list
+        # of contributors alone does not: someone may have spent days on it
+        # without being assigned to it today.
         by_person: dict[int, float] = {}
         by_month: dict[int, dict[date, float]] = {}
         for entry in entries:

@@ -1,7 +1,7 @@
-"""Le retrait d'une mission, contre une vraie base PostgreSQL.
+"""Removing a mission, against a real PostgreSQL database.
 
-Le double en memoire rend les memes objets que ceux qu'on lui a confies, la
-base en reconstruit d'autres : ce test tient l'usage a distance de cet ecart.
+The in-memory double hands back the very objects it was given, the database
+rebuilds others: this test keeps the behaviour clear of that difference.
 """
 
 from datetime import date
@@ -57,7 +57,7 @@ async def seed(session: AsyncSession) -> tuple[int, int, int]:
             id=None,
             label="Portail",
             kind=ProjectKind.PROJECT,
-            status=ProjectStatus.BUILD,
+            status=ProjectStatus.DEVELOPMENT,
         )
     )
     epargne = await projects.add(
@@ -65,7 +65,7 @@ async def seed(session: AsyncSession) -> tuple[int, int, int]:
             id=None,
             label="Extranet",
             kind=ProjectKind.PROJECT,
-            status=ProjectStatus.BUILD,
+            status=ProjectStatus.DEVELOPMENT,
         )
     )
     assert user.id is not None and target.id is not None and epargne.id is not None
@@ -82,7 +82,7 @@ async def une_saisie(
             project_id=project_id,
             day=date(2026, 9, day),
             value=DayValue(value),
-            status_at_entry=ProjectStatus.BUILD,
+            status_at_entry=ProjectStatus.DEVELOPMENT,
         )
     )
 

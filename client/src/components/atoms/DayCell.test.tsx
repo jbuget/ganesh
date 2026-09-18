@@ -12,8 +12,8 @@ const baseProps = {
 };
 
 /**
- * DayCell vit dans une ligne de tableau. Le rendre hors de ce contexte masquerait
- * une structure HTML invalide, qui casse silencieusement l'hydratation React.
+ * DayCell lives in a table row. Rendering it outside that context would hide an
+ * invalid HTML structure, which silently breaks React hydration.
  */
 function renderInRow(ui: React.ReactElement) {
   return render(

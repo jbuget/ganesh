@@ -8,7 +8,7 @@ import type { ProjectKind } from "./projectKind";
 import type { ProjectStatus } from "./projectStatus";
 
 /**
- * Creation d'une mission.
+ * Creating a mission.
  */
 export interface CreateProjectRequest {
   /**

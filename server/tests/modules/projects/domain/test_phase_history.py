@@ -1,4 +1,4 @@
-"""Les dates auxquelles une mission a atteint ses phases."""
+"""The dates a mission reached its phases."""
 
 from datetime import date
 
@@ -10,11 +10,11 @@ from src.modules.projects.domain.services.phase_history import (
 
 
 def test_reaching_a_phase_implies_the_previous_ones() -> None:
-    """Un projet importe en Deploiement a bien traverse les phases d'avant."""
+    """A project imported in Deployment did go through the earlier phases."""
     assert previous_phases(ProjectStatus.DEPLOYMENT) == [
         ProjectStatus.EXPLORATION,
         ProjectStatus.SCOPING,
-        ProjectStatus.BUILD,
+        ProjectStatus.DEVELOPMENT,
         ProjectStatus.VALIDATION,
     ]
 
@@ -24,7 +24,7 @@ def test_the_first_phase_has_nothing_before_it() -> None:
 
 
 def test_a_passage_is_named_after_what_it_achieves() -> None:
-    """« Validé le » se lit mieux que « entré en déploiement le »."""
+    """\u00ab Valide le \u00bb reads better than \u00ab entre en deploiement le \u00bb."""
     assert transition_label(ProjectStatus.DEPLOYMENT) == "Validé"
     assert transition_label(ProjectStatus.OPERATIONS) == "Déployé"
 
@@ -34,8 +34,8 @@ def test_every_phase_can_be_named() -> None:
 
 
 def test_a_phase_date_is_not_lost_when_a_project_goes_back() -> None:
-    """Revenir en arriere n'efface pas ce qui a eu lieu : le service ne dit
-    que l'ordre des phases, il n'autorise aucune suppression."""
+    """Going back does not erase what happened: the service only states the
+    order of the phases, it allows no deletion."""
     assert ProjectStatus.VALIDATION in previous_phases(ProjectStatus.OPERATIONS)
 
 
@@ -44,6 +44,6 @@ def test_phases_are_ordered_as_declared() -> None:
 
 
 def test_a_date_marks_the_entry_into_a_phase() -> None:
-    """La date de « Valide » est celle de l'entree en Deploiement."""
+    """The \u00ab Valide \u00bb date is the one of entering Deployment."""
     start = date(2026, 9, 17)
     assert (transition_label(ProjectStatus.DEPLOYMENT), start) == ("Validé", start)

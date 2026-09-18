@@ -1,11 +1,11 @@
-"""Commandes du fil de suivi d'une mission."""
+"""Commands for a mission's follow-up thread."""
 
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
 class PostUpdateCommand:
-    """Publication d'une mise a jour."""
+    """Posting an update."""
 
     actor_id: int
     project_id: int
@@ -14,7 +14,7 @@ class PostUpdateCommand:
 
 @dataclass(frozen=True)
 class EditUpdateCommand:
-    """Correction d'une mise a jour deja publiee."""
+    """Correcting an update already posted."""
 
     actor_id: int
     update_id: int
@@ -23,7 +23,7 @@ class EditUpdateCommand:
 
 @dataclass(frozen=True)
 class RemoveUpdateCommand:
-    """Retrait d'une mise a jour."""
+    """Withdrawing an update."""
 
     actor_id: int
     update_id: int

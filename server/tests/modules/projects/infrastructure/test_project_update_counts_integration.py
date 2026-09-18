@@ -1,9 +1,8 @@
-"""Ce que le fil de suivi annonce de lui-meme, contre une vraie base.
+"""What the follow-up thread announces of itself, against a real database.
 
-Le double en memoire parcourt une liste ; la base agrege et deduplique en SQL,
-en ignorant les lignes retirees. Cette difference merite d'etre couverte : le
-compteur des cartes du tableau et l'infobulle du referentiel en dependent
-entierement.
+The in-memory double walks a list; the database aggregates and deduplicates in
+SQL, ignoring withdrawn rows. That difference is worth covering: the board
+card counters and the reference list tooltip depend on it entirely.
 """
 
 from datetime import datetime
@@ -75,7 +74,7 @@ async def test_counts_live_updates_per_project(db_session: AsyncSession) -> None
             published_at=datetime(2026, 9, 11, 9, 0),
         )
     )
-    removed.remove(par=author.id, a=datetime(2026, 9, 12, 9, 0))
+    removed.remove(by=author.id, at=datetime(2026, 9, 12, 9, 0))
     await updates.update(removed)
 
     counts = await updates.count_by_project()
@@ -87,7 +86,7 @@ async def test_counts_live_updates_per_project(db_session: AsyncSession) -> None
 async def test_the_last_live_update_of_each_project_is_returned(
     db_session: AsyncSession,
 ) -> None:
-    """Retirer le dernier message rend son rang au precedent."""
+    """Withdrawing the last message gives its place back to the previous one."""
     author = await SqlUserRepository(db_session).add(
         User(
             id=None,
@@ -131,7 +130,7 @@ async def test_the_last_live_update_of_each_project_is_returned(
             published_at=datetime(2026, 9, 12, 9, 0),
         )
     )
-    removed.remove(par=author.id, a=datetime(2026, 9, 13, 9, 0))
+    removed.remove(by=author.id, at=datetime(2026, 9, 13, 9, 0))
     await updates.update(removed)
 
     dernieres = await updates.latest_by_project()

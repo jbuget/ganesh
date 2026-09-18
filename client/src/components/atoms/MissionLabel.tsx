@@ -10,11 +10,11 @@ interface MissionLabelProps {
 }
 
 /**
- * Libelle d'une mission, avec son avancement en infobulle.
+ * A mission's label, with its progress in a tooltip.
  *
- * Le nom peut etre tronque : l'infobulle le redonne en entier, accompagne du
- * consomme face a l'estime. Une seule infobulle porte les deux informations,
- * pour ne pas faire concurrence a l'infobulle native du navigateur.
+ * The name may be truncated: the tooltip gives it back in full, along with what
+ * is consumed against the estimate. One tooltip carries both, so as not to
+ * compete with the browser's native one.
  */
 export function MissionLabel({ label, consommeJ, estimeJ }: MissionLabelProps) {
   const { tooltip, follow, leave } = useCursorTooltip();

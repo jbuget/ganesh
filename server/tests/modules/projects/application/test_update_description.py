@@ -1,4 +1,4 @@
-"""La fiche de service d'une mission."""
+"""The service sheet of a mission."""
 
 import pytest
 
@@ -48,8 +48,8 @@ async def test_a_description_is_written() -> None:
 
 
 async def test_edge_whitespace_is_trimmed() -> None:
-    """Rogner les bords rend l'ecriture idempotente : relire puis renvoyer le
-    meme texte ne doit pas compter comme une modification."""
+    """Trimming the edges makes the write idempotent: reading then sending the
+    same text back must not count as a change."""
     use_case, repo, _ = build()
 
     await use_case.execute(
@@ -63,7 +63,7 @@ async def test_edge_whitespace_is_trimmed() -> None:
 
 
 async def test_an_empty_description_clears_the_sheet() -> None:
-    """Vider le champ efface la fiche : on ne garde pas une chaine vide."""
+    """Emptying the field clears the sheet: an empty string is not kept."""
     use_case, repo, _ = build(description=FICHE)
 
     await use_case.execute(
@@ -86,7 +86,7 @@ async def test_the_change_is_traced() -> None:
 
 
 async def test_rewriting_the_same_text_leaves_no_trace() -> None:
-    """Ouvrir l'editeur et refermer sans rien changer n'est pas un evenement."""
+    """Opening the editor and closing it unchanged is not an event."""
     use_case, _, audit = build(description=FICHE)
 
     await use_case.execute(

@@ -1,4 +1,4 @@
-"""Change le role d'un collaborateur."""
+"""Changes a teammate's role."""
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
@@ -14,7 +14,7 @@ from src.shared.exceptions.domain_exceptions import (
 
 
 class ChangeUserRoleUseCase:
-    """Promeut ou retrograde un collaborateur. Reserve aux managers."""
+    """Promotes or demotes a teammate. Managers only."""
 
     def __init__(self, users: UserRepository, audit_logs: AuditLogRepository) -> None:
         self._users = users
@@ -25,9 +25,7 @@ class ChangeUserRoleUseCase:
         if actor is None:
             raise EntityNotFoundError("Utilisateur inconnu.")
         if not actor.can_manage_teammates():
-            raise ForbiddenActionError(
-                "Seul un manager peut modifier le role d'un collaborateur."
-            )
+            raise ForbiddenActionError("Only a manager can change a teammate's role.")
 
         target = await self._users.get_by_id(command.target_user_id)
         if target is None:

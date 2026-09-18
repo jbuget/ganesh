@@ -36,7 +36,7 @@ describe("ProjectContributions", () => {
   });
 
   it("garde les autres intervenants ouverts", () => {
-    // On deplie deux personnes justement pour confronter leurs mois.
+    // Two people are expanded precisely to set their months side by side.
     render(
       <ProjectContributions
         contributions={[contribution(1, "Léa", 4), contribution(2, "Nino", 2)]}

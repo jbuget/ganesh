@@ -1,4 +1,4 @@
-"""La hierarchie du referentiel s'arrete a deux niveaux."""
+"""The hierarchy of the reference list stops at two levels."""
 
 import pytest
 
@@ -36,8 +36,8 @@ def test_a_project_can_carry_lots() -> None:
 
 
 def test_a_lot_cannot_carry_another_lot() -> None:
-    """Deux niveaux suffisent : un sous-sous-projet n'a pas de sens ici."""
-    with pytest.raises(ValidationError, match="sous-projet"):
+    """Two levels are enough: a sub-sub-project makes no sense here."""
+    with pytest.raises(ValidationError, match="sub-project"):
         ensure_can_be_parent(work_package())
 
 

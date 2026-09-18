@@ -1,4 +1,4 @@
-"""Retire d'un mois toutes les saisies d'une mission."""
+"""Removes from a month every entry of a mission."""
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
@@ -15,11 +15,11 @@ from src.shared.exceptions.domain_exceptions import (
 
 
 class RemoveMissionFromMonthUseCase:
-    """Supprime la ligne d'une mission sur un mois, saisies comprises.
+    """Deletes a mission's row on a month, entries included.
 
-    Retirer une ligne du tableau efface le temps qu'elle porte : l'operation
-    est groupee pour qu'un mois ne se retrouve jamais a moitie nettoye, et
-    chaque saisie garde sa trace, avec sa valeur d'avant.
+    Removing a row from the grid erases the time it carries: the operation is
+    grouped so a month never ends up half cleaned, and each entry keeps its
+    trace, with its former value.
     """
 
     def __init__(
@@ -35,19 +35,19 @@ class RemoveMissionFromMonthUseCase:
         self._audit_logs = audit_logs
 
     async def execute(self, command: RemoveMissionCommand) -> float:
-        """Retourne le nombre de jours retires."""
+        """Returns how many days were removed."""
         actor = await self._users.get_by_id(command.actor_id)
         if actor is None:
             raise EntityNotFoundError("Utilisateur inconnu.")
         if not actor.can_edit_open_months():
             raise ForbiddenActionError(
-                "Un utilisateur desactive ne peut plus modifier de saisie."
+                "A deactivated user can no longer change an entry."
             )
 
         month = await self._months.get(command.target_user_id, command.month)
         if month is not None and not month.is_writable:
             raise ForbiddenActionError(
-                "Ce mois est valide : il doit etre rouvert par un manager."
+                "This month is validated: a manager must reopen it."
             )
 
         entries = [

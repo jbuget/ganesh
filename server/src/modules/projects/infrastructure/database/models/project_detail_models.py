@@ -1,4 +1,4 @@
-"""Tables attachees a une mission : departements, liens, phases atteintes."""
+"""Tables attached to a mission: departments, links, phases reached."""
 
 from datetime import date
 
@@ -11,7 +11,7 @@ from src.modules.projects.domain.entities.project_link import LinkIcon
 
 
 class ProjectDepartmentModel(Base):
-    """Departements concernes par une mission."""
+    """Departments a mission concerns."""
 
     __tablename__ = "project_departments"
 
@@ -25,7 +25,7 @@ class ProjectDepartmentModel(Base):
 
 
 class ProjectLinkModel(Base):
-    """Liens utiles d'une mission."""
+    """Useful links of a mission."""
 
     __tablename__ = "project_links"
 
@@ -42,11 +42,11 @@ class ProjectLinkModel(Base):
 
 
 class ProjectPhaseReachedModel(Base):
-    """Date a laquelle une mission est entree dans une phase.
+    """The date a mission entered a phase.
 
-    Une ligne par phase atteinte, et non une colonne par phase : revenir en
-    arriere puis repasser ne doit pas ecraser la premiere date, et ajouter une
-    phase au produit ne demandera pas de migrer le schema.
+    One row per phase reached, not one column per phase: going back then
+    through again must not overwrite the first date, and adding a phase to the
+    product will not call for a schema migration.
     """
 
     __tablename__ = "project_phases_reached"

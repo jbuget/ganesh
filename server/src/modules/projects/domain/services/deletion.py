@@ -1,23 +1,23 @@
-"""Conditions de suppression d'une mission."""
+"""When a mission may be deleted."""
 
 from src.modules.projects.domain.entities.project import Project
 from src.shared.exceptions.domain_exceptions import ForbiddenActionError
 
 
 def ensure_can_be_deleted(project: Project, entries: int, sub_projects: int) -> None:
-    """Refuse la suppression des que la mission a servi.
+    """Refuses deletion as soon as the mission has been used.
 
-    Une mission jamais utilisee peut disparaitre : c'est une erreur de saisie du
-    referentiel. Des qu'elle porte du temps, la supprimer detruirait du travail
-    declare — on archive, ce qui la retire des listes sans rien perdre.
+    A mission never used may disappear: it was a slip in the reference list.
+    Once it carries time, deleting it would destroy declared work — we archive
+    instead, which takes it out of the lists without losing anything.
     """
     if sub_projects > 0:
         raise ForbiddenActionError(
-            f"« {project.label} » porte {sub_projects} sous-projet(s) : "
-            "traitez-les d'abord."
+            f"\u00ab {project.label} \u00bb carries {sub_projects} sub-project(s): "
+            "deal with those first."
         )
     if entries > 0:
         raise ForbiddenActionError(
-            f"« {project.label} » porte deja {entries} saisie(s) de temps : "
-            "vous pouvez l'archiver, pas la supprimer."
+            f"\u00ab {project.label} \u00bb already carries {entries} time entry/entries: "
+            "you can archive it, not delete it."
         )

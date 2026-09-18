@@ -43,7 +43,7 @@ export const getValidateMonthUrl = (month: string) => {
 };
 
 /**
- * Verrouille son propre mois. La validation n'est pas delegable.
+ * Locks one's own month. Validation cannot be delegated.
  * @summary Validate Month
  */
 export const validateMonth = async (
@@ -161,7 +161,7 @@ export const getReopenMonthUrl = (month: string, params: ReopenMonthParams) => {
 };
 
 /**
- * Rouvre le mois valide d'un collaborateur. Reserve aux managers.
+ * Reopens a teammate's validated month. Managers only.
  * @summary Reopen Month
  */
 export const reopenMonth = async (

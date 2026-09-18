@@ -1,4 +1,4 @@
-"""Provisionnement depuis Entra et gestion des roles."""
+"""Provisioning from Entra and managing roles."""
 
 from datetime import datetime
 
@@ -83,7 +83,7 @@ async def test_a_known_identity_is_reused() -> None:
 
 
 async def test_a_seeded_user_keeps_their_role_on_first_login() -> None:
-    """Le seed pre-attribue les roles avant la premiere connexion."""
+    """The seed pre-assigns roles before the first login."""
     seeded = User(
         id=1,
         entra_oid=None,
@@ -164,7 +164,7 @@ async def test_a_returning_user_sees_their_connection_refreshed() -> None:
 
 
 async def test_a_busy_user_is_not_written_on_every_request() -> None:
-    """Le jeton est represente a chaque appel : la base n'a pas a le subir."""
+    """The token is presented on every call: the database need not suffer it."""
     teammate = make_teammate()
     teammate.last_login_at = datetime(2026, 9, 17, 9, 0)
     provision, _, repo, _, _ = build([teammate])
@@ -214,7 +214,7 @@ async def test_a_teammate_cannot_deactivate_anyone() -> None:
 
 
 async def test_a_manager_cannot_deactivate_themselves() -> None:
-    """Sinon le compte est refuse a la porte des la requete suivante."""
+    """Otherwise the account is turned away at the door on the next request."""
     _, _, repo, _, set_active = build([make_manager(), make_teammate()])
 
     with pytest.raises(ForbiddenActionError):
@@ -230,7 +230,7 @@ async def test_a_manager_cannot_deactivate_themselves() -> None:
 async def test_a_manager_can_always_reactivate_themselves_is_pointless_but_allowed() -> (
     None
 ):
-    """Reactiver n'enferme personne dehors : la regle ne vise que la coupure."""
+    """Reactivating locks nobody out: the rule only aims at cutting off."""
     _, _, repo, _, set_active = build([make_manager(), make_teammate()])
 
     await set_active.execute(
@@ -277,7 +277,7 @@ async def test_a_reactivation_is_traced_under_its_own_action() -> None:
 
 
 async def test_setting_the_state_it_already_has_traces_nothing() -> None:
-    """Un clic sans effet ne doit pas polluer le journal."""
+    """A click with no effect must not clutter the log."""
     _, _, _, audit, set_active = build([make_manager(), make_teammate()])
 
     await set_active.execute(

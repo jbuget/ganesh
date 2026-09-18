@@ -1,4 +1,4 @@
-"""Change la phase d'un projet ou d'un lot."""
+"""Changes the phase of a project or a work package."""
 
 from datetime import date
 
@@ -19,10 +19,10 @@ from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 
 class ChangeProjectStatusUseCase:
-    """Fait avancer, ou reculer, un projet dans ses phases.
+    """Moves a project forward, or back, through its phases.
 
-    Le statut au moment de la saisie est fige sur chaque `Entry` : changer la
-    phase ne reecrit jamais l'historique deja consomme.
+    The status at entry time is frozen on every `Entry`: changing the phase
+    never rewrites history already consumed.
     """
 
     def __init__(
@@ -51,8 +51,8 @@ class ChangeProjectStatusUseCase:
         project.change_status(command.status)
         await self._projects.update(project)
 
-        # La date d'entree dans une phase se note au passage : elle ne se
-        # reconstitue pas apres coup, et l'audit peut etre purge.
+        # The date a phase is entered is recorded on the way through: it
+        # cannot be reconstructed afterwards, and the audit log may be purged.
         await self._details.mark_phase_reached(
             command.project_id, command.status, today or date.today()
         )

@@ -7,7 +7,7 @@ describe("PHASES", () => {
     expect(PHASES.map((p) => p.status)).toEqual([
       "exploration",
       "scoping",
-      "build",
+      "development",
       "validation",
       "deployment",
       "operations",
@@ -21,8 +21,8 @@ describe("PHASES", () => {
 
 describe("phaseRank", () => {
   it("classe les phases dans l'ordre des colonnes du kanban", () => {
-    expect(phaseRank("scoping")).toBeLessThan(phaseRank("build"));
-    expect(phaseRank("build")).toBeLessThan(phaseRank("operations"));
+    expect(phaseRank("scoping")).toBeLessThan(phaseRank("development"));
+    expect(phaseRank("development")).toBeLessThan(phaseRank("operations"));
   });
 
   it("renvoie en fin de liste ce qui ne porte pas de phase", () => {

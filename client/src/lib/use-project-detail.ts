@@ -21,15 +21,15 @@ import {
 } from "@/lib/api/generated/projects/projects";
 
 /**
- * La fiche d'une mission et ses modifications.
+ * A mission's sheet and its changes.
  *
- * Chaque changement est enregistre puis relu depuis le serveur : la fiche
- * s'edite champ par champ, sans bouton « Enregistrer », et l'ecran ne doit
- * jamais montrer autre chose que ce qui est en base.
+ * Every change is saved then read back from the server: the sheet is edited
+ * field by field, with no \u00ab Enregistrer \u00bb button, and the screen must
+ * never show anything other than what is in the database.
  */
 export function useProjectDetail(
   projectId: number,
-  /** Appele apres chaque ecriture : l'ecran d'ou l'on vient peut en dependre. */
+  /** Called after every write: the screen one came from may depend on it. */
   onEcriture?: () => void | Promise<void>,
 ) {
   const [detail, setDetail] = useState<ProjectDetailResponse | null>(null);
@@ -46,8 +46,8 @@ export function useProjectDetail(
   }, [projectId, onEcriture]);
 
   useEffect(() => {
-    // Le garde evite d'ecrire dans un composant deja demonte, quand on quitte
-    // la fiche avant que la reponse ne revienne.
+    // The guard avoids writing into an already unmounted component, when one
+    // leaves the sheet before the response comes back.
     let alive = true;
     getProjectDetail(projectId)
       .then((response) => {
@@ -84,7 +84,7 @@ export function useProjectDetail(
       await reload();
     },
 
-    /** Modification partielle : seuls les champs fournis sont appliques. */
+    /** Partial change: only the fields provided are applied. */
     async changerCaracteristiques(champs: {
       category?: ProjectCategory | null;
       priority?: ProjectPriority | null;
@@ -95,8 +95,8 @@ export function useProjectDetail(
     },
 
     /**
-     * Sort la mission du referentiel sans rien perdre : le referentiel ne la
-     * liste plus, mais les saisies deja passees dessus restent lisibles.
+     * Takes the mission out of the reference list without losing anything: the
+     * list no longer shows it, but entries already booked stay readable.
      */
     async archiver() {
       await updateProject(projectId, { is_active: false });

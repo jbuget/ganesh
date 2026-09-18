@@ -5,14 +5,13 @@ import { PHASES } from "@/lib/board";
 import type { Colonnes } from "@/lib/use-board";
 
 /**
- * Deplacements de cartes sur le tableau, independamment du geste qui les
- * declenche.
+ * Card moves on the board, independent of the gesture that triggers them.
  *
- * Le survol et le depot partagent ces calculs : ce qu'on voit pendant le
- * glissement est donc exactement ce qui sera enregistre.
+ * Hovering and dropping share these computations: what one sees during the
+ * drag is therefore exactly what will be saved.
  */
 
-/** Phase et rang d'une carte, ou null si elle n'est pas sur le tableau. */
+/** Phase and rank of a card, or null if it is not on the board. */
 export function locate(
   columns: Colonnes,
   projectId: number,
@@ -26,10 +25,10 @@ export function locate(
 }
 
 /**
- * Rang qu'occuperait la carte glissee dans une phase.
+ * The rank the dragged card would take within a phase.
  *
- * `apres` dit si le curseur a depasse la moitie de la carte survolee : on se
- * glisse alors derriere elle plutot que devant.
+ * `after` says whether the cursor went past the middle of the hovered card: it
+ * then slips behind it rather than in front.
  */
 export function targetIndex(
   cards: BoardCardResponse[],
@@ -43,11 +42,11 @@ export function targetIndex(
 }
 
 /**
- * Fait passer une carte dans une autre phase.
+ * Moves a card into another phase.
  *
- * Rend null si le deplacement n'a pas lieu d'etre : le survol appelle cette
- * fonction a chaque mouvement de souris, et reecrire un etat identique ferait
- * clignoter le tableau.
+ * Returns null when the move has no reason to happen: hovering calls this
+ * function on every mouse move, and rewriting an identical state would make
+ * the board flicker.
  */
 export function moveToColumn(
   columns: Colonnes,
@@ -69,7 +68,7 @@ export function moveToColumn(
   };
 }
 
-/** Change le rang d'une carte au sein de sa phase. Null si elle ne bouge pas. */
+/** Changes a card's rank within its phase. Null if it does not move. */
 export function reorder(
   columns: Colonnes,
   projectId: number,

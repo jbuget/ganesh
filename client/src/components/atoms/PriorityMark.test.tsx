@@ -11,8 +11,8 @@ describe("PriorityMark", () => {
   });
 
   it("donne à chaque niveau un dessin distinct, et pas qu'une teinte", () => {
-    // Sans la couleur — daltonisme, impression, ecran mal calibre — c'est le
-    // remplissage de la jauge qui doit porter l'echelle.
+    // Without colour — colour blindness, print, a poorly calibrated screen — it
+    // is how full the gauge is that must carry the scale.
     const formes = (["critical", "high", "normal", "low"] as const).map((niveau) => {
       const { container, unmount } = render(<PriorityMark value={niveau} />);
       const className = container.querySelector("svg")?.getAttribute("class") ?? "";

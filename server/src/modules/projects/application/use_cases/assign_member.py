@@ -1,4 +1,4 @@
-"""Declare ou retire un intervenant sur une mission."""
+"""Declares or removes a contributor on a mission."""
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
@@ -16,12 +16,11 @@ from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 
 class _AssignmentUseCase:
-    """Ce que partagent l'ajout et le retrait : verifier avant d'ecrire.
+    """What adding and removing share: check before writing.
 
-    Affecter quelqu'un n'est pas un acte de gestion : chacun peut dire qui
-    s'apprete a intervenir, comme chacun peut deja corriger le mois d'un
-    collegue. Seules l'existence de la mission et celle de la personne sont
-    verifiees.
+    Assigning someone is not an act of management: anyone may say who is about
+    to step in, just as anyone may already fix a colleague's month. Only the
+    existence of the mission and of the person are checked.
     """
 
     def __init__(
@@ -44,7 +43,7 @@ class _AssignmentUseCase:
 
 
 class AssignMemberUseCase(_AssignmentUseCase):
-    """Declare qu'une personne intervient, ou va intervenir, sur une mission."""
+    """Declares that someone is working, or about to work, on a mission."""
 
     async def execute(self, command: AssignmentCommand) -> None:
         await self._ensure_both_exist(command)
@@ -62,7 +61,7 @@ class AssignMemberUseCase(_AssignmentUseCase):
 
 
 class UnassignMemberUseCase(_AssignmentUseCase):
-    """Retire une personne des intervenants d'une mission."""
+    """Removes someone from a mission's contributors."""
 
     async def execute(self, command: AssignmentCommand) -> None:
         await self._ensure_both_exist(command)

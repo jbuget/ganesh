@@ -15,10 +15,10 @@ interface RolePickerProps {
 }
 
 /**
- * Role d'un collaborateur, change depuis la liste.
+ * A teammate's role, changed from the list.
  *
- * Sans droit de gestion, le role reste affiche : savoir qui peut rouvrir un
- * mois validé concerne toute l'équipe, pas seulement ceux qui le décident.
+ * Without management rights, the role still shows: knowing who can reopen a
+ * validated month concerns the whole team, not only those who decide it.
  */
 export function RolePicker({ role, modifiable, onChange }: RolePickerProps) {
   const [ouvert, setOuvert] = useState(false);

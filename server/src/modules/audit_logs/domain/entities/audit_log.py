@@ -1,7 +1,7 @@
-"""Journal des actions significatives.
+"""Log of the actions that matter.
 
-La transparence est assumee : chacun peut editer le mois ouvert d'un collegue.
-Cette liberte n'a de sens que si chaque geste laisse une trace lisible.
+Transparency is deliberate: anyone may edit a colleague's open month. That
+freedom only makes sense if every move leaves a readable trace.
 """
 
 from dataclasses import dataclass, field
@@ -37,7 +37,7 @@ def _as_text(value: Any | None) -> str | None:
 
 @dataclass
 class AuditLog:
-    """Une ligne du journal d'audit."""
+    """One line of the audit log."""
 
     action: AuditAction
     actor_id: int
@@ -52,7 +52,7 @@ class AuditLog:
 
     @property
     def is_on_behalf_of_someone_else(self) -> bool:
-        """Signale une action faite sur le mois d'un collegue."""
+        """Flags an action taken on a colleague's month."""
         return self.target_user_id is not None and self.target_user_id != self.actor_id
 
     @classmethod
@@ -138,7 +138,7 @@ class AuditLog:
         role: str,
         at: datetime | None = None,
     ) -> "AuditLog":
-        """Un intervenant est declare sur une mission."""
+        """A contributor is declared on a mission."""
         return cls(
             action=AuditAction.PROJECT_ASSIGN,
             actor_id=actor_id,
@@ -157,7 +157,7 @@ class AuditLog:
         role: str,
         at: datetime | None = None,
     ) -> "AuditLog":
-        """Un intervenant n'est plus attendu sur une mission."""
+        """A contributor is no longer expected on a mission."""
         return cls(
             action=AuditAction.PROJECT_UNASSIGN,
             actor_id=actor_id,

@@ -1,4 +1,4 @@
-"""Construit la matrice de saisie d'un mois : missions en lignes, jours en colonnes."""
+"""Builds a month's entry grid: missions as rows, days as columns."""
 
 from dataclasses import dataclass, field
 from datetime import date
@@ -21,7 +21,7 @@ from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 @dataclass(frozen=True)
 class GetMonthGridQuery:
-    """Demande la matrice d'un utilisateur pour un mois."""
+    """Asks for a user's grid for one month."""
 
     user_id: int
     month: date
@@ -30,7 +30,7 @@ class GetMonthGridQuery:
 
 @dataclass
 class GridRow:
-    """Une ligne de la matrice : une mission et ses saisies du mois."""
+    """One grid row: a mission and its entries for the month."""
 
     project_id: int
     label: str
@@ -39,19 +39,19 @@ class GridRow:
     values: dict[date, float] = field(default_factory=dict)
     actual_total: float = 0.0
     forecast_total: float = 0.0
-    #: Consomme du projet entier, tous mois et tous developpeurs confondus.
-    #: C'est la seule grandeur comparable a `estime_j`, qui porte sur le projet.
+    #: Consumed across the whole project, every month and every developer.
+    #: The only figure comparable to `estimated_days`, which covers the project.
     total_consumed_days: float = 0.0
 
     @property
     def total(self) -> float:
-        """Total du mois, realise et previsionnel confondus."""
+        """Month total, delivered and forecast together."""
         return round(self.actual_total + self.forecast_total, 2)
 
 
 @dataclass
 class DayTotal:
-    """Total saisi sur une journee, tous projets confondus."""
+    """Total entered on one day, across every project."""
 
     day: date
     total: float
@@ -60,7 +60,7 @@ class DayTotal:
 
 @dataclass
 class MonthGrid:
-    """La matrice complete d'un mois."""
+    """The complete grid for a month."""
 
     user_id: int
     month: date
@@ -80,7 +80,7 @@ class MonthGrid:
 
 
 class GetMonthGridUseCase:
-    """Assemble la matrice affichee par l'ecran de saisie."""
+    """Assembles the grid the entry screen displays."""
 
     def __init__(
         self,
@@ -95,7 +95,7 @@ class GetMonthGridUseCase:
         self._months = months
 
     async def _project_consumption(self, project_id: int, today: date) -> float:
-        """Temps deja consomme sur un projet, previsionnel exclu."""
+        """Time already consumed on a project, forecast excluded."""
         entries = await self._entries.list_for_project(project_id)
         return round(
             sum(float(e.value) for e in entries if not e.is_forecast(today)), 2

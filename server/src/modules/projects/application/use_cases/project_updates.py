@@ -1,4 +1,4 @@
-"""Le fil de suivi d'une mission : publier, corriger, retirer, lire."""
+"""A mission's follow-up thread: post, correct, withdraw, read."""
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -26,14 +26,14 @@ from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 @dataclass
 class SignedUpdate:
-    """Une mise a jour et qui l'a ecrite."""
+    """An update and who wrote it."""
 
     update: ProjectUpdate
     author: User
 
 
 class _UpdateUseCase:
-    """Ce que partagent les trois ecritures du fil."""
+    """What the three thread writes share."""
 
     def __init__(
         self,
@@ -67,7 +67,7 @@ class _UpdateUseCase:
 
 
 class PostProjectUpdateUseCase(_UpdateUseCase):
-    """Publie une mise a jour sur une mission."""
+    """Posts an update on a mission."""
 
     async def execute(
         self, command: PostUpdateCommand, now: datetime | None = None
@@ -94,13 +94,13 @@ class PostProjectUpdateUseCase(_UpdateUseCase):
 
 
 class EditProjectUpdateUseCase(_UpdateUseCase):
-    """Corrige une mise a jour. Reserve a son auteur, l'entite s'en assure."""
+    """Corrects an update. Author only, as the entity makes sure."""
 
     async def execute(
         self, command: EditUpdateCommand, now: datetime | None = None
     ) -> ProjectUpdate:
         update = await self._load(command.update_id)
-        update.rewrite(command.body, par=command.actor_id, a=now or datetime.now())
+        update.rewrite(command.body, by=command.actor_id, at=now or datetime.now())
         await self._updates.update(update)
         await self._trace(
             AuditAction.UPDATE_EDIT,
@@ -112,13 +112,13 @@ class EditProjectUpdateUseCase(_UpdateUseCase):
 
 
 class RemoveProjectUpdateUseCase(_UpdateUseCase):
-    """Retire une mise a jour. Elle garde sa place dans le fil."""
+    """Withdraws an update. It keeps its place in the thread."""
 
     async def execute(
         self, command: RemoveUpdateCommand, now: datetime | None = None
     ) -> None:
         update = await self._load(command.update_id)
-        update.remove(par=command.actor_id, a=now or datetime.now())
+        update.remove(by=command.actor_id, at=now or datetime.now())
         await self._updates.update(update)
         await self._trace(
             AuditAction.UPDATE_REMOVE,
@@ -129,7 +129,7 @@ class RemoveProjectUpdateUseCase(_UpdateUseCase):
 
 
 class ListProjectUpdatesUseCase:
-    """Le fil d'une mission, chaque mise a jour signee."""
+    """A mission's thread, every update signed."""
 
     def __init__(self, updates: ProjectUpdateRepository, users: UserRepository) -> None:
         self._updates = updates

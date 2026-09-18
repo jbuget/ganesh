@@ -1,4 +1,4 @@
-"""Traduction des objets applicatifs en schemas d'API."""
+"""Translating application objects into API schemas."""
 
 from src.modules.entries.application.use_cases.get_month_grid import MonthGrid
 from src.modules.entries.domain.entities.entry import Entry

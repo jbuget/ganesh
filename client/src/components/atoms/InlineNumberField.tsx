@@ -11,11 +11,10 @@ interface InlineNumberFieldProps {
 }
 
 /**
- * Un nombre qui s'edite la ou il s'affiche.
+ * A number that edits where it shows.
  *
- * Le champ n'apparait qu'au clic : une fiche se lit bien plus souvent qu'elle
- * ne se modifie, et une bordure de saisie permanente ferait du bruit sur chaque
- * ligne.
+ * The field only appears on click: a sheet is read far more often than it is
+ * changed, and a permanent input border would make noise on every row.
  */
 export function InlineNumberField({
   value,

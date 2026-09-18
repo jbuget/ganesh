@@ -1,22 +1,22 @@
 import { formatDays } from "@/lib/dates";
 
-/** Cote d'une cellule portant un trait fort plutot que le trait de grille. */
+/** Side of a cell carrying a strong rule rather than the grid line. */
 export type StrongSide = "right" | "bottom";
 
 interface DayTotalCellProps {
   value: number;
   isOffDay: boolean;
-  /** Un jour non ouvre se reduit a une bande, sauf s'il porte une saisie. */
+  /** A non-working day shrinks to a band, unless it carries an entry. */
   isNarrow?: boolean;
   strongSides?: StrongSide[];
 }
 
 /**
- * Total d'une journee, toutes missions confondues.
+ * A day's total, across every mission.
  *
- * Le fond porte l'etat de la journee : verte si elle est complete, rouge si
- * elle ne l'est pas — qu'il manque du temps ou qu'il y en ait trop. C'est la
- * lecture utile au quotidien : reperer d'un coup d'oeil les journees a corriger.
+ * The background carries the state of the day: green when it is complete, red
+ * when it is not — whether time is missing or there is too much. That is the
+ * useful daily reading: spotting at a glance the days to fix.
  */
 function backgroundFor(value: number, isOffDay: boolean) {
   if (value > 0) {

@@ -9,10 +9,10 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
-/** Decalage de l'infobulle par rapport au curseur, pour ne pas le masquer. */
+/** Offset of the tooltip from the cursor, so as not to hide it. */
 const OFFSET = { x: 14, y: 18 };
 
-/** Ce qu'on laisse respirer entre la bulle et le bord de la fenetre. */
+/** The breathing room left between the bubble and the window edge. */
 const MARGE = 8;
 
 interface State {
@@ -22,12 +22,13 @@ interface State {
 }
 
 /**
- * La bulle elle-meme, repliee dans la fenetre.
+ * The bubble itself, folded back into the window.
  *
- * Posee telle quelle au curseur, une bulle haute ou large sortirait de l'ecran
- * par le bas ou la droite — d'autant plus qu'elle ne se defile pas. On la
- * mesure donc avant peinture pour la ramener dans la fenetre : `useLayoutEffect`
- * s'execute entre le rendu et l'affichage, la correction ne se voit pas.
+ * Placed as is at the cursor, a tall or wide bubble would run off the screen at
+ * the bottom or the right — all the more since it does not scroll. It is
+ * therefore measured before paint to bring it back inside the window:
+ * `useLayoutEffect` runs between render and display, so the correction never
+ * shows.
  */
 function Bubble({
   x,
@@ -42,8 +43,8 @@ function Bubble({
     if (!element.current) return;
     const { width, height } = element.current.getBoundingClientRect();
 
-    // A droite et en bas du curseur par defaut ; de l'autre cote s'il n'y a
-    // plus la place, et cale contre le bord si elle n'y tient nulle part.
+    // To the right and below the cursor by default; on the other side when
+    // there is no room left, and against the edge if it fits nowhere.
     const left =
       x + OFFSET.x + width > window.innerWidth - MARGE
         ? Math.max(MARGE, x - OFFSET.x - width)

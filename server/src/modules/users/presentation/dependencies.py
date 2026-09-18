@@ -1,4 +1,4 @@
-"""Cablage des use cases collaborateurs."""
+"""Wiring of the teammate use cases."""
 
 from fastapi import Depends
 

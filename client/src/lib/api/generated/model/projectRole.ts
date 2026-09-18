@@ -6,11 +6,10 @@
  */
 
 /**
- * A quel titre quelqu'un est rattache a une mission.
+ * On what grounds someone is attached to a mission.
  *
- * L'intervenant met les mains dedans en ce moment ou sous peu ; le referent
- * repond des choix et des interlocuteurs, sur toute la duree. Une meme
- * personne tient souvent les deux roles.
+ * A contributor has their hands in it now or shortly; a lead answers for the
+ * choices and the contacts, throughout. The same person often holds both.
  */
 export type ProjectRole = (typeof ProjectRole)[keyof typeof ProjectRole];
 

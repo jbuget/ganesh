@@ -19,7 +19,7 @@ describe("DeactivateUserDialog", () => {
   });
 
   it("annonce que les saisies passées sont conservées", () => {
-    // Couper l'acces n'efface rien : le dire evite d'hesiter a le faire.
+    // Cutting off access erases nothing: saying so saves hesitating over it.
     render(
       <DeactivateUserDialog
         open

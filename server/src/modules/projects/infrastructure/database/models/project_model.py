@@ -1,4 +1,4 @@
-"""Modele SQLAlchemy du referentiel des missions."""
+"""SQLAlchemy model of the mission reference list."""
 
 from datetime import date, datetime
 
@@ -25,7 +25,7 @@ from src.modules.projects.domain.entities.project import (
 
 
 class ProjectModel(Base):
-    """Table des projets, lots et activites hors projet."""
+    """Table of projects, work packages and off-project work."""
 
     __tablename__ = "projects"
 
@@ -43,7 +43,7 @@ class ProjectModel(Base):
         ForeignKey("projects.id", ondelete="RESTRICT"), nullable=True, index=True
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
-    #: Date de sortie du referentiel. Nulle tant que la mission est active.
+    #: When the mission left the reference list. Null while it is active.
     archived_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     estimated_days: Mapped[float | None] = mapped_column(Float, nullable=True)
     category: Mapped[ProjectCategory | None] = mapped_column(
@@ -57,7 +57,7 @@ class ProjectModel(Base):
     go_live_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     business_contacts: Mapped[str | None] = mapped_column(Text, nullable=True)
-    #: Rang dans sa colonne du tableau de bord.
+    #: Rank within its board column.
     position: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
     # Rattachement Monday : inutilise en V1, alimente en V1.1.

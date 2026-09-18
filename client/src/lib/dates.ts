@@ -1,4 +1,4 @@
-/** Utilitaires de dates pour la matrice mensuelle. */
+/** Date helpers for the monthly grid. */
 
 const MONTH_NAMES = [
   "janvier",
@@ -17,42 +17,42 @@ const MONTH_NAMES = [
 
 const WEEKDAY_INITIALS = ["D", "L", "M", "M", "J", "V", "S"];
 
-/** Premier jour du mois, au format ISO `YYYY-MM-DD`. */
+/** First day of the month, in ISO format `YYYY-MM-DD`. */
 export function firstDayOfMonth(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, "0")}-01`;
 }
 
-/** Libellé lisible du mois, par exemple « septembre 2026 ». */
+/** Readable month label, for instance \u00ab septembre 2026 \u00bb. */
 export function formatMonth(year: number, month: number): string {
   return `${MONTH_NAMES[month - 1]} ${year}`;
 }
 
-/** Mois précédent, en gérant le passage d'année. */
+/** Previous month, handling the year boundary. */
 export function previousMonth(year: number, month: number) {
   return month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 };
 }
 
-/** Mois suivant, en gérant le passage d'année. */
+/** Next month, handling the year boundary. */
 export function nextMonth(year: number, month: number) {
   return month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };
 }
 
-/** Numéro du jour dans le mois, à partir d'une date ISO. */
+/** Day number within the month, from an ISO date. */
 export function dayNumber(isoDate: string): number {
   return Number(isoDate.slice(8, 10));
 }
 
-/** Initiale du jour de la semaine (L, M, M, J, V, S, D). */
+/** Initial of the weekday (L, M, M, J, V, S, D). */
 export function weekdayInitial(isoDate: string): string {
   const [year, month, day] = isoDate.split("-").map(Number);
   return WEEKDAY_INITIALS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
 }
 
 /**
- * Formate un nombre de jours dans une cellule : 1 → « 1 », 0.5 → « ½ ».
+ * Formats a number of days inside a cell: 1 → \u00ab 1 \u00bb, 0.5 → \u00ab ½ \u00bb.
  *
- * Une valeur nulle ne s'affiche pas : dans la matrice, une cellule vide signifie
- * « rien de saisi », et la remplir de zéros rendrait la grille illisible.
+ * A null value shows nothing: in the grid, an empty cell means \u00ab nothing
+ * entered \u00bb, and filling it with zeros would make the grid unreadable.
  */
 export function formatDays(value: number): string {
   if (value === 0) return "";
@@ -63,36 +63,36 @@ export function formatDays(value: number): string {
 }
 
 /**
- * Formate un nombre de jours dans un total : 0 → « 0 ».
+ * Formats a number of days inside a total: 0 → \u00ab 0 \u00bb.
  *
- * Contrairement à une cellule, un total nul est une information : « 0 j réalisé »
- * ne doit pas s'afficher comme un blanc.
+ * Unlike a cell, a null total is information: \u00ab 0 j réalisé \u00bb must not
+ * show up blank.
  */
 export function formatTotal(value: number): string {
   return value === 0 ? "0" : formatDays(value);
 }
 
 /**
- * Nombre de jours en decimal : 7.5 → « 7,5 », 26 → « 26 ».
+ * A number of days in decimal: 7.5 → \u00ab 7,5 \u00bb, 26 → \u00ab 26 \u00bb.
  *
- * La matrice prefere « ½ », qui tient dans une cellule etroite. Sur une carte
- * de tableau, ou le consomme se lit face a un estime entier, le decimal parle
- * plus vite : « 7,5/20 » se compare d'un coup d'oeil, pas « 7½/20 ».
+ * The grid prefers \u00ab ½ \u00bb, which fits a narrow cell. On a board card,
+ * where what is consumed reads against a whole estimate, the decimal speaks
+ * faster: \u00ab 7,5/20 \u00bb compares at a glance, \u00ab 7½/20 \u00bb does not.
  *
- * Formate a la main plutot que par `toLocaleString` : le rendu serveur et le
- * navigateur doivent produire la meme chaine, sans dependre des donnees de
- * localisation disponibles de chaque cote.
+ * Formatted by hand rather than through `toLocaleString`: the server render and
+ * the browser must produce the same string, without depending on the locale
+ * data available on either side.
  */
 export function formatDecimalDays(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1).replace(".", ",");
 }
 
 /**
- * Une date ISO en « 18/09/2026 ».
+ * An ISO date as \u00ab 18/09/2026 \u00bb.
  *
- * Decoupe la chaine plutot que de passer par `Date` : un horodatage naif
- * interprete comme UTC reculerait d'un jour le soir, et la date affichee ne
- * serait plus celle que le serveur a enregistree.
+ * Splits the string rather than going through `Date`: a naive timestamp read as
+ * UTC would slip back a day in the evening, and the date shown would no longer
+ * be the one the server recorded.
  */
 export function formatDateCourte(iso: string): string {
   const [annee, month, day] = iso.slice(0, 10).split("-");

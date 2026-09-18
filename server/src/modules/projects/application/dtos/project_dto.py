@@ -1,4 +1,4 @@
-"""Commandes portant sur le referentiel des missions."""
+"""Commands acting on the mission reference list."""
 
 from dataclasses import dataclass, field
 from datetime import date
@@ -14,7 +14,7 @@ from src.modules.projects.domain.entities.project import (
 
 @dataclass(frozen=True)
 class CreateProjectCommand:
-    """Creation d'un projet, d'un lot ou d'une activite hors projet."""
+    """Creating a project, a work package or off-project work."""
 
     actor_id: int
     label: str
@@ -26,21 +26,22 @@ class CreateProjectCommand:
 
 @dataclass(frozen=True)
 class ChangeProjectStatusCommand:
-    """Changement de phase. Ouvert a toute l'equipe, mais trace."""
+    """Phase change. Open to the whole team, but traced."""
 
     actor_id: int
     project_id: int
     status: ProjectStatus
 
 
-#: Marque un champ absent de la commande, pour le distinguer d'une valeur nulle
-#: volontaire : `estime_j=None` efface l'estime, `estime_j` omis ne le touche pas.
+#: Marks a field absent from the command, to tell it from a deliberate null:
+#: `estimated_days=None` clears the estimate, an omitted `estimated_days`
+#: leaves it alone.
 ABSENT: Any = object()
 
 
 @dataclass(frozen=True)
 class UpdateProjectCommand:
-    """Modification d'une mission. Seuls les champs fournis sont appliques."""
+    """Changing a mission. Only the fields provided are applied."""
 
     actor_id: int
     project_id: int
@@ -58,10 +59,9 @@ class UpdateProjectCommand:
 
 @dataclass(frozen=True)
 class ProjectImportLine:
-    """Une ligne d'un import, telle qu'elle sort d'un tableur.
+    """One line of an import, as it comes out of a spreadsheet.
 
-    Le parent est designe par son libelle : un export Monday ne connait pas nos
-    identifiants.
+    The parent is named by its label: a Monday export knows nothing of our ids.
     """
 
     label: str
@@ -75,7 +75,7 @@ class ProjectImportLine:
 
 @dataclass(frozen=True)
 class ImportProjectsCommand:
-    """Import en masse du referentiel. Reserve aux managers."""
+    """Bulk import of the reference list. Managers only."""
 
     actor_id: int
     rows: list[ProjectImportLine]
@@ -83,7 +83,7 @@ class ImportProjectsCommand:
 
 @dataclass
 class ImportReport:
-    """Ce que l'import a fait, ligne par ligne."""
+    """What the import did, line by line."""
 
     created: int = 0
     skipped: int = 0
@@ -92,7 +92,7 @@ class ImportReport:
 
 @dataclass(frozen=True)
 class DeleteProjectCommand:
-    """Suppression d'une mission jamais utilisee."""
+    """Deleting a mission that was never used."""
 
     actor_id: int
     project_id: int
@@ -100,7 +100,7 @@ class DeleteProjectCommand:
 
 @dataclass(frozen=True)
 class MoveProjectCommand:
-    """Deplacement d'une carte sur le tableau de bord."""
+    """Moving a card on the board."""
 
     actor_id: int
     project_id: int

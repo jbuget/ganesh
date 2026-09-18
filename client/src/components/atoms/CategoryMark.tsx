@@ -8,10 +8,10 @@ interface CategoryMarkProps {
 }
 
 /**
- * L'axe strategique d'une mission : une puce coloree, un libelle ordinaire.
+ * A mission's strategic axis: a coloured bullet, an ordinary label.
  *
- * Carree, la ou la pastille d'une phase est ronde : sur une meme ligne, deux
- * marques de meme forme se liraient comme la meme information.
+ * Square, where a phase's dot is round: on one line, two marks of the same
+ * shape would read as the same information.
  */
 export function CategoryMark({ value }: CategoryMarkProps) {
   const axis = category(value);

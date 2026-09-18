@@ -11,7 +11,7 @@ const card = (id: number, label: string): BoardCardResponse =>
       id,
       label,
       kind: "project",
-      status: "build",
+      status: "development",
       parent_id: null,
       is_active: true,
       estimated_days: 20,
@@ -35,7 +35,7 @@ const afficher = (cards: BoardCardResponse[], frozen = false) =>
   render(
     <DndContext>
       <BoardColumn
-        status="build"
+        status="development"
         cards={cards}
         maintenant={MAINTENANT}
         frozen={frozen}

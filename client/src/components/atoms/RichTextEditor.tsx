@@ -19,9 +19,9 @@ import {
 import { Markdown, type MarkdownStorage } from "tiptap-markdown";
 
 /**
- * `tiptap-markdown` greffe sa sortie sur le stockage de l'editeur sans
- * l'exposer aux types : on passe par le type qu'il publie plutot que d'ecrire
- * un `any`.
+ * `tiptap-markdown` grafts its output onto the editor storage without exposing
+ * it to the types: we go through the type it publishes rather than writing an
+ * `any`.
  */
 function markdownDe(editor: Editor): string {
   const stockage = editor.storage as unknown as { markdown: MarkdownStorage };
@@ -32,17 +32,17 @@ interface RichTextEditorProps {
   value: string;
   placeholder?: string;
   onChange: (markdown: string) => void;
-  /** Declenche par Cmd+Entree, pour enregistrer sans lacher le clavier. */
+  /** Triggered by Cmd+Enter, to save without leaving the keyboard. */
   onSubmit?: () => void;
-  /** Offre les titres : une fiche s'articule, un point hebdomadaire non. */
+  /** Offers headings: a sheet has structure, a weekly note does not. */
   avecTitres?: boolean;
-  /** Pose le curseur dans la zone de saisie des son apparition. */
+  /** Puts the cursor in the input area as soon as it appears. */
   autoFocus?: boolean;
   /** Hauteur minimale de la zone de saisie, en classes Tailwind. */
   hauteur?: string;
   /**
-   * Occupe toute la hauteur laissee par le parent, la zone de saisie
-   * defilant seule. Demande une chaine flex continue au-dessus.
+   * Takes all the height the parent leaves, the input area scrolling on its
+   * own. Requires an unbroken flex chain above.
    */
   pleineHauteur?: boolean;
 }
@@ -67,8 +67,8 @@ function Outil({
       title={titre}
       aria-label={titre}
       aria-pressed={isActive}
-      // `onMouseDown` plutot que `onClick` : le bouton prendrait le focus et
-      // la selection serait perdue avant que la commande ne s'applique.
+      // `onMouseDown` rather than `onClick`: the button would take focus and
+      // the selection would be lost before the command applied.
       onMouseDown={(event) => {
         event.preventDefault();
         onClick();
@@ -84,12 +84,12 @@ function Outil({
 }
 
 /**
- * Redaction assistee, qui produit du markdown.
+ * Assisted writing, producing markdown.
  *
- * On ecrit en voyant le resultat, mais c'est du markdown qui part en base :
- * la fiche de service en stocke deja, les mises a jour se lisent avec le meme
- * rendu, et surtout rien n'est du HTML — il n'y a donc rien a assainir a la
- * relecture.
+ * One writes while seeing the result, but it is markdown that goes to the
+ * database: the service sheet already stores some, updates read with the same
+ * rendering, and above all nothing is HTML — so there is nothing to sanitise
+ * when reading back.
  */
 export function RichTextEditor({
   value,
@@ -102,11 +102,12 @@ export function RichTextEditor({
   pleineHauteur = false,
 }: RichTextEditorProps) {
   const editor = useEditor({
-    // Next rend ce composant sur le serveur : laisser ProseMirror s'installer
-    // au premier rendu ferait diverger le HTML et provoquerait une erreur
-    // d'hydratation.
+    // Next renders this component on the server: letting ProseMirror settle in
+    // on the first render would make the HTML diverge and cause a hydration
+    // error.
     immediatelyRender: false,
-    // « end » et non « start » : on ecrit a la suite de ce qui est deja la.
+    // \u00ab end \u00bb and not \u00ab start \u00bb: one writes after what is
+    // already there.
     autofocus: autoFocus ? "end" : false,
     extensions: [
       StarterKit.configure({ heading: { levels: [2, 3] } }),
@@ -144,8 +145,8 @@ export function RichTextEditor({
     >
       <EditorContent
         editor={editor}
-        // La zone de saisie defile seule : la barre d'outils reste sous les
-        // yeux, meme au bas d'une fiche longue.
+        // The input area scrolls on its own: the toolbar stays before the
+        // eyes, even at the bottom of a long sheet.
         className={pleineHauteur ? "min-h-0 flex-1 overflow-y-auto" : undefined}
       />
 

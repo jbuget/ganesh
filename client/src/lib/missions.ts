@@ -7,11 +7,11 @@ export interface AvailableMissions {
 }
 
 /**
- * Missions qu'un utilisateur peut encore ajouter a sa matrice.
+ * Missions a user can still add to their grid.
  *
- * Celles deja presentes sont ecartees : on ne cree pas deux lignes pour la meme
- * mission. Cette logique vit hors du composant pour etre testable sans dependre
- * du rendu d'un menu.
+ * Those already there are ruled out: no two rows for the same mission. This
+ * logic lives outside the component so it can be tested without depending on
+ * how a menu renders.
  */
 export function availableMissions(
   projects: ProjectResponse[],

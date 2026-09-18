@@ -9,27 +9,27 @@ import type {
 import { CATEGORIES, PHASES, PRIORITIES } from "@/lib/board";
 
 /**
- * Une mission est active tant qu'elle n'a pas ete archivee.
+ * A mission is active until it has been archived.
  *
- * L'archivage retire une mission des listes sans rien perdre de ce qui y a ete
- * declare : c'est ce qu'on fait d'un projet termine ou abandonne, quand la
- * suppression n'est plus possible.
+ * Archiving takes a mission out of the lists without losing anything declared
+ * on it: that is what becomes of a finished or abandoned project, when deleting
+ * is no longer possible.
  */
 export type EtatMission = "active" | "archivee";
 
 /**
- * Tout ce qui se filtre : une mission, et qui s'en occupe.
+ * Everything that gets filtered: a mission, and who looks after it.
  *
- * La forme suffit a couvrir une carte du kanban comme une ligne du referentiel.
- * Les deux ecrans posent les memes questions au meme endroit, et une reponse
- * commune leur evite de diverger.
+ * The shape covers a kanban card as well as a reference list row. Both screens
+ * ask the same questions in the same place, and a shared answer keeps them from
+ * drifting apart.
  */
 export interface FilterableMission {
   project: ProjectResponse;
   contributors: BoardMemberResponse[];
 }
 
-/** Ce que l'on demande a l'ecran de montrer. */
+/** What the screen is asked to show. */
 export interface MissionFilters {
   name: string;
   phases: ProjectStatus[];
@@ -52,10 +52,10 @@ export const NO_FILTER: MissionFilters = {
 };
 
 /**
- * Les deux natures qu'une carte peut prendre.
+ * The two kinds a card can be.
  *
- * Les activites hors projet n'apparaissent jamais sur le tableau : elles ne
- * portent pas de phase, et ce filtre ne les propose donc pas.
+ * Off-project work never appears on the board: it carries no phase, so this
+ * filter does not offer it.
  */
 export const MISSION_KINDS: { value: ProjectKind; label: string }[] = [
   { value: "project", label: "Projets" },
@@ -63,18 +63,18 @@ export const MISSION_KINDS: { value: ProjectKind; label: string }[] = [
 ];
 
 /**
- * Les deux etats qu'une mission peut prendre.
+ * The two states a mission can be in.
  *
- * Ce critere est le seul dont le vide n'est pas neutre : le tableau sert a
- * piloter ce qui tourne, et montre donc les seules missions actives tant qu'on
- * ne demande pas les archivees.
+ * This is the only criterion whose empty value is not neutral: the board is
+ * there to steer what is running, and so shows active missions alone until the
+ * archived ones are asked for.
  */
 export const MISSION_STATES: { value: EtatMission; label: string }[] = [
   { value: "active", label: "Actives" },
   { value: "archivee", label: "Archivées" },
 ];
 
-/** Minuscules et sans accent : on cherche « copropriete » et on trouve « copropriété ». */
+/** Lowercase and unaccented: searching \u00ab copropriete \u00bb finds \u00ab copropriété \u00bb. */
 function normalise(body: string): string {
   return body
     .normalize("NFD")
@@ -95,15 +95,15 @@ export function filtreActif(filters: MissionFilters): boolean {
 }
 
 /**
- * Une carte passe-t-elle les criteres ?
+ * Does a card pass the criteria?
  *
- * Un critere vide ne retranche rien ; plusieurs valeurs dans un meme critere
- * s'additionnent, et les criteres entre eux se cumulent. « Realisation » et
- * « Nino » montre donc ce qui est en realisation *et* porte par Nino.
+ * An empty criterion takes nothing away; several values within one criterion
+ * add up, and criteria stack with each other. \u00ab Réalisation \u00bb and
+ * \u00ab Nino \u00bb therefore shows what is in development *and* carried by Nino.
  *
- * Filtrer sur une phase vide les autres colonnes sans les retirer : le tableau
- * garde ses six phases d'un filtre a l'autre, et l'on continue de lire d'ou
- * viennent les cartes et ou elles vont.
+ * Filtering on a phase empties the other columns without removing them: the
+ * board keeps its six phases from one filter to the next, and one goes on
+ * reading where cards come from and where they go.
  */
 function kept(mission: FilterableMission, filters: MissionFilters): boolean {
   const search = normalise(filters.name.trim());
@@ -149,10 +149,10 @@ export function filtrerMissions<T extends FilterableMission>(
 }
 
 /**
- * Le tableau doit-il redemander les archivees au serveur ?
+ * Should the board ask the server for the archived ones again?
  *
- * Elles ne voyagent que sur demande : les charger pour les masquer aussitot
- * ferait payer a chaque ouverture du tableau ce dont on se sert rarement.
+ * They only travel on request: loading them to hide them straight away would
+ * make every opening of the board pay for what is rarely used.
  */
 export function inclutLesArchivees(filters: MissionFilters): boolean {
   return filters.states.includes("archivee");
@@ -174,7 +174,7 @@ const PRIORITES_CONNUES = new Set<string>(PRIORITIES.map((p) => p.value));
 const TYPES_CONNUS = new Set<string>(MISSION_KINDS.map((t) => t.value));
 const ETATS_CONNUS = new Set<string>(MISSION_STATES.map((e) => e.value));
 
-/** Ne retient d'un parametre que les valeurs que l'on sait interpreter. */
+/** Keeps from a parameter only the values we know how to read. */
 function valeursConnues<T extends string>(
   params: URLSearchParams,
   name: string,
@@ -184,10 +184,10 @@ function valeursConnues<T extends string>(
 }
 
 /**
- * Les filtres tels que l'URL les porte.
+ * The filters as the URL carries them.
  *
- * Une valeur inconnue est ignoree : une adresse mal recopiee doit montrer le
- * tableau, pas un ecran vide sans explication.
+ * An unknown value is ignored: a mistyped address must show the board, not an
+ * empty screen with no explanation.
  */
 export function lireFiltres(params: URLSearchParams): MissionFilters {
   return {
@@ -212,7 +212,7 @@ export function lireFiltres(params: URLSearchParams): MissionFilters {
   };
 }
 
-/** Reporte les filtres dans l'URL, sans toucher aux autres parametres. */
+/** Writes the filters into the URL, leaving the other parameters alone. */
 export function ecrireFiltres(params: URLSearchParams, filters: MissionFilters): void {
   Object.values(PARAMETERS).forEach((name) => params.delete(name));
 

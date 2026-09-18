@@ -14,11 +14,11 @@ interface LinkIconPickerProps {
 }
 
 /**
- * L'icone d'un lien.
+ * The icon of a link.
  *
- * « Automatique » est propose en tete et reste le choix par defaut : coller une
- * adresse connue suffit le plus souvent, et c'est le serveur qui tranche. Le
- * selecteur n'est la que pour les cas ou il se tromperait.
+ * \u00ab Automatique \u00bb comes first and stays the default: pasting a known
+ * address is usually enough, and the server decides. The picker is only there
+ * for the cases where it would get it wrong.
  */
 export function LinkIconPicker({ value, onChange }: LinkIconPickerProps) {
   const [open, setOpen] = useState(false);
@@ -64,7 +64,7 @@ export function LinkIconPicker({ value, onChange }: LinkIconPickerProps) {
   );
 }
 
-/** Le dessin d'une icone, recu en prop : rien n'est cree pendant le rendu. */
+/** An icon drawing, received as a prop: nothing is created during the render. */
 function Glyph({ icon: Icon, className }: { icon: LucideIcon; className?: string }) {
   return <Icon className={`size-4 shrink-0 ${className ?? ""}`} aria-hidden />;
 }

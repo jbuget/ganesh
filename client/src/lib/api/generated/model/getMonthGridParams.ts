@@ -7,11 +7,11 @@
 
 export type GetMonthGridParams = {
   /**
-   * N'importe quel jour du mois demande
+   * Any day of the month asked for
    */
   month: string;
   /**
-   * Collaborateur consulte. Par defaut, l'utilisateur courant.
+   * Teammate being looked at. Defaults to the current user.
    */
   user_id?: number | null;
 };

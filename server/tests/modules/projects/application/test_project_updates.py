@@ -1,4 +1,4 @@
-"""Publier, corriger et retirer une mise a jour."""
+"""Posting, correcting and withdrawing an update."""
 
 from datetime import datetime
 
@@ -60,7 +60,7 @@ def build():
                     id=10,
                     label="Portail",
                     kind=ProjectKind.PROJECT,
-                    status=ProjectStatus.BUILD,
+                    status=ProjectStatus.DEVELOPMENT,
                 )
             ]
         ),
@@ -138,7 +138,7 @@ async def test_nobody_corrects_the_words_of_another() -> None:
 
 
 async def test_a_removed_update_keeps_its_place() -> None:
-    """Le fil garde sa chronologie : l'ecran y affichera « Message supprime »."""
+    """The thread keeps its order: the screen will show \u00ab Message supprime \u00bb there."""
     publier, _, retirer, lister, _ = build()
     update = await poster(publier)
 

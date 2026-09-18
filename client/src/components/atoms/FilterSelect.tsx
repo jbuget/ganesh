@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 export interface FilterOption {
   value: string;
   label: string;
-  /** Pastille ou vignette affichee devant le libelle, s'il y en a une. */
+  /** Dot or thumbnail shown before the label, if there is one. */
   thumbnail?: React.ReactNode;
 }
 
@@ -20,11 +20,11 @@ interface FilterSelectProps {
 }
 
 /**
- * Un critere de filtrage a choix multiples.
+ * A filter criterion with multiple choices.
  *
- * Chaque valeur bascule au clic, sans validation ni fermeture : on en coche
- * trois d'affilee sans rouvrir le menu. Le declencheur annonce combien sont
- * retenues, pour que la barre dise ce qu'elle filtre une fois repliee.
+ * Each value toggles on click, with no confirmation and no closing: three get
+ * ticked in a row without reopening the menu. The trigger announces how many
+ * are kept, so the bar says what it filters once folded.
  */
 export function FilterSelect({ label, options, values, onChange }: FilterSelectProps) {
   const [ouvert, setOuvert] = useState(false);
@@ -34,8 +34,8 @@ export function FilterSelect({ label, options, values, onChange }: FilterSelectP
     const next_ones = new Set(chosen);
     if (next_ones.has(value)) next_ones.delete(value);
     else next_ones.add(value);
-    // L'ordre des options fait foi : deux selections identiques produisent la
-    // meme adresse, quel que soit l'ordre des clics.
+    // The order of the options is what counts: two identical selections
+    // produce the same address, whatever the order of the clicks.
     onChange(options.filter((o) => next_ones.has(o.value)).map((o) => o.value));
   }
 

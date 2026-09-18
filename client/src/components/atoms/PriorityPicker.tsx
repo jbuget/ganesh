@@ -12,7 +12,7 @@ interface PriorityPickerProps {
   onChange: (value: ProjectPriority | null) => void | Promise<void>;
 }
 
-/** Urgence d'une mission. Une seule, ou aucune. */
+/** A mission's urgency. One, or none. */
 export function PriorityPicker({ value, onChange }: PriorityPickerProps) {
   const [ouvert, setOuvert] = useState(false);
   const urgency = priority(value);
@@ -45,8 +45,8 @@ export function PriorityPicker({ value, onChange }: PriorityPickerProps) {
                 aria-pressed={choice.value === value}
                 onClick={() => {
                   setOuvert(false);
-                  // Recliquer sur l'urgence courante la retire : c'est le seul
-                  // moyen de revenir a « aucune priorite ».
+                  // Clicking the current urgency again removes it: the only
+                  // way back to \u00ab no priority \u00bb.
                   void onChange(choice.value === value ? null : choice.value);
                 }}
                 className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"

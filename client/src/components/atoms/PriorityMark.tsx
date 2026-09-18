@@ -8,10 +8,10 @@ interface PriorityMarkProps {
 }
 
 /**
- * L'urgence d'une mission : une jauge coloree, un libelle ordinaire.
+ * A mission's urgency: a coloured gauge, an ordinary label.
  *
- * Le remplissage de la jauge porte l'echelle autant que la teinte — quatre
- * barres, puis trois, deux, une — de sorte qu'elle se lise sans la couleur.
+ * How full the gauge is carries the scale as much as the shade does — four
+ * bars, then three, two, one — so that it reads without the colour.
  */
 export function PriorityMark({ value }: PriorityMarkProps) {
   const urgency = priority(value);

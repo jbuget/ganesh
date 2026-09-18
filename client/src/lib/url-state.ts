@@ -3,14 +3,14 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * L'URL comme etat partage de l'ecran.
+ * The URL as the screen's shared state.
  *
- * Panneau ouvert, filtres poses : ce sont des choses qui se partagent par un
- * lien et survivent a un rechargement. Elles vivent donc dans l'adresse, et non
- * dans un etat React que le premier F5 emporte.
+ * An open panel, filters set: these are things shared by a link and surviving a
+ * reload. They therefore live in the address, not in React state the first F5
+ * carries off.
  *
- * `history.pushState` ne declenche pas `popstate` : on previent donc les
- * abonnes nous-memes apres chaque ecriture.
+ * `history.pushState` does not fire `popstate`: we notify the subscribers
+ * ourselves after every write.
  */
 const subscribers = new Set<() => void>();
 
@@ -18,7 +18,7 @@ function query(): string {
   return typeof window === "undefined" ? "" : window.location.search;
 }
 
-/** Cote serveur, l'adresse n'est pas connue : aucun parametre. */
+/** Server-side the address is unknown: no parameters. */
 function surLeServeur(): string {
   return "";
 }
@@ -27,8 +27,8 @@ function subscribe(callback: () => void) {
   subscribers.add(callback);
   window.addEventListener("popstate", callback);
 
-  // Le serveur rend toujours l'ecran nu. Si l'URL dit autre chose, personne ne
-  // previendrait React apres l'hydratation : on le fait au premier abonnement.
+  // The server always renders a bare screen. If the URL says otherwise, nobody
+  // would tell React after hydration: we do it on the first subscription.
   if (query()) queueMicrotask(callback);
 
   return () => {
@@ -37,18 +37,17 @@ function subscribe(callback: () => void) {
   };
 }
 
-/** Les parametres courants, tels que l'adresse les porte. */
+/** The current parameters, as the address carries them. */
 export function useQueryString(): string {
   return useSyncExternalStore(subscribe, query, surLeServeur);
 }
 
 /**
- * Remanie les parametres de l'adresse.
+ * Reworks the parameters of the address.
  *
- * `pousser` ajoute une etape a l'historique : c'est ce qu'on veut d'une
- * navigation, dont le retour arriere doit defaire l'effet. `remplacer` n'en
- * ajoute aucune : un filtre se regle par touches successives, et chacune ne
- * doit pas devenir une etape a remonter.
+ * `push` adds a history step: that is what a navigation calls for, one whose
+ * effect going back should undo. `replace` adds none: a filter is set by
+ * successive touches, and each must not become a step to walk back through.
  */
 export function writeUrl(
   maj: (params: URLSearchParams) => void,

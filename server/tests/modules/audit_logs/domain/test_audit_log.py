@@ -1,4 +1,4 @@
-"""Tracabilite des actions significatives."""
+"""Traceability of the actions that matter."""
 
 from datetime import date, datetime
 
@@ -61,11 +61,11 @@ def test_editing_ones_own_month_is_not_flagged() -> None:
 
 def test_a_status_change_records_the_transition() -> None:
     log = AuditLog.project_status_change(
-        actor_id=1, project_id=3, old_status="scoping", new_status="build"
+        actor_id=1, project_id=3, old_status="scoping", new_status="development"
     )
 
     assert log.action is AuditAction.PROJECT_STATUS_CHANGE
-    assert (log.old_value, log.new_value) == ("scoping", "build")
+    assert (log.old_value, log.new_value) == ("scoping", "development")
 
 
 def test_a_month_reopening_is_traced() -> None:

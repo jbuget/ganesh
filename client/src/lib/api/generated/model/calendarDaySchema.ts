@@ -6,7 +6,7 @@
  */
 
 /**
- * Un jour et sa nature.
+ * A day and its kind.
  */
 export interface CalendarDaySchema {
   day: string;

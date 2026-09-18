@@ -33,12 +33,12 @@ const FRENCH_KINDS: Record<string, string> = {
 
 const FRENCH_STATUSES: Record<string, string> = {
   cadrage: "scoping",
-  realisation: "build",
+  realisation: "development",
   deploiement: "deployment",
   exploitation: "operations",
 };
 
-/** Devine le separateur : un export francais sort souvent en point-virgule. */
+/** Guesses the separator: a French export often comes out semicolon-separated. */
 function detectSeparator(entete: string): string {
   return (
     SEPARATORS.map((s) => ({ s, n: entete.split(s).length }))
@@ -52,11 +52,11 @@ function split(line: string, separator: string): string[] {
 }
 
 /**
- * Convertit un CSV en lignes d'import.
+ * Turns a CSV into import lines.
  *
- * La premiere ligne nomme les colonnes : leur ordre n'a pas d'importance, et
- * celles qu'on ne reconnait pas sont ignorees plutot que de faire echouer le
- * fichier entier — un export Monday porte bien d'autres colonnes.
+ * The first line names the columns: their order does not matter, and those not
+ * recognised are ignored rather than failing the whole file — a Monday export
+ * carries plenty of other columns.
  */
 export function parseProjectsCsv(content: string): ImportLineRequest[] {
   const lines = content

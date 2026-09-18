@@ -6,10 +6,10 @@
  */
 
 /**
- * Famille de lien, annoncee par une icone.
+ * Family of link, announced by an icon.
  *
- * Le catalogue est ferme et nomme des usages, non des outils : le jour ou
- * l'equipe quitte Figma pour autre chose, `MAQUETTE` reste juste.
+ * The catalogue is closed and names uses, not tools: the day the team leaves
+ * Figma for something else, `DESIGN` still holds.
  */
 export type LinkIcon = (typeof LinkIcon)[keyof typeof LinkIcon];
 

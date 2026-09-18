@@ -12,7 +12,7 @@ import type { ProjectLinkResponse } from "./projectLinkResponse";
 import type { ProjectResponse } from "./projectResponse";
 
 /**
- * La fiche complete d'une mission.
+ * The full sheet of a mission.
  */
 export interface ProjectDetailResponse {
   project: ProjectResponse;

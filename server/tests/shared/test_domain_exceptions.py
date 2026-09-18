@@ -1,4 +1,4 @@
-"""Toutes les exceptions metier derivent de DomainError."""
+"""Every business exception derives from DomainError."""
 
 import pytest
 

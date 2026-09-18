@@ -1,4 +1,4 @@
-"""Modele SQLAlchemy des utilisateurs."""
+"""SQLAlchemy model of users."""
 
 from datetime import datetime
 
@@ -10,7 +10,7 @@ from src.modules.users.domain.entities.user import Role
 
 
 class UserModel(Base):
-    """Table des utilisateurs, provisionnes depuis Entra ID."""
+    """Table of users, provisioned from Entra ID."""
 
     __tablename__ = "users"
 
@@ -23,5 +23,5 @@ class UserModel(Base):
         default=Role.TEAMMATE,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
-    # Nullable : les comptes pre-attribues par le seed ne se sont jamais connectes.
+    # Nullable: accounts pre-assigned by the seed have never logged in.
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

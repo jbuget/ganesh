@@ -1,4 +1,4 @@
-"""Modification d'une mission du referentiel."""
+"""Changing a mission in the reference list."""
 
 import pytest
 
@@ -75,7 +75,7 @@ async def test_the_estimate_can_be_adjusted() -> None:
 
 
 async def test_a_field_left_out_is_not_touched() -> None:
-    """La commande ne porte que ce qui change : le reste doit survivre."""
+    """The command carries only what changes: the rest must survive."""
     use_case, repo, _ = build()
 
     await use_case.execute(
@@ -112,7 +112,7 @@ async def test_a_project_can_be_linked_to_monday() -> None:
 
 
 async def test_a_project_cannot_be_moved_under_a_lot() -> None:
-    """Deplacer une mission ne doit pas creer un troisieme niveau."""
+    """Moving a mission must not create a third level."""
     work_package = Project(
         id=20,
         label="Lot API",
@@ -174,7 +174,7 @@ async def test_a_priority_can_be_declared() -> None:
 
 
 async def test_a_priority_can_be_taken_back() -> None:
-    """Une mission peut cesser d'etre situee par rapport aux autres."""
+    """A mission may stop being placed against the others."""
     projet = make_project()
     projet.priority = ProjectPriority.HIGH
     use_case, repo, _ = build([projet])

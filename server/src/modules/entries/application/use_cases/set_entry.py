@@ -1,4 +1,4 @@
-"""Enregistre le temps passe par un utilisateur sur une mission, un jour donne."""
+"""Records the time a user spent on a mission, on a given day."""
 
 from datetime import date
 
@@ -23,7 +23,7 @@ from src.shared.exceptions.domain_exceptions import (
 
 
 class SetEntryUseCase:
-    """Ecrit une saisie, apres avoir verifie que le mois l'accepte."""
+    """Writes an entry, once the month is known to accept it."""
 
     def __init__(
         self,
@@ -44,9 +44,7 @@ class SetEntryUseCase:
         if actor is None:
             raise EntityNotFoundError("Utilisateur inconnu.")
         if not actor.can_edit_open_months():
-            raise ForbiddenActionError(
-                "Un utilisateur desactive ne peut plus saisir de temps."
-            )
+            raise ForbiddenActionError("A deactivated user can no longer enter time.")
 
         if await self._users.get_by_id(command.target_user_id) is None:
             raise EntityNotFoundError("Utilisateur cible inconnu.")
@@ -55,7 +53,7 @@ class SetEntryUseCase:
         if project is None:
             raise EntityNotFoundError("Mission inconnue.")
 
-        # Invariants du domaine, verifies avant toute ecriture.
+        # Domain invariants, checked before any write.
         ensure_day_is_workable(command.day)
         value = DayValue(command.value)
 
@@ -94,6 +92,6 @@ class SetEntryUseCase:
             month = Month(user_id=user_id, month=day)
         if not month.is_writable:
             raise ForbiddenActionError(
-                "Ce mois est valide : il doit etre rouvert par un manager."
+                "This month is validated: a manager must reopen it."
             )
         return month

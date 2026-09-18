@@ -1,4 +1,4 @@
-"""Suppression d'une mission du referentiel."""
+"""Deleting a mission from the reference list."""
 
 from datetime import date
 
@@ -79,7 +79,7 @@ async def test_a_mission_never_used_is_deleted() -> None:
 async def test_a_mission_carrying_time_is_refused() -> None:
     use_case, repo, _ = build(entries=[entry(10)])
 
-    with pytest.raises(ForbiddenActionError, match="archiver"):
+    with pytest.raises(ForbiddenActionError, match="archive"):
         await use_case.execute(DeleteProjectCommand(actor_id=1, project_id=10))
 
     assert await repo.get_by_id(10) is not None
@@ -88,7 +88,7 @@ async def test_a_mission_carrying_time_is_refused() -> None:
 async def test_a_project_carrying_sub_projects_is_refused() -> None:
     use_case, repo, _ = build([projet(), projet(11, ProjectKind.WORK_PACKAGE)])
 
-    with pytest.raises(ForbiddenActionError, match="sous-projet"):
+    with pytest.raises(ForbiddenActionError, match="sub-project"):
         await use_case.execute(DeleteProjectCommand(actor_id=1, project_id=10))
 
     assert await repo.get_by_id(10) is not None
@@ -103,7 +103,7 @@ async def test_a_sub_project_never_used_is_deleted() -> None:
 
 
 async def test_time_on_another_mission_does_not_block() -> None:
-    """Le comptage doit porter sur la mission visee, pas sur le referentiel."""
+    """The count must cover the mission aimed at, not the whole reference list."""
     use_case, repo, _ = build([projet(), projet(11)], entries=[entry(11)])
 
     await use_case.execute(DeleteProjectCommand(actor_id=1, project_id=10))

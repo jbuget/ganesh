@@ -21,7 +21,7 @@ interface ImportProjectsDialogProps {
   onImport: (content: string) => Promise<ImportReportResponse>;
 }
 
-/** Import d'un referentiel depuis un export tableur. Reserve aux managers. */
+/** Importing a reference list from a spreadsheet export. Managers only. */
 export function ImportProjectsDialog({
   open,
   onOpenChange,

@@ -1,4 +1,4 @@
-"""Retrait d'une mission entiere d'un mois."""
+"""Removing a whole mission from a month."""
 
 from datetime import date
 
@@ -85,7 +85,7 @@ async def test_the_other_missions_of_the_month_are_left_alone() -> None:
 
 
 async def test_the_removed_days_are_counted_back() -> None:
-    """L'ecran annonce ce qui sera perdu : le compte doit venir du domaine."""
+    """The screen announces what will be lost: the count must come from the domain."""
     use_case, _, _ = build([an_entry(14), an_entry(15, value=0.5, entry_id=2)])
 
     assert await use_case.execute(a_command()) == 1.5

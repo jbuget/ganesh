@@ -8,21 +8,21 @@ import { Input } from "@/components/ui/input";
 
 interface EditableTitleProps {
   label: string;
-  /** Ce que le bouton crayon annonce aux lecteurs d'ecran. */
+  /** What the pencil button announces to screen readers. */
   invite: string;
-  /** Absent quand le renommage n'est pas permis : le crayon disparait alors. */
+  /** Absent when renaming is not allowed: the pencil then disappears. */
   onRename?: (label: string) => void | Promise<void>;
-  /** `1` en pleine page, `2` dans un panneau : le titre suit son contexte. */
+  /** `1` on a full page, `2` in a panel: the title follows its context. */
   niveau?: 1 | 2;
 }
 
 /**
- * Un titre qui se renomme sur place.
+ * A title that renames in place.
  *
- * Le crayon n'ouvre le champ qu'a la demande : un titre se lit bien plus
- * souvent qu'il ne se change, et une bordure de saisie permanente ferait du
- * bruit en tete de chaque fiche. Une fois ouvert, le champ s'assume : boutons
- * explicites, Entree pour valider, Echap pour abandonner.
+ * The pencil only opens the field on demand: a title is read far more often
+ * than it is changed, and a permanent input border would make noise at the top
+ * of every sheet. Once open, the field owns it: explicit buttons, Enter to
+ * confirm, Escape to give up.
  */
 export function EditableTitle({
   label,
@@ -54,8 +54,8 @@ export function EditableTitle({
       await onRename?.(propre);
       abandonner();
     } catch {
-      // La saisie reste a l'ecran : on ne fait pas retaper un titre a quelqu'un
-      // sous pretexte que le reseau a flanche.
+      // The input stays on screen: nobody is made to retype a title because
+      // the network gave out.
       setEnErreur(true);
     } finally {
       setEnCours(false);
@@ -74,8 +74,8 @@ export function EditableTitle({
             aria-invalid={hasError || undefined}
             onChange={(event) => setSaisie(event.target.value)}
             onKeyDown={(event) => {
-              // Le panneau se ferme sur Echap : sans cela, abandonner la saisie
-              // fermerait la fiche par la meme occasion.
+              // The panel closes on Escape: without this, giving up on the
+              // input would close the sheet at the same time.
               if (event.key === "Escape") {
                 event.stopPropagation();
                 abandonner();

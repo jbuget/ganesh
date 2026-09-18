@@ -1,4 +1,4 @@
-"""Implementation SQLAlchemy du port EntryRepository."""
+"""SQLAlchemy implementation of the EntryRepository port."""
 
 from datetime import date
 
@@ -22,7 +22,7 @@ def to_entity(model: EntryModel) -> Entry:
 
 
 class SqlEntryRepository(EntryRepository):
-    """Persiste les saisies de temps."""
+    """Persists time entries."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session

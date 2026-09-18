@@ -4,19 +4,19 @@ interface DayHeaderProps {
   day: string;
   isOffDay: boolean;
   isToday: boolean;
-  /** Un jour non ouvre se reduit a une bande, sauf s'il porte une saisie. */
+  /** A non-working day shrinks to a band, unless it carries an entry. */
   isNarrow?: boolean;
-  /** La derniere colonne de jours porte le trait qui la separe des totaux. */
+  /** The last day column carries the rule that separates it from the totals. */
   isLastDay?: boolean;
   label: string | null;
 }
 
 /**
- * En-tete d'une colonne de jour.
+ * Header of a day column.
  *
- * Les jours non ouvres sont grises et reduits a une bande : on ne peut pas y
- * saisir, et leur rendre toute une colonne coutait un cinquieme de la largeur
- * du tableau. Le rythme des semaines reste lisible.
+ * Non-working days are greyed and shrunk to a band: nothing can be entered on
+ * them, and giving them a full column cost a fifth of the table's width. The
+ * rhythm of the weeks stays readable.
  */
 export function DayHeader({
   day,
@@ -45,8 +45,8 @@ export function DayHeader({
       ].join(" ")}
     >
       {isNarrow ? (
-        // Reduite a une bande, la colonne garde son intitule pour la lecture
-        // d'ecran : une colonne anonyme rendrait le tableau incomprehensible.
+        // Shrunk to a band, the column keeps its heading for screen readers:
+        // an anonymous column would make the table incomprehensible.
         <span className="sr-only">{intitule}</span>
       ) : (
         <>

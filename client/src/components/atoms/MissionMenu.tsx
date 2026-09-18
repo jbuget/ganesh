@@ -6,26 +6,26 @@ import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface MissionMenuProps {
-  /** Si la mission a deja quitte le referentiel. */
+  /** Whether the mission has already left the reference list. */
   archivee: boolean;
-  /** Sort la mission du referentiel courant, sans la supprimer. */
+  /** Takes the mission out of the current reference list, without deleting it. */
   onArchiver: () => void | Promise<void>;
   /** La remet au referentiel. */
   onDesarchiver: () => void | Promise<void>;
 }
 
 /**
- * Ce qu'on fait a une mission entiere, replie derriere une icone.
+ * What one does to a whole mission, folded behind an icon.
  *
- * Les onglets editent le contenu de la mission ; ces actions-la portent sur la
- * mission elle-meme. Les tenir a l'ecart evite qu'on archive en visant un
- * onglet, et laisse la place aux suivantes sans redessiner l'en-tete.
+ * The tabs edit the mission's content; these actions act on the mission
+ * itself. Keeping them apart avoids archiving while aiming at a tab, and
+ * leaves room for the next ones without redrawing the header.
  */
 export function MissionMenu({ archivee, onArchiver, onDesarchiver }: MissionMenuProps) {
   const [ouvert, setOuvert] = useState(false);
 
-  // Une seule entree, qui dit dans quel sens elle fait bouger la mission :
-  // proposer les deux laisserait choisir l'etat ou l'on est deja.
+  // A single entry, saying which way it moves the mission: offering both would
+  // let one pick the state one is already in.
   const Icone = archivee ? ArchiveRestore : Archive;
 
   return (

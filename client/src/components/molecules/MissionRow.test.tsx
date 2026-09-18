@@ -18,7 +18,7 @@ const mission = (champs: Record<string, unknown> = {}): ProjectListItemResponse 
       id: 1,
       label: "Portail",
       kind: "project",
-      status: "build",
+      status: "development",
       category: "automate_streamline",
       estimated_days: 12,
       parent_id: null,
@@ -199,7 +199,7 @@ describe("MissionRow", () => {
     fireEvent.click(screen.getByLabelText("2 mises à jour"));
 
     expect(ouvrirFil).toHaveBeenCalledTimes(1);
-    // La ligne entiere ouvre la mission : le decompte ne doit pas faire les deux.
+    // The whole row opens the mission: the counter must not do both.
     expect(open).not.toHaveBeenCalled();
   });
 

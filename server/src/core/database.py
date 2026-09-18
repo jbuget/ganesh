@@ -1,4 +1,4 @@
-"""Acces a la base de donnees : engine, session et base declarative."""
+"""Database access: engine, session and declarative base."""
 
 from collections.abc import AsyncGenerator
 
@@ -9,7 +9,7 @@ from src.core.config import get_settings
 
 
 class Base(DeclarativeBase):
-    """Base declarative commune a tous les modeles SQLAlchemy."""
+    """Declarative base shared by every SQLAlchemy model."""
 
 
 engine = create_async_engine(
@@ -26,6 +26,6 @@ AsyncSessionLocal = async_sessionmaker(
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """Fournit une session de base de donnees par requete."""
+    """Provides one database session per request."""
     async with AsyncSessionLocal() as session:
         yield session

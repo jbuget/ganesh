@@ -8,7 +8,7 @@ import type { BoardCardResponse } from "./boardCardResponse";
 import type { ProjectStatus } from "./projectStatus";
 
 /**
- * Une phase et ses cartes.
+ * A phase and its cards.
  */
 export interface BoardColumnResponse {
   status: ProjectStatus;

@@ -1,7 +1,7 @@
-"""Exceptions metier partagees par tous les modules.
+"""Business exceptions shared by every module.
 
-Le domaine leve ces exceptions ; la couche presentation les traduit en
-reponses HTTP. Aucune dependance vers un framework ici.
+The domain raises them; the presentation layer turns them into HTTP
+responses. No framework dependency here.
 """
 
 
@@ -10,16 +10,16 @@ class DomainError(Exception):
 
 
 class EntityNotFoundError(DomainError):
-    """L'entite demandee n'existe pas."""
+    """The requested entity does not exist."""
 
 
 class ValidationError(DomainError):
-    """Une invariante metier n'est pas respectee."""
+    """A business invariant is not satisfied."""
 
 
 class ForbiddenActionError(DomainError):
-    """L'acteur n'a pas le droit d'effectuer cette action."""
+    """The actor is not allowed to perform this action."""
 
 
 class ConflictError(DomainError):
-    """L'action entre en conflit avec l'etat courant."""
+    """The action conflicts with the current state."""

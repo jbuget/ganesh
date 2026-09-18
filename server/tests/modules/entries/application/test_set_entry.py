@@ -1,4 +1,4 @@
-"""Enregistrement d'une saisie de temps."""
+"""Recording a time entry."""
 
 from datetime import date
 
@@ -94,7 +94,7 @@ async def test_the_entry_captures_the_current_project_phase() -> None:
 
 
 async def test_a_user_can_record_time_on_a_colleague_open_month() -> None:
-    """Transparence assumee : chacun peut corriger le mois ouvert d'un autre."""
+    """Transparency is deliberate: anyone may fix another's open month."""
     use_case, entries, _, _ = build()
 
     await use_case.execute(
@@ -122,7 +122,7 @@ async def test_writing_to_a_validated_month_is_rejected() -> None:
 
 
 async def test_a_saturday_is_rejected() -> None:
-    """La regle vit dans le domaine : l'API refuse, quel que soit l'appelant."""
+    """The rule lives in the domain: the API refuses, whoever the caller is."""
     use_case, entries, _, _ = build()
 
     with pytest.raises(ValidationError):

@@ -1,4 +1,4 @@
-"""Schemas d'entree et de sortie des saisies."""
+"""Input and output schemas for entries."""
 
 from datetime import date
 
@@ -8,15 +8,15 @@ from src.modules.projects.domain.entities.project import ProjectKind
 
 
 class SetEntryRequest(BaseModel):
-    """Demande d'ecriture d'une saisie."""
+    """Request to write an entry."""
 
     project_id: int
     day: date
-    value: float = Field(description="0.5 pour une demi-journee, 1 pour une journee")
+    value: float = Field(description="0.5 for a half day, 1 for a full day")
 
 
 class EntryResponse(BaseModel):
-    """Une saisie enregistree."""
+    """A recorded entry."""
 
     project_id: int
     day: date
@@ -24,7 +24,7 @@ class EntryResponse(BaseModel):
 
 
 class CalendarDayResponse(BaseModel):
-    """Un jour du mois et sa nature."""
+    """A day of the month and its kind."""
 
     day: date
     kind: str
@@ -33,7 +33,7 @@ class CalendarDayResponse(BaseModel):
 
 
 class GridRowResponse(BaseModel):
-    """Une ligne de la matrice : une mission et ses saisies."""
+    """One grid row: a mission and its entries."""
 
     project_id: int
     label: str
@@ -47,7 +47,7 @@ class GridRowResponse(BaseModel):
 
 
 class DayTotalResponse(BaseModel):
-    """Total saisi sur une journee."""
+    """Total entered on one day."""
 
     day: date
     total: float
@@ -55,7 +55,7 @@ class DayTotalResponse(BaseModel):
 
 
 class MonthGridResponse(BaseModel):
-    """La matrice complete d'un mois."""
+    """The complete grid for a month."""
 
     user_id: int
     month: date

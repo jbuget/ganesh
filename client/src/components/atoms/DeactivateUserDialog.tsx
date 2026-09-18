@@ -19,13 +19,13 @@ interface DeactivateUserDialogProps {
 }
 
 /**
- * Confirmation avant de couper l'acces d'un utilisateur.
+ * Confirmation before cutting off a user's access.
  *
- * Rien n'est efface : les saisies passees restent et continuent d'alimenter les
- * totaux par projet. Le dire ici evite d'hesiter devant une action reversible.
+ * Nothing is erased: past entries stay and go on feeding the per-project
+ * totals. Saying so here saves hesitating over a reversible action.
  *
- * Le retablissement, lui, ne passe pas par une confirmation : il ne retire rien
- * a personne.
+ * Restoring, on the other hand, needs no confirmation: it takes nothing away
+ * from anyone.
  */
 export function DeactivateUserDialog({
   open,

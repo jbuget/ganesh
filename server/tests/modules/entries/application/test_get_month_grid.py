@@ -32,7 +32,7 @@ PORTAIL = Project(
     id=10,
     label="Portail",
     kind=ProjectKind.PROJECT,
-    status=ProjectStatus.BUILD,
+    status=ProjectStatus.DEVELOPMENT,
     estimated_days=20,
 )
 ABSENCES = Project(id=11, label="Absences", kind=ProjectKind.OFF_PROJECT, status=None)
@@ -55,7 +55,7 @@ def entry(project_id: int, day: int, value: float) -> Entry:
         project_id=project_id,
         day=date(2026, 9, day),
         value=DayValue(value),
-        status_at_entry=ProjectStatus.BUILD,
+        status_at_entry=ProjectStatus.DEVELOPMENT,
     )
 
 
@@ -142,9 +142,9 @@ async def test_a_validated_month_is_read_only() -> None:
 
 
 async def test_a_row_reports_the_whole_project_consumption() -> None:
-    """L'estime porte sur tout le projet : le consomme doit porter dessus aussi.
+    """The estimate covers the whole project: so must what is consumed.
 
-    Comparer le realise du mois a un estime global induirait en erreur.
+    Comparing the month's delivered days to a global estimate would mislead.
     """
     entries = [
         entry(10, 15, 1.0),  # ce mois-ci
@@ -154,7 +154,7 @@ async def test_a_row_reports_the_whole_project_consumption() -> None:
             project_id=10,
             day=date(2026, 8, 3),
             value=DayValue(1.0),
-            status_at_entry=ProjectStatus.BUILD,
+            status_at_entry=ProjectStatus.DEVELOPMENT,
         ),  # un mois anterieur
         Entry(
             id=None,
@@ -162,7 +162,7 @@ async def test_a_row_reports_the_whole_project_consumption() -> None:
             project_id=10,
             day=date(2026, 9, 1),
             value=DayValue(0.5),
-            status_at_entry=ProjectStatus.BUILD,
+            status_at_entry=ProjectStatus.DEVELOPMENT,
         ),  # un autre developpeur
     ]
     grid = await build(entries).execute(
@@ -175,7 +175,7 @@ async def test_a_row_reports_the_whole_project_consumption() -> None:
 
 
 async def test_project_consumption_excludes_forecast() -> None:
-    """Le previsionnel n'est pas du consomme."""
+    """A forecast is not consumed time."""
     grid = await build([entry(10, 15, 1.0), entry(10, 25, 1.0)]).execute(
         GetMonthGridQuery(user_id=1, month=date(2026, 9, 1), today=TODAY)
     )

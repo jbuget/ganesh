@@ -7,7 +7,7 @@
 import type { ProjectStatus } from "./projectStatus";
 
 /**
- * Depot d'une carte : colonne d'arrivee et rang voulu.
+ * Dropping a card: the column it lands in and the rank wanted.
  */
 export interface MoveProjectRequest {
   status: ProjectStatus;

@@ -24,11 +24,11 @@ interface ValidateMonthDialogProps {
 }
 
 /**
- * Confirmation avant verrouillage d'un mois.
+ * Confirmation before locking a month.
  *
- * Le recapitulatif est affiche avant la decision : le controle de completude
- * fait la qualite de la donnee, mieux qu'un blocage qui pousserait a remplir
- * n'importe quoi.
+ * The summary is shown before the decision: checking completeness is what makes
+ * the data good, better than a block that would push people to fill in
+ * anything.
  */
 export function ValidateMonthDialog({
   open,

@@ -1,4 +1,4 @@
-"""Verrouille un mois de saisie."""
+"""Locks a month of entries."""
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
@@ -15,7 +15,7 @@ from src.shared.exceptions.domain_exceptions import (
 
 
 class ValidateMonthUseCase:
-    """Passe un mois a l'etat valide, apres confirmation de l'utilisateur."""
+    """Moves a month to the validated state, once the user confirms."""
 
     def __init__(
         self,
@@ -30,7 +30,7 @@ class ValidateMonthUseCase:
     async def execute(self, command: ValidateMonthCommand) -> Month:
         if command.actor_id != command.target_user_id:
             raise ForbiddenActionError(
-                "Chacun valide son propre mois : la validation n'est pas delegable."
+                "Everyone validates their own month: validation cannot be delegated."
             )
 
         actor = await self._users.get_by_id(command.actor_id)

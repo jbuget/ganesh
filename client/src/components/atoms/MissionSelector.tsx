@@ -25,7 +25,7 @@ interface MissionSelectorProps {
   disabled?: boolean;
 }
 
-/** Une mission proposee : `value` / `label` est la forme que Base UI sait lire. */
+/** An offered mission: `value` / `label` is the shape Base UI can read. */
 interface MissionItem {
   value: number;
   label: string;
@@ -40,16 +40,16 @@ const enItems = (projects: ProjectResponse[]): MissionItem[] =>
   projects.map((project) => ({ value: project.id, label: project.label }));
 
 /**
- * Ajout d'une mission a la matrice, depuis la derniere ligne du tableau.
+ * Adding a mission to the grid, from the last row of the table.
  *
- * Les missions deja presentes sont retirees de la liste : on ne peut pas creer
- * deux lignes pour la meme mission.
+ * Missions already there are taken out of the list: no two rows for the same
+ * mission.
  *
- * Le referentiel compte des dizaines de projets et de lots : le champ de
- * recherche en tete du menu evite de parcourir la liste entiere pour trouver
- * celui qu'on cherche. « Declarer un nouveau projet » reste en pied de menu,
- * hors du filtre : c'est justement quand aucune mission ne correspond qu'on en
- * a besoin.
+ * The reference list runs to dozens of projects and work packages: the search
+ * field at the top of the menu saves scanning the whole list for the one being
+ * looked for. \u00ab Declarer un nouveau projet \u00bb stays at the foot of the
+ * menu, outside the filter: it is precisely when no mission matches that one
+ * needs it.
  */
 export function MissionSelector({
   projects,

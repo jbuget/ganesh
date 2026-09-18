@@ -20,7 +20,7 @@ const card = (over: Record<string, unknown> = {}): BoardCardResponse =>
       id: 1,
       label: "Portail bailleurs",
       kind: "project",
-      status: "build",
+      status: "development",
       parent_id: null,
       is_active: true,
       estimated_days: 20,

@@ -24,7 +24,7 @@ class ProjectStatus(StrEnum):
 
     EXPLORATION = "exploration"
     SCOPING = "scoping"
-    BUILD = "build"
+    DEVELOPMENT = "development"
     VALIDATION = "validation"
     DEPLOYMENT = "deployment"
     OPERATIONS = "operations"

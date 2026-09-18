@@ -1,13 +1,13 @@
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 import { PRIORITIES, phaseRank } from "@/lib/board";
 
-/** Les colonnes du referentiel sur lesquelles on peut ranger la liste. */
+/** The reference list columns the list can be ordered by. */
 export type SortColumn =
   "project" | "phase" | "priority" | "category" | "estimated" | "delivered";
 
 export type SortDirection = "asc" | "desc";
 
-/** La colonne demandee, ou `null` pour l'ordre propre au referentiel. */
+/** The column asked for, or `null` for the reference list's own order. */
 export interface MissionSort {
   column: SortColumn | null;
   direction: SortDirection;
@@ -31,10 +31,10 @@ const PRIORITY_RANKS = new Map(PRIORITIES.map((p, rang) => [p.value, rang]));
 type Mission = ProjectListItemResponse;
 
 /**
- * Ce que chaque colonne donne a comparer.
+ * What each column gives to compare.
  *
- * Une valeur absente vaut `null` : elle ne se compare pas, et le tri la range
- * en fin de liste plutot que de lui inventer un rang.
+ * A missing value is `null`: it does not compare, and the sort puts it at the
+ * end of the list rather than inventing a rank for it.
  */
 const VALUES: Record<SortColumn, (m: Mission) => string | number | null> = {
   project: (m) => m.project.label,
@@ -51,11 +51,11 @@ function byLabel(a: Mission, b: Mission): number {
 }
 
 /**
- * Ou en est la mission d'abord, son nom ensuite.
+ * Where the mission stands first, its name second.
  *
- * Le referentiel se parcourt comme le kanban se lit, de gauche a droite : ce
- * qui demarre en haut, ce qui tourne en bas. A phase egale, l'alphabet, seul
- * ordre ou l'on retrouve une mission dont on connait le nom.
+ * The reference list is scanned the way the kanban reads, left to right: what
+ * is starting at the top, what is running at the bottom. At equal phase, the
+ * alphabet, the only order in which one finds a mission one knows by name.
  */
 function parPhasePuisLabel(a: Mission, b: Mission): number {
   const ecart = phaseRank(a.project.status) - phaseRank(b.project.status);
@@ -63,12 +63,12 @@ function parPhasePuisLabel(a: Mission, b: Mission): number {
 }
 
 /**
- * Le comparateur a appliquer aux missions d'un meme niveau.
+ * The comparator to apply to missions of the same level.
  *
- * Le sens ne renverse que la comparaison des valeurs : les missions sans
- * valeur restent en fin de liste, et deux missions qu'une colonne egalise
- * restent departagees par leur nom. Sans cela, inverser le sens ferait remonter
- * les trous en tete, et l'ordre des ex aequo changerait a chaque rendu.
+ * The direction only reverses the comparison of values: missions without a
+ * value stay at the end of the list, and two missions a column ties are still
+ * settled by their name. Without that, reversing the direction would bring the
+ * gaps to the top, and the order of ties would change on every render.
  */
 export function comparateurDeTri(sorted: MissionSort) {
   if (sorted.column === null) return parPhasePuisLabel;
@@ -95,9 +95,9 @@ export function comparateurDeTri(sorted: MissionSort) {
 }
 
 /**
- * Le tri obtenu en cliquant une colonne : croissant, decroissant, puis plus
- * rien. Le troisieme clic rend son ordre au referentiel, sans avoir a chercher
- * comment le retrouver.
+ * The sort you get by clicking a column: ascending, descending, then nothing.
+ * The third click gives the reference list its own order back, without having
+ * to hunt for how to find it again.
  */
 export function triSuivant(sorted: MissionSort, column: SortColumn): MissionSort {
   if (sorted.column !== column) return { column, direction: "asc" };
@@ -115,7 +115,7 @@ export function readSort(params: URLSearchParams): MissionSort {
   };
 }
 
-/** Reporte le tri dans l'URL, sans toucher aux autres parametres. */
+/** Writes the sort into the URL, leaving the other parameters alone. */
 export function writeSort(params: URLSearchParams, sorted: MissionSort): void {
   params.delete(PARAMETERS.column);
   params.delete(PARAMETERS.direction);

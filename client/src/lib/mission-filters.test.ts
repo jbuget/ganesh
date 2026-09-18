@@ -23,7 +23,7 @@ const card = (over: Record<string, unknown> = {}): BoardCardResponse =>
       id: 1,
       label: "Portail bailleurs",
       kind: "project",
-      status: "build",
+      status: "development",
       parent_id: null,
       is_active: true,
       estimated_days: 20,
@@ -185,7 +185,7 @@ describe("missions archivées", () => {
 
 describe("filtrage par phase", () => {
   const cards = [
-    card({ project: { id: 1, status: "build" } }),
+    card({ project: { id: 1, status: "development" } }),
     card({ project: { id: 2, status: "scoping" } }),
   ];
 
@@ -194,7 +194,7 @@ describe("filtrage par phase", () => {
   });
 
   it("ne garde que les missions des phases choisies", () => {
-    const kept = filtrerMissions(cards, filters({ phases: ["build"] }));
+    const kept = filtrerMissions(cards, filters({ phases: ["development"] }));
 
     expect(kept.map((c) => c.project.id)).toEqual([1]);
   });
@@ -204,7 +204,7 @@ describe("filtres portés par l'URL", () => {
   it("relit ce qu'il a écrit", () => {
     const chosen = filters({
       name: "portail",
-      phases: ["scoping", "build"],
+      phases: ["scoping", "development"],
       categories: ["innovate_differentiate"],
       priorities: ["high"],
       contributors: [3, 7],
@@ -227,10 +227,10 @@ describe("filtres portés par l'URL", () => {
 
   it("laisse les autres paramètres en place", () => {
     const params = new URLSearchParams("mission=12&phase=scoping");
-    ecrireFiltres(params, filters({ phases: ["build"] }));
+    ecrireFiltres(params, filters({ phases: ["development"] }));
 
     expect(params.get("mission")).toBe("12");
-    expect(params.getAll("phase")).toEqual(["build"]);
+    expect(params.getAll("phase")).toEqual(["development"]);
   });
 
   it("ignore une valeur inconnue plutôt que de vider l'écran", () => {

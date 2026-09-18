@@ -2,10 +2,10 @@
 
 
 def initials(nom: str) -> str:
-    """Deux initiales au plus, tirees d'un nom affiche.
+    """At most two initials, taken from a display name.
 
-    Les noms de l'annuaire prennent la forme « L. Chen » : le point y separe
-    autant que l'espace, faute de quoi « L. » donnerait une seule initiale.
+    Directory names come as \u00ab L. Chen \u00bb: the dot separates as much as
+    the space does, otherwise \u00ab L. \u00bb would yield a single initial.
     """
     mots = [mot for mot in nom.replace(".", " ").split() if mot]
     return "".join(mot[0].upper() for mot in mots[:2])

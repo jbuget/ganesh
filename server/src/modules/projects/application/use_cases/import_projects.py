@@ -1,4 +1,4 @@
-"""Importe un referentiel de missions en une passe."""
+"""Imports a mission reference list in one pass."""
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
@@ -23,11 +23,11 @@ from src.shared.exceptions.domain_exceptions import (
 
 
 class ImportProjectsUseCase:
-    """Cree les missions absentes du referentiel, sans toucher aux autres.
+    """Creates the missions missing from the reference list, leaving others be.
 
-    L'import est rejouable : une mission deja presente est ignoree, jamais
-    dupliquee ni ecrasee. Une ligne en erreur n'interrompt pas les suivantes,
-    et le rapport dit precisement ce qui a echoue.
+    The import can be replayed: a mission already there is skipped, never
+    duplicated nor overwritten. A failing line does not stop the following
+    ones, and the report says precisely what went wrong.
     """
 
     def __init__(
@@ -45,7 +45,7 @@ class ImportProjectsUseCase:
         if actor is None:
             raise EntityNotFoundError("Utilisateur inconnu.")
         if not actor.is_manager:
-            raise ForbiddenActionError("Seul un manager peut importer un referentiel.")
+            raise ForbiddenActionError("Only a manager can import a reference list.")
 
         report = ImportReport()
         connus = {p.label: p for p in await self._projects.list_all(True)}
@@ -57,8 +57,8 @@ class ImportProjectsUseCase:
                 continue
             try:
                 projet = await self._create(line, connus)
-            except DomainError as erreur:
-                report.errors.append(f"{label or '(sans nom)'} : {erreur}")
+            except DomainError as error:
+                report.errors.append(f"{label or '(unnamed)'}: {error}")
                 continue
             connus[projet.label] = projet
             report.created += 1
@@ -80,7 +80,7 @@ class ImportProjectsUseCase:
             parent = connus.get((line.parent_label or "").strip())
             if parent is None:
                 raise EntityNotFoundError(
-                    f"projet parent « {line.parent_label} » introuvable."
+                    f"parent project \u00ab {line.parent_label} \u00bb not found."
                 )
             ensure_can_be_parent(parent)
             parent_id = parent.id

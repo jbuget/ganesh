@@ -15,22 +15,22 @@ interface IntervenantsPickerProps {
   onChange: () => void | Promise<void>;
   /** A quel titre ces personnes sont rattachees a la mission. */
   role?: ProjectRole;
-  /** Invite affichee quand personne n'est encore rattache. */
+  /** Prompt shown when nobody is attached yet. */
   invite?: string;
 }
 
-/** Au-dela, les pastilles se chevauchent trop pour rester lisibles. */
+/** Past this, the avatars overlap too much to stay readable. */
 const VISIBLES = 4;
 
 /**
- * Qui intervient sur une mission, en lecture et en modification.
+ * Who works on a mission, to read and to change.
  *
- * La liste se remanie deux fois par semaine : on l'ouvre d'un clic sur les
- * pastilles, et chaque nom bascule au clic suivant, sans validation ni
- * fermeture. Enchainer trois personnes ne demande donc que trois clics.
+ * The list is reworked twice a week: it opens with a click on the avatars, and
+ * each name toggles on the next click, with no confirmation and no closing.
+ * Three people in a row therefore take three clicks.
  *
- * Le champ de recherche prend le focus a l'ouverture : sur une equipe entiere,
- * taper trois lettres va plus vite que derouler la liste.
+ * The search field takes focus on opening: across a whole team, typing three
+ * letters beats scrolling the list.
  */
 export function IntervenantsPicker({
   projectId,
@@ -42,8 +42,8 @@ export function IntervenantsPicker({
   const { teammates } = useTeammates();
   const [ouvert, setOuvert] = useState(false);
   const [search, setRecherche] = useState("");
-  // Le meme filtre que les menus de recherche du reste de l'application :
-  // insensible a la casse comme aux accents.
+  // The same filter as the search menus elsewhere in the application:
+  // insensitive to case and to accents alike.
   const { contains } = useComboboxFilter();
   const affectes = new Set(contributors.map((member) => member.id));
 
@@ -100,8 +100,8 @@ export function IntervenantsPicker({
 
       <PopoverContent align="start" className="w-56 gap-0 p-1">
         {/*
-          Marges negatives : le popover a son propre padding, sans quoi le trait
-          sous le champ s'arreterait avant les bords.
+          Negative margins: the popover has padding of its own, otherwise the
+          rule under the field would stop short of the edges.
         */}
         <div className="-mx-1 flex items-center gap-2 border-b border-border px-2.5">
           <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />

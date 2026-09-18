@@ -1,4 +1,4 @@
-"""Implementation SQLAlchemy du port ProjectRepository."""
+"""SQLAlchemy implementation of the ProjectRepository port."""
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,7 +34,7 @@ def to_entity(model: ProjectModel) -> Project:
 
 
 class SqlProjectRepository(ProjectRepository):
-    """Persiste le referentiel des missions."""
+    """Persists the mission reference list."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session

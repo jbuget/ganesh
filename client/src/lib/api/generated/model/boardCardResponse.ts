@@ -10,7 +10,7 @@ import type { LastUpdateResponse } from "./lastUpdateResponse";
 import type { ProjectResponse } from "./projectResponse";
 
 /**
- * Une carte du tableau de bord.
+ * A board card.
  */
 export interface BoardCardResponse {
   project: ProjectResponse;

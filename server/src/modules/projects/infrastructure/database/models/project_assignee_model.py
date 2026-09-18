@@ -1,4 +1,4 @@
-"""Modele SQLAlchemy des intervenants affectes a une mission."""
+"""SQLAlchemy model for the contributors assigned to a mission."""
 
 from sqlalchemy import Enum, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
@@ -8,12 +8,12 @@ from src.modules.projects.domain.entities.project_role import ProjectRole
 
 
 class ProjectAssigneeModel(Base):
-    """Table de liaison entre une mission et ses intervenants.
+    """Join table between a mission and its contributors.
 
-    La cle primaire porte les trois colonnes : une meme personne ne peut pas
-    tenir deux fois le meme role sur une mission, et l'ajout devient idempotent
-    sans qu'aucun code n'ait a le verifier. Elle peut en revanche etre a la fois
-    referente et intervenante, ce qui arrive souvent.
+    The primary key carries all three columns: the same person cannot hold the
+    same role twice on a mission, and adding becomes idempotent without any
+    code checking for it. They may however be both lead and contributor, which
+    happens often.
     """
 
     __tablename__ = "project_assignees"

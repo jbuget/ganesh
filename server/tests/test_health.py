@@ -1,4 +1,4 @@
-"""L'API doit repondre sur /health."""
+"""The API must answer on /health."""
 
 import pytest
 from httpx import ASGITransport, AsyncClient

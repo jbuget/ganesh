@@ -1,7 +1,7 @@
-"""Nature des jours du mois : ouvre, week-end ou ferie.
+"""What kind of day each day of the month is: working, weekend or holiday.
 
-`holidays` est une bibliotheque de calcul deterministe, sans entree-sortie ni
-framework : elle a sa place dans le domaine, au meme titre que `datetime`.
+`holidays` is a deterministic computation library, with no I/O and no
+framework: it belongs in the domain, just as `datetime` does.
 """
 
 from calendar import monthrange
@@ -16,7 +16,7 @@ SATURDAY = 5
 
 
 class DayKind(StrEnum):
-    """Nature d'un jour du calendrier."""
+    """What kind of day a calendar day is."""
 
     OUVRE = "ouvre"
     WEEKEND = "weekend"
@@ -25,7 +25,7 @@ class DayKind(StrEnum):
 
 @dataclass(frozen=True)
 class CalendarDay:
-    """Un jour du mois et sa nature."""
+    """A day of the month and its kind."""
 
     day: date
     kind: DayKind
@@ -33,7 +33,7 @@ class CalendarDay:
 
     @property
     def is_off_day(self) -> bool:
-        """Un jour non ouvre est mis en evidence dans la matrice de saisie."""
+        """A non-working day stands out in the entry grid."""
         return self.kind is not DayKind.OUVRE
 
 
@@ -43,15 +43,15 @@ def _french_holidays(year: int) -> dict[date, str]:
 
 
 def holiday_label(day: date) -> str | None:
-    """Libelle du jour ferie, ou None si le jour n'est pas ferie."""
+    """Name of the public holiday, or None if the day is not one."""
     return _french_holidays(day.year).get(day)
 
 
 def classify_day(day: date) -> DayKind:
-    """Determine la nature d'un jour.
+    """Works out what kind of day this is.
 
-    Un ferie tombant un week-end est signale comme ferie : c'est l'information
-    la plus utile a afficher.
+    A holiday falling on a weekend is reported as a holiday: that is the more
+    useful thing to show.
     """
     if holiday_label(day) is not None:
         return DayKind.FERIE
@@ -61,7 +61,7 @@ def classify_day(day: date) -> DayKind:
 
 
 def days_of_month(year: int, month: int) -> list[CalendarDay]:
-    """Tous les jours du mois, avec leur nature."""
+    """Every day of the month, with its kind."""
     _, last_day = monthrange(year, month)
     return [
         CalendarDay(
@@ -74,5 +74,5 @@ def days_of_month(year: int, month: int) -> list[CalendarDay]:
 
 
 def working_days_count(year: int, month: int) -> int:
-    """Nombre de jours ouvres du mois, feries et week-ends exclus."""
+    """Number of working days in the month, holidays and weekends excluded."""
     return sum(1 for day in days_of_month(year, month) if day.kind is DayKind.OUVRE)

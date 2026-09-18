@@ -1,4 +1,4 @@
-"""Affectation des intervenants d'une mission."""
+"""Assigning the contributors of a mission."""
 
 import pytest
 
@@ -68,7 +68,7 @@ async def test_a_member_joins_the_mission() -> None:
 
 
 async def test_assigning_twice_leaves_a_single_intervenant() -> None:
-    """Un clic repete sur la meme personne ne doit pas la dedoubler."""
+    """Clicking the same person twice must not duplicate them."""
     assign, _, assignees, _ = build(affectes=[2])
 
     await assign.execute(a_command())
@@ -121,7 +121,7 @@ async def test_an_unknown_member_is_refused() -> None:
 
 
 async def test_someone_can_be_both_referent_and_intervenant() -> None:
-    """Le referent d'une mission met souvent lui-meme les mains dedans."""
+    """The lead of a mission often has their own hands in it."""
     assign, _, assignees, _ = build()
 
     await assign.execute(a_command())

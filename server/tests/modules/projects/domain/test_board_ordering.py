@@ -1,4 +1,4 @@
-"""Ordre des cartes dans une colonne du tableau de bord."""
+"""Order of the cards in a board column."""
 
 from src.modules.projects.domain.entities.project import (
     Project,
@@ -39,7 +39,7 @@ def test_a_card_moves_down_within_its_column() -> None:
 
 
 def test_positions_stay_contiguous() -> None:
-    """Sans renumerotation, les rangs finiraient par se chevaucher."""
+    """Without renumbering, ranks would end up overlapping."""
     column = [card(1, 0), card(2, 5), card(3, 12)]
 
     reorder_column(column, deplacee=column[1], vers=0)
@@ -49,7 +49,7 @@ def test_positions_stay_contiguous() -> None:
 
 def test_a_card_arriving_from_another_column_is_inserted() -> None:
     column = [card(1, 0), card(2, 1)]
-    arrivante = card(9, 0, ProjectStatus.BUILD)
+    arrivante = card(9, 0, ProjectStatus.DEVELOPMENT)
     column.append(arrivante)
 
     reorder_column(column, deplacee=arrivante, vers=1)

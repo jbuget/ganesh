@@ -6,7 +6,7 @@
  */
 
 /**
- * Un jour du mois et sa nature.
+ * A day of the month and its kind.
  */
 export interface CalendarDayResponse {
   day: string;

@@ -1,4 +1,4 @@
-"""Implementation SQLAlchemy du port AuditLogRepository."""
+"""SQLAlchemy implementation of the AuditLogRepository port."""
 
 from datetime import date
 
@@ -30,7 +30,7 @@ def to_entity(model: AuditLogModel) -> AuditLog:
 
 
 class SqlAuditLogRepository(AuditLogRepository):
-    """Persiste le journal d'audit."""
+    """Persists the audit log."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session

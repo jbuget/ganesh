@@ -53,12 +53,12 @@ describe("useMissionOuverte", () => {
   });
 
   it("laisse intacts les autres paramètres de l'écran", () => {
-    window.history.replaceState(null, "", "/kanban?phase=build");
+    window.history.replaceState(null, "", "/kanban?phase=development");
     const { result } = renderHook(() => useOpenedMission());
 
     act(() => result.current.open(29, "updates"));
     act(() => result.current.close());
 
-    expect(window.location.search).toContain("phase=build");
+    expect(window.location.search).toContain("phase=development");
   });
 });

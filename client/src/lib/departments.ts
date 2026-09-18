@@ -1,6 +1,6 @@
 import type { Department } from "@/lib/api/generated/model";
 
-/** Departements de l'entreprise, dans l'ordre ou l'equipe les enonce. */
+/** Company departments, in the order the team names them. */
 export const DEPARTEMENTS: { value: Department; label: string }[] = [
   { value: "finance_admin", label: "Administratif & Financier" },
   { value: "landlords", label: "Bailleurs" },

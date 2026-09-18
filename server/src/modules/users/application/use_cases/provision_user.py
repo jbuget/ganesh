@@ -1,4 +1,4 @@
-"""Provisionne un utilisateur a partir de son identite Entra."""
+"""Provisions a user from their Entra identity."""
 
 from datetime import datetime
 
@@ -8,15 +8,14 @@ from src.modules.users.domain.repositories.user_repository import UserRepository
 
 
 class ProvisionUserUseCase:
-    """Retrouve ou cree l'utilisateur correspondant a une identite Entra.
+    """Finds or creates the user matching an Entra identity.
 
-    Le rapprochement se fait d'abord sur l'identifiant Entra, puis sur l'email :
-    c'est ce second cas qui permet au seed de pre-attribuer les roles avant la
-    toute premiere connexion.
+    Matching goes by the Entra id first, then by email: that second case is
+    what lets the seed pre-assign roles before the very first login.
 
-    C'est aussi le seul endroit ou l'API voit passer une identite : c'est donc
-    ici que se date la derniere connexion, sous reserve de la fenetre de
-    fraicheur portee par le domaine.
+    It is also the only place the API sees an identity go by: this is
+    therefore where the last login is stamped, subject to the freshness window
+    the domain holds.
     """
 
     def __init__(self, users: UserRepository) -> None:

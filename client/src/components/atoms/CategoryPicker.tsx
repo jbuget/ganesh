@@ -12,7 +12,7 @@ interface CategoryPickerProps {
   onChange: (value: ProjectCategory | null) => void | Promise<void>;
 }
 
-/** Axe strategique d'une mission. Un seul, ou aucun. */
+/** A mission's strategic axis. One, or none. */
 export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
   const [ouvert, setOuvert] = useState(false);
   const axis = category(value);
@@ -48,8 +48,8 @@ export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
                 aria-pressed={choice.value === value}
                 onClick={() => {
                   setOuvert(false);
-                  // Recliquer sur l'axe courant le retire : c'est le seul
-                  // moyen de revenir a « aucune categorie ».
+                  // Clicking the current axis again removes it: the only way
+                  // back to \u00ab no category \u00bb.
                   void onChange(choice.value === value ? null : choice.value);
                 }}
                 className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"

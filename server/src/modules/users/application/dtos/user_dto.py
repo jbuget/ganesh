@@ -1,4 +1,4 @@
-"""Donnees d'entree des use cases utilisateurs."""
+"""Input data of the user use cases."""
 
 from dataclasses import dataclass
 
@@ -7,7 +7,7 @@ from src.modules.users.domain.entities.user import Role
 
 @dataclass(frozen=True)
 class EntraIdentity:
-    """Identite telle que fournie par Microsoft Entra ID."""
+    """Identity as provided by Microsoft Entra ID."""
 
     oid: str
     email: str
@@ -16,7 +16,7 @@ class EntraIdentity:
 
 @dataclass(frozen=True)
 class ChangeRoleCommand:
-    """Promotion ou retrogradation. Reservee aux managers."""
+    """Promotion or demotion. Managers only."""
 
     actor_id: int
     target_user_id: int
@@ -25,7 +25,7 @@ class ChangeRoleCommand:
 
 @dataclass(frozen=True)
 class SetUserActiveCommand:
-    """Coupure ou retablissement de l'acces. Reservee aux managers."""
+    """Cutting off or restoring access. Managers only."""
 
     actor_id: int
     target_user_id: int

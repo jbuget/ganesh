@@ -12,10 +12,10 @@ import type {
 import { useCurrentUser } from "@/lib/api/queries";
 import { useEffect } from "react";
 
-/** Colonnes indexees par phase, forme pratique pour le glisser-deposer. */
+/** Columns indexed by phase, a handy shape for drag and drop. */
 export type Colonnes = Record<ProjectStatus, BoardCardResponse[]>;
 
-/** Les archivees ne sont demandees que lorsqu'on veut les voir. */
+/** Archived ones are only asked for when they are wanted. */
 function scope(inclureArchivees: boolean) {
   return inclureArchivees ? { include_inactive: true } : undefined;
 }
@@ -27,15 +27,15 @@ function versColonnes(board: BoardResponse): Colonnes {
 }
 
 /**
- * Etat du tableau de bord et deplacement des cartes.
+ * Board state and card moves.
  *
- * Les colonnes sont tenues localement : un glisser-deposer doit se voir
- * immediatement, sans attendre l'aller-retour serveur. L'appel suit, et un
- * echec recharge la verite du serveur plutot que de laisser un ecran qui ment.
+ * Columns are held locally: a drag and drop must show at once, without waiting
+ * for the server round trip. The call follows, and a failure reloads the
+ * server's truth rather than leaving a screen that lies.
  *
- * Les missions archivees ne voyagent que sur demande : le tableau sert a
- * piloter ce qui tourne, et les charger a chaque ouverture ferait payer a tous
- * ce dont on se sert rarement.
+ * Archived missions only travel on request: the board is there to steer what is
+ * running, and loading them on every opening would make everyone pay for what
+ * is rarely used.
  */
 export function useBoard(inclureArchivees = false) {
   const queryClient = useQueryClient();
@@ -65,15 +65,14 @@ export function useBoard(inclureArchivees = false) {
     user: user,
 
     /**
-     * Montre un etat sans l'enregistrer.
+     * Shows a state without saving it.
      *
-     * C'est ce qui se joue pendant un glissement : les colonnes s'ouvrent et se
-     * referment sous le curseur, mais rien n'est ecrit tant que la carte n'est
-     * pas relachee.
+     * That is what happens during a drag: columns open and close under the
+     * cursor, but nothing is written until the card is released.
      */
     preview: setColonnes,
 
-    /** Reprend la verite du serveur, apres un changement fait hors glissement. */
+    /** Takes the server's truth back, after a change made outside a drag. */
     reload,
 
     /** Applique le deplacement a l'ecran, puis l'enregistre. */
@@ -92,7 +91,7 @@ export function useBoard(inclureArchivees = false) {
         });
         await queryClient.invalidateQueries();
       } catch {
-        // L'ecran ne doit jamais rester sur un etat que le serveur ignore.
+        // The screen must never sit on a state the server knows nothing of.
         setEnErreur(true);
         await reload();
       }

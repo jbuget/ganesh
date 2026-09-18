@@ -27,8 +27,8 @@ describe("MarkdownView", () => {
   });
 
   it("ignore le HTML plutôt que de l'injecter", () => {
-    // Sans `rehype-raw`, une balise ecrite dans le markdown reste du texte :
-    // rien n'est execute, et il n'y a donc rien a assainir.
+    // Without `rehype-raw`, a tag written in the markdown stays text: nothing
+    // is executed, so there is nothing to sanitise.
     const { container } = render(
       <MarkdownView body={'<img src=x onerror="alert(1)">Bonjour'} />,
     );

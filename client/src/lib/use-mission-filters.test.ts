@@ -18,10 +18,10 @@ describe("useMissionFilters", () => {
   it("relit dans l'URL le critère qu'on vient de poser", () => {
     const { result } = renderHook(() => useMissionFilters());
 
-    act(() => result.current.set({ phases: ["build"] }));
+    act(() => result.current.set({ phases: ["development"] }));
 
-    expect(result.current.filters.phases).toEqual(["build"]);
-    expect(window.location.search).toContain("phase=build");
+    expect(result.current.filters.phases).toEqual(["development"]);
+    expect(window.location.search).toContain("phase=development");
   });
 
   it("garde les autres critères en changeant l'un d'eux", () => {

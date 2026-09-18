@@ -1,4 +1,4 @@
-"""Les dates de passage de phase, notees au fil des changements."""
+"""Phase crossing dates, recorded as the changes happen."""
 
 from datetime import date
 
@@ -58,7 +58,7 @@ async def test_entering_a_phase_is_dated() -> None:
 
 
 async def test_passing_again_keeps_the_first_date() -> None:
-    """Un projet qui recule puis repasse garde la date du premier passage."""
+    """A project that goes back then through again keeps the first crossing date."""
     use_case, details = build()
     await use_case.execute(
         ChangeProjectStatusCommand(
@@ -90,7 +90,7 @@ async def test_going_back_does_not_erase_what_happened() -> None:
 
     await use_case.execute(
         ChangeProjectStatusCommand(
-            actor_id=1, project_id=10, status=ProjectStatus.BUILD
+            actor_id=1, project_id=10, status=ProjectStatus.DEVELOPMENT
         ),
         today=date(2026, 10, 1),
     )

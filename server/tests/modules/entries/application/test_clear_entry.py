@@ -1,4 +1,4 @@
-"""Suppression d'une saisie."""
+"""Deleting an entry."""
 
 from datetime import date
 
@@ -83,7 +83,7 @@ async def test_an_entry_is_removed() -> None:
 
 
 async def test_clearing_an_empty_cell_is_harmless() -> None:
-    """Le cycle de saisie repasse par le vide : l'operation doit rester sure."""
+    """The entry cycle passes back through empty: the operation must stay safe."""
     clear, _, entries, _ = build()
 
     await clear.execute(
@@ -138,7 +138,7 @@ async def test_an_unknown_actor_is_rejected() -> None:
 
 
 async def test_a_non_working_day_can_still_be_cleaned_up() -> None:
-    """On interdit de saisir un samedi, jamais d'en retirer une saisie heritee."""
+    """Entering on a Saturday is forbidden, removing an inherited entry never is."""
     samedi = date(2026, 9, 12)
     clear, _, entries, _ = build([an_entry(day=samedi)])
 
@@ -150,7 +150,7 @@ async def test_a_non_working_day_can_still_be_cleaned_up() -> None:
 
 
 async def test_a_full_cycle_returns_the_cell_to_empty() -> None:
-    """Vide -> demi -> pleine -> vide : le tour complet du clic."""
+    """Empty -> half -> full -> empty: the full round of the click."""
     clear, set_entry, entries, _ = build()
     for value in (0.5, 1.0):
         await set_entry.execute(

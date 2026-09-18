@@ -1,4 +1,4 @@
-"""Port d'acces aux saisies de temps."""
+"""Port for time entries."""
 
 from abc import ABC, abstractmethod
 from datetime import date
@@ -7,7 +7,7 @@ from src.modules.entries.domain.entities.entry import Entry
 
 
 class EntryRepository(ABC):
-    """Contrat de persistance des saisies."""
+    """Persistence contract for entries."""
 
     @abstractmethod
     async def get(self, user_id: int, project_id: int, day: date) -> Entry | None: ...
@@ -23,15 +23,15 @@ class EntryRepository(ABC):
 
     @abstractmethod
     async def count_by_project(self) -> dict[int, int]:
-        """Nombre de saisies par mission, pour savoir lesquelles ont servi."""
+        """Entry count per mission, to know which ones have been used."""
         ...
 
     @abstractmethod
     async def sum_realised_by_project(self, today: date) -> dict[int, float]:
-        """Jours realises par mission : le previsionnel n'y entre pas.
+        """Delivered days per mission: forecasts do not count.
 
-        Somme lue en une fois : le referentiel aligne des dizaines de missions,
-        et une requete par ligne les ferait arriver l'une apres l'autre.
+        Summed in one go: the reference list lines up dozens of missions, and
+        one query per row would make them arrive one after the other.
         """
         ...
 

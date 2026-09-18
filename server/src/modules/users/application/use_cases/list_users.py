@@ -1,11 +1,11 @@
-"""Liste les collaborateurs."""
+"""Lists the teammates."""
 
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
 
 class ListUsersUseCase:
-    """Retourne les collaborateurs, actifs par defaut."""
+    """Returns the teammates, active ones by default."""
 
     def __init__(self, users: UserRepository) -> None:
         self._users = users

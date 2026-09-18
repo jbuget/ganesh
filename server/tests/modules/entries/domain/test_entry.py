@@ -16,7 +16,7 @@ def make_entry(value: float = 1.0, day: date = date(2026, 9, 15)) -> Entry:
         project_id=2,
         day=day,
         value=DayValue(value),
-        status_at_entry=ProjectStatus.BUILD,
+        status_at_entry=ProjectStatus.DEVELOPMENT,
     )
 
 
@@ -34,7 +34,7 @@ def test_any_other_value_is_rejected(value: float) -> None:
 def test_an_entry_remembers_the_project_phase_at_write_time() -> None:
     entry = make_entry()
 
-    assert entry.status_at_entry is ProjectStatus.BUILD
+    assert entry.status_at_entry is ProjectStatus.DEVELOPMENT
 
 
 def test_an_entry_on_a_future_day_is_a_forecast() -> None:
@@ -50,7 +50,7 @@ def test_an_entry_on_a_past_day_is_actual_time() -> None:
 
 
 def test_an_entry_on_today_is_actual_time() -> None:
-    """Le jour courant compte comme realise : il ne doit pas etre exclu de Monday."""
+    """Today counts as delivered: it must not be left out of Monday."""
     entry = make_entry(day=date(2026, 9, 15))
 
     assert entry.is_forecast(today=date(2026, 9, 15)) is False

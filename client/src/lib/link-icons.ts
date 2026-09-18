@@ -15,11 +15,11 @@ import {
 import type { LinkIcon } from "@/lib/api/generated/model";
 
 /**
- * Les familles de liens du referentiel, et la forme qu'elles prennent a l'ecran.
+ * The families of links in the reference list, and the shape they take on screen.
  *
- * Le catalogue vient du serveur : ce fichier ne fait que lui donner un dessin
- * et un nom lisible. L'ordre est celui du selecteur — le lien generique en
- * tete, puis les familles de la plus courante a la plus rare.
+ * The catalogue comes from the server: this file only gives it a drawing and a
+ * readable name. The order is that of the picker — the plain link first, then
+ * the families from the most common to the rarest.
  */
 export const LINK_ICONS: {
   value: LinkIcon;
@@ -40,12 +40,12 @@ export const LINK_ICONS: {
 
 const PAR_VALEUR = new Map(LINK_ICONS.map((icon) => [icon.value, icon]));
 
-/** Le dessin d'une icone. Une valeur inconnue retombe sur le lien generique. */
+/** The drawing of an icon. An unknown value falls back to the plain link. */
 export function iconGlyph(value: LinkIcon): LucideIcon {
   return PAR_VALEUR.get(value)?.glyph ?? PlainLink;
 }
 
-/** Le nom lisible d'une icone, pour les lecteurs d'ecran et le selecteur. */
+/** The readable name of an icon, for screen readers and the picker. */
 export function libelleIcone(value: LinkIcon): string {
   return PAR_VALEUR.get(value)?.label ?? "Lien";
 }

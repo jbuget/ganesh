@@ -1,4 +1,4 @@
-"""Ce qu'un projet porte pour etre affiche dans un tableau de phases."""
+"""What a project carries to be shown on a board of phases."""
 
 from datetime import date
 
@@ -27,7 +27,7 @@ def test_the_phases_follow_the_project_life_cycle() -> None:
     assert [phase.value for phase in ProjectStatus] == [
         "exploration",
         "scoping",
-        "build",
+        "development",
         "validation",
         "deployment",
         "operations",
@@ -51,7 +51,7 @@ def test_a_project_can_carry_a_go_live_date() -> None:
 
 
 def test_a_project_holds_its_rank_within_its_phase() -> None:
-    """L'ordre choisi dans une colonne doit survivre au rechargement."""
+    """The order chosen in a column must survive a reload."""
     assert projet(position=3).position == 3
 
 
@@ -77,7 +77,7 @@ def test_a_project_appears_on_the_board() -> None:
 
 
 def test_a_lot_appears_on_the_board_too() -> None:
-    """Un lot se pilote comme un projet : il a sa phase et sa charge."""
+    """A work package is steered like a project: it has its phase and its load."""
     work_package = projet(kind=ProjectKind.WORK_PACKAGE, parent_id=9)
 
     assert work_package.appears_on_board is True

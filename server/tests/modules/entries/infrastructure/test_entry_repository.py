@@ -1,4 +1,4 @@
-"""Le repository des saisies, contre une vraie base PostgreSQL."""
+"""The entry repository, against a real PostgreSQL database."""
 
 from datetime import date
 
@@ -42,7 +42,7 @@ async def seed(session: AsyncSession) -> tuple[int, int]:
             id=None,
             label="Portail",
             kind=ProjectKind.PROJECT,
-            status=ProjectStatus.BUILD,
+            status=ProjectStatus.DEVELOPMENT,
         )
     )
     assert user.id is not None and project.id is not None
@@ -60,14 +60,14 @@ async def test_an_entry_is_persisted_and_read_back(db_session: AsyncSession) -> 
             project_id=project_id,
             day=JOUR,
             value=DayValue(0.5),
-            status_at_entry=ProjectStatus.BUILD,
+            status_at_entry=ProjectStatus.DEVELOPMENT,
         )
     )
 
     saved = await repo.get(user_id, project_id, JOUR)
     assert saved is not None
     assert saved.value == 0.5
-    assert saved.status_at_entry is ProjectStatus.BUILD
+    assert saved.status_at_entry is ProjectStatus.DEVELOPMENT
 
 
 async def test_upserting_twice_keeps_a_single_row(db_session: AsyncSession) -> None:
@@ -82,7 +82,7 @@ async def test_upserting_twice_keeps_a_single_row(db_session: AsyncSession) -> N
                 project_id=project_id,
                 day=JOUR,
                 value=DayValue(value),
-                status_at_entry=ProjectStatus.BUILD,
+                status_at_entry=ProjectStatus.DEVELOPMENT,
             )
         )
 
@@ -102,7 +102,7 @@ async def test_listing_a_month_excludes_other_months(db_session: AsyncSession) -
                 project_id=project_id,
                 day=day,
                 value=DayValue(1.0),
-                status_at_entry=ProjectStatus.BUILD,
+                status_at_entry=ProjectStatus.DEVELOPMENT,
             )
         )
 
@@ -133,7 +133,7 @@ async def test_deleting_an_entry_removes_it(db_session: AsyncSession) -> None:
 async def test_the_captured_phase_survives_a_project_status_change(
     db_session: AsyncSession,
 ) -> None:
-    """Changer la phase du projet ne reecrit pas le temps deja impute."""
+    """Changing the project phase does not rewrite time already booked."""
     user_id, project_id = await seed(db_session)
     entries = SqlEntryRepository(db_session)
     projects = SqlProjectRepository(db_session)

@@ -21,17 +21,17 @@ interface TeammateSelectorProps {
   onSelect: (userId: number) => void;
 }
 
-/** Un collaborateur propose : `value` / `label` est la forme que Base UI sait lire. */
+/** An offered teammate: `value` / `label` is the shape Base UI can read. */
 interface TeammateItem {
   value: number;
   label: string;
 }
 
 /**
- * Choix du collaborateur consulte. Chacun peut consulter le mois de chacun.
+ * Choosing which teammate is looked at. Anyone may look at anyone's month.
  *
- * Le champ de recherche en tete du menu evite de parcourir toute l'equipe pour
- * trouver un nom, comme dans les autres menus de l'application.
+ * The search field at the top of the menu saves scanning the whole team for a
+ * name, as in the other menus of the application.
  */
 export function TeammateSelector({
   teammates,

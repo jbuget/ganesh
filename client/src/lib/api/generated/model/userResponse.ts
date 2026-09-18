@@ -7,7 +7,7 @@
 import type { Role } from "./role";
 
 /**
- * Un collaborateur.
+ * A teammate.
  */
 export interface UserResponse {
   id: number;

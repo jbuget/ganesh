@@ -1,4 +1,4 @@
-"""Implementation SQLAlchemy du port MonthRepository."""
+"""SQLAlchemy implementation of the MonthRepository port."""
 
 from datetime import date
 
@@ -24,7 +24,7 @@ def to_entity(model: MonthModel) -> Month:
 
 
 class SqlMonthRepository(MonthRepository):
-    """Persiste l'etat de saisie des mois."""
+    """Persists month entry state."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session

@@ -1,4 +1,4 @@
-"""Le catalogue d'icones des liens, et ce qu'une adresse laisse deviner."""
+"""The link icon catalogue, and what an address lets one guess."""
 
 import pytest
 
@@ -33,7 +33,7 @@ def test_a_known_service_is_recognised(url: str, attendue: str) -> None:
     ],
 )
 def test_google_documents_are_told_apart_by_their_path(url: str, attendue: str) -> None:
-    """Un meme domaine sert trois outils : c'est le chemin qui les distingue."""
+    """One domain serves three tools: the path is what tells them apart."""
     assert guess_icon(url) == attendue
 
 
@@ -54,5 +54,5 @@ def test_an_unknown_address_falls_back_on_the_generic_icon(url: str) -> None:
 
 
 def test_an_address_that_only_resembles_a_known_service_is_not_matched() -> None:
-    """`monfigma.com` n'est pas Figma : le suffixe se lit sur un point."""
+    """`myfigma.com` is not Figma: the suffix hinges on a dot."""
     assert guess_icon("https://monfigma.com/x") == LinkIcon.LINK

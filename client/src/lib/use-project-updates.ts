@@ -11,18 +11,17 @@ import {
 } from "@/lib/api/generated/projects/projects";
 
 /**
- * Le fil de suivi d'une mission.
+ * A mission's follow-up thread.
  *
- * Chaque ecriture est relue depuis le serveur : c'est lui qui decide de la
- * chronologie, de ce qui reste visible d'une mise a jour retiree, et de qui a
- * le droit de la toucher.
+ * Every write is read back from the server: it decides the order, what stays
+ * visible of a withdrawn update, and who is allowed to touch it.
  */
 export function useProjectUpdates(
   projectId: number,
   /**
-   * Appele apres chaque ecriture : le fil ne se lit pas qu'ici. Le referentiel
-   * et le kanban annoncent son decompte et son dernier message, et resteraient
-   * sur ce qu'ils savaient a l'ouverture du panneau.
+   * Called after every write: the thread is not read here alone. The reference
+   * list and the kanban announce its count and its latest message, and would
+   * otherwise sit on what they knew when the panel opened.
    */
   onEcriture?: () => void | Promise<void>,
 ) {

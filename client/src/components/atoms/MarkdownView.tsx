@@ -6,14 +6,15 @@ interface MarkdownViewProps {
 }
 
 /**
- * Rendu d'un texte markdown.
+ * Rendering markdown text.
  *
- * `rehype-raw` n'est deliberement pas branche : le HTML ecrit dans le markdown
- * est ignore plutot qu'injecte. Une fiche se redige a plusieurs et finira
- * ailleurs qu'ici — il n'y a donc rien a assainir, puisque rien n'est execute.
+ * `rehype-raw` is deliberately not wired in: HTML written in the markdown is
+ * ignored rather than injected. A sheet is written by several people and will
+ * end up elsewhere than here — so there is nothing to sanitise, since nothing
+ * is executed.
  *
- * `remark-gfm` apporte ce qu'on ecrit sans y penser : tableaux, listes a
- * cocher, barre, liens bruts.
+ * `remark-gfm` brings what people write without thinking: tables, checklists,
+ * strikethrough, bare links.
  */
 export function MarkdownView({ body }: MarkdownViewProps) {
   return (

@@ -1,4 +1,4 @@
-"""Implementation SQLAlchemy du port UserRepository."""
+"""SQLAlchemy implementation of the UserRepository port."""
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,7 +21,7 @@ def to_entity(model: UserModel) -> User:
 
 
 class SqlUserRepository(UserRepository):
-    """Persiste les utilisateurs en base."""
+    """Persists users in the database."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session

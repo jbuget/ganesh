@@ -1,4 +1,4 @@
-"""Traduction des collaborateurs en schemas d'API."""
+"""Translating teammates into API schemas."""
 
 from src.modules.users.domain.entities.user import User
 from src.modules.users.presentation.api.schemas.user_schemas import UserResponse

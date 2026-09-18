@@ -6,7 +6,7 @@
  */
 
 /**
- * Temps declare sur un mois donne.
+ * Time declared over a given month.
  */
 export interface MonthlyShareResponse {
   month: string;

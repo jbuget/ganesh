@@ -1,8 +1,8 @@
-"""Deplacement d'une carte, contre une vraie base.
+"""Moving a card, against a real database.
 
-Le double en memoire renvoie la meme instance depuis `get_by_id` et
-`list_all` ; la base, elle, en renvoie deux. Ce test existe pour couvrir cette
-difference, qui a masque un bug de renumerotation.
+The in-memory double returns the same instance from `get_by_id` and
+`list_all`; the database returns two. This test exists to cover that
+difference, which once hid a renumbering bug.
 """
 
 import pytest
@@ -94,7 +94,7 @@ async def test_a_card_moved_to_the_top_really_lands_there(
 
 
 async def test_ranks_stay_unique_within_a_column(db_session: AsyncSession) -> None:
-    """Deux cartes au meme rang rendraient l'ordre instable."""
+    """Two cards at the same rank would make the order unstable."""
     actor_id, ids = await preparer(db_session)
 
     await use_case(db_session).execute(
@@ -124,10 +124,10 @@ async def test_a_card_changing_column_keeps_a_coherent_order(
         MoveProjectCommand(
             actor_id=actor_id,
             project_id=ids["Alpha"],
-            status=ProjectStatus.BUILD,
+            status=ProjectStatus.DEVELOPMENT,
             position=0,
         )
     )
 
     assert await ordre(db_session, ProjectStatus.SCOPING) == ["Beta", "Gamma"]
-    assert await ordre(db_session, ProjectStatus.BUILD) == ["Alpha"]
+    assert await ordre(db_session, ProjectStatus.DEVELOPMENT) == ["Alpha"]
