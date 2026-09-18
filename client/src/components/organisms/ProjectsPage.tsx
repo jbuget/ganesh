@@ -19,6 +19,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  CATEGORY_COLUMN,
+  DAYS_COLUMN,
+  LEFT_MARGIN,
+  MEMBERS_COLUMN,
+  MISSIONS_TABLE,
+  NAME_COLUMN,
+  PHASE_COLUMN,
+  PRIORITY_COLUMN,
+  SEPARATOR,
+  THREAD_COLUMN,
+} from "@/lib/mission-columns";
 import { useOpenedMission } from "@/lib/opened-mission";
 import { useMissionFilters } from "@/lib/use-mission-filters";
 import { useMissionSort } from "@/lib/use-mission-sort";
@@ -51,37 +63,42 @@ export function ProjectsPage() {
   return (
     <PageLayout
       header={
-        <PageHeader
-          title="Projets"
-          subtitle="Gestion des projets et sous-projets"
-          actions={
-            <>
-              {screen.isManager && (
-                <Button variant="outline" onClick={() => setImporting(true)}>
-                  <Upload />
-                  Importer
+        <>
+          <PageHeader
+            title="Projets"
+            subtitle="Gestion des projets et sous-projets"
+            actions={
+              <>
+                {screen.isManager && (
+                  <Button variant="outline" onClick={() => setImporting(true)}>
+                    <Upload />
+                    Importer
+                  </Button>
+                )}
+                <Button onClick={() => setDeclaration(true)}>
+                  <Plus />
+                  Déclarer un projet
                 </Button>
-              )}
-              <Button onClick={() => setDeclaration(true)}>
-                <Plus />
-                Déclarer un projet
-              </Button>
-            </>
-          }
-        />
+              </>
+            }
+          />
+
+          {/* With the header, outside the scrolling area: the question asked of
+              the reference list must stay readable and editable, whether one
+              has gone fifty rows down or off to the right after a column. */}
+          <MissionFilters
+            filters={filters}
+            hasFilter={hasFilter}
+            onChange={set}
+            onClear={clear}
+            visible={screen.visible}
+            total={screen.total}
+          />
+        </>
       }
     >
       {/* Wide enough for nine columns, not so wide as to stretch the names. */}
       <div className="max-w-[1300px]">
-        <MissionFilters
-          filters={filters}
-          hasFilter={hasFilter}
-          onChange={set}
-          onClear={clear}
-          visible={screen.visible}
-          total={screen.total}
-        />
-
         {screen.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
         {screen.tree.length === 0 && !screen.isLoading && (
@@ -96,8 +113,12 @@ export function ProjectsPage() {
           // The shadcn container opens a scrolling context that would hold the
           // header inside the table: we neutralise it so the `sticky` latches
           // onto the page's scrolling area.
-          <div className="[&_[data-slot=table-container]]:overflow-visible">
-            <Table>
+          // The box sizes itself on the table rather than on the available
+          // room: the padding of the scrolling area does not count towards what
+          // it can travel, and without that band on the right the last column
+          // would butt against the window edge.
+          <div className="w-max pr-6 [&_[data-slot=table-container]]:overflow-visible">
+            <Table className={MISSIONS_TABLE}>
               {/* Sixty rows pass under the header: without it, one no longer
                   knows which column one is reading by the time one reaches the
                   bottom. The background sits on the cells and not on the row:
@@ -110,26 +131,34 @@ export function ProjectsPage() {
                     label="Projet"
                     sorted={sorted}
                     onToggle={sortBy}
+                    className={`${NAME_COLUMN} ${LEFT_MARGIN}`}
                   />
                   {/* The follow-up thread: its icon carries the meaning, not a title. */}
-                  <TableHead />
+                  {/* Only the right-hand line reaches into the header: it marks
+                      where the pinned part stops, over the full height of the
+                      table. The left-hand one separates two columns, and so
+                      starts below their titles. */}
+                  <TableHead className={`${THREAD_COLUMN} ${SEPARATOR}`} />
                   <SortableColumnHeader
                     column="phase"
                     label="Phase"
                     sorted={sorted}
                     onToggle={sortBy}
+                    className={PHASE_COLUMN}
                   />
                   <SortableColumnHeader
                     column="priority"
                     label="Priorité"
                     sorted={sorted}
                     onToggle={sortBy}
+                    className={PRIORITY_COLUMN}
                   />
                   <SortableColumnHeader
                     column="category"
                     label="Catégorie"
                     sorted={sorted}
                     onToggle={sortBy}
+                    className={CATEGORY_COLUMN}
                   />
                   {/* Build against its estimate, run apart: the two answer
                       different questions, and a single column carrying both
@@ -140,6 +169,7 @@ export function ProjectsPage() {
                     sorted={sorted}
                     onToggle={sortBy}
                     alignRight
+                    className={DAYS_COLUMN}
                   />
                   <SortableColumnHeader
                     column="run"
@@ -147,10 +177,11 @@ export function ProjectsPage() {
                     sorted={sorted}
                     onToggle={sortBy}
                     alignRight
+                    className={DAYS_COLUMN}
                   />
                   {/* Who looks after it does not sort: a column of badges has no
                       order the reader would have in mind. */}
-                  <TableHead>Référents</TableHead>
+                  <TableHead className={MEMBERS_COLUMN}>Référents</TableHead>
                   <TableHead>Intervenants</TableHead>
                 </TableRow>
               </TableHeader>

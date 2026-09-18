@@ -488,6 +488,30 @@ describe("MissionRow", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("keeps the whole name within reach when the column truncates it", () => {
+    const longLabel = mission({
+      label: "NETSUITE - Branchement et association indice de revalorisation",
+    });
+
+    line(
+      <MissionRow
+        mission={longLabel}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", {
+        name: "NETSUITE - Branchement et association indice de revalorisation",
+      }),
+    ).toHaveAttribute(
+      "title",
+      "NETSUITE - Branchement et association indice de revalorisation",
+    );
+  });
+
   it("announces off-project work, which has no phase", () => {
     line(
       <MissionRow
