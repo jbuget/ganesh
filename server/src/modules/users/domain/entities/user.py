@@ -1,4 +1,4 @@
-"""Janus user, and the rights that come with their role."""
+"""Ganesh user, and the rights that come with their role."""
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta

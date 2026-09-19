@@ -1,4 +1,4 @@
-# Janus
+# Ganesh
 
 Per-project time tracking for WAAT's Dev & Automation team.
 
@@ -27,7 +27,7 @@ make catalog OUT=../waat-tools/content/catalog.json
 ```
 
 The same content is served by `GET /api/v1/projects/catalog`, which is where
-waat.tools will read it once Janus is deployed. Until then the file is written
+waat.tools will read it once Ganesh is deployed. Until then the file is written
 here and committed over there: same contract, other pipe.
 
 Only published missions leave, and publishing asks for an address, a summary, a

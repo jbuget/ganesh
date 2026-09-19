@@ -7,7 +7,7 @@
 
 ## The gap it closes
 
-Janus authenticates **humans and nobody else**. `get_current_user`
+Ganesh authenticates **humans and nobody else**. `get_current_user`
 (`server/src/modules/auth/presentation/dependencies.py`) validates an Entra
 bearer token, pulls an `oid`, an email and a name out of the claims, then
 provisions a `User`. A client-credentials token — the kind a CI would obtain —
@@ -118,7 +118,7 @@ jns_<public_id>_<secret>
 ```
 
 - `jns_` — a distinctive prefix. It makes the key recognisable in a log, a
-  `grep` or a secret scanner, and it tells a Janus key from an Entra token on
+  `grep` or a secret scanner, and it tells a Ganesh key from an Entra token on
   the same header.
 - `public_id` — random, unique, **indexed**, not secret. It is the handle the
   lookup goes through, and the only part of the key ever shown again.

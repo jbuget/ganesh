@@ -1,4 +1,4 @@
-"""Entry point of the Janus API."""
+"""Entry point of the Ganesh API."""
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

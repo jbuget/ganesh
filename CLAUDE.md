@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# CLAUDE.md — Janus
+# CLAUDE.md — Ganesh
 
 Development guide for Claude Code on this project. These rules apply to every
 contribution, without exception.
@@ -13,29 +13,38 @@ point not covered here, look at what WAATcher does rather than inventing:
 
 ## The product
 
-Janus lets every developer declare, in days or half days, the time spent (or
+Ganesh lets every developer declare, in days or half days, the time spent (or
 planned) on each project or sub-project, as a `days of the month × missions`
-grid. It is named after the god of doorways, who looks at what has been and at
-what comes with the same glance: the screens do the same — Activité behind,
-Planification ahead.
+grid. It is named after the lord of the *gaṇa* — the troop one belongs to, and
+the count: the same root gives *gaṇita*, calculation. He is the scribe who took
+down the Mahābhārata on the one condition that the dictation never stop, and the
+doorkeeper who turns back whoever has no right to pass. A register kept without
+a break, and a door that opens or holds — that is the whole product: Activité
+behind, Planification ahead, and a validated month nobody walks into.
 
-**The product is Janus; the domain is still a timesheet.** `TimesheetGrid`,
+**The name is that of a living deity. Keep it sober.** The name, a plain mark,
+and one sentence that says why. No mascot, no pun on the trunk, no elephant
+winking from an empty state. What would read as a tribute read straight reads as
+decoration the moment it is made cute.
+
+**The product is Ganesh; the domain is still a timesheet.** `TimesheetGrid`,
 `TimesheetPage` and `useTimesheetMonth` name a monthly time sheet, which is what
 they are and what they stay. Only what names the *application* carries the
 product's name — what the user reads, the page title, the API's own name. Do not
-rename a domain identifier to chase the product: `JanusGrid` would say nothing
+rename a domain identifier to chase the product: `GaneshGrid` would say nothing
 about what it renders.
 
 The database, its user, the Docker volume, the session cookie and the
-`localStorage` keys still read `timesheet`. Renaming them would cost everyone a
-fresh database and a new sign-in, and buy nothing: nobody reads the name of a
-volume.
+`localStorage` keys still read `timesheet`, and an API key still announces
+itself with `jns_`. Renaming them would cost everyone a fresh database, a new
+sign-in and a fresh set of keys, and buy nothing: nobody reads the name of a
+volume, and a key prefix is a needle for a secret scanner, not a brand.
 
 - **V1: no Monday integration.** Projects are created in the application or
   imported from CSV.
 - **V1.1:** a "Sync to Monday" button, managers only. The `monday_item_id` /
   `monday_subitem_id` columns exist from V1, nullable.
-- Monday will **never** be a source of entry: syncing goes one way, Janus →
+- Monday will **never** be a source of entry: syncing goes one way, Ganesh →
   Monday.
 
 ### Roles
@@ -186,7 +195,7 @@ callback `/api/auth/callback/azure-ad`.
 
 ### Entra credentials
 
-Janus reuses **WAATcher's Entra app registration** (same
+Ganesh reuses **WAATcher's Entra app registration** (same
 `AZURE_AD_TENANT_ID` and `AZURE_AD_CLIENT_ID`). The redirect URI
 `http://localhost:3000/api/auth/callback/azure-ad` must therefore be declared on
 that app registration in the Azure portal.
@@ -210,7 +219,7 @@ the tenant and the client id.
   (`pnpm api:generate`).
 
 > **A deliberate divergence from WAATcher.** WAATcher has no BFF: its browser
-> calls FastAPI directly through `NEXT_PUBLIC_API_URL`. Janus introduces a
+> calls FastAPI directly through `NEXT_PUBLIC_API_URL`. Ganesh introduces a
 > BFF on purpose, so that the Entra token never leaves the server and the API is
 > not publicly exposed. That is the one structural gap; everything else follows
 > WAATcher.
@@ -411,7 +420,7 @@ end up contradicting each other.
 
 ## The service catalogue
 
-waat.tools publishes the services the team produces. Janus is the source for
+waat.tools publishes the services the team produces. Ganesh is the source for
 everything it publishes: a mission carries a service sheet, and the « Fiche
 service » tab is where that sheet is filled in — nowhere else.
 
@@ -445,7 +454,7 @@ criticality publish. A field belongs to one side or the other, never to both.
 
 ## API keys
 
-A machine reaches Janus with a key, never with a user account. The rule the
+A machine reaches Ganesh with a key, never with a user account. The rule the
 whole design leans on, and the one to respect when adding a route:
 
 - **A key opens nothing by default.** `get_current_user` refuses keys outright,

@@ -22,7 +22,7 @@ export function BuildCost({ cost }: BuildCostProps) {
 
   // The ratio always reads in full, « 0/20 » included: a lone figure would not
   // say whether it counts what has been spent or what was planned, and a
-  // project whose build predates Janus would read as one that landed
+  // project whose build predates Ganesh would read as one that landed
   // exactly on its quote.
   return (
     <span className={cost.has_overrun ? "text-red-700" : undefined}>
