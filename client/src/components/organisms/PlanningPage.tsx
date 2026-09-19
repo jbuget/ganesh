@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { HorizonSelect } from "@/components/atoms/HorizonSelect";
+import { LeaveWithoutSavingDialog } from "@/components/atoms/LeaveWithoutSavingDialog";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { PlanSummaryBar } from "@/components/atoms/PlanSummaryBar";
 import { SimulationBar } from "@/components/molecules/SimulationBar";
@@ -11,6 +12,7 @@ import { PageLayout } from "@/components/organisms/PageLayout";
 import { WorkloadTimeline } from "@/components/organisms/WorkloadTimeline";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatShortDate } from "@/lib/dates";
+import { useUnsavedChangesGuard } from "@/lib/use-unsaved-changes-guard";
 import { useWorkloadPlanScreen } from "@/lib/use-workload-plan";
 
 /**
@@ -51,6 +53,11 @@ export function PlanningPage() {
   } = useWorkloadPlanScreen();
   const [tab, setTab] = useState("missions");
 
+  // Work worth warning about: a saved simulation one has since changed, or a
+  // hypothesis nobody has written down at all. Both are lost the same way by
+  // walking off the page, so both are held back the same way.
+  const guard = useUnsavedChangesGuard(hasUnsavedChanges || (isHypothesis && !opened));
+
   const weeks = plan?.weeks ?? [];
 
   return (
@@ -72,7 +79,7 @@ export function PlanningPage() {
                 isHypothesis={isHypothesis}
                 hasUnsavedChanges={hasUnsavedChanges}
                 saveError={saveError}
-                onOpen={open}
+                onOpen={guard.guard(open)}
                 onSaveAs={saveAs}
                 onSaveOver={saveOver}
                 onDelete={remove}
@@ -93,6 +100,15 @@ export function PlanningPage() {
       )}
 
       {plan && <PlanSummaryBar summary={plan.summary} />}
+
+      <LeaveWithoutSavingDialog
+        open={guard.isBlocking}
+        onOpenChange={(next) => {
+          if (!next) guard.stay();
+        }}
+        simulationName={opened?.name ?? null}
+        onDiscard={guard.discard}
+      />
 
       <Tabs value={tab} onValueChange={setTab} className="flex min-h-0 flex-col">
         <TabsList className="shrink-0">
