@@ -20,6 +20,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
+from src.modules.projects.domain.services.deletion import can_be_deleted
 from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.projects.domain.services.project_cost import (
     NO_COST,
@@ -59,7 +60,7 @@ class ListedProject:
     @property
     def is_deletable(self) -> bool:
         """A mission that never served may disappear; the others get archived."""
-        return self.entries == 0 and self.sub_projects == 0
+        return can_be_deleted(self.project, self.entries, self.sub_projects)
 
 
 class ListProjectsUseCase:
