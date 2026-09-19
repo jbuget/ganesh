@@ -51,6 +51,12 @@ class ProjectDetail:
     contributions: list[Contribution]
     #: Work packages attached to the mission, in alphabetical order.
     sub_projects: list[Project]
+    #: Technologies the service is built on, as the catalogue lists them.
+    stack: list[str]
+    #: Free tags the service is found by in the catalogue.
+    tags: list[str]
+    #: Internal missions this one relies on, in alphabetical order.
+    dependencies: list[Project]
     #: The project a work package belongs to. A project has none.
     parent: Project | None = None
 
@@ -71,6 +77,19 @@ class GetProjectDetailUseCase:
         self._assignees = assignees
         self._entries = entries
         self._users = users
+
+    async def _dependencies(self, project_id: int) -> list[Project]:
+        """The missions depended on, named rather than numbered.
+
+        The sheet shows their labels and the catalogue links to their pages:
+        an id alone would force the screen to fetch them one by one.
+        """
+        missions = []
+        for other_id in await self._details.list_dependencies(project_id):
+            mission = await self._projects.get_by_id(other_id)
+            if mission is not None:
+                missions.append(mission)
+        return sorted(missions, key=lambda mission: mission.label.lower())
 
     async def execute(self, project_id: int) -> ProjectDetail:
         mission = await self._projects.get_by_id(project_id)
@@ -141,5 +160,8 @@ class GetProjectDetailUseCase:
                 ),
                 key=lambda work_package: work_package.label.lower(),
             ),
+            stack=await self._details.list_stack(project_id),
+            tags=await self._details.list_tags(project_id),
+            dependencies=await self._dependencies(project_id),
             parent=parent,
         )

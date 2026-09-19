@@ -1,4 +1,9 @@
-"""Tables attached to a mission: departments, links, phases reached."""
+"""Tables attached to a mission.
+
+Departments, links and phases reached, and what the service catalogue adds:
+stack, tags and dependencies. All exist only through the project that carries
+them and disappear with it.
+"""
 
 from datetime import date
 
@@ -59,3 +64,43 @@ class ProjectPhaseReachedModel(Base):
         primary_key=True,
     )
     reached_at: Mapped[date] = mapped_column(Date)
+
+
+class ProjectStackModel(Base):
+    """Technologies a service is built on."""
+
+    __tablename__ = "project_stack"
+
+    project_id: Mapped[int] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    technology: Mapped[str] = mapped_column(String(64), primary_key=True)
+
+
+class ProjectTagModel(Base):
+    """Free tags a service is found by in the catalogue."""
+
+    __tablename__ = "project_tags"
+
+    project_id: Mapped[int] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    tag: Mapped[str] = mapped_column(String(64), primary_key=True)
+
+
+class ProjectDependencyModel(Base):
+    """Internal services a service relies on.
+
+    Deleting the service depended upon takes the row with it: a dependency on
+    something that no longer exists says nothing, whereas holding the deletion
+    back would make a catalogue entry a reason not to tidy up.
+    """
+
+    __tablename__ = "project_dependencies"
+
+    project_id: Mapped[int] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    depends_on_id: Mapped[int] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )

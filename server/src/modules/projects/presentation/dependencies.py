@@ -51,6 +51,9 @@ from src.modules.projects.application.use_cases.update_project_detail import (
     UpdateDescriptionUseCase,
     UpdateProjectDetailUseCase,
 )
+from src.modules.projects.application.use_cases.update_project_registry import (
+    UpdateProjectRegistryUseCase,
+)
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -228,6 +231,16 @@ def get_update_project_detail_use_case(
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> UpdateProjectDetailUseCase:
     return UpdateProjectDetailUseCase(
+        projects=projects, details=details, audit_logs=audit_logs
+    )
+
+
+def get_update_project_registry_use_case(
+    projects: ProjectRepository = Depends(get_project_repository),
+    details: ProjectDetailRepository = Depends(get_project_detail_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> UpdateProjectRegistryUseCase:
+    return UpdateProjectRegistryUseCase(
         projects=projects, details=details, audit_logs=audit_logs
     )
 

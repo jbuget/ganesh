@@ -17,6 +17,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     BoardMemberResponse,
     BoardResponse,
     LastUpdateResponse,
+    MissionRefResponse,
     MonthlyShareResponse,
     ParentResponse,
     PhaseReachedResponse,
@@ -55,6 +56,23 @@ def to_project_response(
         description=project.description,
         is_syncable_to_monday=project.is_syncable_to_monday,
         is_deletable=is_deletable,
+        slug=project.slug,
+        is_published=project.is_published,
+        summary=project.summary,
+        criticality=project.criticality,
+        service_type=project.service_type,
+        hosting=project.hosting,
+        has_microsoft_entra=project.has_microsoft_entra,
+        team=project.team,
+        slack_channel=project.slack_channel,
+        production_link=project.production_link,
+        staging_link=project.staging_link,
+        repository_link=project.repository_link,
+        documentation_link=project.documentation_link,
+        project_management_link=project.project_management_link,
+        monitoring_link=project.monitoring_link,
+        stats_page_link=project.stats_page_link,
+        stats_api_link=project.stats_api_link,
     )
 
 
@@ -183,6 +201,14 @@ def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
         ],
         sub_projects=[
             to_project_response(work_package) for work_package in detail.sub_projects
+        ],
+        stack=detail.stack,
+        tags=detail.tags,
+        dependencies=[
+            MissionRefResponse(
+                id=mission.id or 0, label=mission.label, slug=mission.slug
+            )
+            for mission in detail.dependencies
         ],
         parent=(
             ParentResponse(id=detail.parent.id or 0, label=detail.parent.label)

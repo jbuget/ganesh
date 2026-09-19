@@ -30,6 +30,23 @@ def to_entity(model: ProjectModel) -> Project:
         monday_subitem_id=model.monday_subitem_id,
         business_contacts=model.business_contacts,
         description=model.description,
+        slug=model.slug,
+        is_published=model.is_published,
+        summary=model.summary,
+        criticality=model.criticality,
+        service_type=model.service_type,
+        hosting=model.hosting,
+        has_microsoft_entra=model.has_microsoft_entra,
+        team=model.team,
+        slack_channel=model.slack_channel,
+        production_link=model.production_link,
+        staging_link=model.staging_link,
+        repository_link=model.repository_link,
+        documentation_link=model.documentation_link,
+        project_management_link=model.project_management_link,
+        monitoring_link=model.monitoring_link,
+        stats_page_link=model.stats_page_link,
+        stats_api_link=model.stats_api_link,
     )
 
 
@@ -41,6 +58,13 @@ class SqlProjectRepository(ProjectRepository):
 
     async def get_by_id(self, project_id: int) -> Project | None:
         model = await self._session.get(ProjectModel, project_id)
+        return to_entity(model) if model else None
+
+    async def get_by_slug(self, slug: str) -> Project | None:
+        result = await self._session.execute(
+            select(ProjectModel).where(ProjectModel.slug == slug)
+        )
+        model = result.scalars().first()
         return to_entity(model) if model else None
 
     async def list_all(self, include_inactive: bool = False) -> list[Project]:
@@ -75,6 +99,23 @@ class SqlProjectRepository(ProjectRepository):
             monday_subitem_id=project.monday_subitem_id,
             business_contacts=project.business_contacts,
             description=project.description,
+            slug=project.slug,
+            is_published=project.is_published,
+            summary=project.summary,
+            criticality=project.criticality,
+            service_type=project.service_type,
+            hosting=project.hosting,
+            has_microsoft_entra=project.has_microsoft_entra,
+            team=project.team,
+            slack_channel=project.slack_channel,
+            production_link=project.production_link,
+            staging_link=project.staging_link,
+            repository_link=project.repository_link,
+            documentation_link=project.documentation_link,
+            project_management_link=project.project_management_link,
+            monitoring_link=project.monitoring_link,
+            stats_page_link=project.stats_page_link,
+            stats_api_link=project.stats_api_link,
         )
         self._session.add(model)
         await self._session.flush()
@@ -102,6 +143,23 @@ class SqlProjectRepository(ProjectRepository):
         model.monday_subitem_id = project.monday_subitem_id
         model.business_contacts = project.business_contacts
         model.description = project.description
+        model.slug = project.slug
+        model.is_published = project.is_published
+        model.summary = project.summary
+        model.criticality = project.criticality
+        model.service_type = project.service_type
+        model.hosting = project.hosting
+        model.has_microsoft_entra = project.has_microsoft_entra
+        model.team = project.team
+        model.slack_channel = project.slack_channel
+        model.production_link = project.production_link
+        model.staging_link = project.staging_link
+        model.repository_link = project.repository_link
+        model.documentation_link = project.documentation_link
+        model.project_management_link = project.project_management_link
+        model.monitoring_link = project.monitoring_link
+        model.stats_page_link = project.stats_page_link
+        model.stats_api_link = project.stats_api_link
         await self._session.flush()
         return project
 
