@@ -63,15 +63,17 @@ export function ValidateMonthDialog({
           <AlertDialogTitle className="capitalize">Valider {month} ?</AlertDialogTitle>
           <AlertDialogDescription>
             Après validation, vous ne pourrez plus modifier ce mois. Seul un manager
-            pourra le reopen.
+            pourra le rouvrir.
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
           <dt className="text-muted-foreground">Total saisi</dt>
-          <dd className="text-right font-medium">{formatTotal(totalEntered)} day(s)</dd>
+          <dd className="text-right font-medium">
+            {formatTotal(totalEntered)} jour(s)
+          </dd>
           <dt className="text-muted-foreground">Jours ouvrés</dt>
-          <dd className="text-right font-medium">{workingDays} days</dd>
+          <dd className="text-right font-medium">{workingDays} jours</dd>
         </dl>
 
         {missing > 0 && (

@@ -14,7 +14,7 @@ export function useSignOut(): () => Promise<void> {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  return async function seDeconnecter() {
+  return async function signOut() {
     await fetch("/api/auth/signout", { method: "POST" });
     queryClient.clear();
     router.replace("/");

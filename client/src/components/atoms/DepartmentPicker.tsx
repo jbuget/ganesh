@@ -23,12 +23,10 @@ export function DepartmentPicker({ values, onChange }: DepartmentPickerProps) {
   const chosen = new Set(values);
 
   function toggle(value: Department) {
-    const next_ones = new Set(chosen);
-    if (next_ones.has(value)) next_ones.delete(value);
-    else next_ones.add(value);
-    void onChange(
-      DEPARTMENTS.filter((d) => next_ones.has(d.value)).map((d) => d.value),
-    );
+    const next = new Set(chosen);
+    if (next.has(value)) next.delete(value);
+    else next.add(value);
+    void onChange(DEPARTMENTS.filter((d) => next.has(d.value)).map((d) => d.value));
   }
 
   return (
@@ -56,17 +54,17 @@ export function DepartmentPicker({ values, onChange }: DepartmentPickerProps) {
 
       <PopoverContent align="start" className="w-64 p-1">
         <ul>
-          {DEPARTMENTS.map((departement) => {
-            const present = chosen.has(departement.value);
+          {DEPARTMENTS.map((department) => {
+            const present = chosen.has(department.value);
             return (
-              <li key={departement.value}>
+              <li key={department.value}>
                 <button
                   type="button"
                   aria-pressed={present}
-                  onClick={() => toggle(departement.value)}
+                  onClick={() => toggle(department.value)}
                   className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
                 >
-                  <span className="min-w-0 flex-1 truncate">{departement.label}</span>
+                  <span className="min-w-0 flex-1 truncate">{department.label}</span>
                   {present && (
                     <Check className="size-4 shrink-0 text-sky-600" aria-hidden />
                   )}

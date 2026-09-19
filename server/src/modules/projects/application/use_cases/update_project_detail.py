@@ -67,7 +67,7 @@ class UpdateProjectDetailUseCase:
     async def execute(self, command: UpdateProjectDetailCommand) -> None:
         mission = await self._projects.get_by_id(command.project_id)
         if mission is None:
-            raise EntityNotFoundError("Mission inconnue.")
+            raise EntityNotFoundError("The mission cannot be found.")
 
         previous_departments = await self._details.list_departments(command.project_id)
         contacts = (command.business_contacts or "").strip() or None
@@ -78,9 +78,9 @@ class UpdateProjectDetailUseCase:
 
         # One trace per field, as editing a mission already does.
         for field, before, after in (
-            ("contacts_metier", previous, contacts),
+            ("business_contacts", previous, contacts),
             (
-                "departements",
+                "departments",
                 ", ".join(sorted(d.value for d in previous_departments)),
                 ", ".join(sorted(d.value for d in command.departments)),
             ),
@@ -112,7 +112,7 @@ class AddProjectLinkUseCase:
 
     async def execute(self, command: AddLinkCommand) -> ProjectLink:
         if await self._projects.get_by_id(command.project_id) is None:
-            raise EntityNotFoundError("Mission inconnue.")
+            raise EntityNotFoundError("The mission cannot be found.")
         return await self._details.add_link(
             ProjectLink(
                 id=None,
@@ -153,7 +153,7 @@ class UpdateDescriptionUseCase:
     async def execute(self, command: UpdateDescriptionCommand) -> None:
         mission = await self._projects.get_by_id(command.project_id)
         if mission is None:
-            raise EntityNotFoundError("Mission inconnue.")
+            raise EntityNotFoundError("The mission cannot be found.")
 
         description = (command.description or "").strip() or None
         if description == mission.description:

@@ -31,12 +31,12 @@ export function FilterSelect({ label, options, values, onChange }: FilterSelectP
   const chosen = new Set(values);
 
   function toggle(value: string) {
-    const next_ones = new Set(chosen);
-    if (next_ones.has(value)) next_ones.delete(value);
-    else next_ones.add(value);
+    const next = new Set(chosen);
+    if (next.has(value)) next.delete(value);
+    else next.add(value);
     // The order of the options is what counts: two identical selections
     // produce the same address, whatever the order of the clicks.
-    onChange(options.filter((o) => next_ones.has(o.value)).map((o) => o.value));
+    onChange(options.filter((o) => next.has(o.value)).map((o) => o.value));
   }
 
   return (

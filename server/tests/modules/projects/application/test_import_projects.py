@@ -60,13 +60,13 @@ async def test_projects_are_created() -> None:
 
 async def test_an_existing_project_is_left_alone() -> None:
     """Replaying an import must not duplicate the reference list."""
-    existant = Project(
+    existing = Project(
         id=1,
         label="Portail bailleurs",
         kind=ProjectKind.PROJECT,
         status=ProjectStatus.SCOPING,
     )
-    use_case, repo = build([existant])
+    use_case, repo = build([existing])
 
     report = await use_case.execute(
         ImportProjectsCommand(actor_id=1, rows=[line("Portail bailleurs")])

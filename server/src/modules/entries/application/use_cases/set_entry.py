@@ -42,16 +42,16 @@ class SetEntryUseCase:
     async def execute(self, command: SetEntryCommand) -> Entry:
         actor = await self._users.get_by_id(command.actor_id)
         if actor is None:
-            raise EntityNotFoundError("Utilisateur inconnu.")
+            raise EntityNotFoundError("The user cannot be found.")
         if not actor.can_edit_open_months():
             raise ForbiddenActionError("A deactivated user can no longer enter time.")
 
         if await self._users.get_by_id(command.target_user_id) is None:
-            raise EntityNotFoundError("Utilisateur cible inconnu.")
+            raise EntityNotFoundError("The target user cannot be found.")
 
         project = await self._projects.get_by_id(command.project_id)
         if project is None:
-            raise EntityNotFoundError("Mission inconnue.")
+            raise EntityNotFoundError("The mission cannot be found.")
 
         # Domain invariants, checked before any write.
         ensure_day_is_workable(command.day)

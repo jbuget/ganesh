@@ -50,17 +50,17 @@ def guess_icon(url: str) -> LinkIcon:
         first_segment = parsed.path.lstrip("/").split("/")[0]
         return _ICON_BY_GOOGLE_PATH.get(first_segment, LinkIcon.DOCUMENT)
 
-    for domaine, icon in _ICON_BY_DOMAIN.items():
-        if _matches(host, domaine):
+    for domain, icon in _ICON_BY_DOMAIN.items():
+        if _matches(host, domain):
             return icon
 
     return LinkIcon.LINK
 
 
-def _matches(host: str, domaine: str) -> bool:
+def _matches(host: str, domain: str) -> bool:
     """The domain itself, or one of its subdomains — and nothing else.
 
     The comparison hinges on a dot: without it, `myfigma.com` would pass for
     Figma.
     """
-    return host == domaine or host.endswith(f".{domaine}")
+    return host == domain or host.endswith(f".{domain}")

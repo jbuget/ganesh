@@ -167,7 +167,7 @@ class BoardCardResponse(BaseModel):
 
     project: ProjectResponse
     consumed_days: float
-    #: Jours de construction seuls : c'est ce que l'estime couvre.
+    #: Build days alone: that is what the estimate covers.
     build_days: float
     contributors: list[BoardMemberResponse]
     comments: int

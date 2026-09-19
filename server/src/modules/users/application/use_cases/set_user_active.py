@@ -27,11 +27,11 @@ class SetUserActiveUseCase:
     async def execute(self, command: SetUserActiveCommand) -> User:
         actor = await self._users.get_by_id(command.actor_id)
         if actor is None:
-            raise EntityNotFoundError("Utilisateur inconnu.")
+            raise EntityNotFoundError("The user cannot be found.")
 
         target = await self._users.get_by_id(command.target_user_id)
         if target is None:
-            raise EntityNotFoundError("Collaborateur inconnu.")
+            raise EntityNotFoundError("The teammate cannot be found.")
 
         if not self._is_allowed(actor, target, command.is_active):
             raise ForbiddenActionError(

@@ -23,13 +23,13 @@ class ChangeUserRoleUseCase:
     async def execute(self, command: ChangeRoleCommand) -> User:
         actor = await self._users.get_by_id(command.actor_id)
         if actor is None:
-            raise EntityNotFoundError("Utilisateur inconnu.")
+            raise EntityNotFoundError("The user cannot be found.")
         if not actor.can_manage_teammates():
             raise ForbiddenActionError("Only a manager can change a teammate's role.")
 
         target = await self._users.get_by_id(command.target_user_id)
         if target is None:
-            raise EntityNotFoundError("Collaborateur inconnu.")
+            raise EntityNotFoundError("The teammate cannot be found.")
 
         previous = target.role
         target.role = command.role

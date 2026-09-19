@@ -60,7 +60,7 @@ async def seed(session: AsyncSession) -> tuple[int, int, int]:
             status=ProjectStatus.DEVELOPMENT,
         )
     )
-    epargne = await projects.add(
+    spared = await projects.add(
         Project(
             id=None,
             label="Extranet",
@@ -68,8 +68,8 @@ async def seed(session: AsyncSession) -> tuple[int, int, int]:
             status=ProjectStatus.DEVELOPMENT,
         )
     )
-    assert user.id is not None and target.id is not None and epargne.id is not None
-    return user.id, target.id, epargne.id
+    assert user.id is not None and target.id is not None and spared.id is not None
+    return user.id, target.id, spared.id
 
 
 async def an_entry(
@@ -99,10 +99,10 @@ def build(session: AsyncSession) -> RemoveMissionFromMonthUseCase:
 async def test_the_mission_leaves_the_month_and_its_neighbours_stay(
     db_session: AsyncSession,
 ) -> None:
-    user_id, target, epargne = await seed(db_session)
+    user_id, target, spared = await seed(db_session)
     await an_entry(db_session, user_id, target, 14, 1.0)
     await an_entry(db_session, user_id, target, 15, 0.5)
-    await an_entry(db_session, user_id, epargne, 14, 1.0)
+    await an_entry(db_session, user_id, spared, 14, 1.0)
 
     removed = await build(db_session).execute(
         RemoveMissionCommand(
@@ -112,14 +112,14 @@ async def test_the_mission_leaves_the_month_and_its_neighbours_stay(
 
     assert removed == 1.5
     remaining = await SqlEntryRepository(db_session).list_for_month(user_id, MONTH)
-    assert [entry.project_id for entry in remaining] == [epargne]
+    assert [entry.project_id for entry in remaining] == [spared]
 
 
 async def test_a_month_without_the_mission_is_left_untouched(
     db_session: AsyncSession,
 ) -> None:
-    user_id, target, epargne = await seed(db_session)
-    await an_entry(db_session, user_id, epargne, 14, 1.0)
+    user_id, target, spared = await seed(db_session)
+    await an_entry(db_session, user_id, spared, 14, 1.0)
 
     removed = await build(db_session).execute(
         RemoveMissionCommand(

@@ -34,7 +34,7 @@ class CreateProjectUseCase:
     async def execute(self, command: CreateProjectCommand) -> Project:
         actor = await self._users.get_by_id(command.actor_id)
         if actor is None:
-            raise EntityNotFoundError("Utilisateur inconnu.")
+            raise EntityNotFoundError("The user cannot be found.")
 
         if command.kind is ProjectKind.WORK_PACKAGE:
             parent = (

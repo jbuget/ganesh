@@ -4,7 +4,7 @@ import { since } from "./relative-dates";
 
 const NOW = new Date("2026-09-17T12:00:00");
 
-describe("depuis", () => {
+describe("since", () => {
   it("says « à l'instant » within the minute", () => {
     expect(since("2026-09-17T11:59:30", NOW)).toBe("à l'instant");
   });

@@ -113,8 +113,8 @@ describe("MissionRow", () => {
   });
 
   it("never lets the run make a mission overrun its build estimate", () => {
-    // Portail a ete estime a douze jours et maintenu quarante : il n'est pas
-    // en retard, l'estime n'a jamais couvert son exploitation.
+    // Portail was estimated at twelve days and kept alive for forty: it is not
+    // late, the estimate never covered its operations.
     line(
       <MissionRow
         mission={mission({}, { cost: { build_days: 10, run_days: 40 } })}
@@ -155,8 +155,8 @@ describe("MissionRow", () => {
   });
 
   it("carries what its work packages cost while it is folded", () => {
-    // Repliee, la ligne dit ce que le service a coute en entier ; depliee,
-    // chaque ligne reprend son chiffre propre.
+    // Folded, the row tells what the service cost as a whole; unfolded, every
+    // row reads its own figure again.
     line(
       <MissionRow
         mission={mission(
@@ -383,8 +383,8 @@ describe("MissionRow", () => {
   });
 
   it("still reads the real ratio when nothing has been spent yet", () => {
-    // « 12 jrs. » seul ne dirait pas si le nombre compte ce qui a ete
-    // consomme ou ce qui etait prevu.
+    // « 12 jrs. » alone would not say whether the figure counts what has been
+    // spent or what was planned.
     line(
       <MissionRow
         mission={mission()}

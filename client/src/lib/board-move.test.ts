@@ -20,7 +20,7 @@ const columns = (filled: Partial<Record<ProjectStatus, number[]>>): Columns =>
 
 const ids = (cards: BoardCardResponse[]) => cards.map((c) => c.project.id);
 
-describe("localiser", () => {
+describe("locate", () => {
   it("returns the phase and rank of a card", () => {
     const state = columns({ scoping: [1, 2], development: [3] });
 
@@ -33,7 +33,7 @@ describe("localiser", () => {
   });
 });
 
-describe("indexVise", () => {
+describe("targetIndex", () => {
   it("inserts before the hovered card", () => {
     expect(targetIndex(columns({ scoping: [1, 2, 3] }).scoping, 2, false)).toBe(1);
   });
@@ -47,7 +47,7 @@ describe("indexVise", () => {
   });
 });
 
-describe("changerDeColonne", () => {
+describe("moveToColumn", () => {
   it("removes the card from its phase and inserts it into the new one", () => {
     const state = columns({ scoping: [1, 2], development: [3, 4] });
 
@@ -81,7 +81,7 @@ describe("changerDeColonne", () => {
   });
 });
 
-describe("reordonner", () => {
+describe("reorder", () => {
   it("moves the card to the rank aimed at within its phase", () => {
     const after = reorder(columns({ scoping: [1, 2, 3] }), 1, 2);
 

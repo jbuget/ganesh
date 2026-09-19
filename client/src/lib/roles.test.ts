@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { ROLES, roleLabel } from "./roles";
 
-describe("libelleRole", () => {
+describe("roleLabel", () => {
   it("names the role in French", () => {
     expect(roleLabel("MANAGER")).toBe("Manager");
     expect(roleLabel("TEAMMATE")).toBe("Collaborateur");

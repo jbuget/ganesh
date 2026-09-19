@@ -43,11 +43,11 @@ class MoveProjectUseCase:
         self, command: MoveProjectCommand, today: date | None = None
     ) -> Project:
         if await self._users.get_by_id(command.actor_id) is None:
-            raise EntityNotFoundError("Utilisateur inconnu.")
+            raise EntityNotFoundError("The user cannot be found.")
 
         mission = await self._projects.get_by_id(command.project_id)
         if mission is None or mission.id is None:
-            raise EntityNotFoundError("Mission inconnue.")
+            raise EntityNotFoundError("The mission cannot be found.")
         if not mission.appears_on_board:
             raise ValidationError("Off-project work does not appear on the board.")
 

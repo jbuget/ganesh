@@ -97,7 +97,7 @@ class TestMonthlyRate:
         assert cost.monthly_run_rate(TODAY) is None
 
     def test_the_rate_is_read_over_the_last_three_months(self) -> None:
-        # 9 jours sur 90 : trois mois a trois jours par mois.
+        # 9 days out of 90: three months at three days a month.
         cost = a_cost(run=40.0, recent_run=9.0, in_run_since=date(2024, 1, 1))
 
         assert cost.monthly_run_rate(TODAY) == 3.0
@@ -105,7 +105,7 @@ class TestMonthlyRate:
     def test_a_younger_mission_is_read_over_its_whole_run(self) -> None:
         """Between one and three months, the window is what the mission has
         lived: dividing by three would halve a pace it never had."""
-        # 45 jours de run, 3 jours consommes : deux jours par mois.
+        # 45 days of run, 3 days spent: two days a month.
         cost = a_cost(run=3.0, recent_run=3.0, in_run_since=date(2026, 8, 4))
 
         assert cost.monthly_run_rate(TODAY) == 2.0

@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
-/** Fournit le cache React Query a l'application. */
+/** Hands the React Query cache to the application. */
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [client] = useState(
     () =>

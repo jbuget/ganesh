@@ -37,14 +37,14 @@ export function SortableColumnHeader({
   alignRight = false,
   className,
 }: SortableColumnHeaderProps) {
-  const is_active = sorted.column === column;
+  const isActive = sorted.column === column;
   const ascending = sorted.direction === "asc";
 
   return (
     // No padding of its own: the button takes the whole cell, and it is the
     // button that spaces the title off the edges.
     <TableHead
-      aria-sort={is_active ? (ascending ? "ascending" : "descending") : "none"}
+      aria-sort={isActive ? (ascending ? "ascending" : "descending") : "none"}
       className={["p-0", className ?? ""].join(" ").trim()}
     >
       <button
@@ -55,7 +55,7 @@ export function SortableColumnHeader({
         }`}
       >
         {label}
-        {is_active ? (
+        {isActive ? (
           ascending ? (
             <ArrowUp className="size-3.5 shrink-0" aria-label="Ordre croissant" />
           ) : (

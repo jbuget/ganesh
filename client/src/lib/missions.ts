@@ -1,6 +1,6 @@
 import type { ProjectResponse } from "@/lib/api/generated/model";
 
-/** Missions proposables a l'ajout, reparties par nature. */
+/** Missions on offer for adding, sorted by nature. */
 export interface AvailableMissions {
   projectMissions: ProjectResponse[];
   offProject: ProjectResponse[];

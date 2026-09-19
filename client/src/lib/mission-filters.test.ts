@@ -43,7 +43,7 @@ const filters = (over: Partial<MissionFilters> = {}): MissionFilters => ({
   ...over,
 });
 
-describe("filtreActif", () => {
+describe("hasActiveFilter", () => {
   it("sees no filter on empty criteria", () => {
     expect(hasActiveFilter(NO_FILTER)).toBe(false);
   });
@@ -183,7 +183,7 @@ describe("archived missions", () => {
   });
 });
 
-describe("filtrage par phase", () => {
+describe("filtering by phase", () => {
   const cards = [
     card({ project: { id: 1, status: "development" } }),
     card({ project: { id: 2, status: "scoping" } }),
