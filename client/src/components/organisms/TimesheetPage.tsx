@@ -7,18 +7,24 @@ import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { MissionSelector } from "@/components/atoms/MissionSelector";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { PageLayout } from "@/components/organisms/PageLayout";
+import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { RemoveMissionDialog } from "@/components/atoms/RemoveMissionDialog";
 import { TeammateSelector } from "@/components/atoms/TeammateSelector";
 import { ValidateMonthDialog } from "@/components/atoms/ValidateMonthDialog";
 import { TimesheetGrid } from "@/components/organisms/TimesheetGrid";
 import { Button } from "@/components/ui/button";
 import { formatMonth } from "@/lib/dates";
+import { useOpenedMission } from "@/lib/opened-mission";
 import { useTimesheetMonth } from "@/lib/use-timesheet-month";
 
 /** Entry screen: the month grid and its navigation. */
 export function TimesheetPage() {
   const month = useTimesheetMonth();
   const { grid, cursor } = month;
+  // The same panel as the kanban and the reference list, held by the same
+  // address: a mission opened from one's month is shared by a link, and going
+  // back closes it.
+  const panel = useOpenedMission();
 
   const [declareOpen, setDeclareOpen] = useState(false);
   const [validateOpen, setValidateOpen] = useState(false);
@@ -117,6 +123,7 @@ export function TimesheetPage() {
           today={month.today}
           onSetValue={month.setDayValue}
           onRemoveMission={grid.is_writable ? askToRemove : undefined}
+          onOpenMission={(projectId) => panel.open(projectId)}
           addingMission={
             grid.is_writable ? (
               <MissionSelector
@@ -148,6 +155,21 @@ export function TimesheetPage() {
         onOpenChange={setDeclareOpen}
         onConfirm={month.declareProject}
       />
+
+      {panel.openedMission && (
+        <ProjectPanel
+          // The tab is part of the key: reopening the same mission on its
+          // thread must remount the panel, which picks its tab on opening.
+          key={`${panel.openedMission}:${panel.openTab ?? ""}`}
+          projectId={panel.openedMission}
+          tab={panel.openTab}
+          onClose={panel.close}
+          // A mission renamed or re-estimated in the panel must read the same
+          // in the grid behind it.
+          onMissionChanged={month.refresh}
+          onOpenMission={(projectId) => panel.open(projectId)}
+        />
+      )}
 
       {grid && (
         <ValidateMonthDialog

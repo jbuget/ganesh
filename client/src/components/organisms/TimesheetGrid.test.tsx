@@ -288,4 +288,25 @@ describe("TimesheetGrid", () => {
       "true",
     );
   });
+
+  it("opens the mission panel when its label is clicked", async () => {
+    const onOpenMission = vi.fn();
+    render(
+      <TimesheetGrid {...baseProps} grid={makeGrid()} onOpenMission={onOpenMission} />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Ouvrir Portail bailleurs" }),
+    );
+
+    expect(onOpenMission).toHaveBeenCalledWith(10);
+  });
+
+  it("leaves the mission label plain when no panel can be opened", () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    expect(
+      screen.queryByRole("button", { name: "Ouvrir Portail bailleurs" }),
+    ).not.toBeInTheDocument();
+  });
 });
