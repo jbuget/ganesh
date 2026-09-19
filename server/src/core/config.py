@@ -32,6 +32,18 @@ class Settings(BaseSettings):
     azure_ad_client_id: str = ""
     require_auth: bool = True
 
+    # La porte de secours, le temps qu'Entra declare l'application. Entra
+    # eteint, un seul compte entre, avec le mot de passe donne ici. Sans mot
+    # de passe, la porte reste close : on n'ouvre pas a qui laisse le champ
+    # vide.
+    auth_entra: bool = True
+    auth_login: str = ""
+    auth_password: str = ""
+    auth_local_email: str = "j.buget@waat.fr"
+    # Signe les jetons de cette porte. Propre a chaque environnement : une
+    # clef partagee laisserait forger une session ailleurs.
+    secret_key: str = ""
+
     # How often one API key may call, as a token bucket. Counted per process:
     # behind several workers the effective allowance is multiplied by their
     # number. Generous on purpose — this is a guard rail against a runaway

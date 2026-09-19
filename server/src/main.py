@@ -8,6 +8,9 @@ from src.core.config import get_settings
 from src.modules.api_keys.presentation.api.routes.api_key_router import (
     router as api_key_router,
 )
+from src.modules.auth.presentation.routes.local_auth_router import (
+    router as local_auth_router,
+)
 from src.modules.calendar.presentation.api.routes.calendar_router import (
     router as calendar_router,
 )
@@ -49,6 +52,7 @@ app.add_middleware(
 register_domain_exception_handlers(app)
 
 for module_router in (
+    local_auth_router,
     user_router,
     api_key_router,
     project_router,

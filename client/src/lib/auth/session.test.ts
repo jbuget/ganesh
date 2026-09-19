@@ -48,6 +48,14 @@ describe("la session scellée", () => {
     expect(await openSession(tampered)).toBeNull();
   });
 
+  /** La porte de secours n'en délivre pas : une session sans jeton de
+   *  renouvellement reste une session valable. */
+  it("accepte une session sans de quoi la renouveler", async () => {
+    const local = { ...session, refreshToken: "" };
+
+    expect(await openSession(await sealSession(local))).toEqual(local);
+  });
+
   it("rend null sur un cookie qui ne veut rien dire", async () => {
     expect(await openSession("n'importe quoi")).toBeNull();
     expect(await openSession("")).toBeNull();

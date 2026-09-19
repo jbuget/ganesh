@@ -38,6 +38,11 @@ async function freshSession(): Promise<{ session: Session | null; renewed: boole
   const session = await currentSession();
   if (!session || !needsRefresh(session)) return { session, renewed: false };
 
+  // Nothing to renew with: the fallback door issues no renewal token, so an
+  // expired session there is simply over. The API will say 401, and the
+  // screen will ask to sign in again.
+  if (!session.refreshToken) return { session: null, renewed: false };
+
   const tokens = await refreshTokens(session.refreshToken);
   // A renewal Entra refuses is a session that has run its course: we relay
   // without a token, the API answers 401, and the screen sends the person to

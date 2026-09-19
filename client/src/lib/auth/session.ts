@@ -19,7 +19,12 @@ export const SESSION_COOKIE = "timesheet_token";
 export interface Session {
   /** What the API is shown: Entra signed it, the API verifies that signature. */
   idToken: string;
-  /** What buys a fresh identity token when this one runs out. */
+  /**
+   * What buys a fresh identity token when this one runs out.
+   *
+   * Empty on a session opened by the fallback door: that one issues no
+   * renewal token, so its session lasts what its token lasts.
+   */
   refreshToken: string;
   /** When the identity token stops being accepted, in seconds since the epoch. */
   expiresAt: number;
@@ -80,8 +85,10 @@ export async function openSession(sealed: string): Promise<Session | null> {
   const payload = (await unseal(sealed)) as unknown as Session | null;
   if (!payload) return null;
   const { idToken, refreshToken, expiresAt, email } = payload;
-  if (!idToken || !refreshToken || !expiresAt || !email) return null;
-  return { idToken, refreshToken, expiresAt, email };
+  // The renewal token is the one thing a session may lack: the fallback door
+  // hands none out.
+  if (!idToken || !expiresAt || !email) return null;
+  return { idToken, refreshToken: refreshToken ?? "", expiresAt, email };
 }
 
 /** The session the incoming request carries, if it carries one. */
