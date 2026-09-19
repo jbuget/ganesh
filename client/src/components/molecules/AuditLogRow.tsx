@@ -23,10 +23,8 @@ function atTime(iso: string): string {
  * value is often long enough to push the sentence off the panel, and what is
  * being read first is who did what.
  *
- * No avatar, and no rule between the lines. A log is read as a column of
- * sentences, from the top down: an initials badge repeated on every line marks
- * nothing, since the name is right beside it, and a rule under each of two
- * hundred lines draws a grid nobody is comparing across.
+ * No avatar: an initials badge repeated on every line marks nothing, the name
+ * being right beside it on the same line.
  */
 export function AuditLogRow({ entry }: AuditLogRowProps) {
   const sentence = auditSentence(entry);
@@ -35,7 +33,7 @@ export function AuditLogRow({ entry }: AuditLogRowProps) {
   const actor = entry.actor;
 
   return (
-    <li className="flex items-baseline gap-3 py-1">
+    <li className="flex items-baseline gap-3 border-b border-slate-200 px-3 py-2 last:border-b-0">
       <span className="w-10 shrink-0 text-xs tabular-nums text-slate-400">
         {atTime(entry.at)}
       </span>
