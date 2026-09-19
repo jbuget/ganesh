@@ -1,6 +1,7 @@
 "use client";
 
 import { ArchivedCallout } from "@/components/atoms/ArchivedCallout";
+import { AttachMissionDialog } from "@/components/atoms/AttachMissionDialog";
 import { DeleteMissionDialog } from "@/components/atoms/DeleteMissionDialog";
 import { MissionMenu } from "@/components/atoms/MissionMenu";
 import { ProjectSteeringTab } from "@/components/organisms/ProjectSteeringTab";
@@ -43,6 +44,10 @@ interface ProjectTabsProps {
   addLink: (label: string, url: string, icon: LinkIcon | null) => Promise<void>;
   removeLink: (linkId: number) => Promise<void>;
   addSubProject: (label: string) => Promise<void>;
+  /** Makes the mission a work package of the project chosen. */
+  attachTo: (parentId: number) => Promise<void>;
+  /** Takes the work package back out as a project of its own. */
+  detach: () => Promise<void>;
   archive: () => Promise<void>;
   unarchive: () => Promise<void>;
   /**
@@ -77,6 +82,8 @@ export function ProjectTabs({
   addLink,
   removeLink,
   addSubProject,
+  attachTo,
+  detach,
   archive,
   unarchive,
   deleteMission,
@@ -86,6 +93,14 @@ export function ProjectTabs({
   // loaded after mounting anyway — nothing is rendered server-side.
   const [now] = useState(() => new Date());
   const [isDeleteOpen, setDeleteOpen] = useState(false);
+  const [isAttachOpen, setAttachOpen] = useState(false);
+
+  const { kind, parent_id: parentId } = detail.project;
+  // Off-project work is not a slice of anything: absences and training belong
+  // to no project. Everything else may move — a work package included, which
+  // is how an aim taken at the wrong project is corrected.
+  const belongsToAProject = kind === "work_package";
+  const canBeAttached = kind !== "off_project";
 
   return (
     <Tabs
@@ -111,11 +126,30 @@ export function ProjectTabs({
 
         <MissionMenu
           archived={!detail.project.is_active}
+          onAttach={canBeAttached ? () => setAttachOpen(true) : undefined}
+          onDetach={belongsToAProject ? detach : undefined}
+          parentLabel={detail.parent?.label ?? null}
           onArchive={archive}
           onUnarchive={unarchive}
           onDelete={() => setDeleteOpen(true)}
         />
       </div>
+
+      {/* What the sheet already shows is what the dialog argues from: the
+          packages attached and the catalogue card are exactly what the server
+          refuses a move over. */}
+      {isAttachOpen && (
+        <AttachMissionDialog
+          open
+          onOpenChange={setAttachOpen}
+          missionId={detail.project.id}
+          label={detail.project.label}
+          subProjects={detail.sub_projects.length}
+          published={detail.project.is_published}
+          currentParentId={parentId}
+          onConfirm={attachTo}
+        />
+      )}
 
       {/* The count the sheet already shows is what the dialog argues from:
           days declared and work packages attached are exactly what the

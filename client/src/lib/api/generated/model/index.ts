@@ -14,6 +14,7 @@ export * from "./apiKeyResponse";
 export * from "./apiKeyScope";
 export * from "./apiKeyState";
 export * from "./assignMemberParams";
+export * from "./attachProjectRequest";
 export * from "./boardCardResponse";
 export * from "./boardColumnResponse";
 export * from "./boardMemberResponse";

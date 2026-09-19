@@ -18,6 +18,10 @@ from src.modules.projects.application.use_cases.assign_member import (
     AssignMemberUseCase,
     UnassignMemberUseCase,
 )
+from src.modules.projects.application.use_cases.attach_project import (
+    AttachProjectUseCase,
+    DetachProjectUseCase,
+)
 from src.modules.projects.application.use_cases.change_project_status import (
     ChangeProjectStatusUseCase,
 )
@@ -145,6 +149,22 @@ def get_delete_project_use_case(
     return DeleteProjectUseCase(
         users=users, projects=projects, entries=entries, audit_logs=audit_logs
     )
+
+
+def get_attach_project_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> AttachProjectUseCase:
+    return AttachProjectUseCase(users=users, projects=projects, audit_logs=audit_logs)
+
+
+def get_detach_project_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> DetachProjectUseCase:
+    return DetachProjectUseCase(users=users, projects=projects, audit_logs=audit_logs)
 
 
 def get_update_project_use_case(

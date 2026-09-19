@@ -54,3 +54,39 @@ def with_resolved_category(project: Project, parent: Project | None) -> Project:
     if project.kind is not ProjectKind.WORK_PACKAGE:
         return project
     return replace(project, category=parent.category if parent else None)
+
+
+def ensure_can_be_attached(
+    project: Project, parent: Project, sub_projects: int
+) -> None:
+    """Refuses turning a mission into a work package of another one.
+
+    Rearranging the reference list is ordinary: one declares two projects
+    before realising they are two slices of a single service. What the rules
+    guard is that the move loses nothing — no level the screens cannot read, no
+    catalogue card gone without anyone saying so.
+    """
+    if project.id == parent.id:
+        raise ValidationError(f"« {project.label} » cannot be attached to itself.")
+    if project.is_off_project:
+        raise ValidationError(
+            f"« {project.label} » is off-project work: "
+            "it is not a slice of a project."
+        )
+    if sub_projects > 0:
+        raise ValidationError(
+            f"« {project.label} » carries sub-projects of its own: "
+            "the hierarchy stops at two levels. Detach them first."
+        )
+    if project.is_published:
+        raise ValidationError(
+            f"« {project.label} » is published in the catalogue: "
+            "unpublish it before attaching it, or the card disappears."
+        )
+    ensure_can_be_parent(parent)
+
+
+def ensure_can_be_detached(project: Project) -> None:
+    """Refuses detaching what is not attached to anything."""
+    if project.kind is not ProjectKind.WORK_PACKAGE:
+        raise ValidationError(f"« {project.label} » is not a sub-project.")

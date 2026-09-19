@@ -101,6 +101,18 @@ class TestPublication:
                 **{**PUBLISHABLE, "kind": ProjectKind.OFF_PROJECT, "status": None}
             )
 
+    def test_a_work_package_cannot_be_published(self) -> None:
+        """The catalogue draws one card per service, not one per slice of it.
+
+        A project cut into four packages is still one service, at one address:
+        publishing the packages would put four cards on waat.tools for the one
+        thing the team delivers.
+        """
+        with pytest.raises(ValidationError, match="work package"):
+            make_project(
+                **{**PUBLISHABLE, "kind": ProjectKind.WORK_PACKAGE, "parent_id": 9}
+            )
+
     def test_an_unpublished_mission_may_leave_everything_blank(self) -> None:
         project = make_project()
         assert project.slug is None

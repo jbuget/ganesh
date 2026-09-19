@@ -29,6 +29,12 @@ class CreateProjectRequest(BaseModel):
     estimated_days: float | None = None
 
 
+class AttachProjectRequest(BaseModel):
+    """Naming the project a mission becomes a slice of."""
+
+    parent_id: int
+
+
 class ChangeStatusRequest(BaseModel):
     """Changing the phase of a mission."""
 
@@ -132,7 +138,6 @@ class UpdateProjectRequest(BaseModel):
     priority: ProjectPriority | None = None
     go_live_date: date | None = None
     is_active: bool | None = None
-    parent_id: int | None = None
     monday_item_id: str | None = None
     monday_subitem_id: str | None = None
 

@@ -54,6 +54,8 @@ function tabs(project: { is_deletable: boolean; consumed_days: number }) {
       addLink={vi.fn()}
       removeLink={vi.fn()}
       addSubProject={vi.fn()}
+      attachTo={vi.fn()}
+      detach={vi.fn()}
       archive={vi.fn()}
       unarchive={vi.fn()}
       deleteMission={deleteMission}

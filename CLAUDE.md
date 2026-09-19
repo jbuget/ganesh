@@ -374,6 +374,17 @@ criticality publish. A field belongs to one side or the other, never to both.
 
 - Publishing asks for a slug, a summary, a criticality and a type: what the
   catalogue cannot draw a card without. Off-project work is never published.
+- **The catalogue draws one card per service, and a sub-project is not one.** A
+  project cut into lots is still one product at one address: a work package is
+  published through its project, never beside it. The domain refuses the
+  combination, so `GET /projects/catalog` carries no lot by construction.
+- **A project joins another from the reference list**, by dragging its row onto
+  a project or through the mission menu, which is also the way back out. The
+  move carries nothing away: the phase, the estimate and the days booked stay
+  on the lot, and the project reads their sum. Only the strategic axis is given
+  up, since a lot reads its project's. A published project is refused — it must
+  be unpublished first, or its card would leave waat.tools with nobody saying
+  so.
 - A slug is chosen once and kept: it is a public address, and it must survive
   the mission being renamed.
 - `description` is the full sheet in markdown, `summary` the one line a card

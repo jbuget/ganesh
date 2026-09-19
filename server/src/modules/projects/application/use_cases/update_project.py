@@ -13,7 +13,6 @@ from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
 from src.modules.projects.domain.services.hierarchy import (
-    ensure_can_be_parent,
     ensure_carries_no_own_category,
     with_resolved_category,
 )
@@ -29,7 +28,6 @@ EDITABLE_FIELDS = (
     "priority",
     "go_live_date",
     "is_active",
-    "parent_id",
     "monday_item_id",
     "monday_subitem_id",
     # Service sheet.
@@ -70,14 +68,6 @@ class UpdateProjectUseCase:
         project = await self._projects.get_by_id(command.project_id)
         if project is None:
             raise EntityNotFoundError("The mission cannot be found.")
-
-        # `isinstance` rules out both ABSENT and a deliberate detach (None).
-        parent_id = command.parent_id
-        if isinstance(parent_id, int):
-            parent = await self._projects.get_by_id(parent_id)
-            if parent is None:
-                raise EntityNotFoundError("The parent project cannot be found.")
-            ensure_can_be_parent(parent)
 
         # A public address points at one mission: letting two claim it would
         # make the catalogue page depend on which one is read first.
