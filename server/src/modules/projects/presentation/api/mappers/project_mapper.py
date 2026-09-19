@@ -3,6 +3,7 @@
 from datetime import date
 
 from src.modules.projects.application.dtos.last_update import LastUpdate
+from src.modules.projects.application.use_cases.export_catalog import CatalogEntry
 from src.modules.projects.application.use_cases.get_board import Board
 from src.modules.projects.application.use_cases.get_project_detail import ProjectDetail
 from src.modules.projects.application.use_cases.list_projects import ListedProject
@@ -16,6 +17,8 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     BoardColumnResponse,
     BoardMemberResponse,
     BoardResponse,
+    CatalogEntryResponse,
+    CatalogLinkResponse,
     LastUpdateResponse,
     MissionRefResponse,
     MonthlyShareResponse,
@@ -234,4 +237,39 @@ def to_project_update_response(
         edited_at=signed.update.edited_at,
         is_deleted=signed.update.is_deleted,
         is_mine=signed.update.author_id == reader_id,
+    )
+
+
+def to_catalog_entry_response(entry: CatalogEntry) -> CatalogEntryResponse:
+    """A published service, in the catalogue's own vocabulary."""
+    return CatalogEntryResponse(
+        slug=entry.slug,
+        name=entry.name,
+        description=entry.description,
+        status=entry.status,
+        archived=entry.archived,
+        criticality=entry.criticality,
+        service_type=entry.service_type,
+        body=entry.body,
+        production_link=entry.production_link,
+        staging_link=entry.staging_link,
+        repository_link=entry.repository_link,
+        documentation_link=entry.documentation_link,
+        project_management_link=entry.project_management_link,
+        monitoring_link=entry.monitoring_link,
+        stats_page_link=entry.stats_page_link,
+        stats_api_link=entry.stats_api_link,
+        secondary_links=[
+            CatalogLinkResponse(label=link.label, url=link.url, icon=link.icon)
+            for link in entry.secondary_links
+        ],
+        first_deployed_at=entry.first_deployed_at,
+        team=entry.team,
+        slack_channel=entry.slack_channel,
+        hosting=entry.hosting,
+        has_microsoft_entra=entry.has_microsoft_entra,
+        contributors=entry.contributors,
+        stack=entry.stack,
+        tags=entry.tags,
+        depends_on=entry.depends_on,
     )

@@ -19,6 +19,7 @@ import type { LinkIcon, ProjectDetailResponse } from "@/lib/api/generated/model"
 import {
   CRITICALITIES,
   SERVICE_TYPES,
+  frenchList,
   publicationBlockers,
   suggestSlug,
   type SheetFields,
@@ -174,7 +175,7 @@ export function ProjectSheetTab({
               onText="Publiée sur waat.tools"
               offText="Non publiée"
               blockedBy={
-                blockers.length > 0 ? `Il manque ${blockers.join(" et ")}.` : null
+                blockers.length > 0 ? `Il manque ${frenchList(blockers)}.` : null
               }
               onChange={(is_published) => updateFields({ is_published })}
             />

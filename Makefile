@@ -1,4 +1,4 @@
-.PHONY: install check lint test db-up db-down migrate dev-server dev-client
+.PHONY: install check lint test db-up db-down migrate catalog dev-server dev-client
 
 # Ports and the Docker project name come from the root .env, and are passed on
 # to the sub-commands: one instance moves in full by changing that one file.
@@ -17,6 +17,10 @@ db-down:
 
 migrate:
 	$(MAKE) -C server migrate
+
+# The service catalogue, as waat.tools reads it.
+catalog:
+	$(MAKE) -C server catalog OUT=$(OUT)
 
 lint:
 	$(MAKE) -C server lint

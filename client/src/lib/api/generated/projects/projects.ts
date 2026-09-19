@@ -24,6 +24,7 @@ import type {
   AddLinkRequest,
   AssignMemberParams,
   BoardResponse,
+  CatalogEntryResponse,
   ChangeStatusRequest,
   CreateProjectRequest,
   GetBoardParams,
@@ -874,6 +875,155 @@ export const useImportProjects = <TError = HTTPValidationError, TContext = unkno
 > => {
   return useMutation(getImportProjectsMutationOptions(options), queryClient);
 };
+export type exportCatalogResponse200 = {
+  data: CatalogEntryResponse[];
+  status: 200;
+};
+
+export type exportCatalogResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type exportCatalogResponseSuccess = exportCatalogResponse200 & {
+  headers: Headers;
+};
+export type exportCatalogResponseError = exportCatalogResponse422 & {
+  headers: Headers;
+};
+
+export type exportCatalogResponse =
+  exportCatalogResponseSuccess | exportCatalogResponseError;
+
+export const getExportCatalogUrl = () => {
+  return `/api/v1/projects/catalog`;
+};
+
+/**
+ * The published services, in the vocabulary of the public catalogue.
+ * @summary Export Catalog
+ */
+export const exportCatalog = async (
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<exportCatalogResponse> => {
+  return bffFetcher<exportCatalogResponse>(getExportCatalogUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportCatalogQueryKey = () => {
+  return [`/api/v1/projects/catalog`] as const;
+};
+
+export const getExportCatalogQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportCatalog>>,
+  TError = HTTPValidationError,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof exportCatalog>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportCatalogQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportCatalog>>> = ({
+    signal,
+  }) => exportCatalog({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportCatalog>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ExportCatalogQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportCatalog>>
+>;
+export type ExportCatalogQueryError = HTTPValidationError;
+
+export function useExportCatalog<
+  TData = Awaited<ReturnType<typeof exportCatalog>>,
+  TError = HTTPValidationError,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportCatalog>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportCatalog>>,
+          TError,
+          Awaited<ReturnType<typeof exportCatalog>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useExportCatalog<
+  TData = Awaited<ReturnType<typeof exportCatalog>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportCatalog>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportCatalog>>,
+          TError,
+          Awaited<ReturnType<typeof exportCatalog>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportCatalog<
+  TData = Awaited<ReturnType<typeof exportCatalog>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportCatalog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export Catalog
+ */
+
+export function useExportCatalog<
+  TData = Awaited<ReturnType<typeof exportCatalog>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportCatalog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportCatalogQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export type getBoardResponse200 = {
   data: BoardResponse;
   status: 200;

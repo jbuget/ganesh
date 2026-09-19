@@ -200,10 +200,16 @@ class Project:
         # page to publish.
         if self.is_off_project:
             raise ValidationError("An off-project activity cannot be published.")
+        # What the catalogue cannot draw a usable card without. The rest may
+        # stay blank: a service with no stack listed still reads.
         if self.slug is None:
             raise ValidationError("A published mission must carry a slug.")
         if self.summary is None:
             raise ValidationError("A published mission must carry a summary.")
+        if self.criticality is None:
+            raise ValidationError("A published mission must carry a criticality.")
+        if self.service_type is None:
+            raise ValidationError("A published mission must carry a service type.")
 
     @property
     def is_off_project(self) -> bool:

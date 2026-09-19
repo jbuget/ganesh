@@ -8,7 +8,11 @@ from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectStatus,
 )
-from src.modules.projects.domain.entities.service_registry import clean_slug
+from src.modules.projects.domain.entities.service_registry import (
+    Criticality,
+    ServiceType,
+    clean_slug,
+)
 from src.shared.exceptions.domain_exceptions import ValidationError
 
 
@@ -64,32 +68,37 @@ class TestNamedAddresses:
                 make_project(**{field: "ftp://example.com"})
 
 
+#: The smallest sheet the catalogue can publish.
+PUBLISHABLE: dict[str, object] = {
+    "is_published": True,
+    "slug": "portail-bailleurs",
+    "summary": "Un portail.",
+    "criticality": Criticality.STANDARD,
+    "service_type": ServiceType.FULLSTACK,
+}
+
+
 class TestPublication:
     def test_a_mission_is_not_published_until_it_is_said_to_be(self) -> None:
         assert make_project().is_published is False
 
-    def test_publishing_asks_for_a_slug_and_a_summary(self) -> None:
-        project = make_project(
-            is_published=True, slug="portail-bailleurs", summary="Un portail."
-        )
+    def test_publishing_asks_for_what_a_card_cannot_be_drawn_without(self) -> None:
+        project = make_project(**PUBLISHABLE)
         assert project.is_published is True
 
-    def test_a_published_mission_without_a_slug_is_refused(self) -> None:
+    @pytest.mark.parametrize(
+        "missing", ["slug", "summary", "criticality", "service_type"]
+    )
+    def test_a_published_mission_missing_any_of_them_is_refused(
+        self, missing: str
+    ) -> None:
         with pytest.raises(ValidationError):
-            make_project(is_published=True, summary="Un portail.")
-
-    def test_a_published_mission_without_a_summary_is_refused(self) -> None:
-        with pytest.raises(ValidationError):
-            make_project(is_published=True, slug="portail-bailleurs")
+            make_project(**{**PUBLISHABLE, missing: None})
 
     def test_off_project_work_cannot_be_published(self) -> None:
         with pytest.raises(ValidationError):
             make_project(
-                kind=ProjectKind.OFF_PROJECT,
-                status=None,
-                is_published=True,
-                slug="conges",
-                summary="Absences.",
+                **{**PUBLISHABLE, "kind": ProjectKind.OFF_PROJECT, "status": None}
             )
 
     def test_an_unpublished_mission_may_leave_everything_blank(self) -> None:

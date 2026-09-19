@@ -16,6 +16,13 @@ interface TagListFieldProps {
  *
  * The whole list is sent on every change: the server replaces what it holds
  * with what the screen shows, so there is no adding one and removing another.
+ *
+ * Typing one entry after another is faster than the round trip that saves
+ * them. The field therefore keeps what it has just added on its own, and adds
+ * to that rather than to the prop: without it, the second entry would be sent
+ * alongside a list that does not know about the first, and the first would be
+ * lost. What the server sends back takes over as soon as it names the same
+ * entries.
  */
 export function TagListField({
   values,
@@ -24,18 +31,29 @@ export function TagListField({
   onChange,
 }: TagListFieldProps) {
   const [entry, setEntry] = useState<string | null>(null);
+  const [added, setAdded] = useState<string[]>([]);
+
+  // Entries the server has not confirmed yet, in the order they were typed.
+  const pending = added.filter((value) => !values.includes(value));
+  const shown = [...values, ...pending];
 
   function add() {
     if (entry === null) return;
-    const trimmed = entry.trim();
+    const typed = entry.trim();
     setEntry(null);
-    if (!trimmed || values.includes(trimmed)) return;
-    void onChange([...values, trimmed]);
+    if (!typed || shown.includes(typed)) return;
+    setAdded([...added, typed]);
+    void onChange([...shown, typed]);
+  }
+
+  function remove(value: string) {
+    setAdded(added.filter((kept) => kept !== value));
+    void onChange(shown.filter((kept) => kept !== value));
   }
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      {values.map((value) => (
+      {shown.map((value) => (
         <span
           key={value}
           className="flex items-center gap-1 rounded border border-slate-200 bg-white py-0.5 pr-1 pl-2 text-sm text-slate-700"
@@ -44,7 +62,7 @@ export function TagListField({
           <button
             type="button"
             aria-label={`Retirer ${value}`}
-            onClick={() => void onChange(values.filter((kept) => kept !== value))}
+            onClick={() => remove(value)}
             className="cursor-pointer rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
           >
             <X className="size-3" aria-hidden />
@@ -84,7 +102,7 @@ export function TagListField({
           className="flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 text-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
         >
           <Plus className="size-3.5" aria-hidden />
-          {values.length === 0 ? label : "Ajouter"}
+          {shown.length === 0 ? label : "Ajouter"}
         </button>
       )}
     </div>

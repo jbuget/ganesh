@@ -1,4 +1,4 @@
-.PHONY: install lint format test test-cov archi check-schema migration migrate seed run
+.PHONY: install lint format test test-cov archi check-schema migration migrate seed catalog run
 
 # Taken from the root .env when entering through `make -C server`: the
 # instance's ports stay described in a single place.
@@ -54,6 +54,12 @@ migrate:
 
 seed:
 	$(PY) -m scripts.seed
+
+# Writes the service catalogue. `OUT` points it at the catalogue's repository:
+# make catalog OUT=../../waat-tools/content/catalog.json
+OUT ?= catalog.json
+catalog:
+	$(PY) -m scripts.export_catalog $(OUT)
 
 run:
 	$(VENV)/bin/uvicorn src.main:app --reload --port $(API_PORT)
