@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from sqlalchemy import and_, extract, select
+from sqlalchemy import and_, extract, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditLog
@@ -68,10 +68,25 @@ class SqlAuditLogRepository(AuditLogRepository):
         )
         return [to_entity(model) for model in result.scalars().all()]
 
-    async def list_for_project(self, project_id: int) -> list[AuditLog]:
+    async def list_for_project(
+        self, project_id: int, limit: int, offset: int
+    ) -> list[AuditLog]:
+        # The id breaks the tie: several lines share a timestamp whenever one
+        # gesture changed several fields, and a page that reordered them
+        # between two reads would show the same line twice.
         result = await self._session.execute(
             select(AuditLogModel)
             .where(AuditLogModel.project_id == project_id)
-            .order_by(AuditLogModel.at.desc())
+            .order_by(AuditLogModel.at.desc(), AuditLogModel.id.desc())
+            .limit(limit)
+            .offset(offset)
         )
         return [to_entity(model) for model in result.scalars().all()]
+
+    async def count_for_project(self, project_id: int) -> int:
+        result = await self._session.execute(
+            select(func.count())
+            .select_from(AuditLogModel)
+            .where(AuditLogModel.project_id == project_id)
+        )
+        return result.scalar_one()

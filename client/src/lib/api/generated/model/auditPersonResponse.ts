@@ -6,9 +6,9 @@
  */
 
 /**
- * Who posted a mood.
+ * Someone a line of the log names.
  */
-export interface MoodAuthorResponse {
+export interface AuditPersonResponse {
   id: number;
   display_name: string;
   initials: string;

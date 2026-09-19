@@ -5,6 +5,7 @@ import { ArchivedCallout } from "@/components/atoms/ArchivedCallout";
 import { AttachMissionDialog } from "@/components/atoms/AttachMissionDialog";
 import { DeleteMissionDialog } from "@/components/atoms/DeleteMissionDialog";
 import { MissionMenu } from "@/components/atoms/MissionMenu";
+import { ProjectAuditTab } from "@/components/organisms/ProjectAuditTab";
 import { ProjectSteeringTab } from "@/components/organisms/ProjectSteeringTab";
 import { ProjectSheetTab } from "@/components/organisms/ProjectSheetTab";
 import { ProjectUpdatesTab } from "@/components/organisms/ProjectUpdatesTab";
@@ -65,11 +66,6 @@ interface ProjectTabsProps {
    * somewhere else afterwards.
    */
   deleteMission: () => Promise<void>;
-}
-
-/** What is still to be built, announced rather than left blank. */
-function ToCome({ text }: { text: string }) {
-  return <p className="py-8 text-center text-sm text-slate-400">{text}</p>;
 }
 
 /**
@@ -227,7 +223,7 @@ export function ProjectTabs({
       </TabsContent>
 
       <TabsContent value="audit">
-        <ToCome text="Le journal arrive." />
+        <ProjectAuditTab projectId={detail.project.id} />
       </TabsContent>
     </Tabs>
   );
