@@ -11,6 +11,9 @@ from src.core.database import get_db
 # The one thing this module needs of the keys: recognising one at the door.
 # Admitting a machine lives in the api_keys module, beside what it admits.
 from src.modules.api_keys.domain.services import key_material
+from src.modules.audit_logs.infrastructure.database.repositories.audit_log_repository_impl import (
+    SqlAuditLogRepository,
+)
 from src.modules.auth.infrastructure.entra_token_validator import EntraTokenValidator
 from src.modules.auth.presentation.identity import identity_from_claims
 from src.modules.users.application.dtos.user_dto import EntraIdentity
@@ -53,7 +56,9 @@ async def get_current_user(
             detail="An API key cannot be used on this route.",
         )
 
-    provision = ProvisionUserUseCase(users=SqlUserRepository(session))
+    provision = ProvisionUserUseCase(
+        users=SqlUserRepository(session), audit_logs=SqlAuditLogRepository(session)
+    )
 
     if not settings.require_auth:
         logger.warning("Authentication disabled: development identity.")

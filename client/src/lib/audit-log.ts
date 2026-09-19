@@ -5,7 +5,7 @@ import type {
   ProjectStatus,
 } from "@/lib/api/generated/model";
 import { category, phaseLabel, priority } from "@/lib/board";
-import { formatDecimalDays, formatSpelledDate } from "@/lib/dates";
+import { formatDecimalDays, formatMonthOf, formatSpelledDate } from "@/lib/dates";
 import { departmentLabel } from "@/lib/departments";
 import { CRITICALITIES, SERVICE_LINKS, SERVICE_TYPES } from "@/lib/service-sheet";
 
@@ -36,7 +36,7 @@ const FIELD_LABELS: Record<string, string> = {
   category: "l'axe stratégique",
   priority: "la priorité",
   go_live_date: "la date de mise en service",
-  kind: "la nature de la mission",
+  kind: "la nature du projet",
   slug: "l'adresse publique",
   summary: "le résumé",
   description: "la fiche détaillée",
@@ -121,6 +121,28 @@ function onBehalfOf(entry: AuditLogEntryResponse): string {
   return ` pour ${target.display_name}`;
 }
 
+/** Whether the month worked on was the actor's own. */
+function isOwnMonth(entry: AuditLogEntryResponse): boolean {
+  return entry.target_user === null || entry.target_user.id === entry.actor?.id;
+}
+
+/** « sur son mois de septembre 2026 », « sur le mois de septembre 2026 ». */
+function ontoTheMonth(entry: AuditLogEntryResponse): string {
+  const month = entry.day ? formatMonthOf(entry.day) : "un mois";
+  return isOwnMonth(entry) ? `sur son mois de ${month}` : `sur le mois de ${month}`;
+}
+
+/**
+ * The same month, introduced by « de » — and contracted where French says so.
+ *
+ * « de le mois » is not a sentence: the two forms are written out rather than
+ * glued together from a preposition and a noun phrase.
+ */
+function fromTheMonth(entry: AuditLogEntryResponse): string {
+  const month = entry.day ? formatMonthOf(entry.day) : "un mois";
+  return isOwnMonth(entry) ? `de son mois de ${month}` : `du mois de ${month}`;
+}
+
 function onTheDay(entry: AuditLogEntryResponse): string {
   return entry.day ? ` le ${formatSpelledDate(entry.day)}` : "";
 }
@@ -130,13 +152,13 @@ function fieldSentence(entry: AuditLogEntryResponse): AuditSentence {
   const { field, old_value: before, new_value: after } = entry;
 
   if (field === "label")
-    return { action: "a renommé la mission", ...movement(field, before, after) };
+    return { action: "a renommé le projet", ...movement(field, before, after) };
 
   // A flag that carries a gesture is said as that gesture: « a archivé » is
   // what happened, « is_active : oui → non » is how it was stored.
   if (field === "is_active")
     return {
-      action: isTrue(after) ? "a désarchivé la mission" : "a archivé la mission",
+      action: isTrue(after) ? "a désarchivé le projet" : "a archivé le projet",
     };
 
   if (field === "is_published")
@@ -148,16 +170,26 @@ function fieldSentence(entry: AuditLogEntryResponse): AuditSentence {
 
   // The id of a project says nothing to a reader, and looking up its name would
   // mean a request per line: the gesture is named, the mission is not.
+  // A link is named rather than counted: « les liens » moving says nothing,
+  // and the address is too long for the column the log stores it in.
+  if (field === "links")
+    return {
+      action:
+        after === null
+          ? `a retiré le lien « ${before} »`
+          : `a ajouté le lien « ${after} »`,
+    };
+
   if (field === "parent_id")
     return {
       action:
         after === null
-          ? "a détaché la mission de son projet"
-          : "a rattaché la mission à un projet",
+          ? "a détaché le projet du sien"
+          : "a rattaché le projet à un autre",
     };
 
   return {
-    action: `a modifié ${field === null ? "la mission" : (FIELD_LABELS[field] ?? field)}`,
+    action: `a modifié ${field === null ? "le projet" : (FIELD_LABELS[field] ?? field)}`,
     ...movement(field, before, after),
   };
 }
@@ -195,11 +227,33 @@ export function auditSentence(entry: AuditLogEntryResponse): AuditSentence {
         action: `a effacé ${days(before ?? "")}${onTheDay(entry)}${onBehalfOf(entry)}`,
       };
 
+    case "month.project_add":
+      return {
+        action: `a mis le projet ${ontoTheMonth(entry)}${onBehalfOf(entry)}`,
+      };
+
+    case "month.project_remove":
+      return {
+        action: `a retiré le projet ${fromTheMonth(entry)}${onBehalfOf(entry)}`,
+      };
+
+    case "simulation.create":
+      return { action: `a enregistré la simulation « ${after ?? ""} »` };
+
+    case "simulation.update":
+      return { action: `a modifié la simulation « ${after ?? ""} »` };
+
+    case "simulation.delete":
+      return { action: `a supprimé la simulation « ${after ?? ""} »` };
+
+    case "user.create":
+      return { action: "a rejoint Ganesh" };
+
     case "project.create":
-      return { action: "a créé la mission" };
+      return { action: "a créé le projet" };
 
     case "project.delete":
-      return { action: "a supprimé la mission" };
+      return { action: "a supprimé le projet" };
 
     case "project.status_change":
       return { action: "a changé la phase", ...movement("status", before, after) };

@@ -34,7 +34,7 @@ describe("AuditLogRow", () => {
     row();
 
     expect(screen.getByText("Lin Chen")).toBeInTheDocument();
-    expect(screen.getByText("a créé la mission")).toBeInTheDocument();
+    expect(screen.getByText("a créé le projet")).toBeInTheDocument();
     expect(screen.getByText("14:05")).toBeInTheDocument();
   });
 
@@ -54,6 +54,6 @@ describe("AuditLogRow", () => {
     row({ actor: null });
 
     expect(screen.getAllByText("Compte supprimé").length).toBeGreaterThan(0);
-    expect(screen.getByText("a créé la mission")).toBeInTheDocument();
+    expect(screen.getByText("a créé le projet")).toBeInTheDocument();
   });
 });

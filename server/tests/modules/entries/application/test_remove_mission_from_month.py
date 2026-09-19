@@ -4,6 +4,7 @@ from datetime import date
 
 import pytest
 
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction
 from src.modules.entries.application.dtos.set_entry_dto import RemoveMissionCommand
 from src.modules.entries.application.use_cases.remove_mission_from_month import (
     RemoveMissionFromMonthUseCase,
@@ -102,7 +103,8 @@ async def test_removing_a_mission_without_entries_is_harmless() -> None:
     use_case, _, audit, _ = build()
 
     assert await use_case.execute(a_command()) == 0
-    assert audit.logs == []
+    # The row leaving is traced; there was no day to clear beside it.
+    assert [log.action for log in audit.logs] == [AuditAction.MONTH_PROJECT_REMOVE]
 
 
 async def test_each_removal_is_traced_with_its_previous_value() -> None:
@@ -110,8 +112,9 @@ async def test_each_removal_is_traced_with_its_previous_value() -> None:
 
     await use_case.execute(a_command())
 
-    assert [log.action.value for log in audit.logs] == ["entry.clear", "entry.clear"]
-    assert sorted(log.old_value for log in audit.logs) == ["0.5", "1.0"]
+    cleared = [log for log in audit.logs if log.action is AuditAction.ENTRY_CLEAR]
+    assert len(cleared) == 2
+    assert sorted(log.old_value for log in cleared) == ["0.5", "1.0"]
 
 
 async def test_a_validated_month_refuses_the_removal() -> None:
@@ -162,3 +165,23 @@ async def test_a_validated_month_keeps_its_rows() -> None:
         await use_case.execute(a_command())
 
     assert await rows.list_for_month(1, MONTH) == [10]
+
+
+async def test_a_row_leaving_a_month_is_traced_even_when_it_carried_nothing() -> None:
+    """The row is a fact of its own, not only the entries it held.
+
+    Lined up and then dropped, a project leaves a readable pair in its log:
+    somebody counted on it, then stopped.
+    """
+    use_case, _, audit, _ = build()
+
+    await use_case.execute(
+        RemoveMissionCommand(
+            actor_id=1, target_user_id=1, project_id=10, month=date(2026, 9, 23)
+        )
+    )
+
+    (trace,) = audit.logs
+    assert trace.action is AuditAction.MONTH_PROJECT_REMOVE
+    assert (trace.actor_id, trace.target_user_id, trace.project_id) == (1, 1, 10)
+    assert trace.day == date(2026, 9, 1)

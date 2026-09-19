@@ -17,6 +17,8 @@ class AuditAction(StrEnum):
     ENTRY_CLEAR = "entry.clear"
     MONTH_VALIDATE = "month.validate"
     MONTH_REOPEN = "month.reopen"
+    MONTH_PROJECT_ADD = "month.project_add"
+    MONTH_PROJECT_REMOVE = "month.project_remove"
     PROJECT_CREATE = "project.create"
     PROJECT_UPDATE = "project.update"
     PROJECT_DELETE = "project.delete"
@@ -26,6 +28,10 @@ class AuditAction(StrEnum):
     UPDATE_POST = "update.post"
     UPDATE_EDIT = "update.edit"
     UPDATE_REMOVE = "update.remove"
+    SIMULATION_CREATE = "simulation.create"
+    SIMULATION_UPDATE = "simulation.update"
+    SIMULATION_DELETE = "simulation.delete"
+    USER_CREATE = "user.create"
     USER_ROLE_CHANGE = "user.role_change"
     USER_IDENTITY_UPDATE = "user.identity_update"
     USER_DEACTIVATE = "user.deactivate"
@@ -129,6 +135,44 @@ class AuditLog:
             action=AuditAction.MONTH_REOPEN,
             actor_id=actor_id,
             target_user_id=target_user_id,
+            day=month,
+            at=at or datetime.now(),
+        )
+
+    @classmethod
+    def month_project_add(
+        cls,
+        actor_id: int,
+        target_user_id: int,
+        project_id: int,
+        month: date,
+        at: datetime | None = None,
+    ) -> "AuditLog":
+        """A project is lined up on a month, ahead of any time entered on it."""
+        return cls(
+            action=AuditAction.MONTH_PROJECT_ADD,
+            actor_id=actor_id,
+            target_user_id=target_user_id,
+            project_id=project_id,
+            day=month,
+            at=at or datetime.now(),
+        )
+
+    @classmethod
+    def month_project_remove(
+        cls,
+        actor_id: int,
+        target_user_id: int,
+        project_id: int,
+        month: date,
+        at: datetime | None = None,
+    ) -> "AuditLog":
+        """A project's row leaves a month. What it carried is cleared beside it."""
+        return cls(
+            action=AuditAction.MONTH_PROJECT_REMOVE,
+            actor_id=actor_id,
+            target_user_id=target_user_id,
+            project_id=project_id,
             day=month,
             at=at or datetime.now(),
         )

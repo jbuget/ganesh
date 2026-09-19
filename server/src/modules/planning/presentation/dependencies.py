@@ -4,8 +4,12 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
+from src.modules.audit_logs.domain.repositories.audit_log_repository import (
+    AuditLogRepository,
+)
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.entries.presentation.dependencies import (
+    get_audit_log_repository,
     get_entry_repository,
     get_project_repository,
     get_user_repository,
@@ -83,17 +87,20 @@ def get_list_simulations_use_case(
 
 def get_save_simulation_use_case(
     simulations: SimulationRepository = Depends(get_simulation_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> SaveSimulationUseCase:
-    return SaveSimulationUseCase(simulations)
+    return SaveSimulationUseCase(simulations, audit_logs)
 
 
 def get_update_simulation_use_case(
     simulations: SimulationRepository = Depends(get_simulation_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> UpdateSimulationUseCase:
-    return UpdateSimulationUseCase(simulations)
+    return UpdateSimulationUseCase(simulations, audit_logs)
 
 
 def get_delete_simulation_use_case(
     simulations: SimulationRepository = Depends(get_simulation_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> DeleteSimulationUseCase:
-    return DeleteSimulationUseCase(simulations)
+    return DeleteSimulationUseCase(simulations, audit_logs)

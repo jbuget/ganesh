@@ -384,6 +384,13 @@ class InMemoryProjectDetailRepository(ProjectDetailRepository):
         self._links.setdefault(link.project_id, []).append(link)
         return link
 
+    async def get_link(self, link_id: int) -> ProjectLink | None:
+        for links in self._links.values():
+            for link in links:
+                if link.id == link_id:
+                    return link
+        return None
+
     async def remove_link(self, link_id: int) -> None:
         for links in self._links.values():
             for link in list(links):

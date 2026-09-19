@@ -610,12 +610,13 @@ async def add_project_link(
 async def remove_project_link(
     project_id: int,
     link_id: int,
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     use_case: RemoveProjectLinkUseCase = Depends(get_remove_project_link_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
     """Detaches a link from the mission."""
-    await use_case.execute(link_id)
+    assert current_user.id is not None
+    await use_case.execute(link_id, actor_id=current_user.id)
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

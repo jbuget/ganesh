@@ -112,9 +112,14 @@ def get_add_mission_use_case(
     projects: ProjectRepository = Depends(get_project_repository),
     months: MonthRepository = Depends(get_month_repository),
     user_missions: UserMissionRepository = Depends(get_user_mission_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> AddMissionToMonthUseCase:
     return AddMissionToMonthUseCase(
-        users=users, projects=projects, months=months, user_missions=user_missions
+        users=users,
+        projects=projects,
+        months=months,
+        user_missions=user_missions,
+        audit_logs=audit_logs,
     )
 
 

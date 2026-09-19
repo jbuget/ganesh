@@ -2,6 +2,7 @@
 
 import pytest
 
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction
 from src.modules.projects.application.dtos.project_dto import (
     ImportProjectsCommand,
     ProjectImportLine,
@@ -38,6 +39,15 @@ def build(projects: list[Project] | None = None):
         audit_logs=InMemoryAuditLogRepository(),
     )
     return use_case, repo
+
+
+def build_with_audit(projects: list[Project] | None = None):
+    repo = InMemoryProjectRepository(projects or [])
+    audit = InMemoryAuditLogRepository()
+    use_case = ImportProjectsUseCase(
+        users=InMemoryUserRepository([MANAGER]), projects=repo, audit_logs=audit
+    )
+    return use_case, repo, audit
 
 
 def line(label: str, **kwargs) -> ProjectImportLine:
@@ -200,3 +210,47 @@ async def test_only_a_manager_may_import() -> None:
         await use_case.execute(
             ImportProjectsCommand(actor_id=2, rows=[line("Portail")])
         )
+
+
+async def test_each_imported_project_is_traced_against_itself() -> None:
+    """An import is one gesture, and it writes one line per project.
+
+    A single line saying « 12 projects » lives in no project's log: opening one
+    of them, nothing would say where it came from. That a single import created
+    twelve of them is read from the timestamps.
+    """
+    use_case, repo, audit = build_with_audit()
+
+    await use_case.execute(
+        ImportProjectsCommand(actor_id=1, rows=[line("ASTRE"), line("BOREAL")])
+    )
+
+    assert [(log.action, log.new_value) for log in audit.logs] == [
+        (AuditAction.PROJECT_CREATE, "ASTRE"),
+        (AuditAction.PROJECT_CREATE, "BOREAL"),
+    ]
+    created = {p.label: p.id for p in await repo.list_all(True)}
+    assert [log.project_id for log in audit.logs] == [
+        created["ASTRE"],
+        created["BOREAL"],
+    ]
+    # Where it came from, said once per line: a project born of a CSV did not
+    # go through the form, and the log says so.
+    assert audit.logs[0].payload == {"source": "import"}
+
+
+async def test_a_project_already_in_the_list_leaves_no_trace() -> None:
+    use_case, _, audit = build_with_audit(
+        [
+            Project(
+                id=10,
+                label="ASTRE",
+                kind=ProjectKind.PROJECT,
+                status=ProjectStatus.EXPLORATION,
+            )
+        ]
+    )
+
+    await use_case.execute(ImportProjectsCommand(actor_id=1, rows=[line("ASTRE")]))
+
+    assert audit.logs == []

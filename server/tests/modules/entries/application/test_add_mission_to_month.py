@@ -4,6 +4,7 @@ from datetime import date
 
 import pytest
 
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction
 from src.modules.entries.application.dtos.set_entry_dto import AddMissionCommand
 from src.modules.entries.application.use_cases.add_mission_to_month import (
     AddMissionToMonthUseCase,
@@ -20,6 +21,7 @@ from src.shared.exceptions.domain_exceptions import (
     ForbiddenActionError,
 )
 from tests.helpers.in_memory_repositories import (
+    InMemoryAuditLogRepository,
     InMemoryMonthRepository,
     InMemoryProjectRepository,
     InMemoryUserMissionRepository,
@@ -43,14 +45,21 @@ MONTH = date(2026, 9, 1)
 
 
 def build(months: list[Month] | None = None):
+    use_case, rows, _ = build_with_audit(months)
+    return use_case, rows
+
+
+def build_with_audit(months: list[Month] | None = None):
     rows = InMemoryUserMissionRepository()
+    audit = InMemoryAuditLogRepository()
     use_case = AddMissionToMonthUseCase(
         users=InMemoryUserRepository([ALICE]),
         projects=InMemoryProjectRepository([PORTAIL]),
         months=InMemoryMonthRepository(months or []),
         user_missions=rows,
+        audit_logs=audit,
     )
-    return use_case, rows
+    return use_case, rows, audit
 
 
 def a_command(project_id: int = 10, actor_id: int = 1) -> AddMissionCommand:
@@ -129,9 +138,38 @@ async def test_a_deactivated_actor_is_refused() -> None:
         projects=InMemoryProjectRepository([PORTAIL]),
         months=InMemoryMonthRepository(),
         user_missions=rows,
+        audit_logs=InMemoryAuditLogRepository(),
     )
 
     with pytest.raises(ForbiddenActionError):
         await use_case.execute(
             AddMissionCommand(actor_id=2, target_user_id=1, project_id=10, month=MONTH)
         )
+
+
+async def test_lining_up_a_project_on_a_month_is_traced() -> None:
+    """Preparing a month is a gesture of its own, and it leaves a trace.
+
+    It is read in the project's own log too: knowing who put it on their month,
+    before any day was booked on it, says when people started counting on it.
+    """
+    use_case, _, audit = build_with_audit()
+
+    await use_case.execute(a_command())
+
+    (trace,) = audit.logs
+    assert trace.action is AuditAction.MONTH_PROJECT_ADD
+    assert (trace.actor_id, trace.target_user_id, trace.project_id) == (1, 1, 10)
+    assert trace.day == MONTH
+
+
+async def test_the_trace_names_the_month_by_its_first_day() -> None:
+    use_case, _, audit = build_with_audit()
+
+    await use_case.execute(
+        AddMissionCommand(
+            actor_id=1, target_user_id=1, project_id=10, month=date(2026, 9, 23)
+        )
+    )
+
+    assert audit.logs[0].day == MONTH

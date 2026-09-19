@@ -94,7 +94,7 @@ describe("auditSentence", () => {
 
   describe("the mission's own life", () => {
     it("reads a mission opened", () => {
-      expect(auditSentence(entry("project.create")).action).toBe("a créé la mission");
+      expect(auditSentence(entry("project.create")).action).toBe("a créé le projet");
     });
 
     it("reads a phase moved, both ends in French", () => {
@@ -121,7 +121,7 @@ describe("auditSentence", () => {
             new_value: "EDIT v2",
           }),
         ),
-      ).toEqual({ action: "a renommé la mission", from: "EDIT", to: "EDIT v2" });
+      ).toEqual({ action: "a renommé le projet", from: "EDIT", to: "EDIT v2" });
     });
 
     it("reads an exit from the reference list as an archiving", () => {
@@ -133,7 +133,7 @@ describe("auditSentence", () => {
             new_value: "False",
           }),
         ),
-      ).toEqual({ action: "a archivé la mission" });
+      ).toEqual({ action: "a archivé le projet" });
     });
 
     it("reads a return as an unarchiving", () => {
@@ -145,7 +145,7 @@ describe("auditSentence", () => {
             new_value: "True",
           }),
         ),
-      ).toEqual({ action: "a désarchivé la mission" });
+      ).toEqual({ action: "a désarchivé le projet" });
     });
 
     it("reads a mission joining a project, without naming an id nobody reads", () => {
@@ -157,7 +157,7 @@ describe("auditSentence", () => {
             new_value: "10",
           }),
         ),
-      ).toEqual({ action: "a rattaché la mission à un projet" });
+      ).toEqual({ action: "a rattaché le projet à un autre" });
     });
 
     it("reads a work package taken back out", () => {
@@ -169,7 +169,7 @@ describe("auditSentence", () => {
             new_value: null,
           }),
         ),
-      ).toEqual({ action: "a détaché la mission de son projet" });
+      ).toEqual({ action: "a détaché le projet du sien" });
     });
 
     it("names the axis on both sides", () => {
@@ -239,6 +239,62 @@ describe("auditSentence", () => {
         auditSentence(entry("project.update", { field: "unheard_of", new_value: "x" }))
           .action,
       ).toBe("a modifié unheard_of");
+    });
+  });
+
+  describe("the links of the service sheet", () => {
+    it("names the link it was given rather than saying « les liens »", () => {
+      expect(
+        auditSentence(
+          entry("project.update", { field: "links", new_value: "Maquettes" }),
+        ),
+      ).toEqual({ action: "a ajouté le lien « Maquettes »" });
+    });
+
+    it("reads a link taken off under the name it carried", () => {
+      expect(
+        auditSentence(
+          entry("project.update", { field: "links", old_value: "Maquettes" }),
+        ),
+      ).toEqual({ action: "a retiré le lien « Maquettes »" });
+    });
+  });
+
+  describe("a row on somebody's month", () => {
+    it("reads a project lined up on one's own month", () => {
+      expect(
+        auditSentence(
+          entry("month.project_add", { target_user: LIN, day: "2026-09-01" }),
+        ),
+      ).toEqual({ action: "a mis le projet sur son mois de septembre 2026" });
+    });
+
+    it("names whose month it was, when it was not one's own", () => {
+      expect(
+        auditSentence(
+          entry("month.project_remove", { target_user: NINO, day: "2026-09-01" }),
+        ).action,
+      ).toBe("a retiré le projet du mois de septembre 2026 pour Nino Garo");
+    });
+  });
+
+  describe("beyond the projects", () => {
+    it("reads a scenario kept, under the name it was given", () => {
+      expect(
+        auditSentence(entry("simulation.create", { new_value: "Priorité bailleurs" }))
+          .action,
+      ).toBe("a enregistré la simulation « Priorité bailleurs »");
+    });
+
+    it("reads a scenario dropped", () => {
+      expect(
+        auditSentence(entry("simulation.delete", { new_value: "Priorité bailleurs" }))
+          .action,
+      ).toBe("a supprimé la simulation « Priorité bailleurs »");
+    });
+
+    it("reads an account coming into being", () => {
+      expect(auditSentence(entry("user.create")).action).toBe("a rejoint Ganesh");
     });
   });
 

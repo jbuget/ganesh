@@ -29,7 +29,7 @@ export function ProjectAuditTab({ projectId }: ProjectAuditTabProps) {
   if (log.entries.length === 0) {
     return (
       <p className="py-6 text-center text-sm text-slate-400">
-        Rien n&apos;a encore été enregistré sur cette mission.
+        Rien n&apos;a encore été enregistré sur ce projet.
       </p>
     );
   }

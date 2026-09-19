@@ -99,6 +99,18 @@ class SqlProjectDetailRepository(ProjectDetailRepository):
         link.id = model.id
         return link
 
+    async def get_link(self, link_id: int) -> ProjectLink | None:
+        row = await self._session.get(ProjectLinkModel, link_id)
+        if row is None:
+            return None
+        return ProjectLink(
+            id=row.id,
+            project_id=row.project_id,
+            label=row.label,
+            url=row.url,
+            icon=row.icon,
+        )
+
     async def remove_link(self, link_id: int) -> None:
         await self._session.execute(
             delete(ProjectLinkModel).where(ProjectLinkModel.id == link_id)

@@ -39,7 +39,7 @@ describe("ProjectAuditTab", () => {
     render(<ProjectAuditTab projectId={7} />);
 
     expect(
-      await screen.findByText("Rien n'a encore été enregistré sur cette mission."),
+      await screen.findByText("Rien n'a encore été enregistré sur ce projet."),
     ).toBeInTheDocument();
   });
 

@@ -99,6 +99,32 @@ class UpdateProjectDetailUseCase:
             )
 
 
+async def _trace_link(
+    audit_logs: AuditLogRepository,
+    actor_id: int,
+    project_id: int,
+    attached: str | None,
+    detached: str | None,
+) -> None:
+    """Records a link coming or going, as the rest of the sheet is recorded.
+
+    Under the same field as the sheet's other lists: what one reads back is a
+    project whose links changed, which is exactly what happened. The name is
+    kept rather than the address — it is what the screen showed, and an address
+    is often too long for the column the log stores it in.
+    """
+    await audit_logs.add(
+        AuditLog(
+            action=AuditAction.PROJECT_UPDATE,
+            actor_id=actor_id,
+            project_id=project_id,
+            old_value=detached,
+            new_value=attached,
+            payload={"field": "links"},
+        )
+    )
+
+
 class AddProjectLinkUseCase:
     """Attaches a useful link to a mission."""
 
@@ -106,14 +132,16 @@ class AddProjectLinkUseCase:
         self,
         projects: ProjectRepository,
         details: ProjectDetailRepository,
+        audit_logs: AuditLogRepository,
     ) -> None:
         self._projects = projects
         self._details = details
+        self._audit_logs = audit_logs
 
     async def execute(self, command: AddLinkCommand) -> ProjectLink:
         if await self._projects.get_by_id(command.project_id) is None:
             raise EntityNotFoundError("The mission cannot be found.")
-        return await self._details.add_link(
+        link = await self._details.add_link(
             ProjectLink(
                 id=None,
                 project_id=command.project_id,
@@ -122,16 +150,41 @@ class AddProjectLinkUseCase:
                 icon=command.icon or guess_icon(command.url),
             )
         )
+        await _trace_link(
+            self._audit_logs,
+            command.actor_id,
+            command.project_id,
+            attached=link.label,
+            detached=None,
+        )
+        return link
 
 
 class RemoveProjectLinkUseCase:
     """Detaches a link from a mission."""
 
-    def __init__(self, details: ProjectDetailRepository) -> None:
+    def __init__(
+        self,
+        details: ProjectDetailRepository,
+        audit_logs: AuditLogRepository,
+    ) -> None:
         self._details = details
+        self._audit_logs = audit_logs
 
-    async def execute(self, link_id: int) -> None:
+    async def execute(self, link_id: int, actor_id: int) -> None:
+        # Read before it goes: afterwards there is no way to say which project
+        # it hung on, nor under what name.
+        link = await self._details.get_link(link_id)
+        if link is None:
+            return
         await self._details.remove_link(link_id)
+        await _trace_link(
+            self._audit_logs,
+            actor_id,
+            link.project_id,
+            attached=None,
+            detached=link.label,
+        )
 
 
 class UpdateDescriptionUseCase:
