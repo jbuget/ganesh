@@ -90,14 +90,3 @@ export function mood(value: MoodLevel | null | undefined) {
 export function dayLabel(day: string, today: string): string {
   return day === today ? "Aujourd'hui" : formatWeekdayDate(day);
 }
-
-/**
- * The level an average falls in, to colour the mark that carries it.
- *
- * Rounded to the nearest: a mean of 3,4 is a neutral day leaning good, and
- * naming it « bonne » would flatter the week.
- */
-export function levelAt(score: number) {
-  const index = Math.min(MOODS.length - 1, Math.max(0, Math.round(score) - 1));
-  return MOODS[index];
-}

@@ -1,7 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/atoms/PageHeader";
-import { MoodTrendsTable } from "@/components/organisms/MoodTrendsTable";
+import { MoodBubbleChart } from "@/components/molecules/MoodBubbleChart";
 import { MoodsTable } from "@/components/organisms/MoodsTable";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -71,11 +71,7 @@ export function MoodPage() {
         </TabsContent>
 
         <TabsContent value="trends">
-          <MoodTrendsTable
-            days={screen.days}
-            headcount={screen.headcount}
-            today={screen.today}
-          />
+          <MoodBubbleChart days={screen.days} />
         </TabsContent>
       </Tabs>
     </PageLayout>
