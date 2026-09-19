@@ -12,6 +12,11 @@ class ProjectRepository(ABC):
     async def get_by_id(self, project_id: int) -> Project | None: ...
 
     @abstractmethod
+    async def get_by_slug(self, slug: str) -> Project | None:
+        """The mission a public address points at, if any claims it."""
+        ...
+
+    @abstractmethod
     async def list_all(self, include_inactive: bool = False) -> list[Project]: ...
 
     @abstractmethod

@@ -8,11 +8,12 @@ from src.modules.projects.domain.entities.project_link import ProjectLink
 
 
 class ProjectDetailRepository(ABC):
-    """Departments, links and phases reached by a mission.
+    """The collections hanging off a mission.
 
-    These three collections exist only through the project that carries them
-    and disappear with it: they belong to the same aggregate, and a single port
-    avoids splitting into three what is read and written together.
+    Departments, links and phases reached, plus what the service catalogue
+    adds: stack, tags and dependencies. They all exist only through the project
+    that carries them and disappear with it — they belong to the same
+    aggregate, and a single port avoids splitting what is read together.
     """
 
     @abstractmethod
@@ -62,4 +63,28 @@ class ProjectDetailRepository(ABC):
         self, project_id: int, status: ProjectStatus, reached_at: date
     ) -> None:
         """Records the date a phase was entered. The first one counts."""
+        ...
+
+    @abstractmethod
+    async def list_stack(self, project_id: int) -> list[str]: ...
+
+    @abstractmethod
+    async def set_stack(self, project_id: int, technologies: list[str]) -> None:
+        """Replaces the whole list: the screen sends what it displays."""
+        ...
+
+    @abstractmethod
+    async def list_tags(self, project_id: int) -> list[str]: ...
+
+    @abstractmethod
+    async def set_tags(self, project_id: int, tags: list[str]) -> None:
+        """Replaces the whole list: the screen sends what it displays."""
+        ...
+
+    @abstractmethod
+    async def list_dependencies(self, project_id: int) -> list[int]: ...
+
+    @abstractmethod
+    async def set_dependencies(self, project_id: int, depends_on: list[int]) -> None:
+        """Replaces the whole list: the screen sends what it displays."""
         ...

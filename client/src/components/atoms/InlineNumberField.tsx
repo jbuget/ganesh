@@ -45,7 +45,12 @@ export function InlineNumberField({
         onBlur={validate}
         onKeyDown={(event) => {
           if (event.key === "Enter") validate();
-          if (event.key === "Escape") setEntry(null);
+          if (event.key === "Escape") {
+            // Cancelling a field cancels the field, not the visit: without this
+            // the panel behind would close on the same key.
+            event.stopPropagation();
+            setEntry(null);
+          }
         }}
         className="w-24 rounded border border-slate-400 px-1.5 py-0.5 text-sm focus:outline-none"
       />

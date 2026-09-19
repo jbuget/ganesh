@@ -3,11 +3,8 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
+from src.modules.projects.domain.entities.web_address import require_address
 from src.shared.exceptions.domain_exceptions import ValidationError
-
-#: A link on the board opens with a plain click: `javascript:` and its kin
-#: have no business there.
-ALLOWED_SCHEMES = ("http://", "https://")
 
 
 class LinkIcon(StrEnum):
@@ -40,11 +37,7 @@ class ProjectLink:
     icon: LinkIcon = LinkIcon.LINK
 
     def __post_init__(self) -> None:
-        self.url = self.url.strip()
-        if not self.url:
-            raise ValidationError("A link must carry an address.")
-        if not self.url.startswith(ALLOWED_SCHEMES):
-            raise ValidationError("A link must start with http:// or https://.")
+        self.url = require_address(self.url)
 
         # Pasting an address is enough: naming it stays optional.
         self.label = self.label.strip() or self.url

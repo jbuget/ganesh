@@ -64,6 +64,10 @@ from src.modules.projects.application.use_cases.update_project_detail import (
     UpdateProjectDetailCommand,
     UpdateProjectDetailUseCase,
 )
+from src.modules.projects.application.use_cases.update_project_registry import (
+    UpdateProjectRegistryCommand,
+    UpdateProjectRegistryUseCase,
+)
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.presentation.api.mappers.project_mapper import (
     to_board_response,
@@ -88,6 +92,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     ProjectUpdateResponse,
     UpdateDescriptionRequest,
     UpdateProjectDetailRequest,
+    UpdateProjectRegistryRequest,
     UpdateProjectRequest,
 )
 from src.modules.projects.presentation.dependencies import (
@@ -109,6 +114,7 @@ from src.modules.projects.presentation.dependencies import (
     get_unassign_member_use_case,
     get_update_description_use_case,
     get_update_project_detail_use_case,
+    get_update_project_registry_use_case,
     get_update_project_use_case,
 )
 from src.modules.users.domain.entities.user import User
@@ -372,6 +378,35 @@ async def update_project_detail(
             project_id=project_id,
             departments=payload.departments,
             business_contacts=payload.business_contacts,
+        )
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.put(
+    "/{project_id}/registry",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="updateProjectRegistry",
+)
+async def update_project_registry(
+    project_id: int,
+    payload: UpdateProjectRegistryRequest,
+    current_user: User = Depends(get_current_user),
+    use_case: UpdateProjectRegistryUseCase = Depends(
+        get_update_project_registry_use_case
+    ),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Saves the stack, the tags and the dependencies of the service."""
+    assert current_user.id is not None
+    await use_case.execute(
+        UpdateProjectRegistryCommand(
+            actor_id=current_user.id,
+            project_id=project_id,
+            stack=payload.stack,
+            tags=payload.tags,
+            depends_on=payload.depends_on,
         )
     )
     await session.commit()

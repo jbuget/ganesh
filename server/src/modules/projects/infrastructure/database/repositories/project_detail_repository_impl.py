@@ -13,8 +13,11 @@ from src.modules.projects.domain.repositories.project_detail_repository import (
 )
 from src.modules.projects.infrastructure.database.models.project_detail_models import (
     ProjectDepartmentModel,
+    ProjectDependencyModel,
     ProjectLinkModel,
     ProjectPhaseReachedModel,
+    ProjectStackModel,
+    ProjectTagModel,
 )
 
 
@@ -127,3 +130,64 @@ class SqlProjectDetailRepository(ProjectDetailRepository):
             .values(project_id=project_id, status=status, reached_at=reached_at)
             .on_conflict_do_nothing()
         )
+
+    # --- Service catalogue --------------------------------------------------
+    # Three lists of the same shape: read sorted so the sheet does not reorder
+    # itself between two visits, and rewritten whole, as the departments are.
+
+    async def list_stack(self, project_id: int) -> list[str]:
+        result = await self._session.execute(
+            select(ProjectStackModel.technology)
+            .where(ProjectStackModel.project_id == project_id)
+            .order_by(ProjectStackModel.technology)
+        )
+        return list(result.scalars().all())
+
+    async def set_stack(self, project_id: int, technologies: list[str]) -> None:
+        await self._session.execute(
+            delete(ProjectStackModel).where(ProjectStackModel.project_id == project_id)
+        )
+        for technology in dict.fromkeys(technologies):
+            await self._session.execute(
+                insert(ProjectStackModel).values(
+                    project_id=project_id, technology=technology
+                )
+            )
+
+    async def list_tags(self, project_id: int) -> list[str]:
+        result = await self._session.execute(
+            select(ProjectTagModel.tag)
+            .where(ProjectTagModel.project_id == project_id)
+            .order_by(ProjectTagModel.tag)
+        )
+        return list(result.scalars().all())
+
+    async def set_tags(self, project_id: int, tags: list[str]) -> None:
+        await self._session.execute(
+            delete(ProjectTagModel).where(ProjectTagModel.project_id == project_id)
+        )
+        for tag in dict.fromkeys(tags):
+            await self._session.execute(
+                insert(ProjectTagModel).values(project_id=project_id, tag=tag)
+            )
+
+    async def list_dependencies(self, project_id: int) -> list[int]:
+        result = await self._session.execute(
+            select(ProjectDependencyModel.depends_on_id)
+            .where(ProjectDependencyModel.project_id == project_id)
+            .order_by(ProjectDependencyModel.depends_on_id)
+        )
+        return list(result.scalars().all())
+
+    async def set_dependencies(self, project_id: int, depends_on: list[int]) -> None:
+        await self._session.execute(
+            delete(ProjectDependencyModel).where(
+                ProjectDependencyModel.project_id == project_id
+            )
+        )
+        for other_id in dict.fromkeys(depends_on):
+            await self._session.execute(
+                insert(ProjectDependencyModel).values(
+                    project_id=project_id, depends_on_id=other_id
+                )
+            )

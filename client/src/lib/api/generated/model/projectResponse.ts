@@ -4,10 +4,12 @@
  * Janus API
  * OpenAPI spec version: 0.1.0
  */
+import type { Criticality } from "./criticality";
 import type { ProjectCategory } from "./projectCategory";
 import type { ProjectKind } from "./projectKind";
 import type { ProjectPriority } from "./projectPriority";
 import type { ProjectStatus } from "./projectStatus";
+import type { ServiceType } from "./serviceType";
 
 /**
  * A mission from the reference list.
@@ -31,4 +33,21 @@ export interface ProjectResponse {
   description: string | null;
   is_syncable_to_monday: boolean;
   is_deletable: boolean;
+  slug: string | null;
+  is_published: boolean;
+  summary: string | null;
+  criticality: Criticality | null;
+  service_type: ServiceType | null;
+  hosting: string | null;
+  has_microsoft_entra: boolean;
+  team: string | null;
+  slack_channel: string | null;
+  production_link: string | null;
+  staging_link: string | null;
+  repository_link: string | null;
+  documentation_link: string | null;
+  project_management_link: string | null;
+  monitoring_link: string | null;
+  stats_page_link: string | null;
+  stats_api_link: string | null;
 }
