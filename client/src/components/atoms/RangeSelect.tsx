@@ -12,6 +12,11 @@ interface RangeSelectProps {
   onChange: (range: PeriodRange) => void;
 }
 
+//: Wide enough for the longest window on offer. Fixed rather than fitted to
+//: the label: a control that shrinks on « Hier » and grows on « 90 derniers
+//: jours » makes the header jump every time the window changes.
+const WIDTH = "w-44";
+
 /**
  * The window the figures are read over.
  *
@@ -26,13 +31,13 @@ export function RangeSelect({ value, onChange }: RangeSelectProps) {
     <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label={`Plage de temps, actuellement ${rangeLabel(value)}`}
-        className="flex cursor-pointer items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-700 transition-colors hover:border-slate-400"
+        className={`flex ${WIDTH} cursor-pointer items-center justify-between gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-700 transition-colors hover:border-slate-400`}
       >
-        {rangeLabel(value)}
+        <span className="truncate">{rangeLabel(value)}</span>
         <ChevronDown className="size-3.5 shrink-0 opacity-60" aria-hidden />
       </PopoverTrigger>
 
-      <PopoverContent align="end" className="w-52 p-1">
+      <PopoverContent align="end" className={`${WIDTH} p-1`}>
         <ul role="listbox" aria-label="Plage de temps">
           {RANGES.map((range) => {
             const isChosen = range.value === value;

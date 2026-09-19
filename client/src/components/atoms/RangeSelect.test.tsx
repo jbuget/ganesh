@@ -73,6 +73,29 @@ describe("RangeSelect", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it("keeps its width whichever window is in force", async () => {
+    // jsdom lays nothing out, so the guarantee is checked where it is
+    // declared: a fixed width, identical from one window to the next. Without
+    // it the control shrinks on « Hier » and grows on « 90 derniers jours »,
+    // and the header jumps at every change.
+    const { rerender } = render(<RangeSelect value="today" onChange={vi.fn()} />);
+    const shortest = screen.getByRole("button").className;
+
+    rerender(<RangeSelect value="last_90_days" onChange={vi.fn()} />);
+
+    expect(screen.getByRole("button").className).toBe(shortest);
+    expect(shortest).toMatch(/\bw-\d/);
+  });
+
+  it("keeps the menu as wide as the control that opens it", async () => {
+    render(<RangeSelect value="today" onChange={vi.fn()} />);
+    const width = screen.getByRole("button").className.match(/\bw-\d+/)?.[0];
+
+    await open();
+
+    expect(screen.getByRole("listbox").parentElement?.className).toContain(width);
+  });
+
   it("names what it selects, for a screen reader", () => {
     render(<RangeSelect value="today" onChange={vi.fn()} />);
 
