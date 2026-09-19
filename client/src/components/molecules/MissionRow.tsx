@@ -148,9 +148,19 @@ export function MissionRow({
         // The row taken hold of fades: what one is carrying reads in the
         // overlay under the cursor, not twice.
         isDragging ? "opacity-40" : "",
-        // The project about to take it in is outlined rather than tinted: a
-        // tint would have to beat the pinned cells' own, which are opaque.
-        isTarget ? "outline-2 -outline-offset-2 outline-sky-500" : "",
+        // The project about to take it in is underlined and overlined rather
+        // than tinted: a tint would have to beat the pinned cells' own, which
+        // are opaque.
+        //
+        // Every cell draws its own two rules, rather than the row drawing one
+        // around itself: the pinned cells paint in front of the row, and an
+        // outline carried by the row stopped where the name begins — exactly
+        // where the eye is. Inset shadows rather than borders, because a
+        // border would add its thickness to the row and make the table jump
+        // as the cursor passes.
+        isTarget
+          ? "[&>td]:shadow-[inset_0_2px_0_0_var(--color-sky-500),inset_0_-2px_0_0_var(--color-sky-500)]"
+          : "",
       ].join(" ")}
     >
       {/* No `z`: a pinned cell already passes in front of ordinary cells, and
