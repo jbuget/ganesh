@@ -67,7 +67,7 @@ class ImportProjectsUseCase:
             AuditLog(
                 action=AuditAction.PROJECT_CREATE,
                 actor_id=command.actor_id,
-                new_value=f"import : {report.created} mission(s)",
+                new_value=f"import: {report.created} mission(s)",
             )
         )
         return report

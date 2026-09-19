@@ -78,9 +78,9 @@ class UpdateProjectDetailUseCase:
 
         # One trace per field, as editing a mission already does.
         for field, before, after in (
-            ("contacts_metier", previous, contacts),
+            ("business_contacts", previous, contacts),
             (
-                "departements",
+                "departments",
                 ", ".join(sorted(d.value for d in previous_departments)),
                 ", ".join(sorted(d.value for d in command.departments)),
             ),
