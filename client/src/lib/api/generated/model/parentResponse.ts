@@ -6,9 +6,10 @@
  */
 
 /**
- * The project a work package belongs to, as announced on its card.
+ * The project a work package belongs to, as announced on its card and on
+ * its sheet.
  */
-export interface BoardParentResponse {
+export interface ParentResponse {
   id: number;
   label: string;
 }

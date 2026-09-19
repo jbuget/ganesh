@@ -14,6 +14,7 @@ from src.modules.projects.domain.repositories.project_detail_repository import (
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
@@ -65,4 +66,12 @@ class ChangeProjectStatusUseCase:
                 new_status=command.status.value,
             )
         )
-        return project
+
+        # A work package answers with the axis of its project, the one every
+        # screen already shows it under.
+        parent = (
+            await self._projects.get_by_id(project.parent_id)
+            if project.parent_id is not None
+            else None
+        )
+        return with_resolved_category(project, parent)

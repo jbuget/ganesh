@@ -9,7 +9,10 @@ from src.modules.projects.domain.entities.project import Project, ProjectKind
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
-from src.modules.projects.domain.services.hierarchy import ensure_can_be_parent
+from src.modules.projects.domain.services.hierarchy import (
+    ensure_can_be_parent,
+    with_resolved_category,
+)
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
@@ -36,6 +39,7 @@ class CreateProjectUseCase:
         if actor is None:
             raise EntityNotFoundError("The user cannot be found.")
 
+        parent: Project | None = None
         if command.kind is ProjectKind.WORK_PACKAGE:
             parent = (
                 await self._projects.get_by_id(command.parent_id)
@@ -67,4 +71,7 @@ class CreateProjectUseCase:
                 new_value=project.label,
             )
         )
-        return project
+        # A work package is created without an axis and answers with its
+        # project's: the screen that opens on it reads the same value as the
+        # list it came from.
+        return with_resolved_category(project, parent)

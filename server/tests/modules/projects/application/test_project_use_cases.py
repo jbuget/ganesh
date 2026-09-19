@@ -15,6 +15,7 @@ from src.modules.projects.application.use_cases.create_project import (
 from src.modules.projects.application.use_cases.list_projects import ListProjectsUseCase
 from src.modules.projects.domain.entities.project import (
     Project,
+    ProjectCategory,
     ProjectKind,
     ProjectStatus,
 )
@@ -261,3 +262,43 @@ async def test_a_mission_never_used_is_reported_as_deletable() -> None:
     _, _, list_projects, _, _ = build()
 
     assert (await list_projects.execute())[0].is_deletable is True
+
+
+async def test_a_created_work_package_comes_back_with_its_project_axis() -> None:
+    """The screen that opens on it reads the axis the list already showed."""
+    portail = make_portail()
+    portail.category = ProjectCategory.INNOVATE
+    create, _, _, _, _ = build([portail])
+
+    created = await create.execute(
+        CreateProjectCommand(
+            actor_id=1,
+            label="Lot API",
+            kind=ProjectKind.WORK_PACKAGE,
+            status=ProjectStatus.EXPLORATION,
+            parent_id=10,
+        )
+    )
+
+    assert created.category is ProjectCategory.INNOVATE
+
+
+async def test_a_work_package_changing_phase_keeps_its_project_axis() -> None:
+    portail = make_portail()
+    portail.category = ProjectCategory.STRUCTURE
+    package = Project(
+        id=11,
+        label="Lot API",
+        kind=ProjectKind.WORK_PACKAGE,
+        status=ProjectStatus.SCOPING,
+        parent_id=10,
+    )
+    _, change_status, _, _, _ = build([portail, package])
+
+    moved = await change_status.execute(
+        ChangeProjectStatusCommand(
+            actor_id=1, project_id=11, status=ProjectStatus.DEVELOPMENT
+        )
+    )
+
+    assert moved.category is ProjectCategory.STRUCTURE

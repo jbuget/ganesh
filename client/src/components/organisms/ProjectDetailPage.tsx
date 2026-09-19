@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 import { EditableTitle } from "@/components/atoms/EditableTitle";
+import { ParentMissionLink } from "@/components/atoms/ParentMissionLink";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectTabs } from "@/components/organisms/ProjectTabs";
 import { phaseLabel, phaseDot } from "@/lib/board";
@@ -62,6 +63,10 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
           <BackToBoard />
 
           <header className="mb-6">
+            {/* Above the title, therefore read before it: which whole this
+                mission is a part of comes before its own name. */}
+            {detail.parent && <ParentMissionLink parent={detail.parent} />}
+
             <EditableTitle
               label={project.label}
               hint="Renommer la mission"
@@ -98,6 +103,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
           updateFields={sheet.updateFields}
           addLink={sheet.addLink}
           removeLink={sheet.removeLink}
+          addSubProject={sheet.addSubProject}
           archive={sheet.archive}
           unarchive={sheet.unarchive}
         />

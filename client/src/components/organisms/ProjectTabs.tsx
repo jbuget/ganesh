@@ -33,6 +33,7 @@ interface ProjectTabsProps {
   }) => Promise<void>;
   addLink: (label: string, url: string, icon: LinkIcon | null) => Promise<void>;
   removeLink: (linkId: number) => Promise<void>;
+  addSubProject: (label: string) => Promise<void>;
   archive: () => Promise<void>;
   unarchive: () => Promise<void>;
 }
@@ -58,6 +59,7 @@ export function ProjectTabs({
   updateFields,
   addLink,
   removeLink,
+  addSubProject,
   archive,
   unarchive,
 }: ProjectTabsProps) {
@@ -104,6 +106,7 @@ export function ProjectTabs({
           updateFields={updateFields}
           addLink={addLink}
           removeLink={removeLink}
+          addSubProject={addSubProject}
         />
       </TabsContent>
 

@@ -8,6 +8,7 @@ from src.modules.projects.application.use_cases.update_project import (
 )
 from src.modules.projects.domain.entities.project import (
     Project,
+    ProjectCategory,
     ProjectKind,
     ProjectPriority,
     ProjectStatus,
@@ -228,3 +229,47 @@ async def test_unarchiving_a_project_clears_its_exit_date() -> None:
     assert reloaded is not None
     assert reloaded.is_active is True
     assert reloaded.archived_at is None
+
+
+async def test_a_work_package_is_refused_an_axis_of_its_own() -> None:
+    """The axis is the project's, and is changed there.
+
+    Letting a package carry its own would let two packages of one project claim
+    two axes, leaving the project itself with none.
+    """
+    package = Project(
+        id=11,
+        label="Lot API",
+        kind=ProjectKind.WORK_PACKAGE,
+        status=ProjectStatus.SCOPING,
+        parent_id=10,
+    )
+    use_case, _, _ = build([make_project(), package])
+
+    # The check comes before the write, as the entity invariants do: nothing
+    # reaches the database.
+    with pytest.raises(ValidationError, match="axis"):
+        await use_case.execute(
+            UpdateProjectCommand(
+                actor_id=1, project_id=11, category=ProjectCategory.INNOVATE
+            )
+        )
+
+
+async def test_a_changed_work_package_comes_back_with_its_project_axis() -> None:
+    parent = make_project()
+    parent.category = ProjectCategory.SUSTAIN
+    package = Project(
+        id=11,
+        label="Lot API",
+        kind=ProjectKind.WORK_PACKAGE,
+        status=ProjectStatus.SCOPING,
+        parent_id=10,
+    )
+    use_case, _, _ = build([parent, package])
+
+    changed = await use_case.execute(
+        UpdateProjectCommand(actor_id=1, project_id=11, label="Lot API v2")
+    )
+
+    assert changed.category is ProjectCategory.SUSTAIN

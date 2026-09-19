@@ -1,8 +1,9 @@
 "use client";
 
-import { Plus, Upload } from "lucide-react";
+import { Download, Plus, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { ColumnsSelect } from "@/components/atoms/ColumnsSelect";
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { ImportProjectsDialog } from "@/components/atoms/ImportProjectsDialog";
 import { PageHeader } from "@/components/atoms/PageHeader";
@@ -12,6 +13,7 @@ import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { Button } from "@/components/ui/button";
 import { useOpenedMission } from "@/lib/opened-mission";
+import { useMissionColumns } from "@/lib/use-mission-columns";
 import { useMissionFilters } from "@/lib/use-mission-filters";
 import { useMissionSort } from "@/lib/use-mission-sort";
 import { useProjectsScreen } from "@/lib/use-projects";
@@ -35,6 +37,11 @@ export function ProjectsPage() {
   // Ordering follows the same path as the filters: the address carries it, and
   // the screen hook renders the tree already in the order asked for.
   const { sorted, toggle: sortBy } = useMissionSort();
+  // A steering meeting opens on the whole panorama, then works on four
+  // columns: what is read once takes up room afterwards. The address carries
+  // that choice like the rest, so the screen one has set up is shared by a
+  // link.
+  const columns = useMissionColumns(sorted);
   const screen = useProjectsScreen(filters, sorted);
   // One reference time for every row: « il y a 3 h » must not depend
   // on when each one renders.
@@ -52,6 +59,16 @@ export function ProjectsPage() {
             subtitle="Gestion des projets et sous-projets"
             actions={
               <>
+                {/* The reference list goes out whole, filters aside: one
+                    exports it to work on it elsewhere. */}
+                <Button
+                  variant="outline"
+                  disabled={screen.isExporting}
+                  onClick={screen.exportToExcel}
+                >
+                  <Download />
+                  {screen.isExporting ? "Export en cours…" : "Exporter"}
+                </Button>
                 {screen.isManager && (
                   <Button variant="outline" onClick={() => setImporting(true)}>
                     <Upload />
@@ -76,6 +93,13 @@ export function ProjectsPage() {
             onClear={clear}
             visible={screen.visible}
             total={screen.total}
+            trailing={
+              <ColumnsSelect
+                hidden={columns.hidden}
+                onToggle={columns.toggle}
+                onShowAll={columns.showAll}
+              />
+            }
           />
         </>
       }
@@ -105,6 +129,7 @@ export function ProjectsPage() {
             now={now}
             onOpen={(projectId) => panel.open(projectId)}
             onOpenThread={(projectId) => panel.open(projectId, "updates")}
+            hidden={columns.hidden}
           />
         )}
       </div>
@@ -112,8 +137,13 @@ export function ProjectsPage() {
       <DeclareProjectDialog
         open={declaring}
         onOpenChange={setDeclaration}
+        // A name declares a mission but does not steer it: phase, priority,
+        // estimate and people are still to be given. The panel is where they
+        // are given, so one is taken there rather than left before a list to
+        // search for what one has just created.
         onConfirm={async (label) => {
-          await screen.declare(label, "project");
+          const created = await screen.declare(label, "project");
+          panel.open(created.id);
         }}
       />
 
@@ -132,6 +162,7 @@ export function ProjectsPage() {
           tab={panel.openTab}
           onClose={panel.close}
           onMissionChanged={screen.refresh}
+          onOpenMission={(projectId) => panel.open(projectId)}
         />
       )}
     </PageLayout>

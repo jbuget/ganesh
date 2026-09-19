@@ -3,8 +3,17 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 
-import { createProject, importProjects } from "@/lib/api/generated/projects/projects";
-import type { ImportReportResponse, ProjectKind } from "@/lib/api/generated/model";
+import {
+  createProject,
+  importProjects,
+  listProjects,
+} from "@/lib/api/generated/projects/projects";
+import type {
+  ImportReportResponse,
+  ProjectKind,
+  ProjectListItemResponse,
+  ProjectResponse,
+} from "@/lib/api/generated/model";
 import { mutationResult, useCurrentUser, useProjects } from "@/lib/api/queries";
 import { parseProjectsCsv } from "@/lib/csv-import";
 import {
@@ -36,6 +45,9 @@ export function useProjectsScreen(
   // opens on its projects, and sub-projects are asked for. A mission created
   // along the way therefore arrives collapsed, like the others.
   const [expanded, setExpanded] = useState<ReadonlySet<number>>(() => new Set());
+  // An export reads the whole reference list again, then writes a file: long
+  // enough for a second click to start a second one.
+  const [exporting, setExporting] = useState(false);
 
   const toggle = useCallback((id: number) => {
     setExpanded((current) => {
@@ -73,7 +85,29 @@ export function useProjectsScreen(
         ...(parentId ? { parent_id: parentId } : {}),
       });
       await refresh();
-      return mutationResult(created);
+      return mutationResult<ProjectResponse>(created);
+    },
+
+    /** Whether an export is running: the button must not start a second one. */
+    isExporting: exporting,
+
+    /**
+     * Writes the whole reference list to a workbook.
+     *
+     * The export ignores the filters and the archived switch: one exports a
+     * reference list to work on it elsewhere, and a file missing the missions
+     * the screen happened to be hiding would read as a complete one.
+     */
+    async exportToExcel() {
+      setExporting(true);
+      try {
+        const response = await listProjects({ include_inactive: true });
+        const all = mutationResult<ProjectListItemResponse[]>(response);
+        const { downloadProjectsWorkbook } = await import("@/lib/projects-export");
+        await downloadProjectsWorkbook(all, new Date());
+      } finally {
+        setExporting(false);
+      }
     },
 
     async importCsv(content: string): Promise<ImportReportResponse> {

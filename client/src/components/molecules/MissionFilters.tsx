@@ -27,6 +27,14 @@ interface MissionFiltersProps {
   /** Missions shown, and missions the screen carries in all. */
   visible: number;
   total: number;
+  /**
+   * What the screen hangs at the far end of the bar, next to the count.
+   *
+   * The bar knows how to filter and nothing else: the reference list puts the
+   * choice of columns there, the kanban has none to offer, and neither has to
+   * be told about the other.
+   */
+  trailing?: React.ReactNode;
 }
 
 /**
@@ -44,100 +52,102 @@ export function MissionFilters({
   onClear,
   visible,
   total,
+  trailing,
 }: MissionFiltersProps) {
   const { teammates } = useTeammates();
 
   return (
-    // An announced search group: a screen reader must be able to jump to the
-    // criteria, and know what they govern.
-    <div
-      role="search"
-      aria-label="Filtrer les missions"
-      className="mb-4 flex flex-wrap items-center gap-2"
-    >
-      <div className="relative">
-        <Search
-          className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-slate-400"
-          aria-hidden
+    <div className="mb-4 flex flex-wrap items-center gap-2">
+      {/* An announced search group: a screen reader must be able to jump to the
+          criteria, and know what they govern. It lays out nothing of its own —
+          the criteria sit on the bar's own line, and what accompanies them is
+          not part of the search. */}
+      <div role="search" aria-label="Filtrer les missions" className="contents">
+        <div className="relative">
+          <Search
+            className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-slate-400"
+            aria-hidden
+          />
+          <Input
+            type="search"
+            value={filters.name}
+            onChange={(event) => onChange({ name: event.target.value })}
+            placeholder="Rechercher une mission"
+            aria-label="Rechercher une mission"
+            className="h-9 w-64 pl-8"
+          />
+        </div>
+
+        <FilterSelect
+          label="Phase"
+          options={PHASES.map(({ status, label, dot }) => ({
+            value: status,
+            label,
+            thumbnail: (
+              <span className={`size-2.5 shrink-0 rounded-full ${dot}`} aria-hidden />
+            ),
+          }))}
+          values={filters.phases}
+          onChange={(values) => onChange({ phases: values as ProjectStatus[] })}
         />
-        <Input
-          type="search"
-          value={filters.name}
-          onChange={(event) => onChange({ name: event.target.value })}
-          placeholder="Rechercher une mission"
-          aria-label="Rechercher une mission"
-          className="h-9 w-64 pl-8"
+
+        <FilterSelect
+          label="Catégorie"
+          options={CATEGORIES.map(({ value, label, bullet }) => ({
+            value,
+            label,
+            thumbnail: (
+              <span
+                className={`size-2.5 shrink-0 rounded-[3px] ${bullet}`}
+                aria-hidden
+              />
+            ),
+          }))}
+          values={filters.categories}
+          onChange={(values) => onChange({ categories: values as ProjectCategory[] })}
         />
-      </div>
 
-      <FilterSelect
-        label="Phase"
-        options={PHASES.map(({ status, label, dot }) => ({
-          value: status,
-          label,
-          thumbnail: (
-            <span className={`size-2.5 shrink-0 rounded-full ${dot}`} aria-hidden />
-          ),
-        }))}
-        values={filters.phases}
-        onChange={(values) => onChange({ phases: values as ProjectStatus[] })}
-      />
+        <FilterSelect
+          label="Priorité"
+          options={PRIORITIES.map(({ value, label, icon: Icon, colour }) => ({
+            value,
+            label,
+            thumbnail: <Icon className={`size-4 shrink-0 ${colour}`} aria-hidden />,
+          }))}
+          values={filters.priorities}
+          onChange={(values) => onChange({ priorities: values as ProjectPriority[] })}
+        />
 
-      <FilterSelect
-        label="Catégorie"
-        options={CATEGORIES.map(({ value, label, bullet }) => ({
-          value,
-          label,
-          thumbnail: (
-            <span className={`size-2.5 shrink-0 rounded-[3px] ${bullet}`} aria-hidden />
-          ),
-        }))}
-        values={filters.categories}
-        onChange={(values) => onChange({ categories: values as ProjectCategory[] })}
-      />
+        <FilterSelect
+          label="Intervenant"
+          options={teammates.map((member) => ({
+            value: String(member.id),
+            label: member.display_name,
+            thumbnail: (
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-700">
+                {member.initials}
+              </span>
+            ),
+          }))}
+          values={filters.contributors.map(String)}
+          onChange={(values) => onChange({ contributors: values.map(Number) })}
+        />
 
-      <FilterSelect
-        label="Priorité"
-        options={PRIORITIES.map(({ value, label, icon: Icon, colour }) => ({
-          value,
-          label,
-          thumbnail: <Icon className={`size-4 shrink-0 ${colour}`} aria-hidden />,
-        }))}
-        values={filters.priorities}
-        onChange={(values) => onChange({ priorities: values as ProjectPriority[] })}
-      />
+        <FilterSelect
+          label="Type"
+          options={MISSION_KINDS.map(({ value, label }) => ({ value, label }))}
+          values={filters.types}
+          onChange={(values) => onChange({ types: values as ProjectKind[] })}
+        />
 
-      <FilterSelect
-        label="Intervenant"
-        options={teammates.map((member) => ({
-          value: String(member.id),
-          label: member.display_name,
-          thumbnail: (
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-700">
-              {member.initials}
-            </span>
-          ),
-        }))}
-        values={filters.contributors.map(String)}
-        onChange={(values) => onChange({ contributors: values.map(Number) })}
-      />
+        <FilterSelect
+          label="État"
+          options={MISSION_STATES.map(({ value, label }) => ({ value, label }))}
+          values={filters.states}
+          onChange={(values) => onChange({ states: values as MissionState[] })}
+        />
 
-      <FilterSelect
-        label="Type"
-        options={MISSION_KINDS.map(({ value, label }) => ({ value, label }))}
-        values={filters.types}
-        onChange={(values) => onChange({ types: values as ProjectKind[] })}
-      />
-
-      <FilterSelect
-        label="État"
-        options={MISSION_STATES.map(({ value, label }) => ({ value, label }))}
-        values={filters.states}
-        onChange={(values) => onChange({ states: values as MissionState[] })}
-      />
-
-      {hasFilter && (
-        <>
+        {hasFilter && (
           <button
             type="button"
             onClick={onClear}
@@ -146,17 +156,24 @@ export function MissionFilters({
             <X className="size-3.5" aria-hidden />
             Effacer
           </button>
+        )}
+      </div>
 
-          {/*
+      {/* Pushed to the far end: what one reads about the list, and what one
+          sets about how to read it, away from the criteria themselves. */}
+      <div className="ml-auto flex items-center gap-2">
+        {hasFilter && (
+          /*
             The count is spoken aloud: a filter that leaves nothing cannot be
             seen when one is not looking at the screen, and `status` announces
             it without interrupting typing.
-          */}
-          <p role="status" className="ml-auto text-sm tabular-nums text-slate-500">
+          */
+          <p role="status" className="text-sm tabular-nums text-slate-500">
             {visible} mission{visible > 1 ? "s" : ""} sur {total}
           </p>
-        </>
-      )}
+        )}
+        {trailing}
+      </div>
     </div>
   );
 }

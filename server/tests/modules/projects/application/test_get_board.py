@@ -397,3 +397,17 @@ async def test_a_removed_update_is_no_longer_announced() -> None:
     board = await build([card(1)], updates=updates).execute(today=TODAY)
 
     assert board.columns[1].cards[0].latest_update is None
+
+
+async def test_a_work_package_card_carries_the_axis_of_its_project() -> None:
+    """The board is filtered by axis like the reference list: same answer."""
+    parent = card(10, category=ProjectCategory.STRUCTURE)
+    package = card(11, kind=ProjectKind.WORK_PACKAGE, parent_id=10)
+
+    board = await build([parent, package]).execute(today=TODAY)
+
+    cards = board.columns[1].cards
+    assert [c.project.category for c in cards] == [
+        ProjectCategory.STRUCTURE,
+        ProjectCategory.STRUCTURE,
+    ]

@@ -20,6 +20,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
+from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.projects.domain.services.project_cost import (
     NO_COST,
     RUN_WINDOW_DAYS,
@@ -101,6 +102,10 @@ class ListProjectsUseCase:
 
         costs = await self._costs(all_missions, day)
 
+        # Archived projects included: a work package outlives the archiving of
+        # its project, and goes on reading with the axis of that project.
+        by_id = {m.id: m for m in all_missions if m.id is not None}
+
         # Assignments are read in two queries, not two per mission: the
         # reference list lines up dozens of them on a single screen.
         users = {u.id: u for u in await self._users.list_all(True)}
@@ -123,7 +128,9 @@ class ListProjectsUseCase:
 
         return [
             ListedProject(
-                project=mission,
+                project=with_resolved_category(
+                    mission, by_id.get(mission.parent_id or 0)
+                ),
                 entries=entries.get(mission.id or 0, 0),
                 sub_projects=children.get(mission.id or 0, 0),
                 leads=people(mission.id or 0, ProjectRole.LEAD),

@@ -16,9 +16,12 @@ import { phaseLabel, phaseDot } from "@/lib/board";
 import {
   LEFT_MARGIN,
   NAME_COLUMN,
+  NO_HIDDEN_COLUMN,
   SEPARATOR,
   STRONG_SEPARATOR,
   THREAD_COLUMN,
+  type ColumnKey,
+  type HiddenColumns,
 } from "@/lib/mission-columns";
 import { since } from "@/lib/relative-dates";
 
@@ -37,6 +40,8 @@ interface MissionRowProps {
   onOpen: () => void;
   /** Opens the mission on its thread, where the preview stops. */
   onOpenThread: () => void;
+  /** The columns put away. Nothing put away shows the whole panorama. */
+  hidden?: HiddenColumns;
 }
 
 /**
@@ -56,7 +61,9 @@ export function MissionRow({
   now,
   onOpen,
   onOpenThread,
+  hidden = NO_HIDDEN_COLUMN,
 }: MissionRowProps) {
+  const shows = (column: ColumnKey) => !hidden.has(column);
   const { project } = mission;
   const latest = mission.latest_update;
 
@@ -87,15 +94,16 @@ export function MissionRow({
   );
 
   return (
-    // The background sits on the row, and the pinned cells inherit it: they
-    // then have no colour of their own to keep up to date, while staying
-    // opaque so the columns sliding underneath do not read through. It matches
-    // the page — the row does not stand out from the background, only hover
-    // marks it — and the tints are solid, not transparent, or inheritance
-    // would let what scrolls show through.
+    // The row takes the page background, the pinned cells white: what stays in
+    // sight is thereby lifted off what scrolls underneath, and the name reads
+    // as the anchor of the line rather than as its first column. Those cells
+    // follow the row one step behind — page background where it goes a shade
+    // darker — so hovering marks the whole line without flattening the relief.
+    // Every tint is solid: a transparent one would let what slides underneath
+    // read through the pinned columns.
     <TableRow
       onClick={onOpen}
-      className="cursor-pointer bg-slate-50 hover:bg-slate-100 has-aria-expanded:bg-slate-100"
+      className="group cursor-pointer bg-slate-50 hover:bg-slate-100 has-aria-expanded:bg-slate-100"
     >
       {/* No `z`: a pinned cell already passes in front of ordinary cells, and
           claiming one would send it in front of the header, which must stay
@@ -105,7 +113,7 @@ export function MissionRow({
           NAME_COLUMN,
           LEFT_MARGIN,
           SEPARATOR,
-          "bg-inherit",
+          "bg-white group-hover:bg-slate-50 group-has-[[aria-expanded=true]]:bg-slate-50",
           isWorkPackage ? "pl-14" : "",
         ].join(" ")}
       >
@@ -174,7 +182,12 @@ export function MissionRow({
           of. The icon already says what the number counts, hence the empty
           heading. */}
       <TableCell
-        className={[THREAD_COLUMN, STRONG_SEPARATOR, "bg-inherit text-right"].join(" ")}
+        className={[
+          THREAD_COLUMN,
+          STRONG_SEPARATOR,
+          "bg-white group-hover:bg-slate-50 group-has-[[aria-expanded=true]]:bg-slate-50",
+          "text-right",
+        ].join(" ")}
       >
         <UpdatesCounter
           count={mission.comments}
@@ -183,54 +196,70 @@ export function MissionRow({
         />
       </TableCell>
 
-      <TableCell>
-        {project.status && (
-          <span className="flex items-center gap-1.5 text-slate-700">
-            <span
-              aria-hidden
-              className={`size-2.5 shrink-0 rounded-full ${phaseDot(project.status)}`}
-            />
-            {phaseLabel(project.status)}
-          </span>
-        )}
-      </TableCell>
+      {shows("phase") && (
+        <TableCell>
+          {project.status && (
+            <span className="flex items-center gap-1.5 text-slate-700">
+              <span
+                aria-hidden
+                className={`size-2.5 shrink-0 rounded-full ${phaseDot(project.status)}`}
+              />
+              {phaseLabel(project.status)}
+            </span>
+          )}
+        </TableCell>
+      )}
 
       {/* Priority follows phase, as in the sheet: where the mission stands,
           then what it must come before. */}
-      <TableCell>
-        <PriorityMark value={project.priority} />
-      </TableCell>
+      {shows("priority") && (
+        <TableCell>
+          <PriorityMark value={project.priority} />
+        </TableCell>
+      )}
 
-      <TableCell>
-        <CategoryMark value={project.category} />
-      </TableCell>
+      {shows("category") && (
+        <TableCell>
+          <CategoryMark value={project.category} />
+        </TableCell>
+      )}
 
       {/* Build against its estimate, run apart: the estimate covered the
           construction alone, and comparing the whole life of a service to it
           would declare every living mission late. A zero is not a value to
           read: a mission nobody has declared on stays empty. */}
-      <TableCell className="text-right tabular-nums text-slate-600">
-        <BuildCost cost={cost} />
-      </TableCell>
+      {shows("build") && (
+        <TableCell className="text-right tabular-nums text-slate-600">
+          <BuildCost cost={cost} />
+        </TableCell>
+      )}
 
-      <TableCell className="text-right tabular-nums text-slate-600">
-        <RunCost cost={cost} />
-      </TableCell>
+      {shows("run") && (
+        <TableCell className="text-right tabular-nums text-slate-600">
+          <RunCost cost={cost} />
+        </TableCell>
+      )}
 
-      <TableCell>
-        <MemberAvatars members={mission.leads} />
-      </TableCell>
+      {shows("leads") && (
+        <TableCell>
+          <MemberAvatars members={mission.leads} />
+        </TableCell>
+      )}
 
-      <TableCell>
-        <MemberAvatars members={mission.contributors} />
-      </TableCell>
+      {shows("contributors") && (
+        <TableCell>
+          <MemberAvatars members={mission.contributors} />
+        </TableCell>
+      )}
 
       {/* Where the mission's work is written down. The icons stand on their
           own: in a row there is no room for their labels, which come back on
           hover. */}
-      <TableCell>
-        <ProjectLinks links={mission.links} />
-      </TableCell>
+      {shows("links") && (
+        <TableCell>
+          <ProjectLinks links={mission.links} />
+        </TableCell>
+      )}
     </TableRow>
   );
 }

@@ -9,7 +9,7 @@ longer recognises. Rows and foreign keys would buy a referential rigour nobody
 wants on a scratch pad, and cost a join on every read.
 
 Revision ID: ca27120f6d05
-Revises: f9f4c0bc47ab
+Revises: b9167b86a301
 Create Date: 2026-09-19 11:13:06.793121
 
 """
@@ -21,7 +21,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "ca27120f6d05"
-down_revision: str | None = "f9f4c0bc47ab"
+down_revision: str | None = "b9167b86a301"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

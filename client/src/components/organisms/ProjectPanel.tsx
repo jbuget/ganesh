@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 
 import { EditableTitle } from "@/components/atoms/EditableTitle";
+import { ParentMissionLink } from "@/components/atoms/ParentMissionLink";
 import { ProjectTabs } from "@/components/organisms/ProjectTabs";
 import { useProjectDetail } from "@/lib/use-project-detail";
 
@@ -15,6 +16,11 @@ interface ProjectPanelProps {
   onClose: () => void;
   /** Tells the board: a phase changed here moves a card there. */
   onMissionChanged: () => void | Promise<void>;
+  /**
+   * Swaps the panel for another mission — the project a work package belongs
+   * to. The screen behind stays where it was.
+   */
+  onOpenMission: (projectId: number) => void;
 }
 
 /**
@@ -29,6 +35,7 @@ export function ProjectPanel({
   tab,
   onClose,
   onMissionChanged,
+  onOpenMission,
 }: ProjectPanelProps) {
   const sheet = useProjectDetail(projectId, onMissionChanged);
   const detail = sheet.detail;
@@ -57,28 +64,36 @@ export function ProjectPanel({
         aria-label={detail ? detail.project.label : "Mission"}
         className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[40rem] flex-col border-l border-slate-300 bg-white shadow-xl"
       >
-        <header className="flex items-center gap-2 border-b border-slate-200 px-5 py-4">
-          <EditableTitle
-            label={detail?.project.label ?? "Chargement…"}
-            hint="Renommer la mission"
-            onRename={detail ? sheet.rename : undefined}
-          />
+        <header className="border-b border-slate-200 px-5 py-4">
+          {/* Above the title, therefore read before it: which whole this
+              mission is a part of comes before its own name. */}
+          {detail?.parent && (
+            <ParentMissionLink parent={detail.parent} onOpen={onOpenMission} />
+          )}
 
-          <Link
-            href={`/projects/${projectId}`}
-            aria-label="Ouvrir en pleine page"
-            className="cursor-pointer rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-          >
-            <Maximize2 className="size-4" aria-hidden />
-          </Link>
-          <button
-            type="button"
-            aria-label="Fermer"
-            onClick={onClose}
-            className="cursor-pointer rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-          >
-            <X className="size-4" aria-hidden />
-          </button>
+          <div className="flex items-center gap-2">
+            <EditableTitle
+              label={detail?.project.label ?? "Chargement…"}
+              hint="Renommer la mission"
+              onRename={detail ? sheet.rename : undefined}
+            />
+
+            <Link
+              href={`/projects/${projectId}`}
+              aria-label="Ouvrir en pleine page"
+              className="cursor-pointer rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            >
+              <Maximize2 className="size-4" aria-hidden />
+            </Link>
+            <button
+              type="button"
+              aria-label="Fermer"
+              onClick={onClose}
+              className="cursor-pointer rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            >
+              <X className="size-4" aria-hidden />
+            </button>
+          </div>
         </header>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4">
@@ -96,6 +111,7 @@ export function ProjectPanel({
               updateFields={sheet.updateFields}
               addLink={sheet.addLink}
               removeLink={sheet.removeLink}
+              addSubProject={sheet.addSubProject}
               // The panel stays open after archiving, even though the mission
               // leaves the list behind: closing it on an unlucky click would
               // leave no way back, the row having gone from the reference

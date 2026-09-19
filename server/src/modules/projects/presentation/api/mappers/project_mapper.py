@@ -15,10 +15,10 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     BoardCardResponse,
     BoardColumnResponse,
     BoardMemberResponse,
-    BoardParentResponse,
     BoardResponse,
     LastUpdateResponse,
     MonthlyShareResponse,
+    ParentResponse,
     PhaseReachedResponse,
     ProjectContributionResponse,
     ProjectCostResponse,
@@ -136,7 +136,7 @@ def to_board_response(board: Board) -> BoardResponse:
                         latest_update=to_latest_update(card.latest_update),
                         sub_projects=card.sub_projects,
                         parent=(
-                            BoardParentResponse(
+                            ParentResponse(
                                 id=card.parent.id or 0, label=card.parent.label
                             )
                             if card.parent is not None
@@ -184,6 +184,11 @@ def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
         sub_projects=[
             to_project_response(work_package) for work_package in detail.sub_projects
         ],
+        parent=(
+            ParentResponse(id=detail.parent.id or 0, label=detail.parent.label)
+            if detail.parent is not None
+            else None
+        ),
     )
 
 
