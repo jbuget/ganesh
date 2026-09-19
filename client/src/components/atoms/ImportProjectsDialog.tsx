@@ -76,7 +76,7 @@ export function ImportProjectsDialog({
             }}
             className="w-full rounded-md border border-slate-300 p-2 font-mono text-xs"
           />
-          <p className="text-xs text-slate-500">{lines.length} line(s) détectée(s).</p>
+          <p className="text-xs text-slate-500">{lines.length} ligne(s) détectée(s).</p>
         </div>
 
         {report && (

@@ -106,7 +106,7 @@ export function EditableTitle({
 
         {hasError && (
           <p role="alert" className="mt-1 text-xs text-red-700">
-            Le nouveau title n&apos;a pas pu être enregistré.
+            Le nouveau titre n&apos;a pas pu être enregistré.
           </p>
         )}
       </div>
