@@ -81,10 +81,8 @@ export function WorkloadTimeline({ missions, weeks, onMove }: WorkloadTimelinePr
         <Table>
           <TableHeader className="sticky top-0 z-20 [&_th]:border-b [&_th]:border-b-slate-500 [&_th]:bg-slate-50">
             <TableRow>
-              <TableHead className="sticky left-0 z-30 w-[22rem] bg-slate-50">
-                Mission
-              </TableHead>
-              <TableHead className="w-24 text-right">Reste</TableHead>
+              <TableHead className="sticky left-0 z-30 bg-slate-50">Mission</TableHead>
+              <TableHead className="w-24 text-right">Reste (j)</TableHead>
               <TableHead className="w-64">Atterrissage</TableHead>
               {weeks.map((week, index) => (
                 <TableHead key={week} className="w-14 px-1">

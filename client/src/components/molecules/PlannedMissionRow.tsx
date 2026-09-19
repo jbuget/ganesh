@@ -41,8 +41,11 @@ export function PlannedMissionRow({ mission, weeks, rank }: PlannedMissionRowPro
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={isDragging ? "bg-sky-50" : undefined}
     >
+      {/* The width is set here and not on the header alone: the table sizes
+          itself on its content, and a mission named in a full sentence would
+          otherwise push the weeks out of sight. */}
       <TableCell className="sticky left-0 z-10 bg-white">
-        <div className="flex items-center gap-2">
+        <div className="flex w-[26rem] items-center gap-2">
           <button
             type="button"
             aria-label={`Déplacer ${mission.label}`}
@@ -65,13 +68,18 @@ export function PlannedMissionRow({ mission, weeks, rank }: PlannedMissionRowPro
             />
           )}
 
-          <span className="truncate text-sm text-slate-800" title={mission.label}>
-            {/* A work package is indented under nothing here: the plan serves a
-                flat queue, and its parent is a column of its own on the list. */}
+          {/* `min-w-0` is what lets the truncation happen: a flex child
+              refuses to shrink below its content without it. */}
+          <span
+            className="min-w-0 flex-1 truncate text-sm text-slate-800"
+            title={mission.label}
+          >
             {mission.label}
           </span>
 
-          <PriorityMark value={mission.priority} />
+          <span className="shrink-0">
+            <PriorityMark value={mission.priority} />
+          </span>
         </div>
       </TableCell>
 
