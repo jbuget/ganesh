@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
+import { AssignedMissionsCallout } from "@/components/atoms/AssignedMissionsCallout";
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { MissionSelector } from "@/components/atoms/MissionSelector";
 import { PageHeader } from "@/components/atoms/PageHeader";
@@ -129,6 +130,7 @@ export function TimesheetPage() {
               <MissionSelector
                 projects={month.projects}
                 excludedIds={month.displayedProjectIds}
+                assignedIds={month.assignedIds}
                 onSelect={month.addMission}
                 onDeclareNew={() => setDeclareOpen(true)}
               />
@@ -155,6 +157,18 @@ export function TimesheetPage() {
         onOpenChange={setDeclareOpen}
         onConfirm={month.declareProject}
       />
+
+      {/* Under the grid, beside the picker that answers it: the two ways of
+          adding a row sit together, and the reminder never passes for a row. */}
+      {grid?.is_writable && (
+        <AssignedMissionsCallout
+          missions={month.missionsToDeclare.map((mission) => ({
+            id: mission.id,
+            label: mission.label,
+          }))}
+          onAdd={month.addMission}
+        />
+      )}
 
       {panel.openedMission && (
         <ProjectPanel

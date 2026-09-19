@@ -20,6 +20,8 @@ import {
 interface MissionSelectorProps {
   projects: ProjectResponse[];
   excludedIds: number[];
+  /** Missions the user contributes to, offered first. */
+  assignedIds: number[];
   onSelect: (projectId: number) => void;
   onDeclareNew: () => void;
   disabled?: boolean;
@@ -47,21 +49,32 @@ const asItems = (projects: ProjectResponse[]): MissionItem[] =>
  *
  * The reference list runs to dozens of projects and work packages: the search
  * field at the top of the menu saves scanning the whole list for the one being
- * looked for. « Declarer un nouveau projet » stays at the foot of the
+ * looked for, and « Mes missions » puts the handful one actually works on
+ * within reach without searching at all. « Declarer un nouveau projet » stays at the foot of the
  * menu, outside the filter: it is precisely when no mission matches that one
  * needs it.
  */
 export function MissionSelector({
   projects,
   excludedIds,
+  assignedIds,
   onSelect,
   onDeclareNew,
   disabled = false,
 }: MissionSelectorProps) {
-  const { projectMissions, offProject } = availableMissions(projects, excludedIds);
+  const { mine, projectMissions, offProject } = availableMissions(
+    projects,
+    excludedIds,
+    assignedIds,
+  );
   const [isOpen, setOpen] = useState(false);
 
   const groups: MissionGroup[] = [];
+  // First, and named after what ties them to the reader: these are the missions
+  // the team put them on.
+  if (mine.length > 0) {
+    groups.push({ value: "Mes missions", items: asItems(mine) });
+  }
   if (projectMissions.length > 0) {
     groups.push({ value: "Projets et lots", items: asItems(projectMissions) });
   }
