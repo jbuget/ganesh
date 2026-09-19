@@ -397,6 +397,9 @@ whole design leans on, and the one to respect when adding a route:
   carries a **human owner** who answers for it. An API call records the owner
   as the actor and names the key in the payload.
 - A key never inherits its owner's role: its power comes from its scopes alone.
+- Scopes read `resource:verb`. The two broad ones, `all:read` and `all:write`,
+  are independent — one per verb, neither covering the other, and writing never
+  implying reading.
 - The secret is shown once, at creation, and stored as a SHA-256. There is no
   route that hands it over again.
 

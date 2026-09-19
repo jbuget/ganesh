@@ -56,7 +56,7 @@ This is the rule the whole design leans on.
 
 - `get_current_user` **refuses API keys outright**. Every route that depends on
   it stays human-only, unchanged, with no audit to rework.
-- A new dependency, `require_scope("catalog:read")`, accepts a key and nothing
+- A new dependency, `require_scope(ApiKeyScope.CATALOG_READ)`, accepts a key and nothing
   else it was not given.
 - A route becomes machine-reachable only by asking for it, explicitly, one
   route at a time.
@@ -158,19 +158,45 @@ scheme, nothing new for a client to learn — GitHub does exactly this with
 
 ## Scopes
 
-A closed enumeration, small on purpose. Each one names what a route needs, not
-what a screen shows.
+A closed enumeration, `resource:verb`. Each member names what a route needs,
+not what a screen shows.
 
 ```
-catalog:read      the service catalogue     ← the only one V1 wires to a route
+all:read          every read, including ones not invented yet
+all:write         every write, same
+
+catalog:read      the service catalogue    ← the only one V1 wires to a route
 projects:read
 projects:write
 entries:read
 ```
 
-Grow it by adding a member, never by inventing a wildcard. A key with no scope
-can do nothing — that is a valid, useless key, and the form must not produce
-one.
+A key with no scope can do nothing — that is a valid, useless key, and the form
+does not produce one.
+
+### The two broad ones
+
+`all:read` and `all:write` are **independent, one per verb**: neither covers the
+other, and a key that reads and writes everything carries both.
+
+**Writing does not imply reading.** The ladder would have been tidier to write
+and worse to hold: a key granted « Tous (écriture) » would have quietly gained
+every read, and — the fault that actually showed up in the browser — ticking one
+« Tous » after the other trapped the first one checked and unremovable. Two
+switches, no implication.
+
+> **This reverses what an earlier draft of this document said**, which was
+> « grow it by adding a member, never by inventing a wildcard ». The reversal is
+> deliberate and it has a price: a broad scope covers routes that **do not exist
+> yet**, so a key minted today gains whatever is added tomorrow. Two things keep
+> that honest — they are real enum members, so a key can still be read off the
+> table and told what it opens, and the form says as much where the box is
+> ticked.
+
+The form ticks and **locks** what a broad scope carries, naming where each
+locked box gets its right from. Only what is not covered is sent: the server
+derives the rest from `ApiKey.grants`, and a stored list of redundant scopes
+would only make the table harder to read.
 
 ## Who sees what
 
