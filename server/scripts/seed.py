@@ -11,11 +11,14 @@ out here.
 """
 
 import asyncio
+import json
 import logging
+import pathlib
 from dataclasses import dataclass
 from datetime import date
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import AsyncSessionLocal
 from src.modules.calendar.domain.services.working_days import (  # noqa: PLC2701
@@ -24,7 +27,15 @@ from src.modules.calendar.domain.services.working_days import (  # noqa: PLC2701
 from src.modules.calendar.infrastructure.database.models.holiday_model import (
     HolidayModel,
 )
-from src.modules.projects.domain.entities.project import ProjectKind
+from src.modules.projects.domain.entities.project import ProjectKind, ProjectStatus
+from src.modules.projects.domain.entities.service_registry import (
+    Criticality,
+    ServiceType,
+)
+from src.modules.projects.infrastructure.database.models.project_detail_models import (
+    ProjectStackModel,
+    ProjectTagModel,
+)
 from src.modules.projects.infrastructure.database.models.project_model import (
     ProjectModel,
 )
@@ -93,6 +104,30 @@ OFF_PROJECT_ACTIVITIES: list[str] = [
 ]
 
 HOLIDAY_YEARS = (2026, 2027, 2028)
+
+#: The service sheets, drawn from the catalogue waat.tools publishes.
+#:
+#: They are the reverse of `make catalog`: the catalogue is exported from
+#: Janus, so reading it back in is how Janus becomes the source it is meant to
+#: be. The file is generated, then maintained by hand like any other reference.
+SERVICES_FILE = pathlib.Path(__file__).parent / "data" / "services.json"
+
+#: Sheet fields that go straight onto the mission, under the same name.
+SHEET_FIELDS = (
+    "summary",
+    "description",
+    "hosting",
+    "team",
+    "has_microsoft_entra",
+    "production_link",
+    "staging_link",
+    "repository_link",
+    "documentation_link",
+    "project_management_link",
+    "monitoring_link",
+    "stats_page_link",
+    "stats_api_link",
+)
 
 
 async def correct_emails() -> int:
@@ -168,6 +203,91 @@ async def seed_users() -> tuple[int, int]:
     return created, updated
 
 
+async def _replace_collection(
+    session: AsyncSession,
+    model: type[ProjectStackModel] | type[ProjectTagModel],
+    project_id: int,
+    column: str,
+    values: list[str],
+) -> None:
+    """Rewrites a mission's stack or tags, which are held as whole lists."""
+    existing = await session.execute(
+        select(model).where(model.project_id == project_id)
+    )
+    for row in existing.scalars().all():
+        await session.delete(row)
+    for value in values:
+        session.add(model(project_id=project_id, **{column: value}))
+
+
+async def seed_services() -> tuple[int, int]:
+    """Creates the missions the catalogue knows of, and fills in their sheet.
+
+    A mission is found by its label — the reference list has no other key a
+    file written by hand could carry. What the sheet says wins: the catalogue
+    is where these fields are maintained today.
+    """
+    created = 0
+    filled = 0
+    services = json.loads(SERVICES_FILE.read_text(encoding="utf-8"))
+
+    async with AsyncSessionLocal() as session:
+        for service in services:
+            found = await session.execute(
+                select(ProjectModel).where(ProjectModel.label == service["label"])
+            )
+            mission = found.scalar_one_or_none()
+
+            if mission is None:
+                if not service["create"]:
+                    logger.warning(
+                        "« %s » est introuvable : fiche ignoree.", service["label"]
+                    )
+                    continue
+                mission = ProjectModel(
+                    label=service["label"], kind=ProjectKind.PROJECT, is_active=True
+                )
+                session.add(mission)
+                await session.flush()
+                created += 1
+
+            for field in SHEET_FIELDS:
+                if service.get(field) is not None:
+                    setattr(mission, field, service[field])
+
+            if service.get("slug"):
+                mission.slug = service["slug"]
+                # A sheet complete enough to have been published on waat.tools
+                # is complete enough to be published from here.
+                mission.is_published = True
+            if service.get("status"):
+                mission.status = ProjectStatus(service["status"])
+            if service.get("criticality"):
+                mission.criticality = Criticality(service["criticality"])
+            if service.get("service_type"):
+                mission.service_type = ServiceType(service["service_type"])
+            mission.is_active = service.get("is_active", True)
+
+            await _replace_collection(
+                session,
+                ProjectStackModel,
+                mission.id,
+                "technology",
+                service.get("stack", []),
+            )
+            await _replace_collection(
+                session,
+                ProjectTagModel,
+                mission.id,
+                "tag",
+                service.get("tags", []),
+            )
+            filled += 1
+
+        await session.commit()
+    return created, filled
+
+
 async def seed_off_project_activities() -> int:
     created = 0
     async with AsyncSessionLocal() as session:
@@ -209,12 +329,15 @@ async def seed_holidays() -> int:
 async def main() -> None:
     corrected = await correct_emails()
     created, updated = await seed_users()
+    missions, sheets = await seed_services()
     activities = await seed_off_project_activities()
     holidays = await seed_holidays()
 
     logger.info("Adresses corrigees          : %s", corrected)
     logger.info("Collaborateurs crees        : %s", created)
     logger.info("Collaborateurs mis a jour   : %s", updated)
+    logger.info("Missions creees             : %s", missions)
+    logger.info("Fiches service remplies     : %s", sheets)
     logger.info("Activites hors projet creees: %s", activities)
     logger.info("Jours feries crees          : %s", holidays)
     logger.info("Seed termine (%s).", date.today())
