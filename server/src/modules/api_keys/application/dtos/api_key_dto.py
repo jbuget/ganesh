@@ -1,0 +1,74 @@
+"""Commands acting on the service accounts."""
+
+from dataclasses import dataclass
+from datetime import datetime
+
+from src.modules.api_keys.domain.entities.api_key import ApiKey, ApiKeyScope
+from src.modules.users.domain.entities.user import User
+
+
+@dataclass(frozen=True)
+class CreateApiKeyCommand:
+    """Minting a key. Managers only — the route sees to that."""
+
+    actor_id: int
+    name: str
+    owner_id: int
+    scopes: list[ApiKeyScope]
+    expires_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class UpdateApiKeyCommand:
+    """Changing a key. A field left out is a field left alone.
+
+    Only what a mistake at creation would leave wrong: the name it is read by
+    and what it opens. An expiry is not moved and an owner is not swapped —
+    those are reasons to mint a new key, not to bend an old one.
+    """
+
+    actor_id: int
+    key_id: int
+    name: str | None = None
+    scopes: list[ApiKeyScope] | None = None
+
+
+@dataclass(frozen=True)
+class RevokeApiKeyCommand:
+    """Cutting a key for good."""
+
+    actor_id: int
+    key_id: int
+
+
+@dataclass(frozen=True)
+class NamedApiKey:
+    """A key and the people it names, so a screen can draw it whole.
+
+    Who owns a key, who minted it and who cut it live in another module: the
+    use case resolves them once rather than leaving every caller to.
+    """
+
+    key: ApiKey
+    people: dict[int, User]
+
+
+@dataclass(frozen=True)
+class ApiKeyListing:
+    """Every key, and the people they name between them."""
+
+    keys: list[ApiKey]
+    people: dict[int, User]
+
+
+@dataclass(frozen=True)
+class MintedApiKey:
+    """A freshly minted key, its secret, and the people it names — once.
+
+    The token travels no further than the response that carries it: nothing
+    stores it, and no route ever hands it over a second time.
+    """
+
+    key: ApiKey
+    token: str
+    people: dict[int, User]
