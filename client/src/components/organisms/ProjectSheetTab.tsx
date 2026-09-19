@@ -21,6 +21,7 @@ import {
   SERVICE_TYPES,
   frenchList,
   publicationBlockers,
+  slugError,
   suggestSlug,
   type SheetFields,
 } from "@/lib/service-sheet";
@@ -187,6 +188,7 @@ export function ProjectSheetTab({
               label="Adresse publique"
               placeholder="portail-bailleurs"
               suggestion={suggested || null}
+              validate={slugError}
               onChange={(slug) => updateFields({ slug })}
             />
           </SheetRow>

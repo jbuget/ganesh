@@ -94,3 +94,26 @@ export function suggestSlug(label: string): string {
     .slice(0, 100)
     .replace(/-+$/g, "");
 }
+
+/** What the catalogue accepts as an address: the domain rule, reflected here. */
+const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const SLUG_MAX_LENGTH = 100;
+
+/**
+ * Why an address would be refused, said before the server has to say it.
+ *
+ * The API holds the rule and refuses the write; this is only its reflection,
+ * so that what one reads is in French and names the shape expected. « Adresse
+ * publique » invites pasting a whole URL: the message answers that first.
+ */
+export function slugError(value: string | null): string | null {
+  if (value === null || value === "") return null;
+  if (value.length > SLUG_MAX_LENGTH) {
+    return `Une adresse publique ne dépasse pas ${SLUG_MAX_LENGTH} caractères.`;
+  }
+  if (!SLUG.test(value)) {
+    return "Une adresse publique s'écrit en minuscules, chiffres et tirets — « portail-bailleurs », pas une URL entière.";
+  }
+  return null;
+}

@@ -205,3 +205,34 @@ describe("cancelling a field", () => {
     expect(onEscape).not.toHaveBeenCalled();
   });
 });
+
+describe("the public address", () => {
+  it("refuses a pasted URL where the catalogue expects an address", async () => {
+    const { updateFields } = sheet();
+
+    await userEvent.click(
+      screen.getAllByRole("button", { name: "Adresse publique" })[0],
+    );
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Adresse publique" }),
+      "https://lorem-ipsum.waat.tools{Enter}",
+    );
+
+    expect(updateFields).not.toHaveBeenCalled();
+    expect(screen.getByText(/pas une URL entière/)).toBeInTheDocument();
+  });
+
+  it("writes an address the catalogue can read", async () => {
+    const { updateFields } = sheet();
+
+    await userEvent.click(
+      screen.getAllByRole("button", { name: "Adresse publique" })[0],
+    );
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Adresse publique" }),
+      "lorem-ipsum{Enter}",
+    );
+
+    expect(updateFields).toHaveBeenCalledWith({ slug: "lorem-ipsum" });
+  });
+});
