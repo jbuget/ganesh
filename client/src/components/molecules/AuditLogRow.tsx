@@ -2,7 +2,6 @@
 
 import { ArrowRight } from "lucide-react";
 
-import { UserAvatar } from "@/components/atoms/UserAvatar";
 import type { AuditLogEntryResponse } from "@/lib/api/generated/model";
 import { auditSentence } from "@/lib/audit-log";
 
@@ -23,6 +22,11 @@ function atTime(iso: string): string {
  * when there is a before and an after — sits on its own line underneath: a
  * value is often long enough to push the sentence off the panel, and what is
  * being read first is who did what.
+ *
+ * No avatar, and no rule between the lines. A log is read as a column of
+ * sentences, from the top down: an initials badge repeated on every line marks
+ * nothing, since the name is right beside it, and a rule under each of two
+ * hundred lines draws a grid nobody is comparing across.
  */
 export function AuditLogRow({ entry }: AuditLogRowProps) {
   const sentence = auditSentence(entry);
@@ -31,17 +35,9 @@ export function AuditLogRow({ entry }: AuditLogRowProps) {
   const actor = entry.actor;
 
   return (
-    <li className="flex items-baseline gap-3 border-b border-slate-200 px-3 py-2 last:border-b-0">
+    <li className="flex items-baseline gap-3 py-1">
       <span className="w-10 shrink-0 text-xs tabular-nums text-slate-400">
         {atTime(entry.at)}
-      </span>
-
-      <span className="self-center">
-        {actor ? (
-          <UserAvatar initials={actor.initials} name={actor.display_name} />
-        ) : (
-          <UserAvatar initials="?" name="Compte supprimé" dimmed />
-        )}
       </span>
 
       <span className="min-w-0 flex-1">

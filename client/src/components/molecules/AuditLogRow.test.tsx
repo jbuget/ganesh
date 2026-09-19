@@ -53,7 +53,7 @@ describe("AuditLogRow", () => {
   it("keeps a gesture whose author is gone, and says the account went", () => {
     row({ actor: null });
 
-    expect(screen.getAllByText("Compte supprimé").length).toBeGreaterThan(0);
+    expect(screen.getByText("Compte supprimé")).toBeInTheDocument();
     expect(screen.getByText("a créé le projet")).toBeInTheDocument();
   });
 });

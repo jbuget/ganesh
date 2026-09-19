@@ -4,7 +4,6 @@ import { AuditLogRow } from "@/components/molecules/AuditLogRow";
 import { Button } from "@/components/ui/button";
 import { groupAuditByDay } from "@/lib/audit-log";
 import { formatSpelledDate } from "@/lib/dates";
-import { STRONG_RULE } from "@/lib/table-frame";
 import { useProjectAudit } from "@/lib/use-project-audit";
 
 interface ProjectAuditTabProps {
@@ -18,6 +17,12 @@ interface ProjectAuditTabProps {
  * log that chose what deserves to be in it would no longer answer the question
  * one opens it with. Length is met by reading fifty lines at a time, and by
  * saying the day once above the gestures made that day.
+ *
+ * Drawn without a frame, where the tables of the application carry one. A
+ * table is a grid one reads across, and the strong rule says where it stops;
+ * this is a column of sentences read from the top down, and ruling it would
+ * fence off something that has no columns to line up. The day headings carry
+ * the rhythm on their own.
  */
 export function ProjectAuditTab({ projectId }: ProjectAuditTabProps) {
   const log = useProjectAudit(projectId);
@@ -44,18 +49,15 @@ export function ProjectAuditTab({ projectId }: ProjectAuditTabProps) {
         {log.total > 1 ? `${log.total} gestes enregistrés` : "1 geste enregistré"}
       </p>
 
-      <div className={`overflow-hidden border ${STRONG_RULE}`}>
+      <div className="space-y-4">
         {days.map(({ day, entries }) => (
           <section key={day}>
-            {/* The day carries the strong rule above and below: it breaks the
-                reading in two, where a line between two gestures only
-                separates them. */}
-            <h3
-              className={`border-y bg-white px-3 py-1.5 text-xs font-medium text-slate-600 ${STRONG_RULE}`}
-            >
+            {/* The day is what one navigates by, so it is set apart by weight
+                and by the air above it rather than by a rule. */}
+            <h3 className="mb-1 text-xs font-semibold text-slate-500">
               {formatSpelledDate(day)}
             </h3>
-            <ul className="bg-slate-50">
+            <ul>
               {entries.map((entry) => (
                 <AuditLogRow key={entry.id} entry={entry} />
               ))}
