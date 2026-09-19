@@ -49,6 +49,27 @@ class EntryRepository(ABC):
         ...
 
     @abstractmethod
+    async def sum_forecast_by_project(self, today: date) -> dict[int, float]:
+        """Days already posted ahead on each mission: delivered ones do not count.
+
+        A forecast entered by hand is a piece of the plan already made. A
+        projection must take it off what is left to place, or it would plan
+        the same days twice.
+        """
+        ...
+
+    @abstractmethod
+    async def sum_by_user_and_day(
+        self, start: date, end: date
+    ) -> dict[int, dict[date, float]]:
+        """What each person has declared on each day of a window.
+
+        Delivered and forecast alike: what a projection needs to know is not
+        which of the two a day holds, but whether it still has any room.
+        """
+        ...
+
+    @abstractmethod
     async def upsert(self, entry: Entry) -> Entry: ...
 
     @abstractmethod

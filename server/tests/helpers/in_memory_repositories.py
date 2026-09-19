@@ -160,11 +160,32 @@ class InMemoryEntryRepository(EntryRepository):
         for entry in self._entries:
             if entry.is_forecast(today) or (since is not None and entry.day < since):
                 continue
-            par_statut = sums.setdefault(entry.project_id, {})
-            par_statut[entry.status_at_entry] = round(
-                par_statut.get(entry.status_at_entry, 0.0) + float(entry.value), 2
+            by_status = sums.setdefault(entry.project_id, {})
+            by_status[entry.status_at_entry] = round(
+                by_status.get(entry.status_at_entry, 0.0) + float(entry.value), 2
             )
         return sums
+
+    async def sum_forecast_by_project(self, today: date) -> dict[int, float]:
+        totals: dict[int, float] = {}
+        for entry in self._entries:
+            if not entry.is_forecast(today):
+                continue
+            totals[entry.project_id] = round(
+                totals.get(entry.project_id, 0.0) + float(entry.value), 2
+            )
+        return totals
+
+    async def sum_by_user_and_day(
+        self, start: date, end: date
+    ) -> dict[int, dict[date, float]]:
+        diaries: dict[int, dict[date, float]] = {}
+        for entry in self._entries:
+            if entry.day < start or entry.day > end:
+                continue
+            diary = diaries.setdefault(entry.user_id, {})
+            diary[entry.day] = round(diary.get(entry.day, 0.0) + float(entry.value), 2)
+        return diaries
 
     async def upsert(self, entry: Entry) -> Entry:
         existing = await self.get(entry.user_id, entry.project_id, entry.day)
