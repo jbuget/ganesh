@@ -29,6 +29,23 @@ class CreateProjectCommand:
 
 
 @dataclass(frozen=True)
+class AttachProjectCommand:
+    """Making a mission a work package of another project."""
+
+    actor_id: int
+    project_id: int
+    parent_id: int
+
+
+@dataclass(frozen=True)
+class DetachProjectCommand:
+    """Making a work package a project of its own again."""
+
+    actor_id: int
+    project_id: int
+
+
+@dataclass(frozen=True)
 class ChangeProjectStatusCommand:
     """Phase change. Open to the whole team, but traced."""
 
@@ -56,7 +73,6 @@ class UpdateProjectCommand:
     priority: ProjectPriority | None | Any = ABSENT
     go_live_date: date | None | Any = ABSENT
     is_active: bool | Any = ABSENT
-    parent_id: int | None | Any = ABSENT
     monday_item_id: str | None | Any = ABSENT
     monday_subitem_id: str | None | Any = ABSENT
 

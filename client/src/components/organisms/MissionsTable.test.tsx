@@ -190,3 +190,47 @@ describe("the columns put away", () => {
     expect(width).toBeLessThan(tableWidth(NO_HIDDEN_COLUMN));
   });
 });
+
+describe("MissionsTable — moving a mission under a project", () => {
+  it("offers no handle while the screen asks for no move", () => {
+    table();
+
+    expect(screen.queryByRole("button", { name: /Déplacer/ })).toBeNull();
+  });
+
+  it("offers a handle on a mission that may become a slice of a project", () => {
+    table({ onAttach: vi.fn() });
+
+    expect(
+      screen.getByRole("button", { name: "Déplacer Portail" }),
+    ).toBeInTheDocument();
+  });
+
+  it("offers none on a mission that already carries sub-projects", () => {
+    table({
+      tree: [node(1, "Portail", [mission(2, "Lot 1", "work_package")])],
+      onAttach: vi.fn(),
+    });
+
+    expect(screen.queryByRole("button", { name: "Déplacer Portail" })).toBeNull();
+  });
+
+  it("offers one on a work package, which may move to another project", () => {
+    table({
+      tree: [node(1, "Portail", [mission(2, "Lot 1", "work_package")])],
+      isExpanded: () => true,
+      onAttach: vi.fn(),
+    });
+
+    expect(screen.getByRole("button", { name: "Déplacer Lot 1" })).toBeInTheDocument();
+  });
+
+  it("offers none on off-project work", () => {
+    table({
+      tree: [{ mission: mission(3, "Absences", "off_project"), workPackages: [] }],
+      onAttach: vi.fn(),
+    });
+
+    expect(screen.queryByRole("button", { name: "Déplacer Absences" })).toBeNull();
+  });
+});

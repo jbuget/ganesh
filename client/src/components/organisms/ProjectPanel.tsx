@@ -91,6 +91,8 @@ export function ProjectPanel({
             addLink={sheet.addLink}
             removeLink={sheet.removeLink}
             addSubProject={sheet.addSubProject}
+            attachTo={sheet.attachTo}
+            detach={sheet.detach}
             // The panel stays open after archiving, even though the mission
             // leaves the list behind: closing it on an unlucky click would
             // leave no way back, the row having gone from the reference

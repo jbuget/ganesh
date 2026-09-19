@@ -110,6 +110,16 @@ class SqlEntryRepository(EntryRepository):
             sums.setdefault(project_id, {})[status] = float(total)
         return sums
 
+    async def span_by_project(self) -> dict[int, tuple[date, date]]:
+        result = await self._session.execute(
+            select(
+                EntryModel.project_id,
+                func.min(EntryModel.day),
+                func.max(EntryModel.day),
+            ).group_by(EntryModel.project_id)
+        )
+        return {project_id: (first, last) for project_id, first, last in result.all()}
+
     async def sum_forecast_by_project(self, today: date) -> dict[int, float]:
         result = await self._session.execute(
             select(EntryModel.project_id, func.sum(EntryModel.value))

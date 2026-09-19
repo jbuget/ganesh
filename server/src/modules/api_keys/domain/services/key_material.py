@@ -9,9 +9,11 @@ import hmac
 import secrets
 import string
 
-#: Announces a Janus key. It tells one from an Entra token on the same header,
+#: Announces a Ganesh key. It tells one from an Entra token on the same header,
 #: and it is what makes a leaked key recognisable in a log or to a secret
-#: scanner.
+#: scanner. It reads `jns` from the days the product was called Janus, and it
+#: stays: every key already minted carries it, and a prefix is a needle for a
+#: scanner, not a brand.
 PREFIX = "jns"
 
 #: Letters and digits only. `token_urlsafe` would be shorter to write but its
@@ -63,7 +65,7 @@ def parse(token: str) -> tuple[str, str] | None:
 
 
 def looks_like_ours(token: str) -> bool:
-    """Whether a bearer token announces itself as a Janus key."""
+    """Whether a bearer token announces itself as a Ganesh key."""
     return token.strip().startswith(f"{PREFIX}_")
 
 

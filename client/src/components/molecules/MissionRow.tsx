@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { ChevronRight, GripVertical } from "lucide-react";
 
 import { BuildCost } from "@/components/atoms/BuildCost";
 import { CategoryMark } from "@/components/atoms/CategoryMark";
@@ -42,6 +43,16 @@ interface MissionRowProps {
   onOpenThread: () => void;
   /** The columns put away. Nothing put away shows the whole panorama. */
   hidden?: HiddenColumns;
+  /**
+   * Whether the row may be picked up and dropped onto a project.
+   *
+   * Left out where the table offers no such gesture: the handle's gutter is
+   * only reserved when there is something to grab in the list, so the names
+   * fall on the same vertical from one row to the next either way.
+   */
+  movable?: boolean;
+  /** Whether dropping what is being dragged here would attach it. */
+  receiving?: boolean;
 }
 
 /**
@@ -62,10 +73,46 @@ export function MissionRow({
   onOpen,
   onOpenThread,
   hidden = NO_HIDDEN_COLUMN,
+  movable,
+  receiving = false,
 }: MissionRowProps) {
   const shows = (column: ColumnKey) => !hidden.has(column);
   const { project } = mission;
   const latest = mission.latest_update;
+
+  // Both hooks are called on every row and turned off where the gesture means
+  // nothing: what a row may do changes with the drag, and hooks may not.
+  //
+  // What is dragged is the row, what one takes hold of is the handle: the two
+  // are declared apart on purpose. Hanging the gesture on the handle alone
+  // would make the copy under the cursor the size of a grip, sixteen pixels
+  // wide, and a label would come out stacked one word per line inside it.
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDraggedRef,
+    setActivatorNodeRef: setHandleRef,
+    isDragging,
+  } = useDraggable({ id: project.id, disabled: movable !== true });
+  const { setNodeRef: setTargetRef, isOver } = useDroppable({
+    id: project.id,
+    disabled: !receiving,
+  });
+  const isTarget = receiving && isOver;
+
+  /** The row is both what moves and what receives: one node, two roles. */
+  function setRowRef(row: HTMLTableRowElement | null) {
+    setDraggedRef(row);
+    setTargetRef(row);
+  }
+
+  // The pinned cells carry the page's relief: white against the row's tint,
+  // one step behind it on hover. Aimed at, they take the colour of what is
+  // about to happen — the same the board tints the slot a card will drop
+  // into. They are what the eye is on, so they are where it has to read.
+  const pinned = isTarget
+    ? "bg-sky-100"
+    : "bg-white group-hover:bg-slate-50 group-has-[[aria-expanded=true]]:bg-slate-50";
 
   // Folded, a row tells what the whole service cost — its own build, that of
   // its evolutions, and the run of all of it. Unfolded, every row speaks of
@@ -102,8 +149,27 @@ export function MissionRow({
     // Every tint is solid: a transparent one would let what slides underneath
     // read through the pinned columns.
     <TableRow
+      ref={setRowRef}
       onClick={onOpen}
-      className="group cursor-pointer bg-slate-50 hover:bg-slate-100 has-aria-expanded:bg-slate-100"
+      className={[
+        "group cursor-pointer bg-slate-50 hover:bg-slate-100 has-aria-expanded:bg-slate-100",
+        // The row taken hold of fades: what one is carrying reads in the
+        // overlay under the cursor, not twice.
+        isDragging ? "opacity-40" : "",
+        // The project about to take it in is closed by a rule above and
+        // below, and named on a tinted ground — that part is the pinned
+        // cells' own, a few lines down.
+        //
+        // Every cell draws its own two rules, rather than the row drawing one
+        // around itself: the pinned cells paint in front of the row, and an
+        // outline carried by the row stopped where the name begins — exactly
+        // where the eye is. Inset shadows rather than borders, because a
+        // border would add its thickness to the row and make the table jump
+        // as the cursor passes.
+        isTarget
+          ? "[&>td]:shadow-[inset_0_2px_0_0_var(--color-sky-500),inset_0_-2px_0_0_var(--color-sky-500)]"
+          : "",
+      ].join(" ")}
     >
       {/* No `z`: a pinned cell already passes in front of ordinary cells, and
           claiming one would send it in front of the header, which must stay
@@ -113,11 +179,42 @@ export function MissionRow({
           NAME_COLUMN,
           LEFT_MARGIN,
           SEPARATOR,
-          "bg-white group-hover:bg-slate-50 group-has-[[aria-expanded=true]]:bg-slate-50",
+          pinned,
           isWorkPackage ? "pl-14" : "",
         ].join(" ")}
       >
         <span className="flex items-center gap-2">
+          {/* The handle shows on hover and keeps its place the rest of the
+              time: appearing out of nowhere would shift every name to the
+              right as the cursor passes. */}
+          {movable !== undefined && (
+            <span className="-ml-1 w-4 shrink-0">
+              {movable && (
+                <button
+                  type="button"
+                  ref={setHandleRef}
+                  aria-label={`Déplacer ${project.label}`}
+                  title="Faire glisser sur un projet pour l'y rattacher"
+                  // The whole row opens the mission: without stopping
+                  // propagation, taking hold of the handle would open the panel.
+                  onClick={(event) => event.stopPropagation()}
+                  // Pressing on the handle must take hold of the row, not start
+                  // selecting the text of the table: the browser reads a press
+                  // and a slide as a selection, and would paint three rows blue
+                  // under the copy being dragged. Refusing the default of the
+                  // mouse event leaves the pointer events dnd-kit listens to
+                  // untouched.
+                  onMouseDown={(event) => event.preventDefault()}
+                  className="cursor-grab text-slate-300 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
+                  {...listeners}
+                  {...attributes}
+                >
+                  <GripVertical className="size-4" aria-hidden />
+                </button>
+              )}
+            </span>
+          )}
+
           {/* The bracket ties the work package to its project: without it,
               indentation alone gets lost as soon as a long line wraps. */}
           {isWorkPackage && (
@@ -182,12 +279,7 @@ export function MissionRow({
           of. The icon already says what the number counts, hence the empty
           heading. */}
       <TableCell
-        className={[
-          THREAD_COLUMN,
-          STRONG_SEPARATOR,
-          "bg-white group-hover:bg-slate-50 group-has-[[aria-expanded=true]]:bg-slate-50",
-          "text-right",
-        ].join(" ")}
+        className={[THREAD_COLUMN, STRONG_SEPARATOR, pinned, "text-right"].join(" ")}
       >
         <UpdatesCounter
           count={mission.comments}

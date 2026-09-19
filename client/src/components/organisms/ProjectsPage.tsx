@@ -108,6 +108,12 @@ export function ProjectsPage() {
       <div className="max-w-[1400px]">
         {screen.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
+        {screen.hasAttachError && (
+          <p className="mb-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
+            Le rattachement n&apos;a pas pu être enregistré. La liste a été rechargée.
+          </p>
+        )}
+
         {/* An empty list is answered here and not by the table: the reason is
             the page's — a filter that keeps nothing, or a reference list still
             to be filled. */}
@@ -130,6 +136,10 @@ export function ProjectsPage() {
             onOpen={(projectId) => panel.open(projectId)}
             onOpenThread={(projectId) => panel.open(projectId, "updates")}
             hidden={columns.hidden}
+            // Dropped onto a project, a mission becomes one of its slices. The
+            // same move is reached from the panel menu, which is where the
+            // keyboard — and an explanation, when it is refused — lives.
+            onAttach={screen.attach}
           />
         )}
       </div>

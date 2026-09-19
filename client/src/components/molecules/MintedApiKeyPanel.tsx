@@ -44,8 +44,8 @@ export function MintedApiKeyPanel({ minted, onClose }: MintedApiKeyPanelProps) {
         <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
           <p>
-            Cette clé ne sera plus jamais affichée. Janus n&apos;en conserve qu&apos;une
-            empreinte : si elle est perdue, il faudra en créer une autre.
+            Cette clé ne sera plus jamais affichée. Ganesh n&apos;en conserve
+            qu&apos;une empreinte : si elle est perdue, il faudra en créer une autre.
           </p>
         </div>
 

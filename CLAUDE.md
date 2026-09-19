@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# CLAUDE.md — Janus
+# CLAUDE.md — Ganesh
 
 Development guide for Claude Code on this project. These rules apply to every
 contribution, without exception.
@@ -13,29 +13,38 @@ point not covered here, look at what WAATcher does rather than inventing:
 
 ## The product
 
-Janus lets every developer declare, in days or half days, the time spent (or
+Ganesh lets every developer declare, in days or half days, the time spent (or
 planned) on each project or sub-project, as a `days of the month × missions`
-grid. It is named after the god of doorways, who looks at what has been and at
-what comes with the same glance: the screens do the same — Activité behind,
-Planification ahead.
+grid. It is named after the lord of the *gaṇa* — the troop one belongs to, and
+the count: the same root gives *gaṇita*, calculation. He is the scribe who took
+down the Mahābhārata on the one condition that the dictation never stop, and the
+doorkeeper who turns back whoever has no right to pass. A register kept without
+a break, and a door that opens or holds — that is the whole product: Activité
+behind, Planification ahead, and a validated month nobody walks into.
 
-**The product is Janus; the domain is still a timesheet.** `TimesheetGrid`,
+**The name is that of a living deity. Keep it sober.** The name, a plain mark,
+and one sentence that says why. No mascot, no pun on the trunk, no elephant
+winking from an empty state. What would read as a tribute read straight reads as
+decoration the moment it is made cute.
+
+**The product is Ganesh; the domain is still a timesheet.** `TimesheetGrid`,
 `TimesheetPage` and `useTimesheetMonth` name a monthly time sheet, which is what
 they are and what they stay. Only what names the *application* carries the
 product's name — what the user reads, the page title, the API's own name. Do not
-rename a domain identifier to chase the product: `JanusGrid` would say nothing
+rename a domain identifier to chase the product: `GaneshGrid` would say nothing
 about what it renders.
 
 The database, its user, the Docker volume, the session cookie and the
-`localStorage` keys still read `timesheet`. Renaming them would cost everyone a
-fresh database and a new sign-in, and buy nothing: nobody reads the name of a
-volume.
+`localStorage` keys still read `timesheet`, and an API key still announces
+itself with `jns_`. Renaming them would cost everyone a fresh database, a new
+sign-in and a fresh set of keys, and buy nothing: nobody reads the name of a
+volume, and a key prefix is a needle for a secret scanner, not a brand.
 
 - **V1: no Monday integration.** Projects are created in the application or
   imported from CSV.
 - **V1.1:** a "Sync to Monday" button, managers only. The `monday_item_id` /
   `monday_subitem_id` columns exist from V1, nullable.
-- Monday will **never** be a source of entry: syncing goes one way, Janus →
+- Monday will **never** be a source of entry: syncing goes one way, Ganesh →
   Monday.
 
 ### Roles
@@ -186,7 +195,7 @@ callback `/api/auth/callback/azure-ad`.
 
 ### Entra credentials
 
-Janus reuses **WAATcher's Entra app registration** (same
+Ganesh reuses **WAATcher's Entra app registration** (same
 `AZURE_AD_TENANT_ID` and `AZURE_AD_CLIENT_ID`). The redirect URI
 `http://localhost:3000/api/auth/callback/azure-ad` must therefore be declared on
 that app registration in the Azure portal.
@@ -210,7 +219,7 @@ the tenant and the client id.
   (`pnpm api:generate`).
 
 > **A deliberate divergence from WAATcher.** WAATcher has no BFF: its browser
-> calls FastAPI directly through `NEXT_PUBLIC_API_URL`. Janus introduces a
+> calls FastAPI directly through `NEXT_PUBLIC_API_URL`. Ganesh introduces a
 > BFF on purpose, so that the Entra token never leaves the server and the API is
 > not publicly exposed. That is the one structural gap; everything else follows
 > WAATcher.
@@ -361,9 +370,57 @@ make migrate     # alembic upgrade head
 
 ---
 
+## Planification and Feuille de route
+
+Two screens read the same missions and answer different questions. Keeping
+them apart is what keeps either one worth opening.
+
+**Planification** asks *what fits, and who carries it*. Week by week, over
+what is left to build, on the room the diaries leave. It is arbitrated: one
+reorders the backlog and puts people on missions to see what that would cost,
+and saves the question as a simulation. Services in operations are out of it —
+`still_to_build()` drops them — and so is everything already delivered.
+
+**Feuille de route** asks *what we deliver, and when*. Over the whole
+portfolio, delivered services included, over a rolling window. It is shown
+rather than arbitrated: to a committee, to a department. Where the plan reads
+`go_live_date` only to work out a delay, the roadmap makes the announced date
+its subject — and is the one place it can be posted.
+
+The window rolls rather than following the calendar, and that is a decision
+about where the width of the screen goes. A civil year read in September
+spends two thirds of it on a past nobody is deciding anything about;
+`rolling_window()` opens one month back and runs `months` ahead, both ends on
+month boundaries so the scale draws whole columns. `months` is what the screen
+asks with — 3, 6 or 12 — and naming `from_day` and `to_day` instead reads
+exactly that window, which is how a year already over is looked back on.
+
+A band folds away the missions that have neither a bar nor a date. They are
+counted in plain sight, never dropped: forty of them unfolded drown the dozen
+that have something to say, and the count itself is a fact about the
+portfolio.
+
+Three rules the drawing rests on:
+
+- **A fact and a supposition are never drawn alike.** Solid is `LIVED`,
+  hatched is `PROJECTED`, a thin rule is `RUNNING`. `SegmentKind` decides it in
+  the domain, not a colour picked on the front end — colour belongs to the
+  phase. Reading a projection as a commitment is the mistake this screen
+  exists to prevent.
+- **Nothing is invented.** What was never recorded leaves no segment, and a
+  stretch nobody can date is carried by the nearest phase that is dated. A
+  roadmap that fills its own gaps gets read as fact.
+- **A mission with nothing to draw still shows.** No estimate, no date, no
+  time declared — that is the line steering has to see, and the tally above
+  says how many there are before anybody reads a bar.
+
+Gestures do not cross: reordering and staffing belong to Planification,
+posting a date belongs to the roadmap. Two screens answering the same gesture
+end up contradicting each other.
+
 ## The service catalogue
 
-waat.tools publishes the services the team produces. Janus is the source for
+waat.tools publishes the services the team produces. Ganesh is the source for
 everything it publishes: a mission carries a service sheet, and the « Fiche
 service » tab is where that sheet is filled in — nowhere else.
 
@@ -374,6 +431,17 @@ criticality publish. A field belongs to one side or the other, never to both.
 
 - Publishing asks for a slug, a summary, a criticality and a type: what the
   catalogue cannot draw a card without. Off-project work is never published.
+- **The catalogue draws one card per service, and a sub-project is not one.** A
+  project cut into lots is still one product at one address: a work package is
+  published through its project, never beside it. The domain refuses the
+  combination, so `GET /projects/catalog` carries no lot by construction.
+- **A project joins another from the reference list**, by dragging its row onto
+  a project or through the mission menu, which is also the way back out. The
+  move carries nothing away: the phase, the estimate and the days booked stay
+  on the lot, and the project reads their sum. Only the strategic axis is given
+  up, since a lot reads its project's. A published project is refused — it must
+  be unpublished first, or its card would leave waat.tools with nobody saying
+  so.
 - A slug is chosen once and kept: it is a public address, and it must survive
   the mission being renamed.
 - `description` is the full sheet in markdown, `summary` the one line a card
@@ -386,7 +454,7 @@ criticality publish. A field belongs to one side or the other, never to both.
 
 ## API keys
 
-A machine reaches Janus with a key, never with a user account. The rule the
+A machine reaches Ganesh with a key, never with a user account. The rule the
 whole design leans on, and the one to respect when adding a route:
 
 - **A key opens nothing by default.** `get_current_user` refuses keys outright,

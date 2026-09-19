@@ -10,11 +10,11 @@ import { defineConfig } from "orval";
  * browser never talks to the API directly.
  */
 export default defineConfig({
-  janus: {
+  ganesh: {
     input: { target: "./openapi.json" },
     output: {
       mode: "tags-split",
-      target: "./src/lib/api/generated/janus.ts",
+      target: "./src/lib/api/generated/ganesh.ts",
       schemas: "./src/lib/api/generated/model",
       client: "react-query",
       override: {

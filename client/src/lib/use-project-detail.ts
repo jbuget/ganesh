@@ -12,9 +12,11 @@ import type {
 } from "@/lib/api/generated/model";
 import {
   addProjectLink,
+  attachProject,
   changeProjectStatus,
   createProject,
   deleteProject,
+  detachProject,
   getProjectDetail,
   removeProjectLink,
   updateProject,
@@ -155,6 +157,23 @@ export function useProjectDetail(
 
     async removeLink(linkId: number) {
       await removeProjectLink(projectId, linkId);
+      await reload();
+    },
+
+    /**
+     * Makes the mission a work package of another project.
+     *
+     * Nothing else moves: the phase, the estimate and the days already
+     * declared stay on it, and the project it joins reads their sum.
+     */
+    async attachTo(parentId: number) {
+      await attachProject(projectId, { parent_id: parentId });
+      await reload();
+    },
+
+    /** Makes the work package a project of its own again. */
+    async detach() {
+      await detachProject(projectId);
       await reload();
     },
 

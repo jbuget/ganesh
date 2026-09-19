@@ -51,6 +51,18 @@ class ProjectDetailRepository(ABC):
     ) -> dict[ProjectStatus, date]: ...
 
     @abstractmethod
+    async def list_phases_reached_by_project(
+        self,
+    ) -> dict[int, dict[ProjectStatus, date]]:
+        """The whole phase history of every mission, read in one go.
+
+        A roadmap draws every bar on one screen, and each bar is made of the
+        phases its mission crossed: asking for them mission by mission would
+        turn one drawing into fifty queries.
+        """
+        ...
+
+    @abstractmethod
     async def list_dates_reached(self, status: ProjectStatus) -> dict[int, date]:
         """The day each mission entered a phase, read in one go.
 

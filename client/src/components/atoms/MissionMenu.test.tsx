@@ -192,3 +192,66 @@ describe("MissionMenu", () => {
     expect(screen.getByRole("button", { name: "Supprimer" })).toBeInTheDocument();
   });
 });
+
+describe("MissionMenu — where the mission sits", () => {
+  it("offers to attach a mission that belongs to no project", async () => {
+    const attach = vi.fn();
+    render(
+      <MissionMenu
+        archived={false}
+        onAttach={attach}
+        onArchive={vi.fn()}
+        onUnarchive={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Actions sur la mission" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Rattacher à un projet…" }),
+    );
+
+    expect(attach).toHaveBeenCalledTimes(1);
+  });
+
+  it("names the project a work package would leave", async () => {
+    const detach = vi.fn();
+    render(
+      <MissionMenu
+        archived={false}
+        onDetach={detach}
+        parentLabel="EDIT"
+        onArchive={vi.fn()}
+        onUnarchive={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Actions sur la mission" }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: /Détacher de/ }));
+
+    expect(detach).toHaveBeenCalledTimes(1);
+  });
+
+  it("says nothing of the hierarchy where the question does not arise", async () => {
+    render(
+      <MissionMenu
+        archived={false}
+        onArchive={vi.fn()}
+        onUnarchive={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Actions sur la mission" }),
+    );
+
+    expect(screen.queryByRole("button", { name: /Rattacher/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Détacher/ })).toBeNull();
+  });
+});

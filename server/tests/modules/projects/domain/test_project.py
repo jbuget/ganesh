@@ -4,6 +4,7 @@ import pytest
 
 from src.modules.projects.domain.entities.project import (
     Project,
+    ProjectCategory,
     ProjectKind,
     ProjectStatus,
 )
@@ -152,3 +153,38 @@ def test_a_project_is_active_and_undated_to_begin_with() -> None:
 
     assert project.is_active is True
     assert project.archived_at is None
+
+
+class TestAttachment:
+    def test_attaching_turns_a_project_into_a_work_package(self) -> None:
+        mission = make_project()
+
+        mission.attach_to(9)
+
+        assert mission.kind is ProjectKind.WORK_PACKAGE
+        assert mission.parent_id == 9
+
+    def test_attaching_drops_the_strategic_axis(self) -> None:
+        """From now on the axis is the project's, read through it."""
+        mission = make_project()
+        mission.category = ProjectCategory.INNOVATE
+
+        mission.attach_to(9)
+
+        assert mission.category is None
+
+    def test_detaching_turns_a_work_package_back_into_a_project(self) -> None:
+        package = make_project(kind=ProjectKind.WORK_PACKAGE, parent_id=9)
+
+        package.detach()
+
+        assert package.kind is ProjectKind.PROJECT
+        assert package.parent_id is None
+
+    def test_a_detached_mission_carries_no_axis_until_one_is_given(self) -> None:
+        """It had none to carry: what it read came from the project it left."""
+        package = make_project(kind=ProjectKind.WORK_PACKAGE, parent_id=9)
+
+        package.detach()
+
+        assert package.category is None

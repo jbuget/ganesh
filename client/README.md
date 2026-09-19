@@ -1,4 +1,4 @@
-# Janus — client
+# Ganesh — client
 
 Next.js front end and BFF. See the [root README](../README.md) to get started,
 `AGENTS.md` for the UI conventions and `CLAUDE.md` for the development charter.

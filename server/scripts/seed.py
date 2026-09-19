@@ -168,7 +168,7 @@ MOOD_WEATHER = 0.6
 #: The service sheets, drawn from the catalogue waat.tools publishes.
 #:
 #: They are the reverse of `make catalog`: the catalogue is exported from
-#: Janus, so reading it back in is how Janus becomes the source it is meant to
+#: Ganesh, so reading it back in is how Ganesh becomes the source it is meant to
 #: be. The file is generated, then maintained by hand like any other reference.
 SERVICES_FILE = DATA / "services.json"
 

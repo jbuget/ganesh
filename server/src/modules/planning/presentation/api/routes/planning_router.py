@@ -5,7 +5,9 @@ and who is taken is everybody's business. Only what writes stays a manager's
 privilege, and a projection writes nothing.
 """
 
-from fastapi import APIRouter, Depends, Response, status
+from datetime import date
+
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
@@ -15,6 +17,7 @@ from src.modules.planning.application.dtos.workload_dto import (
     PlannedMissionRow,
     WorkloadReading,
 )
+from src.modules.planning.application.use_cases.get_roadmap import GetRoadmapUseCase
 from src.modules.planning.application.use_cases.get_workload_plan import (
     GetWorkloadPlanUseCase,
 )
@@ -25,7 +28,12 @@ from src.modules.planning.application.use_cases.manage_simulations import (
     SimulationCommand,
     UpdateSimulationUseCase,
 )
+from src.modules.planning.domain.entities.roadmap import Roadmap, RoadmapMission
 from src.modules.planning.domain.entities.simulation import Simulation
+from src.modules.planning.domain.services.roadmap_window import (
+    DEFAULT_ROADMAP_MONTHS,
+    MAX_ROADMAP_MONTHS,
+)
 from src.modules.planning.presentation.api.schemas.planning_schemas import (
     MissionWeekResponse,
     PersonLoadResponse,
@@ -33,6 +41,10 @@ from src.modules.planning.presentation.api.schemas.planning_schemas import (
     PlannedMissionResponse,
     PlanSummaryResponse,
     ProjectionRequest,
+    RoadmapMissionResponse,
+    RoadmapResponse,
+    RoadmapSegmentResponse,
+    RoadmapSummaryResponse,
     SaveSimulationRequest,
     SimulationResponse,
     WeeklyLoadResponse,
@@ -41,6 +53,7 @@ from src.modules.planning.presentation.api.schemas.planning_schemas import (
 from src.modules.planning.presentation.dependencies import (
     get_delete_simulation_use_case,
     get_list_simulations_use_case,
+    get_roadmap_use_case,
     get_save_simulation_use_case,
     get_update_simulation_use_case,
     get_workload_plan_use_case,
@@ -149,6 +162,79 @@ def to_member_response(user: User) -> PlanMemberResponse:
         id=user.id or 0,
         display_name=user.label,
         initials=initials(user.label),
+    )
+
+
+@router.get(
+    "/roadmap",
+    response_model=RoadmapResponse,
+    operation_id="readRoadmap",
+)
+async def read_roadmap(
+    months: int = Query(default=DEFAULT_ROADMAP_MONTHS, ge=1, le=MAX_ROADMAP_MONTHS),
+    from_day: date | None = None,
+    to_day: date | None = None,
+    _: User = Depends(get_current_user),
+    use_case: GetRoadmapUseCase = Depends(get_roadmap_use_case),
+) -> RoadmapResponse:
+    """The portfolio over a window of time: what was delivered, what is promised.
+
+    A GET, where the projection is a POST: a span is a number and a window is
+    two dates, and neither needs an encoding invented for it.
+
+    `months` is what the screen asks with — how far ahead to look, the month
+    in progress included, with the month before thrown in for context. Naming
+    both dates instead reads exactly that window, which is how a year already
+    over is looked back on.
+    """
+    return to_roadmap_response(
+        await use_case.execute(months=months, from_day=from_day, to_day=to_day)
+    )
+
+
+def to_roadmap_response(roadmap: Roadmap) -> RoadmapResponse:
+    return RoadmapResponse(
+        from_day=roadmap.from_day,
+        to_day=roadmap.to_day,
+        today=roadmap.today,
+        missions=[to_roadmap_mission_response(line) for line in roadmap.missions],
+        summary=RoadmapSummaryResponse(
+            missions=roadmap.summary.missions,
+            late=roadmap.summary.late,
+            undated=roadmap.summary.undated,
+            unestimated=roadmap.summary.unestimated,
+            delivered=roadmap.summary.delivered,
+        ),
+    )
+
+
+def to_roadmap_mission_response(line: RoadmapMission) -> RoadmapMissionResponse:
+    return RoadmapMissionResponse(
+        project_id=line.project_id,
+        label=line.label,
+        kind=line.kind,
+        status=line.status,
+        priority=line.priority,
+        category=line.category,
+        parent_id=line.parent_id,
+        segments=[
+            RoadmapSegmentResponse(
+                kind=segment.kind,
+                status=segment.status,
+                starts_on=segment.starts_on,
+                ends_on=segment.ends_on,
+            )
+            for segment in line.segments
+        ],
+        target_date=line.target_date,
+        landing_date=line.landing_date,
+        slippage_days=line.slippage_days,
+        is_late=line.is_late,
+        estimated_days=line.estimated_days,
+        consumed_days=line.consumed_days,
+        remaining_days=line.remaining_days,
+        blocker=line.blocker,
+        is_active=line.is_active,
     )
 
 

@@ -56,7 +56,7 @@ function Row({ title, children }: { title: string; children: React.ReactNode }) 
  * A teammate, opened beside the list.
  *
  * What one reads about an account comes from Entra and cannot be edited here:
- * only what Janus decides — who is behind it, where they work, the role and
+ * only what Ganesh decides — who is behind it, where they work, the role and
  * the access — is given away. The list
  * behind stays visible, so one compares two colleagues without walking back
  * through a page each time.

@@ -8,6 +8,7 @@ import {
   Home,
   KanbanSquare,
   KeyRound,
+  Milestone,
   PanelLeft,
   Smile,
   Users,
@@ -15,6 +16,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { Logo } from "@/components/atoms/Logo";
 import { UserMenu } from "@/components/atoms/UserMenu";
 import { Button } from "@/components/ui/button";
 import { useSignOut } from "@/lib/use-sign-out";
@@ -29,6 +31,7 @@ const TABS = [
   { href: "/kanban", label: "Kanban", Icon: KanbanSquare },
   { href: "/projects", label: "Projets", Icon: FolderKanban },
   { href: "/planning", label: "Planification", Icon: GanttChartSquare },
+  { href: "/roadmap", label: "Feuille de route", Icon: Milestone },
   { href: "/users", label: "Utilisateurs", Icon: Users },
   { href: "/mood", label: "Moral", Icon: Smile },
   // Shown to everyone, as « Utilisateurs » is: the navigation says what
@@ -67,15 +70,17 @@ export function AppSidebar() {
       <div
         className={[
           "flex items-center gap-2 px-3 py-4",
-          collapsed ? "justify-center" : "justify-between",
+          collapsed ? "flex-col gap-3" : "justify-between",
         ].join(" ")}
       >
-        {!collapsed && (
-          <span className="min-w-0">
-            <span className="block text-sm font-semibold tracking-tight">Janus</span>
+        <span className="flex min-w-0 items-center gap-2">
+          <Logo className="size-6 shrink-0" />
+          {/* Folded, the name is still read by screen readers. */}
+          <span className={collapsed ? "sr-only" : "min-w-0"}>
+            <span className="block text-sm font-semibold tracking-tight">Ganesh</span>
             <span className="block text-xs text-slate-500">WAAT</span>
           </span>
-        )}
+        </span>
 
         <Button
           variant="ghost"
