@@ -1,11 +1,9 @@
 """Rearranging the reference list: what is a project, what is a slice of one."""
 
-from collections.abc import Sequence
-
-from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
+from src.modules.projects.application.audit import trace_project_changes
 from src.modules.projects.application.dtos.project_dto import (
     AttachProjectCommand,
     DetachProjectCommand,
@@ -21,30 +19,6 @@ from src.modules.projects.domain.services.hierarchy import (
 )
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
-
-
-async def _trace(
-    audit_logs: AuditLogRepository,
-    actor_id: int,
-    project: Project,
-    changes: Sequence[tuple[str, object, object]],
-) -> None:
-    """Records the move field by field, as any other change to a mission.
-
-    Nothing new is invented in the audit vocabulary: what one reads back is a
-    mission whose kind and parent changed, which is exactly what happened.
-    """
-    for field, previous, new_one in changes:
-        await audit_logs.add(
-            AuditLog(
-                action=AuditAction.PROJECT_UPDATE,
-                actor_id=actor_id,
-                project_id=project.id,
-                old_value=None if previous is None else str(previous),
-                new_value=None if new_one is None else str(new_one),
-                payload={"field": field},
-            )
-        )
 
 
 class AttachProjectUseCase:
@@ -90,7 +64,9 @@ class AttachProjectUseCase:
         mission.__post_init__()
 
         await self._projects.update(mission)
-        await _trace(self._audit_logs, command.actor_id, mission, changes)
+        await trace_project_changes(
+            self._audit_logs, command.actor_id, mission, changes
+        )
 
         # It answers with the axis of its project, the one every screen now
         # shows it under.
@@ -124,14 +100,27 @@ class DetachProjectUseCase:
 
         ensure_can_be_detached(mission)
 
+        # The axis the package was reading becomes its own: it was on that axis
+        # too, and a mission coming out blank would lose what every screen
+        # already showed on it.
+        parent = (
+            await self._projects.get_by_id(mission.parent_id)
+            if mission.parent_id is not None
+            else None
+        )
+        inherited = parent.category if parent else None
+
         changes = [
             ("kind", mission.kind, ProjectKind.PROJECT),
             ("parent_id", mission.parent_id, None),
+            *([("category", None, inherited)] if inherited else []),
         ]
-        mission.detach()
+        mission.detach(inherited)
         mission.__post_init__()
 
         await self._projects.update(mission)
-        await _trace(self._audit_logs, command.actor_id, mission, changes)
+        await trace_project_changes(
+            self._audit_logs, command.actor_id, mission, changes
+        )
 
         return mission

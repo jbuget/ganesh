@@ -9,9 +9,11 @@ import type {
   ProjectDetailResponse,
   ProjectPriority,
   ProjectStatus,
+  SubProjectPolicy,
 } from "@/lib/api/generated/model";
 import {
   addProjectLink,
+  archiveProject,
   attachProject,
   changeProjectStatus,
   createProject,
@@ -19,6 +21,7 @@ import {
   detachProject,
   getProjectDetail,
   removeProjectLink,
+  unarchiveProject,
   updateProject,
   updateProjectDescription,
   updateProjectDetail,
@@ -120,15 +123,24 @@ export function useProjectDetail(
     /**
      * Takes the mission out of the reference list without losing anything: the
      * list no longer shows it, but entries already booked stay readable.
+     *
+     * `subProjects` answers for the slices of a project cut into packages, and
+     * the server refuses the exit without it: a package left behind would hold
+     * its rank in the plan on behalf of a project that has gone.
      */
-    async archive() {
-      await updateProject(projectId, { is_active: false });
+    async archive(subProjects?: SubProjectPolicy) {
+      await archiveProject(projectId, { sub_projects: subProjects ?? null });
       await reload();
     },
 
-    /** Puts the mission back into the reference list, forgetting when it left. */
+    /**
+     * Puts the mission back into the reference list, forgetting when it left.
+     *
+     * It comes back on its own: packages archived with it carry their own exit
+     * date, and are brought back one by one.
+     */
     async unarchive() {
-      await updateProject(projectId, { is_active: true });
+      await unarchiveProject(projectId);
       await reload();
     },
 

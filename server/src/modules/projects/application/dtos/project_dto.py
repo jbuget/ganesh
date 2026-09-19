@@ -14,6 +14,7 @@ from src.modules.projects.domain.entities.service_registry import (
     Criticality,
     ServiceType,
 )
+from src.modules.projects.domain.services.hierarchy import SubProjectPolicy
 
 
 @dataclass(frozen=True)
@@ -46,6 +47,32 @@ class DetachProjectCommand:
 
 
 @dataclass(frozen=True)
+class ArchiveProjectCommand:
+    """Taking a mission out of the reference list.
+
+    `sub_projects` answers for the slices of a project cut into packages, and
+    is only asked for when there are any still in the list.
+    """
+
+    actor_id: int
+    project_id: int
+    sub_projects: SubProjectPolicy | None = None
+
+
+@dataclass(frozen=True)
+class UnarchiveProjectCommand:
+    """Putting a mission back into the reference list.
+
+    It comes back alone. Packages archived with it carry their own exit date
+    and are brought back one by one: guessing which ones left on their own
+    account would resurrect what nobody asked for.
+    """
+
+    actor_id: int
+    project_id: int
+
+
+@dataclass(frozen=True)
 class ChangeProjectStatusCommand:
     """Phase change. Open to the whole team, but traced."""
 
@@ -72,7 +99,6 @@ class UpdateProjectCommand:
     category: ProjectCategory | None | Any = ABSENT
     priority: ProjectPriority | None | Any = ABSENT
     go_live_date: date | None | Any = ABSENT
-    is_active: bool | Any = ABSENT
     monday_item_id: str | None | Any = ABSENT
     monday_subitem_id: str | None | Any = ABSENT
 

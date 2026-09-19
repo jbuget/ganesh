@@ -16,6 +16,7 @@ from src.modules.api_keys.presentation.dependencies import require_scope
 from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.projects.application.dtos.assignment_dto import AssignmentCommand
 from src.modules.projects.application.dtos.project_dto import (
+    ArchiveProjectCommand,
     AttachProjectCommand,
     ChangeProjectStatusCommand,
     CreateProjectCommand,
@@ -24,12 +25,17 @@ from src.modules.projects.application.dtos.project_dto import (
     ImportProjectsCommand,
     MoveProjectCommand,
     ProjectImportLine,
+    UnarchiveProjectCommand,
     UpdateProjectCommand,
 )
 from src.modules.projects.application.dtos.update_dto import (
     EditUpdateCommand,
     PostUpdateCommand,
     RemoveUpdateCommand,
+)
+from src.modules.projects.application.use_cases.archive_project import (
+    ArchiveProjectUseCase,
+    UnarchiveProjectUseCase,
 )
 from src.modules.projects.application.use_cases.assign_member import (
     AssignMemberUseCase,
@@ -93,6 +99,7 @@ from src.modules.projects.presentation.api.mappers.project_mapper import (
 )
 from src.modules.projects.presentation.api.schemas.project_schemas import (
     AddLinkRequest,
+    ArchiveProjectRequest,
     AttachProjectRequest,
     BoardResponse,
     CatalogEntryResponse,
@@ -114,6 +121,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
 )
 from src.modules.projects.presentation.dependencies import (
     get_add_project_link_use_case,
+    get_archive_project_use_case,
     get_assign_member_use_case,
     get_attach_project_use_case,
     get_board_use_case,
@@ -131,6 +139,7 @@ from src.modules.projects.presentation.dependencies import (
     get_project_detail_use_case,
     get_remove_project_link_use_case,
     get_remove_update_use_case,
+    get_unarchive_project_use_case,
     get_unassign_member_use_case,
     get_update_description_use_case,
     get_update_project_detail_use_case,
@@ -269,6 +278,56 @@ async def detach_project(
     assert current_user.id is not None
     mission = await use_case.execute(
         DetachProjectCommand(actor_id=current_user.id, project_id=project_id)
+    )
+    await session.commit()
+    return to_project_response(mission)
+
+
+@router.post(
+    "/{project_id}/archive",
+    response_model=ProjectResponse,
+    operation_id="archiveProject",
+)
+async def archive_project(
+    project_id: int,
+    payload: ArchiveProjectRequest,
+    current_user: User = Depends(get_current_user),
+    use_case: ArchiveProjectUseCase = Depends(get_archive_project_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> ProjectResponse:
+    """Takes a mission out of the reference list, without losing anything.
+
+    A project cut into packages says what becomes of them in the same breath:
+    archiving is not an edit of one field, it is a gesture that reaches what
+    hangs from the mission.
+    """
+    assert current_user.id is not None
+    mission = await use_case.execute(
+        ArchiveProjectCommand(
+            actor_id=current_user.id,
+            project_id=project_id,
+            sub_projects=payload.sub_projects,
+        )
+    )
+    await session.commit()
+    return to_project_response(mission)
+
+
+@router.post(
+    "/{project_id}/unarchive",
+    response_model=ProjectResponse,
+    operation_id="unarchiveProject",
+)
+async def unarchive_project(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    use_case: UnarchiveProjectUseCase = Depends(get_unarchive_project_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> ProjectResponse:
+    """Puts a mission back into the reference list. It comes back on its own."""
+    assert current_user.id is not None
+    mission = await use_case.execute(
+        UnarchiveProjectCommand(actor_id=current_user.id, project_id=project_id)
     )
     await session.commit()
     return to_project_response(mission)

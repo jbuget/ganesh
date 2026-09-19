@@ -5,6 +5,8 @@ import { useProjectDetail } from "./use-project-detail";
 
 const api = vi.hoisted(() => ({
   getProjectDetail: vi.fn(),
+  archiveProject: vi.fn(),
+  unarchiveProject: vi.fn(),
   updateProject: vi.fn(),
   updateProjectDetail: vi.fn(),
   updateProjectDescription: vi.fn(),
@@ -103,6 +105,30 @@ describe("useProjectDetail", () => {
       status: "exploration",
       parent_id: 7,
     });
+  });
+
+  /**
+   * Archiving a project cut into packages says what becomes of them in the
+   * same call: the server refuses the exit otherwise.
+   */
+  it("carries what becomes of the sub-projects into the archiving", async () => {
+    const result = await sheet();
+
+    await act(async () => {
+      await result.current.archive("detach");
+    });
+
+    expect(api.archiveProject).toHaveBeenCalledWith(7, { sub_projects: "detach" });
+  });
+
+  it("asks nothing of the packages when the mission carries none", async () => {
+    const result = await sheet();
+
+    await act(async () => {
+      await result.current.archive();
+    });
+
+    expect(api.archiveProject).toHaveBeenCalledWith(7, { sub_projects: null });
   });
 
   it("reads the mission back from the server after a write", async () => {

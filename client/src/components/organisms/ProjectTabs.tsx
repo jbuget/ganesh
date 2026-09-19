@@ -1,5 +1,6 @@
 "use client";
 
+import { ArchiveMissionDialog } from "@/components/atoms/ArchiveMissionDialog";
 import { ArchivedCallout } from "@/components/atoms/ArchivedCallout";
 import { AttachMissionDialog } from "@/components/atoms/AttachMissionDialog";
 import { DeleteMissionDialog } from "@/components/atoms/DeleteMissionDialog";
@@ -17,6 +18,7 @@ import type {
   ProjectCategory,
   ProjectDetailResponse,
   ProjectStatus,
+  SubProjectPolicy,
 } from "@/lib/api/generated/model";
 
 interface ProjectTabsProps {
@@ -48,7 +50,13 @@ interface ProjectTabsProps {
   attachTo: (parentId: number) => Promise<void>;
   /** Takes the work package back out as a project of its own. */
   detach: () => Promise<void>;
-  archive: () => Promise<void>;
+  /**
+   * Takes the mission out of the reference list.
+   *
+   * The policy answers for the slices of a project cut into packages: the
+   * server refuses the exit without it.
+   */
+  archive: (subProjects?: SubProjectPolicy) => Promise<void>;
   unarchive: () => Promise<void>;
   /**
    * Deletes the mission for good, once confirmed.
@@ -94,6 +102,7 @@ export function ProjectTabs({
   const [now] = useState(() => new Date());
   const [isDeleteOpen, setDeleteOpen] = useState(false);
   const [isAttachOpen, setAttachOpen] = useState(false);
+  const [isArchiveOpen, setArchiveOpen] = useState(false);
 
   const { kind, parent_id: parentId } = detail.project;
   // Off-project work is not a slice of anything: absences and training belong
@@ -101,6 +110,10 @@ export function ProjectTabs({
   // is how an aim taken at the wrong project is corrected.
   const belongsToAProject = kind === "work_package";
   const canBeAttached = kind !== "off_project";
+
+  // Packages that already left settle nothing: the question is only about the
+  // ones the archiving would leave behind, still steered on their own.
+  const liveSubProjects = detail.sub_projects.filter((one) => one.is_active).length;
 
   return (
     <Tabs
@@ -129,11 +142,26 @@ export function ProjectTabs({
           onAttach={canBeAttached ? () => setAttachOpen(true) : undefined}
           onDetach={belongsToAProject ? detach : undefined}
           parentLabel={detail.parent?.label ?? null}
-          onArchive={archive}
+          onArchive={liveSubProjects > 0 ? () => setArchiveOpen(true) : () => archive()}
           onUnarchive={unarchive}
           onDelete={() => setDeleteOpen(true)}
         />
       </div>
+
+      {/* The packages the sheet already lists are the ones the dialog argues
+          from, and the ones the server will settle. */}
+      {isArchiveOpen && (
+        <ArchiveMissionDialog
+          open
+          onOpenChange={setArchiveOpen}
+          label={detail.project.label}
+          subProjects={liveSubProjects}
+          onConfirm={async (policy) => {
+            setArchiveOpen(false);
+            await archive(policy);
+          }}
+        />
+      )}
 
       {/* What the sheet already shows is what the dialog argues from: the
           packages attached and the catalogue card are exactly what the server

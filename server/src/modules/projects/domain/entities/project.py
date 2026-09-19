@@ -244,14 +244,17 @@ class Project:
         self.parent_id = parent_id
         self.category = None
 
-    def detach(self) -> None:
+    def detach(self, inherited_category: ProjectCategory | None = None) -> None:
         """Make the work package a project of its own again.
 
-        It comes back without an axis: it never carried one, it read its
-        project's. Naming its own is the first thing to do afterwards.
+        It keeps as its own the axis it was reading from its project: the slice
+        was on that axis too, and coming out blank would lose what every screen
+        already showed on it. A project carrying no axis hands down none, and
+        the mission comes back to be qualified.
         """
         self.kind = ProjectKind.PROJECT
         self.parent_id = None
+        self.category = inherited_category
 
     def change_status(self, new_status: ProjectStatus) -> None:
         """Change the project phase. Every transition is allowed."""
