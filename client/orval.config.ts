@@ -10,11 +10,11 @@ import { defineConfig } from "orval";
  * browser never talks to the API directly.
  */
 export default defineConfig({
-  timesheet: {
+  janus: {
     input: { target: "./openapi.json" },
     output: {
       mode: "tags-split",
-      target: "./src/lib/api/generated/timesheet.ts",
+      target: "./src/lib/api/generated/janus.ts",
       schemas: "./src/lib/api/generated/model",
       client: "react-query",
       override: {
@@ -23,6 +23,12 @@ export default defineConfig({
           name: "bffFetcher",
         },
       },
+    },
+    // Orval writes in its own style, Prettier in the project's. Without this,
+    // regenerating produces a diff of quotes and spacing over every file,
+    // which buries the one change that matters and breaks `format:check`.
+    hooks: {
+      afterAllFilesWrite: "prettier --write",
     },
   },
 });
