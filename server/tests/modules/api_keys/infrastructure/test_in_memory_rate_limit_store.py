@@ -20,9 +20,9 @@ LIMIT = RateLimit(allowance=3, window=timedelta(minutes=1))
 @pytest.mark.asyncio
 async def test_a_key_that_never_called_starts_full() -> None:
     store = InMemoryRateLimitStore()
-    verdict = await store.take(1, LIMIT, NOW)
-    assert verdict.allowed is True
-    assert verdict.remaining == 2
+    decision = await store.take(1, LIMIT, NOW)
+    assert decision.allowed is True
+    assert decision.remaining == 2
 
 
 @pytest.mark.asyncio

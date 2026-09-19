@@ -54,21 +54,31 @@ class Bucket:
 
 
 @dataclass(frozen=True)
-class Verdict:
-    """Whether the call goes through, and what to tell the caller."""
+class Decision:
+    """What the caller is told: whether it passes, and what is left.
+
+    Carries no bucket. What is kept between two calls is the store's business,
+    and the layers above have nothing to do with it.
+    """
 
     allowed: bool
     #: Whole calls left after this one. What the header announces.
     remaining: int
     #: How long until one more call is possible. Zero when allowed.
     retry_after: timedelta
-    #: The state to keep for next time.
-    bucket: Bucket
 
     @property
     def retry_after_seconds(self) -> int:
         """Rounded up: answering « 0 » to « wait » would invite an instant retry."""
         return max(1, ceil_seconds(self.retry_after))
+
+
+@dataclass(frozen=True)
+class Spend:
+    """One call: what it costs the caller, and what to keep for the next."""
+
+    decision: Decision
+    bucket: Bucket
 
 
 def ceil_seconds(span: timedelta) -> int:
@@ -77,7 +87,7 @@ def ceil_seconds(span: timedelta) -> int:
     return whole if seconds == whole else whole + 1
 
 
-def take(limit: RateLimit, bucket: Bucket, now: datetime) -> Verdict:
+def take(limit: RateLimit, bucket: Bucket, now: datetime) -> Spend:
     """Spends one call from the bucket, refilling it for the time gone by.
 
     A refused call **spends nothing**: hammering a closed door does not hold it
@@ -88,17 +98,17 @@ def take(limit: RateLimit, bucket: Bucket, now: datetime) -> Verdict:
 
     if tokens < 1:
         missing = 1 - tokens
-        return Verdict(
-            allowed=False,
-            remaining=0,
-            retry_after=timedelta(seconds=missing / limit.per_second),
+        return Spend(
+            decision=Decision(
+                allowed=False,
+                remaining=0,
+                retry_after=timedelta(seconds=missing / limit.per_second),
+            ),
             bucket=Bucket(tokens=tokens, filled_at=now),
         )
 
     left = tokens - 1
-    return Verdict(
-        allowed=True,
-        remaining=int(left),
-        retry_after=timedelta(0),
+    return Spend(
+        decision=Decision(allowed=True, remaining=int(left), retry_after=timedelta(0)),
         bucket=Bucket(tokens=left, filled_at=now),
     )

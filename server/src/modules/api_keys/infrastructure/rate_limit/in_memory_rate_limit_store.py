@@ -15,8 +15,8 @@ from datetime import datetime
 from src.modules.api_keys.domain.repositories.rate_limit_store import RateLimitStore
 from src.modules.api_keys.domain.services.rate_limit import (
     Bucket,
+    Decision,
     RateLimit,
-    Verdict,
     take,
 )
 
@@ -32,10 +32,10 @@ class InMemoryRateLimitStore(RateLimitStore):
     def __init__(self) -> None:
         self._buckets: dict[int, Bucket] = {}
 
-    async def take(self, key_id: int, limit: RateLimit, now: datetime) -> Verdict:
+    async def take(self, key_id: int, limit: RateLimit, now: datetime) -> Decision:
         # No `await` between reading and writing: under asyncio that makes the
         # pair atomic, and two calls cannot spend the same token.
         bucket = self._buckets.get(key_id) or Bucket.full(limit, now)
-        verdict = take(limit, bucket, now)
-        self._buckets[key_id] = verdict.bucket
-        return verdict
+        spend = take(limit, bucket, now)
+        self._buckets[key_id] = spend.bucket
+        return spend.decision

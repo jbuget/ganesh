@@ -12,7 +12,8 @@ from src.modules.api_keys.application.use_cases.authenticate_api_key import (
     MachineCaller,
 )
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
-from src.modules.auth.presentation.dependencies import get_current_user, require_scope
+from src.modules.api_keys.presentation.dependencies import require_scope
+from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.projects.application.dtos.assignment_dto import AssignmentCommand
 from src.modules.projects.application.dtos.project_dto import (
     ChangeProjectStatusCommand,

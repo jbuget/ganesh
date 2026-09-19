@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-from src.modules.api_keys.domain.services.rate_limit import RateLimit, Verdict
+from src.modules.api_keys.domain.services.rate_limit import Decision, RateLimit
 
 
 class RateLimitStore(ABC):
@@ -15,6 +15,6 @@ class RateLimitStore(ABC):
     """
 
     @abstractmethod
-    async def take(self, key_id: int, limit: RateLimit, now: datetime) -> Verdict:
+    async def take(self, key_id: int, limit: RateLimit, now: datetime) -> Decision:
         """Spends one call for this key, and says what is left."""
         ...

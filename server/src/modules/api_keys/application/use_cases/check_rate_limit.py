@@ -3,7 +3,7 @@
 from datetime import datetime
 
 from src.modules.api_keys.domain.repositories.rate_limit_store import RateLimitStore
-from src.modules.api_keys.domain.services.rate_limit import RateLimit, Verdict
+from src.modules.api_keys.domain.services.rate_limit import Decision, RateLimit
 
 
 class CheckRateLimitUseCase:
@@ -23,5 +23,5 @@ class CheckRateLimitUseCase:
         """What the header announces as the ceiling."""
         return self._limit.allowance
 
-    async def execute(self, key_id: int, now: datetime) -> Verdict:
+    async def execute(self, key_id: int, now: datetime) -> Decision:
         return await self._store.take(key_id, self._limit, now)
