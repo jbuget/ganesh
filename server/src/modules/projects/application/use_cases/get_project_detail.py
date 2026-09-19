@@ -16,6 +16,7 @@ from src.modules.projects.domain.repositories.project_detail_repository import (
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.projects.domain.services.deletion import can_be_deleted
 from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
@@ -54,6 +55,8 @@ class ProjectDetail:
     tags: list[str]
     #: Internal missions this one relies on, in alphabetical order.
     dependencies: list[Project]
+    #: Whether the mission never served, and may therefore be deleted outright.
+    is_deletable: bool
     #: The project a work package belongs to. A project has none.
     parent: Project | None = None
 
@@ -108,6 +111,13 @@ class GetProjectDetailUseCase:
             return sorted(known, key=lambda u: u.label)
 
         entries = await self._entries.list_for_project(project_id)
+        sub_projects = sorted(
+            (
+                with_resolved_category(work_package, mission)
+                for work_package in await self._projects.list_children(project_id)
+            ),
+            key=lambda work_package: work_package.label.lower(),
+        )
 
         # Time per person tells who really carried the mission, which the list
         # of contributors alone does not: someone may have spent days on it
@@ -150,15 +160,10 @@ class GetProjectDetailUseCase:
             contributors=await people(ProjectRole.CONTRIBUTOR),
             consumed_days=round(sum(float(e.value) for e in entries), 2),
             contributions=contributions,
-            sub_projects=sorted(
-                (
-                    with_resolved_category(work_package, mission)
-                    for work_package in await self._projects.list_children(project_id)
-                ),
-                key=lambda work_package: work_package.label.lower(),
-            ),
+            sub_projects=sub_projects,
             stack=await self._details.list_stack(project_id),
             tags=await self._details.list_tags(project_id),
             dependencies=await self._dependencies(project_id),
+            is_deletable=can_be_deleted(mission, len(entries), len(sub_projects)),
             parent=parent,
         )

@@ -174,7 +174,7 @@ def to_board_response(board: Board) -> BoardResponse:
 
 def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
     return ProjectDetailResponse(
-        project=to_project_response(detail.project),
+        project=to_project_response(detail.project, is_deletable=detail.is_deletable),
         departments=detail.departments,
         links=[to_link_response(link) for link in detail.links if link.id is not None],
         # Phases read in nominal order, not the order the database returns
