@@ -20,7 +20,9 @@ import {
   CRITICALITIES,
   SERVICE_TYPES,
   frenchList,
+  CATALOG_ADDRESS,
   publicationBlockers,
+  slugError,
   suggestSlug,
   type SheetFields,
 } from "@/lib/service-sheet";
@@ -181,12 +183,14 @@ export function ProjectSheetTab({
             />
           </SheetRow>
 
-          <SheetRow title="Adresse publique">
+          <SheetRow title="Slug">
             <InlineTextField
               value={project.slug}
-              label="Adresse publique"
+              label="Slug"
+              prefix={CATALOG_ADDRESS}
               placeholder="portail-bailleurs"
               suggestion={suggested || null}
+              validate={slugError}
               onChange={(slug) => updateFields({ slug })}
             />
           </SheetRow>
