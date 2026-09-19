@@ -17,13 +17,42 @@ export class ApiError extends Error {
   }
 }
 
+/** The body as JSON, or nothing when it is not JSON at all. */
+function parsed(body: string): unknown {
+  if (!body) return undefined;
+  try {
+    return JSON.parse(body);
+  } catch {
+    return undefined;
+  }
+}
+
+/** What the API says went wrong, when it says it the way FastAPI does. */
+function detailOf(data: unknown): string | undefined {
+  if (typeof data !== "object" || data === null) return undefined;
+  const detail = (data as { detail?: unknown }).detail;
+  return typeof detail === "string" ? detail : undefined;
+}
+
 export const bffFetcher = async <T>(url: string, options?: RequestInit): Promise<T> => {
   const response = await fetch(url, { ...options, cache: "no-store" });
   const body = await response.text();
-  const data = body ? JSON.parse(body) : undefined;
+  /*
+    Parsed as a maybe, never as a given. A 500 comes back from FastAPI as plain
+    text and a gateway answers in HTML: parsing before reading the status
+    turned both into a `SyntaxError` pointing here, which said nothing of the
+    call that failed nor of the status it came back with.
+  */
+  const data = parsed(body);
 
   if (!response.ok) {
-    throw new ApiError(response.status, data?.detail ?? response.statusText);
+    throw new ApiError(response.status, detailOf(data) ?? response.statusText);
+  }
+
+  // A body that came back whole but unreadable is still a failed call: better
+  // said as such than handed on to React Query as data.
+  if (body && data === undefined) {
+    throw new ApiError(response.status, `Réponse illisible de ${url}`);
   }
 
   return {
