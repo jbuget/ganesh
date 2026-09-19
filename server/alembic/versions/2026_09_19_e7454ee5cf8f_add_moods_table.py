@@ -1,7 +1,7 @@
 """add moods table
 
 Revision ID: e7454ee5cf8f
-Revises: baf25b31828a
+Revises: c3a7d1e84f52
 Create Date: 2026-09-19 20:03:47.173173
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "e7454ee5cf8f"
-down_revision: str | None = "baf25b31828a"
+down_revision: str | None = "c3a7d1e84f52"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
