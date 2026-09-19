@@ -89,7 +89,9 @@ describe("ProjectSheetTab", () => {
       sheet();
 
       expect(
-        screen.getByText("Il manque l'adresse publique et le résumé."),
+        screen.getByText(
+          "Il manque l'adresse publique, le résumé, la criticité et le type.",
+        ),
       ).toBeInTheDocument();
     });
 
@@ -103,7 +105,12 @@ describe("ProjectSheetTab", () => {
 
     it("lets the mission be published once the sheet is complete", async () => {
       const { updateFields } = sheet({
-        project: { slug: "portail", summary: "Un portail." },
+        project: {
+          slug: "portail",
+          summary: "Un portail.",
+          criticality: "standard",
+          service_type: "fullstack",
+        },
       });
 
       await userEvent.click(

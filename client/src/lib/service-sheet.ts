@@ -67,7 +67,20 @@ export function publicationBlockers(project: ProjectResponse): string[] {
   }
   if (!project.slug) missing.push("l'adresse publique");
   if (!project.summary) missing.push("le résumé");
+  if (!project.criticality) missing.push("la criticité");
+  if (!project.service_type) missing.push("le type");
   return missing;
+}
+
+/**
+ * An enumeration as one says it: « a, b et c ».
+ *
+ * Four items strung together by « et » read like a stutter; the comma does the
+ * work and the last « et » closes the sentence.
+ */
+export function frenchList(items: string[]): string {
+  if (items.length <= 1) return items.join("");
+  return `${items.slice(0, -1).join(", ")} et ${items[items.length - 1]}`;
 }
 
 /** Turns a label into the address it would take in the catalogue. */

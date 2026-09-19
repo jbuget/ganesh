@@ -14,6 +14,8 @@ export * from "./boardMemberResponse";
 export * from "./boardResponse";
 export * from "./calendarDayResponse";
 export * from "./calendarDaySchema";
+export * from "./catalogEntryResponse";
+export * from "./catalogLinkResponse";
 export * from "./categoryShareResponse";
 export * from "./changeRoleRequest";
 export * from "./changeStatusRequest";

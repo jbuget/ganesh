@@ -2,7 +2,8 @@
 
 from datetime import date, datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+from pydantic.alias_generators import to_camel
 
 from src.modules.projects.domain.entities.project import (
     Department,
@@ -349,3 +350,53 @@ class PostUpdateRequest(BaseModel):
     """Posting or correcting an update."""
 
     body: str = Field(min_length=1)
+
+
+class CatalogLinkResponse(BaseModel):
+    """A secondary link, as the catalogue lists it."""
+
+    label: str
+    url: str
+    icon: LinkIcon
+
+
+class CatalogEntryResponse(BaseModel):
+    """One published service, in the catalogue's own vocabulary.
+
+    This schema speaks camelCase where the rest of the API speaks snake_case,
+    on purpose: it is a publication format, read by waat.tools and shaped for
+    it. Keeping the names identical on both sides means neither has a
+    translation table to keep in step.
+    """
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+    slug: str
+    name: str
+    description: str
+    status: ProjectStatus
+    archived: bool
+    criticality: str
+    service_type: str = Field(serialization_alias="type")
+    #: The full sheet in markdown; the catalogue renders it.
+    body: str | None
+
+    production_link: str | None
+    staging_link: str | None
+    repository_link: str | None
+    documentation_link: str | None
+    project_management_link: str | None
+    monitoring_link: str | None
+    stats_page_link: str | None
+    stats_api_link: str | None
+    secondary_links: list[CatalogLinkResponse]
+
+    first_deployed_at: date | None
+    team: str | None
+    slack_channel: str | None
+    hosting: str | None
+    has_microsoft_entra: bool
+    contributors: list[str]
+    stack: list[str]
+    tags: list[str]
+    depends_on: list[str]
