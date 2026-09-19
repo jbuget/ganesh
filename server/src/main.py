@@ -5,6 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.common.exception_handlers import register_domain_exception_handlers
 from src.core.config import get_settings
+from src.modules.api_keys.presentation.api.routes.api_key_router import (
+    router as api_key_router,
+)
 from src.modules.calendar.presentation.api.routes.calendar_router import (
     router as calendar_router,
 )
@@ -46,6 +49,7 @@ register_domain_exception_handlers(app)
 
 for module_router in (
     user_router,
+    api_key_router,
     project_router,
     entry_router,
     month_router,

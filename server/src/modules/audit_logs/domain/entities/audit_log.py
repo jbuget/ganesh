@@ -29,6 +29,8 @@ class AuditAction(StrEnum):
     USER_ROLE_CHANGE = "user.role_change"
     USER_DEACTIVATE = "user.deactivate"
     USER_ACTIVATE = "user.activate"
+    API_KEY_CREATE = "api_key.create"
+    API_KEY_REVOKE = "api_key.revoke"
 
 
 def _as_text(value: Any | None) -> str | None:

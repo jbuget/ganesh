@@ -17,6 +17,9 @@ from src.modules.audit_logs.infrastructure.database.models import (  # noqa: F40
 from src.modules.calendar.infrastructure.database.models import (  # noqa: F401, E402
     holiday_model,
 )
+from src.modules.api_keys.infrastructure.database.models import (  # noqa: F401, E402
+    api_key_models,
+)
 from src.modules.entries.infrastructure.database.models import (  # noqa: F401, E402
     entry_model,
 )

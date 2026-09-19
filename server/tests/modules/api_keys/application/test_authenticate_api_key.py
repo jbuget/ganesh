@@ -1,0 +1,173 @@
+"""Letting a machine in — and, far more often, not.
+
+Unknown, malformed, expired, revoked, owner deactivated: all five come back as
+nothing at all, and the caller answers 401 to every one. Telling them apart
+would hand an attacker a way to enumerate. Only a valid key short of a scope
+raises, because there the caller needs to know what to ask for.
+"""
+
+from datetime import datetime, timedelta
+
+import pytest
+
+from src.modules.api_keys.application.use_cases.authenticate_api_key import (
+    AuthenticateApiKeyUseCase,
+)
+from src.modules.api_keys.domain.entities.api_key import (
+    USE_FRESHNESS,
+    ApiKey,
+    ApiKeyScope,
+)
+from src.modules.api_keys.domain.services import key_material
+from src.modules.users.domain.entities.user import User
+from src.shared.exceptions.domain_exceptions import ForbiddenActionError
+from tests.helpers.in_memory_repositories import (
+    InMemoryApiKeyRepository,
+    InMemoryUserRepository,
+)
+
+OWNER = User(id=10, entra_oid="a", email="t.da@waat.fr", display_name="Toni DA RODDA")
+
+
+def build(
+    scopes: list[ApiKeyScope] | None = None,
+    owner: User = OWNER,
+    **overrides: object,
+):
+    public_id, secret, token = key_material.generate()
+    fields: dict[str, object] = {
+        "id": 1,
+        "name": "CI waat-tools",
+        "public_id": public_id,
+        "secret_hash": key_material.hash_secret(secret),
+        "owner_id": 10,
+        "created_by": 20,
+        "scopes": scopes or [ApiKeyScope.CATALOG_READ],
+    }
+    fields.update(overrides)
+    key = ApiKey(**fields)  # type: ignore[arg-type]
+    keys = InMemoryApiKeyRepository([key])
+    use_case = AuthenticateApiKeyUseCase(
+        keys=keys, users=InMemoryUserRepository([owner])
+    )
+    return use_case, token, key
+
+
+CATALOG = ApiKeyScope.CATALOG_READ
+
+
+@pytest.mark.asyncio
+async def test_a_good_key_with_the_scope_gets_in() -> None:
+    use_case, token, key = build()
+    caller = await use_case.execute(token, CATALOG)
+
+    assert caller is not None
+    assert caller.key.id == key.id
+    assert caller.owner.id == 10
+
+
+@pytest.mark.asyncio
+async def test_the_caller_answers_under_its_owner() -> None:
+    # This is what the audit records: nothing in the use cases has to learn
+    # about machines, and the trace still says who is accountable.
+    use_case, token, _ = build()
+    caller = await use_case.execute(token, CATALOG)
+    assert caller is not None and caller.actor_id == 10
+
+
+class TestTurnedAwayWithoutASayingWhy:
+    @pytest.mark.asyncio
+    async def test_a_token_that_is_not_ours(self) -> None:
+        use_case, _, _ = build()
+        assert await use_case.execute("ghp_something", CATALOG) is None
+
+    @pytest.mark.asyncio
+    async def test_a_malformed_token(self) -> None:
+        use_case, _, _ = build()
+        assert await use_case.execute("jns_only-two-parts", CATALOG) is None
+
+    @pytest.mark.asyncio
+    async def test_an_unknown_public_id(self) -> None:
+        use_case, _, _ = build()
+        _, _, other = key_material.generate()
+        assert await use_case.execute(other, CATALOG) is None
+
+    @pytest.mark.asyncio
+    async def test_a_known_public_id_with_the_wrong_secret(self) -> None:
+        use_case, token, _ = build()
+        public_id, _ = key_material.parse(token)  # type: ignore[misc]
+        forged = f"jns_{public_id}_{'z' * 43}"
+        assert await use_case.execute(forged, CATALOG) is None
+
+    @pytest.mark.asyncio
+    async def test_an_expired_key(self) -> None:
+        use_case, token, _ = build(
+            created_at=datetime.now() - timedelta(days=400),
+            expires_at=datetime.now() - timedelta(days=1),
+        )
+        assert await use_case.execute(token, CATALOG) is None
+
+    @pytest.mark.asyncio
+    async def test_a_revoked_key(self) -> None:
+        use_case, token, key = build()
+        key.revoke(by=20, at=datetime.now())
+        assert await use_case.execute(token, CATALOG) is None
+
+    @pytest.mark.asyncio
+    async def test_a_key_whose_owner_was_deactivated(self) -> None:
+        # Deactivating someone cuts their machines with them: that is the
+        # offboarding story.
+        gone = User(
+            id=10,
+            entra_oid="a",
+            email="t.da@waat.fr",
+            display_name="Toni DA RODDA",
+            is_active=False,
+        )
+        use_case, token, _ = build(owner=gone)
+        assert await use_case.execute(token, CATALOG) is None
+
+    @pytest.mark.asyncio
+    async def test_a_key_whose_owner_no_longer_exists(self) -> None:
+        use_case, token, _ = build()
+        use_case._users = InMemoryUserRepository([])
+        assert await use_case.execute(token, CATALOG) is None
+
+
+@pytest.mark.asyncio
+async def test_a_valid_key_short_of_the_scope_says_so() -> None:
+    use_case, token, _ = build(scopes=[ApiKeyScope.ENTRIES_READ])
+    with pytest.raises(ForbiddenActionError):
+        await use_case.execute(token, CATALOG)
+
+
+class TestRecordingUse:
+    @pytest.mark.asyncio
+    async def test_a_first_call_stamps_the_key(self) -> None:
+        use_case, token, key = build()
+        await use_case.execute(token, CATALOG)
+        assert key.last_used_at is not None
+
+    @pytest.mark.asyncio
+    async def test_a_second_call_inside_the_window_does_not_restamp(self) -> None:
+        use_case, token, key = build()
+        await use_case.execute(token, CATALOG)
+        first = key.last_used_at
+        await use_case.execute(token, CATALOG)
+        assert key.last_used_at == first
+
+    @pytest.mark.asyncio
+    async def test_a_call_past_the_window_stamps_again(self) -> None:
+        use_case, token, key = build(
+            last_used_at=datetime.now() - USE_FRESHNESS - timedelta(minutes=1)
+        )
+        stale = key.last_used_at
+        await use_case.execute(token, CATALOG)
+        assert key.last_used_at != stale
+
+    @pytest.mark.asyncio
+    async def test_a_refused_key_is_never_stamped(self) -> None:
+        use_case, token, key = build(scopes=[ApiKeyScope.ENTRIES_READ])
+        with pytest.raises(ForbiddenActionError):
+            await use_case.execute(token, CATALOG)
+        assert key.last_used_at is None

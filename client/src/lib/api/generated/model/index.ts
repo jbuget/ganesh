@@ -7,6 +7,9 @@
 
 export * from "./addLinkRequest";
 export * from "./adoptionResponse";
+export * from "./apiKeyOwnerResponse";
+export * from "./apiKeyResponse";
+export * from "./apiKeyScope";
 export * from "./assignMemberParams";
 export * from "./boardCardResponse";
 export * from "./boardColumnResponse";
@@ -21,6 +24,7 @@ export * from "./changeRoleRequest";
 export * from "./changeStatusRequest";
 export * from "./clearEntryParams";
 export * from "./coverageResponse";
+export * from "./createApiKeyRequest";
 export * from "./createProjectRequest";
 export * from "./criticality";
 export * from "./dayTotalResponse";
@@ -42,6 +46,7 @@ export * from "./lastUpdateResponse";
 export * from "./linkIcon";
 export * from "./listProjectsParams";
 export * from "./listUsersParams";
+export * from "./mintedApiKeyResponse";
 export * from "./missionRefResponse";
 export * from "./missionShareResponse";
 export * from "./missionWeekResponse";
