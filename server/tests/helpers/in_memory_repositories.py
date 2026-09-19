@@ -14,6 +14,10 @@ from src.modules.entries.domain.entities.entry import Entry
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.domain.repositories.month_repository import MonthRepository
+from src.modules.planning.domain.entities.simulation import Simulation
+from src.modules.planning.domain.repositories.simulation_repository import (
+    SimulationRepository,
+)
 from src.modules.projects.domain.entities.project import (
     Department,
     Project,
@@ -160,11 +164,32 @@ class InMemoryEntryRepository(EntryRepository):
         for entry in self._entries:
             if entry.is_forecast(today) or (since is not None and entry.day < since):
                 continue
-            par_statut = sums.setdefault(entry.project_id, {})
-            par_statut[entry.status_at_entry] = round(
-                par_statut.get(entry.status_at_entry, 0.0) + float(entry.value), 2
+            by_status = sums.setdefault(entry.project_id, {})
+            by_status[entry.status_at_entry] = round(
+                by_status.get(entry.status_at_entry, 0.0) + float(entry.value), 2
             )
         return sums
+
+    async def sum_forecast_by_project(self, today: date) -> dict[int, float]:
+        totals: dict[int, float] = {}
+        for entry in self._entries:
+            if not entry.is_forecast(today):
+                continue
+            totals[entry.project_id] = round(
+                totals.get(entry.project_id, 0.0) + float(entry.value), 2
+            )
+        return totals
+
+    async def sum_by_user_and_day(
+        self, start: date, end: date
+    ) -> dict[int, dict[date, float]]:
+        diaries: dict[int, dict[date, float]] = {}
+        for entry in self._entries:
+            if entry.day < start or entry.day > end:
+                continue
+            diary = diaries.setdefault(entry.user_id, {})
+            diary[entry.day] = round(diary.get(entry.day, 0.0) + float(entry.value), 2)
+        return diaries
 
     async def upsert(self, entry: Entry) -> Entry:
         existing = await self.get(entry.user_id, entry.project_id, entry.day)
@@ -345,3 +370,39 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
 
     async def update(self, update: ProjectUpdate) -> ProjectUpdate:
         return update
+
+
+class InMemorySimulationRepository(SimulationRepository):
+    def __init__(self, simulations: list[Simulation] | None = None) -> None:
+        self._simulations: dict[int, Simulation] = {}
+        self._next_id = 1
+        for simulation in simulations or []:
+            self._simulations[simulation.id or self._next_id] = simulation
+            self._next_id = max(self._next_id, (simulation.id or 0) + 1)
+
+    async def list_all(self) -> list[Simulation]:
+        return list(self._simulations.values())
+
+    async def get_by_id(self, simulation_id: int) -> Simulation | None:
+        return self._simulations.get(simulation_id)
+
+    async def find_by_name(self, name: str) -> Simulation | None:
+        target = name.strip().casefold()
+        return next(
+            (s for s in self._simulations.values() if s.name.casefold() == target),
+            None,
+        )
+
+    async def add(self, simulation: Simulation) -> Simulation:
+        simulation.id = self._next_id
+        self._next_id += 1
+        self._simulations[simulation.id] = simulation
+        return simulation
+
+    async def update(self, simulation: Simulation) -> Simulation:
+        if simulation.id is not None:
+            self._simulations[simulation.id] = simulation
+        return simulation
+
+    async def delete(self, simulation_id: int) -> None:
+        self._simulations.pop(simulation_id, None)

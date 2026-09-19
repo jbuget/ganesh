@@ -15,6 +15,22 @@ const MONTH_NAMES = [
   "décembre",
 ];
 
+/** Abbreviated, for labels that must stay narrow: « 14 sept. ». */
+const MONTH_ABBREVIATIONS = [
+  "janv.",
+  "févr.",
+  "mars",
+  "avr.",
+  "mai",
+  "juin",
+  "juil.",
+  "août",
+  "sept.",
+  "oct.",
+  "nov.",
+  "déc.",
+];
+
 const WEEKDAY_INITIALS = ["D", "L", "M", "M", "J", "V", "S"];
 
 /** First day of the month, in ISO format `YYYY-MM-DD`. */
@@ -97,4 +113,32 @@ export function formatDecimalDays(value: number): string {
 export function formatShortDate(iso: string): string {
   const [year, month, day] = iso.slice(0, 10).split("-");
   return `${day}/${month}/${year}`;
+}
+
+/**
+ * An ISO date spelled out and abbreviated: « 17 sept. 2026 ».
+ *
+ * Splits the string rather than going through `Date`, for the same reason
+ * `formatShortDate` does: a naive timestamp read as UTC slips back a day.
+ */
+export function formatSpelledDate(iso: string): string {
+  const [year, month, day] = iso.slice(0, 10).split("-").map(Number);
+  return `${day} ${MONTH_ABBREVIATIONS[month - 1]} ${year}`;
+}
+
+/**
+ * A week named by its Monday, without the year: « 14 sept. ».
+ *
+ * Twenty-six columns line up across a horizon: the year is the same on nearly
+ * all of them, and repeating it would cost the width the days need.
+ */
+export function formatWeek(iso: string): string {
+  const [, month, day] = iso.slice(0, 10).split("-").map(Number);
+  return `${day} ${MONTH_ABBREVIATIONS[month - 1]}`;
+}
+
+/** The month a date falls in, spelled out: « septembre 2026 ». */
+export function formatMonthOf(iso: string): string {
+  const [year, month] = iso.slice(0, 10).split("-").map(Number);
+  return formatMonth(year, month);
 }

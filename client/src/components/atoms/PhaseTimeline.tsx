@@ -1,29 +1,9 @@
 import type { PhaseReachedResponse } from "@/lib/api/generated/model";
 import { phaseDot } from "@/lib/board";
+import { formatSpelledDate } from "@/lib/dates";
 
 interface PhaseTimelineProps {
   phases: PhaseReachedResponse[];
-}
-
-/** A date spelled out, abbreviated: « 17 sept. 2026 ». */
-const MONTH = [
-  "janv.",
-  "févr.",
-  "mars",
-  "avr.",
-  "mai",
-  "juin",
-  "juil.",
-  "août",
-  "sept.",
-  "oct.",
-  "nov.",
-  "déc.",
-];
-
-function formatDate(iso: string): string {
-  const [year, month, day] = iso.split("-").map(Number);
-  return `${day} ${MONTH[month - 1]} ${year}`;
 }
 
 /**
@@ -46,7 +26,9 @@ export function PhaseTimeline({ phases }: PhaseTimelineProps) {
             className={`size-2 shrink-0 rounded-full ${phaseDot(phase.status)}`}
           />
           <span className="font-medium text-slate-700">{phase.label}</span>
-          <span className="text-slate-500">le {formatDate(phase.reached_at)}</span>
+          <span className="text-slate-500">
+            le {formatSpelledDate(phase.reached_at)}
+          </span>
         </li>
       ))}
     </ol>

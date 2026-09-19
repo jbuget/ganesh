@@ -25,7 +25,7 @@ export function mutationResult<T>(response: { data: unknown }): T {
   return response.data as T;
 }
 
-/** L'utilisateur courant. */
+/** The current user. */
 export function useCurrentUser() {
   const query = useGetMe();
   return { ...query, user: successOf<UserResponse>(query.data) };

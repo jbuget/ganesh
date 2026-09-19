@@ -156,3 +156,49 @@ async def test_the_captured_phase_survives_a_project_status_change(
     saved = await entries.get(user_id, project_id, DAY)
     assert saved is not None
     assert saved.status_at_entry is ProjectStatus.SCOPING
+
+
+async def test_forecasts_are_summed_per_mission_apart_from_delivered_days(
+    db_session: AsyncSession,
+) -> None:
+    """A projection takes what is already forecast off what it has left to
+    place; a day already delivered is not that."""
+    user_id, project_id = await seed(db_session)
+    repo = SqlEntryRepository(db_session)
+    for day, value in ((DAY, 1.0), (date(2026, 9, 21), 1.0), (date(2026, 9, 22), 0.5)):
+        await repo.upsert(
+            Entry(
+                id=None,
+                user_id=user_id,
+                project_id=project_id,
+                day=day,
+                value=DayValue(value),
+                status_at_entry=ProjectStatus.DEVELOPMENT,
+            )
+        )
+
+    assert await repo.sum_forecast_by_project(DAY) == {project_id: 1.5}
+
+
+async def test_a_diary_is_read_day_by_day_over_a_window(
+    db_session: AsyncSession,
+) -> None:
+    """What a day still has free is one minus what is declared on it, whether
+    that was delivered or merely forecast."""
+    user_id, project_id = await seed(db_session)
+    repo = SqlEntryRepository(db_session)
+    for day in (date(2026, 9, 14), DAY, date(2026, 9, 30)):
+        await repo.upsert(
+            Entry(
+                id=None,
+                user_id=user_id,
+                project_id=project_id,
+                day=day,
+                value=DayValue(0.5),
+                status_at_entry=ProjectStatus.DEVELOPMENT,
+            )
+        )
+
+    diaries = await repo.sum_by_user_and_day(DAY, date(2026, 9, 20))
+
+    assert diaries == {user_id: {DAY: 0.5}}

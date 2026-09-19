@@ -6,7 +6,7 @@ framework: it belongs in the domain, just as `datetime` does.
 
 from calendar import monthrange
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from enum import StrEnum
 from functools import lru_cache
 
@@ -76,3 +76,18 @@ def days_of_month(year: int, month: int) -> list[CalendarDay]:
 def working_days_count(year: int, month: int) -> int:
     """Number of working days in the month, holidays and weekends excluded."""
     return sum(1 for day in days_of_month(year, month) if day.kind is DayKind.WORKING)
+
+
+def working_days_between(start: date, end: date) -> list[date]:
+    """Working days from `start` to `end`, both included, in order.
+
+    An empty window when `end` precedes `start`: a projection over no time
+    places nothing, and that is a legitimate answer rather than an error.
+    """
+    days: list[date] = []
+    day = start
+    while day <= end:
+        if classify_day(day) is DayKind.WORKING:
+            days.append(day)
+        day += timedelta(days=1)
+    return days
