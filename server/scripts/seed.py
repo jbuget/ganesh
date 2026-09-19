@@ -14,20 +14,25 @@ import asyncio
 import json
 import logging
 import pathlib
+import random
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import AsyncSessionLocal
-from src.modules.calendar.domain.services.working_days import (  # noqa: PLC2701
+from src.modules.calendar.domain.services.working_days import (
+    DayKind,
     _french_holidays,
+    classify_day,
 )
 from src.modules.calendar.infrastructure.database.models.holiday_model import (
     HolidayModel,
 )
+from src.modules.moods.domain.entities.mood import MoodLevel
+from src.modules.moods.infrastructure.database.models.mood_model import MoodModel
 from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectPriority,
@@ -131,6 +136,34 @@ OFF_PROJECT_ACTIVITIES: list[str] = [
 ]
 
 HOLIDAY_YEARS = (2026, 2027, 2028)
+
+#: How far back the seeded moods go, in calendar days.
+MOOD_WINDOW = 20
+
+#: How a teammate answers, and where their days sit on the scale.
+#:
+#: Three of them, cycled over the team in order: a morale screen is only worth
+#: looking at once the silences are uneven, and everyone answering every day
+#: would make participation say nothing.
+#:
+#: `answers` is how often the day gets an answer at all; `centre` is where that
+#: person's days fall on the 1-to-5 scale, and `spread` how far they wander
+#: from it. Nobody is centred on 3: a team where every temperament is the same
+#: draws a flat chart.
+MOOD_PROFILES: tuple[tuple[str, float, float, float], ...] = (
+    ("assidu", 0.9, 3.8, 0.8),
+    ("irregulier", 0.4, 3.1, 1.1),
+    ("silencieux", 0.08, 2.9, 1.0),
+)
+
+#: The same draw every time the seed runs, so replaying it adds nothing and
+#: two developers describe the same screen.
+MOOD_SEED = 20260919
+
+#: How much a day weighs on everybody at once. Without it each person wanders
+#: on their own, the means all land near the middle, and the trend line comes
+#: out flat — where a team actually has good weeks and bad ones.
+MOOD_WEATHER = 0.6
 
 #: The service sheets, drawn from the catalogue waat.tools publishes.
 #:
@@ -510,6 +543,68 @@ async def seed_off_project_activities() -> int:
     return created
 
 
+async def seed_moods() -> int:
+    """Fills the last working days with moods, for the morale screen.
+
+    Dev data, like everything else here: the moods are drawn, not collected,
+    and they carry the names of real teammates. Never run this script against
+    anything but a development database.
+
+    Working days only, because the domain refuses the rest: seeding a Sunday
+    would write a row the API itself could never have produced, and which no
+    screen would ever show.
+
+    A day someone has already answered for is left alone: what a person said
+    about their own day is not something a seed gets to overwrite.
+    """
+    levels = list(MoodLevel)
+    rng = random.Random(MOOD_SEED)
+    today = date.today()
+    days = [
+        day
+        for offset in range(MOOD_WINDOW)
+        if classify_day(day := today - timedelta(days=offset)) is DayKind.WORKING
+    ]
+    weather = {day: rng.gauss(0, MOOD_WEATHER) for day in days}
+
+    created = 0
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(UserModel.id).where(UserModel.is_active).order_by(UserModel.id)
+        )
+        # Deactivated teammates are left out: they are no longer expected to
+        # answer, and the screen counts them nowhere.
+        people = list(result.scalars().all())
+
+        for rank, user_id in enumerate(people):
+            _, answers, centre, spread = MOOD_PROFILES[rank % len(MOOD_PROFILES)]
+
+            for day in days:
+                # Both draws happen whatever the database already holds. Skipping
+                # one of them on a day that is taken would shift every draw that
+                # follows, and replaying the seed would answer for other days than
+                # the first run did — which is exactly what it did before.
+                answered = rng.random() <= answers
+                score = round(rng.gauss(centre, spread) + weather[day])
+                if not answered:
+                    continue
+
+                taken = await session.execute(
+                    select(MoodModel.id).where(
+                        MoodModel.user_id == user_id, MoodModel.day == day
+                    )
+                )
+                if taken.scalar_one_or_none() is not None:
+                    continue
+
+                level = levels[min(len(levels), max(1, score)) - 1]
+                session.add(MoodModel(user_id=user_id, day=day, level=level))
+                created += 1
+
+        await session.commit()
+    return created
+
+
 async def seed_holidays() -> int:
     created = 0
     async with AsyncSessionLocal() as session:
@@ -532,6 +627,7 @@ async def main() -> None:
     moved, assigned = await seed_kanban()
     activities = await seed_off_project_activities()
     holidays = await seed_holidays()
+    moods = await seed_moods()
 
     logger.info("Adresses corrigees          : %s", corrected)
     logger.info("Collaborateurs crees        : %s", created)
@@ -544,6 +640,7 @@ async def main() -> None:
     logger.info("Intervenants affectes       : %s", assigned)
     logger.info("Activites hors projet creees: %s", activities)
     logger.info("Jours feries crees          : %s", holidays)
+    logger.info("Moraux tires au sort        : %s", moods)
     logger.info("Seed termine (%s).", date.today())
 
 
