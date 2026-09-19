@@ -134,12 +134,38 @@ def load_team() -> list[Teammate]:
 
 #: Without these rows, working days would spill over onto the projects and
 #: what they consumed would read too high.
-OFF_PROJECT_ACTIVITIES: list[str] = [
-    "Absences (conges, RTT, maladie)",
-    "Formation",
-    "Interne / Reunions",
-    "Avant-vente",
-    "Support",
+@dataclass(frozen=True)
+class OffProjectActivity:
+    """One line of work that belongs to no mission.
+
+    These rows exist so that working days do not spill over onto the projects,
+    which would read as time they never consumed. They are few on purpose: the
+    finer the list, the more filling it becomes an exercise in classification,
+    and the less the figure means.
+    """
+
+    label: str
+    #: Labels this activity was given before. An activity is found by its
+    #: label: renaming it in the list alone would add a second one beside the
+    #: first rather than putting it right.
+    previous_labels: tuple[str, ...] = ()
+
+
+OFF_PROJECT_ACTIVITIES: list[OffProjectActivity] = [
+    OffProjectActivity(
+        "Absences (congés, RTT, maladie)", ("Absences (conges, RTT, maladie)",)
+    ),
+    OffProjectActivity("Formation"),
+    OffProjectActivity(
+        "Évènementiel / communication",
+        # Every label this line has worn, so a database left behind is caught
+        # up rather than given a second row beside the first.
+        ("Interne / Reunions", "Interne / Réunions"),
+    ),
+    OffProjectActivity("Avant-vente / relation partenaire", ("Avant-vente",)),
+    OffProjectActivity("Management / pilotage", ("Management / encadrement",)),
+    OffProjectActivity("Recrutement / intégration"),
+    OffProjectActivity("Support"),
 ]
 
 HOLIDAY_YEARS = (2026, 2027, 2028)
@@ -624,29 +650,41 @@ async def seed_updates() -> tuple[int, int]:
     return posted, orphans
 
 
-async def seed_off_project_activities() -> int:
+async def seed_off_project_activities() -> tuple[int, int]:
+    """Creates what is missing, and renames what has been renamed."""
     created = 0
+    renamed = 0
     async with AsyncSessionLocal() as session:
-        for label in OFF_PROJECT_ACTIVITIES:
-            existing = await session.execute(
+        for activity in OFF_PROJECT_ACTIVITIES:
+            found = await session.execute(
                 select(ProjectModel).where(
-                    ProjectModel.label == label,
+                    ProjectModel.label.in_((activity.label, *activity.previous_labels)),
                     ProjectModel.kind == ProjectKind.OFF_PROJECT,
                 )
             )
-            if existing.scalar_one_or_none() is not None:
-                continue
-            session.add(
-                ProjectModel(
-                    label=label,
-                    kind=ProjectKind.OFF_PROJECT,
-                    status=None,
-                    is_active=True,
+            rows = list(found.scalars().all())
+
+            if not rows:
+                session.add(
+                    ProjectModel(
+                        label=activity.label,
+                        kind=ProjectKind.OFF_PROJECT,
+                        status=None,
+                        is_active=True,
+                    )
                 )
-            )
-            created += 1
+                created += 1
+                continue
+
+            # Renaming, never duplicating: the entries already booked against
+            # the old label stay where they are, under the new one.
+            for row in rows:
+                if row.label != activity.label:
+                    row.label = activity.label
+                    renamed += 1
+
         await session.commit()
-    return created
+    return created, renamed
 
 
 async def seed_moods() -> int:
@@ -732,7 +770,7 @@ async def main() -> None:
     attached, filled = await seed_board_fields()
     moved, assigned = await seed_kanban()
     posted, orphans = await seed_updates()
-    activities = await seed_off_project_activities()
+    activities, renamed = await seed_off_project_activities()
     holidays = await seed_holidays()
     moods = await seed_moods()
 
@@ -748,6 +786,7 @@ async def main() -> None:
     logger.info("Mises a jour publiees       : %s", posted)
     logger.info("Mises a jour sans mission   : %s", orphans)
     logger.info("Activites hors projet creees: %s", activities)
+    logger.info("Activites renommees         : %s", renamed)
     logger.info("Jours feries crees          : %s", holidays)
     logger.info("Moraux tires au sort        : %s", moods)
     logger.info("Seed termine (%s).", date.today())
