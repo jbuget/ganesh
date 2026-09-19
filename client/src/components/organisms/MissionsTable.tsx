@@ -4,12 +4,13 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  pointerWithin,
   useSensor,
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { Fragment, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 
 import { SortableColumnHeader } from "@/components/atoms/SortableColumnHeader";
 import { MissionRow } from "@/components/molecules/MissionRow";
@@ -95,6 +96,10 @@ export function MissionsTable({
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
+  // Letting go over another row ends the gesture with a click, which the
+  // browser sends to what the two rows have in common — the table. Without
+  // this, every drop opened the mission that had just been moved.
+  const dropped = useRef(false);
 
   /** The mission behind an id, wherever it sits in the tree. */
   function find(id: number): ProjectListItemResponse | null {
@@ -113,6 +118,7 @@ export function MissionsTable({
   function onDragEnd(event: DragEndEvent) {
     const mission = dragged;
     setDragged(null);
+    dropped.current = true;
     if (!event.over || mission === null) return;
     const target = find(Number(event.over.id));
     if (target === null || !canReceive(target, mission)) return;
@@ -131,6 +137,10 @@ export function MissionsTable({
   return (
     <DndContext
       sensors={sensors}
+      // The row under the cursor, not the one the dragged rectangle happens to
+      // overlap: rows are barely taller than the handle, and going by
+      // rectangles dropped the mission one line off from where it was aimed.
+      collisionDetection={pointerWithin}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onDragCancel={() => setDragged(null)}
@@ -142,7 +152,28 @@ export function MissionsTable({
           the padding of the scrolling area does not count towards what it can
           travel, and without that band on the right the last column would butt
           against the window edge. */}
-      <div className="w-max pr-6 [&_[data-slot=table-container]]:overflow-visible">
+      <div
+        // The click that closes a drag is swallowed here, before it reaches the
+        // row: the capture phase runs on the way down, so the row's own handler
+        // never fires.
+        onClickCapture={(event) => {
+          if (!dropped.current) return;
+          dropped.current = false;
+          event.stopPropagation();
+        }}
+        // A gesture that ended outside the table leaves its click there, and
+        // the mark would wait to swallow an honest one. Pressing again clears
+        // it: the press comes before the click it belongs to.
+        onPointerDownCapture={() => {
+          dropped.current = false;
+        }}
+        className={[
+          "w-max pr-6 [&_[data-slot=table-container]]:overflow-visible",
+          // Nothing is selected while something is being carried: a slide
+          // across a table otherwise paints three rows blue behind the copy.
+          dragged ? "select-none" : "",
+        ].join(" ")}
+      >
         {/* The width is carried in figures rather than by a class: Tailwind
           cannot write one for a span only known once the address has said
           which columns are put away. */}
@@ -269,7 +300,7 @@ export function MissionsTable({
           of ten columns dragged whole would hide the projects it is aimed at. */}
         <DragOverlay dropAnimation={null}>
           {dragged && (
-            <span className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800 shadow-lg">
+            <span className="inline-block w-max max-w-md truncate rounded border border-slate-300 bg-white px-2 py-1 text-sm whitespace-nowrap text-slate-800 shadow-lg">
               {dragged.project.label}
             </span>
           )}

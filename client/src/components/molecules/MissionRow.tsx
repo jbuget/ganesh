@@ -82,10 +82,16 @@ export function MissionRow({
 
   // Both hooks are called on every row and turned off where the gesture means
   // nothing: what a row may do changes with the drag, and hooks may not.
+  //
+  // What is dragged is the row, what one takes hold of is the handle: the two
+  // are declared apart on purpose. Hanging the gesture on the handle alone
+  // would make the copy under the cursor the size of a grip, sixteen pixels
+  // wide, and a label would come out stacked one word per line inside it.
   const {
     attributes,
     listeners,
-    setNodeRef: setHandleRef,
+    setNodeRef: setDraggedRef,
+    setActivatorNodeRef: setHandleRef,
     isDragging,
   } = useDraggable({ id: project.id, disabled: movable !== true });
   const { setNodeRef: setTargetRef, isOver } = useDroppable({
@@ -93,6 +99,12 @@ export function MissionRow({
     disabled: !receiving,
   });
   const isTarget = receiving && isOver;
+
+  /** The row is both what moves and what receives: one node, two roles. */
+  function setRowRef(row: HTMLTableRowElement | null) {
+    setDraggedRef(row);
+    setTargetRef(row);
+  }
 
   // Folded, a row tells what the whole service cost — its own build, that of
   // its evolutions, and the run of all of it. Unfolded, every row speaks of
@@ -129,7 +141,7 @@ export function MissionRow({
     // Every tint is solid: a transparent one would let what slides underneath
     // read through the pinned columns.
     <TableRow
-      ref={setTargetRef}
+      ref={setRowRef}
       onClick={onOpen}
       className={[
         "group cursor-pointer bg-slate-50 hover:bg-slate-100 has-aria-expanded:bg-slate-100",
@@ -168,6 +180,13 @@ export function MissionRow({
                   // The whole row opens the mission: without stopping
                   // propagation, taking hold of the handle would open the panel.
                   onClick={(event) => event.stopPropagation()}
+                  // Pressing on the handle must take hold of the row, not start
+                  // selecting the text of the table: the browser reads a press
+                  // and a slide as a selection, and would paint three rows blue
+                  // under the copy being dragged. Refusing the default of the
+                  // mouse event leaves the pointer events dnd-kit listens to
+                  // untouched.
+                  onMouseDown={(event) => event.preventDefault()}
                   className="cursor-grab text-slate-300 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
                   {...listeners}
                   {...attributes}
