@@ -66,7 +66,39 @@ the UI:
   (`status_at_entry`), which makes it possible to measure time spent per phase.
 - Off-project work (absences, training, internal) carries no status and is never
   synced.
+- A project cut into work packages cannot leave the reference list without
+  saying what becomes of them.
 - Every action that matters is traced in `audit_log`.
+
+### Leaving the reference list
+
+A mission that is over — delivered, abandoned, or never really started — is
+**archived**, and `ProjectStatus` will never grow a phase for it. A phase says
+*where the work stands*, archiving says *whether the mission is still one to
+book against*: an abandonment is an exit, not a step forward. Writing it as a
+phase would erase the one thing worth knowing, which is how far the project got
+before it stopped, put a column that steers nothing on a board that steers what
+runs, and cost the plan a second exception beside `OPERATIONS`. Nothing is lost
+by archiving: entries already booked stay readable, and only the list one can
+still book against shrinks.
+
+- **Archiving a project cut into packages says what becomes of them**, in the
+  same gesture: they leave with it, or they are detached and carry on as
+  projects of their own. Saying nothing is refused — a package left behind
+  holds its rank in the plan and its card on the board on behalf of a project
+  that has gone. Archiving is therefore a gesture of its own
+  (`POST /projects/{id}/archive`), never a field of `PATCH /projects/{id}`.
+- **A detached package takes over the axis it was reading.** It was on that
+  axis too, under its project's name rather than its own, and coming out blank
+  would lose what every screen already showed of it. A project carrying no axis
+  hands down none: nothing is invented.
+- **Unarchiving brings back one mission, never a tree.** Each package carries
+  its own exit date, and the ones that left long before, for their own reasons,
+  are not resurrected by their project coming back.
+- Telling « stopped » from « delivered, then retired » does not follow from an
+  exit date, and deducing it would fabricate a fact nobody recorded. The day a
+  screen has to filter on it, record a reason beside `archived_at` — never a
+  phase.
 
 ---
 
