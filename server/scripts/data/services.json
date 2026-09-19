@@ -309,7 +309,8 @@
       "streaming"
     ],
     "repository_link": "https://github.com/waat-fr/ocpp-bridge",
-    "documentation_link": "https://docs.ai.waat.tools/doc/ocpp-bridge-rstZazE7f6"
+    "documentation_link": "https://docs.ai.waat.tools/doc/ocpp-bridge-rstZazE7f6",
+    "production_link": "wss://ocpp.ai.waat.tools"
   },
   {
     "label": "CHECK",
