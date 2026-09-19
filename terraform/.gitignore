@@ -1,0 +1,9 @@
+# State carries resource IDs and the RDS master password. Never commit it.
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+.terraform/
+
+# Real values, as opposed to the example beside them.
+terraform.tfvars
+*.auto.tfvars

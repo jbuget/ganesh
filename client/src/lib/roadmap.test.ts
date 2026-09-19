@@ -12,6 +12,7 @@ import {
   placeOn,
   positionOf,
   roadmapNotice,
+  slipOf,
 } from "@/lib/roadmap";
 
 const FROM = "2026-01-01";
@@ -28,6 +29,7 @@ function aLine(fields: Partial<RoadmapMissionResponse> = {}): RoadmapMissionResp
     parent_id: null,
     segments: [],
     target_date: null,
+    went_live_on: null,
     landing_date: null,
     slippage_days: null,
     is_late: false,
@@ -246,5 +248,91 @@ describe("what the drawing is worth", () => {
     expect(notice).toBe(
       "14 projets · 4 livrés · 3 en retard · 5 sans date · 2 sans estimation",
     );
+  });
+});
+
+describe("the thread between what was announced and where it lands", () => {
+  const late = (fields: Partial<RoadmapMissionResponse>) =>
+    aLine({ is_late: true, slippage_days: 30, ...fields });
+
+  it("runs from the diamond to where the projection lands", () => {
+    const slip = slipOf(
+      late({ target_date: "2026-04-01", landing_date: "2026-07-01" }),
+      FROM,
+      TO,
+    );
+
+    expect(slip).toEqual({
+      left: positionOf("2026-04-01", FROM, TO),
+      width: positionOf("2026-07-01", FROM, TO) - positionOf("2026-04-01", FROM, TO),
+      settled: false,
+    });
+  });
+
+  it("stops at the landing when the date announced is before the window", () => {
+    // The left end is cut by the edge, so the width has to be cut with it:
+    // keeping the whole length would run the thread past the landing and
+    // claim a delay nobody computed.
+    const slip = slipOf(
+      late({ target_date: "2025-10-01", landing_date: "2026-03-01" }),
+      FROM,
+      TO,
+    );
+
+    expect(slip?.left).toBe(0);
+    expect(slip?.width).toBeCloseTo(positionOf("2026-03-01", FROM, TO), 10);
+  });
+
+  it("is cut by the far edge when the landing falls past the window", () => {
+    const slip = slipOf(
+      late({ target_date: "2026-10-01", landing_date: "2027-06-01" }),
+      FROM,
+      TO,
+    );
+
+    expect(slip?.left).toBeCloseTo(positionOf("2026-10-01", FROM, TO), 10);
+    expect((slip?.left ?? 0) + (slip?.width ?? 0)).toBeCloseTo(1, 10);
+  });
+
+  it("draws nothing when the whole thread falls outside the window", () => {
+    expect(
+      slipOf(late({ target_date: "2024-01-01", landing_date: "2024-06-01" }), FROM, TO),
+    ).toBeNull();
+    expect(
+      slipOf(late({ target_date: "2028-01-01", landing_date: "2028-06-01" }), FROM, TO),
+    ).toBeNull();
+  });
+
+  it("reads a recorded go-live as settled, and prefers it to a projection", () => {
+    const slip = slipOf(
+      late({
+        target_date: "2026-04-01",
+        went_live_on: "2026-06-01",
+        landing_date: "2026-11-01",
+      }),
+      FROM,
+      TO,
+    );
+
+    expect(slip?.settled).toBe(true);
+    expect(slip?.width).toBeCloseTo(
+      positionOf("2026-06-01", FROM, TO) - positionOf("2026-04-01", FROM, TO),
+      10,
+    );
+  });
+
+  it("draws nothing for a mission that is not late", () => {
+    expect(
+      slipOf(
+        aLine({ target_date: "2026-04-01", landing_date: "2026-07-01" }),
+        FROM,
+        TO,
+      ),
+    ).toBeNull();
+  });
+
+  it("draws nothing when either end is missing", () => {
+    expect(slipOf(late({ target_date: "2026-04-01" }), FROM, TO)).toBeNull();
+    expect(slipOf(late({ landing_date: "2026-07-01" }), FROM, TO)).toBeNull();
   });
 });

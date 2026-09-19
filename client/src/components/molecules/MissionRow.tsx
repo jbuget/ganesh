@@ -5,10 +5,12 @@ import { ChevronRight, GripVertical } from "lucide-react";
 
 import { BuildCost } from "@/components/atoms/BuildCost";
 import { CategoryMark } from "@/components/atoms/CategoryMark";
+import { GoLiveDate } from "@/components/atoms/GoLiveDate";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
+import { MissionDepartments } from "@/components/atoms/MissionDepartments";
 import { PriorityMark } from "@/components/atoms/PriorityMark";
-import { ProjectLinks } from "@/components/atoms/ProjectLinks";
+import { PublishedMark } from "@/components/atoms/PublishedMark";
 import { RunCost } from "@/components/atoms/RunCost";
 import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -316,6 +318,12 @@ export function MissionRow({
         </TableCell>
       )}
 
+      {shows("departments") && (
+        <TableCell>
+          <MissionDepartments departments={mission.departments} />
+        </TableCell>
+      )}
+
       {/* Build against its estimate, run apart: the estimate covered the
           construction alone, and comparing the whole life of a service to it
           would declare every living mission late. A zero is not a value to
@@ -332,6 +340,16 @@ export function MissionRow({
         </TableCell>
       )}
 
+      {/* The day the team announced, read against today: a mission still to
+          be delivered whose date has gone by is the line steering has to
+          see. The reference time is the row's own, so no two rows disagree on
+          what « today » is. */}
+      {shows("goLive") && (
+        <TableCell>
+          <GoLiveDate date={project.go_live_date} status={project.status} today={now} />
+        </TableCell>
+      )}
+
       {shows("leads") && (
         <TableCell>
           <MemberAvatars members={mission.leads} />
@@ -344,12 +362,11 @@ export function MissionRow({
         </TableCell>
       )}
 
-      {/* Where the mission's work is written down. The icons stand on their
-          own: in a row there is no room for their labels, which come back on
-          hover. */}
-      {shows("links") && (
+      {/* Whether waat.tools draws a card for it. Empty says « pas encore de
+          fiche », which is what one scans this column for. */}
+      {shows("published") && (
         <TableCell>
-          <ProjectLinks links={mission.links} />
+          <PublishedMark published={project.is_published} />
         </TableCell>
       )}
     </TableRow>

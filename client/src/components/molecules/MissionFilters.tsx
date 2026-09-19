@@ -5,6 +5,7 @@ import { FilterSelect } from "@/components/atoms/FilterSelect";
 import { FilteredCount } from "@/components/atoms/FilteredCount";
 import { SearchField } from "@/components/atoms/SearchField";
 import type {
+  Department,
   ProjectCategory,
   ProjectKind,
   ProjectPriority,
@@ -12,11 +13,14 @@ import type {
 } from "@/lib/api/generated/model";
 import { useTeammates } from "@/lib/api/queries";
 import { CATEGORIES, PHASES, PRIORITIES } from "@/lib/board";
+import { DEPARTMENTS } from "@/lib/departments";
 import {
   MISSION_STATES,
   MISSION_KINDS,
+  PUBLICATION_STATES,
   type MissionFilters as Criteria,
   type MissionState,
+  type PublicationState,
 } from "@/lib/mission-filters";
 
 interface MissionFiltersProps {
@@ -98,6 +102,15 @@ export function MissionFilters({
           onChange={(values) => onChange({ categories: values as ProjectCategory[] })}
         />
 
+        {/* Next to the axis, which answers the neighbouring question: what
+            the mission is for, then whom it is for. */}
+        <FilterSelect
+          label="Département"
+          options={DEPARTMENTS.map(({ value, label }) => ({ value, label }))}
+          values={filters.departments}
+          onChange={(values) => onChange({ departments: values as Department[] })}
+        />
+
         <FilterSelect
           label="Priorité"
           options={PRIORITIES.map(({ value, label, icon: Icon, colour }) => ({
@@ -129,6 +142,17 @@ export function MissionFilters({
           options={MISSION_KINDS.map(({ value, label }) => ({ value, label }))}
           values={filters.types}
           onChange={(values) => onChange({ types: values as ProjectKind[] })}
+        />
+
+        {/* What waat.tools draws a card for. Asked when tending the
+            catalogue, which is the one thing no other screen asks. */}
+        <FilterSelect
+          label="Publication"
+          options={PUBLICATION_STATES.map(({ value, label }) => ({ value, label }))}
+          values={filters.publications}
+          onChange={(values) =>
+            onChange({ publications: values as PublicationState[] })
+          }
         />
 
         <FilterSelect

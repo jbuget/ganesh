@@ -104,7 +104,7 @@ export function ProjectsPage() {
         </>
       }
     >
-      {/* Wide enough for ten columns, not so wide as to stretch the names. */}
+      {/* Wide enough for a dozen columns, not so wide as to stretch the names. */}
       <div className="max-w-[1400px]">
         {screen.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 

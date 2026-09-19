@@ -275,6 +275,64 @@ class TestTheTallyAbove:
 
         assert roadmap.summary.delivered == 1
 
+    async def test_a_service_nobody_dated_the_go_live_of_is_not_a_delivery(
+        self,
+    ) -> None:
+        # Twenty-three services were on the reference list before anybody
+        # started recording phases. Their rule has to open somewhere, and
+        # where it opens must never be counted as a mise en service — or the
+        # bandeau announces a month of deliveries that never happened.
+        roadmap = await read(
+            [
+                a_mission(10, status=ProjectStatus.OPERATIONS),
+                a_mission(11, "Autre", status=ProjectStatus.OPERATIONS),
+            ]
+        )
+
+        assert roadmap.summary.delivered == 0
+        assert all(line.went_live_on is None for line in roadmap.missions)
+
+    async def test_a_service_nobody_dated_opens_its_rule_at_the_window(self) -> None:
+        roadmap = await read([a_mission(status=ProjectStatus.OPERATIONS)])
+
+        assert [
+            (s.kind, s.starts_on, s.ends_on) for s in roadmap.missions[0].segments
+        ] == [(SegmentKind.RUNNING, FROM_DAY, TO_DAY)]
+
+
+class TestWhatItSaysAboutADateAnnounced:
+    async def test_a_service_that_went_live_late_carries_a_settled_slip(self) -> None:
+        roadmap = await read(
+            [a_mission(status=ProjectStatus.OPERATIONS, go_live=date(2026, 4, 1))],
+            phases={10: {ProjectStatus.OPERATIONS: date(2026, 6, 15)}},
+        )
+
+        line = roadmap.missions[0]
+        assert (line.went_live_on, line.slippage_days, line.is_late) == (
+            date(2026, 6, 15),
+            75,
+            True,
+        )
+        assert roadmap.summary.late == 1
+
+    async def test_a_service_that_went_live_on_time_is_not_late(self) -> None:
+        roadmap = await read(
+            [a_mission(status=ProjectStatus.OPERATIONS, go_live=date(2026, 6, 15))],
+            phases={10: {ProjectStatus.OPERATIONS: date(2026, 6, 15)}},
+        )
+
+        assert (roadmap.missions[0].slippage_days, roadmap.summary.late) == (0, 0)
+
+    async def test_a_service_live_but_undated_owes_no_slip(self) -> None:
+        # Its go-live was never recorded: what it cost against the date
+        # announced is not knowable, and guessing it would invent a fact.
+        roadmap = await read(
+            [a_mission(status=ProjectStatus.OPERATIONS, go_live=date(2026, 4, 1))]
+        )
+
+        line = roadmap.missions[0]
+        assert (line.slippage_days, line.is_late) == (None, False)
+
 
 class TestTheWindow:
     async def test_it_rolls_from_the_month_before_when_nobody_says_otherwise(

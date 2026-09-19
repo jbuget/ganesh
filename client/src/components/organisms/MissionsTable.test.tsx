@@ -30,6 +30,8 @@ const mission = (id: number, label: string, kind = "project") =>
       estimated_days: null,
       parent_id: null,
       is_active: true,
+      is_published: false,
+      go_live_date: null,
     },
     leads: [],
     contributors: [],
@@ -39,6 +41,7 @@ const mission = (id: number, label: string, kind = "project") =>
     comments: 0,
     latest_update: null,
     links: [],
+    departments: [],
   }) as unknown as ProjectListItemResponse;
 
 const node = (
@@ -72,11 +75,13 @@ describe("MissionsTable", () => {
       "Phase",
       "Priorité",
       "Catégorie",
+      "Départements",
       "Build",
       "Run",
+      "Mise en service",
       "Référents",
       "Intervenants",
-      "Liens",
+      "Publié",
     ]) {
       expect(screen.getByText(title)).toBeInTheDocument();
     }
@@ -166,11 +171,13 @@ describe("the columns put away", () => {
         "phase",
         "priority",
         "category",
+        "departments",
         "build",
         "run",
+        "goLive",
         "leads",
         "contributors",
-        "links",
+        "published",
       ]),
     });
 

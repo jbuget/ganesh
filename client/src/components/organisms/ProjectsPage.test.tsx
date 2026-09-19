@@ -91,6 +91,8 @@ describe("the columns one puts away", () => {
       estimated_days: null,
       parent_id: null,
       is_active: true,
+      is_published: false,
+      go_live_date: null,
     },
     leads: [],
     contributors: [],
@@ -100,6 +102,7 @@ describe("the columns one puts away", () => {
     comments: 0,
     latest_update: null,
     links: [],
+    departments: [],
   };
 
   beforeEach(() => {

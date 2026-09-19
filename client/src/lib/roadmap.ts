@@ -83,6 +83,47 @@ export function placeOn(
   return { left, width: Math.max(right - left, 0.002), clippedLeft, clippedRight };
 }
 
+/** The red thread from the date announced to where the mission lands. */
+export interface Slip {
+  /** Share of the width the thread starts at, from 0 to 1. */
+  left: number;
+  /** Share of the width it covers. */
+  width: number;
+  /**
+   * Whether the far end is a day the register holds or one the projection
+   * supposes. A fact and a supposition are never drawn alike, and this is
+   * what tells the drawing which it has.
+   */
+  settled: boolean;
+}
+
+/**
+ * The thread joining the diamond to where the mission lands, clipped to the
+ * window.
+ *
+ * Both ends are cut by the edges and the width is measured **after** the
+ * cut: clamping the start alone would keep the whole length and run the
+ * thread past the landing, drawing a delay longer than the one computed.
+ *
+ * A recorded go-live answers before a projection. The two should never meet
+ * — a service already live is dropped from the backlog — but a fact outranks
+ * a supposition wherever they do.
+ */
+export function slipOf(
+  mission: RoadmapMissionResponse,
+  from: string,
+  to: string,
+): Slip | null {
+  const lands = mission.went_live_on ?? mission.landing_date;
+  if (!mission.is_late || !mission.target_date || !lands) return null;
+
+  const left = Math.max(0, Math.min(1, positionOf(mission.target_date, from, to)));
+  const right = Math.max(0, Math.min(1, positionOf(lands, from, to)));
+  if (right <= left) return null;
+
+  return { left, width: right - left, settled: mission.went_live_on !== null };
+}
+
 const MONTH_ABBREVIATIONS = [
   "janv.",
   "févr.",

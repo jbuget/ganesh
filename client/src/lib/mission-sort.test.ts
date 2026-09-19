@@ -42,6 +42,7 @@ const mission = (
     comments: 0,
     latest_update: null,
     links: [],
+    departments: [],
   }) as ProjectListItemResponse;
 
 const labels = (missions: ProjectListItemResponse[], sorted: MissionSort) =>
@@ -221,5 +222,38 @@ describe("the sort in the address", () => {
     writeSort(params, { column: "project", direction: "asc" });
 
     expect(params.get("phase")).toBe("scoping");
+  });
+});
+
+describe("ordering by the announced date", () => {
+  it("arranges the nearest first, ascending", () => {
+    const missions = [
+      mission("Extranet", { go_live_date: "2027-01-05" }),
+      mission("Portail", { go_live_date: "2026-11-15" }),
+      mission("Bornes", { go_live_date: "2026-12-01" }),
+    ];
+
+    expect(labels(missions, { column: "goLive", direction: "asc" })).toEqual([
+      "Portail",
+      "Bornes",
+      "Extranet",
+    ]);
+  });
+
+  /** An undated mission has no rank: inventing one would announce a delivery. */
+  it("leaves the missions nobody has dated at the end, whatever the direction", () => {
+    const missions = [
+      mission("Sans date"),
+      mission("Portail", { go_live_date: "2026-11-15" }),
+    ];
+
+    expect(labels(missions, { column: "goLive", direction: "asc" })).toEqual([
+      "Portail",
+      "Sans date",
+    ]);
+    expect(labels(missions, { column: "goLive", direction: "desc" })).toEqual([
+      "Portail",
+      "Sans date",
+    ]);
   });
 });

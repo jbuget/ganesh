@@ -16,7 +16,7 @@ import logging
 import pathlib
 import random
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
@@ -34,6 +34,7 @@ from src.modules.calendar.infrastructure.database.models.holiday_model import (
 from src.modules.moods.domain.entities.mood import MoodLevel
 from src.modules.moods.infrastructure.database.models.mood_model import MoodModel
 from src.modules.projects.domain.entities.project import (
+    ProjectCategory,
     ProjectKind,
     ProjectPriority,
     ProjectStatus,
@@ -52,6 +53,9 @@ from src.modules.projects.infrastructure.database.models.project_detail_models i
 )
 from src.modules.projects.infrastructure.database.models.project_model import (
     ProjectModel,
+)
+from src.modules.projects.infrastructure.database.models.project_update_model import (
+    ProjectUpdateModel,
 )
 from src.modules.users.domain.entities.user import Role
 from src.modules.users.infrastructure.database.models.user_model import UserModel
@@ -82,6 +86,8 @@ class Teammate:
     #: field stays per person: the day someone sits elsewhere, only their line
     #: changes.
     department: Department = Department.INFORMATION_SYSTEMS
+    #: Their handle on GitHub, which is where their contributions are found.
+    github_username: str | None = None
     #: Addresses this person was handed before: an account is found by its
     #: email, so a typo corrected in the list alone would create a second
     #: account beside the first rather than putting it right.
@@ -119,6 +125,7 @@ def load_team() -> list[Teammate]:
             department=Department(
                 row.get("department", Department.INFORMATION_SYSTEMS.value)
             ),
+            github_username=row.get("github_username"),
             previous_emails=tuple(row.get("previous_emails", ())),
         )
         for row in rows
@@ -127,12 +134,38 @@ def load_team() -> list[Teammate]:
 
 #: Without these rows, working days would spill over onto the projects and
 #: what they consumed would read too high.
-OFF_PROJECT_ACTIVITIES: list[str] = [
-    "Absences (conges, RTT, maladie)",
-    "Formation",
-    "Interne / Reunions",
-    "Avant-vente",
-    "Support",
+@dataclass(frozen=True)
+class OffProjectActivity:
+    """One line of work that belongs to no mission.
+
+    These rows exist so that working days do not spill over onto the projects,
+    which would read as time they never consumed. They are few on purpose: the
+    finer the list, the more filling it becomes an exercise in classification,
+    and the less the figure means.
+    """
+
+    label: str
+    #: Labels this activity was given before. An activity is found by its
+    #: label: renaming it in the list alone would add a second one beside the
+    #: first rather than putting it right.
+    previous_labels: tuple[str, ...] = ()
+
+
+OFF_PROJECT_ACTIVITIES: list[OffProjectActivity] = [
+    OffProjectActivity(
+        "Absences (congés, RTT, maladie)", ("Absences (conges, RTT, maladie)",)
+    ),
+    OffProjectActivity("Formation"),
+    OffProjectActivity(
+        "Évènementiel / communication",
+        # Every label this line has worn, so a database left behind is caught
+        # up rather than given a second row beside the first.
+        ("Interne / Reunions", "Interne / Réunions"),
+    ),
+    OffProjectActivity("Avant-vente / relation partenaire", ("Avant-vente",)),
+    OffProjectActivity("Management / pilotage", ("Management / encadrement",)),
+    OffProjectActivity("Recrutement / intégration"),
+    OffProjectActivity("Support"),
 ]
 
 HOLIDAY_YEARS = (2026, 2027, 2028)
@@ -190,6 +223,14 @@ BOARD_FILE = DATA / "monday.json"
 #: still a framing exercise, so it lands on « cadrage » like the rest of
 #: Discovery's right-hand side.
 KANBAN_FILE = DATA / "kanban.json"
+
+#: What was said on a mission on the board, brought over to its thread.
+#:
+#: Monday nests replies under the update they answer; the thread here is flat
+#: and ordered by time, so a reply comes over as a message of its own, at the
+#: moment it was written. Nothing is lost, and the thread reads in the order it
+#: was spoken.
+UPDATES_FILE = DATA / "updates.json"
 
 COLUMN_PHASES = {
     "idees": ProjectStatus.EXPLORATION,
@@ -271,6 +312,7 @@ async def seed_users(team: list[Teammate]) -> tuple[int, int]:
                         first_name=teammate.first_name,
                         last_name=teammate.last_name,
                         department=teammate.department,
+                        github_username=teammate.github_username,
                     )
                 )
                 created += 1
@@ -278,15 +320,23 @@ async def seed_users(team: list[Teammate]) -> tuple[int, int]:
 
             # The role and the access are left alone: they are given out from
             # the screen, and this script has no business taking them back.
+            # The handle is only ever added: a list that says nothing about
+            # someone's GitHub account does not say they have none.
             drifted = (
                 account.first_name != teammate.first_name
                 or account.last_name != teammate.last_name
                 or account.department is not teammate.department
+                or (
+                    teammate.github_username is not None
+                    and account.github_username != teammate.github_username
+                )
             )
             if drifted:
                 account.first_name = teammate.first_name
                 account.last_name = teammate.last_name
                 account.department = teammate.department
+                if teammate.github_username is not None:
+                    account.github_username = teammate.github_username
                 updated += 1
 
         await session.commit()
@@ -387,9 +437,14 @@ async def seed_services() -> tuple[int, int]:
 
 
 async def seed_board_fields() -> tuple[int, int]:
-    """Brings over what the steering board holds: the rattachement, the priority."""
+    """Brings over what the steering board holds, and it alone.
+
+    Priority, strategic axis and estimate are maintained on the board and
+    nowhere else — unlike the phase, which the wall carries. What the board
+    leaves empty is left alone here: it says nothing, it does not say « none ».
+    """
     attached = 0
-    prioritised = 0
+    filled = 0
     rows = read_data(BOARD_FILE, "les priorites")
     if rows is None:
         return 0, 0
@@ -414,12 +469,29 @@ async def seed_board_fields() -> tuple[int, int]:
                 mission.monday_item_id = row["monday_item_id"]
                 attached += 1
 
-            if row["priority"] is not None:
-                mission.priority = ProjectPriority(row["priority"])
-                prioritised += 1
+            # Counted only when it changes something: every other line of the
+            # report reads as « what moved », and a replay must show zeros.
+            changed = False
+            priority = ProjectPriority(row["priority"]) if row["priority"] else None
+            if priority is not None and mission.priority is not priority:
+                mission.priority = priority
+                changed = True
+
+            category = ProjectCategory(row["category"]) if row.get("category") else None
+            if category is not None and mission.category is not category:
+                mission.category = category
+                changed = True
+
+            estimate = row.get("estimated_days")
+            if estimate is not None and mission.estimated_days != estimate:
+                mission.estimated_days = estimate
+                changed = True
+
+            if changed:
+                filled += 1
 
         await session.commit()
-    return attached, prioritised
+    return attached, filled
 
 
 async def seed_kanban() -> tuple[int, int]:
@@ -518,29 +590,101 @@ async def seed_kanban() -> tuple[int, int]:
     return moved, assigned
 
 
-async def seed_off_project_activities() -> int:
-    created = 0
+async def seed_updates() -> tuple[int, int]:
+    """Posts on each mission what was said about it on the board.
+
+    An update is recognised by its mission, its author and the moment it was
+    published: Monday's own id has nowhere to live here, and no two people
+    write on the same mission in the same second.
+    """
+    posted = 0
+    orphans = 0
+    rows = read_data(UPDATES_FILE, "les mises a jour")
+    if rows is None:
+        return 0, 0
+
     async with AsyncSessionLocal() as session:
-        for label in OFF_PROJECT_ACTIVITIES:
-            existing = await session.execute(
+        authors: dict[str, int] = {}
+        for email in {row["author_email"] for row in rows}:
+            found = await session.execute(
+                select(UserModel).where(UserModel.email == email)
+            )
+            account = found.scalar_one_or_none()
+            if account is not None:
+                authors[email] = account.id
+
+        for row in rows:
+            missions = await session.execute(
                 select(ProjectModel).where(
-                    ProjectModel.label == label,
+                    ProjectModel.monday_item_id == row["monday_item_id"]
+                )
+            )
+            mission = missions.scalar_one_or_none()
+            if mission is None or row["author_email"] not in authors:
+                orphans += 1
+                continue
+
+            published_at = datetime.fromisoformat(row["published_at"])
+            author_id = authors[row["author_email"]]
+            already = await session.execute(
+                select(ProjectUpdateModel).where(
+                    ProjectUpdateModel.project_id == mission.id,
+                    ProjectUpdateModel.author_id == author_id,
+                    ProjectUpdateModel.published_at == published_at,
+                )
+            )
+            if already.scalar_one_or_none() is not None:
+                continue
+
+            session.add(
+                ProjectUpdateModel(
+                    project_id=mission.id,
+                    author_id=author_id,
+                    body=row["body"],
+                    published_at=published_at,
+                )
+            )
+            posted += 1
+
+        await session.commit()
+    return posted, orphans
+
+
+async def seed_off_project_activities() -> tuple[int, int]:
+    """Creates what is missing, and renames what has been renamed."""
+    created = 0
+    renamed = 0
+    async with AsyncSessionLocal() as session:
+        for activity in OFF_PROJECT_ACTIVITIES:
+            found = await session.execute(
+                select(ProjectModel).where(
+                    ProjectModel.label.in_((activity.label, *activity.previous_labels)),
                     ProjectModel.kind == ProjectKind.OFF_PROJECT,
                 )
             )
-            if existing.scalar_one_or_none() is not None:
-                continue
-            session.add(
-                ProjectModel(
-                    label=label,
-                    kind=ProjectKind.OFF_PROJECT,
-                    status=None,
-                    is_active=True,
+            rows = list(found.scalars().all())
+
+            if not rows:
+                session.add(
+                    ProjectModel(
+                        label=activity.label,
+                        kind=ProjectKind.OFF_PROJECT,
+                        status=None,
+                        is_active=True,
+                    )
                 )
-            )
-            created += 1
+                created += 1
+                continue
+
+            # Renaming, never duplicating: the entries already booked against
+            # the old label stay where they are, under the new one.
+            for row in rows:
+                if row.label != activity.label:
+                    row.label = activity.label
+                    renamed += 1
+
         await session.commit()
-    return created
+    return created, renamed
 
 
 async def seed_moods() -> int:
@@ -623,9 +767,10 @@ async def main() -> None:
     corrected = await correct_emails(team)
     created, updated = await seed_users(team)
     missions, sheets = await seed_services()
-    attached, prioritised = await seed_board_fields()
+    attached, filled = await seed_board_fields()
     moved, assigned = await seed_kanban()
-    activities = await seed_off_project_activities()
+    posted, orphans = await seed_updates()
+    activities, renamed = await seed_off_project_activities()
     holidays = await seed_holidays()
     moods = await seed_moods()
 
@@ -635,10 +780,13 @@ async def main() -> None:
     logger.info("Missions creees             : %s", missions)
     logger.info("Fiches service remplies     : %s", sheets)
     logger.info("Missions reliees a Monday   : %s", attached)
-    logger.info("Priorites posees            : %s", prioritised)
+    logger.info("Missions renseignees        : %s", filled)
     logger.info("Missions deplacees de phase : %s", moved)
     logger.info("Intervenants affectes       : %s", assigned)
+    logger.info("Mises a jour publiees       : %s", posted)
+    logger.info("Mises a jour sans mission   : %s", orphans)
     logger.info("Activites hors projet creees: %s", activities)
+    logger.info("Activites renommees         : %s", renamed)
     logger.info("Jours feries crees          : %s", holidays)
     logger.info("Moraux tires au sort        : %s", moods)
     logger.info("Seed termine (%s).", date.today())

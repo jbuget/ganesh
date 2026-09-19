@@ -227,6 +227,7 @@ def to_roadmap_mission_response(line: RoadmapMission) -> RoadmapMissionResponse:
             for segment in line.segments
         ],
         target_date=line.target_date,
+        went_live_on=line.went_live_on,
         landing_date=line.landing_date,
         slippage_days=line.slippage_days,
         is_late=line.is_late,

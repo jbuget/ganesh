@@ -31,6 +31,7 @@ from src.modules.projects.domain.services.project_cost import (
 )
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.shared.enums.department import Department
 
 
 @dataclass
@@ -52,6 +53,8 @@ class ListedProject:
     tree_cost: ProjectCost = NO_COST
     #: The useful addresses attached to the mission, in the order they were added.
     links: list[ProjectLink] = field(default_factory=list)
+    #: The departments the mission serves, in the order they are declared.
+    departments: list[Department] = field(default_factory=list)
     #: Live updates in the follow-up thread.
     comments: int = 0
     #: The latest of them, to announce the thread without opening it.
@@ -92,6 +95,7 @@ class ListProjectsUseCase:
         comments = await self._updates.count_by_project()
         latest_by_project = await self._updates.latest_by_project()
         links = await self._details.list_links_by_project()
+        departments = await self._details.list_departments_by_project()
 
         # The count is read over the whole tree, work packages a filter left
         # out included: what an evolution cost is still the cost of the service.
@@ -138,6 +142,7 @@ class ListProjectsUseCase:
                 contributors=people(mission.id or 0, ProjectRole.CONTRIBUTOR),
                 delivered_days=delivered.get(mission.id or 0, 0.0),
                 links=links.get(mission.id or 0, []),
+                departments=departments.get(mission.id or 0, []),
                 cost=costs.own.get(mission.id or 0, NO_COST),
                 tree_cost=costs.tree.get(mission.id or 0, NO_COST),
                 comments=comments.get(mission.id or 0, 0),

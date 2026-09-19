@@ -471,10 +471,18 @@ Three rules the drawing rests on:
   hatched is `PROJECTED`, a thin rule is `RUNNING`. `SegmentKind` decides it in
   the domain, not a colour picked on the front end — colour belongs to the
   phase. Reading a projection as a commitment is the mistake this screen
-  exists to prevent.
+  exists to prevent. The rule holds down to the red thread: a delay already
+  taken is drawn solid, one the projection merely supposes is dashed.
 - **Nothing is invented.** What was never recorded leaves no segment, and a
   stretch nobody can date is carried by the nearest phase that is dated. A
   roadmap that fills its own gaps gets read as fact.
+- **A placeholder is never counted as a fact.** A running rule has to open
+  somewhere to be drawn, and on the missions that were already live before
+  anybody recorded a phase, that day is chosen by the drawing — the window's
+  edge, which says « since before you started looking ». Only
+  `went_live_on` carries the day the register holds, and only it may be read
+  by the tally or by an écart. Asking the bar instead makes a portfolio that
+  shipped nothing announce « 23 mises en service ».
 - **A mission with nothing to draw still shows.** No estimate, no date, no
   time declared — that is the line steering has to see, and the tally above
   says how many there are before anybody reads a bar.
@@ -541,6 +549,40 @@ whole design leans on, and the one to respect when adding a route:
 
 The whole team reads the table of keys; only a manager mints or revokes one.
 See `docs/api-keys.md`.
+
+---
+
+## Production
+
+One push to `main` deploys the API. Nothing else deploys it: no laptop builds
+the production image, and no one holds a key to the host.
+
+The client is on **AWS Amplify** at `ganesh.waat.tools`, the API on one **EC2
+host behind Caddy** at `api.ganesh.waat.tools`, the database on **managed
+RDS**. Same shape as NOMAD and SALSA, so that whoever is on call recognises
+what they are looking at — and the runbook is `docs/deployment.md`.
+
+Four rules worth knowing before touching `terraform/`, `docker-compose.prod.yml`
+or the CD workflow:
+
+- **The host is ARM.** The image is built for `linux/arm64`, and an amd64 one
+  pulls without complaint before refusing to start. Never drop the platform
+  from the build.
+- **No secret goes through Terraform.** The state file is not a vault: the
+  parameters are created empty and filled out of band with `put-parameter`.
+  Nor does a secret go through the SSM payload, which is logged — the host
+  reads Parameter Store itself.
+- **The instance and the database carry `prevent_destroy`.** A plan that says
+  `replace` on either is a plan to read again, not to apply: the instance holds
+  Caddy's certificate store, the database holds everyone's declared months.
+- **A deploy ends on the health check.** The API answering is what makes a
+  deploy a success, and the migration runs once, inside the container, rather
+  than in each worker as it boots.
+
+**The sign-in flow does not exist yet**, so production runs `REQUIRE_AUTH=false`
+and the application is open to whoever knows the address. That is a step, not a
+state: the day the Entra callback lands in the BFF, the parameter flips and the
+next deploy closes the door.
 
 ---
 

@@ -24,11 +24,13 @@ describe("ColumnsSelect", () => {
       "Phase",
       "Priorité",
       "Catégorie",
+      "Départements",
       "Build",
       "Run",
+      "Mise en service",
       "Référents",
       "Intervenants",
-      "Liens",
+      "Publié",
     ]) {
       expect(screen.getByRole("button", { name: column })).toBeInTheDocument();
     }
@@ -68,7 +70,7 @@ describe("ColumnsSelect", () => {
   });
 
   it("says how many columns are put away, so the folded bar still tells", () => {
-    selector(hiddenColumns(["category", "links"]));
+    selector(hiddenColumns(["category", "published"]));
 
     expect(screen.getByRole("button", { name: /Colonnes/ })).toHaveTextContent("2");
   });

@@ -31,9 +31,9 @@ from src.modules.planning.domain.services.backlog import (
     still_to_build,
 )
 from src.modules.planning.domain.services.horizon import horizon_end, months_to_cover
-from src.modules.planning.domain.services.plan_summary import is_late
 from src.modules.planning.domain.services.projection import project_workload
 from src.modules.planning.domain.services.roadmap_drawing import draw_segments
+from src.modules.planning.domain.services.roadmap_slippage import slippage_of
 from src.modules.planning.domain.services.roadmap_summary import summarise_roadmap
 from src.modules.planning.domain.services.roadmap_window import (
     DEFAULT_ROADMAP_MONTHS,
@@ -119,6 +119,7 @@ class GetRoadmapUseCase:
                 consumed=consumed.get(mission.id or 0, 0.0),
                 remaining=remaining.get(mission.id or 0),
                 today=now,
+                window_start=opens_on,
                 window_end=closes_on,
             )
             for mission in missions
@@ -189,10 +190,12 @@ class GetRoadmapUseCase:
         consumed: float,
         remaining: float | None,
         today: date,
+        window_start: date,
         window_end: date,
     ) -> RoadmapMission:
         first_declared, last_declared = span or (None, None)
         projected_end = landing.ends_on if landing else None
+        went_live_on = phases.get(ProjectStatus.OPERATIONS)
 
         segments = draw_segments(
             status=mission.status,
@@ -201,9 +204,11 @@ class GetRoadmapUseCase:
             last_declared=last_declared,
             projected_end=projected_end,
             today=today,
+            window_start=window_start,
             window_end=window_end,
             is_active=mission.is_active,
         )
+        slipped = slippage_of(went_live_on, landing, mission.go_live_date)
 
         return RoadmapMission(
             project_id=mission.id or 0,
@@ -215,11 +220,10 @@ class GetRoadmapUseCase:
             parent_id=mission.parent_id,
             segments=segments,
             target_date=mission.go_live_date,
+            went_live_on=went_live_on,
             landing_date=projected_end,
-            slippage_days=(
-                landing.slippage_days(mission.go_live_date) if landing else None
-            ),
-            is_late=is_late(landing, mission.go_live_date) if landing else False,
+            slippage_days=slipped.days,
+            is_late=slipped.is_late,
             estimated_days=mission.estimated_days,
             consumed_days=consumed,
             remaining_days=remaining,

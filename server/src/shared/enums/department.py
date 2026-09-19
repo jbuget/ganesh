@@ -21,3 +21,17 @@ class Department(StrEnum):
     MARKETING_COMMUNICATION_CSR = "marketing_communication_csr"
     COMMERCIAL_REAL_ESTATE = "commercial_real_estate"
     OTHER = "other"
+
+
+#: Rank of each department in the order declared above.
+_ORDER = {department: rank for rank, department in enumerate(Department)}
+
+
+def in_declared_order(departments: list[Department]) -> list[Department]:
+    """The departments sorted as they are declared, duplicates dropped.
+
+    A mission concerns several of them, and nothing in the database says in
+    which order: sorting them here is what keeps a row reading the same way
+    from one load to the next, and the same way as the picker offers them.
+    """
+    return sorted(dict.fromkeys(departments), key=lambda d: _ORDER[d])

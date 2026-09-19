@@ -10,6 +10,9 @@ from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
+from src.modules.projects.domain.repositories.project_detail_repository import (
+    ProjectDetailRepository,
+)
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
@@ -20,6 +23,7 @@ from src.modules.projects.domain.services.hierarchy import with_resolved_categor
 from src.modules.projects.domain.services.project_cost import split_delivered
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.shared.enums.department import Department
 
 
 @dataclass
@@ -42,6 +46,9 @@ class BoardCard:
     parent: Project | None = None
     #: The latest message of the thread, to announce it without opening the panel.
     latest_update: LastUpdate | None = None
+    #: The departments the mission serves. The board does not draw them: it
+    #: filters on them, under the same criteria as the reference list.
+    departments: list[Department] = field(default_factory=list)
 
 
 @dataclass
@@ -77,12 +84,14 @@ class GetBoardUseCase:
         users: UserRepository,
         assignees: ProjectAssigneeRepository,
         updates: ProjectUpdateRepository,
+        details: ProjectDetailRepository,
     ) -> None:
         self._projects = projects
         self._entries = entries
         self._users = users
         self._assignees = assignees
         self._updates = updates
+        self._details = details
 
     async def execute(
         self, today: date | None = None, include_inactive: bool = False
@@ -104,6 +113,7 @@ class GetBoardUseCase:
         assignments = await self._assignees.list_all(ProjectRole.CONTRIBUTOR)
         comments = await self._updates.count_by_project()
         latest_by_project = await self._updates.latest_by_project()
+        departments = await self._details.list_departments_by_project()
 
         def latest(project_id: int) -> LastUpdate | None:
             update = latest_by_project.get(project_id)
@@ -163,6 +173,7 @@ class GetBoardUseCase:
                     contributors=[users[uid] for uid in contributors if uid in users],
                     comments=comments.get(mission.id, 0),
                     latest_update=latest(mission.id),
+                    departments=departments.get(mission.id, []),
                     sub_projects=work_package_counts.get(mission.id, 0),
                     parent=(
                         by_id.get(mission.parent_id)

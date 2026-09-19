@@ -56,7 +56,7 @@ describe("useMissionColumns", () => {
     const { result } = columns();
 
     act(() => result.current.toggle("category"));
-    act(() => result.current.toggle("links"));
+    act(() => result.current.toggle("published"));
     act(() => result.current.showAll());
 
     expect(result.current.hidden.size).toBe(0);
@@ -68,7 +68,7 @@ describe("useMissionColumns", () => {
     const { result } = columns();
 
     act(() => result.current.toggle("category"));
-    act(() => result.current.toggle("links"));
+    act(() => result.current.toggle("published"));
 
     expect(window.history.length).toBe(depth);
   });

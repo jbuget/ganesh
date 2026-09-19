@@ -1,0 +1,15 @@
+# Copy to terraform.tfvars and override only what you need: every variable has
+# a default that matches the production stack. terraform.tfvars is git-ignored.
+
+# aws_region  = "eu-west-3"
+# aws_profile = "waat-prod"
+
+# One step up from NOMAD's nano; see the comment on the variable.
+# instance_type = "t4g.micro"
+
+# The repository allowed to deploy. Case-sensitive, and matched by immutable
+# numeric ID — change these only if the fork moves.
+# github_org_slug      = "waat-fr"
+# github_repo_slug     = "ganesh"
+# github_owner_id      = "236424188"
+# github_repository_id = "1377592789"

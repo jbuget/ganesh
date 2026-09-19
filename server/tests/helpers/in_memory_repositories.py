@@ -53,7 +53,7 @@ from src.modules.stats.domain.repositories.statistics_repository import (
 )
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
-from src.shared.enums.department import Department
+from src.shared.enums.department import Department, in_declared_order
 
 
 class InMemoryUserRepository(UserRepository):
@@ -361,7 +361,14 @@ class InMemoryProjectDetailRepository(ProjectDetailRepository):
         self._next_link_id = 1
 
     async def list_departments(self, project_id: int) -> list[Department]:
-        return list(self._departments.get(project_id, []))
+        return in_declared_order(self._departments.get(project_id, []))
+
+    async def list_departments_by_project(self) -> dict[int, list[Department]]:
+        return {
+            project_id: in_declared_order(departments)
+            for project_id, departments in self._departments.items()
+            if departments
+        }
 
     async def set_departments(
         self, project_id: int, departments: list[Department]

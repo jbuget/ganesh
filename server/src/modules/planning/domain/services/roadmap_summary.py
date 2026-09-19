@@ -8,11 +8,7 @@ is what says how much of that report to believe.
 from collections.abc import Sequence
 from datetime import date
 
-from src.modules.planning.domain.entities.roadmap import (
-    RoadmapMission,
-    RoadmapSummary,
-    SegmentKind,
-)
+from src.modules.planning.domain.entities.roadmap import RoadmapMission, RoadmapSummary
 
 
 def summarise_roadmap(
@@ -38,10 +34,12 @@ def summarise_roadmap(
 def _went_live_between(mission: RoadmapMission, from_day: date, to_day: date) -> bool:
     """Whether the mission went into operations inside the window.
 
-    Read off the bar rather than off the phase history: the segment already
-    knows the day, and two readings of one date is one too many.
+    Read off the recorded day, never off the bar. A running rule has to open
+    somewhere to be drawn, and when nobody wrote down the go-live it opens
+    where the drawing needs it to — a placeholder, not a fact. Counting that
+    would report deliveries the register never saw, which is how a portfolio
+    that shipped nothing this month announces « 23 mises en service ».
     """
-    return any(
-        segment.kind is SegmentKind.RUNNING and from_day <= segment.starts_on <= to_day
-        for segment in mission.segments
+    return mission.went_live_on is not None and (
+        from_day <= mission.went_live_on <= to_day
     )

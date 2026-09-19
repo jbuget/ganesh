@@ -18,7 +18,26 @@ class ProjectDetailRepository(ABC):
     """
 
     @abstractmethod
-    async def list_departments(self, project_id: int) -> list[Department]: ...
+    async def list_departments(self, project_id: int) -> list[Department]:
+        """The departments of one mission, in the order `Department` declares.
+
+        That is the order the picker offers them in, and the order the
+        reference list reads them in: nothing says in which order they were
+        stored, so a mission read as it comes would show its chips one way in
+        its panel and another in the column — and move them about from one
+        load to the next.
+        """
+        ...
+
+    @abstractmethod
+    async def list_departments_by_project(self) -> dict[int, list[Department]]:
+        """The departments of every mission, read in one go.
+
+        The reference list shows them in a column: asking for them mission by
+        mission would make the rows arrive one after the other. Same order as
+        above, for the same reason.
+        """
+        ...
 
     @abstractmethod
     async def set_departments(
