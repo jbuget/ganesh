@@ -158,7 +158,9 @@ the API down fails** — the health check is the last word, not a formality.
 Created in the console, not in Terraform: it holds the Entra client secret, and
 Terraform state is not a vault.
 
-1. New application → connect `waat-fr/ganesh`, branch `main`.
+1. New application → connect `waat-fr/ganesh`, branch `main`. Authorise
+   through the **GitHub App**, not a personal access token: a token here would
+   have to be renewed, and the one the deploy uses is meant to disappear.
 2. Amplify picks `amplify.yml` up on its own. The platform must be
    **WEB_COMPUTE** (SSR) — the BFF is Route Handlers, a static export would
    drop them silently.
@@ -178,6 +180,24 @@ Terraform state is not a vault.
 4. Custom domain `ganesh.waat.tools`, then the CNAME of step 3.
 5. On the Entra app registration (shared with WAATcher), declare the redirect
    URI `https://ganesh.waat.tools/api/auth/callback/azure-ad`.
+
+## What production actually is
+
+Written down because half of it is not in Terraform: the Amplify application is
+created in the console, and nothing else records its identifiers.
+
+| | |
+|---|---|
+| AWS account | `880882846647` (`waat-prod`), region `eu-west-3` |
+| API host | EC2 `i-0fd877b529458bfb2`, Elastic IP `13.39.143.94` |
+| Database | `ganesh-production.cro4wywkgx89.eu-west-3.rds.amazonaws.com:5432`, db `timesheet` |
+| Amplify app | `ganesh-production`, app id `d5gyiguzjy1oj`, platform `WEB_COMPUTE` |
+| Amplify default URL | `https://main.d5gyiguzjy1oj.amplifyapp.com` |
+| Images | `ghcr.io/waat-fr/ganesh-api`, tagged by commit SHA |
+| DNS | zone `waat.tools`, **at OVH** — not Route 53. Every record is made by hand. |
+
+The Terraform-managed half is one command away: `terraform output` in
+`terraform/`. The Amplify half is the table above.
 
 ## Day to day
 
