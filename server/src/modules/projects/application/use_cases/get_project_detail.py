@@ -20,6 +20,7 @@ from src.modules.projects.domain.repositories.project_detail_repository import (
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
@@ -74,6 +75,13 @@ class GetProjectDetailUseCase:
         if mission is None:
             raise EntityNotFoundError("The mission cannot be found.")
 
+        # A work package has no axis of its own: it is read on its project.
+        parent = (
+            await self._projects.get_by_id(mission.parent_id)
+            if mission.parent_id is not None
+            else None
+        )
+
         users = {u.id: u for u in await self._users.list_all(True)}
 
         async def people(role: ProjectRole) -> list[User]:
@@ -116,7 +124,7 @@ class GetProjectDetailUseCase:
         )
 
         return ProjectDetail(
-            project=mission,
+            project=with_resolved_category(mission, parent),
             departments=await self._details.list_departments(project_id),
             links=await self._details.list_links(project_id),
             phases_reached=await self._details.list_phases_reached(project_id),
@@ -125,7 +133,10 @@ class GetProjectDetailUseCase:
             consumed_days=round(sum(float(e.value) for e in entries), 2),
             contributions=contributions,
             sub_projects=sorted(
-                await self._projects.list_children(project_id),
+                (
+                    with_resolved_category(work_package, mission)
+                    for work_package in await self._projects.list_children(project_id)
+                ),
                 key=lambda work_package: work_package.label.lower(),
             ),
         )

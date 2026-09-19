@@ -10,6 +10,7 @@ from src.modules.projects.application.use_cases.get_project_detail import (
 )
 from src.modules.projects.domain.entities.project import (
     Project,
+    ProjectCategory,
     ProjectKind,
     ProjectStatus,
 )
@@ -68,9 +69,10 @@ def build(
     entries: list[Entry] | None = None,
     assignments=None,
     work_packages: list[Project] | None = None,
+    parent: Project | None = None,
 ):
     return GetProjectDetailUseCase(
-        projects=InMemoryProjectRepository([PROJECT, *(work_packages or [])]),
+        projects=InMemoryProjectRepository([parent or PROJECT, *(work_packages or [])]),
         details=InMemoryProjectDetailRepository(),
         assignees=InMemoryProjectAssigneeRepository(assignments or {}),
         entries=InMemoryEntryRepository(entries or []),
@@ -164,3 +166,35 @@ async def test_the_children_of_a_mission_are_listed_in_alphabetical_order() -> N
         "Authentification",
         "Reprise de donnees",
     ]
+
+
+async def test_the_sheet_of_a_work_package_shows_the_axis_of_its_project() -> None:
+    parent = Project(
+        id=10,
+        label="Portail",
+        kind=ProjectKind.PROJECT,
+        status=ProjectStatus.DEVELOPMENT,
+        category=ProjectCategory.AUTOMATE,
+    )
+
+    detail = await build(
+        work_packages=[work_package(11, "Lot API")], parent=parent
+    ).execute(11)
+
+    assert detail.project.category is ProjectCategory.AUTOMATE
+
+
+async def test_the_packages_of_a_sheet_show_the_axis_of_their_project() -> None:
+    parent = Project(
+        id=10,
+        label="Portail",
+        kind=ProjectKind.PROJECT,
+        status=ProjectStatus.DEVELOPMENT,
+        category=ProjectCategory.AUTOMATE,
+    )
+
+    detail = await build(
+        work_packages=[work_package(11, "Lot API")], parent=parent
+    ).execute(10)
+
+    assert [p.category for p in detail.sub_projects] == [ProjectCategory.AUTOMATE]

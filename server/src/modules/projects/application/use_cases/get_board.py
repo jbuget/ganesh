@@ -16,6 +16,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
+from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.projects.domain.services.project_cost import split_delivered
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
@@ -154,7 +155,9 @@ class GetBoardUseCase:
 
             by_status[mission.status].cards.append(
                 BoardCard(
-                    project=mission,
+                    project=with_resolved_category(
+                        mission, by_id.get(mission.parent_id or 0)
+                    ),
                     consumed_days=consumed,
                     build_days=cost.build_days,
                     contributors=[users[uid] for uid in contributors if uid in users],

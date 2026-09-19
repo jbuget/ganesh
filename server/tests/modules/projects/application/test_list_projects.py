@@ -6,6 +6,7 @@ from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.projects.application.use_cases.list_projects import ListProjectsUseCase
 from src.modules.projects.domain.entities.project import (
     Project,
+    ProjectCategory,
     ProjectKind,
     ProjectStatus,
 )
@@ -60,9 +61,10 @@ def build(
     entries: list[Entry] | None = None,
     updates: InMemoryProjectUpdateRepository | None = None,
     details: InMemoryProjectDetailRepository | None = None,
+    projects: list[Project] | None = None,
 ):
     return ListProjectsUseCase(
-        projects=InMemoryProjectRepository([PORTAIL]),
+        projects=InMemoryProjectRepository(projects or [PORTAIL]),
         entries=InMemoryEntryRepository(entries or []),
         assignees=InMemoryProjectAssigneeRepository(assignments or {}),
         users=InMemoryUserRepository([ALICE, NINO]),
@@ -243,3 +245,28 @@ async def test_the_links_of_another_mission_stay_with_it() -> None:
     listed = await build(details=details).execute()
 
     assert listed[0].links == []
+
+
+async def test_a_work_package_is_listed_with_the_axis_of_its_project() -> None:
+    """Otherwise a filter on the axis would show the project without its packages."""
+    parent = Project(
+        id=10,
+        label="Portail",
+        kind=ProjectKind.PROJECT,
+        status=ProjectStatus.SCOPING,
+        category=ProjectCategory.INNOVATE,
+    )
+    package = Project(
+        id=11,
+        label="Lot API",
+        kind=ProjectKind.WORK_PACKAGE,
+        status=ProjectStatus.SCOPING,
+        parent_id=10,
+    )
+
+    listed = await build(projects=[parent, package]).execute()
+
+    assert [m.project.category for m in listed] == [
+        ProjectCategory.INNOVATE,
+        ProjectCategory.INNOVATE,
+    ]
