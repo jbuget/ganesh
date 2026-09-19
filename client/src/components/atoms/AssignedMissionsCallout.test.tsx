@@ -10,19 +10,19 @@ const MISSIONS = [
 ];
 
 describe("AssignedMissionsCallout", () => {
-  it("counts the missions left to declare", () => {
+  it("counts the projects left to declare", () => {
     render(<AssignedMissionsCallout missions={MISSIONS} onAdd={vi.fn()} />);
 
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Vous intervenez sur 2 missions sans temps déclaré ce mois-ci",
+      "Vous êtes déclaré en tant qu'intervenant sur 2 projets sans temps saisi ce mois-ci",
     );
   });
 
-  it("speaks of a single mission in the singular", () => {
+  it("speaks of a single project in the singular", () => {
     render(<AssignedMissionsCallout missions={[MISSIONS[0]]} onAdd={vi.fn()} />);
 
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Vous intervenez sur 1 mission sans temps déclaré ce mois-ci",
+      "Vous êtes déclaré en tant qu'intervenant sur 1 projet sans temps saisi ce mois-ci",
     );
   });
 

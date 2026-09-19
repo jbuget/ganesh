@@ -2,7 +2,8 @@
 
 from datetime import date, datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+from pydantic.alias_generators import to_camel
 
 from src.modules.projects.domain.entities.project import (
     ProjectCategory,
@@ -11,6 +12,10 @@ from src.modules.projects.domain.entities.project import (
     ProjectStatus,
 )
 from src.modules.projects.domain.entities.project_link import LinkIcon
+from src.modules.projects.domain.entities.service_registry import (
+    Criticality,
+    ServiceType,
+)
 from src.shared.enums.department import Department
 
 
@@ -52,6 +57,24 @@ class ProjectResponse(BaseModel):
     description: str | None
     is_syncable_to_monday: bool
     is_deletable: bool
+    #: --- Service sheet ---
+    slug: str | None
+    is_published: bool
+    summary: str | None
+    criticality: Criticality | None
+    service_type: ServiceType | None
+    hosting: str | None
+    has_microsoft_entra: bool
+    team: str | None
+    slack_channel: str | None
+    production_link: str | None
+    staging_link: str | None
+    repository_link: str | None
+    documentation_link: str | None
+    project_management_link: str | None
+    monitoring_link: str | None
+    stats_page_link: str | None
+    stats_api_link: str | None
 
 
 class LastUpdateResponse(BaseModel):
@@ -112,6 +135,25 @@ class UpdateProjectRequest(BaseModel):
     parent_id: int | None = None
     monday_item_id: str | None = None
     monday_subitem_id: str | None = None
+
+    # Service sheet.
+    slug: str | None = None
+    is_published: bool | None = None
+    summary: str | None = None
+    criticality: Criticality | None = None
+    service_type: ServiceType | None = None
+    hosting: str | None = None
+    has_microsoft_entra: bool | None = None
+    team: str | None = None
+    slack_channel: str | None = None
+    production_link: str | None = None
+    staging_link: str | None = None
+    repository_link: str | None = None
+    documentation_link: str | None = None
+    project_management_link: str | None = None
+    monitoring_link: str | None = None
+    stats_page_link: str | None = None
+    stats_api_link: str | None = None
 
 
 class ImportLineRequest(BaseModel):
@@ -235,6 +277,15 @@ class ProjectContributionResponse(BaseModel):
     by_month: list[MonthlyShareResponse]
 
 
+class MissionRefResponse(BaseModel):
+    """A mission named just enough to be listed and linked to."""
+
+    id: int
+    label: str
+    #: Its address in the public catalogue, absent while it has none.
+    slug: str | None
+
+
 class ProjectDetailResponse(BaseModel):
     """The full sheet of a mission."""
 
@@ -247,6 +298,12 @@ class ProjectDetailResponse(BaseModel):
     consumed_days: float
     contributions: list[ProjectContributionResponse]
     sub_projects: list[ProjectResponse]
+    #: Technologies the service is built on.
+    stack: list[str]
+    #: Free tags the service is found by in the catalogue.
+    tags: list[str]
+    #: Internal missions this one relies on.
+    dependencies: list[MissionRefResponse]
     #: The project this one belongs to, absent when it is a project itself.
     parent: ParentResponse | None
 
@@ -262,6 +319,18 @@ class UpdateDescriptionRequest(BaseModel):
     """Service sheet, in markdown."""
 
     description: str | None = None
+
+
+class UpdateProjectRegistryRequest(BaseModel):
+    """The catalogue lists of a mission, sent whole.
+
+    The screen shows them in full and sends back what it shows: each list
+    replaces the previous one.
+    """
+
+    stack: list[str] = []
+    tags: list[str] = []
+    depends_on: list[int] = []
 
 
 class ProjectUpdateResponse(BaseModel):
@@ -281,3 +350,53 @@ class PostUpdateRequest(BaseModel):
     """Posting or correcting an update."""
 
     body: str = Field(min_length=1)
+
+
+class CatalogLinkResponse(BaseModel):
+    """A secondary link, as the catalogue lists it."""
+
+    label: str
+    url: str
+    icon: LinkIcon
+
+
+class CatalogEntryResponse(BaseModel):
+    """One published service, in the catalogue's own vocabulary.
+
+    This schema speaks camelCase where the rest of the API speaks snake_case,
+    on purpose: it is a publication format, read by waat.tools and shaped for
+    it. Keeping the names identical on both sides means neither has a
+    translation table to keep in step.
+    """
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+    slug: str
+    name: str
+    description: str
+    status: ProjectStatus
+    archived: bool
+    criticality: str
+    service_type: str = Field(serialization_alias="type")
+    #: The full sheet in markdown; the catalogue renders it.
+    body: str | None
+
+    production_link: str | None
+    staging_link: str | None
+    repository_link: str | None
+    documentation_link: str | None
+    project_management_link: str | None
+    monitoring_link: str | None
+    stats_page_link: str | None
+    stats_api_link: str | None
+    secondary_links: list[CatalogLinkResponse]
+
+    first_deployed_at: date | None
+    team: str | None
+    slack_channel: str | None
+    hosting: str | None
+    has_microsoft_entra: bool
+    contributors: list[str]
+    stack: list[str]
+    tags: list[str]
+    depends_on: list[str]

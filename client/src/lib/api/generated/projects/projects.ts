@@ -24,6 +24,7 @@ import type {
   AddLinkRequest,
   AssignMemberParams,
   BoardResponse,
+  CatalogEntryResponse,
   ChangeStatusRequest,
   CreateProjectRequest,
   GetBoardParams,
@@ -41,6 +42,7 @@ import type {
   UnassignMemberParams,
   UpdateDescriptionRequest,
   UpdateProjectDetailRequest,
+  UpdateProjectRegistryRequest,
   UpdateProjectRequest,
 } from "../model";
 
@@ -873,6 +875,155 @@ export const useImportProjects = <TError = HTTPValidationError, TContext = unkno
 > => {
   return useMutation(getImportProjectsMutationOptions(options), queryClient);
 };
+export type exportCatalogResponse200 = {
+  data: CatalogEntryResponse[];
+  status: 200;
+};
+
+export type exportCatalogResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type exportCatalogResponseSuccess = exportCatalogResponse200 & {
+  headers: Headers;
+};
+export type exportCatalogResponseError = exportCatalogResponse422 & {
+  headers: Headers;
+};
+
+export type exportCatalogResponse =
+  exportCatalogResponseSuccess | exportCatalogResponseError;
+
+export const getExportCatalogUrl = () => {
+  return `/api/v1/projects/catalog`;
+};
+
+/**
+ * The published services, in the vocabulary of the public catalogue.
+ * @summary Export Catalog
+ */
+export const exportCatalog = async (
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<exportCatalogResponse> => {
+  return bffFetcher<exportCatalogResponse>(getExportCatalogUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportCatalogQueryKey = () => {
+  return [`/api/v1/projects/catalog`] as const;
+};
+
+export const getExportCatalogQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportCatalog>>,
+  TError = HTTPValidationError,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof exportCatalog>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportCatalogQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportCatalog>>> = ({
+    signal,
+  }) => exportCatalog({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportCatalog>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ExportCatalogQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportCatalog>>
+>;
+export type ExportCatalogQueryError = HTTPValidationError;
+
+export function useExportCatalog<
+  TData = Awaited<ReturnType<typeof exportCatalog>>,
+  TError = HTTPValidationError,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportCatalog>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportCatalog>>,
+          TError,
+          Awaited<ReturnType<typeof exportCatalog>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useExportCatalog<
+  TData = Awaited<ReturnType<typeof exportCatalog>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportCatalog>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportCatalog>>,
+          TError,
+          Awaited<ReturnType<typeof exportCatalog>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportCatalog<
+  TData = Awaited<ReturnType<typeof exportCatalog>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportCatalog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export Catalog
+ */
+
+export function useExportCatalog<
+  TData = Awaited<ReturnType<typeof exportCatalog>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportCatalog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportCatalogQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export type getBoardResponse200 = {
   data: BoardResponse;
   status: 200;
@@ -1731,6 +1882,147 @@ export const useUpdateProjectDetail = <
   TContext
 > => {
   return useMutation(getUpdateProjectDetailMutationOptions(options), queryClient);
+};
+export type updateProjectRegistryResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type updateProjectRegistryResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type updateProjectRegistryResponseSuccess = updateProjectRegistryResponse204 & {
+  headers: Headers;
+};
+export type updateProjectRegistryResponseError = updateProjectRegistryResponse422 & {
+  headers: Headers;
+};
+
+export type updateProjectRegistryResponse =
+  updateProjectRegistryResponseSuccess | updateProjectRegistryResponseError;
+
+export const getUpdateProjectRegistryUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/registry`;
+};
+
+/**
+ * Saves the stack, the tags and the dependencies of the service.
+ * @summary Update Project Registry
+ */
+export const updateProjectRegistry = async (
+  projectId: number,
+  updateProjectRegistryRequest: UpdateProjectRegistryRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<updateProjectRegistryResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<updateProjectRegistryResponse>(
+    getUpdateProjectRegistryUrl(projectId),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(updateProjectRegistryRequest),
+    },
+  );
+};
+
+export const getUpdateProjectRegistryMutationKey = () =>
+  ["updateProjectRegistry"] as const;
+
+export const getUpdateProjectRegistryMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateProjectRegistry>>,
+    TError,
+    UpdateProjectRegistryMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateProjectRegistry>>,
+  TError,
+  UpdateProjectRegistryMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateProjectRegistryMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateProjectRegistry>>,
+    UpdateProjectRegistryMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return updateProjectRegistry(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateProjectRegistryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateProjectRegistry>>
+>;
+export type UpdateProjectRegistryMutationBody = UpdateProjectRegistryRequest;
+export type UpdateProjectRegistryMutationError = HTTPValidationError;
+export type UpdateProjectRegistryMutationVariables = {
+  projectId: number;
+  data: UpdateProjectRegistryRequest;
+};
+
+/**
+ * @summary Update Project Registry
+ */
+export const useUpdateProjectRegistry = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateProjectRegistry>>,
+      TError,
+      UpdateProjectRegistryMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateProjectRegistry>>,
+  TError,
+  UpdateProjectRegistryMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateProjectRegistryMutationOptions(options), queryClient);
 };
 export type addProjectLinkResponse201 = {
   data: ProjectLinkResponse;

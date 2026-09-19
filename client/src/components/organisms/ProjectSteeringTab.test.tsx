@@ -47,8 +47,6 @@ const steering = (kind: ProjectKind, category: ProjectCategory | null = null) =>
       saveSheet={vi.fn()}
       changePhase={vi.fn()}
       updateFields={vi.fn()}
-      addLink={vi.fn()}
-      removeLink={vi.fn()}
       addSubProject={vi.fn()}
     />,
   );

@@ -37,6 +37,9 @@ from src.modules.projects.application.use_cases.create_project import (
 from src.modules.projects.application.use_cases.delete_project import (
     DeleteProjectUseCase,
 )
+from src.modules.projects.application.use_cases.export_catalog import (
+    ExportCatalogUseCase,
+)
 from src.modules.projects.application.use_cases.get_board import GetBoardUseCase
 from src.modules.projects.application.use_cases.get_project_detail import (
     GetProjectDetailUseCase,
@@ -64,9 +67,14 @@ from src.modules.projects.application.use_cases.update_project_detail import (
     UpdateProjectDetailCommand,
     UpdateProjectDetailUseCase,
 )
+from src.modules.projects.application.use_cases.update_project_registry import (
+    UpdateProjectRegistryCommand,
+    UpdateProjectRegistryUseCase,
+)
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.presentation.api.mappers.project_mapper import (
     to_board_response,
+    to_catalog_entry_response,
     to_listed_project_response,
     to_project_detail_response,
     to_project_response,
@@ -75,6 +83,7 @@ from src.modules.projects.presentation.api.mappers.project_mapper import (
 from src.modules.projects.presentation.api.schemas.project_schemas import (
     AddLinkRequest,
     BoardResponse,
+    CatalogEntryResponse,
     ChangeStatusRequest,
     CreateProjectRequest,
     ImportProjectsRequest,
@@ -88,6 +97,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     ProjectUpdateResponse,
     UpdateDescriptionRequest,
     UpdateProjectDetailRequest,
+    UpdateProjectRegistryRequest,
     UpdateProjectRequest,
 )
 from src.modules.projects.presentation.dependencies import (
@@ -98,6 +108,7 @@ from src.modules.projects.presentation.dependencies import (
     get_create_project_use_case,
     get_delete_project_use_case,
     get_edit_update_use_case,
+    get_export_catalog_use_case,
     get_import_projects_use_case,
     get_list_projects_use_case,
     get_list_updates_use_case,
@@ -109,6 +120,7 @@ from src.modules.projects.presentation.dependencies import (
     get_unassign_member_use_case,
     get_update_description_use_case,
     get_update_project_detail_use_case,
+    get_update_project_registry_use_case,
     get_update_project_use_case,
 )
 from src.modules.users.domain.entities.user import User
@@ -244,6 +256,19 @@ async def delete_project(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+@router.get(
+    "/catalog",
+    response_model=list[CatalogEntryResponse],
+    operation_id="exportCatalog",
+)
+async def export_catalog(
+    _: User = Depends(get_current_user),
+    use_case: ExportCatalogUseCase = Depends(get_export_catalog_use_case),
+) -> list[CatalogEntryResponse]:
+    """The published services, in the vocabulary of the public catalogue."""
+    return [to_catalog_entry_response(entry) for entry in await use_case.execute()]
+
+
 @router.get("/board", response_model=BoardResponse, operation_id="getBoard")
 async def get_board(
     include_inactive: bool = Query(default=False),
@@ -372,6 +397,35 @@ async def update_project_detail(
             project_id=project_id,
             departments=payload.departments,
             business_contacts=payload.business_contacts,
+        )
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.put(
+    "/{project_id}/registry",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="updateProjectRegistry",
+)
+async def update_project_registry(
+    project_id: int,
+    payload: UpdateProjectRegistryRequest,
+    current_user: User = Depends(get_current_user),
+    use_case: UpdateProjectRegistryUseCase = Depends(
+        get_update_project_registry_use_case
+    ),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Saves the stack, the tags and the dependencies of the service."""
+    assert current_user.id is not None
+    await use_case.execute(
+        UpdateProjectRegistryCommand(
+            actor_id=current_user.id,
+            project_id=project_id,
+            stack=payload.stack,
+            tags=payload.tags,
+            depends_on=payload.depends_on,
         )
     )
     await session.commit()

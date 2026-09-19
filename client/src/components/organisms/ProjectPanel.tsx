@@ -87,6 +87,7 @@ export function ProjectPanel({
             saveDescription={sheet.saveDescription}
             changePhase={sheet.changePhase}
             updateFields={sheet.updateFields}
+            saveRegistry={sheet.saveRegistry}
             addLink={sheet.addLink}
             removeLink={sheet.removeLink}
             addSubProject={sheet.addSubProject}

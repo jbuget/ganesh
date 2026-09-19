@@ -70,10 +70,10 @@ export function MissionSelector({
   const [isOpen, setOpen] = useState(false);
 
   const groups: MissionGroup[] = [];
-  // First, and named after what ties them to the reader: these are the missions
-  // the team put them on.
+  // First, and named after what ties them to the reader: these are the
+  // projects the team put them on.
   if (mine.length > 0) {
-    groups.push({ value: "Mes missions", items: asItems(mine) });
+    groups.push({ value: "Mes projets", items: asItems(mine) });
   }
   if (projectMissions.length > 0) {
     groups.push({ value: "Projets et lots", items: asItems(projectMissions) });
@@ -95,15 +95,15 @@ export function MissionSelector({
     >
       <ComboboxTrigger
         className="w-full text-muted-foreground"
-        aria-label="Ajouter une mission"
+        aria-label="Ajouter un projet"
       >
-        <span className="truncate">+ Ajouter une mission…</span>
+        <span className="truncate">+ Ajouter un projet…</span>
       </ComboboxTrigger>
 
-      <ComboboxContent className="min-w-80" aria-label="Ajouter une mission">
-        <ComboboxInput placeholder="Rechercher une mission…" />
+      <ComboboxContent className="min-w-80" aria-label="Ajouter un projet">
+        <ComboboxInput placeholder="Rechercher un projet…" />
 
-        <ComboboxEmpty>Aucune mission ne correspond.</ComboboxEmpty>
+        <ComboboxEmpty>Aucun projet ne correspond.</ComboboxEmpty>
 
         <ComboboxList>
           {(group: MissionGroup) => (

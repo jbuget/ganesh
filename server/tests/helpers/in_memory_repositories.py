@@ -12,8 +12,12 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 )
 from src.modules.entries.domain.entities.entry import Entry
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
+from src.modules.entries.domain.repositories.user_mission_repository import (
+    UserMissionRepository,
+)
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.domain.repositories.month_repository import MonthRepository
+from src.modules.months.domain.services.month_period import first_day_of
 from src.modules.planning.domain.entities.simulation import Simulation
 from src.modules.planning.domain.repositories.simulation_repository import (
     SimulationRepository,
@@ -95,6 +99,9 @@ class InMemoryProjectRepository(ProjectRepository):
 
     async def get_by_id(self, project_id: int) -> Project | None:
         return self._projects.get(project_id)
+
+    async def get_by_slug(self, slug: str) -> Project | None:
+        return next((p for p in self._projects.values() if p.slug == slug), None)
 
     async def list_all(self, include_inactive: bool = False) -> list[Project]:
         return [p for p in self._projects.values() if include_inactive or p.is_active]
@@ -292,6 +299,9 @@ class InMemoryProjectDetailRepository(ProjectDetailRepository):
         self._departments: dict[int, list[Department]] = {}
         self._links: dict[int, list[ProjectLink]] = {}
         self._phases: dict[int, dict[ProjectStatus, date]] = {}
+        self._stack: dict[int, list[str]] = {}
+        self._tags: dict[int, list[str]] = {}
+        self._dependencies: dict[int, list[int]] = {}
         self._next_link_id = 1
 
     async def list_departments(self, project_id: int) -> list[Department]:
@@ -338,6 +348,24 @@ class InMemoryProjectDetailRepository(ProjectDetailRepository):
         self, project_id: int, status: ProjectStatus, reached_at: date
     ) -> None:
         self._phases.setdefault(project_id, {}).setdefault(status, reached_at)
+
+    async def list_stack(self, project_id: int) -> list[str]:
+        return sorted(self._stack.get(project_id, []))
+
+    async def set_stack(self, project_id: int, technologies: list[str]) -> None:
+        self._stack[project_id] = list(dict.fromkeys(technologies))
+
+    async def list_tags(self, project_id: int) -> list[str]:
+        return sorted(self._tags.get(project_id, []))
+
+    async def set_tags(self, project_id: int, tags: list[str]) -> None:
+        self._tags[project_id] = list(dict.fromkeys(tags))
+
+    async def list_dependencies(self, project_id: int) -> list[int]:
+        return sorted(self._dependencies.get(project_id, []))
+
+    async def set_dependencies(self, project_id: int, depends_on: list[int]) -> None:
+        self._dependencies[project_id] = list(dict.fromkeys(depends_on))
 
 
 class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
@@ -486,3 +514,24 @@ class InMemorySimulationRepository(SimulationRepository):
 
     async def delete(self, simulation_id: int) -> None:
         self._simulations.pop(simulation_id, None)
+
+
+class InMemoryUserMissionRepository(UserMissionRepository):
+    def __init__(self, rows: list[tuple[int, int, date]] | None = None) -> None:
+        self._rows: set[tuple[int, int, date]] = {
+            (user_id, project_id, first_day_of(month))
+            for user_id, project_id, month in rows or []
+        }
+
+    async def list_for_month(self, user_id: int, month: date) -> list[int]:
+        return [
+            project_id
+            for row_user, project_id, row_month in sorted(self._rows)
+            if row_user == user_id and row_month == first_day_of(month)
+        ]
+
+    async def add(self, user_id: int, project_id: int, month: date) -> None:
+        self._rows.add((user_id, project_id, first_day_of(month)))
+
+    async def remove(self, user_id: int, project_id: int, month: date) -> None:
+        self._rows.discard((user_id, project_id, first_day_of(month)))

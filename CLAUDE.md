@@ -361,6 +361,29 @@ make migrate     # alembic upgrade head
 
 ---
 
+## The service catalogue
+
+waat.tools publishes the services the team produces. Janus is the source for
+everything it publishes: a mission carries a service sheet, and the « Fiche
+service » tab is where that sheet is filled in — nowhere else.
+
+The line between the two tabs of a mission is what one is doing there:
+**Pilotage steers the mission, Fiche publishes the service.** Phase, priority,
+departments, contributors and cost steer; address, summary, links, stack and
+criticality publish. A field belongs to one side or the other, never to both.
+
+- Publishing asks for a slug, a summary, a criticality and a type: what the
+  catalogue cannot draw a card without. Off-project work is never published.
+- A slug is chosen once and kept: it is a public address, and it must survive
+  the mission being renamed.
+- `description` is the full sheet in markdown, `summary` the one line a card
+  shows. The catalogue reads both, under those two names.
+- `make catalog` writes the export; `GET /api/v1/projects/catalog` serves the
+  same thing. The shape is described once, in `CatalogEntryResponse`, and it
+  speaks camelCase on purpose — it is waat.tools's vocabulary, not ours.
+
+---
+
 ## Code conventions
 
 ### Python (backend)

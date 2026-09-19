@@ -3,7 +3,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { TimesheetGrid } from "./TimesheetGrid";
-import type { MonthGridResponse, ProjectResponse } from "@/lib/api/generated/model";
+import type { GridRowResponse, MonthGridResponse } from "@/lib/api/generated/model";
 
 const TODAY = "2026-09-16";
 
@@ -45,21 +45,20 @@ function makeGrid(overrides: Partial<MonthGridResponse> = {}): MonthGridResponse
   } as MonthGridResponse;
 }
 
-const PROJECTS: ProjectResponse[] = [
-  {
-    id: 11,
-    label: "Absences",
-    kind: "off_project",
-    status: null,
-    parent_id: null,
-    is_active: true,
-    estimated_days: null,
-    is_syncable_to_monday: false,
-  } as ProjectResponse,
-];
+/** A mission put on the month, with nothing entered on it yet. */
+const EMPTY_ROW: GridRowResponse = {
+  project_id: 11,
+  label: "Absences",
+  kind: "off_project",
+  estimated_days: null,
+  values: {},
+  actual_total: 0,
+  forecast_total: 0,
+  total: 0,
+  total_consumed_days: 0,
+} as GridRowResponse;
 
 const baseProps = {
-  extraRows: [],
   today: TODAY,
   onSetValue: vi.fn(),
 };
@@ -107,8 +106,13 @@ describe("TimesheetGrid", () => {
     expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-15", 0.5);
   });
 
-  it("keeps a row added but still empty", () => {
-    render(<TimesheetGrid {...baseProps} grid={makeGrid()} extraRows={PROJECTS} />);
+  it("shows a mission put on the month with nothing entered on it", () => {
+    render(
+      <TimesheetGrid
+        {...baseProps}
+        grid={makeGrid({ rows: [...makeGrid().rows, EMPTY_ROW] })}
+      />,
+    );
 
     expect(screen.getByRole("rowheader", { name: /Absences/ })).toBeInTheDocument();
   });
@@ -145,12 +149,12 @@ describe("TimesheetGrid", () => {
       <TimesheetGrid
         {...baseProps}
         grid={makeGrid()}
-        addingMission={<button>Ajouter une mission</button>}
+        addingMission={<button>Ajouter un projet</button>}
       />,
     );
 
     const lines = screen.getAllByRole("row");
-    expect(within(lines.at(-1)!).getByText("Ajouter une mission")).toBeInTheDocument();
+    expect(within(lines.at(-1)!).getByText("Ajouter un projet")).toBeInTheDocument();
   });
 
   it("lets the add row close the table with a strong rule", () => {
@@ -158,7 +162,7 @@ describe("TimesheetGrid", () => {
       <TimesheetGrid
         {...baseProps}
         grid={makeGrid()}
-        addingMission={<button>Ajouter une mission</button>}
+        addingMission={<button>Ajouter un projet</button>}
       />,
     );
 
@@ -175,12 +179,12 @@ describe("TimesheetGrid", () => {
       <TimesheetGrid
         {...baseProps}
         grid={makeGrid({ rows: [] })}
-        addingMission={<button>Ajouter une mission</button>}
+        addingMission={<button>Ajouter un projet</button>}
       />,
     );
 
     expect(screen.queryByText(/Aucune mission pour ce mois/)).toBeNull();
-    expect(screen.getByText("Ajouter une mission")).toBeInTheDocument();
+    expect(screen.getByText("Ajouter un projet")).toBeInTheDocument();
   });
 
   it("offers to remove each mission, outside the table frame", () => {
@@ -203,7 +207,7 @@ describe("TimesheetGrid", () => {
       <TimesheetGrid {...baseProps} grid={makeGrid()} onRemoveMission={vi.fn()} />,
     );
 
-    const action = screen.getByText("Retirer la mission").closest("th")!;
+    const action = screen.getByText("Retirer le projet").closest("th")!;
     expect(action.className).not.toContain("border-t");
     // The totals column does carry it: the frame stops there.
     const totals = screen.getByText("Total du mois").closest("th")!;
@@ -255,7 +259,7 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     const rows = screen.getAllByRole("row");
-    expect(rows[0]).toHaveTextContent("Mission");
+    expect(rows[0]).toHaveTextContent("Projet");
     expect(rows[1]).toHaveTextContent("22 jrs. ouvrés");
     expect(rows[2]).toHaveTextContent("Portail bailleurs");
   });

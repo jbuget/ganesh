@@ -54,51 +54,61 @@ export function TimesheetPage() {
         <PageHeader
           title="Activité"
           subtitle="Déclarez votre temps en journées ou demi-journées. Tant que le mois n'est pas validé, tout reste modifiable."
+          actions={
+            <>
+              <TeammateSelector
+                teammates={month.teammates}
+                selectedId={month.targetUserId}
+                onSelect={month.viewTeammate}
+              />
+
+              {grid?.is_writable && month.isOwnMonth && (
+                <Button onClick={() => setValidateOpen(true)}>Valider le mois</Button>
+              )}
+            </>
+          }
         />
       }
     >
+      {/* Before the month it speaks of: what the team put one on is read first,
+          and the reminder never passes for a row of the grid. */}
+      {grid?.is_writable && (
+        <AssignedMissionsCallout
+          missions={month.missionsToDeclare.map((mission) => ({
+            id: mission.id,
+            label: mission.label,
+          }))}
+          onAdd={(projectId) => void month.addMission(projectId)}
+        />
+      )}
+
       {/*
-        The grid's three controls, right above it: whose month is being looked
-        at, which month, and the one action that commits it. Both sides take the
-        same share of the remaining space, which centres the month whatever the
-        width of the other two.
+        Right above the grid, nothing but the month it shows, centred on it.
+        Whose month it is and the action that commits it sit in the page header,
+        where the other screens carry their general actions — which leaves this
+        line to one thing alone, and keeps the month at the centre whatever
+        stands above.
       */}
-      <div className="mb-3 flex flex-wrap items-center gap-4">
-        <div className="flex flex-1 justify-start">
-          <TeammateSelector
-            teammates={month.teammates}
-            selectedId={month.targetUserId}
-            onSelect={month.viewTeammate}
-          />
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="icon"
-            aria-label="Mois précédent"
-            onClick={month.goToPreviousMonth}
-          >
-            <ChevronLeft />
-          </Button>
-          <h2 className="min-w-48 text-center text-lg font-semibold capitalize">
-            {formatMonth(cursor.year, cursor.month)}
-          </h2>
-          <Button
-            variant="outline"
-            size="icon"
-            aria-label="Mois suivant"
-            onClick={month.goToNextMonth}
-          >
-            <ChevronRight />
-          </Button>
-        </div>
-
-        <div className="flex flex-1 justify-end">
-          {grid?.is_writable && month.isOwnMonth && (
-            <Button onClick={() => setValidateOpen(true)}>Valider le mois</Button>
-          )}
-        </div>
+      <div className="mb-3 flex items-center justify-center gap-3">
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label="Mois précédent"
+          onClick={month.goToPreviousMonth}
+        >
+          <ChevronLeft />
+        </Button>
+        <h2 className="min-w-48 text-center text-lg font-semibold capitalize">
+          {formatMonth(cursor.year, cursor.month)}
+        </h2>
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label="Mois suivant"
+          onClick={month.goToNextMonth}
+        >
+          <ChevronRight />
+        </Button>
       </div>
 
       {!month.isOwnMonth && (
@@ -120,7 +130,6 @@ export function TimesheetPage() {
       {grid && (
         <TimesheetGrid
           grid={grid}
-          extraRows={month.extraRows}
           today={month.today}
           onSetValue={month.setDayValue}
           onRemoveMission={grid.is_writable ? askToRemove : undefined}
@@ -131,7 +140,7 @@ export function TimesheetPage() {
                 projects={month.projects}
                 excludedIds={month.displayedProjectIds}
                 assignedIds={month.assignedIds}
-                onSelect={month.addMission}
+                onSelect={(projectId) => void month.addMission(projectId)}
                 onDeclareNew={() => setDeclareOpen(true)}
               />
             ) : null
@@ -157,18 +166,6 @@ export function TimesheetPage() {
         onOpenChange={setDeclareOpen}
         onConfirm={month.declareProject}
       />
-
-      {/* Under the grid, beside the picker that answers it: the two ways of
-          adding a row sit together, and the reminder never passes for a row. */}
-      {grid?.is_writable && (
-        <AssignedMissionsCallout
-          missions={month.missionsToDeclare.map((mission) => ({
-            id: mission.id,
-            label: mission.label,
-          }))}
-          onAdd={month.addMission}
-        />
-      )}
 
       {panel.openedMission && (
         <ProjectPanel

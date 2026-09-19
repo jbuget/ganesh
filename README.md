@@ -16,6 +16,23 @@ make dev-server  # FastAPI API
 make dev-client  # Next.js
 ```
 
+## The service catalogue
+
+A mission carries a service sheet — public address, summary, links, stack,
+criticality — filled in under the « Fiche service » tab. Publishing it puts the
+service in **waat.tools**, the internal catalogue.
+
+```bash
+make catalog OUT=../waat-tools/content/catalog.json
+```
+
+The same content is served by `GET /api/v1/projects/catalog`, which is where
+waat.tools will read it once Janus is deployed. Until then the file is written
+here and committed over there: same contract, other pipe.
+
+Only published missions leave, and publishing asks for an address, a summary, a
+criticality and a type — what the catalogue cannot draw a card without.
+
 ### Ports
 
 `WEB_PORT`, `API_PORT` and `POSTGRES_PORT` are read from the root `.env`

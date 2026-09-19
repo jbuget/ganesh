@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import StrEnum
 
+from src.modules.months.domain.services.month_period import first_day_of
 from src.modules.users.domain.entities.user import User
 from src.shared.exceptions.domain_exceptions import ForbiddenActionError
 
@@ -34,7 +35,7 @@ class Month:
     id: int | None = field(default=None)
 
     def __post_init__(self) -> None:
-        self.month = self.month.replace(day=1)
+        self.month = first_day_of(self.month)
 
     @property
     def is_writable(self) -> bool:

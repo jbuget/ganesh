@@ -22,6 +22,11 @@ from src.modules.projects.domain.entities.project import (
     ProjectPriority,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.service_registry import (
+    SLUG_MAX_LENGTH,
+    Criticality,
+    ServiceType,
+)
 
 
 class ProjectModel(Base):
@@ -59,6 +64,40 @@ class ProjectModel(Base):
     business_contacts: Mapped[str | None] = mapped_column(Text, nullable=True)
     #: Rank within its board column.
     position: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+
+    # Service sheet: what the public catalogue reads.
+    slug: Mapped[str | None] = mapped_column(
+        String(SLUG_MAX_LENGTH), nullable=True, unique=True
+    )
+    is_published: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", index=True
+    )
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    criticality: Mapped[Criticality | None] = mapped_column(
+        Enum(Criticality, name="criticality", native_enum=False, length=16),
+        nullable=True,
+    )
+    service_type: Mapped[ServiceType | None] = mapped_column(
+        Enum(ServiceType, name="service_type", native_enum=False, length=16),
+        nullable=True,
+    )
+    hosting: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    has_microsoft_entra: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
+    team: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    slack_channel: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+    production_link: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    staging_link: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    repository_link: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    documentation_link: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    project_management_link: Mapped[str | None] = mapped_column(
+        String(2048), nullable=True
+    )
+    monitoring_link: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    stats_page_link: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    stats_api_link: Mapped[str | None] = mapped_column(String(2048), nullable=True)
 
     # Rattachement Monday : inutilise en V1, alimente en V1.1.
     monday_item_id: Mapped[str | None] = mapped_column(String(32), nullable=True)

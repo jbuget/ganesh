@@ -35,14 +35,14 @@ describe("MissionSelector", () => {
     render(<MissionSelector {...baseProps} />);
 
     expect(
-      screen.getByRole("combobox", { name: "Ajouter une mission" }),
+      screen.getByRole("combobox", { name: "Ajouter un projet" }),
     ).toBeInTheDocument();
   });
 
   it("invites adding a mission", () => {
     render(<MissionSelector {...baseProps} />);
 
-    expect(screen.getByText(/Ajouter une mission/)).toBeInTheDocument();
+    expect(screen.getByText(/Ajouter un projet/)).toBeInTheDocument();
   });
 
   it("is disabled when the month is locked", () => {

@@ -10,6 +10,10 @@ from src.modules.projects.domain.entities.project import (
     ProjectPriority,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.service_registry import (
+    Criticality,
+    ServiceType,
+)
 
 
 @dataclass(frozen=True)
@@ -55,6 +59,25 @@ class UpdateProjectCommand:
     parent_id: int | None | Any = ABSENT
     monday_item_id: str | None | Any = ABSENT
     monday_subitem_id: str | None | Any = ABSENT
+
+    # Service sheet.
+    slug: str | None | Any = ABSENT
+    is_published: bool | Any = ABSENT
+    summary: str | None | Any = ABSENT
+    criticality: Criticality | None | Any = ABSENT
+    service_type: ServiceType | None | Any = ABSENT
+    hosting: str | None | Any = ABSENT
+    has_microsoft_entra: bool | Any = ABSENT
+    team: str | None | Any = ABSENT
+    slack_channel: str | None | Any = ABSENT
+    production_link: str | None | Any = ABSENT
+    staging_link: str | None | Any = ABSENT
+    repository_link: str | None | Any = ABSENT
+    documentation_link: str | None | Any = ABSENT
+    project_management_link: str | None | Any = ABSENT
+    monitoring_link: str | None | Any = ABSENT
+    stats_page_link: str | None | Any = ABSENT
+    stats_api_link: str | None | Any = ABSENT
 
 
 @dataclass(frozen=True)

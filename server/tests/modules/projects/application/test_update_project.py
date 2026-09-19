@@ -14,7 +14,11 @@ from src.modules.projects.domain.entities.project import (
     ProjectStatus,
 )
 from src.modules.users.domain.entities.user import Role, User
-from src.shared.exceptions.domain_exceptions import EntityNotFoundError, ValidationError
+from src.shared.exceptions.domain_exceptions import (
+    ConflictError,
+    EntityNotFoundError,
+    ValidationError,
+)
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryProjectRepository,
@@ -273,3 +277,70 @@ async def test_a_changed_work_package_comes_back_with_its_project_axis() -> None
     )
 
     assert changed.category is ProjectCategory.SUSTAIN
+
+
+class TestServiceSheet:
+    """The catalogue fields travel by the same route as the rest."""
+
+    @pytest.mark.asyncio
+    async def test_a_sheet_field_is_applied(self) -> None:
+        use_case, _, _ = build()
+        project = await use_case.execute(
+            UpdateProjectCommand(
+                actor_id=1, project_id=10, summary="Le portail des bailleurs."
+            )
+        )
+        assert project.summary == "Le portail des bailleurs."
+
+    @pytest.mark.asyncio
+    async def test_a_named_address_is_applied(self) -> None:
+        use_case, _, _ = build()
+        project = await use_case.execute(
+            UpdateProjectCommand(
+                actor_id=1,
+                project_id=10,
+                repository_link="https://github.com/waat-fr/portail",
+            )
+        )
+        assert project.repository_link == "https://github.com/waat-fr/portail"
+
+    @pytest.mark.asyncio
+    async def test_a_sheet_change_is_traced(self) -> None:
+        use_case, _, audit = build()
+        await use_case.execute(
+            UpdateProjectCommand(actor_id=1, project_id=10, slug="portail")
+        )
+        assert [log.payload["field"] for log in audit.logs] == ["slug"]
+
+    @pytest.mark.asyncio
+    async def test_a_slug_already_taken_is_refused(self) -> None:
+        other = Project(
+            id=20,
+            label="ASTRE",
+            kind=ProjectKind.PROJECT,
+            status=ProjectStatus.OPERATIONS,
+            slug="astre",
+        )
+        use_case, _, _ = build([make_project(), other])
+        with pytest.raises(ConflictError):
+            await use_case.execute(
+                UpdateProjectCommand(actor_id=1, project_id=10, slug="astre")
+            )
+
+    @pytest.mark.asyncio
+    async def test_a_mission_keeps_its_own_slug(self) -> None:
+        holder = make_project()
+        holder.slug = "portail"
+        use_case, _, _ = build([holder])
+        project = await use_case.execute(
+            UpdateProjectCommand(actor_id=1, project_id=10, slug="portail")
+        )
+        assert project.slug == "portail"
+
+    @pytest.mark.asyncio
+    async def test_publishing_without_a_slug_is_refused(self) -> None:
+        use_case, _, _ = build()
+        with pytest.raises(ValidationError):
+            await use_case.execute(
+                UpdateProjectCommand(actor_id=1, project_id=10, is_published=True)
+            )
