@@ -25,13 +25,12 @@ export function TrendBadge({ points }: TrendBadgeProps) {
   return (
     <span
       role="status"
-      aria-describedby="trend-reference"
       className={`rounded px-1.5 py-0.5 text-sm font-medium tabular-nums ${tone}`}
     >
-      {isFlat ? "stable" : formatPoints(points)}
-      <span id="trend-reference" className="sr-only">
-        par rapport à la période précédente
-      </span>
+      <span>{isFlat ? "stable" : formatPoints(points)}</span>
+      {/* Carried inside the badge rather than through an id: an atom may be
+          drawn more than once on a page, and a fixed id would collide. */}
+      <span className="sr-only"> par rapport à la période précédente</span>
     </span>
   );
 }

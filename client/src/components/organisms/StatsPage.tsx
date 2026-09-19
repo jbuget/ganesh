@@ -2,7 +2,7 @@
 
 import { MetricTile } from "@/components/atoms/MetricTile";
 import { PageHeader } from "@/components/atoms/PageHeader";
-import { RangeTabs } from "@/components/atoms/RangeTabs";
+import { RangeSelect } from "@/components/atoms/RangeSelect";
 import { CoverageHeadline } from "@/components/molecules/CoverageHeadline";
 import { ShareBreakdown } from "@/components/molecules/ShareBreakdown";
 import { PageLayout } from "@/components/organisms/PageLayout";
@@ -16,7 +16,7 @@ import {
   phaseRows,
   summarise,
 } from "@/lib/statistics";
-import { LATE_SHARE_ALERT, useStatisticsScreen } from "@/lib/use-statistics-screen";
+import { useStatisticsScreen } from "@/lib/use-statistics-screen";
 
 /**
  * The dashboard: is what we build actually used, and is it worth using?
@@ -28,7 +28,7 @@ import { LATE_SHARE_ALERT, useStatisticsScreen } from "@/lib/use-statistics-scre
  * above hold.
  */
 export function StatsPage() {
-  const { range, setRange, statistics, isLoading } = useStatisticsScreen();
+  const { range, setRange, statistics, isLoading, alerts } = useStatisticsScreen();
 
   const header = (
     <PageHeader
@@ -38,7 +38,7 @@ export function StatsPage() {
           ? summarise(statistics.period)
           : "Mesure de l'usage et de la valeur de Timesheet"
       }
-      actions={<RangeTabs value={range} onChange={setRange} />}
+      actions={<RangeSelect value={range} onChange={setRange} />}
     />
   );
 
@@ -54,13 +54,6 @@ export function StatsPage() {
 
   const { coverage, freshness, month_validation, adoption, steering, registry } =
     statistics;
-  // A period that expects nobody cannot be behind: crying wolf every weekend
-  // would teach the team to ignore the colour altogether.
-  const expectsSomething = statistics.period.working_days > 0;
-  const catchingUpLate =
-    freshness.late_share !== null &&
-    freshness.late_share !== undefined &&
-    freshness.late_share > LATE_SHARE_ALERT;
 
   return (
     <PageLayout header={header}>
@@ -92,7 +85,7 @@ export function StatsPage() {
               label="Rattrapé tardivement"
               value={formatShare(freshness.late_share)}
               hint="déclaré plus de 15 jours après"
-              tone={catchingUpLate ? "warning" : "plain"}
+              tone={alerts.lateCatchUp ? "warning" : "plain"}
             />
             <MetricTile
               label="Mois validés"
@@ -125,7 +118,7 @@ export function StatsPage() {
                   ? "toute l'équipe a déclaré"
                   : adoption.idle.map((teammate) => teammate.display_name).join(", ")
               }
-              tone={expectsSomething && adoption.idle.length > 0 ? "warning" : "plain"}
+              tone={alerts.idleTeammates ? "warning" : "plain"}
             />
           </dl>
         </section>

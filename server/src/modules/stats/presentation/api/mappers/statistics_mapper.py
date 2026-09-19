@@ -1,5 +1,6 @@
 """Turns the dashboard of a window into what the screen reads."""
 
+from src.modules.stats.domain.entities.period import PeriodRange
 from src.modules.stats.domain.entities.statistics import Statistics
 from src.modules.stats.presentation.api.schemas.statistics_schemas import (
     AdoptionResponse,
@@ -17,14 +18,11 @@ from src.modules.stats.presentation.api.schemas.statistics_schemas import (
 )
 
 
-def _share(days: float, total: float) -> float | None:
-    return None if total == 0 else days / total
-
-
-def to_statistics_response(statistics: Statistics, range_: str) -> StatisticsResponse:
+def to_statistics_response(
+    statistics: Statistics, range_: PeriodRange
+) -> StatisticsResponse:
     """Draws the figures out, heaviest first wherever a list is offered."""
     steering = statistics.steering
-    total = steering.total_days
 
     return StatisticsResponse(
         period=PeriodResponse(
@@ -65,14 +63,16 @@ def to_statistics_response(statistics: Statistics, range_: str) -> StatisticsRes
             off_project_days=steering.off_project_days,
             project_share=steering.project_share,
             by_status=[
-                StatusShareResponse(status=status, days=days, share=_share(days, total))
+                StatusShareResponse(
+                    status=status, days=days, share=steering.share_of(days)
+                )
                 for status, days in sorted(
                     steering.by_status.items(), key=lambda item: -item[1]
                 )
             ],
             by_category=[
                 CategoryShareResponse(
-                    category=category, days=days, share=_share(days, total)
+                    category=category, days=days, share=steering.share_of(days)
                 )
                 for category, days in sorted(
                     steering.by_category.items(), key=lambda item: -item[1]

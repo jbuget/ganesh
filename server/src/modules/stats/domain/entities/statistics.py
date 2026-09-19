@@ -171,7 +171,16 @@ class Steering:
     @property
     def project_share(self) -> float | None:
         """Share of the time that went to a mission rather than around it."""
-        return _rate(self.project_days, self.total_days)
+        return self.share_of(self.project_days)
+
+    def share_of(self, days: float) -> float | None:
+        """Weight of a slice of the declared time in the whole window.
+
+        Every breakdown reads its weight from here: a phase, an axis and a
+        mission all answer the same question, and the answer is a domain rule
+        rather than something each screen works out for itself.
+        """
+        return _rate(days, self.total_days)
 
 
 @dataclass(frozen=True)

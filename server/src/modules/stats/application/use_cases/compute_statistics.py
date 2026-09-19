@@ -21,6 +21,7 @@ from src.modules.stats.domain.services.expectations import (
     closed_months_covered_by,
     expected_days,
 )
+from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
 #: How many missions the steering block lists. A top that scrolls is a table,
@@ -61,7 +62,7 @@ class ComputeStatisticsUseCase:
         )
 
     async def _month_validation(
-        self, period: Period, query: StatisticsQuery, team: list
+        self, period: Period, query: StatisticsQuery, team: list[User]
     ) -> MonthValidation:
         months = closed_months_covered_by(period, query.today)
         user_ids = [user.id for user in team if user.id is not None]
@@ -70,7 +71,7 @@ class ComputeStatisticsUseCase:
         )
         return MonthValidation(validated=validated, due=len(months) * len(user_ids))
 
-    async def _adoption(self, period: Period, team: list) -> Adoption:
+    async def _adoption(self, period: Period, team: list[User]) -> Adoption:
         contributors = await self._statistics.contributor_ids(period)
         idle = [
             Teammate(id=user.id, display_name=user.display_name)

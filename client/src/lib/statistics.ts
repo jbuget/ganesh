@@ -6,7 +6,12 @@
  * failure that is not one. An em dash says « there is nothing to read », which
  * is a different statement.
  */
-import type { PeriodRange, PeriodResponse } from "@/lib/api/generated/model";
+import type {
+  PeriodRange,
+  PeriodResponse,
+  SteeringResponse,
+} from "@/lib/api/generated/model";
+import { category, phaseDot, phaseLabel } from "@/lib/board";
 
 /** The windows the screen offers, in the order they are shown. */
 export const RANGES: { value: PeriodRange; label: string }[] = [
@@ -109,9 +114,6 @@ export function summarise(period: PeriodResponse): string {
  * Phases and axes keep the labels and the colours they carry on the board: the
  * same mission must be recognisable from one screen to the next.
  */
-import type { SteeringResponse } from "@/lib/api/generated/model";
-import { category, phaseDot, phaseLabel } from "@/lib/board";
-
 /** One line of a breakdown: what it is, how many days, what share. */
 export interface BreakdownRow {
   key: string;

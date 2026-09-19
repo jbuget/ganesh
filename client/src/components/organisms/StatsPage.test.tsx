@@ -10,6 +10,7 @@ const screenState = vi.hoisted(() => ({
   statistics: undefined as StatisticsResponse | undefined,
   isLoading: false,
   setRange: vi.fn(),
+  alerts: { lateCatchUp: false, idleTeammates: false },
 }));
 
 vi.mock("@/lib/use-statistics-screen", async () => {
@@ -69,6 +70,7 @@ function renderPage(overrides: Partial<typeof screenState> = {}) {
     statistics: STATISTICS,
     isLoading: false,
     setRange: vi.fn(),
+    alerts: { lateCatchUp: false, idleTeammates: false },
     ...overrides,
   });
   render(<StatsPage />);
@@ -93,7 +95,8 @@ describe("StatsPage", () => {
   it("changes window on demand", async () => {
     const state = renderPage();
 
-    await userEvent.click(screen.getByRole("tab", { name: "7 derniers jours" }));
+    await userEvent.click(screen.getByRole("button", { name: /Plage de temps/ }));
+    await userEvent.click(screen.getByRole("option", { name: /7 derniers jours/ }));
 
     expect(state.setRange).toHaveBeenCalledWith("last_7_days");
   });
@@ -122,19 +125,14 @@ describe("StatsPage", () => {
     expect(screen.getByText("L. Chen")).toBeInTheDocument();
   });
 
-  it("flags a period mostly caught up after the fact", () => {
-    renderPage({
-      statistics: {
-        ...STATISTICS,
-        freshness: { ...STATISTICS.freshness, late_share: 0.32 },
-      },
-    });
+  it("draws attention to a freshness the hook raised", () => {
+    renderPage({ alerts: { lateCatchUp: true, idleTeammates: false } });
 
     const tile = screen.getByText("Rattrapé tardivement").closest("[data-tone]");
     expect(tile).toHaveAttribute("data-tone", "warning");
   });
 
-  it("leaves a healthy freshness plain", () => {
+  it("leaves an unraised freshness plain", () => {
     renderPage();
 
     const tile = screen.getByText("Rattrapé tardivement").closest("[data-tone]");
@@ -165,22 +163,15 @@ describe("StatsPage", () => {
     }
   });
 
-  it("does not raise an alarm over a day nobody was expected in", () => {
-    // A Saturday: « nobody declared anything » is not a finding, it is the
-    // weekend. Flagging it in amber would cry wolf every Monday morning.
-    renderPage({
-      statistics: {
-        ...STATISTICS,
-        period: { ...STATISTICS.period, working_days: 0 },
-      },
-    });
+  it("stays neutral over teammates the hook did not raise", () => {
+    renderPage();
 
     const tile = screen.getByText("Sans aucune saisie").closest("[data-tone]");
     expect(tile).toHaveAttribute("data-tone", "plain");
   });
 
-  it("flags teammates who declared nothing on a working period", () => {
-    renderPage();
+  it("draws attention to teammates the hook raised", () => {
+    renderPage({ alerts: { lateCatchUp: false, idleTeammates: true } });
 
     const tile = screen.getByText("Sans aucune saisie").closest("[data-tone]");
     expect(tile).toHaveAttribute("data-tone", "warning");
@@ -219,9 +210,9 @@ describe("StatsPage", () => {
     expect(screen.queryByText("0 %")).not.toBeInTheDocument();
   });
 
-  it("offers the window tabs even before the figures arrive", () => {
+  it("offers the window selector even before the figures arrive", () => {
     renderPage({ statistics: undefined, isLoading: true });
 
-    expect(screen.getAllByRole("tab")).toHaveLength(5);
+    expect(screen.getByRole("button", { name: /Plage de temps/ })).toBeInTheDocument();
   });
 });

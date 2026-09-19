@@ -19,9 +19,22 @@ describe("TrendBadge", () => {
   it("says against what the movement is read", () => {
     render(<TrendBadge points={6} />);
 
-    expect(screen.getByRole("status")).toHaveAccessibleDescription(
-      /période précédente/,
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "+6 pts par rapport à la période précédente",
     );
+  });
+
+  it("carries no fixed identifier, so it may be drawn twice", () => {
+    // An atom is reusable by nature: two badges sharing one id would make the
+    // document invalid and the description ambiguous.
+    const { container } = render(
+      <>
+        <TrendBadge points={6} />
+        <TrendBadge points={-2} />
+      </>,
+    );
+
+    expect(container.querySelectorAll("[id]")).toHaveLength(0);
   });
 
   it("shows nothing without a comparable window", () => {

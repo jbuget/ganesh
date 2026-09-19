@@ -9,6 +9,7 @@ from src.modules.stats.domain.entities.statistics import (
     MissionShare,
     MonthValidation,
     Registry,
+    Steering,
     Teammate,
 )
 
@@ -114,6 +115,20 @@ class TestMissionShare:
         share = MissionShare(project_id=3, label="Extranet", days=0, total_days=0)
 
         assert share.share is None
+
+
+class TestSteering:
+    def test_a_slice_of_the_window_carries_its_weight(self) -> None:
+        # The rule lives here, once: the screen reports the share, it does not
+        # work it out.
+        steering = Steering(project_days=18, off_project_days=2)
+
+        assert steering.share_of(5) == pytest.approx(0.25)
+
+    def test_nothing_declared_leaves_every_slice_weightless(self) -> None:
+        steering = Steering(project_days=0, off_project_days=0)
+
+        assert steering.share_of(0) is None
 
 
 class TestRegistry:
