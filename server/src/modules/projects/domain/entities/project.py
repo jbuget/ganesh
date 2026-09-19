@@ -181,6 +181,13 @@ class Project:
         # page to publish.
         if self.is_off_project:
             raise ValidationError("An off-project activity cannot be published.")
+        # The catalogue draws one card per service, and a project cut into four
+        # packages is still one service at one address: a package is published
+        # through its project, never beside it.
+        if self.kind is ProjectKind.WORK_PACKAGE:
+            raise ValidationError(
+                "A work package is published through its project, " "never on its own."
+            )
         # What the catalogue cannot draw a usable card without. The rest may
         # stay blank: a service with no stack listed still reads.
         if self.slug is None:
