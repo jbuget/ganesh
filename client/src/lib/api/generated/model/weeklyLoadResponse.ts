@@ -13,6 +13,7 @@ export interface WeeklyLoadResponse {
   capacity: number;
   booked: number;
   projected: number;
+  reserved: number;
   free: number;
   is_overloaded: boolean;
 }

@@ -4,22 +4,17 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import type {
-  DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
-  QueryFunction,
-  QueryKey,
-  UndefinedInitialDataOptions,
-  UseQueryOptions,
-  UseQueryResult,
+  UseMutationOptions,
+  UseMutationResult,
 } from "@tanstack/react-query";
 
 import type {
-  GetWorkloadPlanParams,
   HTTPValidationError,
+  ProjectionRequest,
   WorkloadPlanResponse,
 } from "../model";
 
@@ -27,203 +22,142 @@ import { bffFetcher } from "../../fetcher";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-const withQueryKey = <T extends object, K>(
-  query: T,
-  queryKey: K,
-): T & { queryKey: K } => {
-  const result = { queryKey } as T & { queryKey: K };
-  for (const key of Object.keys(query)) {
-    // The explicit queryKey always wins, matching the previous
-    // `{ ...query, queryKey }` spread where it was set last.
-    if (key === "queryKey") continue;
-    Object.defineProperty(result, key, {
-      enumerable: true,
-      configurable: true,
-      get: () => (query as Record<string, unknown>)[key],
-    });
-  }
-  return result;
-};
-
-export type getWorkloadPlanResponse200 = {
+export type projectWorkloadResponse200 = {
   data: WorkloadPlanResponse;
   status: 200;
 };
 
-export type getWorkloadPlanResponse422 = {
+export type projectWorkloadResponse422 = {
   data: HTTPValidationError;
   status: 422;
 };
 
-export type getWorkloadPlanResponseSuccess = getWorkloadPlanResponse200 & {
+export type projectWorkloadResponseSuccess = projectWorkloadResponse200 & {
   headers: Headers;
 };
-export type getWorkloadPlanResponseError = getWorkloadPlanResponse422 & {
+export type projectWorkloadResponseError = projectWorkloadResponse422 & {
   headers: Headers;
 };
 
-export type getWorkloadPlanResponse =
-  getWorkloadPlanResponseSuccess | getWorkloadPlanResponseError;
+export type projectWorkloadResponse =
+  projectWorkloadResponseSuccess | projectWorkloadResponseError;
 
-export const getGetWorkloadPlanUrl = (params?: GetWorkloadPlanParams) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    const explodeParameters = ["order"];
-
-    if (Array.isArray(value) && explodeParameters.includes(key)) {
-      value.forEach((v) => {
-        normalizedParams.append(key, v === null ? "null" : String(v));
-      });
-      return;
-    }
-
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : String(value));
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0
-    ? `/api/v1/planning?${stringifiedParams}`
-    : `/api/v1/planning`;
+export const getProjectWorkloadUrl = () => {
+  return `/api/v1/planning/projection`;
 };
 
 /**
  * Projects the backlog onto the room the team's diaries leave.
  *
- * `order` states a hypothesis: the missions it names are served first, in
- * that order, and the rest follow in the order the board already tells.
- * Nothing is written — asking « et si celui-là passait devant ? » must cost
- * nothing but the answer.
- * @summary Get Workload Plan
+ * A POST that writes nothing: the body carries a scenario — an order to
+ * serve, people to place the work on — and the answer is what that scenario
+ * would cost. Asking « et si celui-là passait devant, avec Valentin dessus ? »
+ * must leave the board exactly as it was.
+ *
+ * It is a POST and not a GET because a scenario is a structure, not a string:
+ * squeezing a map of missions to people through a query string would mean
+ * inventing an encoding, and hand-writing the type that reads it back.
+ * @summary Project Workload
  */
-export const getWorkloadPlan = async (
-  params?: GetWorkloadPlanParams,
+export const projectWorkload = async (
+  projectionRequestNull?: ProjectionRequest | null,
   options?: Parameters<typeof bffFetcher>[1],
-): Promise<getWorkloadPlanResponse> => {
-  return bffFetcher<getWorkloadPlanResponse>(getGetWorkloadPlanUrl(params), {
+): Promise<projectWorkloadResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<projectWorkloadResponse>(getProjectWorkloadUrl(), {
     ...options,
-    method: "GET",
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(projectionRequestNull),
   });
 };
 
-export const getGetWorkloadPlanQueryKey = (params?: GetWorkloadPlanParams) => {
-  return [`/api/v1/planning`, ...(params ? [params] : [])] as const;
-};
+export const getProjectWorkloadMutationKey = () => ["projectWorkload"] as const;
 
-export const getGetWorkloadPlanQueryOptions = <
-  TData = Awaited<ReturnType<typeof getWorkloadPlan>>,
+export const getProjectWorkloadMutationOptions = <
   TError = HTTPValidationError,
->(
-  params?: GetWorkloadPlanParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getWorkloadPlan>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof bffFetcher>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetWorkloadPlanQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getWorkloadPlan>>> = ({
-    signal,
-  }) => getWorkloadPlan(params, { signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getWorkloadPlan>>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof projectWorkload>>,
     TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
+    ProjectWorkloadMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof projectWorkload>>,
+  TError,
+  ProjectWorkloadMutationVariables,
+  TContext
+> => {
+  const mutationKey = getProjectWorkloadMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-export type GetWorkloadPlanQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getWorkloadPlan>>
->;
-export type GetWorkloadPlanQueryError = HTTPValidationError;
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof projectWorkload>>,
+    ProjectWorkloadMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
 
-export function useGetWorkloadPlan<
-  TData = Awaited<ReturnType<typeof getWorkloadPlan>>,
-  TError = HTTPValidationError,
->(
-  params: undefined | GetWorkloadPlanParams,
-  options: {
-    query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getWorkloadPlan>>, TError, TData>
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getWorkloadPlan>>,
-          TError,
-          Awaited<ReturnType<typeof getWorkloadPlan>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof bffFetcher>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetWorkloadPlan<
-  TData = Awaited<ReturnType<typeof getWorkloadPlan>>,
-  TError = HTTPValidationError,
->(
-  params?: GetWorkloadPlanParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getWorkloadPlan>>, TError, TData>
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getWorkloadPlan>>,
-          TError,
-          Awaited<ReturnType<typeof getWorkloadPlan>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof bffFetcher>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetWorkloadPlan<
-  TData = Awaited<ReturnType<typeof getWorkloadPlan>>,
-  TError = HTTPValidationError,
->(
-  params?: GetWorkloadPlanParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getWorkloadPlan>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof bffFetcher>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get Workload Plan
- */
-
-export function useGetWorkloadPlan<
-  TData = Awaited<ReturnType<typeof getWorkloadPlan>>,
-  TError = HTTPValidationError,
->(
-  params?: GetWorkloadPlanParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getWorkloadPlan>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof bffFetcher>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetWorkloadPlanQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
+    return projectWorkload(data, requestOptions);
   };
 
-  return withQueryKey(query, queryOptions.queryKey);
-}
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ProjectWorkloadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof projectWorkload>>
+>;
+export type ProjectWorkloadMutationBody = ProjectionRequest | null | undefined;
+export type ProjectWorkloadMutationError = HTTPValidationError;
+export type ProjectWorkloadMutationVariables = { data?: ProjectionRequest | null };
+
+/**
+ * @summary Project Workload
+ */
+export const useProjectWorkload = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof projectWorkload>>,
+      TError,
+      ProjectWorkloadMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof projectWorkload>>,
+  TError,
+  ProjectWorkloadMutationVariables,
+  TContext
+> => {
+  return useMutation(getProjectWorkloadMutationOptions(options), queryClient);
+};

@@ -48,26 +48,25 @@ export function blocker(value: PlanBlocker | null | undefined) {
 export type Slippage = "none" | "early" | "on-time" | "late";
 
 /**
- * A day or two either side reads as on time.
+ * What the landing of a mission says, given what the server worked out.
  *
- * A projection is not a commitment: announcing « en retard d'un jour » would
- * make the screen cry wolf, and a plan nobody believes steers nothing.
+ * Lateness is not decided here: the server owns the threshold below which a
+ * projection is not worth crying about, so a row's red mark and the tally at
+ * the top of the screen can never disagree.
  */
-const TOLERANCE_DAYS = 2;
-
-export function slippage(days: number | null | undefined): Slippage {
+export function slippage(days: number | null | undefined, isLate: boolean): Slippage {
+  if (isLate) return "late";
   if (days === null || days === undefined) return "none";
-  if (days > TOLERANCE_DAYS) return "late";
-  if (days < -TOLERANCE_DAYS) return "early";
-  return "on-time";
+  return days < 0 ? "early" : "on-time";
 }
 
 /** « 5 jours de retard », « 3 jours d'avance », « dans les temps ». */
-export function slippageLabel(days: number): string {
-  if (Math.abs(days) <= TOLERANCE_DAYS) return "Dans les temps";
+export function slippageLabel(days: number, isLate: boolean): string {
   const count = Math.abs(days);
   const plural = count > 1 ? "jours" : "jour";
-  return days > 0 ? `${count} ${plural} de retard` : `${count} ${plural} d'avance`;
+  if (isLate) return `${count} ${plural} de retard`;
+  if (days < 0) return `${count} ${plural} d'avance`;
+  return "Dans les temps";
 }
 
 /** How full a week is, from what is declared and what is projected on it. */

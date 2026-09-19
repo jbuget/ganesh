@@ -3,42 +3,41 @@ import { describe, expect, it } from "vitest";
 import { blocker, fillRatio, slippage, slippageLabel } from "./planning";
 
 describe("slippage", () => {
-  it("reads a landing well past the date announced as late", () => {
-    expect(slippage(9)).toBe("late");
+  it("takes the server's word for what is late", () => {
+    // The threshold lives on the server: the mark on a row and the tally at
+    // the top must never be worked out twice, and differently.
+    expect(slippage(9, true)).toBe("late");
   });
 
-  it("reads a landing well ahead of it as early", () => {
-    expect(slippage(-9)).toBe("early");
+  it("reads a landing ahead of the date announced as early", () => {
+    expect(slippage(-9, false)).toBe("early");
   });
 
-  it("forgives a day or two either side", () => {
-    // A projection is not a commitment: crying « en retard d'un jour » would
-    // teach everyone to stop reading the column.
-    expect(slippage(2)).toBe("on-time");
-    expect(slippage(-2)).toBe("on-time");
+  it("reads anything else the server forgave as on time", () => {
+    expect(slippage(2, false)).toBe("on-time");
   });
 
   it("says nothing of a mission with no date announced", () => {
-    expect(slippage(null)).toBe("none");
+    expect(slippage(null, false)).toBe("none");
   });
 });
 
 describe("slippageLabel", () => {
   it("counts the days late", () => {
-    expect(slippageLabel(5)).toBe("5 jours de retard");
+    expect(slippageLabel(5, true)).toBe("5 jours de retard");
   });
 
   it("counts the days early", () => {
-    expect(slippageLabel(-5)).toBe("5 jours d'avance");
+    expect(slippageLabel(-5, false)).toBe("5 jours d'avance");
   });
 
   it("keeps a single day singular", () => {
-    expect(slippageLabel(3)).toBe("3 jours de retard");
-    expect(slippageLabel(-3)).toBe("3 jours d'avance");
+    expect(slippageLabel(1, true)).toBe("1 jour de retard");
+    expect(slippageLabel(-1, false)).toBe("1 jour d'avance");
   });
 
-  it("says a landing inside the tolerance is on time", () => {
-    expect(slippageLabel(1)).toBe("Dans les temps");
+  it("says a landing the server forgave is on time", () => {
+    expect(slippageLabel(1, false)).toBe("Dans les temps");
   });
 });
 

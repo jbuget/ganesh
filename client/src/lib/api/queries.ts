@@ -8,12 +8,10 @@
  * casts across the components.
  */
 import { useGetMonthGrid } from "@/lib/api/generated/entries/entries";
-import { useGetWorkloadPlan } from "@/lib/api/generated/planning/planning";
 import type {
   MonthGridResponse,
   ProjectListItemResponse,
   UserResponse,
-  WorkloadPlanResponse,
 } from "@/lib/api/generated/model";
 import { useListProjects } from "@/lib/api/generated/projects/projects";
 import { useGetMe, useListUsers } from "@/lib/api/generated/users/users";
@@ -74,20 +72,4 @@ export function useMonthGrid(month: string, userId: number | null, enabled: bool
     { query: { enabled } },
   );
   return { ...query, grid: successOf<MonthGridResponse>(query.data) };
-}
-
-/**
- * The workload plan, on the board's own order or on a hypothetical one.
- *
- * `order` states a what-if: the missions it names are served first, in that
- * order. It is a query parameter and nothing else — asking « et si celui-là
- * passait devant ? » writes nothing down, and reloading the page comes back to
- * the order the team actually decided.
- */
-export function useWorkloadPlan(horizonMonths: number, order: number[]) {
-  const query = useGetWorkloadPlan({
-    horizon_months: horizonMonths,
-    ...(order.length > 0 ? { order } : {}),
-  });
-  return { ...query, plan: successOf<WorkloadPlanResponse>(query.data) };
 }

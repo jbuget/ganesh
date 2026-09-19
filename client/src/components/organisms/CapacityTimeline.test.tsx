@@ -15,6 +15,7 @@ function aPerson(overrides: Partial<PersonLoadResponse> = {}): PersonLoadRespons
         capacity: 5,
         booked: 5,
         projected: 1,
+        reserved: 0.5,
         free: 0,
         is_overloaded: true,
       },
@@ -23,11 +24,12 @@ function aPerson(overrides: Partial<PersonLoadResponse> = {}): PersonLoadRespons
         capacity: 5,
         booked: 1,
         projected: 0,
-        free: 4,
+        reserved: 0.5,
+        free: 3.5,
         is_overloaded: false,
       },
     ],
-    free_days: 4,
+    free_days: 3.5,
     first_free_week: "2026-09-21",
     ...overrides,
   };
@@ -37,7 +39,7 @@ describe("CapacityTimeline", () => {
   it("says how much room someone has left over the horizon", () => {
     render(<CapacityTimeline people={[aPerson()]} weeks={WEEKS} />);
 
-    expect(screen.getByText("4")).toBeInTheDocument();
+    expect(screen.getByText("3,5")).toBeInTheDocument();
   });
 
   it("says from when someone frees up, not merely that they are taken", () => {
@@ -60,7 +62,9 @@ describe("CapacityTimeline", () => {
   it("keeps what is declared apart from what is projected", () => {
     render(<CapacityTimeline people={[aPerson()]} weeks={WEEKS} />);
 
-    expect(screen.getByTitle("5 j déclarés, 1 j projetés sur 5 j")).toBeInTheDocument();
+    expect(
+      screen.getByTitle("5 j déclarés, 1 j projetés, 0,5 j réservés sur 5 j"),
+    ).toBeInTheDocument();
   });
 
   it("announces an empty team in its own words", () => {

@@ -24,14 +24,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { PlannedMissionResponse } from "@/lib/api/generated/model";
+import type {
+  PlanMemberResponse,
+  PlannedMissionResponse,
+} from "@/lib/api/generated/model";
 import { formatMonthOf } from "@/lib/dates";
 
 interface WorkloadTimelineProps {
   missions: PlannedMissionResponse[];
   weeks: string[];
+  /** Everyone the work could be placed on. */
+  team: PlanMemberResponse[];
   /** Puts a mission at a new rank, which re-asks the whole projection. */
   onMove: (projectId: number, to: number) => void;
+  onTop: (projectId: number) => void;
+  onUp: (projectId: number) => void;
+  onDown: (projectId: number) => void;
+  /** Supposes a mission is carried by these people, and nobody else. */
+  onStaff: (projectId: number, userIds: number[]) => void;
 }
 
 /** Whether a week opens a month, which is where the month label goes. */
@@ -50,7 +60,16 @@ function opensMonth(weeks: string[], index: number): boolean {
  * It renders what it is given and asks for the rest: the order, the horizon and
  * the fetching belong to the screen around it.
  */
-export function WorkloadTimeline({ missions, weeks, onMove }: WorkloadTimelineProps) {
+export function WorkloadTimeline({
+  missions,
+  weeks,
+  team,
+  onMove,
+  onTop,
+  onUp,
+  onDown,
+  onStaff,
+}: WorkloadTimelineProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -81,7 +100,13 @@ export function WorkloadTimeline({ missions, weeks, onMove }: WorkloadTimelinePr
         <Table>
           <TableHeader className="sticky top-0 z-20 [&_th]:border-b [&_th]:border-b-slate-500 [&_th]:bg-slate-50">
             <TableRow>
-              <TableHead className="sticky left-0 z-30 bg-slate-50">Mission</TableHead>
+              <TableHead className="sticky left-0 z-30 w-[7.5rem] bg-slate-50">
+                Rang
+              </TableHead>
+              <TableHead className="sticky left-[7.5rem] z-30 bg-slate-50">
+                Mission
+              </TableHead>
+              <TableHead className="w-40">Intervenants</TableHead>
               <TableHead className="w-24 text-right">Reste (j)</TableHead>
               <TableHead className="w-64">Atterrissage</TableHead>
               {weeks.map((week, index) => (
@@ -107,6 +132,12 @@ export function WorkloadTimeline({ missions, weeks, onMove }: WorkloadTimelinePr
                   mission={mission}
                   weeks={weeks}
                   rank={rank}
+                  isLast={rank === missions.length - 1}
+                  team={team}
+                  onTop={onTop}
+                  onUp={onUp}
+                  onDown={onDown}
+                  onStaff={onStaff}
                 />
               ))}
             </SortableContext>

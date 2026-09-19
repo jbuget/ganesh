@@ -28,6 +28,7 @@ export interface PlannedMissionResponse {
   ends_on: string | null;
   target_date: string | null;
   slippage_days: number | null;
+  is_late: boolean;
   blocker: PlanBlocker | null;
   assignees: PlanMemberResponse[];
   weeks: MissionWeekResponse[];

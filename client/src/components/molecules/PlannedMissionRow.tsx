@@ -6,10 +6,15 @@ import { GripVertical } from "lucide-react";
 
 import { LandingDate } from "@/components/atoms/LandingDate";
 import { MissionLoadCell } from "@/components/atoms/MissionLoadCell";
+import { PlanAssigneesPicker } from "@/components/atoms/PlanAssigneesPicker";
 import { PlanBlockerNote } from "@/components/atoms/PlanBlockerNote";
 import { PriorityMark } from "@/components/atoms/PriorityMark";
+import { RankControls } from "@/components/atoms/RankControls";
 import { TableCell, TableRow } from "@/components/ui/table";
-import type { PlannedMissionResponse } from "@/lib/api/generated/model";
+import type {
+  PlanMemberResponse,
+  PlannedMissionResponse,
+} from "@/lib/api/generated/model";
 import { phaseDot, phaseLabel } from "@/lib/board";
 import { formatDecimalDays } from "@/lib/dates";
 
@@ -19,17 +24,34 @@ interface PlannedMissionRowProps {
   weeks: string[];
   /** Its rank in the backlog, which is what a move changes. */
   rank: number;
+  isLast: boolean;
+  /** Everyone the work could be placed on. */
+  team: PlanMemberResponse[];
+  onTop: (projectId: number) => void;
+  onUp: (projectId: number) => void;
+  onDown: (projectId: number) => void;
+  onStaff: (projectId: number, userIds: number[]) => void;
 }
 
 /**
- * One mission of the plan: what it is, when it lands, and the weeks it takes.
+ * One mission of the plan: what it is, who carries it, when it lands.
  *
- * The handle on the left is the whole point of the screen: moving the row asks
- * the server what that order would cost, and the dates on every other row
- * answer. Nothing is written — the board only moves if someone decides to move
- * it there.
+ * The two levers sit on the row itself, and show at all times. Reorder it, or
+ * put somebody else on it, and the server says what that would cost — the
+ * dates on every other row answer. Nothing is written: the board only moves if
+ * someone decides to move it there.
  */
-export function PlannedMissionRow({ mission, weeks, rank }: PlannedMissionRowProps) {
+export function PlannedMissionRow({
+  mission,
+  weeks,
+  rank,
+  isLast,
+  team,
+  onTop,
+  onUp,
+  onDown,
+  onStaff,
+}: PlannedMissionRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: mission.project_id });
 
@@ -41,11 +63,8 @@ export function PlannedMissionRow({ mission, weeks, rank }: PlannedMissionRowPro
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={isDragging ? "bg-sky-50" : undefined}
     >
-      {/* The width is set here and not on the header alone: the table sizes
-          itself on its content, and a mission named in a full sentence would
-          otherwise push the weeks out of sight. */}
       <TableCell className="sticky left-0 z-10 bg-white">
-        <div className="flex w-[26rem] items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             type="button"
             aria-label={`Déplacer ${mission.label}`}
@@ -56,10 +75,26 @@ export function PlannedMissionRow({ mission, weeks, rank }: PlannedMissionRowPro
             <GripVertical className="size-4" />
           </button>
 
-          <span className="w-5 shrink-0 text-xs text-slate-400 tabular-nums">
+          <span className="w-5 shrink-0 text-right text-xs text-slate-400 tabular-nums">
             {rank + 1}
           </span>
 
+          <RankControls
+            label={mission.label}
+            isFirst={rank === 0}
+            isLast={isLast}
+            onTop={() => onTop(mission.project_id)}
+            onUp={() => onUp(mission.project_id)}
+            onDown={() => onDown(mission.project_id)}
+          />
+        </div>
+      </TableCell>
+
+      {/* The width is set on the content and not on the header alone: the
+          table sizes itself on what it holds, and a mission named in a full
+          sentence would otherwise push the weeks out of sight. */}
+      <TableCell className="sticky left-[7.5rem] z-10 bg-white">
+        <div className="flex w-[22rem] items-center gap-2">
           {mission.status && (
             <span
               aria-hidden
@@ -83,6 +118,15 @@ export function PlannedMissionRow({ mission, weeks, rank }: PlannedMissionRowPro
         </div>
       </TableCell>
 
+      <TableCell>
+        <PlanAssigneesPicker
+          label={mission.label}
+          team={team}
+          assignees={mission.assignees}
+          onChange={(userIds) => onStaff(mission.project_id, userIds)}
+        />
+      </TableCell>
+
       <TableCell className="text-right text-sm text-slate-600 tabular-nums">
         {mission.remaining_days > 0 ? formatDecimalDays(mission.remaining_days) : "—"}
       </TableCell>
@@ -91,7 +135,11 @@ export function PlannedMissionRow({ mission, weeks, rank }: PlannedMissionRowPro
         {mission.blocker ? (
           <PlanBlockerNote reason={mission.blocker} />
         ) : (
-          <LandingDate endsOn={mission.ends_on} slippageDays={mission.slippage_days} />
+          <LandingDate
+            endsOn={mission.ends_on}
+            slippageDays={mission.slippage_days}
+            isLate={mission.is_late}
+          />
         )}
       </TableCell>
 

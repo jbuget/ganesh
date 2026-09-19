@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { HorizonSelect } from "@/components/atoms/HorizonSelect";
 import { PageHeader } from "@/components/atoms/PageHeader";
+import { PlanSummaryBar } from "@/components/atoms/PlanSummaryBar";
 import { CapacityTimeline } from "@/components/organisms/CapacityTimeline";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { WorkloadTimeline } from "@/components/organisms/WorkloadTimeline";
@@ -30,10 +31,14 @@ export function PlanningPage() {
     plan,
     missions,
     isLoading,
-    isError,
+    hasError,
     horizonMonths,
     setHorizon,
     move,
+    moveToTop,
+    moveUp,
+    moveDown,
+    staff,
     isHypothesis,
     reset,
   } = useWorkloadPlanScreen();
@@ -49,7 +54,7 @@ export function PlanningPage() {
           title="Planification"
           subtitle={
             plan
-              ? `Du ${formatShortDate(plan.from_day)} au ${formatShortDate(plan.to_day)}, sur les disponibilités déclarées`
+              ? `Du ${formatShortDate(plan.from_day)} au ${formatShortDate(plan.to_day)} · 4,5 j planifiables par personne et par semaine`
               : "Projection du reste à faire sur les disponibilités déclarées"
           }
           actions={
@@ -73,10 +78,12 @@ export function PlanningPage() {
     >
       {isHypothesis && (
         <p className="mb-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
-          Hypothèse en cours : cet ordre n&apos;est pas enregistré. Pour le rendre réel,
-          déplacez la carte sur le kanban ou changez sa priorité.
+          Hypothèse en cours : rien n&apos;est enregistré. Pour la rendre réelle,
+          changez la priorité et les intervenants sur la fiche du projet.
         </p>
       )}
+
+      {plan && <PlanSummaryBar summary={plan.summary} />}
 
       <Tabs value={tab} onValueChange={setTab} className="flex min-h-0 flex-col">
         <TabsList className="shrink-0">
@@ -92,7 +99,7 @@ export function PlanningPage() {
           <p className="py-12 text-center text-sm text-slate-400">Calcul…</p>
         )}
 
-        {isError && (
+        {hasError && (
           <p className="py-12 text-center text-sm text-red-600">
             La projection n&apos;a pas pu être calculée.
           </p>
@@ -101,7 +108,16 @@ export function PlanningPage() {
         {plan && (
           <>
             <TabsContent value="missions" className="min-h-0 flex-1 overflow-auto">
-              <WorkloadTimeline missions={missions} weeks={weeks} onMove={move} />
+              <WorkloadTimeline
+                missions={missions}
+                weeks={weeks}
+                team={plan.people.map((person) => person.user)}
+                onMove={move}
+                onTop={moveToTop}
+                onUp={moveUp}
+                onDown={moveDown}
+                onStaff={staff}
+              />
             </TabsContent>
 
             <TabsContent value="people" className="min-h-0 flex-1 overflow-auto">

@@ -6,6 +6,7 @@
  */
 import type { PersonLoadResponse } from "./personLoadResponse";
 import type { PlannedMissionResponse } from "./plannedMissionResponse";
+import type { PlanSummaryResponse } from "./planSummaryResponse";
 
 /**
  * A whole projection, as the planning screen reads it.
@@ -16,4 +17,5 @@ export interface WorkloadPlanResponse {
   weeks: string[];
   missions: PlannedMissionResponse[];
   people: PersonLoadResponse[];
+  summary: PlanSummaryResponse;
 }

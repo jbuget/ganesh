@@ -47,6 +47,7 @@ export function PersonLoadRow({ person }: PersonLoadRowProps) {
             capacity={week.capacity}
             booked={week.booked}
             projected={week.projected}
+            reserved={week.reserved}
             isOverloaded={week.is_overloaded}
           />
         </TableCell>
