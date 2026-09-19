@@ -97,8 +97,13 @@ export function UserPanel({
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4">
-        {/* Who one is talking to comes before how the account is named: Entra
-            writes « L. Chen », the team says « Léa ». */}
+        <Row title="Email">
+          {/* First, because it is the only thing that never moves: Entra's
+              address identifies the account, everything below describes who
+              holds it. */}
+          <span className="text-slate-700">{user.email}</span>
+        </Row>
+
         <Row title="Prénom">
           <InlineTextField
             value={user.first_name}
@@ -115,11 +120,6 @@ export function UserPanel({
             editable={editable}
             onChange={(last_name) => onUpdateIdentity(user, { last_name })}
           />
-        </Row>
-
-        <Row title="Email">
-          {/* Entra's, and Entra's alone: it identifies the account. */}
-          <span className="text-slate-700">{user.email}</span>
         </Row>
 
         <Row title="GitHub">
