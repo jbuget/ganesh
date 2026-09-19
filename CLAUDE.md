@@ -361,6 +361,41 @@ make migrate     # alembic upgrade head
 
 ---
 
+## Planification and Feuille de route
+
+Two screens read the same missions and answer different questions. Keeping
+them apart is what keeps either one worth opening.
+
+**Planification** asks *what fits, and who carries it*. Week by week, over
+what is left to build, on the room the diaries leave. It is arbitrated: one
+reorders the backlog and puts people on missions to see what that would cost,
+and saves the question as a simulation. Services in operations are out of it —
+`still_to_build()` drops them — and so is everything already delivered.
+
+**Feuille de route** asks *what we deliver, and when*. Over the whole
+portfolio, delivered services included, across a civil year. It is shown
+rather than arbitrated: to a committee, to a department. Where the plan reads
+`go_live_date` only to work out a delay, the roadmap makes the announced date
+its subject — and is the one place it can be posted.
+
+Three rules the drawing rests on:
+
+- **A fact and a supposition are never drawn alike.** Solid is `LIVED`,
+  hatched is `PROJECTED`, a thin rule is `RUNNING`. `SegmentKind` decides it in
+  the domain, not a colour picked on the front end — colour belongs to the
+  phase. Reading a projection as a commitment is the mistake this screen
+  exists to prevent.
+- **Nothing is invented.** What was never recorded leaves no segment, and a
+  stretch nobody can date is carried by the nearest phase that is dated. A
+  roadmap that fills its own gaps gets read as fact.
+- **A mission with nothing to draw still shows.** No estimate, no date, no
+  time declared — that is the line steering has to see, and the tally above
+  says how many there are before anybody reads a bar.
+
+Gestures do not cross: reordering and staffing belong to Planification,
+posting a date belongs to the roadmap. Two screens answering the same gesture
+end up contradicting each other.
+
 ## The service catalogue
 
 waat.tools publishes the services the team produces. Janus is the source for
