@@ -21,6 +21,8 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AddMissionRequest,
+  AddMissionToMonthParams,
   ClearEntryParams,
   EntryResponse,
   GetMonthGridParams,
@@ -482,6 +484,152 @@ export const useClearEntry = <TError = HTTPValidationError, TContext = unknown>(
   TContext
 > => {
   return useMutation(getClearEntryMutationOptions(options), queryClient);
+};
+export type addMissionToMonthResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type addMissionToMonthResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type addMissionToMonthResponseSuccess = addMissionToMonthResponse204 & {
+  headers: Headers;
+};
+export type addMissionToMonthResponseError = addMissionToMonthResponse422 & {
+  headers: Headers;
+};
+
+export type addMissionToMonthResponse =
+  addMissionToMonthResponseSuccess | addMissionToMonthResponseError;
+
+export const getAddMissionToMonthUrl = (params?: AddMissionToMonthParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/entries/mission?${stringifiedParams}`
+    : `/api/v1/entries/mission`;
+};
+
+/**
+ * Puts a mission on a month, with no time on it yet.
+ * @summary Add Mission To Month
+ */
+export const addMissionToMonth = async (
+  addMissionRequest: AddMissionRequest,
+  params?: AddMissionToMonthParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<addMissionToMonthResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<addMissionToMonthResponse>(getAddMissionToMonthUrl(params), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(addMissionRequest),
+  });
+};
+
+export const getAddMissionToMonthMutationKey = () => ["addMissionToMonth"] as const;
+
+export const getAddMissionToMonthMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addMissionToMonth>>,
+    TError,
+    AddMissionToMonthMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addMissionToMonth>>,
+  TError,
+  AddMissionToMonthMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAddMissionToMonthMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addMissionToMonth>>,
+    AddMissionToMonthMutationVariables
+  > = (props) => {
+    const { data, params } = props ?? {};
+
+    return addMissionToMonth(data, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddMissionToMonthMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addMissionToMonth>>
+>;
+export type AddMissionToMonthMutationBody = AddMissionRequest;
+export type AddMissionToMonthMutationError = HTTPValidationError;
+export type AddMissionToMonthMutationVariables = {
+  data: AddMissionRequest;
+  params?: AddMissionToMonthParams;
+};
+
+/**
+ * @summary Add Mission To Month
+ */
+export const useAddMissionToMonth = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof addMissionToMonth>>,
+      TError,
+      AddMissionToMonthMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof addMissionToMonth>>,
+  TError,
+  AddMissionToMonthMutationVariables,
+  TContext
+> => {
+  return useMutation(getAddMissionToMonthMutationOptions(options), queryClient);
 };
 export type removeMissionFromMonthResponse204 = {
   data: void;

@@ -11,23 +11,29 @@ from src.modules.auth.presentation.dependencies import (
 from src.modules.users.application.dtos.user_dto import (
     ChangeRoleCommand,
     SetUserActiveCommand,
+    UpdateUserIdentityCommand,
 )
 from src.modules.users.application.use_cases.change_user_role import (
     ChangeUserRoleUseCase,
 )
 from src.modules.users.application.use_cases.list_users import ListUsersUseCase
 from src.modules.users.application.use_cases.set_user_active import SetUserActiveUseCase
+from src.modules.users.application.use_cases.update_user_identity import (
+    UpdateUserIdentityUseCase,
+)
 from src.modules.users.domain.entities.user import User
 from src.modules.users.presentation.api.mappers.user_mapper import to_user_response
 from src.modules.users.presentation.api.schemas.user_schemas import (
     ChangeRoleRequest,
     SetActiveRequest,
+    UpdateUserIdentityRequest,
     UserResponse,
 )
 from src.modules.users.presentation.dependencies import (
     get_change_role_use_case,
     get_list_users_use_case,
     get_set_user_active_use_case,
+    get_update_user_identity_use_case,
 )
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -86,6 +92,33 @@ async def set_active(
     user = await use_case.execute(
         SetUserActiveCommand(
             actor_id=manager.id, target_user_id=user_id, is_active=payload.is_active
+        )
+    )
+    await session.commit()
+    return to_user_response(user)
+
+
+@router.patch(
+    "/{user_id}/identity",
+    response_model=UserResponse,
+    operation_id="updateUserIdentity",
+)
+async def update_identity(
+    user_id: int,
+    payload: UpdateUserIdentityRequest,
+    manager: User = Depends(get_current_manager),
+    use_case: UpdateUserIdentityUseCase = Depends(get_update_user_identity_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> UserResponse:
+    """Gives away who a teammate is, and where they work. Managers only."""
+    assert manager.id is not None
+    user = await use_case.execute(
+        UpdateUserIdentityCommand(
+            actor_id=manager.id,
+            target_user_id=user_id,
+            first_name=payload.first_name,
+            last_name=payload.last_name,
+            department=payload.department,
         )
     )
     await session.commit()

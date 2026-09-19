@@ -14,6 +14,7 @@ import {
   addProjectLink,
   changeProjectStatus,
   createProject,
+  deleteProject,
   getProjectDetail,
   removeProjectLink,
   updateProject,
@@ -127,6 +128,18 @@ export function useProjectDetail(
     async unarchive() {
       await updateProject(projectId, { is_active: true });
       await reload();
+    },
+
+    /**
+     * Takes a mission that never served out of the reference list for good.
+     *
+     * Nothing is read back: the sheet no longer exists. It is up to the screen
+     * that opened it to go somewhere else — reloading here would only find a
+     * 404.
+     */
+    async remove() {
+      await deleteProject(projectId);
+      await onWrite?.();
     },
 
     async saveDescription(description: string) {

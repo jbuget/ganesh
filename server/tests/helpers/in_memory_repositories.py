@@ -14,14 +14,17 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 )
 from src.modules.entries.domain.entities.entry import Entry
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
+from src.modules.entries.domain.repositories.user_mission_repository import (
+    UserMissionRepository,
+)
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.domain.repositories.month_repository import MonthRepository
+from src.modules.months.domain.services.month_period import first_day_of
 from src.modules.planning.domain.entities.simulation import Simulation
 from src.modules.planning.domain.repositories.simulation_repository import (
     SimulationRepository,
 )
 from src.modules.projects.domain.entities.project import (
-    Department,
     Project,
     ProjectCategory,
     ProjectKind,
@@ -48,6 +51,7 @@ from src.modules.stats.domain.repositories.statistics_repository import (
 )
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.shared.enums.department import Department
 
 
 class InMemoryUserRepository(UserRepository):
@@ -540,3 +544,24 @@ class InMemorySimulationRepository(SimulationRepository):
 
     async def delete(self, simulation_id: int) -> None:
         self._simulations.pop(simulation_id, None)
+
+
+class InMemoryUserMissionRepository(UserMissionRepository):
+    def __init__(self, rows: list[tuple[int, int, date]] | None = None) -> None:
+        self._rows: set[tuple[int, int, date]] = {
+            (user_id, project_id, first_day_of(month))
+            for user_id, project_id, month in rows or []
+        }
+
+    async def list_for_month(self, user_id: int, month: date) -> list[int]:
+        return [
+            project_id
+            for row_user, project_id, row_month in sorted(self._rows)
+            if row_user == user_id and row_month == first_day_of(month)
+        ]
+
+    async def add(self, user_id: int, project_id: int, month: date) -> None:
+        self._rows.add((user_id, project_id, first_day_of(month)))
+
+    async def remove(self, user_id: int, project_id: int, month: date) -> None:
+        self._rows.discard((user_id, project_id, first_day_of(month)))

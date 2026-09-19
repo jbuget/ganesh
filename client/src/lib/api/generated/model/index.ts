@@ -6,6 +6,8 @@
  */
 
 export * from "./addLinkRequest";
+export * from "./addMissionRequest";
+export * from "./addMissionToMonthParams";
 export * from "./adoptionResponse";
 export * from "./apiKeyOwnerResponse";
 export * from "./apiKeyResponse";
@@ -102,6 +104,7 @@ export * from "./updateDescriptionRequest";
 export * from "./updateProjectDetailRequest";
 export * from "./updateProjectRegistryRequest";
 export * from "./updateProjectRequest";
+export * from "./updateUserIdentityRequest";
 export * from "./userResponse";
 export * from "./validationError";
 export * from "./weeklyLoadResponse";

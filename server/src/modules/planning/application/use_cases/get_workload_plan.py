@@ -79,7 +79,7 @@ class GetWorkloadPlanUseCase:
             await self._assignees.list_all(ProjectRole.CONTRIBUTOR), staffing or {}
         )
 
-        team = sorted(await self._users.list_all(), key=lambda u: u.display_name)
+        team = sorted(await self._users.list_all(), key=lambda u: u.label)
         user_ids = [user.id for user in team if user.id is not None]
         known = set(user_ids)
 
@@ -150,4 +150,4 @@ class GetWorkloadPlanUseCase:
 
 def _people(user_ids: list[int], by_user: dict[int | None, User]) -> list[User]:
     known = [by_user[uid] for uid in user_ids if uid in by_user]
-    return sorted(known, key=lambda u: u.display_name)
+    return sorted(known, key=lambda u: u.label)

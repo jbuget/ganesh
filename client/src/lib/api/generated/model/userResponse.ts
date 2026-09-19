@@ -4,6 +4,7 @@
  * Janus API
  * OpenAPI spec version: 0.1.0
  */
+import type { Department } from "./department";
 import type { Role } from "./role";
 
 /**
@@ -17,4 +18,7 @@ export interface UserResponse {
   role: Role;
   is_active: boolean;
   last_login_at?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  department?: Department | null;
 }

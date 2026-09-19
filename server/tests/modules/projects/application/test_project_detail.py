@@ -213,3 +213,22 @@ async def test_the_sheet_of_a_work_package_names_the_project_it_belongs_to() -> 
     assert detail.parent is not None
     assert detail.parent.id == 10
     assert detail.parent.label == "Portail"
+
+
+async def test_a_mission_never_used_reads_as_deletable() -> None:
+    """The sheet carries the answer: the menu offers deletion without trying it."""
+    detail = await build().execute(10)
+
+    assert detail.is_deletable
+
+
+async def test_a_mission_carrying_time_does_not_read_as_deletable() -> None:
+    detail = await build([entry(1, date(2026, 9, 14))]).execute(10)
+
+    assert not detail.is_deletable
+
+
+async def test_a_mission_carrying_a_work_package_does_not_read_as_deletable() -> None:
+    detail = await build(work_packages=[work_package(11, "Lot API")]).execute(10)
+
+    assert not detail.is_deletable

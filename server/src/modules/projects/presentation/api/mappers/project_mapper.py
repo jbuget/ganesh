@@ -84,8 +84,8 @@ def to_member(user: User) -> BoardMemberResponse:
     assert user.id is not None
     return BoardMemberResponse(
         id=user.id,
-        display_name=user.display_name,
-        initials=initials(user.display_name),
+        display_name=user.label,
+        initials=initials(user.label),
     )
 
 
@@ -148,8 +148,8 @@ def to_board_response(board: Board) -> BoardResponse:
                         contributors=[
                             BoardMemberResponse(
                                 id=membre.id or 0,
-                                display_name=membre.display_name,
-                                initials=initials(membre.display_name),
+                                display_name=membre.label,
+                                initials=initials(membre.label),
                             )
                             for membre in card.contributors
                         ],
@@ -174,7 +174,7 @@ def to_board_response(board: Board) -> BoardResponse:
 
 def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
     return ProjectDetailResponse(
-        project=to_project_response(detail.project),
+        project=to_project_response(detail.project, is_deletable=detail.is_deletable),
         departments=detail.departments,
         links=[to_link_response(link) for link in detail.links if link.id is not None],
         # Phases read in nominal order, not the order the database returns
@@ -229,8 +229,8 @@ def to_project_update_response(
         id=signed.update.id,
         author=BoardMemberResponse(
             id=signed.author.id,
-            display_name=signed.author.display_name,
-            initials=initials(signed.author.display_name),
+            display_name=signed.author.label,
+            initials=initials(signed.author.label),
         ),
         body=signed.update.body,
         published_at=signed.update.published_at,

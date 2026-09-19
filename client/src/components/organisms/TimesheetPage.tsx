@@ -78,7 +78,7 @@ export function TimesheetPage() {
             id: mission.id,
             label: mission.label,
           }))}
-          onAdd={month.addMission}
+          onAdd={(projectId) => void month.addMission(projectId)}
         />
       )}
 
@@ -130,7 +130,6 @@ export function TimesheetPage() {
       {grid && (
         <TimesheetGrid
           grid={grid}
-          extraRows={month.extraRows}
           today={month.today}
           onSetValue={month.setDayValue}
           onRemoveMission={grid.is_writable ? askToRemove : undefined}
@@ -141,7 +140,7 @@ export function TimesheetPage() {
                 projects={month.projects}
                 excludedIds={month.displayedProjectIds}
                 assignedIds={month.assignedIds}
-                onSelect={month.addMission}
+                onSelect={(projectId) => void month.addMission(projectId)}
                 onDeclareNew={() => setDeclareOpen(true)}
               />
             ) : null

@@ -18,31 +18,20 @@ const jeremy: UserResponse = {
 
 const NOW = new Date("2026-09-17T12:00:00");
 
-const onSetActive = vi.fn();
+const onOpen = vi.fn();
 
-function renderRow(
-  user: UserResponse,
-  roleModifiable = false,
-  canChangeStatus = false,
-) {
+function renderRow(user: UserResponse) {
   return render(
     <Table>
       <TableBody>
-        <UserRow
-          user={user}
-          roleModifiable={roleModifiable}
-          canChangeStatus={canChangeStatus}
-          onChangeRole={vi.fn()}
-          onSetActive={onSetActive}
-          now={NOW}
-        />
+        <UserRow user={user} now={NOW} onOpen={onOpen} />
       </TableBody>
     </Table>,
   );
 }
 
 describe("UserRow", () => {
-  beforeEach(() => onSetActive.mockClear());
+  beforeEach(() => onOpen.mockClear());
 
   it("shows the teammate, their email and their role", () => {
     renderRow(jeremy);
@@ -61,50 +50,19 @@ describe("UserRow", () => {
     expect(screen.getByText("Désactivé")).toBeInTheDocument();
   });
 
-  it("does not offer cutting off access without management rights", () => {
-    renderRow(jeremy, false, false);
+  it("opens the panel rather than editing in place", async () => {
+    renderRow(jeremy);
 
-    expect(screen.queryByRole("button", { name: /Désactiver/ })).toBeNull();
+    await userEvent.click(screen.getByText("Jérémy Buget"));
+
+    expect(onOpen).toHaveBeenCalledTimes(1);
   });
 
-  it("asks for confirmation before cutting off access", async () => {
-    renderRow(jeremy, true, true);
-
-    await userEvent.click(screen.getByRole("button", { name: "Désactiver ce compte" }));
-
-    // Cutting off access does not go ahead on a single click.
-    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
-    expect(onSetActive).not.toHaveBeenCalled();
-  });
-
-  it("cuts off access once confirmation is given", async () => {
-    renderRow(jeremy, true, true);
-
-    await userEvent.click(screen.getByRole("button", { name: "Désactiver ce compte" }));
-    // The dialog's button, not the badge that opened it.
-    await userEvent.click(screen.getByRole("button", { name: /^Désactiver$/ }));
-
-    expect(onSetActive).toHaveBeenCalledWith(1, false);
-  });
-
-  it("restores access without confirmation, since it takes nothing away", async () => {
-    renderRow({ ...jeremy, is_active: false }, true, true);
-
-    await userEvent.click(screen.getByRole("button", { name: "Réactiver ce compte" }));
-
-    expect(onSetActive).toHaveBeenCalledWith(1, true);
-  });
-
-  it("lets a manager change the role", () => {
-    renderRow(jeremy, true);
-
-    expect(screen.getByRole("button", { name: /Changer le rôle/ })).toBeInTheDocument();
-  });
-
-  it("does not offer changing the role without management rights", () => {
-    renderRow(jeremy, false);
+  it("edits nothing: the role and the access are given away in the panel", () => {
+    renderRow(jeremy);
 
     expect(screen.queryByRole("button", { name: /Changer le rôle/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Désactiver/ })).toBeNull();
   });
 
   it("says how long since the account last logged in", () => {

@@ -14,6 +14,9 @@ from src.modules.users.application.use_cases.change_user_role import (
 )
 from src.modules.users.application.use_cases.list_users import ListUsersUseCase
 from src.modules.users.application.use_cases.set_user_active import SetUserActiveUseCase
+from src.modules.users.application.use_cases.update_user_identity import (
+    UpdateUserIdentityUseCase,
+)
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
 
@@ -35,3 +38,10 @@ def get_set_user_active_use_case(
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> SetUserActiveUseCase:
     return SetUserActiveUseCase(users=users, audit_logs=audit_logs)
+
+
+def get_update_user_identity_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> UpdateUserIdentityUseCase:
+    return UpdateUserIdentityUseCase(users=users, audit_logs=audit_logs)

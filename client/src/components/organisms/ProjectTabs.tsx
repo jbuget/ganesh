@@ -1,6 +1,7 @@
 "use client";
 
 import { ArchivedCallout } from "@/components/atoms/ArchivedCallout";
+import { DeleteMissionDialog } from "@/components/atoms/DeleteMissionDialog";
 import { MissionMenu } from "@/components/atoms/MissionMenu";
 import { ProjectSteeringTab } from "@/components/organisms/ProjectSteeringTab";
 import { ProjectSheetTab } from "@/components/organisms/ProjectSheetTab";
@@ -44,6 +45,13 @@ interface ProjectTabsProps {
   addSubProject: (label: string) => Promise<void>;
   archive: () => Promise<void>;
   unarchive: () => Promise<void>;
+  /**
+   * Deletes the mission for good, once confirmed.
+   *
+   * The sheet dies with it: it is up to the screen holding these tabs to go
+   * somewhere else afterwards.
+   */
+  deleteMission: () => Promise<void>;
 }
 
 /** What is still to be built, announced rather than left blank. */
@@ -71,11 +79,13 @@ export function ProjectTabs({
   addSubProject,
   archive,
   unarchive,
+  deleteMission,
 }: ProjectTabsProps) {
   // Freezes the reference time for the duration of the visit: « il y a 3
   // min » must not recompute on every render, and the thread is only
   // loaded after mounting anyway — nothing is rendered server-side.
   const [now] = useState(() => new Date());
+  const [isDeleteOpen, setDeleteOpen] = useState(false);
 
   return (
     <Tabs
@@ -103,8 +113,22 @@ export function ProjectTabs({
           archived={!detail.project.is_active}
           onArchive={archive}
           onUnarchive={unarchive}
+          onDelete={() => setDeleteOpen(true)}
         />
       </div>
+
+      {/* The count the sheet already shows is what the dialog argues from:
+          days declared and work packages attached are exactly what the
+          server refuses a deletion over. */}
+      <DeleteMissionDialog
+        open={isDeleteOpen}
+        onOpenChange={setDeleteOpen}
+        label={detail.project.label}
+        deletable={detail.project.is_deletable}
+        consumedDays={detail.consumed_days}
+        subProjects={detail.sub_projects.length}
+        onConfirm={deleteMission}
+      />
 
       <TabsContent value="pilotage">
         <ProjectSteeringTab

@@ -20,6 +20,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
+from src.modules.projects.domain.services.deletion import can_be_deleted
 from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.projects.domain.services.project_cost import (
     NO_COST,
@@ -59,7 +60,7 @@ class ListedProject:
     @property
     def is_deletable(self) -> bool:
         """A mission that never served may disappear; the others get archived."""
-        return self.entries == 0 and self.sub_projects == 0
+        return can_be_deleted(self.project, self.entries, self.sub_projects)
 
 
 class ListProjectsUseCase:
@@ -115,7 +116,7 @@ class ListProjectsUseCase:
             known = [
                 users[uid] for uid in by_role[role].get(project_id, []) if uid in users
             ]
-            return sorted(known, key=lambda u: u.display_name)
+            return sorted(known, key=lambda u: u.label)
 
         def latest(project_id: int) -> LastUpdate | None:
             update = latest_by_project.get(project_id)

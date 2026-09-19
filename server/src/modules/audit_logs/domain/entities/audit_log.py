@@ -27,6 +27,7 @@ class AuditAction(StrEnum):
     UPDATE_EDIT = "update.edit"
     UPDATE_REMOVE = "update.remove"
     USER_ROLE_CHANGE = "user.role_change"
+    USER_IDENTITY_UPDATE = "user.identity_update"
     USER_DEACTIVATE = "user.deactivate"
     USER_ACTIVATE = "user.activate"
     API_KEY_CREATE = "api_key.create"

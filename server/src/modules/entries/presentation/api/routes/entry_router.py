@@ -8,9 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.database import get_db
 from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.entries.application.dtos.set_entry_dto import (
+    AddMissionCommand,
     ClearEntryCommand,
     RemoveMissionCommand,
     SetEntryCommand,
+)
+from src.modules.entries.application.use_cases.add_mission_to_month import (
+    AddMissionToMonthUseCase,
 )
 from src.modules.entries.application.use_cases.clear_entry import ClearEntryUseCase
 from src.modules.entries.application.use_cases.get_month_grid import (
@@ -26,11 +30,13 @@ from src.modules.entries.presentation.api.mappers.entry_mapper import (
     to_month_grid_response,
 )
 from src.modules.entries.presentation.api.schemas.entry_schemas import (
+    AddMissionRequest,
     EntryResponse,
     MonthGridResponse,
     SetEntryRequest,
 )
 from src.modules.entries.presentation.dependencies import (
+    get_add_mission_use_case,
     get_clear_entry_use_case,
     get_month_grid_use_case,
     get_remove_mission_use_case,
@@ -107,6 +113,34 @@ async def clear_entry(
             target_user_id=user_id or current_user.id,
             project_id=project_id,
             day=day,
+        )
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/mission",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="addMissionToMonth",
+)
+async def add_mission_to_month(
+    payload: AddMissionRequest,
+    user_id: int | None = Query(
+        default=None, description="Teammate whose month is changed."
+    ),
+    current_user: User = Depends(get_current_user),
+    use_case: AddMissionToMonthUseCase = Depends(get_add_mission_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Puts a mission on a month, with no time on it yet."""
+    assert current_user.id is not None
+    await use_case.execute(
+        AddMissionCommand(
+            actor_id=current_user.id,
+            target_user_id=user_id or current_user.id,
+            project_id=payload.project_id,
+            month=payload.month,
         )
     )
     await session.commit()

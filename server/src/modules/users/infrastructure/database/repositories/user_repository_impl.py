@@ -17,6 +17,9 @@ def to_entity(model: UserModel) -> User:
         role=model.role,
         is_active=model.is_active,
         last_login_at=model.last_login_at,
+        first_name=model.first_name,
+        last_name=model.last_name,
+        department=model.department,
     )
 
 
@@ -59,6 +62,9 @@ class SqlUserRepository(UserRepository):
             role=user.role,
             is_active=user.is_active,
             last_login_at=user.last_login_at,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            department=user.department,
         )
         self._session.add(model)
         await self._session.flush()
@@ -77,5 +83,8 @@ class SqlUserRepository(UserRepository):
         model.role = user.role
         model.is_active = user.is_active
         model.last_login_at = user.last_login_at
+        model.first_name = user.first_name
+        model.last_name = user.last_name
+        model.department = user.department
         await self._session.flush()
         return user
