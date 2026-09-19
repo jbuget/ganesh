@@ -7,12 +7,13 @@
 import type { Department } from "./department";
 
 /**
- * Who a teammate is, and where they work.
+ * Who a teammate is, where they work, and how one finds them on GitHub.
  *
- * The three fields travel together: what is left out is emptied.
+ * The four fields travel together: what is left out is emptied.
  */
 export interface UpdateUserIdentityRequest {
   first_name?: string | null;
   last_name?: string | null;
   department?: Department | null;
+  github_username?: string | null;
 }

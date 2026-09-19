@@ -25,6 +25,8 @@ class UserResponse(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     department: Department | None = None
+    #: The handle alone — « lea-chen », never « @lea-chen ».
+    github_username: str | None = None
 
 
 class ChangeRoleRequest(BaseModel):
@@ -40,11 +42,12 @@ class SetActiveRequest(BaseModel):
 
 
 class UpdateUserIdentityRequest(BaseModel):
-    """Who a teammate is, and where they work.
+    """Who a teammate is, where they work, and how one finds them on GitHub.
 
-    The three fields travel together: what is left out is emptied.
+    The four fields travel together: what is left out is emptied.
     """
 
     first_name: str | None = Field(default=None, max_length=255)
     last_name: str | None = Field(default=None, max_length=255)
     department: Department | None = None
+    github_username: str | None = Field(default=None, max_length=255)
