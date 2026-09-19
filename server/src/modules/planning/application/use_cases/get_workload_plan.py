@@ -20,6 +20,7 @@ from src.modules.planning.domain.services.horizon import (
     DEFAULT_HORIZON_MONTHS,
     horizon_end,
 )
+from src.modules.planning.domain.services.plan_summary import summarise
 from src.modules.planning.domain.services.projection import project_workload
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_role import ProjectRole
@@ -53,8 +54,15 @@ class GetWorkloadPlanUseCase:
         self,
         horizon_months: int = DEFAULT_HORIZON_MONTHS,
         order: list[int] | None = None,
+        staffing: dict[int, list[int]] | None = None,
         today: date | None = None,
     ) -> WorkloadReading:
+        """Projects the backlog, optionally on a hypothesis.
+
+        `order` and `staffing` state a what-if: a queue to serve, and who to
+        place the work on. Both are read and neither is written — asking « et
+        si Valentin passait dessus ? » must cost nothing but the answer.
+        """
         start = today or date.today()
         end = horizon_end(start, horizon_months)
 
@@ -63,7 +71,9 @@ class GetWorkloadPlanUseCase:
         )
 
         remaining = await self._remaining_days(backlog, start)
-        contributors = await self._assignees.list_all(ProjectRole.CONTRIBUTOR)
+        contributors = _staffed(
+            await self._assignees.list_all(ProjectRole.CONTRIBUTOR), staffing or {}
+        )
 
         team = sorted(await self._users.list_all(), key=lambda u: u.display_name)
         user_ids = [user.id for user in team if user.id is not None]
@@ -92,23 +102,28 @@ class GetWorkloadPlanUseCase:
         by_user = {user.id: user for user in team}
         landed = {mission.project_id: mission for mission in plan.missions}
 
+        rows = [
+            PlannedMissionRow(
+                mission=mission,
+                projected=landed[mission.id or 0],
+                assignees=_people(contributors.get(mission.id or 0, []), by_user),
+            )
+            for mission in backlog
+        ]
+
         return WorkloadReading(
             from_day=start,
             to_day=end,
             weeks=plan.weeks,
-            missions=[
-                PlannedMissionRow(
-                    mission=mission,
-                    projected=landed[mission.id or 0],
-                    assignees=_people(contributors.get(mission.id or 0, []), by_user),
-                )
-                for mission in backlog
-            ],
+            missions=rows,
             people=[
                 PersonLoadRow(user=by_user[load.user_id], load=load)
                 for load in plan.people
                 if load.user_id in by_user
             ],
+            summary=summarise(
+                [(row.projected, row.target_date) for row in rows], plan.people
+            ),
         )
 
     async def _remaining_days(
@@ -137,6 +152,18 @@ class GetWorkloadPlanUseCase:
             spent = cost.build_days + forecast.get(project_id, 0.0)
             left[project_id] = round(max(0.0, mission.estimated_days - spent), 2)
         return left
+
+
+def _staffed(
+    assigned: dict[int, list[int]], staffing: dict[int, list[int]]
+) -> dict[int, list[int]]:
+    """Who the work may be placed on, the hypothesis having its say.
+
+    A mission named in the hypothesis takes the people it names, and only
+    them: naming nobody is how one asks what happens if a mission is left
+    unstaffed. Missions it does not name keep the team they actually have.
+    """
+    return {**assigned, **staffing}
 
 
 def _still_to_build(missions: list[Project]) -> list[Project]:

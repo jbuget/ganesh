@@ -5,7 +5,7 @@ and who is taken is everybody's business. Only what writes stays a manager's
 privilege, and a projection writes nothing.
 """
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 
 from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.planning.application.dtos.workload_dto import (
@@ -16,15 +16,13 @@ from src.modules.planning.application.dtos.workload_dto import (
 from src.modules.planning.application.use_cases.get_workload_plan import (
     GetWorkloadPlanUseCase,
 )
-from src.modules.planning.domain.services.horizon import (
-    DEFAULT_HORIZON_MONTHS,
-    MAX_HORIZON_MONTHS,
-)
 from src.modules.planning.presentation.api.schemas.planning_schemas import (
     MissionWeekResponse,
     PersonLoadResponse,
     PlanMemberResponse,
     PlannedMissionResponse,
+    PlanSummaryResponse,
+    ProjectionRequest,
     WeeklyLoadResponse,
     WorkloadPlanResponse,
 )
@@ -35,24 +33,34 @@ from src.shared.utils.initials import initials
 router = APIRouter(prefix="/planning", tags=["planning"])
 
 
-@router.get("", response_model=WorkloadPlanResponse, operation_id="getWorkloadPlan")
-async def get_workload_plan(
-    horizon_months: int = Query(
-        default=DEFAULT_HORIZON_MONTHS, ge=1, le=MAX_HORIZON_MONTHS
-    ),
-    order: list[int] = Query(default=[]),
+@router.post(
+    "/projection",
+    response_model=WorkloadPlanResponse,
+    operation_id="projectWorkload",
+)
+async def project_workload(
+    scenario: ProjectionRequest | None = None,
     _: User = Depends(get_current_user),
     use_case: GetWorkloadPlanUseCase = Depends(get_workload_plan_use_case),
 ) -> WorkloadPlanResponse:
     """Projects the backlog onto the room the team's diaries leave.
 
-    `order` states a hypothesis: the missions it names are served first, in
-    that order, and the rest follow in the order the board already tells.
-    Nothing is written — asking « et si celui-là passait devant ? » must cost
-    nothing but the answer.
+    A POST that writes nothing: the body carries a scenario — an order to
+    serve, people to place the work on — and the answer is what that scenario
+    would cost. Asking « et si celui-là passait devant, avec Valentin dessus ? »
+    must leave the board exactly as it was.
+
+    It is a POST and not a GET because a scenario is a structure, not a string:
+    squeezing a map of missions to people through a query string would mean
+    inventing an encoding, and hand-writing the type that reads it back.
     """
+    asked = scenario or ProjectionRequest()
     return to_plan_response(
-        await use_case.execute(horizon_months=horizon_months, order=order)
+        await use_case.execute(
+            horizon_months=asked.horizon_months,
+            order=asked.order,
+            staffing=asked.staffing,
+        )
     )
 
 
@@ -63,6 +71,13 @@ def to_plan_response(reading: WorkloadReading) -> WorkloadPlanResponse:
         weeks=reading.weeks,
         missions=[to_mission_response(row) for row in reading.missions],
         people=[to_person_response(row) for row in reading.people],
+        summary=PlanSummaryResponse(
+            planned=reading.summary.planned,
+            late=reading.summary.late,
+            blocked=reading.summary.blocked,
+            unassigned=reading.summary.unassigned,
+            free_days=reading.summary.free_days,
+        ),
     )
 
 
@@ -81,6 +96,7 @@ def to_mission_response(row: PlannedMissionRow) -> PlannedMissionResponse:
         ends_on=row.projected.ends_on,
         target_date=row.target_date,
         slippage_days=row.slippage_days,
+        is_late=row.is_late,
         blocker=row.projected.blocker,
         assignees=[to_member_response(user) for user in row.assignees],
         weeks=[
@@ -99,6 +115,7 @@ def to_person_response(row: PersonLoadRow) -> PersonLoadResponse:
                 capacity=week.capacity,
                 booked=week.booked,
                 projected=week.projected,
+                reserved=week.reserved,
                 free=week.free,
                 is_overloaded=week.is_overloaded,
             )

@@ -219,12 +219,13 @@ class TestWhoCarriesTheWork:
 class TestLandingAndSlippage:
     @pytest.mark.asyncio
     async def test_the_projection_lands_the_mission_on_a_working_day(self) -> None:
-        """Five days from Friday 18 September land on Thursday 24."""
+        """Five days from Friday 18 September land on Friday 25: the half day
+        held back each week pushes what a bare count would put on Thursday."""
         reading = await a_use_case(
             [a_mission(10, estimated=5.0)], contributors={10: [1]}
         ).execute(today=TODAY)
 
-        assert row(reading, 10).projected.ends_on == date(2026, 9, 24)
+        assert row(reading, 10).projected.ends_on == date(2026, 9, 25)
 
     @pytest.mark.asyncio
     async def test_landing_after_the_date_announced_reads_as_late(self) -> None:
@@ -233,7 +234,7 @@ class TestLandingAndSlippage:
             contributors={10: [1]},
         ).execute(today=TODAY)
 
-        assert row(reading, 10).slippage_days == 3
+        assert row(reading, 10).slippage_days == 4
 
     @pytest.mark.asyncio
     async def test_landing_ahead_of_the_date_announced_reads_as_early(self) -> None:
@@ -242,7 +243,7 @@ class TestLandingAndSlippage:
             contributors={10: [1]},
         ).execute(today=TODAY)
 
-        assert row(reading, 10).slippage_days == -7
+        assert row(reading, 10).slippage_days == -6
 
     @pytest.mark.asyncio
     async def test_a_mission_with_no_announced_date_is_never_late(self) -> None:
@@ -265,7 +266,7 @@ class TestTheWhatIf:
         ).execute(today=TODAY)
 
         assert [r.mission.id for r in reading.missions] == [20, 10]
-        assert row(reading, 20).projected.ends_on == date(2026, 9, 21)
+        assert row(reading, 20).projected.ends_on == date(2026, 9, 22)
 
     @pytest.mark.asyncio
     async def test_the_hypothesis_reorders_the_backlog_and_moves_the_dates(
@@ -282,8 +283,8 @@ class TestTheWhatIf:
         ).execute(today=TODAY, order=[10, 20])
 
         assert [r.mission.id for r in reading.missions] == [10, 20]
-        assert row(reading, 10).projected.ends_on == date(2026, 9, 21)
-        assert row(reading, 20).projected.ends_on == date(2026, 9, 23)
+        assert row(reading, 10).projected.ends_on == date(2026, 9, 22)
+        assert row(reading, 20).projected.ends_on == date(2026, 9, 24)
 
     @pytest.mark.asyncio
     async def test_a_hypothesis_writes_nothing_down(self) -> None:
@@ -322,3 +323,88 @@ class TestHorizon:
     async def test_an_impossible_horizon_is_refused(self) -> None:
         with pytest.raises(ValidationError):
             await a_use_case([]).execute(today=TODAY, horizon_months=0)
+
+
+class TestStaffingHypothesis:
+    @pytest.mark.asyncio
+    async def test_putting_someone_on_a_mission_brings_its_landing_forward(
+        self,
+    ) -> None:
+        """The strongest lever of an arbitration: a second pair of hands."""
+        missions = [a_mission(10, estimated=4.0)]
+        alone = await a_use_case(missions, contributors={10: [1]}).execute(today=TODAY)
+        paired = await a_use_case(missions, contributors={10: [1]}).execute(
+            today=TODAY, staffing={10: [1, 2]}
+        )
+
+        assert row(alone, 10).projected.ends_on == date(2026, 9, 24)
+        assert row(paired, 10).projected.ends_on == date(2026, 9, 22)
+
+    @pytest.mark.asyncio
+    async def test_taking_everyone_off_a_mission_leaves_it_unplannable(self) -> None:
+        reading = await a_use_case(
+            [a_mission(10, estimated=4.0)], contributors={10: [1]}
+        ).execute(today=TODAY, staffing={10: []})
+
+        assert row(reading, 10).projected.blocker is PlanBlocker.NO_ASSIGNEE
+
+    @pytest.mark.asyncio
+    async def test_a_mission_the_hypothesis_leaves_alone_keeps_its_own_team(
+        self,
+    ) -> None:
+        reading = await a_use_case(
+            [a_mission(10, estimated=4.0), a_mission(20, estimated=4.0)],
+            contributors={10: [1], 20: [2]},
+        ).execute(today=TODAY, staffing={10: [1, 2]})
+
+        assert [u.id for u in row(reading, 20).assignees] == [2]
+
+    @pytest.mark.asyncio
+    async def test_the_hypothesis_shows_in_who_the_row_names(self) -> None:
+        """What the screen draws must be what the projection used."""
+        reading = await a_use_case(
+            [a_mission(10, estimated=4.0)], contributors={10: [1]}
+        ).execute(today=TODAY, staffing={10: [1, 2]})
+
+        assert [u.id for u in row(reading, 10).assignees] == [1, 2]
+
+    @pytest.mark.asyncio
+    async def test_a_hypothesis_on_staffing_writes_nothing_down(self) -> None:
+        use_case = a_use_case([a_mission(10, estimated=4.0)], contributors={10: [1]})
+
+        await use_case.execute(today=TODAY, staffing={10: [1, 2]})
+        after = await use_case.execute(today=TODAY)
+
+        assert [u.id for u in row(after, 10).assignees] == [1]
+
+
+class TestSummary:
+    @pytest.mark.asyncio
+    async def test_it_counts_what_lands_and_what_is_late(self) -> None:
+        reading = await a_use_case(
+            [
+                a_mission(10, estimated=2.0, go_live=date(2026, 9, 1)),
+                a_mission(20, estimated=2.0, go_live=date(2026, 12, 1)),
+            ],
+            contributors={10: [1], 20: [1]},
+        ).execute(today=TODAY)
+
+        assert (reading.summary.planned, reading.summary.late) == (2, 1)
+
+    @pytest.mark.asyncio
+    async def test_it_calls_out_the_missions_nobody_is_on(self) -> None:
+        reading = await a_use_case(
+            [a_mission(10, estimated=2.0), a_mission(20, estimated=None)]
+        ).execute(today=TODAY)
+
+        assert (reading.summary.blocked, reading.summary.unassigned) == (2, 1)
+
+    @pytest.mark.asyncio
+    async def test_it_totals_the_capacity_nobody_took(self) -> None:
+        """Twenty-one working days, less the half day held back on each of the
+        five weeks they span."""
+        reading = await a_use_case([], users=[ALICE]).execute(
+            today=TODAY, horizon_months=1
+        )
+
+        assert reading.summary.free_days == 18.5

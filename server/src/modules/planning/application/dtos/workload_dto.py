@@ -7,6 +7,7 @@ from src.modules.planning.domain.entities.workload_plan import (
     PersonPlan,
     ProjectedMission,
 )
+from src.modules.planning.domain.services.plan_summary import PlanSummary, is_late
 from src.modules.projects.domain.entities.project import Project
 from src.modules.users.domain.entities.user import User
 
@@ -29,6 +30,15 @@ class PlannedMissionRow:
     def slippage_days(self) -> int | None:
         return self.projected.slippage_days(self.target_date)
 
+    @property
+    def is_late(self) -> bool:
+        """Whether it lands past the date announced, beyond what is forgiven.
+
+        Read from the domain rather than worked out again on the screen: the
+        red mark on a row and the tally at the top must never disagree.
+        """
+        return is_late(self.projected, self.target_date)
+
 
 @dataclass(frozen=True)
 class PersonLoadRow:
@@ -49,3 +59,5 @@ class WorkloadReading:
     #: The backlog, in the order it was served.
     missions: list[PlannedMissionRow]
     people: list[PersonLoadRow]
+    #: The whole projection in the few figures a decision turns on.
+    summary: PlanSummary
