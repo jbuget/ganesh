@@ -1,19 +1,25 @@
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 import { PRIORITIES, phaseRank } from "@/lib/board";
+import {
+  NO_COLUMN_SORT,
+  compareValues,
+  nextColumnSort,
+  readColumnSort,
+  writeColumnSort,
+  type ColumnSort,
+  type SortDirection,
+} from "@/lib/table-sort";
+
+export type { SortDirection };
 
 /** The reference list columns the list can be ordered by. */
 export type SortColumn =
   "project" | "phase" | "priority" | "category" | "build" | "run";
 
-export type SortDirection = "asc" | "desc";
-
 /** The column asked for, or `null` for the reference list's own order. */
-export interface MissionSort {
-  column: SortColumn | null;
-  direction: SortDirection;
-}
+export type MissionSort = ColumnSort<SortColumn>;
 
-export const NO_SORT: MissionSort = { column: null, direction: "asc" };
+export const NO_SORT: MissionSort = NO_COLUMN_SORT;
 
 const COLUMNS: SortColumn[] = [
   "project",
@@ -23,8 +29,6 @@ const COLUMNS: SortColumn[] = [
   "build",
   "run",
 ];
-
-const PARAMETERS = { column: "sort", direction: "direction" } as const;
 
 const PRIORITY_RANKS = new Map(PRIORITIES.map((p, rank) => [p.value, rank]));
 
@@ -76,24 +80,9 @@ export function sortComparator(sorted: MissionSort) {
   if (sorted.column === null) return byPhaseThenLabel;
 
   const valueOf = VALUES[sorted.column];
-  const sign = sorted.direction === "desc" ? -1 : 1;
 
-  return (a: Mission, b: Mission): number => {
-    const left = valueOf(a);
-    const right = valueOf(b);
-
-    if (left === null || right === null) {
-      if (left === right) return byLabel(a, b);
-      return left === null ? 1 : -1;
-    }
-
-    const gap =
-      typeof left === "string" && typeof right === "string"
-        ? left.localeCompare(right, "fr")
-        : Number(left) - Number(right);
-
-    return gap !== 0 ? sign * gap : byLabel(a, b);
-  };
+  return (a: Mission, b: Mission): number =>
+    compareValues(a, b, valueOf, sorted.direction, byLabel);
 }
 
 /**
@@ -102,27 +91,14 @@ export function sortComparator(sorted: MissionSort) {
  * to hunt for how to find it again.
  */
 export function nextSort(sorted: MissionSort, column: SortColumn): MissionSort {
-  if (sorted.column !== column) return { column, direction: "asc" };
-  if (sorted.direction === "asc") return { column, direction: "desc" };
-  return NO_SORT;
+  return nextColumnSort(sorted, column);
 }
 
 export function readSort(params: URLSearchParams): MissionSort {
-  const column = params.get(PARAMETERS.column);
-  if (!column || !COLUMNS.includes(column as SortColumn)) return NO_SORT;
-
-  return {
-    column: column as SortColumn,
-    direction: params.get(PARAMETERS.direction) === "desc" ? "desc" : "asc",
-  };
+  return readColumnSort(params, COLUMNS);
 }
 
 /** Writes the sort into the URL, leaving the other parameters alone. */
 export function writeSort(params: URLSearchParams, sorted: MissionSort): void {
-  params.delete(PARAMETERS.column);
-  params.delete(PARAMETERS.direction);
-  if (sorted.column === null) return;
-
-  params.set(PARAMETERS.column, sorted.column);
-  params.set(PARAMETERS.direction, sorted.direction);
+  writeColumnSort(params, sorted);
 }

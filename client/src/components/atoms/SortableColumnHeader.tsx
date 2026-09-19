@@ -3,13 +3,13 @@
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 
 import { TableHead } from "@/components/ui/table";
-import type { SortColumn, MissionSort } from "@/lib/mission-sort";
+import type { ColumnSort } from "@/lib/table-sort";
 
-interface SortableColumnHeaderProps {
-  column: SortColumn;
+interface SortableColumnHeaderProps<Column extends string> {
+  column: Column;
   label: string;
-  sorted: MissionSort;
-  onToggle: (column: SortColumn) => void;
+  sorted: ColumnSort<Column>;
+  onToggle: (column: Column) => void;
   /** Number columns align right, heading included. */
   alignRight?: boolean;
   /** What the column imposes on its header: width, sticking to the left. */
@@ -28,15 +28,19 @@ interface SortableColumnHeaderProps {
  * The whole cell answers the click, not the title alone: between two long
  * column names, the target was a few characters wide and nothing said where it
  * ended.
+ *
+ * Which columns there are is the table's business, not the header's: it is told
+ * the column it carries and hands it back on a click, so the mission reference
+ * list and the team list share the same header without sharing their columns.
  */
-export function SortableColumnHeader({
+export function SortableColumnHeader<Column extends string>({
   column,
   label,
   sorted,
   onToggle,
   alignRight = false,
   className,
-}: SortableColumnHeaderProps) {
+}: SortableColumnHeaderProps<Column>) {
   const isActive = sorted.column === column;
   const ascending = sorted.direction === "asc";
 
