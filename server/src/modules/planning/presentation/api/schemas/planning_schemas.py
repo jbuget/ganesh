@@ -1,9 +1,10 @@
 """Schemas of the workload plan."""
 
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
+from src.modules.planning.domain.entities.simulation import NAME_MAX_LENGTH
 from src.modules.planning.domain.entities.workload_plan import PlanBlocker
 from src.modules.planning.domain.services.horizon import (
     DEFAULT_HORIZON_MONTHS,
@@ -33,6 +34,34 @@ class ProjectionRequest(BaseModel):
     #: people it names and only them; naming nobody asks what happens if it is
     #: left unstaffed. Missions absent from the map keep the team they have.
     staffing: dict[int, list[int]] = Field(default_factory=dict)
+
+
+class SaveSimulationRequest(BaseModel):
+    """A scenario to write down, or to rewrite in place."""
+
+    name: str = Field(min_length=1, max_length=NAME_MAX_LENGTH)
+    horizon_months: int = Field(ge=1, le=MAX_HORIZON_MONTHS)
+    order: list[int] = Field(default_factory=list)
+    staffing: dict[int, list[int]] = Field(default_factory=dict)
+
+
+class SimulationResponse(BaseModel):
+    """A scenario the team kept.
+
+    It carries the hypothesis and never a result: what a scenario would cost
+    depends on what has been declared since, and a landing date frozen in a row
+    would be a lie by the following Monday.
+    """
+
+    id: int
+    name: str
+    horizon_months: int
+    order: list[int]
+    staffing: dict[int, list[int]]
+    #: Who wrote it down. Null once that account is gone.
+    author_id: int | None
+    created_at: datetime
+    updated_at: datetime
 
 
 class PlanSummaryResponse(BaseModel):

@@ -5,8 +5,10 @@ and who is taken is everybody's business. Only what writes stays a manager's
 privilege, and a projection writes nothing.
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.database import get_db
 from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.planning.application.dtos.workload_dto import (
     PersonLoadRow,
@@ -16,6 +18,14 @@ from src.modules.planning.application.dtos.workload_dto import (
 from src.modules.planning.application.use_cases.get_workload_plan import (
     GetWorkloadPlanUseCase,
 )
+from src.modules.planning.application.use_cases.manage_simulations import (
+    DeleteSimulationUseCase,
+    ListSimulationsUseCase,
+    SaveSimulationUseCase,
+    SimulationCommand,
+    UpdateSimulationUseCase,
+)
+from src.modules.planning.domain.entities.simulation import Simulation
 from src.modules.planning.presentation.api.schemas.planning_schemas import (
     MissionWeekResponse,
     PersonLoadResponse,
@@ -23,10 +33,18 @@ from src.modules.planning.presentation.api.schemas.planning_schemas import (
     PlannedMissionResponse,
     PlanSummaryResponse,
     ProjectionRequest,
+    SaveSimulationRequest,
+    SimulationResponse,
     WeeklyLoadResponse,
     WorkloadPlanResponse,
 )
-from src.modules.planning.presentation.dependencies import get_workload_plan_use_case
+from src.modules.planning.presentation.dependencies import (
+    get_delete_simulation_use_case,
+    get_list_simulations_use_case,
+    get_save_simulation_use_case,
+    get_update_simulation_use_case,
+    get_workload_plan_use_case,
+)
 from src.modules.users.domain.entities.user import User
 from src.shared.utils.initials import initials
 
@@ -131,4 +149,103 @@ def to_member_response(user: User) -> PlanMemberResponse:
         id=user.id or 0,
         display_name=user.display_name,
         initials=initials(user.display_name),
+    )
+
+
+@router.get(
+    "/simulations",
+    response_model=list[SimulationResponse],
+    operation_id="listSimulations",
+)
+async def list_simulations(
+    _: User = Depends(get_current_user),
+    use_case: ListSimulationsUseCase = Depends(get_list_simulations_use_case),
+) -> list[SimulationResponse]:
+    """The scenarios the team kept, most recently touched first.
+
+    Whole, not as a list of names: each holds a handful of numbers, and
+    picking one must not cost a round trip before the plan can be redrawn.
+    """
+    return [to_simulation_response(s) for s in await use_case.execute()]
+
+
+@router.post(
+    "/simulations",
+    response_model=SimulationResponse,
+    status_code=201,
+    operation_id="saveSimulation",
+)
+async def save_simulation(
+    body: SaveSimulationRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+    use_case: SaveSimulationUseCase = Depends(get_save_simulation_use_case),
+) -> SimulationResponse:
+    """Writes a scenario down, under a name nobody else is using."""
+    assert current_user.id is not None
+    saved = await use_case.execute(to_command(body), author_id=current_user.id)
+    await session.commit()
+    return to_simulation_response(saved)
+
+
+@router.put(
+    "/simulations/{simulation_id}",
+    response_model=SimulationResponse,
+    operation_id="updateSimulation",
+)
+async def update_simulation(
+    simulation_id: int,
+    body: SaveSimulationRequest,
+    _: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+    use_case: UpdateSimulationUseCase = Depends(get_update_simulation_use_case),
+) -> SimulationResponse:
+    """Rewrites a scenario in place, so trying again costs no second row."""
+    rewritten = await use_case.execute(simulation_id, to_command(body))
+    await session.commit()
+    return to_simulation_response(rewritten)
+
+
+@router.delete(
+    "/simulations/{simulation_id}",
+    status_code=204,
+    operation_id="deleteSimulation",
+)
+async def delete_simulation(
+    simulation_id: int,
+    _: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+    use_case: DeleteSimulationUseCase = Depends(get_delete_simulation_use_case),
+) -> Response:
+    """Drops a scenario.
+
+    Anyone may, whoever wrote it: a simulation holds no declared time and
+    changes nothing that was decided. Trust is the stance here as on the board.
+    """
+    await use_case.execute(simulation_id)
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+def to_command(body: SaveSimulationRequest) -> SimulationCommand:
+    return SimulationCommand(
+        name=body.name,
+        horizon_months=body.horizon_months,
+        order=body.order,
+        staffing=body.staffing,
+    )
+
+
+def to_simulation_response(simulation: Simulation) -> SimulationResponse:
+    assert simulation.id is not None
+    assert simulation.created_at is not None and simulation.updated_at is not None
+    return SimulationResponse(
+        id=simulation.id,
+        name=simulation.name,
+        horizon_months=simulation.horizon_months,
+        order=simulation.order,
+        staffing=simulation.staffing,
+        author_id=simulation.author_id,
+        created_at=simulation.created_at,
+        updated_at=simulation.updated_at,
     )

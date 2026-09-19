@@ -14,6 +14,10 @@ from src.modules.entries.domain.entities.entry import Entry
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.domain.repositories.month_repository import MonthRepository
+from src.modules.planning.domain.entities.simulation import Simulation
+from src.modules.planning.domain.repositories.simulation_repository import (
+    SimulationRepository,
+)
 from src.modules.projects.domain.entities.project import (
     Department,
     Project,
@@ -366,3 +370,39 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
 
     async def update(self, update: ProjectUpdate) -> ProjectUpdate:
         return update
+
+
+class InMemorySimulationRepository(SimulationRepository):
+    def __init__(self, simulations: list[Simulation] | None = None) -> None:
+        self._simulations: dict[int, Simulation] = {}
+        self._next_id = 1
+        for simulation in simulations or []:
+            self._simulations[simulation.id or self._next_id] = simulation
+            self._next_id = max(self._next_id, (simulation.id or 0) + 1)
+
+    async def list_all(self) -> list[Simulation]:
+        return list(self._simulations.values())
+
+    async def get_by_id(self, simulation_id: int) -> Simulation | None:
+        return self._simulations.get(simulation_id)
+
+    async def find_by_name(self, name: str) -> Simulation | None:
+        target = name.strip().casefold()
+        return next(
+            (s for s in self._simulations.values() if s.name.casefold() == target),
+            None,
+        )
+
+    async def add(self, simulation: Simulation) -> Simulation:
+        simulation.id = self._next_id
+        self._next_id += 1
+        self._simulations[simulation.id] = simulation
+        return simulation
+
+    async def update(self, simulation: Simulation) -> Simulation:
+        if simulation.id is not None:
+            self._simulations[simulation.id] = simulation
+        return simulation
+
+    async def delete(self, simulation_id: int) -> None:
+        self._simulations.pop(simulation_id, None)
