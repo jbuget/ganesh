@@ -24,7 +24,15 @@ const API_PREFIX = process.env.API_PREFIX || "/api/v1";
 const SESSION_SECONDS = 60 * 60 * 24;
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  const form = await request.formData();
+  // Only our own form posts here, but the route is open by necessity: anyone
+  // may reach it with anything. A body that is not a form is not a sign-in
+  // attempt to redirect, it is a malformed request to name as one — left to
+  // throw, it answered 500 to whoever cared to ask.
+  const form = await request.formData().catch(() => null);
+  if (!form) {
+    return NextResponse.json({ detail: "Requête malformée." }, { status: 400 });
+  }
+
   const login = String(form.get("login") ?? "");
   const password = String(form.get("password") ?? "");
   const landing = safeLanding(String(form.get("from") ?? ""));

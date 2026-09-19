@@ -236,10 +236,6 @@ the application is never open to whoever knows the address.
 The day the redirect URI is declared, `AUTH_ENTRA=true` goes into the parameter
 on both sides, and the deploy that follows hands everyone their own account.
 
-**A session that dies is not sent back to sign in.** The API answers 401 and
-the screens show their panels empty rather than the sign-in page. It bites on
-an expired fallback session, or when Entra refuses a renewal.
-
 Also left for later, in rough order of how much they will be missed:
 
 - **Staging.** Copy `terraform/` to `terraform/staging/`, change
