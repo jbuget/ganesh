@@ -31,3 +31,8 @@ out/
 # Artefacts generes
 server/openapi.json
 client/openapi.json
+
+# What the seed feeds the database with: the team, the missions, who works on
+# what. That is the company's business, not the code's — the repository carries
+# the script, never the data.
+server/scripts/data/
