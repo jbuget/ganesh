@@ -10,9 +10,12 @@
 import { useGetMonthGrid } from "@/lib/api/generated/entries/entries";
 import type {
   MonthGridResponse,
+  PeriodRange,
   ProjectListItemResponse,
+  StatisticsResponse,
   UserResponse,
 } from "@/lib/api/generated/model";
+import { useGetStatistics } from "@/lib/api/generated/stats/stats";
 import { useListProjects } from "@/lib/api/generated/projects/projects";
 import { useGetMe, useListUsers } from "@/lib/api/generated/users/users";
 
@@ -72,4 +75,10 @@ export function useMonthGrid(month: string, userId: number | null, enabled: bool
     { query: { enabled } },
   );
   return { ...query, grid: successOf<MonthGridResponse>(query.data) };
+}
+
+/** The dashboard of one window. */
+export function useStatistics(range: PeriodRange) {
+  const query = useGetStatistics({ range });
+  return { ...query, statistics: successOf<StatisticsResponse>(query.data) };
 }
