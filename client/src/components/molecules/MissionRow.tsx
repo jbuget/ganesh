@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { ChevronRight, GripVertical } from "lucide-react";
 
 import { BuildCost } from "@/components/atoms/BuildCost";
 import { CategoryMark } from "@/components/atoms/CategoryMark";
@@ -42,6 +43,16 @@ interface MissionRowProps {
   onOpenThread: () => void;
   /** The columns put away. Nothing put away shows the whole panorama. */
   hidden?: HiddenColumns;
+  /**
+   * Whether the row may be picked up and dropped onto a project.
+   *
+   * Left out where the table offers no such gesture: the handle's gutter is
+   * only reserved when there is something to grab in the list, so the names
+   * fall on the same vertical from one row to the next either way.
+   */
+  movable?: boolean;
+  /** Whether dropping what is being dragged here would attach it. */
+  receiving?: boolean;
 }
 
 /**
@@ -62,10 +73,26 @@ export function MissionRow({
   onOpen,
   onOpenThread,
   hidden = NO_HIDDEN_COLUMN,
+  movable,
+  receiving = false,
 }: MissionRowProps) {
   const shows = (column: ColumnKey) => !hidden.has(column);
   const { project } = mission;
   const latest = mission.latest_update;
+
+  // Both hooks are called on every row and turned off where the gesture means
+  // nothing: what a row may do changes with the drag, and hooks may not.
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setHandleRef,
+    isDragging,
+  } = useDraggable({ id: project.id, disabled: movable !== true });
+  const { setNodeRef: setTargetRef, isOver } = useDroppable({
+    id: project.id,
+    disabled: !receiving,
+  });
+  const isTarget = receiving && isOver;
 
   // Folded, a row tells what the whole service cost — its own build, that of
   // its evolutions, and the run of all of it. Unfolded, every row speaks of
@@ -102,8 +129,17 @@ export function MissionRow({
     // Every tint is solid: a transparent one would let what slides underneath
     // read through the pinned columns.
     <TableRow
+      ref={setTargetRef}
       onClick={onOpen}
-      className="group cursor-pointer bg-slate-50 hover:bg-slate-100 has-aria-expanded:bg-slate-100"
+      className={[
+        "group cursor-pointer bg-slate-50 hover:bg-slate-100 has-aria-expanded:bg-slate-100",
+        // The row taken hold of fades: what one is carrying reads in the
+        // overlay under the cursor, not twice.
+        isDragging ? "opacity-40" : "",
+        // The project about to take it in is outlined rather than tinted: a
+        // tint would have to beat the pinned cells' own, which are opaque.
+        isTarget ? "outline-2 -outline-offset-2 outline-sky-500" : "",
+      ].join(" ")}
     >
       {/* No `z`: a pinned cell already passes in front of ordinary cells, and
           claiming one would send it in front of the header, which must stay
@@ -118,6 +154,30 @@ export function MissionRow({
         ].join(" ")}
       >
         <span className="flex items-center gap-2">
+          {/* The handle shows on hover and keeps its place the rest of the
+              time: appearing out of nowhere would shift every name to the
+              right as the cursor passes. */}
+          {movable !== undefined && (
+            <span className="-ml-1 w-4 shrink-0">
+              {movable && (
+                <button
+                  type="button"
+                  ref={setHandleRef}
+                  aria-label={`Déplacer ${project.label}`}
+                  title="Faire glisser sur un projet pour l'y rattacher"
+                  // The whole row opens the mission: without stopping
+                  // propagation, taking hold of the handle would open the panel.
+                  onClick={(event) => event.stopPropagation()}
+                  className="cursor-grab text-slate-300 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
+                  {...listeners}
+                  {...attributes}
+                >
+                  <GripVertical className="size-4" aria-hidden />
+                </button>
+              )}
+            </span>
+          )}
+
           {/* The bracket ties the work package to its project: without it,
               indentation alone gets lost as soon as a long line wraps. */}
           {isWorkPackage && (

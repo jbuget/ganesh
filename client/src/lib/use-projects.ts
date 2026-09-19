@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 
 import {
+  attachProject,
   createProject,
   importProjects,
   listProjects,
@@ -48,6 +49,9 @@ export function useProjectsScreen(
   // An export reads the whole reference list again, then writes a file: long
   // enough for a second click to start a second one.
   const [exporting, setExporting] = useState(false);
+  // A move the server turned away: the table shows the reference list as it
+  // is, so the refusal has to be said in words.
+  const [attachFailed, setAttachFailed] = useState(false);
 
   const toggle = useCallback((id: number) => {
     setExpanded((current) => {
@@ -86,6 +90,26 @@ export function useProjectsScreen(
       });
       await refresh();
       return mutationResult<ProjectResponse>(created);
+    },
+
+    /** Whether the last move was refused, and the list read again as it is. */
+    hasAttachError: attachFailed,
+
+    /**
+     * Makes a mission a work package of the project it was dropped onto.
+     *
+     * The screen never anticipates the move: a row that jumped under its new
+     * project before the server agreed would have to jump back. The list is
+     * read again once the answer is in, refused or not.
+     */
+    async attach(missionId: number, parentId: number) {
+      setAttachFailed(false);
+      try {
+        await attachProject(missionId, { parent_id: parentId });
+      } catch {
+        setAttachFailed(true);
+      }
+      await refresh();
     },
 
     /** Whether an export is running: the button must not start a second one. */

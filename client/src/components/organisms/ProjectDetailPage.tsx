@@ -107,6 +107,8 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
           addLink={sheet.addLink}
           removeLink={sheet.removeLink}
           addSubProject={sheet.addSubProject}
+          attachTo={sheet.attachTo}
+          detach={sheet.detach}
           archive={sheet.archive}
           // The page one is standing on no longer exists: the kanban is where
           // one came from, and where there is still something to read.
