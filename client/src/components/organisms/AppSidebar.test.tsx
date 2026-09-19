@@ -65,6 +65,7 @@ describe("AppSidebar", () => {
 
     expect(screen.getByRole("link", { name: /Activité/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Projets/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Planification/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Utilisateurs/ })).toBeInTheDocument();
   });
 
