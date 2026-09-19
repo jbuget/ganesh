@@ -28,9 +28,12 @@ export const NAME_COLUMN = "sticky left-0 w-[400px] min-w-[400px]";
  *
  * It takes the page background, not the row's: the margin is not the row, and
  * tinting it on hover would spill the line outside the table.
+ *
+ * It stops one pixel short of the cell: flush against it, it painted over the
+ * left edge of the frame, which the pinned column carries.
  */
 export const LEFT_MARGIN =
-  "before:absolute before:inset-y-0 before:right-full before:z-10 before:w-6 before:bg-slate-50";
+  "before:absolute before:inset-y-0 before:right-[calc(100%+1px)] before:z-10 before:w-6 before:bg-slate-50";
 
 export const THREAD_COLUMN = "sticky left-[400px] w-12 min-w-12";
 
@@ -82,6 +85,22 @@ export const MEMBERS_COLUMN = "w-[130px]";
  * the left while scrolling. Separated, each line belongs to its cell and stops
  * with it. The rows therefore carry none: the cells do the underlining, or
  * nothing would show.
+ *
+ * The frame is strong, the inner lines faint: the table then reads as one
+ * block rather than as a grid trailing off into the page. It is drawn by the
+ * cells at the edges and not by the table itself — a border on the table would
+ * scroll away while the pinned column stays, leaving it open on its left.
  */
-export const MISSIONS_TABLE =
-  "w-[1500px] table-fixed border-separate border-spacing-0 [&_tbody_td]:border-b [&_tbody_td]:border-b-slate-200";
+export const MISSIONS_TABLE = [
+  "w-[1500px] table-fixed border-separate border-spacing-0",
+  // The top of the frame travels with the pinned header.
+  "[&_th]:border-t [&_th]:border-t-slate-500",
+  "[&_th:first-child]:border-l [&_th:first-child]:border-l-slate-500",
+  "[&_th:last-child]:border-r [&_th:last-child]:border-r-slate-500",
+  "[&_tbody_td]:border-b [&_tbody_td]:border-b-slate-200",
+  "[&_tbody_td:first-child]:border-l [&_tbody_td:first-child]:border-l-slate-500",
+  "[&_tbody_td:last-child]:border-r [&_tbody_td:last-child]:border-r-slate-500",
+  // The last row closes the table, and carries the strong rule rather than the
+  // line that separates two rows.
+  "[&_tbody_tr:last-child_td]:border-b-slate-500",
+].join(" ");
