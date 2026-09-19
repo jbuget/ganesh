@@ -106,6 +106,14 @@ export function MissionRow({
     setTargetRef(row);
   }
 
+  // The pinned cells carry the page's relief: white against the row's tint,
+  // one step behind it on hover. Aimed at, they take the colour of what is
+  // about to happen — the same the board tints the slot a card will drop
+  // into. They are what the eye is on, so they are where it has to read.
+  const pinned = isTarget
+    ? "bg-sky-100"
+    : "bg-white group-hover:bg-slate-50 group-has-[[aria-expanded=true]]:bg-slate-50";
+
   // Folded, a row tells what the whole service cost — its own build, that of
   // its evolutions, and the run of all of it. Unfolded, every row speaks of
   // itself again, and the totals would be counted twice.
@@ -148,9 +156,9 @@ export function MissionRow({
         // The row taken hold of fades: what one is carrying reads in the
         // overlay under the cursor, not twice.
         isDragging ? "opacity-40" : "",
-        // The project about to take it in is underlined and overlined rather
-        // than tinted: a tint would have to beat the pinned cells' own, which
-        // are opaque.
+        // The project about to take it in is closed by a rule above and
+        // below, and named on a tinted ground — that part is the pinned
+        // cells' own, a few lines down.
         //
         // Every cell draws its own two rules, rather than the row drawing one
         // around itself: the pinned cells paint in front of the row, and an
@@ -171,7 +179,7 @@ export function MissionRow({
           NAME_COLUMN,
           LEFT_MARGIN,
           SEPARATOR,
-          "bg-white group-hover:bg-slate-50 group-has-[[aria-expanded=true]]:bg-slate-50",
+          pinned,
           isWorkPackage ? "pl-14" : "",
         ].join(" ")}
       >
@@ -271,12 +279,7 @@ export function MissionRow({
           of. The icon already says what the number counts, hence the empty
           heading. */}
       <TableCell
-        className={[
-          THREAD_COLUMN,
-          STRONG_SEPARATOR,
-          "bg-white group-hover:bg-slate-50 group-has-[[aria-expanded=true]]:bg-slate-50",
-          "text-right",
-        ].join(" ")}
+        className={[THREAD_COLUMN, STRONG_SEPARATOR, pinned, "text-right"].join(" ")}
       >
         <UpdatesCounter
           count={mission.comments}
