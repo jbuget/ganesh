@@ -112,6 +112,21 @@ class SqlProjectDetailRepository(ProjectDetailRepository):
         )
         return dict(result.all())  # type: ignore[arg-type]
 
+    async def list_phases_reached_by_project(
+        self,
+    ) -> dict[int, dict[ProjectStatus, date]]:
+        result = await self._session.execute(
+            select(
+                ProjectPhaseReachedModel.project_id,
+                ProjectPhaseReachedModel.status,
+                ProjectPhaseReachedModel.reached_at,
+            )
+        )
+        history: dict[int, dict[ProjectStatus, date]] = {}
+        for project_id, status, reached_at in result.all():
+            history.setdefault(project_id, {})[status] = reached_at
+        return history
+
     async def list_dates_reached(self, status: ProjectStatus) -> dict[int, date]:
         result = await self._session.execute(
             select(
