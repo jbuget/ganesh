@@ -126,3 +126,19 @@ async def test_the_deletion_is_traced() -> None:
     log = audit.logs[-1]
     assert log.action.value == "project.delete"
     assert log.old_value == "Mission 10"
+
+
+async def test_a_project_whose_work_package_carries_time_is_refused() -> None:
+    """The project itself declared nothing; what it cuts into did.
+
+    Deleting it would orphan the package, and with it the time declared on the
+    package — the project's own empty count says nothing about that.
+    """
+    use_case, repo, _ = build(
+        [project(), project(11, ProjectKind.WORK_PACKAGE)], entries=[entry(11)]
+    )
+
+    with pytest.raises(ForbiddenActionError):
+        await use_case.execute(DeleteProjectCommand(actor_id=1, project_id=10))
+
+    assert await repo.get_by_id(10) is not None

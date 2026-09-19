@@ -97,6 +97,12 @@ export function ProjectPanel({
             // list. The banner and « Desarchiver » keep the return
             // within reach.
             archive={sheet.archive}
+            // Deleting, unlike archiving, leaves nothing to come back to:
+            // the panel closes, and the screen behind drops the row.
+            deleteMission={async () => {
+              await sheet.remove();
+              onClose();
+            }}
             unarchive={sheet.unarchive}
           />
         )}

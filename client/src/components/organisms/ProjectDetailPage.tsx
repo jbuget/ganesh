@@ -2,6 +2,7 @@
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { EditableTitle } from "@/components/atoms/EditableTitle";
 import { ParentMissionLink } from "@/components/atoms/ParentMissionLink";
@@ -35,6 +36,7 @@ function BackToBoard() {
  * sheet or go through a log, space counts.
  */
 export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
+  const router = useRouter();
   const sheet = useProjectDetail(projectId);
   const detail = sheet.detail;
 
@@ -106,6 +108,12 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
           removeLink={sheet.removeLink}
           addSubProject={sheet.addSubProject}
           archive={sheet.archive}
+          // The page one is standing on no longer exists: the kanban is where
+          // one came from, and where there is still something to read.
+          deleteMission={async () => {
+            await sheet.remove();
+            router.push("/kanban");
+          }}
           unarchive={sheet.unarchive}
         />
       </div>
