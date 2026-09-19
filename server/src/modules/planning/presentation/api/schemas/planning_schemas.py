@@ -4,6 +4,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
+from src.modules.planning.domain.entities.roadmap import SegmentKind
 from src.modules.planning.domain.entities.simulation import NAME_MAX_LENGTH
 from src.modules.planning.domain.entities.workload_plan import PlanBlocker
 from src.modules.planning.domain.services.horizon import (
@@ -11,6 +12,7 @@ from src.modules.planning.domain.services.horizon import (
     MAX_HORIZON_MONTHS,
 )
 from src.modules.projects.domain.entities.project import (
+    ProjectCategory,
     ProjectKind,
     ProjectPriority,
     ProjectStatus,
@@ -162,3 +164,69 @@ class WorkloadPlanResponse(BaseModel):
     missions: list[PlannedMissionResponse]
     people: list[PersonLoadResponse]
     summary: PlanSummaryResponse
+
+
+class RoadmapSegmentResponse(BaseModel):
+    """One stretch of a mission's bar.
+
+    `kind` is what keeps the screen honest: a stretch that was lived and one
+    the projection supposes must never be drawn the same way, and which is
+    which is decided here rather than by the colour somebody picked.
+    """
+
+    kind: SegmentKind
+    status: ProjectStatus | None
+    starts_on: date
+    ends_on: date
+
+
+class RoadmapMissionResponse(BaseModel):
+    """One line of the roadmap."""
+
+    project_id: int
+    label: str
+    kind: ProjectKind
+    status: ProjectStatus | None
+    priority: ProjectPriority | None
+    #: Resolved: a work package answers with the axis of its project.
+    category: ProjectCategory | None
+    parent_id: int | None
+    segments: list[RoadmapSegmentResponse]
+    #: The date the team announced. The subject of this screen.
+    target_date: date | None
+    #: Where the projection lands it. Null when it lands nowhere.
+    landing_date: date | None
+    #: Days between the two. Positive means late.
+    slippage_days: int | None
+    is_late: bool
+    estimated_days: float | None
+    consumed_days: float
+    remaining_days: float | None
+    #: Why the projection placed nothing, when it placed nothing.
+    blocker: PlanBlocker | None
+    is_active: bool
+
+
+class RoadmapSummaryResponse(BaseModel):
+    """What a roadmap says above the bars.
+
+    The first two are the report; the next two say how much of it to believe.
+    """
+
+    missions: int
+    late: int
+    undated: int
+    unestimated: int
+    delivered: int
+
+
+class RoadmapResponse(BaseModel):
+    """A whole roadmap, as the screen reads it."""
+
+    from_day: date
+    to_day: date
+    #: The day the drawing was made. Where the « aujourd'hui » rule is placed,
+    #: and the line between what happened and what is supposed.
+    today: date
+    missions: list[RoadmapMissionResponse]
+    summary: RoadmapSummaryResponse
