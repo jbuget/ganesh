@@ -29,7 +29,7 @@ describe("formatMonth", () => {
   });
 });
 
-describe("navigation entre mois", () => {
+describe("moving from month to month", () => {
   it("goes back to the previous month", () => {
     expect(previousMonth(2026, 9)).toEqual({ year: 2026, month: 8 });
   });
@@ -99,7 +99,7 @@ describe("formatTotal", () => {
   });
 });
 
-describe("formatJoursDecimal", () => {
+describe("formatDecimalDays", () => {
   it("writes a half day in decimal, the French way", () => {
     expect(formatDecimalDays(7.5)).toBe("7,5");
   });
@@ -117,7 +117,7 @@ describe("formatJoursDecimal", () => {
   });
 });
 
-describe("formatDateCourte", () => {
+describe("formatShortDate", () => {
   it("writes an ISO date as day/month/year", () => {
     expect(formatShortDate("2026-09-18")).toBe("18/09/2026");
   });

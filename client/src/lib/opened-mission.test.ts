@@ -7,7 +7,7 @@ beforeEach(() => {
   window.history.replaceState(null, "", "/projects");
 });
 
-describe("useMissionOuverte", () => {
+describe("useOpenedMission", () => {
   it("starts from a screen with no panel", () => {
     const { result } = renderHook(() => useOpenedMission());
 

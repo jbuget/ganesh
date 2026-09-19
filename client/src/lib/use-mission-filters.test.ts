@@ -37,13 +37,13 @@ describe("useMissionFilters", () => {
   });
 
   it("adds no history step: setting a filter is not navigating", () => {
-    const profondeur = window.history.length;
+    const depth = window.history.length;
     const { result } = renderHook(() => useMissionFilters());
 
     act(() => result.current.set({ name: "por" }));
     act(() => result.current.set({ name: "port" }));
 
-    expect(window.history.length).toBe(profondeur);
+    expect(window.history.length).toBe(depth);
   });
 
   it("returns the whole board once cleared", () => {

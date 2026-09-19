@@ -43,9 +43,9 @@ describe("availableMissions", () => {
   });
 
   it("does not change the list received", () => {
-    const copie = [...PROJECTS];
+    const copy = [...PROJECTS];
     availableMissions(PROJECTS, [1]);
 
-    expect(PROJECTS).toEqual(copie);
+    expect(PROJECTS).toEqual(copy);
   });
 });

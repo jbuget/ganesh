@@ -11,7 +11,7 @@ from src.shared.exceptions.domain_exceptions import ValidationError
 @pytest.mark.parametrize(
     "day",
     [date(2026, 9, 12), date(2026, 9, 13)],
-    ids=["samedi", "dimanche"],
+    ids=["saturday", "sunday"],
 )
 def test_a_weekend_day_is_refused(day: date) -> None:
     with pytest.raises(ValidationError):
@@ -21,7 +21,7 @@ def test_a_weekend_day_is_refused(day: date) -> None:
 @pytest.mark.parametrize(
     "day",
     [date(2026, 5, 1), date(2026, 12, 25), date(2026, 7, 14)],
-    ids=["1er mai", "noel", "14 juillet"],
+    ids=["labour day", "christmas", "bastille day"],
 )
 def test_a_public_holiday_is_refused(day: date) -> None:
     with pytest.raises(ValidationError):
@@ -31,7 +31,7 @@ def test_a_public_holiday_is_refused(day: date) -> None:
 @pytest.mark.parametrize(
     "day",
     [date(2026, 9, 15), date(2026, 9, 16), date(2026, 9, 18)],
-    ids=["mardi", "mercredi", "vendredi"],
+    ids=["tuesday", "wednesday", "friday"],
 )
 def test_a_working_day_is_accepted(day: date) -> None:
     ensure_day_is_workable(day)

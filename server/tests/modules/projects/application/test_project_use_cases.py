@@ -139,7 +139,7 @@ async def test_a_work_package_is_attached_to_its_parent() -> None:
 
 
 async def test_a_work_package_cannot_be_attached_to_another_one() -> None:
-    """La hierarchie s'arrete a deux niveaux."""
+    """The hierarchy stops at two levels."""
     parent = make_portail()
     work_package = Project(
         id=20,

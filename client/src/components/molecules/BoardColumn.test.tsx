@@ -98,7 +98,7 @@ describe("BoardColumn", () => {
     show([]);
 
     const list = screen.getByRole("list");
-    const others = [...list.children].filter((noeud) => noeud.tagName !== "LI");
+    const others = [...list.children].filter((node) => node.tagName !== "LI");
     expect(others).toEqual([]);
   });
 });

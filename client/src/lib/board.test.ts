@@ -40,7 +40,7 @@ describe("category", () => {
   });
 });
 
-describe("avancement", () => {
+describe("progress", () => {
   it("passes no judgement on a mission with no estimate", () => {
     expect(progress(12, null)).toBe("no-estimate");
   });

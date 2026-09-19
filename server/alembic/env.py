@@ -1,4 +1,4 @@
-"""Environnement Alembic, branche sur l'engine async de l'application."""
+"""Alembic environment, wired to the application's async engine."""
 
 import asyncio
 from logging.config import fileConfig

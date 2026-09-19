@@ -75,7 +75,7 @@ async def test_an_empty_description_clears_the_sheet() -> None:
 
 
 async def test_the_change_is_traced() -> None:
-    use_case, _, audit = build(description="ancien")
+    use_case, _, audit = build(description="the old text")
 
     await use_case.execute(
         UpdateDescriptionCommand(actor_id=1, project_id=10, description=DESCRIPTION)

@@ -1,4 +1,4 @@
-"""Point d'entree de l'API Timesheet."""
+"""Entry point of the Timesheet API."""
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
