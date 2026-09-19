@@ -232,6 +232,27 @@ class Project:
         self.is_active = True
         self.archived_at = None
 
+    def attach_to(self, parent_id: int) -> None:
+        """Make the mission a work package of another project.
+
+        Nothing else moves: the phase, the estimate, the people and the days
+        already booked stay where they are, and the parent reads their sum. The
+        strategic axis is the one thing given up, because from now on the
+        mission reads the axis of the project it belongs to.
+        """
+        self.kind = ProjectKind.WORK_PACKAGE
+        self.parent_id = parent_id
+        self.category = None
+
+    def detach(self) -> None:
+        """Make the work package a project of its own again.
+
+        It comes back without an axis: it never carried one, it read its
+        project's. Naming its own is the first thing to do afterwards.
+        """
+        self.kind = ProjectKind.PROJECT
+        self.parent_id = None
+
     def change_status(self, new_status: ProjectStatus) -> None:
         """Change the project phase. Every transition is allowed."""
         if self.is_off_project:

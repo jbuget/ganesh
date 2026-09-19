@@ -21,7 +21,6 @@ export interface UpdateProjectRequest {
   priority?: ProjectPriority | null;
   go_live_date?: string | null;
   is_active?: boolean | null;
-  parent_id?: number | null;
   monday_item_id?: string | null;
   monday_subitem_id?: string | null;
   slug?: string | null;

@@ -8,7 +8,13 @@ from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.service_registry import (
+    Criticality,
+    ServiceType,
+)
 from src.modules.projects.domain.services.hierarchy import (
+    ensure_can_be_attached,
+    ensure_can_be_detached,
     ensure_can_be_parent,
     ensure_carries_no_own_category,
     with_resolved_category,
@@ -107,3 +113,58 @@ def test_resolving_an_axis_leaves_the_mission_it_reads_untouched() -> None:
     with_resolved_category(package, parent)
 
     assert package.category is None
+
+
+def published() -> Project:
+    return Project(
+        id=4,
+        label="EDIT",
+        kind=ProjectKind.PROJECT,
+        status=ProjectStatus.OPERATIONS,
+        is_published=True,
+        slug="edit",
+        summary="Études d'implantation.",
+        criticality=Criticality.STANDARD,
+        service_type=ServiceType.FULLSTACK,
+    )
+
+
+class TestAttaching:
+    def test_a_project_becomes_a_work_package_of_another_project(self) -> None:
+        ensure_can_be_attached(project(), parent=published(), sub_projects=0)
+
+    def test_a_work_package_moves_from_one_project_to_another(self) -> None:
+        """Aiming at the wrong project is corrected by aiming again."""
+        ensure_can_be_attached(work_package(), parent=published(), sub_projects=0)
+
+    def test_a_mission_cannot_be_attached_to_itself(self) -> None:
+        with pytest.raises(ValidationError, match="itself"):
+            ensure_can_be_attached(project(), parent=project(), sub_projects=0)
+
+    def test_off_project_work_cannot_be_attached(self) -> None:
+        """Absences and training are not a slice of a project."""
+        with pytest.raises(ValidationError, match="off-project"):
+            ensure_can_be_attached(activity(), parent=published(), sub_projects=0)
+
+    def test_a_project_carrying_sub_projects_cannot_be_attached(self) -> None:
+        """Attaching it would open a third level, which the list does not read."""
+        with pytest.raises(ValidationError, match="two levels"):
+            ensure_can_be_attached(project(), parent=published(), sub_projects=2)
+
+    def test_a_published_project_cannot_be_attached(self) -> None:
+        """Its card would vanish from the catalogue without anyone saying so."""
+        with pytest.raises(ValidationError, match="catalogue"):
+            ensure_can_be_attached(published(), parent=project(), sub_projects=0)
+
+    def test_nothing_can_be_attached_under_a_work_package(self) -> None:
+        with pytest.raises(ValidationError, match="two levels"):
+            ensure_can_be_attached(project(), parent=work_package(), sub_projects=0)
+
+
+class TestDetaching:
+    def test_a_work_package_becomes_a_project_again(self) -> None:
+        ensure_can_be_detached(work_package())
+
+    def test_a_project_is_not_attached_to_anything(self) -> None:
+        with pytest.raises(ValidationError, match="sub-project"):
+            ensure_can_be_detached(project())

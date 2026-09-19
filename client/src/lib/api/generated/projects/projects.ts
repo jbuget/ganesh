@@ -23,6 +23,7 @@ import type {
 import type {
   AddLinkRequest,
   AssignMemberParams,
+  AttachProjectRequest,
   BoardResponse,
   CatalogEntryResponse,
   ChangeStatusRequest,
@@ -744,6 +745,247 @@ export const useDeleteProject = <TError = HTTPValidationError, TContext = unknow
   TContext
 > => {
   return useMutation(getDeleteProjectMutationOptions(options), queryClient);
+};
+export type attachProjectResponse200 = {
+  data: ProjectResponse;
+  status: 200;
+};
+
+export type attachProjectResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type attachProjectResponseSuccess = attachProjectResponse200 & {
+  headers: Headers;
+};
+export type attachProjectResponseError = attachProjectResponse422 & {
+  headers: Headers;
+};
+
+export type attachProjectResponse =
+  attachProjectResponseSuccess | attachProjectResponseError;
+
+export const getAttachProjectUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/parent`;
+};
+
+/**
+ * Makes a mission a work package of another project.
+ * @summary Attach Project
+ */
+export const attachProject = async (
+  projectId: number,
+  attachProjectRequest: AttachProjectRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<attachProjectResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<attachProjectResponse>(getAttachProjectUrl(projectId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(attachProjectRequest),
+  });
+};
+
+export const getAttachProjectMutationKey = () => ["attachProject"] as const;
+
+export const getAttachProjectMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof attachProject>>,
+    TError,
+    AttachProjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof attachProject>>,
+  TError,
+  AttachProjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAttachProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof attachProject>>,
+    AttachProjectMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return attachProject(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AttachProjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof attachProject>>
+>;
+export type AttachProjectMutationBody = AttachProjectRequest;
+export type AttachProjectMutationError = HTTPValidationError;
+export type AttachProjectMutationVariables = {
+  projectId: number;
+  data: AttachProjectRequest;
+};
+
+/**
+ * @summary Attach Project
+ */
+export const useAttachProject = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof attachProject>>,
+      TError,
+      AttachProjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof attachProject>>,
+  TError,
+  AttachProjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getAttachProjectMutationOptions(options), queryClient);
+};
+export type detachProjectResponse200 = {
+  data: ProjectResponse;
+  status: 200;
+};
+
+export type detachProjectResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type detachProjectResponseSuccess = detachProjectResponse200 & {
+  headers: Headers;
+};
+export type detachProjectResponseError = detachProjectResponse422 & {
+  headers: Headers;
+};
+
+export type detachProjectResponse =
+  detachProjectResponseSuccess | detachProjectResponseError;
+
+export const getDetachProjectUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/parent`;
+};
+
+/**
+ * Makes a work package a project of its own again.
+ * @summary Detach Project
+ */
+export const detachProject = async (
+  projectId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<detachProjectResponse> => {
+  return bffFetcher<detachProjectResponse>(getDetachProjectUrl(projectId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDetachProjectMutationKey = () => ["detachProject"] as const;
+
+export const getDetachProjectMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof detachProject>>,
+    TError,
+    DetachProjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof detachProject>>,
+  TError,
+  DetachProjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDetachProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof detachProject>>,
+    DetachProjectMutationVariables
+  > = (props) => {
+    const { projectId } = props ?? {};
+
+    return detachProject(projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DetachProjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof detachProject>>
+>;
+
+export type DetachProjectMutationError = HTTPValidationError;
+export type DetachProjectMutationVariables = { projectId: number };
+
+/**
+ * @summary Detach Project
+ */
+export const useDetachProject = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof detachProject>>,
+      TError,
+      DetachProjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof detachProject>>,
+  TError,
+  DetachProjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getDetachProjectMutationOptions(options), queryClient);
 };
 export type importProjectsResponse200 = {
   data: ImportReportResponse;

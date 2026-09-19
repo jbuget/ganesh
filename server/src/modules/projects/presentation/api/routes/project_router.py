@@ -16,9 +16,11 @@ from src.modules.api_keys.presentation.dependencies import require_scope
 from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.projects.application.dtos.assignment_dto import AssignmentCommand
 from src.modules.projects.application.dtos.project_dto import (
+    AttachProjectCommand,
     ChangeProjectStatusCommand,
     CreateProjectCommand,
     DeleteProjectCommand,
+    DetachProjectCommand,
     ImportProjectsCommand,
     MoveProjectCommand,
     ProjectImportLine,
@@ -32,6 +34,10 @@ from src.modules.projects.application.dtos.update_dto import (
 from src.modules.projects.application.use_cases.assign_member import (
     AssignMemberUseCase,
     UnassignMemberUseCase,
+)
+from src.modules.projects.application.use_cases.attach_project import (
+    AttachProjectUseCase,
+    DetachProjectUseCase,
 )
 from src.modules.projects.application.use_cases.change_project_status import (
     ChangeProjectStatusUseCase,
@@ -87,6 +93,7 @@ from src.modules.projects.presentation.api.mappers.project_mapper import (
 )
 from src.modules.projects.presentation.api.schemas.project_schemas import (
     AddLinkRequest,
+    AttachProjectRequest,
     BoardResponse,
     CatalogEntryResponse,
     ChangeStatusRequest,
@@ -108,10 +115,12 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
 from src.modules.projects.presentation.dependencies import (
     get_add_project_link_use_case,
     get_assign_member_use_case,
+    get_attach_project_use_case,
     get_board_use_case,
     get_change_status_use_case,
     get_create_project_use_case,
     get_delete_project_use_case,
+    get_detach_project_use_case,
     get_edit_update_use_case,
     get_export_catalog_use_case,
     get_import_projects_use_case,
@@ -218,6 +227,51 @@ async def update_project(
     )
     await session.commit()
     return to_project_response(project)
+
+
+@router.patch(
+    "/{project_id}/parent",
+    response_model=ProjectResponse,
+    operation_id="attachProject",
+)
+async def attach_project(
+    project_id: int,
+    payload: AttachProjectRequest,
+    current_user: User = Depends(get_current_user),
+    use_case: AttachProjectUseCase = Depends(get_attach_project_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> ProjectResponse:
+    """Makes a mission a work package of another project."""
+    assert current_user.id is not None
+    mission = await use_case.execute(
+        AttachProjectCommand(
+            actor_id=current_user.id,
+            project_id=project_id,
+            parent_id=payload.parent_id,
+        )
+    )
+    await session.commit()
+    return to_project_response(mission)
+
+
+@router.delete(
+    "/{project_id}/parent",
+    response_model=ProjectResponse,
+    operation_id="detachProject",
+)
+async def detach_project(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    use_case: DetachProjectUseCase = Depends(get_detach_project_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> ProjectResponse:
+    """Makes a work package a project of its own again."""
+    assert current_user.id is not None
+    mission = await use_case.execute(
+        DetachProjectCommand(actor_id=current_user.id, project_id=project_id)
+    )
+    await session.commit()
+    return to_project_response(mission)
 
 
 @router.post(
