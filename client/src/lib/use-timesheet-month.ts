@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import {
+  addMissionToMonth,
   clearEntry,
   removeMissionFromMonth,
   setEntry,
@@ -43,7 +44,6 @@ export function useTimesheetMonth() {
     month: Number(today.slice(5, 7)),
   }));
   const [viewedUserId, setViewedUserId] = useState<number | null>(null);
-  const [extraRows, setExtraRows] = useState<ProjectResponse[]>([]);
 
   const queryClient = useQueryClient();
   const month = firstDayOfMonth(cursor.year, cursor.month);
@@ -69,10 +69,7 @@ export function useTimesheetMonth() {
     cursor.month === Number(today.slice(5, 7));
 
   /** Missions already in the grid, not to be offered again. */
-  const displayedProjectIds = [
-    ...(grid?.rows.map((row) => row.project_id) ?? []),
-    ...extraRows.map((project) => project.id),
-  ];
+  const displayedProjectIds = grid?.rows.map((row) => row.project_id) ?? [];
 
   return {
     today,
@@ -82,7 +79,6 @@ export function useTimesheetMonth() {
     isLoading: gridQuery.isLoading,
     teammates,
     projects,
-    extraRows,
     /** Replays the month's queries — what a panel edit changes shows here. */
     refresh,
 
@@ -109,12 +105,10 @@ export function useTimesheetMonth() {
 
     goToPreviousMonth() {
       setCursor(previousMonth(cursor.year, cursor.month));
-      setExtraRows([]);
     },
 
     goToNextMonth() {
       setCursor(nextMonth(cursor.year, cursor.month));
-      setExtraRows([]);
     },
 
     viewTeammate(userId: number) {
@@ -131,30 +125,32 @@ export function useTimesheetMonth() {
       await refresh();
     },
 
-    addMission(projectId: number) {
-      const project = projects.find((p) => p.id === projectId);
-      if (project) setExtraRows((rows) => [...rows, project]);
+    /**
+     * Puts a mission on the month, with nothing entered on it yet.
+     *
+     * The row is written server-side straight away: lining up what one is
+     * about to work on is a gesture of its own, and it must still be there
+     * after a reload.
+     */
+    async addMission(projectId: number) {
+      await addMissionToMonth({ project_id: projectId, month }, target);
+      await refresh();
     },
 
-    /**
-     * Removes a mission from the month, with the time it carries.
-     *
-     * A row added but still empty exists locally only: there is nothing to ask
-     * the server to make it disappear.
-     */
+    /** Removes a mission from the month, with the time it carries. */
     async removeMission(projectId: number) {
-      setExtraRows((rows) => rows.filter((row) => row.id !== projectId));
-      if (grid?.rows.some((row) => row.project_id === projectId)) {
-        await removeMissionFromMonth({ project_id: projectId, month, ...target });
-        await refresh();
-      }
+      await removeMissionFromMonth({ project_id: projectId, month, ...target });
+      await refresh();
     },
 
     async declareProject(label: string) {
       const created = await createProject.mutateAsync({
         data: { label, kind: "project", status: "exploration" },
       });
-      setExtraRows((rows) => [...rows, mutationResult<ProjectResponse>(created)]);
+      await addMissionToMonth(
+        { project_id: mutationResult<ProjectResponse>(created).id, month },
+        target,
+      );
       await refresh();
     },
 
