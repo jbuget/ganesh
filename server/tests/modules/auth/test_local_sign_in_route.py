@@ -1,4 +1,4 @@
-"""La route de la porte de secours, et ce qu'elle refuse."""
+"""The route of the fallback door, and what it turns away."""
 
 from collections.abc import AsyncIterator
 
@@ -10,15 +10,15 @@ from src.main import app
 
 URL = "/api/v1/auth/local"
 
-CREDENTIALS = {"login": "admin", "password": "un-mot-de-passe-solide"}
+CREDENTIALS = {"login": "admin", "password": "a-solid-password"}
 
 
 def settings_with(**overrides: object) -> Settings:
     base = {
         "auth_entra": False,
         "auth_login": "admin",
-        "auth_password": "un-mot-de-passe-solide",
-        "secret_key": "une clef de signature de developpement, bien assez longue",
+        "auth_password": "a-solid-password",
+        "secret_key": "a development signing key, long enough by far",
         "require_auth": True,
     }
     base.update(overrides)
@@ -27,8 +27,8 @@ def settings_with(**overrides: object) -> Settings:
 
 @pytest.fixture
 async def client() -> AsyncIterator[AsyncClient]:
-    # Une lambda sans paramètre : FastAPI inspecte la signature de ce qu'on
-    # lui donne, et prendrait un **kwargs pour des paramètres de requête.
+    # A lambda taking nothing: FastAPI inspects the signature of what it is
+    # given, and would read a **kwargs as query parameters.
     app.dependency_overrides[get_settings] = lambda: settings_with()
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as http:
@@ -36,32 +36,45 @@ async def client() -> AsyncIterator[AsyncClient]:
     app.dependency_overrides.clear()
 
 
-async def test_les_bons_identifiants_rendent_un_jeton(client: AsyncClient) -> None:
+async def test_right_credentials_return_a_token(client: AsyncClient) -> None:
     response = await client.post(URL, json=CREDENTIALS)
 
     assert response.status_code == 200
     assert response.json()["access_token"]
 
 
-async def test_un_mot_de_passe_faux_est_refuse(client: AsyncClient) -> None:
-    response = await client.post(URL, json={**CREDENTIALS, "password": "faux"})
+async def test_wrong_password_is_refused(client: AsyncClient) -> None:
+    response = await client.post(URL, json={**CREDENTIALS, "password": "wrong"})
 
     assert response.status_code == 401
-    # Ce qui est refusé ne dit pas lequel des deux champs était faux : cela
-    # dirait à qui cherche qu'il tient déjà l'identifiant.
+    # What is refused does not say which of the two fields was wrong: that
+    # would tell whoever is trying that they already hold the login.
     assert "identifiant" in response.json()["detail"].lower()
 
 
-async def test_un_identifiant_inconnu_est_refuse(client: AsyncClient) -> None:
-    response = await client.post(URL, json={**CREDENTIALS, "login": "quelquun"})
+async def test_unknown_login_is_refused(client: AsyncClient) -> None:
+    response = await client.post(URL, json={**CREDENTIALS, "login": "someone"})
 
     assert response.status_code == 401
 
 
-async def test_la_porte_reste_close_quand_entra_est_actif(
+async def test_accented_password_is_refused_rather_than_raising(
     client: AsyncClient,
 ) -> None:
-    """Deux portes ouvertes en même temps, c'est une de trop."""
+    """A 500 where a 401 belongs tells whoever is trying that they found something."""
+    app.dependency_overrides[get_settings] = lambda: settings_with(
+        auth_password="un-mot-de-passé"
+    )
+
+    wrong = await client.post(URL, json={**CREDENTIALS, "password": "wrong"})
+    right = await client.post(URL, json={**CREDENTIALS, "password": "un-mot-de-passé"})
+
+    assert wrong.status_code == 401
+    assert right.status_code == 200
+
+
+async def test_the_door_stays_shut_while_entra_is_on(client: AsyncClient) -> None:
+    """Two doors open at once is one too many."""
     app.dependency_overrides[get_settings] = lambda: settings_with(auth_entra=True)
 
     response = await client.post(URL, json=CREDENTIALS)
@@ -69,7 +82,7 @@ async def test_la_porte_reste_close_quand_entra_est_actif(
     assert response.status_code == 404
 
 
-async def test_la_porte_reste_close_sans_mot_de_passe_configure(
+async def test_the_door_stays_shut_without_a_password_set(
     client: AsyncClient,
 ) -> None:
     app.dependency_overrides[get_settings] = lambda: settings_with(auth_password="")

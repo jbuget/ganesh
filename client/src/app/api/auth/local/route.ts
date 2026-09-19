@@ -11,11 +11,14 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 
-import { safeLanding } from "@/lib/auth/pending";
+import { landingUrl, safeLanding } from "@/lib/auth/pending";
 import { sealSession, sessionCookie } from "@/lib/auth/session";
 
 const API_URL = process.env.API_URL ?? "http://localhost:8000";
-const API_PREFIX = process.env.API_PREFIX ?? "/api/v1";
+// `||` rather than `??`: an API_PREFIX left empty in the environment is a
+// variable nobody filled in, not a deliberate empty prefix — and `??`
+// would take it for one, relaying to an address without /api/v1.
+const API_PREFIX = process.env.API_PREFIX || "/api/v1";
 
 /** A day, as the API's own token lasts. */
 const SESSION_SECONDS = 60 * 60 * 24;
@@ -48,7 +51,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   };
 
   const response = NextResponse.redirect(
-    new URL(landing, request.nextUrl.origin),
+    landingUrl(landing, request.nextUrl.origin),
     // 303: what follows a form is a GET, not a second POST on the landing page.
     { status: 303 },
   );

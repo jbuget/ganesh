@@ -11,6 +11,8 @@
  * the redirect cannot be spent by anyone else.
  */
 
+import { once } from "./single-flight";
+
 interface AuthorizationRequest {
   /** Ties the callback to the request that started it, against CSRF. */
   state: string;
@@ -191,32 +193,55 @@ export async function exchangeCode(
  * keeping the previous one would lock the person out at the next renewal.
  */
 export async function refreshTokens(refreshToken: string): Promise<TokenSet | null> {
-  return askForTokens(
-    new URLSearchParams({
-      client_id: clientId(),
-      client_secret: clientSecret(),
-      grant_type: "refresh_token",
-      refresh_token: refreshToken,
-      scope: SCOPES,
-    }),
+  // Once per token, however many requests find the session expiring at the
+  // same moment: Entra hands back a fresh renewal token each time, and only
+  // the last cookie written would survive — the others spent for nothing.
+  return once(refreshToken, () =>
+    askForTokens(
+      new URLSearchParams({
+        client_id: clientId(),
+        client_secret: clientSecret(),
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+        scope: SCOPES,
+      }),
+    ),
   );
 }
 
-/** The address Entra put in the identity token, without verifying it.
+/** What an identity token claims, for the little the BFF needs of it. */
+export interface IdTokenClaims {
+  preferred_username?: string;
+  email?: string;
+  upn?: string;
+  /** Echoed back from the sign-in request, which is what makes replay visible. */
+  nonce?: string;
+}
+
+/** What Entra put in the identity token, without verifying its signature.
  *
  * Reading is not trusting: the API checks the signature. Here it only serves
- * to name the person in the session and to close the door on other domains.
+ * to name the person in the session, to close the door on other domains, and
+ * to compare the nonce with the one this browser asked to sign in with.
  */
-export function emailFromIdToken(idToken: string): string | null {
+export function claimsFromIdToken(idToken: string): IdTokenClaims | null {
   try {
     const [, payload] = idToken.split(".");
-    const claims = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))) as {
-      preferred_username?: string;
-      email?: string;
-      upn?: string;
-    };
-    return claims.preferred_username ?? claims.email ?? claims.upn ?? null;
+    const claims = JSON.parse(
+      atob(payload.replace(/-/g, "+").replace(/_/g, "/")),
+    ) as IdTokenClaims;
+    // A JWT body is an object; anything else read as one would answer
+    // `undefined` to every claim and look merely empty.
+    if (typeof claims !== "object" || claims === null) return null;
+    return claims;
   } catch {
     return null;
   }
+}
+
+/** The address Entra put in the identity token. */
+export function emailFromIdToken(idToken: string): string | null {
+  const claims = claimsFromIdToken(idToken);
+  if (!claims) return null;
+  return claims.preferred_username ?? claims.email ?? claims.upn ?? null;
 }

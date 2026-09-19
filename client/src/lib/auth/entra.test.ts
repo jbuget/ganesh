@@ -2,124 +2,125 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   authorizationUrl,
+  claimsFromIdToken,
   emailFromIdToken,
   isAllowedEmail,
   needsRefresh,
   pkcePair,
 } from "./entra";
 
-/** Un jeton d'identité comme Entra les écrit : trois parties, la seconde lisible. */
+/** An identity token as Entra writes them: three parts, the middle one readable. */
 function idTokenCarrying(claims: Record<string, string>): string {
   const body = btoa(JSON.stringify(claims)).replace(/\+/g, "-").replace(/\//g, "_");
-  return `entete.${body}.signature`;
+  return `header.${body}.signature`;
 }
 
-describe("l'adresse où l'on envoie se connecter", () => {
+describe("the address people are sent to sign in", () => {
   beforeEach(() => {
-    process.env.AZURE_AD_TENANT_ID = "un-tenant";
-    process.env.AZURE_AD_CLIENT_ID = "un-client";
+    process.env.AZURE_AD_TENANT_ID = "a-tenant";
+    process.env.AZURE_AD_CLIENT_ID = "a-client";
     process.env.AZURE_AD_REDIRECT_URI =
       "http://localhost:3007/api/auth/callback/azure-ad";
   });
 
-  it("mène au tenant, et lui dit qui demande", async () => {
+  it("leads to the tenant, and names who is asking", async () => {
     const url = new URL(
       await authorizationUrl({
-        state: "un-etat",
-        nonce: "un-nonce",
-        challenge: "un-defi",
+        state: "a-state",
+        nonce: "a-nonce",
+        challenge: "a-challenge",
       }),
     );
 
     expect(url.origin + url.pathname).toBe(
-      "https://login.microsoftonline.com/un-tenant/oauth2/v2.0/authorize",
+      "https://login.microsoftonline.com/a-tenant/oauth2/v2.0/authorize",
     );
-    expect(url.searchParams.get("client_id")).toBe("un-client");
+    expect(url.searchParams.get("client_id")).toBe("a-client");
     expect(url.searchParams.get("response_type")).toBe("code");
   });
 
   /**
-   * Sans `offline_access`, Entra ne rend pas de jeton de renouvellement, et il
-   * faudrait se reconnecter toutes les heures.
+   * Without `offline_access` Entra hands back no renewal token, and everyone
+   * would sign in afresh every hour.
    */
-  it("demande de quoi renouveler la session", async () => {
+  it("asks for what renews the session", async () => {
     const url = new URL(
-      await authorizationUrl({ state: "e", nonce: "n", challenge: "d" }),
+      await authorizationUrl({ state: "s", nonce: "n", challenge: "c" }),
     );
 
     expect(url.searchParams.get("scope")).toContain("offline_access");
     expect(url.searchParams.get("scope")).toContain("openid");
   });
 
-  /** L'état déjoue le CSRF, le nonce déjoue le rejeu d'un jeton d'identité. */
-  it("emporte l'état, le nonce et le défi PKCE", async () => {
+  /** The state foils CSRF, the nonce foils the replay of an identity token. */
+  it("carries the state, the nonce and the PKCE challenge", async () => {
     const url = new URL(
       await authorizationUrl({
-        state: "un-etat",
-        nonce: "un-nonce",
-        challenge: "un-defi",
+        state: "a-state",
+        nonce: "a-nonce",
+        challenge: "a-challenge",
       }),
     );
 
-    expect(url.searchParams.get("state")).toBe("un-etat");
-    expect(url.searchParams.get("nonce")).toBe("un-nonce");
-    expect(url.searchParams.get("code_challenge")).toBe("un-defi");
+    expect(url.searchParams.get("state")).toBe("a-state");
+    expect(url.searchParams.get("nonce")).toBe("a-nonce");
+    expect(url.searchParams.get("code_challenge")).toBe("a-challenge");
     expect(url.searchParams.get("code_challenge_method")).toBe("S256");
   });
 });
 
-describe("le couple PKCE", () => {
-  it("dérive le défi du secret, sans jamais le montrer", async () => {
+describe("the PKCE pair", () => {
+  it("derives the challenge from the secret, without ever showing it", async () => {
     const { verifier, challenge } = await pkcePair();
 
     expect(verifier.length).toBeGreaterThanOrEqual(43);
     expect(challenge).not.toBe(verifier);
-    // Base64url : ce qu'attend Entra, sans caractère à échapper dans une URL.
+    // Base64url: what Entra expects, with nothing to escape in a URL.
     expect(challenge).toMatch(/^[A-Za-z0-9_-]+$/);
   });
 
-  it("en tire un différent à chaque fois", async () => {
-    const [un, deux] = [await pkcePair(), await pkcePair()];
+  it("draws a different one every time", async () => {
+    const [one, two] = [await pkcePair(), await pkcePair()];
 
-    expect(un.verifier).not.toBe(deux.verifier);
+    expect(one.verifier).not.toBe(two.verifier);
   });
 });
 
-describe("le domaine autorisé", () => {
+describe("the allowed domain", () => {
   beforeEach(() => {
     process.env.ALLOWED_EMAIL_DOMAIN = "waat.fr";
   });
 
-  it("laisse entrer l'équipe", () => {
+  it("lets the team in", () => {
     expect(isAllowedEmail("l.chen@waat.fr")).toBe(true);
     expect(isAllowedEmail("L.Chen@WAAT.FR")).toBe(true);
   });
 
-  it("referme sur qui vient d'ailleurs", () => {
-    expect(isAllowedEmail("quelquun@autre.fr")).toBe(false);
-    // Le piège du suffixe : « waat.fr.evil.com » finit par autre chose.
-    expect(isAllowedEmail("quelquun@waat.fr.evil.com")).toBe(false);
+  it("closes on whoever comes from elsewhere", () => {
+    expect(isAllowedEmail("someone@other.fr")).toBe(false);
+    // The suffix trap: "waat.fr.evil.com" ends in something else entirely.
+    expect(isAllowedEmail("someone@waat.fr.evil.com")).toBe(false);
     expect(isAllowedEmail("")).toBe(false);
   });
 });
 
-describe("le moment de renouveler", () => {
+describe("when to renew", () => {
   const now = 1_800_000_000;
 
-  it("renouvelle avant l'échéance, pas après", () => {
-    // Une requête partie juste avant l'expiration arriverait trop tard : on
-    // prend de l'avance plutôt que de laisser passer un jeton mort.
+  it("renews ahead of the deadline, not after it", () => {
+    // A request leaving just before expiry would arrive too late: take a lead
+    // rather than let a dead token through.
     expect(needsRefresh({ expiresAt: now + 30 }, now)).toBe(true);
     expect(needsRefresh({ expiresAt: now + 600 }, now)).toBe(false);
   });
 
-  it("renouvelle ce qui a déjà expiré", () => {
+  it("renews what has already expired", () => {
     expect(needsRefresh({ expiresAt: now - 1 }, now)).toBe(true);
   });
 });
 
-describe("l'adresse lue dans le jeton d'identité", () => {
-  it("se lit là où Entra la met", () => {
+describe("the address read from the identity token", () => {
+  it("reads where Entra puts it", () => {
     expect(
       emailFromIdToken(idTokenCarrying({ preferred_username: "l.chen@waat.fr" })),
     ).toBe("l.chen@waat.fr");
@@ -128,8 +129,25 @@ describe("l'adresse lue dans le jeton d'identité", () => {
     );
   });
 
-  it("rend null plutôt que de deviner", () => {
-    expect(emailFromIdToken("pas-un-jeton")).toBeNull();
-    expect(emailFromIdToken(idTokenCarrying({ sub: "sans-adresse" }))).toBeNull();
+  it("returns null rather than guess", () => {
+    expect(emailFromIdToken("not-a-token")).toBeNull();
+    expect(emailFromIdToken(idTokenCarrying({ sub: "no-address" }))).toBeNull();
+  });
+});
+
+describe("the claims read from the identity token", () => {
+  /** Without this, the nonce could not be compared and replay would go unseen. */
+  it("hands back the nonce the token carries", () => {
+    expect(claimsFromIdToken(idTokenCarrying({ nonce: "n-123" }))?.nonce).toBe("n-123");
+  });
+
+  it("says nothing of a token it cannot read", () => {
+    expect(claimsFromIdToken("not-a-token")).toBeNull();
+  });
+
+  it("carries no nonce when the token carries none", () => {
+    expect(
+      claimsFromIdToken(idTokenCarrying({ preferred_username: "a@waat.fr" }))?.nonce,
+    ).toBeUndefined();
   });
 });

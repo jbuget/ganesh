@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ApiError, bffFetcher } from "./fetcher";
+import { ApiError, bffFetcher, signInAgain } from "./fetcher";
 
 function respondWith(body: string, init: ResponseInit) {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(body, init)));
@@ -62,5 +62,63 @@ describe("bffFetcher", () => {
       data: undefined,
       status: 200,
     });
+  });
+
+  /**
+   * A session that has run its course answers 401 to every call. Left alone,
+   * the screen shows its panels empty, as though there were nothing to see —
+   * and the person has no way of guessing they must sign in again.
+   */
+  it("sends the person back to sign in when the session is over", async () => {
+    respondWith('{"detail":"Session expirée."}', { status: 401 });
+    const gone: string[] = [];
+
+    await expect(
+      bffFetcher("/api/v1/projects", undefined, {
+        at: () => "/projets?mois=2026-09",
+        goTo: (url) => gone.push(url),
+      }),
+    ).rejects.toMatchObject({ status: 401 });
+
+    // Where they were, so signing in brings them back rather than home.
+    expect(gone).toEqual(["/connexion?from=%2Fprojets%3Fmois%3D2026-09"]);
+  });
+
+  it("does not send back to sign in from the sign-in screen itself", async () => {
+    respondWith('{"detail":"Session expirée."}', { status: 401 });
+    const gone: string[] = [];
+
+    await expect(
+      bffFetcher("/api/v1/projects", undefined, {
+        at: () => "/connexion",
+        goTo: (url) => gone.push(url),
+      }),
+    ).rejects.toMatchObject({ status: 401 });
+
+    expect(gone).toEqual([]);
+  });
+
+  it("leaves a refusal that is not about the session alone", async () => {
+    respondWith('{"detail":"Réservé aux managers."}', { status: 403 });
+    const gone: string[] = [];
+
+    await expect(
+      bffFetcher("/api/v1/users", undefined, {
+        at: () => "/utilisateurs",
+        goTo: (url) => gone.push(url),
+      }),
+    ).rejects.toMatchObject({ status: 403 });
+
+    expect(gone).toEqual([]);
+  });
+});
+
+describe("signInAgain", () => {
+  it("does nothing outside a browser, where there is nowhere to go", () => {
+    const gone: string[] = [];
+
+    signInAgain({ at: () => null, goTo: (url) => gone.push(url) });
+
+    expect(gone).toEqual([]);
   });
 });

@@ -17,6 +17,8 @@ const REASONS: Record<string, string> = {
   expire: "La connexion a pris trop de temps. Il faut la reprendre.",
   etat: "Cette connexion ne vient pas de cet onglet. Reprenez depuis ici.",
   echange: "Microsoft n'a pas accepté la connexion. Réessayez dans un instant.",
+  jeton: "La réponse de Microsoft est illisible. Reprenez la connexion.",
+  nonce: "Cette connexion ne correspond pas à celle demandée ici. Reprenez-la.",
   "sans-adresse": "Votre compte Microsoft n'expose pas d'adresse e-mail.",
   domaine: "Seules les adresses @waat.fr ont accès à Ganesh.",
   identifiants: "Identifiant ou mot de passe incorrect.",

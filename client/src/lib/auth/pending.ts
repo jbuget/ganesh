@@ -42,9 +42,16 @@ export async function openPending(sealed: string): Promise<PendingSignIn | null>
  *
  * Only a path of ours: a caller must not be able to hand us another site to
  * send the person to once signed in.
+ *
+ * Starting with a slash is not enough. The URL parser reads a backslash as a
+ * slash, so « /\\elsewhere.example » resolves to elsewhere.example just as
+ * surely as « //elsewhere.example » — and the sign-in page becomes a springboard
+ * to whatever site a link names. The second character therefore has to be
+ * neither, and the answer is checked against the origin rather than trusted.
  */
 export function safeLanding(asked: string | null): string {
-  if (!asked || !asked.startsWith("/") || asked.startsWith("//")) return "/";
+  if (!asked || !asked.startsWith("/")) return "/";
+  if (asked[1] === "/" || asked[1] === "\\") return "/";
   return asked;
 }
 
@@ -58,4 +65,22 @@ export function pendingCookie(sealed: string) {
     path: "/",
     maxAge: PENDING_MAX_AGE,
   };
+}
+
+/**
+ * The address to land on, resolved and checked against our own origin.
+ *
+ * `safeLanding` already refuses what does not look like one of our paths.
+ * This is the second lock, at the one place a redirection actually happens:
+ * whatever the parser makes of the path, if it does not resolve to us, it is
+ * not where anyone is sent.
+ */
+export function landingUrl(landing: string, origin: string): URL {
+  const home = new URL("/", origin);
+  try {
+    const target = new URL(landing, origin);
+    return target.origin === home.origin ? target : home;
+  } catch {
+    return home;
+  }
 }

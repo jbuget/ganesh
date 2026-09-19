@@ -25,7 +25,10 @@ import {
 } from "@/lib/auth/session";
 
 const API_URL = process.env.API_URL ?? "http://localhost:8000";
-const API_PREFIX = process.env.API_PREFIX ?? "/api/v1";
+// `||` rather than `??`: an API_PREFIX left empty in the environment is a
+// variable nobody filled in, not a deliberate empty prefix — and `??`
+// would take it for one, relaying to an address without /api/v1.
+const API_PREFIX = process.env.API_PREFIX || "/api/v1";
 
 const HOP_BY_HOP = new Set(["connection", "keep-alive", "transfer-encoding", "host"]);
 

@@ -4,6 +4,12 @@
 *.tfstate.backup
 .terraform/
 
+# A saved plan is a zip carrying a whole tfstate: whatever the state must not
+# show, the plan shows too. It is a build artefact besides — `terraform plan`
+# writes it again in seconds.
+tfplan
+*.tfplan
+
 # Real values, as opposed to the example beside them.
 terraform.tfvars
 *.auto.tfvars

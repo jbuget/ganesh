@@ -4,14 +4,15 @@
  * Everything that can be checked is checked here, because this is the one
  * place a stranger can reach with something that looks like a sign-in: the
  * state must match the one we set aside, the code must be spendable with our
- * PKCE secret, and the address must belong to the company. Anything short of
+ * PKCE secret, the identity token must echo our nonce, and the address must
+ * belong to the company. Anything short of
  * that lands back on the sign-in screen with a reason, never on a half-open
  * session.
  */
 import { NextRequest, NextResponse } from "next/server";
 
-import { emailFromIdToken, exchangeCode, isAllowedEmail } from "@/lib/auth/entra";
-import { PENDING_COOKIE, openPending } from "@/lib/auth/pending";
+import { claimsFromIdToken, exchangeCode, isAllowedEmail } from "@/lib/auth/entra";
+import { PENDING_COOKIE, landingUrl, openPending } from "@/lib/auth/pending";
 import { sealSession, sessionCookie } from "@/lib/auth/session";
 
 /** Back to the sign-in screen, saying what went wrong in a word. */
@@ -43,12 +44,20 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const tokens = await exchangeCode(code, pending.verifier);
   if (!tokens) return refused(request, "echange");
 
-  const email = emailFromIdToken(tokens.idToken);
+  const claims = claimsFromIdToken(tokens.idToken);
+  if (!claims) return refused(request, "jeton");
+  // The nonce came back from the token Entra signed for *this* sign-in. An
+  // identity token captured elsewhere carries another one, and stops here.
+  if (!claims.nonce || claims.nonce !== pending.nonce) {
+    return refused(request, "nonce");
+  }
+
+  const email = claims.preferred_username ?? claims.email ?? claims.upn ?? null;
   if (!email) return refused(request, "sans-adresse");
   if (!isAllowedEmail(email)) return refused(request, "domaine");
 
   const response = NextResponse.redirect(
-    new URL(pending.landing, request.nextUrl.origin),
+    landingUrl(pending.landing, request.nextUrl.origin),
   );
   response.cookies.set(sessionCookie(await sealSession({ ...tokens, email })));
   response.cookies.delete(PENDING_COOKIE);

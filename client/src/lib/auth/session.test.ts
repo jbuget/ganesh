@@ -2,62 +2,62 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { openSession, sealSession, type Session } from "./session";
 
-const SECRET = "une clef de session de developpement, longue comme il faut";
+const SECRET = "a development session key, as long as it needs to be";
 
 const session: Session = {
-  idToken: "eyJ.un.jeton",
-  refreshToken: "un-jeton-de-renouvellement",
+  idToken: "eyJ.a.token",
+  refreshToken: "a-renewal-token",
   expiresAt: 1_800_000_000,
   email: "l.chen@waat.fr",
 };
 
-describe("la session scellée", () => {
+describe("the sealed session", () => {
   beforeEach(() => {
     process.env.SESSION_SECRET = SECRET;
   });
 
-  it("se rouvre telle qu'elle a été scellée", async () => {
+  it("opens again just as it was sealed", async () => {
     const sealed = await sealSession(session);
 
     expect(await openSession(sealed)).toEqual(session);
   });
 
   /**
-   * Le cookie part chez le lecteur : ce qu'il porte ne doit se lire qu'ici.
-   * Un jeton en clair dans le cookie serait lisible par qui l'intercepte.
+   * The cookie goes to the reader: what it carries must be readable here
+   * alone. A token in the clear would be readable by whoever intercepts it.
    */
-  it("ne laisse rien lire de ce qu'elle porte", async () => {
+  it("lets nothing be read of what it carries", async () => {
     const sealed = await sealSession(session);
 
-    expect(sealed).not.toContain("eyJ.un.jeton");
-    expect(sealed).not.toContain("un-jeton-de-renouvellement");
+    expect(sealed).not.toContain("eyJ.a.token");
+    expect(sealed).not.toContain("a-renewal-token");
     expect(sealed).not.toContain("l.chen@waat.fr");
   });
 
-  it("refuse une session qu'une autre clef a scellée", async () => {
+  it("refuses a session another key sealed", async () => {
     const sealed = await sealSession(session);
-    process.env.SESSION_SECRET = "une tout autre clef, tout aussi longue mais autre";
+    process.env.SESSION_SECRET = "an altogether other key, just as long but other";
 
     expect(await openSession(sealed)).toBeNull();
   });
 
-  it("refuse ce qui a été retouché en chemin", async () => {
+  it("refuses what was touched up on the way", async () => {
     const sealed = await sealSession(session);
     const tampered = sealed.slice(0, -4) + "AAAA";
 
     expect(await openSession(tampered)).toBeNull();
   });
 
-  /** La porte de secours n'en délivre pas : une session sans jeton de
-   *  renouvellement reste une session valable. */
-  it("accepte une session sans de quoi la renouveler", async () => {
+  /** The fallback door issues none: a session without a renewal token is
+   *  still a valid session. */
+  it("accepts a session with nothing to renew it with", async () => {
     const local = { ...session, refreshToken: "" };
 
     expect(await openSession(await sealSession(local))).toEqual(local);
   });
 
-  it("rend null sur un cookie qui ne veut rien dire", async () => {
-    expect(await openSession("n'importe quoi")).toBeNull();
+  it("returns null on a cookie that means nothing", async () => {
+    expect(await openSession("anything at all")).toBeNull();
     expect(await openSession("")).toBeNull();
   });
 });
