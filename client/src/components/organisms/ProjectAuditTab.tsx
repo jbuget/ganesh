@@ -45,13 +45,17 @@ export function ProjectAuditTab({ projectId }: ProjectAuditTabProps) {
       </p>
 
       <div className={`overflow-hidden border ${STRONG_RULE}`}>
-        {days.map(({ day, entries }) => (
+        {days.map(({ day, entries }, rank) => (
           <section key={day}>
             {/* The day carries the strong rule above and below: it breaks the
                 reading in two, where a line between two gestures only
-                separates them. */}
+                separates them.
+
+                The first one does without the rule above: the frame already
+                closes the log there, and the two lines sitting side by side
+                read as one thick, crooked border. */}
             <h3
-              className={`border-y bg-white px-3 py-1.5 text-xs font-medium text-slate-600 ${STRONG_RULE}`}
+              className={`border-b bg-white px-3 py-1.5 text-xs font-medium text-slate-600 ${STRONG_RULE} ${rank > 0 ? "border-t" : ""}`}
             >
               {formatSpelledDate(day)}
             </h3>
