@@ -25,6 +25,7 @@ const PROJECTS: ProjectResponse[] = [
 const baseProps = {
   projects: PROJECTS,
   excludedIds: [],
+  assignedIds: [],
   onSelect: vi.fn(),
   onDeclareNew: vi.fn(),
 };

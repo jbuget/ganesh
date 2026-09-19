@@ -1,4 +1,4 @@
-"""Entry point of the Timesheet API."""
+"""Entry point of the Janus API."""
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,6 +19,9 @@ from src.modules.planning.presentation.api.routes.planning_router import (
 )
 from src.modules.projects.presentation.api.routes.project_router import (
     router as project_router,
+)
+from src.modules.stats.presentation.api.routes.statistics_router import (
+    router as statistics_router,
 )
 from src.modules.users.presentation.api.routes.user_router import router as user_router
 
@@ -48,6 +51,7 @@ for module_router in (
     month_router,
     calendar_router,
     planning_router,
+    statistics_router,
 ):
     app.include_router(module_router, prefix=settings.api_prefix)
 

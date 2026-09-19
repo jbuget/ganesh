@@ -1,4 +1,4 @@
-"""Timesheet user, and the rights that come with their role."""
+"""Janus user, and the rights that come with their role."""
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta

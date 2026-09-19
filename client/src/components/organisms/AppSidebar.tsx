@@ -2,6 +2,7 @@
 
 import {
   CalendarDays,
+  ChartNoAxesColumn,
   FolderKanban,
   GanttChartSquare,
   KanbanSquare,
@@ -23,6 +24,7 @@ const TABS = [
   { href: "/projects", label: "Projets", Icon: FolderKanban },
   { href: "/planning", label: "Planification", Icon: GanttChartSquare },
   { href: "/users", label: "Utilisateurs", Icon: Users },
+  { href: "/stats", label: "Statistiques", Icon: ChartNoAxesColumn },
 ] as const;
 
 /**
@@ -58,9 +60,7 @@ export function AppSidebar() {
       >
         {!collapsed && (
           <span className="min-w-0">
-            <span className="block text-sm font-semibold tracking-tight">
-              Timesheet
-            </span>
+            <span className="block text-sm font-semibold tracking-tight">Janus</span>
             <span className="block text-xs text-slate-500">WAAT</span>
           </span>
         )}

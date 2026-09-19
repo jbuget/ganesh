@@ -20,6 +20,7 @@ import {
 } from "@/lib/api/queries";
 import type { DayValue } from "@/lib/day-value";
 import { firstDayOfMonth, nextMonth, previousMonth } from "@/lib/dates";
+import { assignedMissionIds, missionsToDeclare } from "@/lib/missions";
 
 /** Today's date in local time: `toISOString` would return yesterday in the evening. */
 export function todayIso(): string {
@@ -49,7 +50,7 @@ export function useTimesheetMonth() {
 
   const { user: me } = useCurrentUser();
   const { teammates } = useTeammates();
-  const { projects } = useProjects();
+  const { missions, projects } = useProjects();
   const createProject = useCreateProject();
   const validateMonth = useValidateMonth();
 
@@ -61,6 +62,17 @@ export function useTimesheetMonth() {
   async function refresh() {
     await queryClient.invalidateQueries();
   }
+
+  const isOwnMonth = viewedUserId === null || viewedUserId === me?.id;
+  const isCurrentMonth =
+    cursor.year === Number(today.slice(0, 4)) &&
+    cursor.month === Number(today.slice(5, 7));
+
+  /** Missions already in the grid, not to be offered again. */
+  const displayedProjectIds = [
+    ...(grid?.rows.map((row) => row.project_id) ?? []),
+    ...extraRows.map((project) => project.id),
+  ];
 
   return {
     today,
@@ -76,13 +88,24 @@ export function useTimesheetMonth() {
 
     targetUserId: viewedUserId ?? me?.id ?? null,
     currentUserId: me?.id ?? null,
-    isOwnMonth: viewedUserId === null || viewedUserId === me?.id,
+    isOwnMonth,
 
-    /** Missions already in the grid, not to be offered again. */
-    displayedProjectIds: [
-      ...(grid?.rows.map((row) => row.project_id) ?? []),
-      ...extraRows.map((project) => project.id),
-    ],
+    /** Missions the viewer contributes to, offered first when adding a row. */
+    assignedIds: assignedMissionIds(missions, me?.id ?? null),
+
+    /**
+     * Missions one was put on with nothing declared on them.
+     *
+     * Only on one's own month, and only on the month running: an assignment
+     * carries no date, so it says what holds today and nothing about a month
+     * gone by. Reading it into September in December would be inventing.
+     */
+    missionsToDeclare:
+      isOwnMonth && isCurrentMonth
+        ? missionsToDeclare(missions, me?.id ?? null, displayedProjectIds)
+        : [],
+
+    displayedProjectIds,
 
     goToPreviousMonth() {
       setCursor(previousMonth(cursor.year, cursor.month));

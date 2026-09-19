@@ -21,6 +21,8 @@ from src.modules.planning.domain.repositories.simulation_repository import (
 from src.modules.projects.domain.entities.project import (
     Department,
     Project,
+    ProjectCategory,
+    ProjectKind,
     ProjectStatus,
 )
 from src.modules.projects.domain.entities.project_link import ProjectLink
@@ -37,6 +39,10 @@ from src.modules.projects.domain.repositories.project_repository import (
 )
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
+)
+from src.modules.stats.domain.entities.period import Period
+from src.modules.stats.domain.repositories.statistics_repository import (
+    StatisticsRepository,
 )
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
@@ -394,6 +400,80 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
 
     async def update(self, update: ProjectUpdate) -> ProjectUpdate:
         return update
+
+
+class InMemoryStatisticsRepository(StatisticsRepository):
+    """Dashboard figures, handed over rather than counted from a database.
+
+    `declared_by_day` is dated rather than fixed: it is the one figure read
+    over two windows, and only real days prove the comparison window is the
+    one the use case asked for.
+    """
+
+    def __init__(
+        self,
+        declared_by_day: dict[date, float] | None = None,
+        contributors: set[int] | None = None,
+        delays: list[int] | None = None,
+        by_kind: dict[ProjectKind, float] | None = None,
+        by_status: dict[ProjectStatus, float] | None = None,
+        by_category: dict[ProjectCategory | None, float] | None = None,
+        missions: list[tuple[int, str, float]] | None = None,
+        validated_months: int = 0,
+        active_missions: int = 0,
+        missions_with_time: int = 0,
+        created: int = 0,
+    ) -> None:
+        self._declared_by_day = declared_by_day or {}
+        self._contributors = contributors or set()
+        self._delays = delays or []
+        self._by_kind = by_kind or {}
+        self._by_status = by_status or {}
+        self._by_category = by_category or {}
+        self._missions = missions or []
+        self._validated_months = validated_months
+        self._active_missions = active_missions
+        self._missions_with_time = missions_with_time
+        self._created = created
+
+    async def declared_days(self, period: Period) -> float:
+        return sum(
+            value for day, value in self._declared_by_day.items() if period.covers(day)
+        )
+
+    async def contributor_ids(self, period: Period) -> set[int]:
+        return self._contributors
+
+    async def entry_delays(self, period: Period) -> list[int]:
+        return self._delays
+
+    async def days_by_kind(self, period: Period) -> dict[ProjectKind, float]:
+        return self._by_kind
+
+    async def days_by_status(self, period: Period) -> dict[ProjectStatus, float]:
+        return self._by_status
+
+    async def days_by_category(
+        self, period: Period
+    ) -> dict[ProjectCategory | None, float]:
+        return self._by_category
+
+    async def top_missions(
+        self, period: Period, limit: int
+    ) -> list[tuple[int, str, float]]:
+        return sorted(self._missions, key=lambda mission: -mission[2])[:limit]
+
+    async def validated_months(self, months: list[date], user_ids: list[int]) -> int:
+        return self._validated_months
+
+    async def active_missions(self) -> int:
+        return self._active_missions
+
+    async def active_missions_with_time(self, period: Period) -> int:
+        return self._missions_with_time
+
+    async def missions_created(self, period: Period) -> int:
+        return self._created
 
 
 class InMemorySimulationRepository(SimulationRepository):

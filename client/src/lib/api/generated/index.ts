@@ -4,4 +4,5 @@ export * from "./health/health";
 export * from "./months/months";
 export * from "./planning/planning";
 export * from "./projects/projects";
+export * from "./stats/stats";
 export * from "./users/users";
