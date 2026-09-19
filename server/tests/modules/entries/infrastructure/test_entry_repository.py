@@ -202,3 +202,36 @@ async def test_a_diary_is_read_day_by_day_over_a_window(
     diaries = await repo.sum_by_user_and_day(DAY, date(2026, 9, 20))
 
     assert diaries == {user_id: {DAY: 0.5}}
+
+
+async def test_the_span_of_a_mission_runs_from_its_first_declared_day_to_its_last(
+    db_session: AsyncSession,
+) -> None:
+    user_id, project_id = await seed(db_session)
+    repo = SqlEntryRepository(db_session)
+
+    for day in (date(2026, 3, 2), date(2026, 5, 4), date(2026, 4, 1)):
+        await repo.upsert(
+            Entry(
+                id=None,
+                user_id=user_id,
+                project_id=project_id,
+                day=day,
+                value=DayValue(1.0),
+                status_at_entry=ProjectStatus.DEVELOPMENT,
+            )
+        )
+
+    spans = await repo.span_by_project()
+
+    assert spans[project_id] == (date(2026, 3, 2), date(2026, 5, 4))
+
+
+async def test_a_mission_nobody_declared_on_has_no_span(
+    db_session: AsyncSession,
+) -> None:
+    _, project_id = await seed(db_session)
+
+    spans = await SqlEntryRepository(db_session).span_by_project()
+
+    assert project_id not in spans

@@ -218,6 +218,13 @@ class InMemoryEntryRepository(EntryRepository):
             )
         return sums
 
+    async def span_by_project(self) -> dict[int, tuple[date, date]]:
+        spans: dict[int, tuple[date, date]] = {}
+        for entry in self._entries:
+            first, last = spans.get(entry.project_id, (entry.day, entry.day))
+            spans[entry.project_id] = (min(first, entry.day), max(last, entry.day))
+        return spans
+
     async def sum_forecast_by_project(self, today: date) -> dict[int, float]:
         totals: dict[int, float] = {}
         for entry in self._entries:
@@ -371,6 +378,11 @@ class InMemoryProjectDetailRepository(ProjectDetailRepository):
 
     async def list_phases_reached(self, project_id: int) -> dict[ProjectStatus, date]:
         return dict(self._phases.get(project_id, {}))
+
+    async def list_phases_reached_by_project(
+        self,
+    ) -> dict[int, dict[ProjectStatus, date]]:
+        return {project_id: dict(phases) for project_id, phases in self._phases.items()}
 
     async def list_dates_reached(self, status: ProjectStatus) -> dict[int, date]:
         return {

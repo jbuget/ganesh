@@ -49,6 +49,19 @@ class EntryRepository(ABC):
         ...
 
     @abstractmethod
+    async def span_by_project(self) -> dict[int, tuple[date, date]]:
+        """The first and the last day declared on each mission.
+
+        What a roadmap opens a bar on when the phase history says nothing:
+        a mission somebody spent forty days on before the reference list
+        recorded a single transition still has a past, and it starts there.
+
+        Forecasts count. A day posted ahead is part of the mission's span:
+        the bar it draws is cut at today by whoever draws it, not here.
+        """
+        ...
+
+    @abstractmethod
     async def sum_forecast_by_project(self, today: date) -> dict[int, float]:
         """Days already posted ahead on each mission: delivered ones do not count.
 

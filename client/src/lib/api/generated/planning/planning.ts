@@ -23,6 +23,8 @@ import type {
 import type {
   HTTPValidationError,
   ProjectionRequest,
+  ReadRoadmapParams,
+  RoadmapResponse,
   SaveSimulationRequest,
   SimulationResponse,
   WorkloadPlanResponse,
@@ -189,6 +191,182 @@ export const useProjectWorkload = <TError = HTTPValidationError, TContext = unkn
 > => {
   return useMutation(getProjectWorkloadMutationOptions(options), queryClient);
 };
+export type readRoadmapResponse200 = {
+  data: RoadmapResponse;
+  status: 200;
+};
+
+export type readRoadmapResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type readRoadmapResponseSuccess = readRoadmapResponse200 & {
+  headers: Headers;
+};
+export type readRoadmapResponseError = readRoadmapResponse422 & {
+  headers: Headers;
+};
+
+export type readRoadmapResponse = readRoadmapResponseSuccess | readRoadmapResponseError;
+
+export const getReadRoadmapUrl = (params?: ReadRoadmapParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/planning/roadmap?${stringifiedParams}`
+    : `/api/v1/planning/roadmap`;
+};
+
+/**
+ * The portfolio over a window of time: what was delivered, what is promised.
+ *
+ * A GET, where the projection is a POST: a span is a number and a window is
+ * two dates, and neither needs an encoding invented for it.
+ *
+ * `months` is what the screen asks with — how far ahead to look, the month
+ * in progress included, with the month before thrown in for context. Naming
+ * both dates instead reads exactly that window, which is how a year already
+ * over is looked back on.
+ * @summary Read Roadmap
+ */
+export const readRoadmap = async (
+  params?: ReadRoadmapParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<readRoadmapResponse> => {
+  return bffFetcher<readRoadmapResponse>(getReadRoadmapUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getReadRoadmapQueryKey = (params?: ReadRoadmapParams) => {
+  return [`/api/v1/planning/roadmap`, ...(params ? [params] : [])] as const;
+};
+
+export const getReadRoadmapQueryOptions = <
+  TData = Awaited<ReturnType<typeof readRoadmap>>,
+  TError = HTTPValidationError,
+>(
+  params?: ReadRoadmapParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof readRoadmap>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getReadRoadmapQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof readRoadmap>>> = ({
+    signal,
+  }) => readRoadmap(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof readRoadmap>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ReadRoadmapQueryResult = NonNullable<
+  Awaited<ReturnType<typeof readRoadmap>>
+>;
+export type ReadRoadmapQueryError = HTTPValidationError;
+
+export function useReadRoadmap<
+  TData = Awaited<ReturnType<typeof readRoadmap>>,
+  TError = HTTPValidationError,
+>(
+  params: undefined | ReadRoadmapParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof readRoadmap>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof readRoadmap>>,
+          TError,
+          Awaited<ReturnType<typeof readRoadmap>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useReadRoadmap<
+  TData = Awaited<ReturnType<typeof readRoadmap>>,
+  TError = HTTPValidationError,
+>(
+  params?: ReadRoadmapParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof readRoadmap>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof readRoadmap>>,
+          TError,
+          Awaited<ReturnType<typeof readRoadmap>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReadRoadmap<
+  TData = Awaited<ReturnType<typeof readRoadmap>>,
+  TError = HTTPValidationError,
+>(
+  params?: ReadRoadmapParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof readRoadmap>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read Roadmap
+ */
+
+export function useReadRoadmap<
+  TData = Awaited<ReturnType<typeof readRoadmap>>,
+  TError = HTTPValidationError,
+>(
+  params?: ReadRoadmapParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof readRoadmap>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getReadRoadmapQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export type listSimulationsResponse200 = {
   data: SimulationResponse[];
   status: 200;

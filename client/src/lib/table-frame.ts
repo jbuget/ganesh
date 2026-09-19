@@ -15,6 +15,15 @@
  * Every table of the application reads under this same grammar: the mission
  * reference list, the entry grid, the teammates.
  */
+/**
+ * The colour of a strong rule: what closes a table, and never what divides it.
+ *
+ * Named here so that a frame drawn outside a `<table>` — the roadmap draws
+ * its own, in plain elements — reads at the same weight as every other. The
+ * inner lines stay faint; strength marks an edge, it does not make a grid.
+ */
+export const STRONG_RULE = "border-slate-500";
+
 export const TABLE_FRAME = [
   // The top of the frame travels with the pinned header.
   "[&_th]:border-t [&_th]:border-t-slate-500",

@@ -10,6 +10,7 @@ from src.modules.entries.presentation.dependencies import (
     get_project_repository,
     get_user_repository,
 )
+from src.modules.planning.application.use_cases.get_roadmap import GetRoadmapUseCase
 from src.modules.planning.application.use_cases.get_workload_plan import (
     GetWorkloadPlanUseCase,
 )
@@ -28,11 +29,15 @@ from src.modules.planning.infrastructure.database.repositories.simulation_reposi
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
+from src.modules.projects.domain.repositories.project_detail_repository import (
+    ProjectDetailRepository,
+)
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
 from src.modules.projects.presentation.dependencies import (
     get_project_assignee_repository,
+    get_project_detail_repository,
 )
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
@@ -45,6 +50,22 @@ def get_workload_plan_use_case(
 ) -> GetWorkloadPlanUseCase:
     return GetWorkloadPlanUseCase(
         projects=projects, entries=entries, assignees=assignees, users=users
+    )
+
+
+def get_roadmap_use_case(
+    projects: ProjectRepository = Depends(get_project_repository),
+    entries: EntryRepository = Depends(get_entry_repository),
+    details: ProjectDetailRepository = Depends(get_project_detail_repository),
+    assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
+    users: UserRepository = Depends(get_user_repository),
+) -> GetRoadmapUseCase:
+    return GetRoadmapUseCase(
+        projects=projects,
+        entries=entries,
+        details=details,
+        assignees=assignees,
+        users=users,
     )
 
 

@@ -45,3 +45,17 @@ def _months_later(day: date, months: int) -> date:
     year = day.year + total // 12
     month = total % 12 + 1
     return date(year, month, min(day.day, monthrange(year, month)[1]))
+
+
+def months_to_cover(start: date, end: date) -> int:
+    """Months a projection must run for to reach the end of a window.
+
+    A roadmap chooses its window and the projection follows, rather than the
+    other way round: nobody reading a year of deliveries thinks in horizons.
+    Zero when the window is already over — there is nothing left to suppose —
+    and never past what a projection can honestly say.
+    """
+    if end <= start:
+        return 0
+    months = (end.year - start.year) * 12 + end.month - start.month + 1
+    return min(months, MAX_HORIZON_MONTHS)
