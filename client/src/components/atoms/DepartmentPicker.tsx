@@ -26,9 +26,7 @@ export function DepartmentPicker({ values, onChange }: DepartmentPickerProps) {
     const next = new Set(chosen);
     if (next.has(value)) next.delete(value);
     else next.add(value);
-    void onChange(
-      DEPARTMENTS.filter((d) => next.has(d.value)).map((d) => d.value),
-    );
+    void onChange(DEPARTMENTS.filter((d) => next.has(d.value)).map((d) => d.value));
   }
 
   return (

@@ -69,7 +69,9 @@ export function ValidateMonthDialog({
 
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
           <dt className="text-muted-foreground">Total saisi</dt>
-          <dd className="text-right font-medium">{formatTotal(totalEntered)} jour(s)</dd>
+          <dd className="text-right font-medium">
+            {formatTotal(totalEntered)} jour(s)
+          </dd>
           <dt className="text-muted-foreground">Jours ouvrés</dt>
           <dd className="text-right font-medium">{workingDays} jours</dd>
         </dl>
