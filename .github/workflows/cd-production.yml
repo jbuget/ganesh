@@ -82,6 +82,13 @@ jobs:
     needs: build-and-push
     if: github.repository == 'waat-fr/ganesh'
     runs-on: ubuntu-latest
+    # Hoisted here because a step's `if` cannot read the secrets context — only
+    # `env`, which a job may fill from secrets. Testing
+    # `secrets.TEAMS_WEBHOOK_URL` in a step condition does not evaluate false,
+    # it makes the whole workflow invalid, and an invalid workflow fails before
+    # it creates a single job.
+    env:
+      TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
     # The environment name is part of the OIDC `sub` claim the trust policy
     # matches: repo:waat-fr@<id>/ganesh@<id>:environment:production. It must
     # stay in step with var.github_environment in terraform/.
@@ -110,7 +117,7 @@ jobs:
       # Skipped rather than failed when the webhook is not set: a deploy that
       # worked must not come out red because nobody could be told about it.
       - name: Notify Teams — success
-        if: success() && secrets.TEAMS_WEBHOOK_URL != ''
+        if: success() && env.TEAMS_WEBHOOK_URL != ''
         env:
           ENV: production
           SERVICE: Ganesh
@@ -119,13 +126,13 @@ jobs:
           AUTHOR: ${{ github.actor }}
           MESSAGE: ${{ github.event.head_commit.message }}
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          WEBHOOK_URL: ${{ env.TEAMS_WEBHOOK_URL }}
         run: |
           chmod +x .github/scripts/notify-teams.sh
           ./.github/scripts/notify-teams.sh success
 
       - name: Notify Teams — failure
-        if: failure() && secrets.TEAMS_WEBHOOK_URL != ''
+        if: failure() && env.TEAMS_WEBHOOK_URL != ''
         env:
           ENV: production
           SERVICE: Ganesh
@@ -134,7 +141,7 @@ jobs:
           AUTHOR: ${{ github.actor }}
           MESSAGE: ${{ github.event.head_commit.message }}
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          WEBHOOK_URL: ${{ env.TEAMS_WEBHOOK_URL }}
         run: |
           chmod +x .github/scripts/notify-teams.sh
           ./.github/scripts/notify-teams.sh failure
