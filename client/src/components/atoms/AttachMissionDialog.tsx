@@ -106,7 +106,9 @@ export function AttachMissionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      {/* Wider than a dialog that only asks a question: this one is read as a
+          list, and the reference list's names are long. */}
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
             {attachable
@@ -121,7 +123,12 @@ export function AttachMissionDialog({
         </DialogHeader>
 
         {attachable && (
-          <div>
+          // `min-w-0`, without which nothing below truncates: the dialog lays
+          // its parts out in a grid, and a grid cell is free to grow to the
+          // width of what it holds. The longest name would stretch it, the
+          // buttons would measure themselves against that stretched width, and
+          // the list would run out of the dialog and over the page behind.
+          <div className="min-w-0">
             <div className="flex items-center gap-2 border-b border-slate-200 px-1 pb-2">
               <Search className="size-4 shrink-0 text-slate-400" aria-hidden />
               <input
@@ -146,6 +153,10 @@ export function AttachMissionDialog({
                     <button
                       type="button"
                       disabled={busy}
+                      // Truncated, the name still reads in full on hover: the
+                      // reference list holds labels no dialog is wide enough
+                      // for, and one chooses a project by its whole name.
+                      title={project.label}
                       onClick={() => void attachTo(project.id)}
                       className="w-full cursor-pointer truncate rounded px-2 py-2 text-left text-sm transition-colors hover:bg-slate-100 disabled:cursor-default disabled:opacity-50"
                     >
