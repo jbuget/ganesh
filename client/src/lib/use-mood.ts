@@ -7,6 +7,7 @@ import type { MoodLevel } from "@/lib/api/generated/model";
 import {
   clearMood,
   getGetMyMoodsQueryKey,
+  getGetTeamMoodsQueryKey,
   setMood,
 } from "@/lib/api/generated/moods/moods";
 import { useMyMoods } from "@/lib/api/queries";
@@ -15,10 +16,13 @@ import { todayIso } from "@/lib/dates";
 /**
  * What one may still answer for, and the answering itself.
  *
- * Only the mood query is replayed after a write, where the other screens
- * invalidate everything: nothing else on the home screen depends on a mood,
- * and refetching four months of grid to colour one face in would make the
- * cheapest gesture of the screen the most expensive.
+ * The two mood queries are replayed after a write, and only those. Refetching
+ * four months of grid to colour one face in would make the cheapest gesture of
+ * the screen the most expensive — but « what the home screen shows » is the
+ * wrong boundary, and reading it that way is what left the team screen showing
+ * a mood that had already changed. What a write touches is what must be
+ * replayed, wherever it is read: an answer posted here lands in the team's
+ * fortnight, which is another screen entirely.
  */
 export function useMood() {
   const queryClient = useQueryClient();
@@ -49,7 +53,12 @@ export function useMood() {
         } else {
           await setMood({ day, level });
         }
-        await queryClient.invalidateQueries({ queryKey: getGetMyMoodsQueryKey() });
+        // Both, always: the answer one has just given is read on the home
+        // screen and on the team's fortnight, and the two go stale together.
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: getGetMyMoodsQueryKey() }),
+          queryClient.invalidateQueries({ queryKey: getGetTeamMoodsQueryKey() }),
+        ]);
       } finally {
         setSavingDay(null);
       }

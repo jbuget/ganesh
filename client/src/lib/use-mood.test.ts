@@ -6,8 +6,10 @@ import { useMood } from "./use-mood";
 const moods = vi.hoisted(() => ({
   setMood: vi.fn(),
   clearMood: vi.fn(),
-  getGetMyMoodsQueryKey: () => ["moods", "me"],
+  getGetMyMoodsQueryKey: () => ["/api/v1/moods/me"],
+  getGetTeamMoodsQueryKey: () => ["/api/v1/moods/team"],
 }));
+const client = vi.hoisted(() => ({ invalidateQueries: vi.fn() }));
 const queries = vi.hoisted(() => ({
   days: [] as { day: string; level: string | null }[],
   useMyMoods: () => ({ days: queries.days, isLoading: false }),
@@ -16,7 +18,7 @@ const queries = vi.hoisted(() => ({
 vi.mock("@/lib/api/generated/moods/moods", () => moods);
 vi.mock("@/lib/api/queries", () => queries);
 vi.mock("@tanstack/react-query", () => ({
-  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
+  useQueryClient: () => client,
 }));
 
 beforeEach(() => {
@@ -67,5 +69,27 @@ describe("useMood", () => {
 
     expect(moods.setMood).toHaveBeenCalledWith({ day: "2026-09-17", level: "good" });
     expect(moods.clearMood).not.toHaveBeenCalled();
+  });
+
+  it("replays the team's fortnight too, not just one's own days", async () => {
+    // Queries stay fresh for half a minute: without this, walking over to the
+    // team screen right after answering showed the mood one had just changed.
+    const { result } = renderHook(() => useMood());
+
+    await act(() => result.current.post("2026-09-18", "good"));
+
+    expect(client.invalidateQueries.mock.calls.map(([call]) => call.queryKey)).toEqual([
+      ["/api/v1/moods/me"],
+      ["/api/v1/moods/team"],
+    ]);
+  });
+
+  it("replays both after taking an answer back as well", async () => {
+    queries.days = [{ day: "2026-09-18", level: "good" }];
+    const { result } = renderHook(() => useMood());
+
+    await act(() => result.current.post("2026-09-18", "good"));
+
+    expect(client.invalidateQueries).toHaveBeenCalledTimes(2);
   });
 });
