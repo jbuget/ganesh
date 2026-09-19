@@ -1,5 +1,11 @@
 /** Date helpers for the monthly grid. */
 
+/** A month, as the screens point at one. */
+export interface MonthCursor {
+  year: number;
+  month: number;
+}
+
 const MONTH_NAMES = [
   "janvier",
   "février",
@@ -44,12 +50,12 @@ export function formatMonth(year: number, month: number): string {
 }
 
 /** Previous month, handling the year boundary. */
-export function previousMonth(year: number, month: number) {
+export function previousMonth(year: number, month: number): MonthCursor {
   return month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 };
 }
 
 /** Next month, handling the year boundary. */
-export function nextMonth(year: number, month: number) {
+export function nextMonth(year: number, month: number): MonthCursor {
   return month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };
 }
 
@@ -141,4 +147,37 @@ export function formatWeek(iso: string): string {
 export function formatMonthOf(iso: string): string {
   const [year, month] = iso.slice(0, 10).split("-").map(Number);
   return formatMonth(year, month);
+}
+
+/**
+ * Today, in ISO format, read from the local clock.
+ *
+ * Built by hand rather than through `toISOString`, which works in UTC: past
+ * 22:00 in Paris it would already return tomorrow's date, and the grid would
+ * dim a day that has not started.
+ */
+export function todayIso(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+/** A month as an address carries it: « 2026-08 ». */
+export function monthParam(cursor: MonthCursor): string {
+  return `${cursor.year}-${String(cursor.month).padStart(2, "0")}`;
+}
+
+/**
+ * The month an address names, or null when it names none.
+ *
+ * An address is typed by hand and pasted between people: anything that is not
+ * a month is ignored rather than trusted, and the screen falls back on the
+ * month running.
+ */
+export function parseMonthParam(value: string | null): MonthCursor | null {
+  if (!value || !/^\d{4}-\d{2}$/.test(value)) return null;
+
+  const [year, month] = value.split("-").map(Number);
+  return month >= 1 && month <= 12 ? { year, month } : null;
 }
