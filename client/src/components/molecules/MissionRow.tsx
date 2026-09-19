@@ -17,6 +17,7 @@ import {
   LEFT_MARGIN,
   NAME_COLUMN,
   SEPARATOR,
+  STRONG_SEPARATOR,
   THREAD_COLUMN,
 } from "@/lib/mission-columns";
 import { since } from "@/lib/relative-dates";
@@ -173,7 +174,7 @@ export function MissionRow({
           of. The icon already says what the number counts, hence the empty
           heading. */}
       <TableCell
-        className={[THREAD_COLUMN, SEPARATOR, "bg-inherit text-right"].join(" ")}
+        className={[THREAD_COLUMN, STRONG_SEPARATOR, "bg-inherit text-right"].join(" ")}
       >
         <UpdatesCounter
           count={mission.comments}

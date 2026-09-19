@@ -35,11 +35,10 @@ export const LEFT_MARGIN =
 export const THREAD_COLUMN = "sticky left-[400px] w-12 min-w-12";
 
 /**
- * The line that detaches the name from the thread, and the thread from what
- * scrolls.
+ * The line that detaches the name from the thread.
  *
- * It only runs along the rows, never the header: as in Monday, it starts below
- * the column name. A bar reaching the top would cut the title band in two.
+ * It only runs along the rows, never the header: it separates two columns, and
+ * a bar reaching the top would cut the title band in two.
  *
  * An inner shadow rather than a border: the table collapses its borders, and a
  * collapsed border belongs to the table rather than to the cell — it would
@@ -47,6 +46,16 @@ export const THREAD_COLUMN = "sticky left-[400px] w-12 min-w-12";
  * cell.
  */
 export const SEPARATOR = "shadow-[inset_-1px_0_0_var(--color-slate-200)]";
+
+/**
+ * The line that closes the pinned part, where the table starts scrolling.
+ *
+ * It is drawn strong, and over the full height, title band included: it does
+ * not separate two columns like its neighbour, it says where what stays in
+ * sight stops and what slides underneath begins. Same tint as the strong rules
+ * of the entry grid, so both tables mark a boundary the same way.
+ */
+export const STRONG_SEPARATOR = "shadow-[inset_-1px_0_0_var(--color-slate-500)]";
 
 /**
  * The width of the following columns, set once and for all on the header: in

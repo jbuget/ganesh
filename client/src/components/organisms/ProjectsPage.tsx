@@ -28,7 +28,7 @@ import {
   NAME_COLUMN,
   PHASE_COLUMN,
   PRIORITY_COLUMN,
-  SEPARATOR,
+  STRONG_SEPARATOR,
   THREAD_COLUMN,
 } from "@/lib/mission-columns";
 import { useOpenedMission } from "@/lib/opened-mission";
@@ -124,7 +124,7 @@ export function ProjectsPage() {
                   bottom. The background sits on the cells and not on the row:
                   in a table, a row's background paints under the lines that
                   scroll. */}
-              <TableHeader className="sticky top-0 z-10 [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50">
+              <TableHeader className="sticky top-0 z-10 [&_th]:border-b [&_th]:border-slate-500 [&_th]:bg-slate-50">
                 <TableRow>
                   <SortableColumnHeader
                     column="project"
@@ -138,7 +138,7 @@ export function ProjectsPage() {
                       where the pinned part stops, over the full height of the
                       table. The left-hand one separates two columns, and so
                       starts below their titles. */}
-                  <TableHead className={`${THREAD_COLUMN} ${SEPARATOR}`} />
+                  <TableHead className={`${THREAD_COLUMN} ${STRONG_SEPARATOR}`} />
                   <SortableColumnHeader
                     column="phase"
                     label="Phase"
