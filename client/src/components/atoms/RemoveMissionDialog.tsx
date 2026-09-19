@@ -41,8 +41,8 @@ export function RemoveMissionDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Retirer {label} ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette mission porte {formatDecimalDays(total)} jour(s) saisi(s) sur le mois.
-            Le retrait est définitif.
+            Ce projet porte {formatDecimalDays(total)} jour(s) saisi(s) sur le mois. Le
+            retrait est définitif.
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -52,7 +52,7 @@ export function RemoveMissionDialog({
             onClick={onConfirm}
             className="bg-red-600 text-white hover:bg-red-700"
           >
-            Retirer la mission
+            Retirer le projet
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

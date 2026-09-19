@@ -145,12 +145,12 @@ describe("TimesheetGrid", () => {
       <TimesheetGrid
         {...baseProps}
         grid={makeGrid()}
-        addingMission={<button>Ajouter une mission</button>}
+        addingMission={<button>Ajouter un projet</button>}
       />,
     );
 
     const lines = screen.getAllByRole("row");
-    expect(within(lines.at(-1)!).getByText("Ajouter une mission")).toBeInTheDocument();
+    expect(within(lines.at(-1)!).getByText("Ajouter un projet")).toBeInTheDocument();
   });
 
   it("lets the add row close the table with a strong rule", () => {
@@ -158,7 +158,7 @@ describe("TimesheetGrid", () => {
       <TimesheetGrid
         {...baseProps}
         grid={makeGrid()}
-        addingMission={<button>Ajouter une mission</button>}
+        addingMission={<button>Ajouter un projet</button>}
       />,
     );
 
@@ -175,12 +175,12 @@ describe("TimesheetGrid", () => {
       <TimesheetGrid
         {...baseProps}
         grid={makeGrid({ rows: [] })}
-        addingMission={<button>Ajouter une mission</button>}
+        addingMission={<button>Ajouter un projet</button>}
       />,
     );
 
     expect(screen.queryByText(/Aucune mission pour ce mois/)).toBeNull();
-    expect(screen.getByText("Ajouter une mission")).toBeInTheDocument();
+    expect(screen.getByText("Ajouter un projet")).toBeInTheDocument();
   });
 
   it("offers to remove each mission, outside the table frame", () => {
@@ -203,7 +203,7 @@ describe("TimesheetGrid", () => {
       <TimesheetGrid {...baseProps} grid={makeGrid()} onRemoveMission={vi.fn()} />,
     );
 
-    const action = screen.getByText("Retirer la mission").closest("th")!;
+    const action = screen.getByText("Retirer le projet").closest("th")!;
     expect(action.className).not.toContain("border-t");
     // The totals column does carry it: the frame stops there.
     const totals = screen.getByText("Total du mois").closest("th")!;
@@ -255,7 +255,7 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     const rows = screen.getAllByRole("row");
-    expect(rows[0]).toHaveTextContent("Mission");
+    expect(rows[0]).toHaveTextContent("Projet");
     expect(rows[1]).toHaveTextContent("22 jrs. ouvrés");
     expect(rows[2]).toHaveTextContent("Portail bailleurs");
   });

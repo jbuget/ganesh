@@ -97,14 +97,14 @@ export function TimesheetGrid({
   return (
     <div className="max-w-full overflow-x-auto">
       <table className="w-max border-separate border-spacing-0 border-l border-slate-500 text-slate-800">
-        <caption className="sr-only">Temps saisi par mission et par jour</caption>
+        <caption className="sr-only">Temps saisi par projet et par jour</caption>
         <thead>
           <tr>
             <th
               scope="col"
               className="sticky left-0 z-10 h-11 w-56 border-t border-r border-b border-t-slate-500 border-r-slate-500 border-b-slate-300 bg-white px-3 text-left text-xs font-medium text-slate-600"
             >
-              <span className="sr-only">Mission</span>
+              <span className="sr-only">Projet</span>
             </th>
             {grid.days.map((day, dayIndex) => (
               <DayHeader
@@ -128,7 +128,7 @@ export function TimesheetGrid({
               // That is why the top rule is carried by the cells and not by the
               // table, which would have run it all the way here.
               <th scope="col" className="w-10">
-                <span className="sr-only">Retirer la mission</span>
+                <span className="sr-only">Retirer le projet</span>
               </th>
             )}
           </tr>
