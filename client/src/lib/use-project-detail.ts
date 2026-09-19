@@ -19,7 +19,9 @@ import {
   updateProject,
   updateProjectDescription,
   updateProjectDetail,
+  updateProjectRegistry,
 } from "@/lib/api/generated/projects/projects";
+import type { SheetFields } from "@/lib/service-sheet";
 
 /**
  * A mission's sheet and its changes.
@@ -86,12 +88,29 @@ export function useProjectDetail(
     },
 
     /** Partial change: only the fields provided are applied. */
-    async updateFields(fields: {
-      category?: ProjectCategory | null;
-      priority?: ProjectPriority | null;
-      estimated_days?: number | null;
-    }) {
+    async updateFields(
+      fields: SheetFields & {
+        category?: ProjectCategory | null;
+        priority?: ProjectPriority | null;
+        estimated_days?: number | null;
+      },
+    ) {
       await updateProject(projectId, fields);
+      await reload();
+    },
+
+    /**
+     * The catalogue lists: stack, tags and dependencies.
+     *
+     * The three travel together, and each replaces what the server holds: the
+     * screen shows them in full and sends back what it shows.
+     */
+    async saveRegistry(registry: {
+      stack: string[];
+      tags: string[];
+      depends_on: number[];
+    }) {
+      await updateProjectRegistry(projectId, registry);
       await reload();
     },
 

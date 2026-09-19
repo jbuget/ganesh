@@ -11,12 +11,12 @@ import { InlineNumberField } from "@/components/atoms/InlineNumberField";
 import { ContributorsPicker } from "@/components/atoms/ContributorsPicker";
 import { PhasePicker } from "@/components/atoms/PhasePicker";
 import { PriorityPicker } from "@/components/atoms/PriorityPicker";
+import { SheetRow } from "@/components/atoms/SheetRow";
+import { SheetSectionTitle } from "@/components/atoms/SheetSectionTitle";
 import { ProjectContributions } from "@/components/molecules/ProjectContributions";
-import { ProjectLinksEditor } from "@/components/molecules/ProjectLinksEditor";
 import { ProjectSubProjects } from "@/components/molecules/ProjectSubProjects";
 import type {
   Department,
-  LinkIcon,
   ProjectCategory,
   ProjectDetailResponse,
   ProjectPriority,
@@ -36,40 +36,7 @@ interface ProjectSteeringTabProps {
     priority?: ProjectPriority | null;
     estimated_days?: number | null;
   }) => Promise<void>;
-  addLink: (label: string, url: string, icon: LinkIcon | null) => Promise<void>;
-  removeLink: (linkId: number) => Promise<void>;
   addSubProject: (label: string) => Promise<void>;
-}
-
-/**
- * One row of the sheet: its heading on the left, its value on the right.
- *
- * Fields stack rather than arrange themselves in columns: a sheet is scanned
- * top to bottom, and a constant heading width gives that scan something to lean
- * on.
- */
-function Row({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-3 py-1.5">
-      <span className="w-36 shrink-0 pt-0.5 text-sm text-slate-500">{title}</span>
-      <div className="min-w-0 flex-1">{children}</div>
-    </div>
-  );
-}
-
-/**
- * The heading of a section of the sheet.
- *
- * Three blocks follow one another in the same column: their title must stand
- * out from their content, otherwise one no longer sees where one stops and the
- * next begins. The rule gives the break, the weight gives the level.
- */
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h3 className="border-b border-slate-200 pb-1.5 text-sm font-semibold text-slate-900">
-      {children}
-    </h3>
-  );
 }
 
 /**
@@ -120,8 +87,6 @@ export function ProjectSteeringTab({
   saveSheet,
   changePhase,
   updateFields,
-  addLink,
-  removeLink,
   addSubProject,
 }: ProjectSteeringTabProps) {
   // Until anything is typed, the field shows what the server says: no local
@@ -133,21 +98,21 @@ export function ProjectSteeringTab({
   return (
     <div className="space-y-6">
       <section className="space-y-2">
-        <SectionTitle>Informations</SectionTitle>
+        <SheetSectionTitle>Informations</SheetSectionTitle>
 
         <div className="divide-y divide-slate-100">
-          <Row title="Phase">
+          <SheetRow title="Phase">
             <PhasePicker status={project.status} onChange={changePhase} />
-          </Row>
+          </SheetRow>
 
-          <Row title="Priorité">
+          <SheetRow title="Priorité">
             <PriorityPicker
               value={project.priority}
               onChange={(priority) => updateFields({ priority })}
             />
-          </Row>
+          </SheetRow>
 
-          <Row title="Catégorie">
+          <SheetRow title="Catégorie">
             {project.kind === "work_package" ? (
               <InheritedCategory
                 value={project.category}
@@ -159,25 +124,25 @@ export function ProjectSteeringTab({
                 onChange={(category) => updateFields({ category })}
               />
             )}
-          </Row>
+          </SheetRow>
 
-          <Row title="Départements">
+          <SheetRow title="Départements">
             <DepartmentPicker
               values={detail.departments}
               onChange={(values) => saveSheet(values, contacts.trim() || null)}
             />
-          </Row>
+          </SheetRow>
 
-          <Row title="Estimé (build)">
+          <SheetRow title="Estimé (build)">
             <InlineNumberField
               value={project.estimated_days}
               suffix="jrs."
               label="Estimer"
               onChange={(estimated_days) => updateFields({ estimated_days })}
             />
-          </Row>
+          </SheetRow>
 
-          <Row title="Référents projet">
+          <SheetRow title="Référents projet">
             <ContributorsPicker
               projectId={project.id}
               contributors={detail.leads}
@@ -185,18 +150,18 @@ export function ProjectSteeringTab({
               label="Référents"
               onChange={onChange}
             />
-          </Row>
+          </SheetRow>
 
-          <Row title="Intervenants">
+          <SheetRow title="Intervenants">
             <ContributorsPicker
               projectId={project.id}
               contributors={detail.contributors}
               label="Intervenants"
               onChange={onChange}
             />
-          </Row>
+          </SheetRow>
 
-          <Row title="Contacts métier">
+          <SheetRow title="Contacts métier">
             <input
               type="text"
               value={contacts}
@@ -214,15 +179,7 @@ export function ProjectSteeringTab({
               }}
               className="-mx-1 w-full rounded px-1 py-0.5 text-sm transition-colors hover:bg-slate-100 focus:bg-white focus:ring-1 focus:ring-slate-400 focus:outline-none"
             />
-          </Row>
-
-          <Row title="Liens">
-            <ProjectLinksEditor
-              links={detail.links}
-              onAdd={addLink}
-              onRemove={removeLink}
-            />
-          </Row>
+          </SheetRow>
         </div>
       </section>
 
@@ -231,13 +188,13 @@ export function ProjectSteeringTab({
           section, rather than offering a move the server would refuse. */}
       {project.kind === "project" && (
         <section className="space-y-2">
-          <SectionTitle>Sous-projets</SectionTitle>
+          <SheetSectionTitle>Sous-projets</SheetSectionTitle>
           <ProjectSubProjects subProjects={detail.sub_projects} onAdd={addSubProject} />
         </section>
       )}
 
       <section className="space-y-2">
-        <SectionTitle>Consommation</SectionTitle>
+        <SheetSectionTitle>Consommation</SheetSectionTitle>
         <ProjectContributions
           contributions={detail.contributions}
           total={detail.consumed_days}

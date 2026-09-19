@@ -6,6 +6,7 @@
  */
 import type { BoardMemberResponse } from "./boardMemberResponse";
 import type { Department } from "./department";
+import type { MissionRefResponse } from "./missionRefResponse";
 import type { ParentResponse } from "./parentResponse";
 import type { PhaseReachedResponse } from "./phaseReachedResponse";
 import type { ProjectContributionResponse } from "./projectContributionResponse";
@@ -25,5 +26,8 @@ export interface ProjectDetailResponse {
   consumed_days: number;
   contributions: ProjectContributionResponse[];
   sub_projects: ProjectResponse[];
+  stack: string[];
+  tags: string[];
+  dependencies: MissionRefResponse[];
   parent: ParentResponse | null;
 }

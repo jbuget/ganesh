@@ -41,6 +41,7 @@ import type {
   UnassignMemberParams,
   UpdateDescriptionRequest,
   UpdateProjectDetailRequest,
+  UpdateProjectRegistryRequest,
   UpdateProjectRequest,
 } from "../model";
 
@@ -1731,6 +1732,147 @@ export const useUpdateProjectDetail = <
   TContext
 > => {
   return useMutation(getUpdateProjectDetailMutationOptions(options), queryClient);
+};
+export type updateProjectRegistryResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type updateProjectRegistryResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type updateProjectRegistryResponseSuccess = updateProjectRegistryResponse204 & {
+  headers: Headers;
+};
+export type updateProjectRegistryResponseError = updateProjectRegistryResponse422 & {
+  headers: Headers;
+};
+
+export type updateProjectRegistryResponse =
+  updateProjectRegistryResponseSuccess | updateProjectRegistryResponseError;
+
+export const getUpdateProjectRegistryUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/registry`;
+};
+
+/**
+ * Saves the stack, the tags and the dependencies of the service.
+ * @summary Update Project Registry
+ */
+export const updateProjectRegistry = async (
+  projectId: number,
+  updateProjectRegistryRequest: UpdateProjectRegistryRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<updateProjectRegistryResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<updateProjectRegistryResponse>(
+    getUpdateProjectRegistryUrl(projectId),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(updateProjectRegistryRequest),
+    },
+  );
+};
+
+export const getUpdateProjectRegistryMutationKey = () =>
+  ["updateProjectRegistry"] as const;
+
+export const getUpdateProjectRegistryMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateProjectRegistry>>,
+    TError,
+    UpdateProjectRegistryMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateProjectRegistry>>,
+  TError,
+  UpdateProjectRegistryMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateProjectRegistryMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateProjectRegistry>>,
+    UpdateProjectRegistryMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return updateProjectRegistry(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateProjectRegistryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateProjectRegistry>>
+>;
+export type UpdateProjectRegistryMutationBody = UpdateProjectRegistryRequest;
+export type UpdateProjectRegistryMutationError = HTTPValidationError;
+export type UpdateProjectRegistryMutationVariables = {
+  projectId: number;
+  data: UpdateProjectRegistryRequest;
+};
+
+/**
+ * @summary Update Project Registry
+ */
+export const useUpdateProjectRegistry = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateProjectRegistry>>,
+      TError,
+      UpdateProjectRegistryMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateProjectRegistry>>,
+  TError,
+  UpdateProjectRegistryMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateProjectRegistryMutationOptions(options), queryClient);
 };
 export type addProjectLinkResponse201 = {
   data: ProjectLinkResponse;

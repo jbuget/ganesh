@@ -4,9 +4,11 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
+import type { Criticality } from "./criticality";
 import type { ProjectCategory } from "./projectCategory";
 import type { ProjectPriority } from "./projectPriority";
 import type { ProjectStatus } from "./projectStatus";
+import type { ServiceType } from "./serviceType";
 
 /**
  * Partial change: only the fields provided are applied.
@@ -22,4 +24,21 @@ export interface UpdateProjectRequest {
   parent_id?: number | null;
   monday_item_id?: string | null;
   monday_subitem_id?: string | null;
+  slug?: string | null;
+  is_published?: boolean | null;
+  summary?: string | null;
+  criticality?: Criticality | null;
+  service_type?: ServiceType | null;
+  hosting?: string | null;
+  has_microsoft_entra?: boolean | null;
+  team?: string | null;
+  slack_channel?: string | null;
+  production_link?: string | null;
+  staging_link?: string | null;
+  repository_link?: string | null;
+  documentation_link?: string | null;
+  project_management_link?: string | null;
+  monitoring_link?: string | null;
+  stats_page_link?: string | null;
+  stats_api_link?: string | null;
 }

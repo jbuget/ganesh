@@ -8,6 +8,7 @@ import { ProjectUpdatesTab } from "@/components/organisms/ProjectUpdatesTab";
 import { useState } from "react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { SheetFields } from "@/lib/service-sheet";
 import type {
   Department,
   LinkIcon,
@@ -27,9 +28,16 @@ interface ProjectTabsProps {
   ) => Promise<void>;
   saveDescription: (body: string) => Promise<void>;
   changePhase: (status: ProjectStatus) => Promise<void>;
-  updateFields: (fields: {
-    category?: ProjectCategory | null;
-    estimated_days?: number | null;
+  updateFields: (
+    fields: SheetFields & {
+      category?: ProjectCategory | null;
+      estimated_days?: number | null;
+    },
+  ) => Promise<void>;
+  saveRegistry: (registry: {
+    stack: string[];
+    tags: string[];
+    depends_on: number[];
   }) => Promise<void>;
   addLink: (label: string, url: string, icon: LinkIcon | null) => Promise<void>;
   removeLink: (linkId: number) => Promise<void>;
@@ -57,6 +65,7 @@ export function ProjectTabs({
   saveDescription,
   changePhase,
   updateFields,
+  saveRegistry,
   addLink,
   removeLink,
   addSubProject,
@@ -104,8 +113,6 @@ export function ProjectTabs({
           saveSheet={saveSheet}
           changePhase={changePhase}
           updateFields={updateFields}
-          addLink={addLink}
-          removeLink={removeLink}
           addSubProject={addSubProject}
         />
       </TabsContent>
@@ -124,8 +131,12 @@ export function ProjectTabs({
 
       <TabsContent value="fiche" className="min-h-0 flex-1">
         <ProjectSheetTab
-          description={detail.project.description}
-          onSave={saveDescription}
+          detail={detail}
+          updateFields={updateFields}
+          saveDescription={saveDescription}
+          saveRegistry={saveRegistry}
+          addLink={addLink}
+          removeLink={removeLink}
         />
       </TabsContent>
 
