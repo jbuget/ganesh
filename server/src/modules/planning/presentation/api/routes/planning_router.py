@@ -147,8 +147,8 @@ def to_person_response(row: PersonLoadRow) -> PersonLoadResponse:
 def to_member_response(user: User) -> PlanMemberResponse:
     return PlanMemberResponse(
         id=user.id or 0,
-        display_name=user.display_name,
-        initials=initials(user.display_name),
+        display_name=user.label,
+        initials=initials(user.label),
     )
 
 

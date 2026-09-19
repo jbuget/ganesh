@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from src.modules.users.domain.entities.user import Role
+from src.shared.enums.department import Department
 
 
 @dataclass(frozen=True)
@@ -30,3 +31,18 @@ class SetUserActiveCommand:
     actor_id: int
     target_user_id: int
     is_active: bool
+
+
+@dataclass(frozen=True)
+class UpdateUserIdentityCommand:
+    """Who a teammate is and where they work. Managers only.
+
+    The three fields travel together: the sheet is written as a whole, and a
+    field left blank is a field one has decided to empty.
+    """
+
+    actor_id: int
+    target_user_id: int
+    first_name: str | None
+    last_name: str | None
+    department: Department | None

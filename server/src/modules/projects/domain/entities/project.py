@@ -43,25 +43,6 @@ class ProjectPriority(StrEnum):
     LOW = "low"
 
 
-class Department(StrEnum):
-    """Company department a mission serves.
-
-    A mission may serve several: a landlord portal that also equips customer
-    service concerns both, and steering wants to see it.
-    """
-
-    FINANCE_ADMIN = "finance_admin"
-    LANDLORDS = "landlords"
-    CONDOMINIUM = "condominium"
-    CUSTOMER_SERVICE = "customer_service"
-    OPERATIONS = "operations"
-    INFORMATION_SYSTEMS = "information_systems"
-    HUMAN_RESOURCES = "human_resources"
-    MARKETING_COMMUNICATION_CSR = "marketing_communication_csr"
-    COMMERCIAL_REAL_ESTATE = "commercial_real_estate"
-    OTHER = "other"
-
-
 class ProjectCategory(StrEnum):
     """Strategic axis a project belongs to."""
 

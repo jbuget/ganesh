@@ -6,7 +6,6 @@ from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditL
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
-from src.modules.projects.domain.entities.project import Department
 from src.modules.projects.domain.entities.project_link import LinkIcon, ProjectLink
 from src.modules.projects.domain.repositories.project_detail_repository import (
     ProjectDetailRepository,
@@ -15,6 +14,7 @@ from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
 from src.modules.projects.domain.services.link_icons import guess_icon
+from src.shared.enums.department import Department
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 

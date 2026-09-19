@@ -74,7 +74,7 @@ class ComputeStatisticsUseCase:
     async def _adoption(self, period: Period, team: list[User]) -> Adoption:
         contributors = await self._statistics.contributor_ids(period)
         idle = [
-            Teammate(id=user.id, display_name=user.display_name)
+            Teammate(id=user.id, display_name=user.label)
             for user in team
             if user.id is not None and user.id not in contributors
         ]

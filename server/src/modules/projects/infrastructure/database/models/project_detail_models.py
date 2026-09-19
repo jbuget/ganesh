@@ -6,8 +6,9 @@ from sqlalchemy import Date, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
-from src.modules.projects.domain.entities.project import Department, ProjectStatus
+from src.modules.projects.domain.entities.project import ProjectStatus
 from src.modules.projects.domain.entities.project_link import LinkIcon
+from src.shared.enums.department import Department
 
 
 class ProjectDepartmentModel(Base):

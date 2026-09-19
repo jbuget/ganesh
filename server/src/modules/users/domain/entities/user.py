@@ -4,12 +4,22 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import StrEnum
 
+from src.shared.enums.department import Department
+
 #: Below this, a fresh login is not worth a write to the database.
 #:
 #: The API is sessionless: a bearer token is presented on every request, and
 #: the only thing it can observe is "this teammate was here". Without this
 #: window, the column would measure nothing but HTTP traffic.
 LOGIN_FRESHNESS = timedelta(minutes=15)
+
+
+def _trimmed(value: str | None) -> str | None:
+    """« », «   » and « nothing » all say the same: nothing is known."""
+    if value is None:
+        return None
+    cleaned = value.strip()
+    return cleaned or None
 
 
 class Role(StrEnum):
@@ -30,9 +40,44 @@ class User:
     role: Role = Role.TEAMMATE
     is_active: bool = field(default=True)
     last_login_at: datetime | None = None
+    #: Civil name, told apart from the display name Entra provides: « L. Chen »
+    #: identifies an account, it does not tell who one is talking to.
+    first_name: str | None = None
+    last_name: str | None = None
+    #: The department this teammate belongs to. Named from the same list as the
+    #: missions: steering compares the two sides, and cannot if the names drift.
+    department: Department | None = None
 
     def __post_init__(self) -> None:
         self.email = self.email.strip().lower()
+        self.first_name = _trimmed(self.first_name)
+        self.last_name = _trimmed(self.last_name)
+
+    def set_identity(
+        self,
+        first_name: str | None,
+        last_name: str | None,
+        department: Department | None,
+    ) -> None:
+        """Gives away who this teammate is, and where they work.
+
+        The three go together: the sheet is written as a whole, and a field
+        left out is a field one has decided to empty.
+        """
+        self.first_name = _trimmed(first_name)
+        self.last_name = _trimmed(last_name)
+        self.department = department
+
+    @property
+    def label(self) -> str:
+        """The name one reads, everywhere the application names this teammate.
+
+        « Prénom Nom » as soon as anyone has said who is behind the account.
+        Entra only ever names the account — « L. Chen » identifies a mailbox,
+        it does not say who one is talking to — so it stands in and no more.
+        """
+        civil = " ".join(part for part in (self.first_name, self.last_name) if part)
+        return civil or self.display_name
 
     @property
     def is_manager(self) -> bool:

@@ -150,7 +150,7 @@ class GetBoardUseCase:
             # undone the same way.
             contributors = sorted(
                 assignments.get(mission.id, []),
-                key=lambda uid: (users[uid].display_name if uid in users else ""),
+                key=lambda uid: (users[uid].label if uid in users else ""),
             )
 
             by_status[mission.status].cards.append(

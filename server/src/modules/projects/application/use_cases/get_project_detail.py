@@ -4,11 +4,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
-from src.modules.projects.domain.entities.project import (
-    Department,
-    Project,
-    ProjectStatus,
-)
+from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.repositories.project_assignee_repository import (
@@ -23,6 +19,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.shared.enums.department import Department
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 
@@ -89,7 +86,7 @@ class GetProjectDetailUseCase:
         async def people(role: ProjectRole) -> list[User]:
             ids = await self._assignees.list_for_project(project_id, role)
             known = [users[uid] for uid in ids if uid in users]
-            return sorted(known, key=lambda u: u.display_name)
+            return sorted(known, key=lambda u: u.label)
 
         entries = await self._entries.list_for_project(project_id)
 

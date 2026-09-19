@@ -3,8 +3,9 @@
 from abc import ABC, abstractmethod
 from datetime import date
 
-from src.modules.projects.domain.entities.project import Department, ProjectStatus
+from src.modules.projects.domain.entities.project import ProjectStatus
 from src.modules.projects.domain.entities.project_link import ProjectLink
+from src.shared.enums.department import Department
 
 
 class ProjectDetailRepository(ABC):

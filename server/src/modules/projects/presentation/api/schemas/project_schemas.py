@@ -5,13 +5,13 @@ from datetime import date, datetime
 from pydantic import BaseModel, Field
 
 from src.modules.projects.domain.entities.project import (
-    Department,
     ProjectCategory,
     ProjectKind,
     ProjectPriority,
     ProjectStatus,
 )
 from src.modules.projects.domain.entities.project_link import LinkIcon
+from src.shared.enums.department import Department
 
 
 class CreateProjectRequest(BaseModel):
