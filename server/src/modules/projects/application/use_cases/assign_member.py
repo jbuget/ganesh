@@ -37,9 +37,9 @@ class _AssignmentUseCase:
 
     async def _ensure_both_exist(self, command: AssignmentCommand) -> None:
         if await self._projects.get_by_id(command.project_id) is None:
-            raise EntityNotFoundError("Mission inconnue.")
+            raise EntityNotFoundError("The mission cannot be found.")
         if await self._users.get_by_id(command.member_id) is None:
-            raise EntityNotFoundError("Utilisateur inconnu.")
+            raise EntityNotFoundError("The user cannot be found.")
 
 
 class AssignMemberUseCase(_AssignmentUseCase):

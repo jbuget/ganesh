@@ -38,10 +38,10 @@ export function useProjectsScreen(
   const [expanded, setExpanded] = useState<ReadonlySet<number>>(() => new Set());
 
   const toggle = useCallback((id: number) => {
-    setExpanded((actuels) => {
-      const next_ones = new Set(actuels);
-      if (!next_ones.delete(id)) next_ones.add(id);
-      return next_ones;
+    setExpanded((current) => {
+      const next = new Set(current);
+      if (!next.delete(id)) next.add(id);
+      return next;
     });
   }, []);
 

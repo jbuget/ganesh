@@ -35,7 +35,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { user } = useCurrentUser();
   const collapsed = useSidebarCollapsed();
-  const seDeconnecter = useSignOut();
+  const signOut = useSignOut();
 
   return (
     <aside
@@ -105,7 +105,7 @@ export function AppSidebar() {
         </ul>
       </nav>
 
-      {user && <UserMenu user={user} collapsed={collapsed} onSignOut={seDeconnecter} />}
+      {user && <UserMenu user={user} collapsed={collapsed} onSignOut={signOut} />}
     </aside>
   );
 }

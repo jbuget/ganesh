@@ -59,5 +59,5 @@ class EntraTokenValidator:
             )
         except JWTError as error:
             logger.warning("Entra token refused: %s", error)
-            raise ForbiddenActionError("Jeton d'authentification invalide.") from error
+            raise ForbiddenActionError("Invalid authentication token.") from error
         return claims

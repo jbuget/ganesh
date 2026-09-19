@@ -29,7 +29,7 @@ export function useMissionSort() {
     /** Moves a column to the next step of its cycle. */
     toggle(column: SortColumn) {
       const next: MissionSort = nextSort(sorted, column);
-      writeUrl((params) => writeSort(params, next), "remplacer");
+      writeUrl((params) => writeSort(params, next), "replace");
     },
   };
 }

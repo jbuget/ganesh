@@ -72,7 +72,7 @@ class GetProjectDetailUseCase:
     async def execute(self, project_id: int) -> ProjectDetail:
         mission = await self._projects.get_by_id(project_id)
         if mission is None:
-            raise EntityNotFoundError("Mission inconnue.")
+            raise EntityNotFoundError("The mission cannot be found.")
 
         users = {u.id: u for u in await self._users.list_all(True)}
 

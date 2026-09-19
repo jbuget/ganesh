@@ -38,7 +38,7 @@ class RemoveMissionFromMonthUseCase:
         """Returns how many days were removed."""
         actor = await self._users.get_by_id(command.actor_id)
         if actor is None:
-            raise EntityNotFoundError("Utilisateur inconnu.")
+            raise EntityNotFoundError("The user cannot be found.")
         if not actor.can_edit_open_months():
             raise ForbiddenActionError(
                 "A deactivated user can no longer change an entry."

@@ -51,14 +51,14 @@ export function useQueryString(): string {
  */
 export function writeUrl(
   update: (params: URLSearchParams) => void,
-  mode: "pousser" | "remplacer" = "pousser",
+  mode: "push" | "replace" = "push",
 ): void {
   const params = new URLSearchParams(window.location.search);
   update(params);
 
   const queryString = params.toString();
   const address = queryString ? `?${queryString}` : window.location.pathname;
-  if (mode === "pousser") window.history.pushState(null, "", address);
+  if (mode === "push") window.history.pushState(null, "", address);
   else window.history.replaceState(null, "", address);
 
   subscribers.forEach((callback) => callback());

@@ -35,11 +35,11 @@ class DeleteProjectUseCase:
 
     async def execute(self, command: DeleteProjectCommand) -> None:
         if await self._users.get_by_id(command.actor_id) is None:
-            raise EntityNotFoundError("Utilisateur inconnu.")
+            raise EntityNotFoundError("The user cannot be found.")
 
         project = await self._projects.get_by_id(command.project_id)
         if project is None:
-            raise EntityNotFoundError("Mission inconnue.")
+            raise EntityNotFoundError("The mission cannot be found.")
 
         entries = (await self._entries.count_by_project()).get(command.project_id, 0)
         sub_projects = len(await self._projects.list_children(command.project_id))

@@ -43,7 +43,7 @@ class ImportProjectsUseCase:
     async def execute(self, command: ImportProjectsCommand) -> ImportReport:
         actor = await self._users.get_by_id(command.actor_id)
         if actor is None:
-            raise EntityNotFoundError("Utilisateur inconnu.")
+            raise EntityNotFoundError("The user cannot be found.")
         if not actor.is_manager:
             raise ForbiddenActionError("Only a manager can import a reference list.")
 

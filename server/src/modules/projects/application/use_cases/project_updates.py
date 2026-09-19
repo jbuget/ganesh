@@ -73,9 +73,9 @@ class PostProjectUpdateUseCase(_UpdateUseCase):
         self, command: PostUpdateCommand, now: datetime | None = None
     ) -> ProjectUpdate:
         if await self._users.get_by_id(command.actor_id) is None:
-            raise EntityNotFoundError("Utilisateur inconnu.")
+            raise EntityNotFoundError("The user cannot be found.")
         if await self._projects.get_by_id(command.project_id) is None:
-            raise EntityNotFoundError("Mission inconnue.")
+            raise EntityNotFoundError("The mission cannot be found.")
 
         update = await self._updates.add(
             ProjectUpdate(

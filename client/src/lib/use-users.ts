@@ -22,8 +22,8 @@ export function useUsersScreen() {
   return {
     isLoading,
     isManager: me?.role === "MANAGER",
-    //: Nobody cuts off their own access: the account would be turned away on
-    //: the next request, and no one could reopen it from inside.
+    // Nobody cuts off their own access: the account would be turned away on
+    // the next request, and no one could reopen it from inside.
     meId: me?.id,
     withInactive,
 
@@ -31,7 +31,7 @@ export function useUsersScreen() {
     // would compare against two different « now ».
     now: new Date(),
 
-    toggleInactive: () => setWithInactive((actuel) => !actuel),
+    toggleInactive: () => setWithInactive((current) => !current),
 
     /** By name, the only order one finds by eye in a team list. */
     users: [...teammates].sort((a, b) =>

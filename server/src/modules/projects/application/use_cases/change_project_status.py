@@ -41,11 +41,11 @@ class ChangeProjectStatusUseCase:
         self, command: ChangeProjectStatusCommand, today: date | None = None
     ) -> Project:
         if await self._users.get_by_id(command.actor_id) is None:
-            raise EntityNotFoundError("Utilisateur inconnu.")
+            raise EntityNotFoundError("The user cannot be found.")
 
         project = await self._projects.get_by_id(command.project_id)
         if project is None:
-            raise EntityNotFoundError("Mission inconnue.")
+            raise EntityNotFoundError("The mission cannot be found.")
 
         previous = project.status
         project.change_status(command.status)

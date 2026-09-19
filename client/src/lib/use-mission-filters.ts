@@ -22,8 +22,8 @@ export function useMissionFilters() {
   const query = useQueryString();
   const filters = useMemo(() => readFilters(new URLSearchParams(query)), [query]);
 
-  function apply(next_ones: MissionFilters) {
-    writeUrl((params) => writeFilters(params, next_ones), "remplacer");
+  function apply(next: MissionFilters) {
+    writeUrl((params) => writeFilters(params, next), "replace");
   }
 
   return {

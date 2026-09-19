@@ -30,7 +30,7 @@ class ReopenMonthUseCase:
     async def execute(self, command: ReopenMonthCommand) -> Month:
         actor = await self._users.get_by_id(command.actor_id)
         if actor is None:
-            raise EntityNotFoundError("Utilisateur inconnu.")
+            raise EntityNotFoundError("The user cannot be found.")
 
         month = await self._months.get(command.target_user_id, command.month)
         if month is None:

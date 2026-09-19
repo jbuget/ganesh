@@ -28,10 +28,10 @@ export function ProjectContributions({
   const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set());
 
   function toggle(memberId: number) {
-    setExpanded((ouverts) => {
-      const next_ones = new Set(ouverts);
-      if (!next_ones.delete(memberId)) next_ones.add(memberId);
-      return next_ones;
+    setExpanded((current) => {
+      const next = new Set(current);
+      if (!next.delete(memberId)) next.add(memberId);
+      return next;
     });
   }
 

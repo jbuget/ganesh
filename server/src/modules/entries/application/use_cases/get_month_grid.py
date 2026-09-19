@@ -103,7 +103,7 @@ class GetMonthGridUseCase:
 
     async def execute(self, query: GetMonthGridQuery) -> MonthGrid:
         if await self._users.get_by_id(query.user_id) is None:
-            raise EntityNotFoundError("Utilisateur inconnu.")
+            raise EntityNotFoundError("The user cannot be found.")
 
         month = query.month.replace(day=1)
         today = query.today or date.today()

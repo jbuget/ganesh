@@ -23,9 +23,9 @@ export function useBoardDrag(board: ReturnType<typeof useBoard>) {
   const [isDragging, setIsDragging] = useState<BoardCardResponse | null>(null);
   const gesture = useRef<{ origin: Columns; alive: Columns } | null>(null);
 
-  function apply(next_ones: Columns) {
-    gesture.current!.alive = next_ones;
-    board.preview(next_ones);
+  function apply(next: Columns) {
+    gesture.current!.alive = next;
+    board.preview(next);
   }
 
   /** The phase aimed at: one hovers either a column or a card. */
