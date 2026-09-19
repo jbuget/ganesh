@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import { AppSidebar } from "@/components/organisms/AppSidebar";
 import { QueryProvider } from "@/lib/query-provider";
 
 import "./globals.css";
@@ -20,12 +19,9 @@ export default function RootLayout({
   return (
     <html lang="fr" className={cn("font-sans", geist.variable)}>
       <body className="bg-slate-50 text-slate-900 antialiased">
-        <QueryProvider>
-          <div className="flex min-h-screen">
-            <AppSidebar />
-            <div className="min-w-0 flex-1">{children}</div>
-          </div>
-        </QueryProvider>
+        {/* The sidebar is not here but in the (app) group: it belongs to the
+            screens one reaches signed in, not to the page that asks. */}
+        <QueryProvider>{children}</QueryProvider>
       </body>
     </html>
   );

@@ -6,15 +6,46 @@
  * token never crosses the browser boundary.
  *
  * The paths are identical on both sides: one URL vocabulary.
+ *
+ * It is also where a session is renewed. An identity token lives an hour and
+ * Entra will not make it live longer; rather than sign the person out on the
+ * hour, the relay buys a fresh one just before the old one dies, on the way
+ * past. Entra rotates the renewal token as it goes, so the session is written
+ * back on the response — keeping the spent one would lock the person out at
+ * the following renewal.
  */
 import { NextRequest, NextResponse } from "next/server";
 
-import { getAccessToken } from "@/lib/auth/session";
+import { needsRefresh, refreshTokens } from "@/lib/auth/entra";
+import {
+  currentSession,
+  sealSession,
+  sessionCookie,
+  type Session,
+} from "@/lib/auth/session";
 
 const API_URL = process.env.API_URL ?? "http://localhost:8000";
 const API_PREFIX = process.env.API_PREFIX ?? "/api/v1";
 
 const HOP_BY_HOP = new Set(["connection", "keep-alive", "transfer-encoding", "host"]);
+
+/**
+ * The session to relay with, renewed if it was about to expire.
+ *
+ * Returns the session to use and, when it changed, the cookie to write back.
+ */
+async function freshSession(): Promise<{ session: Session | null; renewed: boolean }> {
+  const session = await currentSession();
+  if (!session || !needsRefresh(session)) return { session, renewed: false };
+
+  const tokens = await refreshTokens(session.refreshToken);
+  // A renewal Entra refuses is a session that has run its course: we relay
+  // without a token, the API answers 401, and the screen sends the person to
+  // sign in again. Better than a request that hangs on a dead token.
+  if (!tokens) return { session: null, renewed: false };
+
+  return { session: { ...tokens, email: session.email }, renewed: true };
+}
 
 async function proxy(request: NextRequest): Promise<NextResponse> {
   const incoming = new URL(request.url);
@@ -26,8 +57,8 @@ async function proxy(request: NextRequest): Promise<NextResponse> {
     if (!HOP_BY_HOP.has(key.toLowerCase())) headers.set(key, value);
   });
 
-  const token = await getAccessToken();
-  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const { session, renewed } = await freshSession();
+  if (session) headers.set("Authorization", `Bearer ${session.idToken}`);
 
   const hasBody = !["GET", "HEAD"].includes(request.method);
 
@@ -40,12 +71,16 @@ async function proxy(request: NextRequest): Promise<NextResponse> {
 
   const payload = await response.text();
 
-  return new NextResponse(payload || null, {
+  const relayed = new NextResponse(payload || null, {
     status: response.status,
     headers: {
       "Content-Type": response.headers.get("Content-Type") ?? "application/json",
     },
   });
+  if (renewed && session) {
+    relayed.cookies.set(sessionCookie(await sealSession(session)));
+  }
+  return relayed;
 }
 
 export const GET = proxy;
