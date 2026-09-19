@@ -132,7 +132,9 @@ In `waat-fr/ganesh`:
   readable to explain it.
 - Repository secrets:
   - `AWS_DEPLOY_ROLE` — the `github_deploy_role_arn` output.
-  - `TEAMS_WEBHOOK_URL` — the same channel the other services post to.
+  - `TEAMS_WEBHOOK_URL` — the same channel the other services post to. It can
+    wait: the notification steps are skipped when it is unset, so a deploy that
+    worked does not come out red because nobody could be told about it.
 
 ## 5. First deploy
 
