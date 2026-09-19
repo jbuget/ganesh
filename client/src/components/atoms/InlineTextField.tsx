@@ -8,6 +8,14 @@ interface InlineTextFieldProps {
   /** What the row asks for, shown as the empty state and read by assistive tech. */
   label: string;
   placeholder?: string;
+  /**
+   * The part of the value that is not typed, shown in front of it.
+   *
+   * A field that completes a known address says so: « waat.tools/services/ »
+   * in front of the box is what tells the reader they are naming a page, not
+   * pasting a URL.
+   */
+  prefix?: string;
   /** Offered while the field is empty, one click away from being accepted. */
   suggestion?: string | null;
   /**
@@ -32,6 +40,7 @@ export function InlineTextField({
   value,
   label,
   placeholder,
+  prefix,
   suggestion,
   editable = true,
   validate,
@@ -75,7 +84,10 @@ export function InlineTextField({
 
   if (!editable) {
     return value ? (
-      <span className="text-sm text-slate-700">{value}</span>
+      <span className="text-sm text-slate-700">
+        {prefix && <span className="text-slate-400">{prefix}</span>}
+        {value}
+      </span>
     ) : (
       <span className="text-sm text-slate-400">Non renseigné</span>
     );
@@ -84,31 +96,36 @@ export function InlineTextField({
   if (entry !== null) {
     return (
       <div className="space-y-1">
-        <input
-          type="text"
-          autoFocus
-          value={entry}
-          aria-label={label}
-          placeholder={placeholder}
-          onChange={(event) => {
-            setEntry(event.target.value);
-            setRefusal(null);
-          }}
-          onBlur={commit}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") commit();
-            if (event.key === "Escape") {
-              // Cancelling a field cancels the field, not the visit: without
-              // this the panel behind would close on the same key.
-              event.stopPropagation();
-              setEntry(null);
-              setRefusal(null);
-            }
-          }}
-          className={`w-full rounded border px-1.5 py-0.5 text-sm focus:outline-none ${
+        <div
+          className={`flex items-center rounded border px-1.5 ${
             refusal ? "border-red-400" : "border-slate-400"
           }`}
-        />
+        >
+          {prefix && <span className="shrink-0 text-sm text-slate-400">{prefix}</span>}
+          <input
+            type="text"
+            autoFocus
+            value={entry}
+            aria-label={label}
+            placeholder={placeholder}
+            onChange={(event) => {
+              setEntry(event.target.value);
+              setRefusal(null);
+            }}
+            onBlur={commit}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") commit();
+              if (event.key === "Escape") {
+                // Cancelling a field cancels the field, not the visit: without
+                // this the panel behind would close on the same key.
+                event.stopPropagation();
+                setEntry(null);
+                setRefusal(null);
+              }
+            }}
+            className="w-full py-0.5 text-sm focus:outline-none"
+          />
+        </div>
         {refusal && <p className="text-xs text-red-600">{refusal}</p>}
       </div>
     );
@@ -124,11 +141,16 @@ export function InlineTextField({
           className="-mx-1 min-w-0 cursor-pointer rounded px-1 py-0.5 text-left text-sm transition-colors hover:bg-slate-100"
         >
           {value ? (
-            <span className="block truncate text-slate-700">{value}</span>
+            <span className="block truncate text-slate-700">
+              {prefix && <span className="text-slate-400">{prefix}</span>}
+              {value}
+            </span>
           ) : (
             <span className="flex items-center gap-1 text-slate-400">
               <Plus className="size-3.5" aria-hidden />
-              {label}
+              {/* An empty field says what shape it expects, prefix included:
+                  that is the moment one wonders what belongs in it. */}
+              {prefix ? `${prefix}${placeholder ?? ""}` : label}
             </span>
           )}
         </button>

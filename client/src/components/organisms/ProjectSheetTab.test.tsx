@@ -90,7 +90,7 @@ describe("ProjectSheetTab", () => {
 
       expect(
         screen.getByText(
-          "Il manque l'adresse publique, le résumé, la criticité et le type.",
+          "Il manque l'identifiant au catalogue, le résumé, la criticité et le type.",
         ),
       ).toBeInTheDocument();
     });
@@ -206,15 +206,29 @@ describe("cancelling a field", () => {
   });
 });
 
-describe("the public address", () => {
-  it("refuses a pasted URL where the catalogue expects an address", async () => {
+describe("the catalogue identifier", () => {
+  it("shows the address it completes, so one sees what is being typed", () => {
+    sheet({ project: { slug: "lorem-ipsum" } });
+
+    expect(screen.getByText("waat.tools/services/")).toBeInTheDocument();
+  });
+
+  it("shows that address on an empty field too: that is where one wonders", () => {
+    sheet();
+
+    expect(
+      screen.getByRole("button", { name: "Identifiant au catalogue" }),
+    ).toHaveTextContent("waat.tools/services/portail-bailleurs");
+  });
+
+  it("refuses a pasted URL where the catalogue expects an identifier", async () => {
     const { updateFields } = sheet();
 
     await userEvent.click(
-      screen.getAllByRole("button", { name: "Adresse publique" })[0],
+      screen.getAllByRole("button", { name: "Identifiant au catalogue" })[0],
     );
     await userEvent.type(
-      screen.getByRole("textbox", { name: "Adresse publique" }),
+      screen.getByRole("textbox", { name: "Identifiant au catalogue" }),
       "https://lorem-ipsum.waat.tools{Enter}",
     );
 
@@ -222,14 +236,14 @@ describe("the public address", () => {
     expect(screen.getByText(/pas une URL entière/)).toBeInTheDocument();
   });
 
-  it("writes an address the catalogue can read", async () => {
+  it("writes an identifier the catalogue can read", async () => {
     const { updateFields } = sheet();
 
     await userEvent.click(
-      screen.getAllByRole("button", { name: "Adresse publique" })[0],
+      screen.getAllByRole("button", { name: "Identifiant au catalogue" })[0],
     );
     await userEvent.type(
-      screen.getByRole("textbox", { name: "Adresse publique" }),
+      screen.getByRole("textbox", { name: "Identifiant au catalogue" }),
       "lorem-ipsum{Enter}",
     );
 

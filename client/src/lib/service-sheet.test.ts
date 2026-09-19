@@ -45,7 +45,7 @@ describe("suggestSlug", () => {
 describe("publicationBlockers", () => {
   it("names everything missing at once", () => {
     expect(publicationBlockers(project())).toEqual([
-      "l'adresse publique",
+      "l'identifiant au catalogue",
       "le résumé",
       "la criticité",
       "le type",
@@ -98,7 +98,7 @@ describe("frenchList", () => {
 });
 
 describe("slugError", () => {
-  it("accepts an address written as the catalogue reads it", () => {
+  it("accepts an identifier written as the catalogue reads it", () => {
     expect(slugError("portail-bailleurs")).toBeNull();
   });
 
@@ -108,7 +108,7 @@ describe("slugError", () => {
 
   it("refuses a whole URL, which is what one is tempted to paste", () => {
     expect(slugError("https://lorem-ipsum.waat.tools")).toBe(
-      "Une adresse publique s'écrit en minuscules, chiffres et tirets — « portail-bailleurs », pas une URL entière.",
+      "Un identifiant s'écrit en minuscules, chiffres et tirets — « portail-bailleurs », pas une URL entière.",
     );
   });
 
@@ -116,9 +116,9 @@ describe("slugError", () => {
     expect(slugError("Portail Bailleurs")).not.toBeNull();
   });
 
-  it("refuses an address longer than the column holds", () => {
+  it("refuses an identifier longer than the column holds", () => {
     expect(slugError("a".repeat(101))).toBe(
-      "Une adresse publique ne dépasse pas 100 caractères.",
+      "Un identifiant ne dépasse pas 100 caractères.",
     );
   });
 });

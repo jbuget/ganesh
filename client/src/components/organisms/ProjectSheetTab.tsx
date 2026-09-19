@@ -20,6 +20,7 @@ import {
   CRITICALITIES,
   SERVICE_TYPES,
   frenchList,
+  CATALOG_ADDRESS,
   publicationBlockers,
   slugError,
   suggestSlug,
@@ -182,10 +183,11 @@ export function ProjectSheetTab({
             />
           </SheetRow>
 
-          <SheetRow title="Adresse publique">
+          <SheetRow title="Identifiant">
             <InlineTextField
               value={project.slug}
-              label="Adresse publique"
+              label="Identifiant au catalogue"
+              prefix={CATALOG_ADDRESS}
               placeholder="portail-bailleurs"
               suggestion={suggested || null}
               validate={slugError}

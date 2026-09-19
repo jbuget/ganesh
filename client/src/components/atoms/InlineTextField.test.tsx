@@ -137,4 +137,49 @@ describe("InlineTextField", () => {
 
     expect(await screen.findByText("Enregistrement impossible.")).toBeInTheDocument();
   });
+
+  it("shows the fixed part of what it completes, in front of the value", () => {
+    render(
+      <InlineTextField
+        value="lorem-ipsum"
+        label="Identifiant"
+        prefix="waat.tools/services/"
+        onChange={onChange}
+      />,
+    );
+
+    expect(screen.getByText("waat.tools/services/")).toBeInTheDocument();
+    expect(screen.getByText("lorem-ipsum")).toBeInTheDocument();
+  });
+
+  it("keeps the fixed part in sight while one types the rest", async () => {
+    render(
+      <InlineTextField
+        value={null}
+        label="Identifiant"
+        prefix="waat.tools/services/"
+        onChange={onChange}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Identifiant" }));
+
+    expect(screen.getByText("waat.tools/services/")).toBeInTheDocument();
+  });
+
+  it("shows the shape expected while the field is still empty", async () => {
+    render(
+      <InlineTextField
+        value={null}
+        label="Identifiant au catalogue"
+        prefix="waat.tools/services/"
+        placeholder="portail-bailleurs"
+        onChange={onChange}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Identifiant au catalogue" }),
+    ).toHaveTextContent("waat.tools/services/portail-bailleurs");
+  });
 });
