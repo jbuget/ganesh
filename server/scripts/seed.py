@@ -56,6 +56,8 @@ TEAM: list[Teammate] = [
     Teammate("j.buget@waat.fr", "Jérémy", "BUGET", Role.MANAGER),
     Teammate("f.lebreuilly@waat.fr", "Fabien", "LEBREUILLY", Role.MANAGER),
     Teammate("v.lestrat.ext@waat.fr", "Valentin", "LE STRAT", Role.MANAGER),
+    Teammate("d.gourdon@waat.fr", "Damien", "GOURDON", Role.MANAGER),
+    Teammate("sp.dobrzynski@waat.fr", "Sylvain-Pierre", "DOBRZYNSKI", Role.MANAGER),
     Teammate("te.bastiegermain@waat.fr", "Thibault-Enzo", "BASTIE-GERMAIN"),
     Teammate("a.hanane@waat.fr", "Adam", "HANANE"),
     Teammate("c.debray.ext@waat.fr", "Christopher", "DEBRAY"),
