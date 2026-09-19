@@ -6,6 +6,7 @@ from src.modules.projects.application.dtos.project_dto import MoveProjectCommand
 from src.modules.projects.application.use_cases.move_project import MoveProjectUseCase
 from src.modules.projects.domain.entities.project import (
     Project,
+    ProjectCategory,
     ProjectKind,
     ProjectStatus,
 )
@@ -179,3 +180,25 @@ async def test_a_simple_reorder_leaves_no_phase_trace() -> None:
     )
 
     assert audit.logs == []
+
+
+async def test_a_dragged_work_package_keeps_the_axis_of_its_project() -> None:
+    """A card answers with the axis it was showing before the drop."""
+    parent = card(1, ProjectStatus.SCOPING, 0)
+    parent.category = ProjectCategory.SUSTAIN
+    package = Project(
+        id=2,
+        label="Lot API",
+        kind=ProjectKind.WORK_PACKAGE,
+        status=ProjectStatus.SCOPING,
+        parent_id=1,
+    )
+    use_case, _, _ = build([parent, package])
+
+    moved = await use_case.execute(
+        MoveProjectCommand(
+            actor_id=1, project_id=2, status=ProjectStatus.DEVELOPMENT, position=0
+        )
+    )
+
+    assert moved.category is ProjectCategory.SUSTAIN

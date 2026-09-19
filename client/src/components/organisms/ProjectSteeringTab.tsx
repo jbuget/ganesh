@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 
+import Link from "next/link";
+
+import { CategoryMark } from "@/components/atoms/CategoryMark";
 import { CategoryPicker } from "@/components/atoms/CategoryPicker";
 import { DepartmentPicker } from "@/components/atoms/DepartmentPicker";
 import { InlineNumberField } from "@/components/atoms/InlineNumberField";
@@ -70,6 +73,41 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 /**
+ * The axis a work package reads under: the one its project carries.
+ *
+ * It qualifies the product, not a slice of it. Two packages of one project
+ * claiming two axes would leave the project itself with none, and its totals
+ * would no longer add up to anything. The field is therefore read here and
+ * changed on the project, for the project and all its packages at once — which
+ * is why the line leads there rather than opening a picker.
+ */
+function InheritedCategory({
+  value,
+  parentId,
+}: {
+  value: ProjectCategory | null | undefined;
+  parentId: number | null;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+      {value ? (
+        <CategoryMark value={value} />
+      ) : (
+        <span className="text-slate-400">Aucune</span>
+      )}
+      {parentId !== null && (
+        <Link
+          href={`/projects/${parentId}`}
+          className="cursor-pointer text-xs text-slate-400 underline-offset-2 transition-colors hover:text-slate-700 hover:underline"
+        >
+          {value ? "Définie sur le projet" : "À définir sur le projet"}
+        </Link>
+      )}
+    </div>
+  );
+}
+
+/**
  * What one needs to steer a mission.
  *
  * Characteristics at the top, consumption at the bottom: one looks first at
@@ -110,10 +148,17 @@ export function ProjectSteeringTab({
           </Row>
 
           <Row title="Catégorie">
-            <CategoryPicker
-              value={project.category}
-              onChange={(category) => updateFields({ category })}
-            />
+            {project.kind === "work_package" ? (
+              <InheritedCategory
+                value={project.category}
+                parentId={project.parent_id}
+              />
+            ) : (
+              <CategoryPicker
+                value={project.category}
+                onChange={(category) => updateFields({ category })}
+              />
+            )}
           </Row>
 
           <Row title="Départements">

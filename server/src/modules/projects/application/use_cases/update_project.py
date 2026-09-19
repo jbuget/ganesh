@@ -12,7 +12,11 @@ from src.modules.projects.domain.entities.project import Project
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
-from src.modules.projects.domain.services.hierarchy import ensure_can_be_parent
+from src.modules.projects.domain.services.hierarchy import (
+    ensure_can_be_parent,
+    ensure_carries_no_own_category,
+    with_resolved_category,
+)
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
@@ -82,6 +86,7 @@ class UpdateProjectUseCase:
 
         # Replays the entity invariants on the resulting state.
         project.__post_init__()
+        ensure_carries_no_own_category(project)
 
         await self._projects.update(project)
 
@@ -96,4 +101,12 @@ class UpdateProjectUseCase:
                     payload={"field": field},
                 )
             )
-        return project
+
+        # A work package answers with the axis of its project, the one every
+        # screen already shows it under.
+        parent = (
+            await self._projects.get_by_id(project.parent_id)
+            if project.parent_id is not None
+            else None
+        )
+        return with_resolved_category(project, parent)
