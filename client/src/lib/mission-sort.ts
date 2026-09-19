@@ -14,7 +14,7 @@ export type { SortDirection };
 
 /** The reference list columns the list can be ordered by. */
 export type SortColumn =
-  "project" | "phase" | "priority" | "category" | "build" | "run";
+  "project" | "phase" | "priority" | "category" | "build" | "run" | "goLive";
 
 /** The column asked for, or `null` for the reference list's own order. */
 export type MissionSort = ColumnSort<SortColumn>;
@@ -28,6 +28,7 @@ const COLUMNS: SortColumn[] = [
   "category",
   "build",
   "run",
+  "goLive",
 ];
 
 const PRIORITY_RANKS = new Map(PRIORITIES.map((p, rank) => [p.value, rank]));
@@ -50,6 +51,9 @@ const VALUES: Record<SortColumn, (m: Mission) => string | number | null> = {
   // packages, so the tree is what gets compared.
   build: (m) => m.tree_cost.build_days || null,
   run: (m) => m.tree_cost.run_days || null,
+  // Written down as `2026-11-15`, which compares as it reads: no date has to
+  // be built to put two of them in order.
+  goLive: (m) => m.project.go_live_date ?? null,
 };
 
 function byLabel(a: Mission, b: Mission): number {

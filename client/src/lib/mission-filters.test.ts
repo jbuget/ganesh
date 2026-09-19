@@ -14,10 +14,13 @@ import type { BoardCardResponse } from "@/lib/api/generated/model";
 const card = (over: Record<string, unknown> = {}): BoardCardResponse =>
   ({
     consumed_days: 0,
+    build_days: 0,
     contributors: [{ id: 1, display_name: "Léa Chen", initials: "LC" }],
     comments: 0,
+    latest_update: null,
     sub_projects: 0,
     parent: null,
+    departments: [],
     ...over,
     project: {
       id: 1,
@@ -34,9 +37,10 @@ const card = (over: Record<string, unknown> = {}): BoardCardResponse =>
       monday_subitem_id: null,
       is_syncable_to_monday: false,
       is_deletable: false,
+      is_published: false,
       ...(over.project as object),
     },
-  }) as BoardCardResponse;
+  }) as unknown as BoardCardResponse;
 
 const filters = (over: Partial<MissionFilters> = {}): MissionFilters => ({
   ...NO_FILTER,
@@ -237,5 +241,92 @@ describe("filters held by the URL", () => {
     const params = new URLSearchParams("phase=sieste&contributor=abc");
 
     expect(readFilters(params)).toEqual(NO_FILTER);
+  });
+});
+
+describe("filtering by department", () => {
+  it("keeps a mission serving any of the departments asked for", () => {
+    const missions = [
+      card({ departments: ["landlords", "condominium"] }),
+      card({ departments: ["customer_service"] }),
+    ];
+
+    const kept = filterMissions(missions, filters({ departments: ["condominium"] }));
+
+    expect(kept).toHaveLength(1);
+    expect(kept[0].departments).toContain("condominium");
+  });
+
+  it("drops a mission serving nobody in particular", () => {
+    expect(
+      filterMissions([card()], filters({ departments: ["landlords"] })),
+    ).toHaveLength(0);
+  });
+
+  it("takes nothing away while no department is asked for", () => {
+    expect(filterMissions([card()], NO_FILTER)).toHaveLength(1);
+  });
+});
+
+describe("filtering by publication", () => {
+  it("keeps only what the catalogue draws a card for", () => {
+    const missions = [
+      card({ project: { id: 1, is_published: true } }),
+      card({ project: { id: 2, is_published: false } }),
+    ];
+
+    const kept = filterMissions(missions, filters({ publications: ["published"] }));
+
+    expect(kept.map((m) => m.project.id)).toEqual([1]);
+  });
+
+  /** The question one comes here for: which missions still have no sheet. */
+  it("finds the missions still missing a service sheet", () => {
+    const missions = [
+      card({ project: { id: 1, is_published: true } }),
+      card({ project: { id: 2, is_published: false } }),
+    ];
+
+    const kept = filterMissions(missions, filters({ publications: ["unpublished"] }));
+
+    expect(kept.map((m) => m.project.id)).toEqual([2]);
+  });
+
+  /** Unlike the state, an empty criterion is neutral here. */
+  it("shows both sides while nothing is asked for", () => {
+    const missions = [
+      card({ project: { id: 1, is_published: true } }),
+      card({ project: { id: 2, is_published: false } }),
+    ];
+
+    expect(filterMissions(missions, NO_FILTER)).toHaveLength(2);
+  });
+});
+
+describe("the new criteria in the address", () => {
+  it("reads them back as they were written", () => {
+    const written = new URLSearchParams();
+    writeFilters(
+      written,
+      filters({ departments: ["landlords"], publications: ["unpublished"] }),
+    );
+
+    expect(readFilters(written)).toEqual(
+      filters({ departments: ["landlords"], publications: ["unpublished"] }),
+    );
+  });
+
+  it("ignores a department and a publication it cannot read", () => {
+    const read = readFilters(
+      new URLSearchParams("department=greffe&publication=peut-etre"),
+    );
+
+    expect(read.departments).toEqual([]);
+    expect(read.publications).toEqual([]);
+  });
+
+  it("counts them as filters set", () => {
+    expect(hasActiveFilter(filters({ departments: ["landlords"] }))).toBe(true);
+    expect(hasActiveFilter(filters({ publications: ["published"] }))).toBe(true);
   });
 });

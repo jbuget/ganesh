@@ -19,7 +19,7 @@ from src.modules.projects.infrastructure.database.models.project_detail_models i
     ProjectStackModel,
     ProjectTagModel,
 )
-from src.shared.enums.department import Department
+from src.shared.enums.department import Department, in_declared_order
 
 
 class SqlProjectDetailRepository(ProjectDetailRepository):
@@ -35,6 +35,18 @@ class SqlProjectDetailRepository(ProjectDetailRepository):
             )
         )
         return list(result.scalars().all())
+
+    async def list_departments_by_project(self) -> dict[int, list[Department]]:
+        result = await self._session.execute(
+            select(ProjectDepartmentModel.project_id, ProjectDepartmentModel.department)
+        )
+        by_project: dict[int, list[Department]] = {}
+        for project_id, department in result.all():
+            by_project.setdefault(project_id, []).append(department)
+        return {
+            project_id: in_declared_order(departments)
+            for project_id, departments in by_project.items()
+        }
 
     async def set_departments(
         self, project_id: int, departments: list[Department]

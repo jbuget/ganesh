@@ -1,5 +1,6 @@
 import type {
   BoardMemberResponse,
+  Department,
   ProjectCategory,
   ProjectKind,
   ProjectPriority,
@@ -7,6 +8,7 @@ import type {
   ProjectStatus,
 } from "@/lib/api/generated/model";
 import { CATEGORIES, PHASES, PRIORITIES } from "@/lib/board";
+import { DEPARTMENTS } from "@/lib/departments";
 
 /**
  * A mission is active until it has been archived.
@@ -18,6 +20,15 @@ import { CATEGORIES, PHASES, PRIORITIES } from "@/lib/board";
 export type MissionState = "active" | "archived";
 
 /**
+ * Whether the service catalogue draws a card for the mission.
+ *
+ * waat.tools publishes what Ganesh says is publishable: this criterion is how
+ * one finds the missions still missing a service sheet, which no other screen
+ * asks.
+ */
+export type PublicationState = "published" | "unpublished";
+
+/**
  * Everything that gets filtered: a mission, and who looks after it.
  *
  * The shape covers a kanban card as well as a reference list row. Both screens
@@ -27,6 +38,7 @@ export type MissionState = "active" | "archived";
 export interface FilterableMission {
   project: ProjectResponse;
   contributors: BoardMemberResponse[];
+  departments: Department[];
 }
 
 /** What the screen is asked to show. */
@@ -36,8 +48,10 @@ export interface MissionFilters {
   categories: ProjectCategory[];
   priorities: ProjectPriority[];
   contributors: number[];
+  departments: Department[];
   types: ProjectKind[];
   states: MissionState[];
+  publications: PublicationState[];
 }
 
 /** The whole board: no criterion set. */
@@ -47,8 +61,10 @@ export const NO_FILTER: MissionFilters = {
   categories: [],
   priorities: [],
   contributors: [],
+  departments: [],
   types: [],
   states: [],
+  publications: [],
 };
 
 /**
@@ -74,6 +90,18 @@ export const MISSION_STATES: { value: MissionState; label: string }[] = [
   { value: "archived", label: "Archivées" },
 ];
 
+/**
+ * The two sides of the catalogue.
+ *
+ * Empty takes nothing away, unlike the state: one comes to the reference list
+ * to steer missions, published or not, and only asks the question when
+ * tending the catalogue.
+ */
+export const PUBLICATION_STATES: { value: PublicationState; label: string }[] = [
+  { value: "published", label: "Publiées" },
+  { value: "unpublished", label: "Non publiées" },
+];
+
 /** Lowercase and unaccented: searching « copropriete » finds « copropriété ». */
 function normalise(body: string): string {
   return body
@@ -89,8 +117,10 @@ export function hasActiveFilter(filters: MissionFilters): boolean {
     filters.categories.length > 0 ||
     filters.priorities.length > 0 ||
     filters.contributors.length > 0 ||
+    filters.departments.length > 0 ||
     filters.types.length > 0 ||
-    filters.states.length > 0
+    filters.states.length > 0 ||
+    filters.publications.length > 0
   );
 }
 
@@ -138,6 +168,21 @@ function kept(mission: FilterableMission, filters: MissionFilters): boolean {
     if (!filters.contributors.some((id) => holders.includes(id))) return false;
   }
 
+  // A mission serving landlords and customer service answers to either: the
+  // criterion asks whom it is for, not whom it is only for.
+  if (filters.departments.length > 0) {
+    if (!filters.departments.some((d) => mission.departments.includes(d))) {
+      return false;
+    }
+  }
+
+  if (filters.publications.length > 0) {
+    const catalogued: PublicationState = mission.project.is_published
+      ? "published"
+      : "unpublished";
+    if (!filters.publications.includes(catalogued)) return false;
+  }
+
   return true;
 }
 
@@ -164,8 +209,10 @@ const PARAMETERS = {
   category: "category",
   priority: "priority",
   contributor: "contributor",
+  department: "department",
   type: "type",
   state: "state",
+  publication: "publication",
 } as const;
 
 const KNOWN_PHASES = new Set<string>(PHASES.map((p) => p.status));
@@ -173,6 +220,8 @@ const KNOWN_CATEGORIES = new Set<string>(CATEGORIES.map((c) => c.value));
 const KNOWN_PRIORITIES = new Set<string>(PRIORITIES.map((p) => p.value));
 const KNOWN_KINDS = new Set<string>(MISSION_KINDS.map((t) => t.value));
 const KNOWN_STATES = new Set<string>(MISSION_STATES.map((e) => e.value));
+const KNOWN_DEPARTMENTS = new Set<string>(DEPARTMENTS.map((d) => d.value));
+const KNOWN_PUBLICATIONS = new Set<string>(PUBLICATION_STATES.map((p) => p.value));
 
 /** Keeps from a parameter only the values we know how to read. */
 function knownValues<T extends string>(
@@ -207,8 +256,18 @@ export function readFilters(params: URLSearchParams): MissionFilters {
       .getAll(PARAMETERS.contributor)
       .map(Number)
       .filter((id) => Number.isInteger(id) && id > 0),
+    departments: knownValues<Department>(
+      params,
+      PARAMETERS.department,
+      KNOWN_DEPARTMENTS,
+    ),
     types: knownValues<ProjectKind>(params, PARAMETERS.type, KNOWN_KINDS),
     states: knownValues<MissionState>(params, PARAMETERS.state, KNOWN_STATES),
+    publications: knownValues<PublicationState>(
+      params,
+      PARAMETERS.publication,
+      KNOWN_PUBLICATIONS,
+    ),
   };
 }
 
@@ -223,6 +282,12 @@ export function writeFilters(params: URLSearchParams, filters: MissionFilters): 
   filters.contributors.forEach((id) =>
     params.append(PARAMETERS.contributor, String(id)),
   );
+  filters.departments.forEach((department) =>
+    params.append(PARAMETERS.department, department),
+  );
   filters.types.forEach((type) => params.append(PARAMETERS.type, type));
   filters.states.forEach((state) => params.append(PARAMETERS.state, state));
+  filters.publications.forEach((publication) =>
+    params.append(PARAMETERS.publication, publication),
+  );
 }

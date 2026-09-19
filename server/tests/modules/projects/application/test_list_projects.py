@@ -14,6 +14,7 @@ from src.modules.projects.domain.entities.project_link import LinkIcon, ProjectL
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.users.domain.entities.user import Role, User
+from src.shared.enums.department import Department
 from tests.helpers.in_memory_repositories import (
     InMemoryEntryRepository,
     InMemoryProjectAssigneeRepository,
@@ -245,6 +246,32 @@ async def test_the_links_of_another_mission_stay_with_it() -> None:
     listed = await build(details=details).execute()
 
     assert listed[0].links == []
+
+
+async def test_a_mission_carries_its_departments() -> None:
+    """The reference list shows them in a column, and filters on them."""
+    details = InMemoryProjectDetailRepository()
+    await details.set_departments(10, [Department.CONDOMINIUM, Department.LANDLORDS])
+
+    listed = await build(details=details).execute()
+
+    assert listed[0].departments == [Department.LANDLORDS, Department.CONDOMINIUM]
+
+
+async def test_a_mission_without_a_department_carries_none() -> None:
+    listed = await build().execute()
+
+    assert listed[0].departments == []
+
+
+async def test_the_departments_of_another_mission_stay_with_it() -> None:
+    """One read serves the whole list: each row must get its own departments."""
+    details = InMemoryProjectDetailRepository()
+    await details.set_departments(99, [Department.OPERATIONS])
+
+    listed = await build(details=details).execute()
+
+    assert listed[0].departments == []
 
 
 async def test_a_work_package_is_listed_with_the_axis_of_its_project() -> None:

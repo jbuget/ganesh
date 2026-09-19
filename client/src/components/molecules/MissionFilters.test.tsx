@@ -47,17 +47,24 @@ describe("MissionFilters", () => {
     expect(screen.getByRole("button", { name: "Colonnes" })).toBeInTheDocument();
   });
 
-  it("offers the five criteria", () => {
+  it("offers every criterion the two mission screens share", () => {
     bar();
 
     expect(screen.getByLabelText("Rechercher une mission")).toBeInTheDocument();
-    ["Phase", "Catégorie", "Priorité", "Intervenant", "Type", "État"].forEach(
-      (criterion) => {
-        expect(
-          screen.getByRole("button", { name: new RegExp(criterion) }),
-        ).toBeInTheDocument();
-      },
-    );
+    [
+      "Phase",
+      "Catégorie",
+      "Département",
+      "Priorité",
+      "Intervenant",
+      "Type",
+      "Publication",
+      "État",
+    ].forEach((criterion) => {
+      expect(
+        screen.getByRole("button", { name: new RegExp(criterion) }),
+      ).toBeInTheDocument();
+    });
   });
 
   it("reports the search typed", () => {
@@ -104,6 +111,25 @@ describe("MissionFilters", () => {
     fireEvent.click(screen.getByRole("button", { name: "Critique" }));
 
     expect(onChange).toHaveBeenCalledWith({ priorities: ["critical"] });
+  });
+
+  it("reports a ticked department", () => {
+    const { onChange } = bar();
+
+    fireEvent.click(screen.getByRole("button", { name: /Département/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Copropriété" }));
+
+    expect(onChange).toHaveBeenCalledWith({ departments: ["condominium"] });
+  });
+
+  /** Tending the catalogue: which missions still have no service sheet. */
+  it("offers to look at the missions with no service sheet", () => {
+    const { onChange } = bar();
+
+    fireEvent.click(screen.getByRole("button", { name: /Publication/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Non publiées" }));
+
+    expect(onChange).toHaveBeenCalledWith({ publications: ["unpublished"] });
   });
 
   it("offers to look at archived missions", () => {

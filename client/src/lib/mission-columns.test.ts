@@ -18,11 +18,13 @@ describe("hideable columns", () => {
       "phase",
       "priority",
       "category",
+      "departments",
       "build",
       "run",
+      "goLive",
       "leads",
       "contributors",
-      "links",
+      "published",
     ]);
   });
 });
@@ -56,9 +58,9 @@ describe("writeHiddenColumns", () => {
 
   it("writes the columns in the order of the table, whatever the order of the clicks", () => {
     const written = params("");
-    writeHiddenColumns(written, hiddenColumns(["links", "phase"]));
+    writeHiddenColumns(written, hiddenColumns(["published", "phase"]));
 
-    expect(written.get("hide")).toBe("phase,links");
+    expect(written.get("hide")).toBe("phase,published");
   });
 
   it("leaves the other parameters alone", () => {
@@ -72,13 +74,13 @@ describe("writeHiddenColumns", () => {
 
 describe("tableWidth", () => {
   it("spans the full reference list when every column shows", () => {
-    expect(tableWidth(NO_HIDDEN_COLUMN)).toBe(1500);
+    expect(tableWidth(NO_HIDDEN_COLUMN)).toBe(1828);
   });
 
   it("gives back exactly what a column put away was taking", () => {
     const category = HIDEABLE_COLUMNS.find((column) => column.key === "category");
 
-    expect(tableWidth(hiddenColumns(["category"]))).toBe(1500 - category!.width);
+    expect(tableWidth(hiddenColumns(["category"]))).toBe(1828 - category!.width);
   });
 
   /** Nothing left but the name and its thread: the row still reads. */
