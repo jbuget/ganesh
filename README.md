@@ -1,4 +1,4 @@
-# Timesheet
+# Janus
 
 Per-project time tracking for WAAT's Dev & Automation team.
 

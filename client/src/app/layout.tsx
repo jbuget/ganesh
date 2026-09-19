@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Timesheet — WAAT",
+  title: "Janus — WAAT",
   description: "Suivi du temps passé par projet",
 };
 

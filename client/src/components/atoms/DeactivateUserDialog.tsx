@@ -39,7 +39,7 @@ export function DeactivateUserDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Désactiver {name} ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Ce compte n&apos;aura plus accès à Timesheet, et disparaîtra des listes. Ses
+            Ce compte n&apos;aura plus accès à Janus, et disparaîtra des listes. Ses
             saisies passées sont conservées. Un manager peut le réactiver à tout moment.
           </AlertDialogDescription>
         </AlertDialogHeader>

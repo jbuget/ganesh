@@ -1,4 +1,4 @@
-# Monday ↔ Timesheet mapping (groundwork for V1.1)
+# Monday ↔ Janus mapping (groundwork for V1.1)
 
 > V1 does **not** talk to Monday. This document prepares V1.1: a "Synchroniser
 > vers Monday" button, managers only, write-only.
@@ -38,7 +38,7 @@ the board, in French: they identify real objects and must match exactly.
 
 ## Sync rules
 
-1. **One way**: Timesheet → Monday. A value typed into Monday is overwritten,
+1. **One way**: Janus → Monday. A value typed into Monday is overwritten,
    never read back. Monday is not a source of entry.
 2. **Delivered only**: sum nothing but the entries whose `day <= today`.
    Forecast must never show up as time spent.
@@ -53,7 +53,7 @@ the board, in French: they identify real objects and must match exactly.
 
 ## Worth watching
 
-Timesheet's phase statuses (`exploration`, `scoping`, `development`,
+Janus's phase statuses (`exploration`, `scoping`, `development`,
 `validation`, `deployment`, `operations`) are **distinct** from Monday's "Statut
 d'avancement". Neither must overwrite the other: they answer different
 questions.
