@@ -74,12 +74,10 @@ export function RoadmapTimeline({
     // The scale stays put while the bands move under it. Sixty lines deep,
     // a reader who has lost the months no longer knows what they are looking
     // at: the axis is the reading, not an ornament at the top of it.
-    // `overflow-hidden` is what makes the rounded corners real: the header
-    // band paints its own background to the edge, and without it the grey
-    // squares off the two top corners the frame has just rounded.
-    <div
-      className={`flex h-full min-h-0 flex-col overflow-hidden rounded-md border bg-white ${STRONG_RULE}`}
-    >
+    // Square corners, as every table of the application has: a frame that
+    // rounded its own would read as a card laid on the page rather than as
+    // one more table in it.
+    <div className={`flex h-full min-h-0 flex-col border bg-white ${STRONG_RULE}`}>
       <div className={`flex shrink-0 items-end border-b bg-slate-50 ${STRONG_RULE}`}>
         <div className={`${HEADINGS} px-3 py-1`}>
           <span className="text-xs text-slate-500">Mission</span>

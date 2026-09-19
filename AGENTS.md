@@ -100,7 +100,9 @@ inside the table.
 **The strong rule is `STRONG_RULE`, and it binds outside `<table>` too.** A
 screen that draws its own frame in plain elements — the roadmap does, its rows
 being bars rather than cells — still closes it at that weight, and never at
-`slate-300`. Strength marks an edge: the frame around, and any line that breaks
+`slate-300`. **Square corners, too**: no table of the application rounds its
+frame, and one that did would read as a card laid on the page rather than as
+one more table in it. Strength marks an edge: the frame around, and any line that breaks
 the reading in two, such as the title of a band, which carries it above and
 below. What merely separates two rows stays faint. A frame drawn a shade
 lighter than the tables beside it reads as a different, weaker object, which is
