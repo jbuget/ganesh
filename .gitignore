@@ -21,6 +21,9 @@ out/
 .env
 .env.*
 !.env.example
+# Read, not secret: the shape of the production environment, whose real values
+# live in SSM Parameter Store.
+!.env.production.example
 
 # Outils & editeurs
 .DS_Store

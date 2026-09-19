@@ -105,3 +105,24 @@ jobs:
 
       - name: Tests
         run: pnpm test
+
+  # The production image, built but never pushed. Without this the Dockerfile is
+  # first exercised by a deploy, which is one merge too late to find out it does
+  # not build. amd64 on the runner: the layers are the same, and the arm64 build
+  # the deploy does needs QEMU for no gain here.
+  api-image:
+    name: API — the production image builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          push: false
+          cache-from: type=gha,scope=api-ci
+          cache-to: type=gha,mode=max,scope=api-ci

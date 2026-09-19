@@ -46,6 +46,14 @@ redirect URI must be declared on the Entra app registration.
 Running `pnpm dev` straight from `client/` ignores the root `.env` and falls
 back to `3000`: go through `make dev-client`.
 
+## Production
+
+`ganesh.waat.tools` is served by AWS Amplify, `api.ganesh.waat.tools` by one
+EC2 host behind Caddy, and the database is managed RDS. A push to `main`
+deploys the API through GitHub Actions and SSM — no SSH key, no port 22.
+
+The infrastructure is in `terraform/`, the runbook in `docs/deployment.md`.
+
 ## Quality
 
 ```bash
@@ -56,3 +64,4 @@ make check       # lint + architecture + types + tests, server and client
 
 - `CLAUDE.md` — development charter (architecture, git, tests, conventions)
 - `AGENTS.md` — UI conventions and Atomic Design
+- `docs/deployment.md` — deploying to AWS, and running it once it is there

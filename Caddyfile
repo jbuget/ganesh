@@ -1,0 +1,22 @@
+# ---------------------------------------------------------------------------
+# Production reverse proxy for the Ganesh API host (EC2).
+# Caddy terminates TLS with certificates it obtains and renews by itself.
+#
+# Prerequisites before the first boot:
+#   - DNS: api.ganesh.waat.tools  A  <the Elastic IP, `terraform output public_ip`>
+#     It must resolve first, or the ACME challenge fails.
+#   - Security group: 80 and 443 open to 0.0.0.0/0 (HTTP-01 challenge, then serving).
+#
+# `ganesh.waat.tools` is not served here: that is Amplify's.
+# ---------------------------------------------------------------------------
+
+api.ganesh.waat.tools {
+	encode gzip zstd
+
+	# The API on the internal compose network; `api` resolves through Docker's
+	# own DNS. Nothing else on this host answers on 8000.
+	reverse_proxy api:8000 {
+		health_uri /api/v1/health
+		health_interval 30s
+	}
+}
