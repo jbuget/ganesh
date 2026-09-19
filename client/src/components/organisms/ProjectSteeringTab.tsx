@@ -35,6 +35,7 @@ interface ProjectSteeringTabProps {
   }) => Promise<void>;
   addLink: (label: string, url: string, icon: LinkIcon | null) => Promise<void>;
   removeLink: (linkId: number) => Promise<void>;
+  addSubProject: (label: string) => Promise<void>;
 }
 
 /**
@@ -83,6 +84,7 @@ export function ProjectSteeringTab({
   updateFields,
   addLink,
   removeLink,
+  addSubProject,
 }: ProjectSteeringTabProps) {
   // Until anything is typed, the field shows what the server says: no local
   // copy to resynchronise on every reload.
@@ -179,10 +181,15 @@ export function ProjectSteeringTab({
         </div>
       </section>
 
-      <section className="space-y-2">
-        <SectionTitle>Sous-projets</SectionTitle>
-        <ProjectSubProjects subProjects={detail.sub_projects} />
-      </section>
+      {/* The hierarchy stops at two levels, and off-project work carries
+          nothing: a mission that cannot be a parent is not offered the
+          section, rather than offering a move the server would refuse. */}
+      {project.kind === "project" && (
+        <section className="space-y-2">
+          <SectionTitle>Sous-projets</SectionTitle>
+          <ProjectSubProjects subProjects={detail.sub_projects} onAdd={addSubProject} />
+        </section>
+      )}
 
       <section className="space-y-2">
         <SectionTitle>Consommation</SectionTitle>

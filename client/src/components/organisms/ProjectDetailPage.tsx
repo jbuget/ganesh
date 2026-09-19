@@ -98,6 +98,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
           updateFields={sheet.updateFields}
           addLink={sheet.addLink}
           removeLink={sheet.removeLink}
+          addSubProject={sheet.addSubProject}
           archive={sheet.archive}
           unarchive={sheet.unarchive}
         />

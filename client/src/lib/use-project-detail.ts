@@ -13,6 +13,7 @@ import type {
 import {
   addProjectLink,
   changeProjectStatus,
+  createProject,
   getProjectDetail,
   removeProjectLink,
   updateProject,
@@ -122,6 +123,22 @@ export function useProjectDetail(
 
     async removeLink(linkId: number) {
       await removeProjectLink(projectId, linkId);
+      await reload();
+    },
+
+    /**
+     * Cuts the mission into a work package.
+     *
+     * A name is all that is asked: the package opens at the phase every mission
+     * starts from, and is steered from its own sheet afterwards.
+     */
+    async addSubProject(label: string) {
+      await createProject({
+        label,
+        kind: "work_package",
+        status: "exploration",
+        parent_id: projectId,
+      });
       await reload();
     },
   };

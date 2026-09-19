@@ -11,6 +11,7 @@ const api = vi.hoisted(() => ({
   changeProjectStatus: vi.fn(),
   addProjectLink: vi.fn(),
   removeProjectLink: vi.fn(),
+  createProject: vi.fn(),
 }));
 
 vi.mock("@/lib/api/generated/projects/projects", () => api);
@@ -67,6 +68,10 @@ describe("useProjectDetail", () => {
       "a link removed",
       (s: Awaited<ReturnType<typeof sheet>>) => s.current.removeLink(3),
     ],
+    [
+      "a sub-project added",
+      (s: Awaited<ReturnType<typeof sheet>>) => s.current.addSubProject("Reprise"),
+    ],
     ["archiving", (s: Awaited<ReturnType<typeof sheet>>) => s.current.archive()],
     ["unarchiving", (s: Awaited<ReturnType<typeof sheet>>) => s.current.unarchive()],
   ])("tells the screen it came from when %s changes", async (_what, change) => {
@@ -78,6 +83,26 @@ describe("useProjectDetail", () => {
     });
 
     expect(notify).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * The hierarchy stops at two levels, and the server refuses anything else:
+   * what is created here is a work package of the mission one is looking at,
+   * at the phase every mission starts from.
+   */
+  it("attaches a sub-project to the mission one is on", async () => {
+    const result = await sheet();
+
+    await act(async () => {
+      await result.current.addSubProject("Reprise");
+    });
+
+    expect(api.createProject).toHaveBeenCalledWith({
+      label: "Reprise",
+      kind: "work_package",
+      status: "exploration",
+      parent_id: 7,
+    });
   });
 
   it("reads the mission back from the server after a write", async () => {
