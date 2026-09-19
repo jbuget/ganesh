@@ -28,6 +28,7 @@ import {
   type HiddenColumns,
 } from "@/lib/mission-columns";
 import type { MissionSort, SortColumn } from "@/lib/mission-sort";
+import { TABLE_HEADER } from "@/lib/table-frame";
 import type { ProjectNode } from "@/lib/project-tree";
 
 interface MissionsTableProps {
@@ -82,11 +83,9 @@ export function MissionsTable({
           cannot write one for a span only known once the address has said
           which columns are put away. */}
       <Table className={MISSIONS_TABLE} style={{ width: tableWidth(hidden) }}>
-        {/* Sixty rows pass under the header: without it, one no longer knows
-            which column one is reading by the time one reaches the bottom. The
-            background sits on the cells and not on the row: in a table, a row's
-            background paints under the lines that scroll. */}
-        <TableHeader className="sticky top-0 z-10 [&_th]:border-b [&_th]:border-b-slate-500 [&_th]:bg-slate-50">
+        {/* Sixty rows pass under the header: the band of titles is the
+            application's own, and stays in sight. */}
+        <TableHeader className={TABLE_HEADER}>
           <TableRow>
             <SortableColumnHeader
               column="project"

@@ -1,3 +1,5 @@
+import { TABLE_FRAME } from "@/lib/table-frame";
+
 /**
  * The two left-hand columns of the reference list, held identically by the
  * header and by the rows.
@@ -53,12 +55,11 @@ export const SEPARATOR = "border-r border-r-slate-200";
 /**
  * The line that closes the pinned part, where the table starts scrolling.
  *
- * It is drawn strong, and over the full height, title band included: it does
- * not separate two columns like its neighbour, it says where what stays in
- * sight stops and what slides underneath begins. Same tint as the strong rules
- * of the entry grid, so both tables mark a boundary the same way.
+ * The same line the teammates table closes its name column with, and the same
+ * tint as the strong rules of the entry grid: every table of the application
+ * marks a boundary the same way.
  */
-export const STRONG_SEPARATOR = "border-r border-r-slate-500";
+export { STRONG_SEPARATOR } from "@/lib/table-frame";
 
 /**
  * The width of the following columns, set once and for all on the header: in
@@ -188,27 +189,9 @@ export function tableWidth(hidden: HiddenColumns): number {
  * the screen scrolls, and it is that scrolling the first two columns cross
  * without moving.
  *
- * Borders do not collapse: collapsed, they belong to the table and run from
- * edge to edge, including under the page margin, where they showed through on
- * the left while scrolling. Separated, each line belongs to its cell and stops
- * with it. The rows therefore carry none: the cells do the underlining, or
- * nothing would show.
- *
- * The frame is strong, the inner lines faint: the table then reads as one
- * block rather than as a grid trailing off into the page. It is drawn by the
- * cells at the edges and not by the table itself — a border on the table would
- * scroll away while the pinned column stays, leaving it open on its left.
+ * The frame itself is the application's own, drawn in `table-frame`.
  */
 export const MISSIONS_TABLE = [
   "table-fixed border-separate border-spacing-0",
-  // The top of the frame travels with the pinned header.
-  "[&_th]:border-t [&_th]:border-t-slate-500",
-  "[&_th:first-child]:border-l [&_th:first-child]:border-l-slate-500",
-  "[&_th:last-child]:border-r [&_th:last-child]:border-r-slate-500",
-  "[&_tbody_td]:border-b [&_tbody_td]:border-b-slate-200",
-  "[&_tbody_td:first-child]:border-l [&_tbody_td:first-child]:border-l-slate-500",
-  "[&_tbody_td:last-child]:border-r [&_tbody_td:last-child]:border-r-slate-500",
-  // The last row closes the table, and carries the strong rule rather than the
-  // line that separates two rows.
-  "[&_tbody_tr:last-child_td]:border-b-slate-500",
+  TABLE_FRAME,
 ].join(" ");
