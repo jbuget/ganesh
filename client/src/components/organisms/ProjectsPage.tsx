@@ -152,6 +152,7 @@ export function ProjectsPage() {
           tab={panel.openTab}
           onClose={panel.close}
           onMissionChanged={screen.refresh}
+          onOpenMission={(projectId) => panel.open(projectId)}
         />
       )}
     </PageLayout>

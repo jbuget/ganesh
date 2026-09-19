@@ -6,6 +6,7 @@
  */
 import type { BoardMemberResponse } from "./boardMemberResponse";
 import type { Department } from "./department";
+import type { ParentResponse } from "./parentResponse";
 import type { PhaseReachedResponse } from "./phaseReachedResponse";
 import type { ProjectContributionResponse } from "./projectContributionResponse";
 import type { ProjectLinkResponse } from "./projectLinkResponse";
@@ -24,4 +25,5 @@ export interface ProjectDetailResponse {
   consumed_days: number;
   contributions: ProjectContributionResponse[];
   sub_projects: ProjectResponse[];
+  parent: ParentResponse | null;
 }

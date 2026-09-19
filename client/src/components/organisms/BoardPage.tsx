@@ -185,6 +185,7 @@ export function BoardPage() {
           projectId={panel.openedMission}
           onClose={panel.close}
           onMissionChanged={board.reload}
+          onOpenMission={(projectId) => panel.open(projectId)}
         />
       )}
     </PageLayout>

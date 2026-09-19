@@ -51,6 +51,8 @@ class ProjectDetail:
     contributions: list[Contribution]
     #: Work packages attached to the mission, in alphabetical order.
     sub_projects: list[Project]
+    #: The project a work package belongs to. A project has none.
+    parent: Project | None = None
 
 
 class GetProjectDetailUseCase:
@@ -139,4 +141,5 @@ class GetProjectDetailUseCase:
                 ),
                 key=lambda work_package: work_package.label.lower(),
             ),
+            parent=parent,
         )
