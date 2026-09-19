@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { ProjectResponse } from "@/lib/api/generated/model";
-import { frenchList, publicationBlockers, suggestSlug } from "@/lib/service-sheet";
+import {
+  frenchList,
+  publicationBlockers,
+  slugError,
+  suggestSlug,
+} from "@/lib/service-sheet";
 
 const project = (overrides: Partial<ProjectResponse> = {}) =>
   ({
@@ -40,7 +45,7 @@ describe("suggestSlug", () => {
 describe("publicationBlockers", () => {
   it("names everything missing at once", () => {
     expect(publicationBlockers(project())).toEqual([
-      "l'adresse publique",
+      "le slug",
       "le résumé",
       "la criticité",
       "le type",
@@ -89,5 +94,29 @@ describe("frenchList", () => {
 
   it("lets the comma do the work and keeps et for the last", () => {
     expect(frenchList(["a", "b", "c"])).toBe("a, b et c");
+  });
+});
+
+describe("slugError", () => {
+  it("accepts a slug written as the catalogue reads it", () => {
+    expect(slugError("portail-bailleurs")).toBeNull();
+  });
+
+  it("accepts an emptied field: not every mission is published", () => {
+    expect(slugError(null)).toBeNull();
+  });
+
+  it("refuses a whole URL, which is what one is tempted to paste", () => {
+    expect(slugError("https://lorem-ipsum.waat.tools")).toBe(
+      "Un slug s'écrit en minuscules, chiffres et tirets — « portail-bailleurs », pas une URL entière.",
+    );
+  });
+
+  it("refuses capitals and spaces", () => {
+    expect(slugError("Portail Bailleurs")).not.toBeNull();
+  });
+
+  it("refuses a slug longer than the column holds", () => {
+    expect(slugError("a".repeat(101))).toBe("Un slug ne dépasse pas 100 caractères.");
   });
 });

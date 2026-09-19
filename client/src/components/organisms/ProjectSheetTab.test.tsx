@@ -89,9 +89,7 @@ describe("ProjectSheetTab", () => {
       sheet();
 
       expect(
-        screen.getByText(
-          "Il manque l'adresse publique, le résumé, la criticité et le type.",
-        ),
+        screen.getByText("Il manque le slug, le résumé, la criticité et le type."),
       ).toBeInTheDocument();
     });
 
@@ -203,5 +201,46 @@ describe("cancelling a field", () => {
     await userEvent.keyboard("{Escape}");
 
     expect(onEscape).not.toHaveBeenCalled();
+  });
+});
+
+describe("the slug", () => {
+  it("shows the address it completes, so one sees what is being typed", () => {
+    sheet({ project: { slug: "lorem-ipsum" } });
+
+    expect(screen.getByText("waat.tools/services/")).toBeInTheDocument();
+  });
+
+  it("shows that address on an empty field too: that is where one wonders", () => {
+    sheet();
+
+    expect(screen.getByRole("button", { name: "Slug" })).toHaveTextContent(
+      "waat.tools/services/portail-bailleurs",
+    );
+  });
+
+  it("refuses a pasted URL where the catalogue expects a slug", async () => {
+    const { updateFields } = sheet();
+
+    await userEvent.click(screen.getAllByRole("button", { name: "Slug" })[0]);
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Slug" }),
+      "https://lorem-ipsum.waat.tools{Enter}",
+    );
+
+    expect(updateFields).not.toHaveBeenCalled();
+    expect(screen.getByText(/pas une URL entière/)).toBeInTheDocument();
+  });
+
+  it("writes a slug the catalogue can read", async () => {
+    const { updateFields } = sheet();
+
+    await userEvent.click(screen.getAllByRole("button", { name: "Slug" })[0]);
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Slug" }),
+      "lorem-ipsum{Enter}",
+    );
+
+    expect(updateFields).toHaveBeenCalledWith({ slug: "lorem-ipsum" });
   });
 });

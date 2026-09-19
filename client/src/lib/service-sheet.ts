@@ -65,7 +65,7 @@ export function publicationBlockers(project: ProjectResponse): string[] {
     missing.push("une activité hors projet ne se publie pas");
     return missing;
   }
-  if (!project.slug) missing.push("l'adresse publique");
+  if (!project.slug) missing.push("le slug");
   if (!project.summary) missing.push("le résumé");
   if (!project.criticality) missing.push("la criticité");
   if (!project.service_type) missing.push("le type");
@@ -93,4 +93,35 @@ export function suggestSlug(label: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 100)
     .replace(/-+$/g, "");
+}
+
+/**
+ * Where a published sheet is read, up to the identifier that names it.
+ *
+ * Shown in front of the field: an identifier asked for on its own reads as an
+ * address to paste, and a whole URL lands in it.
+ */
+export const CATALOG_ADDRESS = "waat.tools/services/";
+
+/** What the catalogue accepts as a slug: the domain rule, reflected here. */
+const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const SLUG_MAX_LENGTH = 100;
+
+/**
+ * Why a slug would be refused, said before the server has to say it.
+ *
+ * The API holds the rule and refuses the write; this is only its reflection,
+ * so that what one reads is in French and names the shape expected. What one
+ * is tempted to paste is a whole URL: the message answers that first.
+ */
+export function slugError(value: string | null): string | null {
+  if (value === null || value === "") return null;
+  if (value.length > SLUG_MAX_LENGTH) {
+    return `Un slug ne dépasse pas ${SLUG_MAX_LENGTH} caractères.`;
+  }
+  if (!SLUG.test(value)) {
+    return "Un slug s'écrit en minuscules, chiffres et tirets — « portail-bailleurs », pas une URL entière.";
+  }
+  return null;
 }

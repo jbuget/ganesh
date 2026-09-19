@@ -30,6 +30,9 @@ class AuditAction(StrEnum):
     USER_IDENTITY_UPDATE = "user.identity_update"
     USER_DEACTIVATE = "user.deactivate"
     USER_ACTIVATE = "user.activate"
+    API_KEY_CREATE = "api_key.create"
+    API_KEY_UPDATE = "api_key.update"
+    API_KEY_REVOKE = "api_key.revoke"
 
 
 def _as_text(value: Any | None) -> str | None:
