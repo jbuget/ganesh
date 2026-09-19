@@ -1,16 +1,7 @@
 "use client";
 
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  pointerWithin,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-} from "@dnd-kit/core";
-import { Fragment, useRef, useState } from "react";
+import { DndContext, DragOverlay } from "@dnd-kit/core";
+import { Fragment } from "react";
 
 import { SortableColumnHeader } from "@/components/atoms/SortableColumnHeader";
 import { MissionRow } from "@/components/molecules/MissionRow";
@@ -37,10 +28,9 @@ import {
   type ColumnKey,
   type HiddenColumns,
 } from "@/lib/mission-columns";
-import type { ProjectListItemResponse } from "@/lib/api/generated/model";
-import { canBeAttached, canReceive } from "@/lib/mission-attach";
 import type { MissionSort, SortColumn } from "@/lib/mission-sort";
 import { TABLE_HEADER } from "@/lib/table-frame";
+import { useMissionDrag } from "@/lib/use-mission-drag";
 import type { ProjectNode } from "@/lib/project-tree";
 
 interface MissionsTableProps {
@@ -90,60 +80,17 @@ export function MissionsTable({
   onAttach,
 }: MissionsTableProps) {
   const shows = (column: ColumnKey) => !hidden.has(column);
-  const [dragged, setDragged] = useState<ProjectListItemResponse | null>(null);
-  // A few pixels before the drag starts: a row is clickable in full, and
-  // without that margin every click on the handle would begin a gesture.
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-  );
-  // Letting go over another row ends the gesture with a click, which the
-  // browser sends to what the two rows have in common — the table. Without
-  // this, every drop opened the mission that had just been moved.
-  const dropped = useRef(false);
-
-  /** The mission behind an id, wherever it sits in the tree. */
-  function find(id: number): ProjectListItemResponse | null {
-    for (const { mission, workPackages } of tree) {
-      if (mission.project.id === id) return mission;
-      const found = workPackages.find((one) => one.project.id === id);
-      if (found) return found;
-    }
-    return null;
-  }
-
-  function onDragStart(event: DragStartEvent) {
-    setDragged(find(Number(event.active.id)));
-  }
-
-  function onDragEnd(event: DragEndEvent) {
-    const mission = dragged;
-    setDragged(null);
-    dropped.current = true;
-    if (!event.over || mission === null) return;
-    const target = find(Number(event.over.id));
-    if (target === null || !canReceive(target, mission)) return;
-    void onAttach?.(mission.project.id, target.project.id);
-  }
-
-  /** What the row may do under the gesture being made, if any. */
-  function gesture(mission: ProjectListItemResponse, subProjects: number) {
-    if (!onAttach) return {};
-    return {
-      movable: canBeAttached(mission, subProjects),
-      receiving: canReceive(mission, dragged),
-    };
-  }
+  // The gesture lives in a hook, as the board's does: the table draws what it
+  // is given, and a drag is not a drawing.
+  const drag = useMissionDrag(tree, onAttach);
 
   return (
     <DndContext
-      sensors={sensors}
-      // The row under the cursor, not the one the dragged rectangle happens to
-      // overlap: rows are barely taller than the handle, and going by
-      // rectangles dropped the mission one line off from where it was aimed.
-      collisionDetection={pointerWithin}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-      onDragCancel={() => setDragged(null)}
+      sensors={drag.sensors}
+      collisionDetection={drag.collisionDetection}
+      onDragStart={drag.onDragStart}
+      onDragEnd={drag.onDragEnd}
+      onDragCancel={drag.onDragCancel}
     >
       {/* The shadcn container opens a scrolling context that would hold the
           header inside the table: we neutralise it so the `sticky` latches
@@ -153,25 +100,13 @@ export function MissionsTable({
           travel, and without that band on the right the last column would butt
           against the window edge. */}
       <div
-        // The click that closes a drag is swallowed here, before it reaches the
-        // row: the capture phase runs on the way down, so the row's own handler
-        // never fires.
-        onClickCapture={(event) => {
-          if (!dropped.current) return;
-          dropped.current = false;
-          event.stopPropagation();
-        }}
-        // A gesture that ended outside the table leaves its click there, and
-        // the mark would wait to swallow an honest one. Pressing again clears
-        // it: the press comes before the click it belongs to.
-        onPointerDownCapture={() => {
-          dropped.current = false;
-        }}
+        onClickCapture={drag.onClickCapture}
+        onPointerDownCapture={drag.onPointerDownCapture}
         className={[
           "w-max pr-6 [&_[data-slot=table-container]]:overflow-visible",
           // Nothing is selected while something is being carried: a slide
           // across a table otherwise paints three rows blue behind the copy.
-          dragged ? "select-none" : "",
+          drag.dragged ? "select-none" : "",
         ].join(" ")}
       >
         {/* The width is carried in figures rather than by a class: Tailwind
@@ -269,7 +204,7 @@ export function MissionsTable({
                     mission={mission}
                     isWorkPackage={mission.project.kind === "work_package"}
                     workPackages={workPackages.length}
-                    {...gesture(mission, workPackages.length)}
+                    {...drag.gesture(mission, workPackages.length)}
                     expanded={expanded}
                     onToggle={() => onToggle(mission.project.id)}
                     now={now}
@@ -283,7 +218,7 @@ export function MissionsTable({
                         key={workPackage.project.id}
                         mission={workPackage}
                         isWorkPackage
-                        {...gesture(workPackage, 0)}
+                        {...drag.gesture(workPackage, 0)}
                         now={now}
                         onOpen={() => onOpen(workPackage.project.id)}
                         onOpenThread={() => onOpenThread(workPackage.project.id)}
@@ -299,9 +234,9 @@ export function MissionsTable({
         {/* What is being carried follows the cursor, freed from the table: a row
           of ten columns dragged whole would hide the projects it is aimed at. */}
         <DragOverlay dropAnimation={null}>
-          {dragged && (
+          {drag.dragged && (
             <span className="inline-block w-max max-w-md truncate rounded border border-slate-300 bg-white px-2 py-1 text-sm whitespace-nowrap text-slate-800 shadow-lg">
-              {dragged.project.label}
+              {drag.dragged.project.label}
             </span>
           )}
         </DragOverlay>
