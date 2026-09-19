@@ -438,10 +438,18 @@ Three rules the drawing rests on:
   hatched is `PROJECTED`, a thin rule is `RUNNING`. `SegmentKind` decides it in
   the domain, not a colour picked on the front end — colour belongs to the
   phase. Reading a projection as a commitment is the mistake this screen
-  exists to prevent.
+  exists to prevent. The rule holds down to the red thread: a delay already
+  taken is drawn solid, one the projection merely supposes is dashed.
 - **Nothing is invented.** What was never recorded leaves no segment, and a
   stretch nobody can date is carried by the nearest phase that is dated. A
   roadmap that fills its own gaps gets read as fact.
+- **A placeholder is never counted as a fact.** A running rule has to open
+  somewhere to be drawn, and on the missions that were already live before
+  anybody recorded a phase, that day is chosen by the drawing — the window's
+  edge, which says « since before you started looking ». Only
+  `went_live_on` carries the day the register holds, and only it may be read
+  by the tally or by an écart. Asking the bar instead makes a portfolio that
+  shipped nothing announce « 23 mises en service ».
 - **A mission with nothing to draw still shows.** No estimate, no date, no
   time declared — that is the line steering has to see, and the tally above
   says how many there are before anybody reads a bar.

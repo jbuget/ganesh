@@ -32,6 +32,7 @@ def draw_segments(
     last_declared: date | None,
     projected_end: date | None,
     today: date,
+    window_start: date,
     window_end: date,
     is_active: bool,
 ) -> list[RoadmapSegment]:
@@ -47,7 +48,11 @@ def draw_segments(
         return []
 
     runs = status is ProjectStatus.OPERATIONS
-    running_from = _running_from(phases_reached, today, lived_end) if runs else None
+    running_from = (
+        _running_from(phases_reached, first_declared, today, lived_end, window_start)
+        if runs
+        else None
+    )
 
     # A service being kept alive closes its history the day it went live: what
     # comes after is not a phase, it is a life.
@@ -101,15 +106,36 @@ def _lived_end(
 
 
 def _running_from(
-    phases_reached: Mapping[ProjectStatus, date], today: date, lived_end: date
+    phases_reached: Mapping[ProjectStatus, date],
+    first_declared: date | None,
+    today: date,
+    lived_end: date,
+    window_start: date,
 ) -> date:
-    """The day the service went live.
+    """Where the rule opens: the day the service went live, or the best known.
 
-    Nobody recorded it on the missions that were already running when the
-    reference list was filled in. Those run from today: saying « depuis
-    toujours » would draw a history that never happened.
+    Nobody recorded that day on the missions that were already running when
+    the reference list was filled in, and the rule still has to open
+    somewhere. Two ways of not knowing, and they do not draw alike.
+
+    A service with nothing behind it — no phase, no day declared — was
+    running before this window opened. The rule is cut by the window's edge,
+    which says « since before you started looking » and invents no day. One
+    that does have a history carries on from where that history stops: that
+    is the most that is known, and dragging the rule back across it would
+    erase what *was* recorded.
+
+    Either way the day is a placeholder, not a fact. Only ``went_live_on``
+    carries the fact, which is why the tally reads that and never this.
     """
-    return phases_reached.get(ProjectStatus.OPERATIONS, min(today, lived_end))
+    recorded = phases_reached.get(ProjectStatus.OPERATIONS)
+    if recorded is not None:
+        return recorded
+
+    known = [day for day in (first_declared, *phases_reached.values()) if day]
+    if known:
+        return min(today, lived_end)
+    return min(window_start, today, lived_end)
 
 
 def _crossed(

@@ -194,9 +194,14 @@ class RoadmapMissionResponse(BaseModel):
     segments: list[RoadmapSegmentResponse]
     #: The date the team announced. The subject of this screen.
     target_date: date | None
+    #: The day the service was recorded as going live. Null when nobody wrote
+    #: it down, which is not the same as « it never did »: the bar opens its
+    #: rule somewhere regardless, and that day is a placeholder.
+    went_live_on: date | None
     #: Where the projection lands it. Null when it lands nowhere.
     landing_date: date | None
-    #: Days between the two. Positive means late.
+    #: Days between the date announced and wherever it lands — the recorded
+    #: go-live when there is one, the projection otherwise. Positive means late.
     slippage_days: int | None
     is_late: bool
     estimated_days: float | None

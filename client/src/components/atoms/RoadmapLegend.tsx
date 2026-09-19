@@ -1,9 +1,10 @@
 /**
- * What the three textures mean.
+ * What the textures mean.
  *
  * Not decoration: the whole screen rests on telling a fact from a
  * supposition, and a reader who has not been told which is which will read
- * both as a commitment.
+ * both as a commitment. The rule holds down to the red thread — a delay
+ * already taken and a delay merely projected are not the same news.
  */
 export function RoadmapLegend() {
   return (
@@ -32,7 +33,11 @@ export function RoadmapLegend() {
       </li>
       <li className="flex items-center gap-1.5">
         <span aria-hidden className="h-px w-6 bg-red-500" />
-        Glissement
+        Glissement constaté
+      </li>
+      <li className="flex items-center gap-1.5">
+        <span aria-hidden className="w-6 border-t border-dashed border-red-500" />
+        Glissement projeté
       </li>
     </ul>
   );

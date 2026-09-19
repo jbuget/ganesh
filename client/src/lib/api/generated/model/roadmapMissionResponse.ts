@@ -24,6 +24,7 @@ export interface RoadmapMissionResponse {
   parent_id: number | null;
   segments: RoadmapSegmentResponse[];
   target_date: string | null;
+  went_live_on: string | null;
   landing_date: string | null;
   slippage_days: number | null;
   is_late: boolean;
