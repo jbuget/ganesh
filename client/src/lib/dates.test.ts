@@ -8,7 +8,9 @@ import {
   formatDecimalDays,
   formatTotal,
   formatMonth,
+  monthParam,
   nextMonth,
+  parseMonthParam,
   previousMonth,
   weekdayInitial,
 } from "./dates";
@@ -124,5 +126,25 @@ describe("formatShortDate", () => {
 
   it("ignores the time of a timestamp", () => {
     expect(formatShortDate("2026-09-18T00:36:07.943722")).toBe("18/09/2026");
+  });
+});
+
+describe("monthParam / parseMonthParam", () => {
+  it("names a month the way an address carries it", () => {
+    expect(monthParam({ year: 2026, month: 8 })).toBe("2026-08");
+  });
+
+  it("reads back what it wrote", () => {
+    expect(parseMonthParam("2026-08")).toEqual({ year: 2026, month: 8 });
+  });
+
+  it("ignores an address naming no month", () => {
+    expect(parseMonthParam(null)).toBeNull();
+  });
+
+  it("ignores what is not a month: a hand-typed address must not break the screen", () => {
+    expect(parseMonthParam("septembre")).toBeNull();
+    expect(parseMonthParam("2026-13")).toBeNull();
+    expect(parseMonthParam("2026-00")).toBeNull();
   });
 });

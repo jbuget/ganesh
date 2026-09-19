@@ -1,5 +1,5 @@
-import { TimesheetPage } from "@/components/organisms/TimesheetPage";
+import { HomePage } from "@/components/organisms/HomePage";
 
 export default function Home() {
-  return <TimesheetPage />;
+  return <HomePage />;
 }

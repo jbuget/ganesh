@@ -35,6 +35,7 @@ vi.mock("@tanstack/react-query", () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   projects.createProject.mockResolvedValue({ id: 42 });
+  window.history.replaceState(null, "", "/");
 });
 
 function month() {
@@ -94,5 +95,29 @@ describe("useTimesheetMonth", () => {
       project_id: 10,
       month: screen.current.month,
     });
+  });
+});
+
+describe("the month in the address", () => {
+  it("opens the month the address names: a reminder links to the month it speaks of", () => {
+    window.history.replaceState(null, "", "?month=2026-03");
+
+    expect(month().current.month).toBe("2026-03-01");
+  });
+
+  it("falls back on the month running when the address names none", () => {
+    expect(month().current.month).toBe(
+      `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-01`,
+    );
+  });
+
+  it("writes the month it moves to, so the month can be shared by a link", () => {
+    const screen = month();
+
+    act(() => screen.current.goToPreviousMonth());
+
+    expect(new URLSearchParams(window.location.search).get("month")).toBe(
+      screen.current.month.slice(0, 7),
+    );
   });
 });

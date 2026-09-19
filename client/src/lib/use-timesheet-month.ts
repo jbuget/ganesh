@@ -20,16 +20,16 @@ import {
   useTeammates,
 } from "@/lib/api/queries";
 import type { DayValue } from "@/lib/day-value";
-import { firstDayOfMonth, nextMonth, previousMonth } from "@/lib/dates";
+import {
+  firstDayOfMonth,
+  monthParam,
+  nextMonth,
+  parseMonthParam,
+  previousMonth,
+  todayIso,
+} from "@/lib/dates";
 import { assignedMissionIds, missionsToDeclare } from "@/lib/missions";
-
-/** Today's date in local time: `toISOString` would return yesterday in the evening. */
-export function todayIso(): string {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${now.getFullYear()}-${month}-${day}`;
-}
+import { useQueryString, writeUrl } from "@/lib/url-state";
 
 /**
  * State and actions of a month's entry screen.
@@ -39,10 +39,14 @@ export function todayIso(): string {
  */
 export function useTimesheetMonth() {
   const today = todayIso();
-  const [cursor, setCursor] = useState(() => ({
+  // The month lives in the address, like the open panel: a reminder on the home
+  // screen links straight to the month it speaks of, and a month is shared by a
+  // link. Absent, it is the month running — which is what one comes for.
+  const query = useQueryString();
+  const cursor = parseMonthParam(new URLSearchParams(query).get("month")) ?? {
     year: Number(today.slice(0, 4)),
     month: Number(today.slice(5, 7)),
-  }));
+  };
   const [viewedUserId, setViewedUserId] = useState<number | null>(null);
 
   const queryClient = useQueryClient();
@@ -61,6 +65,11 @@ export function useTimesheetMonth() {
 
   async function refresh() {
     await queryClient.invalidateQueries();
+  }
+
+  /** Changing month is a navigation: going back must bring the previous one. */
+  function goToMonth(next: { year: number; month: number }) {
+    writeUrl((params) => params.set("month", monthParam(next)));
   }
 
   const isOwnMonth = viewedUserId === null || viewedUserId === me?.id;
@@ -104,11 +113,11 @@ export function useTimesheetMonth() {
     displayedProjectIds,
 
     goToPreviousMonth() {
-      setCursor(previousMonth(cursor.year, cursor.month));
+      goToMonth(previousMonth(cursor.year, cursor.month));
     },
 
     goToNextMonth() {
-      setCursor(nextMonth(cursor.year, cursor.month));
+      goToMonth(nextMonth(cursor.year, cursor.month));
     },
 
     viewTeammate(userId: number) {
