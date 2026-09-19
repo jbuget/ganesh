@@ -22,13 +22,19 @@ class GetTeamMoodsUseCase:
         days = window_days(today or date.today(), span=span)
 
         # Deactivated teammates come along: they posted while they were here,
-        # and dropping them would leave moods no name could be put on. They
-        # are left out of the headcount alone, which counts who could answer
-        # today.
+        # and dropping them would leave moods no name could be put on.
         people = await self._users.list_all(include_inactive=True)
-        headcount = sum(1 for person in people if person.is_active)
-
         moods = await self._moods.list_between(min(days), max(days))
+
+        # Who the window is about: whoever may answer today, plus whoever
+        # answered during it. Counting the active alone made a day read « 8 / 7 »
+        # as soon as someone who has since left had posted — a share above its
+        # whole says the denominator is the wrong one.
+        answered = {mood.user_id for mood in moods}
+        headcount = sum(
+            1 for person in people if person.is_active or person.id in answered
+        )
+
         return TeamMoods(
             report=build_report(days, moods, headcount=headcount), people=people
         )

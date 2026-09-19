@@ -6,17 +6,19 @@
  */
 
 /**
- * How a day felt, from the best to the worst.
+ * How a day felt, from the worst to the best.
  *
- * The order declared here is the order the choices are offered in, and the
- * order a day's moods are read in.
+ * The order declared here is the order the choices are offered in, the order
+ * a day's answers lay out, and the order a stacked bar is read in. A scale
+ * climbs: it runs low to high, as any axis does, and having it climb in one
+ * place and fall in another would make the same five faces read twice.
  */
 export type MoodLevel = (typeof MoodLevel)[keyof typeof MoodLevel];
 
 export const MoodLevel = {
-  excellent: "excellent",
-  good: "good",
-  neutral: "neutral",
-  hard: "hard",
   bad: "bad",
+  hard: "hard",
+  neutral: "neutral",
+  good: "good",
+  excellent: "excellent",
 } as const;

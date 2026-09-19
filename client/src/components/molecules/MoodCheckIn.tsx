@@ -20,9 +20,17 @@ interface MoodCheckInProps {
  * one-second gesture, and a screen of its own to make it would cost more than
  * the answer is worth — nobody would cross it twice.
  *
+ * Nothing is offered until one answers: the five faces stand by in grey, and a
+ * day left alone stays a day nobody answered for. Pre-picking « neutre » would
+ * have the screen answer in one's place, and a morale made of defaults
+ * measures the default.
+ *
  * Two days at most are offered, today and the working day before: past that
  * the window is closed, and a morale reconstituted a week later measures the
  * memory one keeps of the week rather than the days it was made of.
+ *
+ * The day sits on its own line above the faces: the block lives in the narrow
+ * column, where a label and five faces side by side would not fit.
  */
 export function MoodCheckIn({
   days,
@@ -33,31 +41,33 @@ export function MoodCheckIn({
   if (days.length === 0) return null;
 
   return (
-    <section className="rounded-lg border border-slate-300 bg-white p-4">
-      <header className="mb-3">
-        <h2 className="text-sm font-semibold text-slate-900">Mon moral</h2>
-        <p className="text-xs text-slate-500">
+    <section className="rounded-xl border border-slate-300 bg-white p-3">
+      <header className="mb-2">
+        <h2 className="text-sm font-medium text-slate-700">Mon moral</h2>
+        <p className="text-xs text-slate-400">
           Toute l&apos;équipe lit le résultat, et personne ne répond à votre place.
         </p>
       </header>
 
-      <ul className="space-y-1">
+      <ul className="space-y-2">
         {days.map((open) => {
           const answered = mood(open.level);
 
           return (
-            <li key={open.day} className="flex items-center gap-3">
-              <span className="w-36 shrink-0 text-sm text-slate-700 first-letter:uppercase">
-                {dayLabel(open.day, today)}
-              </span>
+            <li key={open.day}>
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-xs text-slate-500 first-letter:uppercase">
+                  {dayLabel(open.day, today)}
+                </span>
+                <span className="text-xs text-slate-400">
+                  {answered ? answered.label : "Pas encore de réponse"}
+                </span>
+              </div>
               <MoodPicker
                 value={open.level ?? null}
                 onPick={(level) => onPick(open.day, level)}
                 disabled={savingDay === open.day}
               />
-              <span className="text-sm text-slate-500">
-                {answered ? answered.label : "Pas encore de réponse"}
-              </span>
             </li>
           );
         })}

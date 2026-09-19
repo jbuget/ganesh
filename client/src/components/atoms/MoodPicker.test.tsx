@@ -4,12 +4,22 @@ import { describe, expect, it, vi } from "vitest";
 import { MoodPicker } from "./MoodPicker";
 
 describe("MoodPicker", () => {
-  it("offers the five levels, from the best to the worst", () => {
+  it("offers the five levels, from the worst to the best", () => {
     render(<MoodPicker value={null} onPick={vi.fn()} />);
 
     expect(
       screen.getAllByRole("radio").map((face) => face.getAttribute("aria-label")),
-    ).toEqual(["Excellente", "Bonne", "Neutre", "Difficile", "Mauvaise"]);
+    ).toEqual(["Mauvaise", "Difficile", "Neutre", "Bonne", "Excellente"]);
+  });
+
+  it("marks nothing until one answers: the screen does not answer in one's place", () => {
+    render(<MoodPicker value={null} onPick={vi.fn()} />);
+
+    expect(
+      screen
+        .getAllByRole("radio")
+        .every((face) => face.getAttribute("aria-checked") === "false"),
+    ).toBe(true);
   });
 
   it("marks the level already answered, and it alone", () => {

@@ -9,6 +9,7 @@ import {
   KanbanSquare,
   KeyRound,
   PanelLeft,
+  Smile,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -29,6 +30,7 @@ const TABS = [
   { href: "/projects", label: "Projets", Icon: FolderKanban },
   { href: "/planning", label: "Planification", Icon: GanttChartSquare },
   { href: "/users", label: "Utilisateurs", Icon: Users },
+  { href: "/mood", label: "Moral", Icon: Smile },
   // Shown to everyone, as « Utilisateurs » is: the navigation says what
   // exists, and the permission lives on the actions.
   { href: "/api-keys", label: "API", Icon: KeyRound },

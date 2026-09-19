@@ -14,9 +14,10 @@ import type {
   PeriodRange,
   ProjectListItemResponse,
   StatisticsResponse,
+  TeamMoodsResponse,
   UserResponse,
 } from "@/lib/api/generated/model";
-import { useGetMyMoods } from "@/lib/api/generated/moods/moods";
+import { useGetMyMoods, useGetTeamMoods } from "@/lib/api/generated/moods/moods";
 import { useGetStatistics } from "@/lib/api/generated/stats/stats";
 import { useListProjects } from "@/lib/api/generated/projects/projects";
 import { useGetMe, useListUsers } from "@/lib/api/generated/users/users";
@@ -89,4 +90,10 @@ export function useStatistics(range: PeriodRange) {
 export function useMyMoods() {
   const query = useGetMyMoods();
   return { ...query, days: successOf<MyMoodsResponse>(query.data)?.days ?? [] };
+}
+
+/** The team's morale over the last fortnight. */
+export function useTeamMoods() {
+  const query = useGetTeamMoods();
+  return { ...query, window: successOf<TeamMoodsResponse>(query.data) };
 }

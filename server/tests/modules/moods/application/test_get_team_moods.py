@@ -57,6 +57,17 @@ async def test_the_headcount_counts_who_could_answer_today() -> None:
     assert view.report.headcount == 2
 
 
+async def test_someone_who_has_left_counts_on_a_window_they_answered_in() -> None:
+    """Otherwise a day reads « 3 / 2 », and a share above its whole says the
+    denominator is the wrong one."""
+    view = await build(
+        [Mood(id=1, user_id=3, day=MONDAY, level=MoodLevel.GOOD)]
+    ).execute(today=TUESDAY)
+
+    assert view.report.headcount == 3
+    assert view.report.days[1].participation == 1
+
+
 async def test_a_deactivated_teammate_still_carries_the_moods_they_posted() -> None:
     view = await build(
         [Mood(id=1, user_id=3, day=MONDAY, level=MoodLevel.GOOD)]

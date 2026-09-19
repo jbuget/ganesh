@@ -23,7 +23,8 @@ class DayMoods:
     """One day of the window, and what the team said of it."""
 
     day: date
-    #: Best first, which is what makes the shape of a day readable at a glance.
+    #: Worst first, as the scale itself runs: what makes the shape of a day
+    #: readable at a glance is that it always climbs the same way.
     moods: tuple[SignedMood, ...]
 
     @property
@@ -87,7 +88,7 @@ def build_report(days: list[date], moods: list[Mood], headcount: int) -> MoodRep
                 moods=tuple(
                     SignedMood(user_id=mood.user_id, level=mood.level)
                     for mood in sorted(
-                        by_day[day], key=lambda m: (-m.level.score, m.user_id)
+                        by_day[day], key=lambda m: (m.level.score, m.user_id)
                     )
                 ),
             )

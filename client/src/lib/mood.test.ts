@@ -3,13 +3,13 @@ import { describe, expect, it } from "vitest";
 import { MOODS, dayLabel, mood } from "./mood";
 
 describe("mood", () => {
-  it("offers the levels from the best to the worst", () => {
+  it("offers the levels from the worst to the best: a scale climbs", () => {
     expect(MOODS.map((level) => level.value)).toEqual([
-      "excellent",
-      "good",
-      "neutral",
-      "hard",
       "bad",
+      "hard",
+      "neutral",
+      "good",
+      "excellent",
     ]);
   });
 

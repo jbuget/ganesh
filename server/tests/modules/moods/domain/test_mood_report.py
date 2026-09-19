@@ -14,7 +14,7 @@ def mood(user_id: int, day: date, level: MoodLevel) -> Mood:
     return Mood(id=None, user_id=user_id, day=day, level=level)
 
 
-def test_a_day_holds_its_moods_from_the_best_to_the_worst() -> None:
+def test_a_day_holds_its_moods_from_the_worst_to_the_best() -> None:
     report = build_report(
         DAYS,
         [
@@ -26,9 +26,9 @@ def test_a_day_holds_its_moods_from_the_best_to_the_worst() -> None:
     )
 
     assert [signed.level for signed in report.days[0].moods] == [
-        MoodLevel.EXCELLENT,
-        MoodLevel.NEUTRAL,
         MoodLevel.HARD,
+        MoodLevel.NEUTRAL,
+        MoodLevel.EXCELLENT,
     ]
 
 
@@ -77,7 +77,7 @@ def test_the_average_is_kept_to_two_decimals() -> None:
     assert report.days[0].average == 3.33
 
 
-def test_a_day_counts_every_level_it_carries() -> None:
+def test_a_day_counts_every_level_it_carries_in_the_order_of_the_scale() -> None:
     report = build_report(
         DAYS,
         [
@@ -88,13 +88,13 @@ def test_a_day_counts_every_level_it_carries() -> None:
         headcount=3,
     )
 
-    assert report.days[0].counts == {
-        MoodLevel.EXCELLENT: 0,
-        MoodLevel.GOOD: 2,
-        MoodLevel.NEUTRAL: 0,
-        MoodLevel.HARD: 0,
-        MoodLevel.BAD: 1,
-    }
+    assert list(report.days[0].counts.items()) == [
+        (MoodLevel.BAD, 1),
+        (MoodLevel.HARD, 0),
+        (MoodLevel.NEUTRAL, 0),
+        (MoodLevel.GOOD, 2),
+        (MoodLevel.EXCELLENT, 0),
+    ]
 
 
 def test_a_mood_outside_the_window_is_left_out() -> None:

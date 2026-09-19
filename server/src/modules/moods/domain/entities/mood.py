@@ -6,28 +6,30 @@ from enum import StrEnum
 
 
 class MoodLevel(StrEnum):
-    """How a day felt, from the best to the worst.
+    """How a day felt, from the worst to the best.
 
-    The order declared here is the order the choices are offered in, and the
-    order a day's moods are read in.
+    The order declared here is the order the choices are offered in, the order
+    a day's answers lay out, and the order a stacked bar is read in. A scale
+    climbs: it runs low to high, as any axis does, and having it climb in one
+    place and fall in another would make the same five faces read twice.
     """
 
-    EXCELLENT = "excellent"
-    GOOD = "good"
-    NEUTRAL = "neutral"
-    HARD = "hard"
     BAD = "bad"
+    HARD = "hard"
+    NEUTRAL = "neutral"
+    GOOD = "good"
+    EXCELLENT = "excellent"
 
     @property
     def score(self) -> int:
-        """Where the level sits on the scale: 5 for the best, 1 for the worst.
+        """Where the level sits on the scale: 1 for the worst, 5 for the best.
 
         Derived from the order above and never stored. What a teammate posts
         is a face, not a mark; the figure only exists to draw a trend, and
         keeping it out of the database is what stops it from becoming a note
         on a person.
         """
-        return len(MoodLevel) - list(MoodLevel).index(self)
+        return list(MoodLevel).index(self) + 1
 
 
 @dataclass

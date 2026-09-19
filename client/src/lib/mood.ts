@@ -5,7 +5,12 @@ import type { MoodLevel } from "@/lib/api/generated/model";
 import { formatWeekdayDate } from "@/lib/dates";
 
 /**
- * How a day felt, from the best to the worst.
+ * How a day felt, from the worst to the best.
+ *
+ * A scale climbs, here as on any axis: the picker offers the faces low to
+ * high, a day's answers lay out the same way, and a stacked bar is read in
+ * that order too. The same five faces must not read one way on one screen and
+ * the other way on the next.
  *
  * A coloured mark and a label in ordinary text, as phases and urgencies have:
  * colour marks, it does not fill.
@@ -27,25 +32,11 @@ export const MOODS: {
   hover: string;
 }[] = [
   {
-    value: "excellent",
-    label: "Excellente",
-    icon: Laugh,
-    colour: "text-emerald-500",
-    hover: "hover:text-emerald-500",
-  },
-  {
-    value: "good",
-    label: "Bonne",
-    icon: Smile,
-    colour: "text-sky-500",
-    hover: "hover:text-sky-500",
-  },
-  {
-    value: "neutral",
-    label: "Neutre",
-    icon: Meh,
-    colour: "text-amber-500",
-    hover: "hover:text-amber-500",
+    value: "bad",
+    label: "Mauvaise",
+    icon: Angry,
+    colour: "text-rose-600",
+    hover: "hover:text-rose-600",
   },
   {
     value: "hard",
@@ -55,11 +46,25 @@ export const MOODS: {
     hover: "hover:text-orange-500",
   },
   {
-    value: "bad",
-    label: "Mauvaise",
-    icon: Angry,
-    colour: "text-rose-600",
-    hover: "hover:text-rose-600",
+    value: "neutral",
+    label: "Neutre",
+    icon: Meh,
+    colour: "text-amber-500",
+    hover: "hover:text-amber-500",
+  },
+  {
+    value: "good",
+    label: "Bonne",
+    icon: Smile,
+    colour: "text-sky-500",
+    hover: "hover:text-sky-500",
+  },
+  {
+    value: "excellent",
+    label: "Excellente",
+    icon: Laugh,
+    colour: "text-emerald-500",
+    hover: "hover:text-emerald-500",
   },
 ];
 
