@@ -40,12 +40,12 @@ export const THREAD_COLUMN = "sticky left-[400px] w-12 min-w-12";
  * It only runs along the rows, never the header: it separates two columns, and
  * a bar reaching the top would cut the title band in two.
  *
- * An inner shadow rather than a border: the table collapses its borders, and a
- * collapsed border belongs to the table rather than to the cell — it would
- * stay behind while the pinned column does not move. The shadow follows the
- * cell.
+ * A border on the cell, not an inner shadow: an inset shadow stops at the
+ * padding edge, so the row's bottom border cut the line at every row. The
+ * table lays its borders out separately, and a cell's own border follows it
+ * when the column stays pinned.
  */
-export const SEPARATOR = "shadow-[inset_-1px_0_0_var(--color-slate-200)]";
+export const SEPARATOR = "border-r border-r-slate-200";
 
 /**
  * The line that closes the pinned part, where the table starts scrolling.
@@ -55,7 +55,7 @@ export const SEPARATOR = "shadow-[inset_-1px_0_0_var(--color-slate-200)]";
  * sight stops and what slides underneath begins. Same tint as the strong rules
  * of the entry grid, so both tables mark a boundary the same way.
  */
-export const STRONG_SEPARATOR = "shadow-[inset_-1px_0_0_var(--color-slate-500)]";
+export const STRONG_SEPARATOR = "border-r border-r-slate-500";
 
 /**
  * The width of the following columns, set once and for all on the header: in
@@ -84,4 +84,4 @@ export const MEMBERS_COLUMN = "w-[130px]";
  * nothing would show.
  */
 export const MISSIONS_TABLE =
-  "w-[1500px] table-fixed border-separate border-spacing-0 [&_tbody_td]:border-b [&_tbody_td]:border-slate-200";
+  "w-[1500px] table-fixed border-separate border-spacing-0 [&_tbody_td]:border-b [&_tbody_td]:border-b-slate-200";

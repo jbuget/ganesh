@@ -74,7 +74,7 @@ export function MissionsTable({
             which column one is reading by the time one reaches the bottom. The
             background sits on the cells and not on the row: in a table, a row's
             background paints under the lines that scroll. */}
-        <TableHeader className="sticky top-0 z-10 [&_th]:border-b [&_th]:border-slate-500 [&_th]:bg-slate-50">
+        <TableHeader className="sticky top-0 z-10 [&_th]:border-b [&_th]:border-b-slate-500 [&_th]:bg-slate-50">
           <TableRow>
             <SortableColumnHeader
               column="project"
