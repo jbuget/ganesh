@@ -19,9 +19,23 @@ interface AssignedMissionsCalloutProps {
  * Contributors are settled week by week, in the team's own meetings; time is
  * declared month by month. Nothing brought the two together, and a mission one
  * was put on could go the whole month without a single row. This names the gap
- * — a suggestion, right next to the picker that answers it, and never a row of
- * its own: a row at zero would say « nothing done », which is not the same
- * thing as « not entered yet ».
+ * — a suggestion, read before the month it speaks of, and never a row of its
+ * own: a row at zero would say « nothing done », which is not the same thing as
+ * « not entered yet ».
+ *
+ * The sentence and the missions it names sit on one line: each mission is the
+ * button that adds it, so reading the gap and closing it are the same gesture.
+ *
+ * Amber, the tone this application keeps for what one must know before writing
+ * — a public holiday, an archived project, a colleague's month. But a light
+ * amber, and the sentence itself in ordinary slate: nothing is wrong here, and
+ * the note must not outshout the grid it sits above. Colour marks the buttons
+ * and the icon, which is where the answer is. It never shows beside the other
+ * amber banners: it only appears on one's own current month, which is exactly
+ * when they do not.
+ *
+ * Full width, like the banners below it: a block that stops halfway across the
+ * grid lines up with nothing.
  */
 export function AssignedMissionsCallout({
   missions,
@@ -32,24 +46,25 @@ export function AssignedMissionsCallout({
   return (
     <aside
       role="status"
-      className="mt-4 max-w-fit rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700"
+      className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-md border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-slate-700"
     >
-      <p className="flex items-center gap-2">
-        <UserRoundCheck className="size-4 shrink-0 text-slate-400" aria-hidden />
-        Vous intervenez sur {missions.length}{" "}
-        {missions.length > 1 ? "missions" : "mission"} sans temps déclaré ce mois-ci.
+      <UserRoundCheck className="size-4 shrink-0 text-amber-500" aria-hidden />
+
+      <p>
+        Vous êtes déclaré en tant qu&apos;intervenant sur {missions.length}{" "}
+        {missions.length > 1 ? "projets" : "projet"} sans temps saisi ce mois-ci :
       </p>
 
-      <ul className="mt-2 flex flex-wrap gap-1.5 pl-6">
+      <ul className="flex flex-wrap gap-1.5">
         {missions.map((mission) => (
           <li key={mission.id}>
             <button
               type="button"
               aria-label={`Ajouter ${mission.label}`}
               onClick={() => onAdd(mission.id)}
-              className="flex cursor-pointer items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
+              className="flex cursor-pointer items-center gap-1 rounded-md border border-amber-300 bg-white px-2 py-1 text-xs text-amber-900 transition-colors hover:border-amber-400 hover:bg-amber-100"
             >
-              <Plus className="size-3 shrink-0 text-slate-400" aria-hidden />
+              <Plus className="size-3 shrink-0 text-amber-500" aria-hidden />
               {mission.label}
             </button>
           </li>
