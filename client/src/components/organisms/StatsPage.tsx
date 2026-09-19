@@ -10,7 +10,6 @@ import {
   NOTHING,
   categoryRows,
   formatDelay,
-  formatPersonDays,
   formatShare,
   kindRows,
   missionRows,
@@ -55,6 +54,9 @@ export function StatsPage() {
 
   const { coverage, freshness, month_validation, adoption, steering, registry } =
     statistics;
+  // A period that expects nobody cannot be behind: crying wolf every weekend
+  // would teach the team to ignore the colour altogether.
+  const expectsSomething = statistics.period.working_days > 0;
   const catchingUpLate =
     freshness.late_share !== null &&
     freshness.late_share !== undefined &&
@@ -71,11 +73,15 @@ export function StatsPage() {
             Peut-on se fier à ces chiffres ? Une couverture élevée mais reconstituée de
             mémoire ne vaut rien.
           </p>
-          <dl className="grid gap-3 sm:grid-cols-3">
+          <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <MetricTile
               label="Délai médian de saisie"
               value={formatDelay(freshness.median_delay)}
-              hint={`sur ${freshness.entries} saisie${freshness.entries > 1 ? "s" : ""} écrite${freshness.entries > 1 ? "s" : ""} sur la période`}
+              hint={
+                freshness.entries === 0
+                  ? "aucune saisie écrite sur la période"
+                  : `sur ${freshness.entries} saisie${freshness.entries > 1 ? "s" : ""} écrite${freshness.entries > 1 ? "s" : ""} sur la période`
+              }
             />
             <MetricTile
               label="Saisi au fil de l'eau"
@@ -88,8 +94,6 @@ export function StatsPage() {
               hint="déclaré plus de 15 jours après"
               tone={catchingUpLate ? "warning" : "plain"}
             />
-          </dl>
-          <dl className="mt-3 grid gap-3 sm:grid-cols-3">
             <MetricTile
               label="Mois validés"
               value={formatShare(month_validation.rate)}
@@ -121,7 +125,7 @@ export function StatsPage() {
                   ? "toute l'équipe a déclaré"
                   : adoption.idle.map((teammate) => teammate.display_name).join(", ")
               }
-              tone={adoption.idle.length > 0 ? "warning" : "plain"}
+              tone={expectsSomething && adoption.idle.length > 0 ? "warning" : "plain"}
             />
           </dl>
         </section>
@@ -173,7 +177,7 @@ export function StatsPage() {
             <MetricTile
               label="Missions créées"
               value={String(registry.created)}
-              hint={`sur ${formatPersonDays(coverage.expected_days)} jours-personnes attendus`}
+              hint="ajoutées au référentiel sur la période"
             />
           </dl>
         </section>

@@ -165,6 +165,51 @@ describe("StatsPage", () => {
     }
   });
 
+  it("does not raise an alarm over a day nobody was expected in", () => {
+    // A Saturday: « nobody declared anything » is not a finding, it is the
+    // weekend. Flagging it in amber would cry wolf every Monday morning.
+    renderPage({
+      statistics: {
+        ...STATISTICS,
+        period: { ...STATISTICS.period, working_days: 0 },
+      },
+    });
+
+    const tile = screen.getByText("Sans aucune saisie").closest("[data-tone]");
+    expect(tile).toHaveAttribute("data-tone", "plain");
+  });
+
+  it("flags teammates who declared nothing on a working period", () => {
+    renderPage();
+
+    const tile = screen.getByText("Sans aucune saisie").closest("[data-tone]");
+    expect(tile).toHaveAttribute("data-tone", "warning");
+  });
+
+  it("says plainly when no entry at all was written", () => {
+    renderPage({
+      statistics: {
+        ...STATISTICS,
+        freshness: {
+          entries: 0,
+          median_delay: null,
+          day_to_day_share: null,
+          late_share: null,
+        },
+      },
+    });
+
+    expect(screen.getByText("aucune saisie écrite sur la période")).toBeInTheDocument();
+  });
+
+  it("says what the missions created were added to", () => {
+    renderPage();
+
+    expect(
+      screen.getByText("ajoutées au référentiel sur la période"),
+    ).toBeInTheDocument();
+  });
+
   it("waits without pretending the figures are zero", () => {
     // Drawing a « 0 % » while loading would announce a failure that has not
     // been measured.
