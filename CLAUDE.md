@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# CLAUDE.md — Timesheet
+# CLAUDE.md — Janus
 
 Development guide for Claude Code on this project. These rules apply to every
 contribution, without exception.
@@ -13,15 +13,29 @@ point not covered here, look at what WAATcher does rather than inventing:
 
 ## The product
 
-Timesheet lets every developer declare, in days or half days, the time spent (or
+Janus lets every developer declare, in days or half days, the time spent (or
 planned) on each project or sub-project, as a `days of the month × missions`
-grid.
+grid. It is named after the god of doorways, who looks at what has been and at
+what comes with the same glance: the screens do the same — Activité behind,
+Planification ahead.
+
+**The product is Janus; the domain is still a timesheet.** `TimesheetGrid`,
+`TimesheetPage` and `useTimesheetMonth` name a monthly time sheet, which is what
+they are and what they stay. Only what names the *application* carries the
+product's name — what the user reads, the page title, the API's own name. Do not
+rename a domain identifier to chase the product: `JanusGrid` would say nothing
+about what it renders.
+
+The database, its user, the Docker volume, the session cookie and the
+`localStorage` keys still read `timesheet`. Renaming them would cost everyone a
+fresh database and a new sign-in, and buy nothing: nobody reads the name of a
+volume.
 
 - **V1: no Monday integration.** Projects are created in the application or
   imported from CSV.
 - **V1.1:** a "Sync to Monday" button, managers only. The `monday_item_id` /
   `monday_subitem_id` columns exist from V1, nullable.
-- Monday will **never** be a source of entry: syncing goes one way, Timesheet →
+- Monday will **never** be a source of entry: syncing goes one way, Janus →
   Monday.
 
 ### Roles
@@ -172,7 +186,7 @@ callback `/api/auth/callback/azure-ad`.
 
 ### Entra credentials
 
-Timesheet reuses **WAATcher's Entra app registration** (same
+Janus reuses **WAATcher's Entra app registration** (same
 `AZURE_AD_TENANT_ID` and `AZURE_AD_CLIENT_ID`). The redirect URI
 `http://localhost:3000/api/auth/callback/azure-ad` must therefore be declared on
 that app registration in the Azure portal.
@@ -196,7 +210,7 @@ the tenant and the client id.
   (`pnpm api:generate`).
 
 > **A deliberate divergence from WAATcher.** WAATcher has no BFF: its browser
-> calls FastAPI directly through `NEXT_PUBLIC_API_URL`. Timesheet introduces a
+> calls FastAPI directly through `NEXT_PUBLIC_API_URL`. Janus introduces a
 > BFF on purpose, so that the Entra token never leaves the server and the API is
 > not publicly exposed. That is the one structural gap; everything else follows
 > WAATcher.
