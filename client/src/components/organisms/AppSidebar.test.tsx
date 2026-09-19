@@ -63,6 +63,7 @@ describe("AppSidebar", () => {
   it("offers every screen", () => {
     render(<AppSidebar />);
 
+    expect(screen.getByRole("link", { name: /Accueil/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Activité/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Projets/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Planification/ })).toBeInTheDocument();
@@ -78,11 +79,24 @@ describe("AppSidebar", () => {
     expect(labels.at(-1)).toMatch(/Statistiques/);
   });
 
+  it("opens the navigation with « Accueil », which holds the root", () => {
+    render(<AppSidebar />);
+
+    const labels = screen.getAllByRole("link").map((link) => link.textContent);
+
+    expect(labels[0]).toMatch(/Accueil/);
+    expect(screen.getByRole("link", { name: /Accueil/ })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: /Activité/ })).toHaveAttribute(
+      "href",
+      "/activite",
+    );
+  });
+
   it("flags the current screen to screen readers", () => {
     pathname.value = "/";
     render(<AppSidebar />);
 
-    expect(screen.getByRole("link", { name: /Activité/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Accueil/ })).toHaveAttribute(
       "aria-current",
       "page",
     );

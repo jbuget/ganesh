@@ -5,6 +5,7 @@ import {
   ChartNoAxesColumn,
   FolderKanban,
   GanttChartSquare,
+  Home,
   KanbanSquare,
   KeyRound,
   PanelLeft,
@@ -20,7 +21,10 @@ import { useCurrentUser } from "@/lib/api/queries";
 import { toggleSidebar, useSidebarCollapsed } from "@/lib/sidebar-store";
 
 const TABS = [
-  { href: "/", label: "Activité", Icon: CalendarDays },
+  // « Accueil » opens the list and holds the root: it is what one lands on
+  // after signing in, and it names what to do before the screens that do it.
+  { href: "/", label: "Accueil", Icon: Home },
+  { href: "/activite", label: "Activité", Icon: CalendarDays },
   { href: "/kanban", label: "Kanban", Icon: KanbanSquare },
   { href: "/projects", label: "Projets", Icon: FolderKanban },
   { href: "/planning", label: "Planification", Icon: GanttChartSquare },
