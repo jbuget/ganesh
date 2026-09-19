@@ -70,6 +70,14 @@ describe("AppSidebar", () => {
     expect(screen.getByRole("link", { name: /Utilisateurs/ })).toBeInTheDocument();
   });
 
+  it("closes the navigation with « Statistiques »", () => {
+    render(<AppSidebar />);
+
+    const labels = screen.getAllByRole("link").map((link) => link.textContent);
+
+    expect(labels.at(-1)).toMatch(/Statistiques/);
+  });
+
   it("flags the current screen to screen readers", () => {
     pathname.value = "/";
     render(<AppSidebar />);
