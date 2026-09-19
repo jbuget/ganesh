@@ -8,6 +8,7 @@ from src.modules.calendar.domain.services.working_days import (
     DayKind,
     classify_day,
     days_of_month,
+    working_days_between,
     working_days_count,
 )
 
@@ -64,3 +65,20 @@ def test_working_days_count_excludes_weekends_and_holidays() -> None:
 
     assert working_days_count(2026, 5) == expected
     assert working_days_count(2026, 5) < 31
+
+
+class TestWorkingDaysBetween:
+    def test_a_window_keeps_only_the_working_days_in_order(self) -> None:
+        """A week from Monday to Sunday leaves five days."""
+        days = working_days_between(date(2026, 9, 14), date(2026, 9, 20))
+
+        assert days == [date(2026, 9, d) for d in (14, 15, 16, 17, 18)]
+
+    def test_a_holiday_is_left_out_of_the_window(self) -> None:
+        """14 July 2026 falls on a Tuesday."""
+        days = working_days_between(date(2026, 7, 13), date(2026, 7, 15))
+
+        assert days == [date(2026, 7, 13), date(2026, 7, 15)]
+
+    def test_a_window_that_ends_before_it_starts_is_empty(self) -> None:
+        assert working_days_between(date(2026, 9, 18), date(2026, 9, 17)) == []
