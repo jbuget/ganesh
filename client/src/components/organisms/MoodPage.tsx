@@ -1,8 +1,10 @@
 "use client";
 
 import { PageHeader } from "@/components/atoms/PageHeader";
+import { MoodTrendsTable } from "@/components/organisms/MoodTrendsTable";
 import { MoodsTable } from "@/components/organisms/MoodsTable";
 import { PageLayout } from "@/components/organisms/PageLayout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTeamMoodScreen } from "@/lib/use-team-mood";
 
 /**
@@ -12,6 +14,14 @@ import { useTeamMoodScreen } from "@/lib/use-team-mood";
  * itself, not a measure taken of it. Which is also why nothing is answered
  * from here — one posts one's own day from the home screen, and a screen that
  * did both would put the answer under the eyes of what it is about.
+ *
+ * Two tabs over the same fortnight, and the order between them is the reading:
+ * « Récap » names who said what, « Tendances » sums it up. One starts on the
+ * people and steps back to the shape, never the other way round — a curve read
+ * before the days it is made of is a figure one trusts without having seen it.
+ *
+ * Not « Journal »: a mission's tabs already give that name to its audit trail,
+ * and one word must not name two different things.
  *
  * Working days alone: four empty lines of weekend over a fortnight would say
  * nothing but that nobody works on Sundays.
@@ -26,21 +36,48 @@ export function MoodPage() {
     />
   );
 
-  return (
-    <PageLayout header={header}>
-      {screen.isLoading ? (
+  if (screen.isLoading) {
+    return (
+      <PageLayout header={header}>
         <p className="text-sm text-slate-500">Chargement…</p>
-      ) : screen.days.length === 0 ? (
+      </PageLayout>
+    );
+  }
+
+  if (screen.days.length === 0) {
+    return (
+      <PageLayout header={header}>
         <p className="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500">
           Aucun jour à afficher sur la quinzaine.
         </p>
-      ) : (
-        <MoodsTable
-          days={screen.days}
-          headcount={screen.headcount}
-          today={screen.today}
-        />
-      )}
+      </PageLayout>
+    );
+  }
+
+  return (
+    <PageLayout header={header}>
+      <Tabs defaultValue="recap" className="flex flex-col gap-4">
+        <TabsList className="w-fit">
+          <TabsTrigger value="recap">Récap</TabsTrigger>
+          <TabsTrigger value="trends">Tendances</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="recap">
+          <MoodsTable
+            days={screen.days}
+            headcount={screen.headcount}
+            today={screen.today}
+          />
+        </TabsContent>
+
+        <TabsContent value="trends">
+          <MoodTrendsTable
+            days={screen.days}
+            headcount={screen.headcount}
+            today={screen.today}
+          />
+        </TabsContent>
+      </Tabs>
     </PageLayout>
   );
 }

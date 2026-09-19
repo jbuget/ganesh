@@ -56,6 +56,33 @@ describe("MoodPage", () => {
     expect(screen.getByText("LC")).toBeInTheDocument();
   });
 
+  it("opens on the record, and offers the summary beside it", () => {
+    show({
+      days: [
+        {
+          day: "2026-09-18",
+          moods: [
+            {
+              author: { id: 1, display_name: "Léa Chen", initials: "LC" },
+              level: "good",
+            },
+          ],
+          counts: { good: 1 },
+          average: 4,
+          participation: 1,
+        },
+      ],
+    });
+
+    // The record first: one starts on the people and steps back to the shape.
+    expect(screen.getByRole("tab", { name: "Récap" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("tab", { name: "Tendances" })).toBeInTheDocument();
+    expect(screen.getByText("LC")).toBeInTheDocument();
+  });
+
   it("shows nothing but the wait until the window has arrived", () => {
     show({ isLoading: true });
 

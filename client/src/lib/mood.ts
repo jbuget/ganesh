@@ -30,6 +30,8 @@ export const MOODS: {
   icon: LucideIcon;
   colour: string;
   hover: string;
+  /** The filled shade, for the one place a surface is legitimate: a chart. */
+  fill: string;
 }[] = [
   {
     value: "bad",
@@ -37,6 +39,7 @@ export const MOODS: {
     icon: Angry,
     colour: "text-rose-600",
     hover: "hover:text-rose-600",
+    fill: "bg-rose-600",
   },
   {
     value: "hard",
@@ -44,6 +47,7 @@ export const MOODS: {
     icon: Frown,
     colour: "text-orange-500",
     hover: "hover:text-orange-500",
+    fill: "bg-orange-500",
   },
   {
     value: "neutral",
@@ -51,6 +55,7 @@ export const MOODS: {
     icon: Meh,
     colour: "text-amber-500",
     hover: "hover:text-amber-500",
+    fill: "bg-amber-500",
   },
   {
     value: "good",
@@ -58,6 +63,7 @@ export const MOODS: {
     icon: Smile,
     colour: "text-sky-500",
     hover: "hover:text-sky-500",
+    fill: "bg-sky-500",
   },
   {
     value: "excellent",
@@ -65,6 +71,7 @@ export const MOODS: {
     icon: Laugh,
     colour: "text-emerald-500",
     hover: "hover:text-emerald-500",
+    fill: "bg-emerald-500",
   },
 ];
 
@@ -82,4 +89,15 @@ export function mood(value: MoodLevel | null | undefined) {
  */
 export function dayLabel(day: string, today: string): string {
   return day === today ? "Aujourd'hui" : formatWeekdayDate(day);
+}
+
+/**
+ * The level an average falls in, to colour the mark that carries it.
+ *
+ * Rounded to the nearest: a mean of 3,4 is a neutral day leaning good, and
+ * naming it « bonne » would flatter the week.
+ */
+export function levelAt(score: number) {
+  const index = Math.min(MOODS.length - 1, Math.max(0, Math.round(score) - 1));
+  return MOODS[index];
 }
