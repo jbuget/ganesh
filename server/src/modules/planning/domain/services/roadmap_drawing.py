@@ -16,8 +16,9 @@ from src.modules.planning.domain.entities.roadmap import RoadmapSegment, Segment
 from src.modules.projects.domain.entities.project import ProjectStatus
 
 #: Nominal order of the phases, to break a tie between two crossed the same day.
+_PHASES: list[ProjectStatus] = list(ProjectStatus)
 _PHASE_RANK: dict[ProjectStatus, int] = {
-    status: rank for rank, status in enumerate(ProjectStatus)
+    status: rank for rank, status in enumerate(_PHASES)
 }
 
 _ONE_DAY = timedelta(days=1)
@@ -59,7 +60,8 @@ def draw_segments(
     )
 
     if running_from is not None:
-        return lived + [
+        return [
+            *lived,
             RoadmapSegment(
                 kind=SegmentKind.RUNNING,
                 status=ProjectStatus.OPERATIONS,
@@ -67,7 +69,7 @@ def draw_segments(
                 # A service that runs has no end. The window's edge is where
                 # the drawing stops, not where the service does.
                 ends_on=max(window_end if is_active else lived_end, running_from),
-            )
+            ),
         ]
 
     projected = _projected(
@@ -77,7 +79,7 @@ def draw_segments(
         status=status,
         is_active=is_active,
     )
-    return lived + projected
+    return [*lived, *projected]
 
 
 def _lived_end(
@@ -156,7 +158,7 @@ def _lived(
         RoadmapSegment(
             kind=SegmentKind.LIVED, status=status, starts_on=start, ends_on=end
         )
-        for (status, _), start, end in zip(crossed, starts, ends)
+        for (status, _), start, end in zip(crossed, starts, ends, strict=False)
         # Two phases crossed the same day leave an empty stretch between them,
         # and an empty stretch is not a segment.
         if start <= end

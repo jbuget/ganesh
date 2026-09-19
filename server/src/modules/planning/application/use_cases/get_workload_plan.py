@@ -14,10 +14,12 @@ from src.modules.planning.application.dtos.workload_dto import (
     PlannedMissionRow,
     WorkloadReading,
 )
+from src.modules.planning.application.services.remaining_work import (
+    remaining_by_mission,
+)
 from src.modules.planning.domain.entities.workload_plan import PlannedMission
 from src.modules.planning.domain.services.backlog import (
     apply_explicit_order,
-    remaining_build,
     staffed,
     still_to_build,
 )
@@ -27,7 +29,6 @@ from src.modules.planning.domain.services.horizon import (
 )
 from src.modules.planning.domain.services.plan_summary import summarise
 from src.modules.planning.domain.services.projection import project_workload
-from src.modules.projects.domain.entities.project import Project
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
@@ -74,7 +75,7 @@ class GetWorkloadPlanUseCase:
             still_to_build(await self._projects.list_all()), order or []
         )
 
-        remaining = await self._remaining_days(backlog, start)
+        remaining = await remaining_by_mission(self._entries, backlog, start)
         contributors = staffed(
             await self._assignees.list_all(ProjectRole.CONTRIBUTOR), staffing or {}
         )
@@ -129,23 +130,6 @@ class GetWorkloadPlanUseCase:
                 [(row.projected, row.target_date) for row in rows], plan.people
             ),
         )
-
-    async def _remaining_days(
-        self, backlog: list[Project], today: date
-    ) -> dict[int, float | None]:
-        """Build left on each mission, read in two queries whatever the count."""
-        by_status = await self._entries.sum_realised_by_project_and_status(today)
-        forecast = await self._entries.sum_forecast_by_project(today)
-
-        return {
-            mission.id
-            or 0: remaining_build(
-                estimated_days=mission.estimated_days,
-                delivered_by_status=by_status.get(mission.id or 0, {}),
-                forecast_days=forecast.get(mission.id or 0, 0.0),
-            )
-            for mission in backlog
-        }
 
 
 def _people(user_ids: list[int], by_user: dict[int | None, User]) -> list[User]:

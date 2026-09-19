@@ -50,8 +50,12 @@ async def test_every_missions_history_comes_back_grouped_by_mission(
     )
     assert portal.id is not None and platform.id is not None
 
-    await repo.mark_phase_reached(portal.id, ProjectStatus.EXPLORATION, date(2026, 3, 2))
-    await repo.mark_phase_reached(portal.id, ProjectStatus.DEVELOPMENT, date(2026, 5, 4))
+    await repo.mark_phase_reached(
+        portal.id, ProjectStatus.EXPLORATION, date(2026, 3, 2)
+    )
+    await repo.mark_phase_reached(
+        portal.id, ProjectStatus.DEVELOPMENT, date(2026, 5, 4)
+    )
     await repo.mark_phase_reached(platform.id, ProjectStatus.SCOPING, date(2026, 6, 1))
 
     history = await repo.list_phases_reached_by_project()
@@ -76,6 +80,8 @@ async def test_a_mission_that_never_moved_has_no_history(
     )
     assert mission.id is not None
 
-    history = await SqlProjectDetailRepository(db_session).list_phases_reached_by_project()
+    history = await SqlProjectDetailRepository(
+        db_session
+    ).list_phases_reached_by_project()
 
     assert mission.id not in history

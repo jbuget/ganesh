@@ -55,9 +55,7 @@ def test_an_empty_roadmap_summarises_to_nothing() -> None:
 
 
 def test_the_tally_counts_every_line_drawn() -> None:
-    summary = summarise_roadmap(
-        [a_line(1), a_line(2), a_line(3)], FROM_DAY, TO_DAY
-    )
+    summary = summarise_roadmap([a_line(1), a_line(2), a_line(3)], FROM_DAY, TO_DAY)
 
     assert summary.missions == 3
 

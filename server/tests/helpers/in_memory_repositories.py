@@ -382,9 +382,7 @@ class InMemoryProjectDetailRepository(ProjectDetailRepository):
     async def list_phases_reached_by_project(
         self,
     ) -> dict[int, dict[ProjectStatus, date]]:
-        return {
-            project_id: dict(phases) for project_id, phases in self._phases.items()
-        }
+        return {project_id: dict(phases) for project_id, phases in self._phases.items()}
 
     async def list_dates_reached(self, status: ProjectStatus) -> dict[int, date]:
         return {

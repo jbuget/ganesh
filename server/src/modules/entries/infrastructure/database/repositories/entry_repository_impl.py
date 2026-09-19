@@ -118,9 +118,7 @@ class SqlEntryRepository(EntryRepository):
                 func.max(EntryModel.day),
             ).group_by(EntryModel.project_id)
         )
-        return {
-            project_id: (first, last) for project_id, first, last in result.all()
-        }
+        return {project_id: (first, last) for project_id, first, last in result.all()}
 
     async def sum_forecast_by_project(self, today: date) -> dict[int, float]:
         result = await self._session.execute(

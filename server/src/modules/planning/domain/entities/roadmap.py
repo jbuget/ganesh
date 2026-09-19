@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from enum import StrEnum
 
+from src.modules.planning.domain.entities.workload_plan import PlanBlocker
 from src.modules.projects.domain.entities.project import (
     ProjectCategory,
     ProjectKind,
@@ -81,25 +82,40 @@ class RoadmapMission:
     estimated_days: float | None = None
     consumed_days: float = 0.0
     remaining_days: float | None = None
+    #: Why the projection placed nothing, when it placed nothing. Said out
+    #: loud: a mission with no bar is a question, not an absence.
+    blocker: PlanBlocker | None = None
+    #: Whether the mission is still on the reference list.
+    is_active: bool = True
 
     @property
     def is_running(self) -> bool:
         return self.status is ProjectStatus.OPERATIONS
 
     @property
+    def is_awaited(self) -> bool:
+        """Still on the list, and not yet delivered: something is owed here."""
+        return self.is_active and not self.is_running
+
+    @property
     def has_bar(self) -> bool:
         return bool(self.segments)
 
-    def shows_between(self, start: date, end: date) -> bool:
+    def shows_between(self, start: date, end: date, today: date) -> bool:
         """Whether this line has anything to say inside a window.
 
-        A mission with no bar still shows when it announced a date there: one
-        that promised March and was never estimated is exactly the line
-        steering has to see.
+        Three ways of having something to say. The bar reaches into the
+        window; or the date announced falls in it; or the mission is still
+        owed and the window looks ahead — a mission nobody estimated and
+        nobody dated draws nothing at all, and is exactly the line steering
+        has to see. Only a window entirely in the past leaves it out: what was
+        owed last year is not what last year delivered.
         """
         if any(segment.overlaps(start, end) for segment in self.segments):
             return True
-        return self.target_date is not None and start <= self.target_date <= end
+        if self.target_date is not None and start <= self.target_date <= end:
+            return True
+        return self.is_awaited and end >= today
 
 
 @dataclass(frozen=True)
