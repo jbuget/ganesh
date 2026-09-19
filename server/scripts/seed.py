@@ -16,7 +16,7 @@ import logging
 import pathlib
 import random
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
@@ -52,6 +52,9 @@ from src.modules.projects.infrastructure.database.models.project_detail_models i
 )
 from src.modules.projects.infrastructure.database.models.project_model import (
     ProjectModel,
+)
+from src.modules.projects.infrastructure.database.models.project_update_model import (
+    ProjectUpdateModel,
 )
 from src.modules.users.domain.entities.user import Role
 from src.modules.users.infrastructure.database.models.user_model import UserModel
@@ -190,6 +193,14 @@ BOARD_FILE = DATA / "monday.json"
 #: still a framing exercise, so it lands on « cadrage » like the rest of
 #: Discovery's right-hand side.
 KANBAN_FILE = DATA / "kanban.json"
+
+#: What was said on a mission on the board, brought over to its thread.
+#:
+#: Monday nests replies under the update they answer; the thread here is flat
+#: and ordered by time, so a reply comes over as a message of its own, at the
+#: moment it was written. Nothing is lost, and the thread reads in the order it
+#: was spoken.
+UPDATES_FILE = DATA / "updates.json"
 
 COLUMN_PHASES = {
     "idees": ProjectStatus.EXPLORATION,
@@ -518,6 +529,66 @@ async def seed_kanban() -> tuple[int, int]:
     return moved, assigned
 
 
+async def seed_updates() -> tuple[int, int]:
+    """Posts on each mission what was said about it on the board.
+
+    An update is recognised by its mission, its author and the moment it was
+    published: Monday's own id has nowhere to live here, and no two people
+    write on the same mission in the same second.
+    """
+    posted = 0
+    orphans = 0
+    rows = read_data(UPDATES_FILE, "les mises a jour")
+    if rows is None:
+        return 0, 0
+
+    async with AsyncSessionLocal() as session:
+        authors: dict[str, int] = {}
+        for email in {row["author_email"] for row in rows}:
+            found = await session.execute(
+                select(UserModel).where(UserModel.email == email)
+            )
+            account = found.scalar_one_or_none()
+            if account is not None:
+                authors[email] = account.id
+
+        for row in rows:
+            missions = await session.execute(
+                select(ProjectModel).where(
+                    ProjectModel.monday_item_id == row["monday_item_id"]
+                )
+            )
+            mission = missions.scalar_one_or_none()
+            if mission is None or row["author_email"] not in authors:
+                orphans += 1
+                continue
+
+            published_at = datetime.fromisoformat(row["published_at"])
+            author_id = authors[row["author_email"]]
+            already = await session.execute(
+                select(ProjectUpdateModel).where(
+                    ProjectUpdateModel.project_id == mission.id,
+                    ProjectUpdateModel.author_id == author_id,
+                    ProjectUpdateModel.published_at == published_at,
+                )
+            )
+            if already.scalar_one_or_none() is not None:
+                continue
+
+            session.add(
+                ProjectUpdateModel(
+                    project_id=mission.id,
+                    author_id=author_id,
+                    body=row["body"],
+                    published_at=published_at,
+                )
+            )
+            posted += 1
+
+        await session.commit()
+    return posted, orphans
+
+
 async def seed_off_project_activities() -> int:
     created = 0
     async with AsyncSessionLocal() as session:
@@ -625,6 +696,7 @@ async def main() -> None:
     missions, sheets = await seed_services()
     attached, prioritised = await seed_board_fields()
     moved, assigned = await seed_kanban()
+    posted, orphans = await seed_updates()
     activities = await seed_off_project_activities()
     holidays = await seed_holidays()
     moods = await seed_moods()
@@ -638,6 +710,8 @@ async def main() -> None:
     logger.info("Priorites posees            : %s", prioritised)
     logger.info("Missions deplacees de phase : %s", moved)
     logger.info("Intervenants affectes       : %s", assigned)
+    logger.info("Mises a jour publiees       : %s", posted)
+    logger.info("Mises a jour sans mission   : %s", orphans)
     logger.info("Activites hors projet creees: %s", activities)
     logger.info("Jours feries crees          : %s", holidays)
     logger.info("Moraux tires au sort        : %s", moods)
