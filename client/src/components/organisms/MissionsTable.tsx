@@ -18,10 +18,14 @@ import {
   MEMBERS_COLUMN,
   MISSIONS_TABLE,
   NAME_COLUMN,
+  NO_HIDDEN_COLUMN,
   PHASE_COLUMN,
   PRIORITY_COLUMN,
   STRONG_SEPARATOR,
   THREAD_COLUMN,
+  tableWidth,
+  type ColumnKey,
+  type HiddenColumns,
 } from "@/lib/mission-columns";
 import type { MissionSort, SortColumn } from "@/lib/mission-sort";
 import type { ProjectNode } from "@/lib/project-tree";
@@ -39,6 +43,8 @@ interface MissionsTableProps {
   onOpen: (projectId: number) => void;
   /** Opens a mission on its thread, where the preview stops. */
   onOpenThread: (projectId: number) => void;
+  /** The columns put away. Nothing put away shows the whole panorama. */
+  hidden?: HiddenColumns;
 }
 
 /**
@@ -59,7 +65,10 @@ export function MissionsTable({
   now,
   onOpen,
   onOpenThread,
+  hidden = NO_HIDDEN_COLUMN,
 }: MissionsTableProps) {
+  const shows = (column: ColumnKey) => !hidden.has(column);
+
   return (
     // The shadcn container opens a scrolling context that would hold the
     // header inside the table: we neutralise it so the `sticky` latches onto
@@ -69,7 +78,10 @@ export function MissionsTable({
     // and without that band on the right the last column would butt against
     // the window edge.
     <div className="w-max pr-6 [&_[data-slot=table-container]]:overflow-visible">
-      <Table className={MISSIONS_TABLE}>
+      {/* The width is carried in figures rather than by a class: Tailwind
+          cannot write one for a span only known once the address has said
+          which columns are put away. */}
+      <Table className={MISSIONS_TABLE} style={{ width: tableWidth(hidden) }}>
         {/* Sixty rows pass under the header: without it, one no longer knows
             which column one is reading by the time one reaches the bottom. The
             background sits on the cells and not on the row: in a table, a row's
@@ -89,53 +101,67 @@ export function MissionsTable({
                 left-hand one separates two columns, and so starts below their
                 titles. */}
             <TableHead className={`${THREAD_COLUMN} ${STRONG_SEPARATOR}`} />
-            <SortableColumnHeader
-              column="phase"
-              label="Phase"
-              sorted={sorted}
-              onToggle={onSort}
-              className={PHASE_COLUMN}
-            />
-            <SortableColumnHeader
-              column="priority"
-              label="Priorité"
-              sorted={sorted}
-              onToggle={onSort}
-              className={PRIORITY_COLUMN}
-            />
-            <SortableColumnHeader
-              column="category"
-              label="Catégorie"
-              sorted={sorted}
-              onToggle={onSort}
-              className={CATEGORY_COLUMN}
-            />
+            {shows("phase") && (
+              <SortableColumnHeader
+                column="phase"
+                label="Phase"
+                sorted={sorted}
+                onToggle={onSort}
+                className={PHASE_COLUMN}
+              />
+            )}
+            {shows("priority") && (
+              <SortableColumnHeader
+                column="priority"
+                label="Priorité"
+                sorted={sorted}
+                onToggle={onSort}
+                className={PRIORITY_COLUMN}
+              />
+            )}
+            {shows("category") && (
+              <SortableColumnHeader
+                column="category"
+                label="Catégorie"
+                sorted={sorted}
+                onToggle={onSort}
+                className={CATEGORY_COLUMN}
+              />
+            )}
             {/* Build against its estimate, run apart: the two answer different
                 questions, and a single column carrying both would no longer
                 sort. */}
-            <SortableColumnHeader
-              column="build"
-              label="Build"
-              sorted={sorted}
-              onToggle={onSort}
-              alignRight
-              className={DAYS_COLUMN}
-            />
-            <SortableColumnHeader
-              column="run"
-              label="Run"
-              sorted={sorted}
-              onToggle={onSort}
-              alignRight
-              className={DAYS_COLUMN}
-            />
+            {shows("build") && (
+              <SortableColumnHeader
+                column="build"
+                label="Build"
+                sorted={sorted}
+                onToggle={onSort}
+                alignRight
+                className={DAYS_COLUMN}
+              />
+            )}
+            {shows("run") && (
+              <SortableColumnHeader
+                column="run"
+                label="Run"
+                sorted={sorted}
+                onToggle={onSort}
+                alignRight
+                className={DAYS_COLUMN}
+              />
+            )}
             {/* Who looks after it does not sort: a column of badges has no order
                 the reader would have in mind. */}
-            <TableHead className={MEMBERS_COLUMN}>Référents</TableHead>
-            <TableHead className={MEMBERS_COLUMN}>Intervenants</TableHead>
+            {shows("leads") && (
+              <TableHead className={MEMBERS_COLUMN}>Référents</TableHead>
+            )}
+            {shows("contributors") && (
+              <TableHead className={MEMBERS_COLUMN}>Intervenants</TableHead>
+            )}
             {/* Last, and without a width: it takes what is left when the screen
                 is wider than the table. */}
-            <TableHead>Liens</TableHead>
+            {shows("links") && <TableHead>Liens</TableHead>}
           </TableRow>
         </TableHeader>
 
@@ -154,6 +180,7 @@ export function MissionsTable({
                   now={now}
                   onOpen={() => onOpen(mission.project.id)}
                   onOpenThread={() => onOpenThread(mission.project.id)}
+                  hidden={hidden}
                 />
                 {expanded &&
                   workPackages.map((workPackage) => (
@@ -164,6 +191,7 @@ export function MissionsTable({
                       now={now}
                       onOpen={() => onOpen(workPackage.project.id)}
                       onOpenThread={() => onOpenThread(workPackage.project.id)}
+                      hidden={hidden}
                     />
                   ))}
               </Fragment>

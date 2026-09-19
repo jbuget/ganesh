@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
+import { NO_HIDDEN_COLUMN, hiddenColumns, tableWidth } from "@/lib/mission-columns";
 import { NO_SORT } from "@/lib/mission-sort";
 import type { ProjectNode } from "@/lib/project-tree";
 
@@ -127,5 +128,65 @@ describe("MissionsTable", () => {
     fireEvent.click(screen.getByText("Portail"));
 
     expect(onOpen).toHaveBeenCalledWith(1);
+  });
+});
+
+/**
+ * A steering meeting opens on the whole panorama, then works on four columns.
+ * The table draws what it is asked to draw, and asks nothing about why.
+ */
+describe("the columns put away", () => {
+  it("shows the whole panorama when nothing is put away", () => {
+    table();
+
+    expect(screen.getByText("Catégorie")).toBeInTheDocument();
+  });
+
+  it("drops the heading of a column put away", () => {
+    table({ hidden: hiddenColumns(["category"]) });
+
+    expect(screen.queryByText("Catégorie")).toBeNull();
+  });
+
+  it("drops it from the rows too, not only from the heading", () => {
+    const withCategory = mission(1, "Portail");
+    withCategory.project.category = "innovate_differentiate";
+
+    table({
+      tree: [{ mission: withCategory, workPackages: [] }],
+      hidden: hiddenColumns(["category"]),
+    });
+
+    expect(screen.queryByText("Innover & différencier")).toBeNull();
+  });
+
+  it("keeps the two columns a row is read by, whatever is put away", () => {
+    table({
+      hidden: hiddenColumns([
+        "phase",
+        "priority",
+        "category",
+        "build",
+        "run",
+        "leads",
+        "contributors",
+        "links",
+      ]),
+    });
+
+    expect(screen.getByText("Projet")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Portail" })).toBeInTheDocument();
+  });
+
+  /**
+   * `table-fixed` shares out whatever the table is given: left at its full
+   * span, the remaining columns would stretch instead of the list drawing
+   * itself narrower.
+   */
+  it("draws the table narrower by what the column put away was taking", () => {
+    table({ hidden: hiddenColumns(["category"]) });
+
+    const width = Number.parseInt(screen.getByRole("table").style.width, 10);
+    expect(width).toBeLessThan(tableWidth(NO_HIDDEN_COLUMN));
   });
 });

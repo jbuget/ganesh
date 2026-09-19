@@ -16,9 +16,12 @@ import { phaseLabel, phaseDot } from "@/lib/board";
 import {
   LEFT_MARGIN,
   NAME_COLUMN,
+  NO_HIDDEN_COLUMN,
   SEPARATOR,
   STRONG_SEPARATOR,
   THREAD_COLUMN,
+  type ColumnKey,
+  type HiddenColumns,
 } from "@/lib/mission-columns";
 import { since } from "@/lib/relative-dates";
 
@@ -37,6 +40,8 @@ interface MissionRowProps {
   onOpen: () => void;
   /** Opens the mission on its thread, where the preview stops. */
   onOpenThread: () => void;
+  /** The columns put away. Nothing put away shows the whole panorama. */
+  hidden?: HiddenColumns;
 }
 
 /**
@@ -56,7 +61,9 @@ export function MissionRow({
   now,
   onOpen,
   onOpenThread,
+  hidden = NO_HIDDEN_COLUMN,
 }: MissionRowProps) {
+  const shows = (column: ColumnKey) => !hidden.has(column);
   const { project } = mission;
   const latest = mission.latest_update;
 
@@ -189,54 +196,70 @@ export function MissionRow({
         />
       </TableCell>
 
-      <TableCell>
-        {project.status && (
-          <span className="flex items-center gap-1.5 text-slate-700">
-            <span
-              aria-hidden
-              className={`size-2.5 shrink-0 rounded-full ${phaseDot(project.status)}`}
-            />
-            {phaseLabel(project.status)}
-          </span>
-        )}
-      </TableCell>
+      {shows("phase") && (
+        <TableCell>
+          {project.status && (
+            <span className="flex items-center gap-1.5 text-slate-700">
+              <span
+                aria-hidden
+                className={`size-2.5 shrink-0 rounded-full ${phaseDot(project.status)}`}
+              />
+              {phaseLabel(project.status)}
+            </span>
+          )}
+        </TableCell>
+      )}
 
       {/* Priority follows phase, as in the sheet: where the mission stands,
           then what it must come before. */}
-      <TableCell>
-        <PriorityMark value={project.priority} />
-      </TableCell>
+      {shows("priority") && (
+        <TableCell>
+          <PriorityMark value={project.priority} />
+        </TableCell>
+      )}
 
-      <TableCell>
-        <CategoryMark value={project.category} />
-      </TableCell>
+      {shows("category") && (
+        <TableCell>
+          <CategoryMark value={project.category} />
+        </TableCell>
+      )}
 
       {/* Build against its estimate, run apart: the estimate covered the
           construction alone, and comparing the whole life of a service to it
           would declare every living mission late. A zero is not a value to
           read: a mission nobody has declared on stays empty. */}
-      <TableCell className="text-right tabular-nums text-slate-600">
-        <BuildCost cost={cost} />
-      </TableCell>
+      {shows("build") && (
+        <TableCell className="text-right tabular-nums text-slate-600">
+          <BuildCost cost={cost} />
+        </TableCell>
+      )}
 
-      <TableCell className="text-right tabular-nums text-slate-600">
-        <RunCost cost={cost} />
-      </TableCell>
+      {shows("run") && (
+        <TableCell className="text-right tabular-nums text-slate-600">
+          <RunCost cost={cost} />
+        </TableCell>
+      )}
 
-      <TableCell>
-        <MemberAvatars members={mission.leads} />
-      </TableCell>
+      {shows("leads") && (
+        <TableCell>
+          <MemberAvatars members={mission.leads} />
+        </TableCell>
+      )}
 
-      <TableCell>
-        <MemberAvatars members={mission.contributors} />
-      </TableCell>
+      {shows("contributors") && (
+        <TableCell>
+          <MemberAvatars members={mission.contributors} />
+        </TableCell>
+      )}
 
       {/* Where the mission's work is written down. The icons stand on their
           own: in a row there is no room for their labels, which come back on
           hover. */}
-      <TableCell>
-        <ProjectLinks links={mission.links} />
-      </TableCell>
+      {shows("links") && (
+        <TableCell>
+          <ProjectLinks links={mission.links} />
+        </TableCell>
+      )}
     </TableRow>
   );
 }

@@ -74,11 +74,119 @@ export const DAYS_COLUMN = "w-[100px]";
 export const MEMBERS_COLUMN = "w-[130px]";
 
 /**
- * The table carries a firm width rather than a share of the available room:
- * its columns are fixed, so it has nothing to gain from stretching, and its
- * container can size itself on it — which a relative width would make
- * circular. Past that width the screen scrolls, and it is that scrolling the
- * first two columns cross without moving.
+ * The columns one may put away, in the order the table draws them.
+ *
+ * The name and the update thread are not among them: they are what a row is
+ * read by, and a line without its name says nothing. Everything else is fair
+ * game — a steering meeting reads the whole panorama, then works on four
+ * columns, and the rest only takes up room.
+ *
+ * Each one carries its width in figures, the same one its class above writes:
+ * Tailwind only reads classes spelled out in full, and the table needs the
+ * number to know how wide it still is once a column has gone. The two are read
+ * together, and change together.
+ */
+export type ColumnKey =
+  | "phase"
+  | "priority"
+  | "category"
+  | "build"
+  | "run"
+  | "leads"
+  | "contributors"
+  | "links";
+
+export interface HideableColumn {
+  key: ColumnKey;
+  label: string;
+  width: number;
+}
+
+export const HIDEABLE_COLUMNS: readonly HideableColumn[] = [
+  { key: "phase", label: "Phase", width: 150 },
+  { key: "priority", label: "Priorité", width: 120 },
+  { key: "category", label: "Catégorie", width: 210 },
+  { key: "build", label: "Build", width: 100 },
+  { key: "run", label: "Run", width: 100 },
+  { key: "leads", label: "Référents", width: 130 },
+  { key: "contributors", label: "Intervenants", width: 130 },
+  // The links column carries no width class: it takes what is left of the
+  // table. What is left is this, and putting it away gives exactly this back.
+  { key: "links", label: "Liens", width: 112 },
+];
+
+/** The name and the thread, which no choice ever takes away. */
+const PINNED_WIDTH = 448;
+
+export type HiddenColumns = ReadonlySet<ColumnKey>;
+
+export const NO_HIDDEN_COLUMN: HiddenColumns = new Set();
+
+/** The set a list of keys makes, so callers never build one by hand. */
+export function hiddenColumns(keys: readonly ColumnKey[]): HiddenColumns {
+  return new Set(keys);
+}
+
+export function isHideable(column: string): column is ColumnKey {
+  return HIDEABLE_COLUMNS.some((hideable) => hideable.key === column);
+}
+
+const HIDE_PARAMETER = "hide";
+
+/**
+ * The columns put away, as the address carries them.
+ *
+ * What is written down is what one has taken away, not what is left: a bare
+ * address then shows the whole panorama, which is what one comes to the
+ * reference list for.
+ */
+export function readHiddenColumns(params: URLSearchParams): HiddenColumns {
+  const hidden = params.get(HIDE_PARAMETER);
+  if (!hidden) return NO_HIDDEN_COLUMN;
+
+  return new Set(hidden.split(",").filter(isHideable));
+}
+
+/** Writes the columns put away into the URL, leaving the other parameters alone. */
+export function writeHiddenColumns(
+  params: URLSearchParams,
+  hidden: HiddenColumns,
+): void {
+  params.delete(HIDE_PARAMETER);
+  if (hidden.size === 0) return;
+
+  // The order of the table is what counts: two identical choices produce the
+  // same address, whatever the order of the clicks.
+  params.set(
+    HIDE_PARAMETER,
+    HIDEABLE_COLUMNS.filter(({ key }) => hidden.has(key))
+      .map(({ key }) => key)
+      .join(","),
+  );
+}
+
+/**
+ * How wide the table stands, once the columns put away are gone.
+ *
+ * It is measured rather than declared: `table-fixed` shares out whatever the
+ * table is given, so a width left at its full span would stretch the remaining
+ * columns instead of drawing the list narrower. The figure is carried inline —
+ * Tailwind cannot write a class for a width only known once the address is
+ * read.
+ */
+export function tableWidth(hidden: HiddenColumns): number {
+  return HIDEABLE_COLUMNS.filter(({ key }) => !hidden.has(key)).reduce(
+    (total, { width }) => total + width,
+    PINNED_WIDTH,
+  );
+}
+
+/**
+ * The table takes its width from `tableWidth`, in figures: its columns are
+ * fixed, so it has nothing to gain from stretching, and its container can size
+ * itself on it — which a relative width would make circular. Past that width
+ * the screen scrolls, and it is that scrolling the first two columns cross
+ * without moving.
  *
  * Borders do not collapse: collapsed, they belong to the table and run from
  * edge to edge, including under the page margin, where they showed through on
@@ -92,7 +200,7 @@ export const MEMBERS_COLUMN = "w-[130px]";
  * scroll away while the pinned column stays, leaving it open on its left.
  */
 export const MISSIONS_TABLE = [
-  "w-[1500px] table-fixed border-separate border-spacing-0",
+  "table-fixed border-separate border-spacing-0",
   // The top of the frame travels with the pinned header.
   "[&_th]:border-t [&_th]:border-t-slate-500",
   "[&_th:first-child]:border-l [&_th:first-child]:border-l-slate-500",
