@@ -91,6 +91,7 @@ export * from "./unassignMemberParams";
 export * from "./updateDescriptionRequest";
 export * from "./updateProjectDetailRequest";
 export * from "./updateProjectRequest";
+export * from "./updateUserIdentityRequest";
 export * from "./userResponse";
 export * from "./validationError";
 export * from "./weeklyLoadResponse";

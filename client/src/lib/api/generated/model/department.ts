@@ -6,10 +6,11 @@
  */
 
 /**
- * Company department a mission serves.
+ * Company department.
  *
- * A mission may serve several: a landlord portal that also equips customer
- * service concerns both, and steering wants to see it.
+ * A mission serves one or several of them; a teammate belongs to one. The
+ * list is the same on both sides — one does not steer a portfolio by
+ * department if the teams do not read under the same names.
  */
 export type Department = (typeof Department)[keyof typeof Department];
 

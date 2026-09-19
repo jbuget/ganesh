@@ -3,8 +3,16 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { changeUserRole, setUserActive } from "@/lib/api/generated/users/users";
-import type { Role } from "@/lib/api/generated/model";
+import {
+  changeUserRole,
+  setUserActive,
+  updateUserIdentity,
+} from "@/lib/api/generated/users/users";
+import type {
+  Role,
+  UpdateUserIdentityRequest,
+  UserResponse,
+} from "@/lib/api/generated/model";
 import { useCurrentUser, useTeammates } from "@/lib/api/queries";
 
 /**
@@ -17,7 +25,14 @@ export function useUsersScreen() {
   const queryClient = useQueryClient();
   const { user: me } = useCurrentUser();
   const [withInactive, setWithInactive] = useState(false);
-  const { teammates, isLoading } = useTeammates(withInactive);
+  // The management screen always asks for everyone, and hides rather than
+  // re-fetches: a panel opened by a link on a deactivated account must find it,
+  // whatever the list is showing at that moment.
+  const { teammates, isLoading } = useTeammates(true);
+
+  const visible = withInactive
+    ? teammates
+    : teammates.filter((teammate) => teammate.is_active);
 
   return {
     isLoading,
@@ -34,12 +49,32 @@ export function useUsersScreen() {
     toggleInactive: () => setWithInactive((current) => !current),
 
     /** By name, the only order one finds by eye in a team list. */
-    users: [...teammates].sort((a, b) =>
+    users: [...visible].sort((a, b) =>
       a.display_name.localeCompare(b.display_name, "fr"),
     ),
 
+    /** The teammate a panel is opened on, deactivated or not. */
+    find: (userId: number) =>
+      teammates.find((teammate) => teammate.id === userId) ?? null,
+
     async changeRole(userId: number, role: Role) {
       await changeUserRole(userId, { role });
+      await queryClient.invalidateQueries();
+    },
+
+    /**
+     * Who a teammate is, and where they work.
+     *
+     * The three fields go to the API together — what is left out is emptied —
+     * so a change to one carries the other two as they stand.
+     */
+    async updateIdentity(user: UserResponse, change: UpdateUserIdentityRequest) {
+      await updateUserIdentity(user.id, {
+        first_name: user.first_name ?? null,
+        last_name: user.last_name ?? null,
+        department: user.department ?? null,
+        ...change,
+      });
       await queryClient.invalidateQueries();
     },
 

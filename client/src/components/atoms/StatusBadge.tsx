@@ -4,7 +4,8 @@ interface StatusBadgeProps {
   is_active: boolean;
   /** Only a manager cuts off or restores access, and never their own. */
   modifiable: boolean;
-  onToggle: (is_active: boolean) => void | Promise<void>;
+  /** Given when the status can be changed; the list only reads it. */
+  onToggle?: (is_active: boolean) => void | Promise<void>;
 }
 
 /**
@@ -31,7 +32,7 @@ export function StatusBadge({ is_active, modifiable, onToggle }: StatusBadgeProp
     <button
       type="button"
       aria-label={is_active ? "Désactiver ce compte" : "Réactiver ce compte"}
-      onClick={() => void onToggle(!is_active)}
+      onClick={() => void onToggle?.(!is_active)}
       className={`cursor-pointer rounded px-1.5 py-0.5 text-xs font-medium transition-colors hover:ring-1 hover:ring-slate-300 ${dot}`}
     >
       {label}
