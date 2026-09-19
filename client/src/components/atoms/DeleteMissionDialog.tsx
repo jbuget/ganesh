@@ -80,7 +80,7 @@ export function DeleteMissionDialog({
           </AlertDialogTitle>
           <AlertDialogDescription>
             {deletable
-              ? "Cette mission n'a jamais porté de temps. Sa suppression est définitive, et emporte les mises à jour publiées sur son fil : rien ne permettra de la rétablir."
+              ? "Ce projet n'a jamais porté de temps. Sa suppression est définitive, et emporte les mises à jour publiées sur son fil : rien ne permettra de le rétablir."
               : refusal(label, consumedDays, subProjects)}
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -94,7 +94,7 @@ export function DeleteMissionDialog({
               onClick={onConfirm}
               className="cursor-pointer bg-red-600 text-white hover:bg-red-700"
             >
-              Supprimer la mission
+              Supprimer le projet
             </AlertDialogAction>
           )}
         </AlertDialogFooter>

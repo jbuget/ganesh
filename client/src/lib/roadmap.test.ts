@@ -218,8 +218,8 @@ describe("telling a line that speaks from one that does not", () => {
   });
 
   it("counts what is folded away, in words", () => {
-    expect(silentNotice(1)).toBe("1 mission sans rien à montrer");
-    expect(silentNotice(12)).toBe("12 missions sans rien à montrer");
+    expect(silentNotice(1)).toBe("1 projet sans rien à montrer");
+    expect(silentNotice(12)).toBe("12 projets sans rien à montrer");
   });
 });
 
@@ -233,7 +233,7 @@ describe("what the drawing is worth", () => {
       delivered: 0,
     });
 
-    expect(notice).toBe("1 mission");
+    expect(notice).toBe("1 projet");
   });
 
   it("names what is missing before the drawing can be believed", () => {
@@ -246,7 +246,7 @@ describe("what the drawing is worth", () => {
     });
 
     expect(notice).toBe(
-      "14 missions · 4 livrées · 3 en retard · 5 sans date · 2 sans estimation",
+      "14 projets · 4 livrés · 3 en retard · 5 sans date · 2 sans estimation",
     );
   });
 });

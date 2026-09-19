@@ -62,14 +62,20 @@ class ImportProjectsUseCase:
                 continue
             known[project.label] = project
             report.created += 1
-
-        await self._audit_logs.add(
-            AuditLog(
-                action=AuditAction.PROJECT_CREATE,
-                actor_id=command.actor_id,
-                new_value=f"import: {report.created} mission(s)",
+            # One line per project, against the project itself: a single
+            # summary line would live in no project's log, and opening one of
+            # them nothing would say where it came from. That one import
+            # created a dozen of them is read from the timestamps.
+            await self._audit_logs.add(
+                AuditLog(
+                    action=AuditAction.PROJECT_CREATE,
+                    actor_id=command.actor_id,
+                    project_id=project.id,
+                    new_value=project.label,
+                    payload={"source": "import"},
+                )
             )
-        )
+
         return report
 
     async def _create(

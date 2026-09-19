@@ -29,7 +29,7 @@ describe("MetricTile", () => {
   });
 
   it("is plain by default", () => {
-    const { container } = render(<MetricTile label="Missions actives" value="30" />);
+    const { container } = render(<MetricTile label="Projets actifs" value="30" />);
 
     expect(container.firstChild).toHaveAttribute("data-tone", "plain");
   });

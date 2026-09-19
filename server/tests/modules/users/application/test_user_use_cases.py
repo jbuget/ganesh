@@ -4,6 +4,7 @@ from datetime import datetime
 
 import pytest
 
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction
 from src.modules.users.application.dtos.user_dto import (
     ChangeRoleCommand,
     EntraIdentity,
@@ -49,7 +50,7 @@ def build(users: list[User] | None = None):
     repo = InMemoryUserRepository(users if users is not None else [])
     audit = InMemoryAuditLogRepository()
     return (
-        ProvisionUserUseCase(users=repo),
+        ProvisionUserUseCase(users=repo, audit_logs=audit),
         ChangeUserRoleUseCase(users=repo, audit_logs=audit),
         repo,
         audit,
@@ -283,5 +284,32 @@ async def test_setting_the_state_it_already_has_traces_nothing() -> None:
     await set_active.execute(
         SetUserActiveCommand(actor_id=1, target_user_id=2, is_active=True)
     )
+
+    assert audit.logs == []
+
+
+async def test_an_account_coming_into_being_is_traced() -> None:
+    provision, _, repo, audit, _ = build()
+
+    user = await provision.execute(
+        EntraIdentity(oid="oid-new", email="d.dehe@waat.fr", display_name="D. Dehe")
+    )
+
+    (trace,) = audit.logs
+    assert trace.action is AuditAction.USER_CREATE
+    assert (trace.actor_id, trace.target_user_id) == (user.id, user.id)
+    assert trace.new_value == "d.dehe@waat.fr"
+
+
+async def test_signing_in_again_traces_nothing() -> None:
+    """A line per sign-in would bury the log under what nobody decided."""
+    provision, _, _, audit, _ = build()
+    identity = EntraIdentity(
+        oid="oid-new", email="d.dehe@waat.fr", display_name="D. Dehe"
+    )
+    await provision.execute(identity)
+    audit.logs.clear()
+
+    await provision.execute(identity)
 
     assert audit.logs == []

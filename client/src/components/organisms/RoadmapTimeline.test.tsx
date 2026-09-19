@@ -80,7 +80,7 @@ describe("RoadmapTimeline", () => {
     draw([]);
 
     expect(
-      screen.getByText("Aucune mission à montrer sur cette période."),
+      screen.getByText("Aucun projet à montrer sur cette période."),
     ).toBeInTheDocument();
   });
 
@@ -161,7 +161,7 @@ describe("RoadmapTimeline", () => {
       aLine({ project_id: 3, label: "Sans rien non plus", blocker: "no_assignee" }),
     ]);
 
-    expect(screen.getByText("2 missions sans rien à montrer")).toBeInTheDocument();
+    expect(screen.getByText("2 projets sans rien à montrer")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Ouvrir Sans rien" }),
     ).not.toBeInTheDocument();
@@ -174,7 +174,7 @@ describe("RoadmapTimeline", () => {
     ]);
 
     await userEvent.click(
-      screen.getByRole("button", { name: /1 mission sans rien à montrer/ }),
+      screen.getByRole("button", { name: /1 projet sans rien à montrer/ }),
     );
 
     expect(

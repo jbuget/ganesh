@@ -66,11 +66,11 @@ export function MissionFilters({
           criteria, and know what they govern. It lays out nothing of its own —
           the criteria sit on the bar's own line, and what accompanies them is
           not part of the search. */}
-      <div role="search" aria-label="Filtrer les missions" className="contents">
+      <div role="search" aria-label="Filtrer les projets" className="contents">
         <SearchField
           value={filters.name}
           onChange={(name) => onChange({ name })}
-          label="Rechercher une mission"
+          label="Rechercher un projet"
         />
 
         <FilterSelect
@@ -169,12 +169,7 @@ export function MissionFilters({
           sets about how to read it, away from the criteria themselves. */}
       <div className="ml-auto flex items-center gap-2">
         {hasFilter && (
-          <FilteredCount
-            visible={visible}
-            total={total}
-            one="mission"
-            many="missions"
-          />
+          <FilteredCount visible={visible} total={total} one="projet" many="projets" />
         )}
         {trailing}
       </div>

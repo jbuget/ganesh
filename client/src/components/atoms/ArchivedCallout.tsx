@@ -25,8 +25,8 @@ export function ArchivedCallout({ archivedAt }: ArchivedCalloutProps) {
     >
       <Archive className="size-4 shrink-0 text-amber-600" aria-hidden />
       {archivedAt
-        ? `Cette mission a été archivée le ${formatShortDate(archivedAt)}.`
-        : "Cette mission est archivée."}
+        ? `Ce projet a été archivé le ${formatShortDate(archivedAt)}.`
+        : "Ce projet est archivé."}
     </p>
   );
 }

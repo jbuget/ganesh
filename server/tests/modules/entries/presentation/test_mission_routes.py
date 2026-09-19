@@ -22,6 +22,7 @@ from src.modules.projects.domain.entities.project import (
 )
 from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
+    InMemoryAuditLogRepository,
     InMemoryMonthRepository,
     InMemoryProjectRepository,
     InMemoryUserMissionRepository,
@@ -76,6 +77,7 @@ def sign_in(months: list[Month]) -> Screen:
             projects=InMemoryProjectRepository([PORTAIL]),
             months=InMemoryMonthRepository(months),
             user_missions=rows,
+            audit_logs=InMemoryAuditLogRepository(),
         )
     )
     return Screen(

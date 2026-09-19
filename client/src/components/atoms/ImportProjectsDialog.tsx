@@ -56,7 +56,7 @@ export function ImportProjectsDialog({
         <DialogHeader>
           <DialogTitle>Importer un référentiel</DialogTitle>
           <DialogDescription>
-            Collez un export tableur. Les missions déjà connues sont ignorées,
+            Collez un export tableur. Les projets déjà connus sont ignorés,
             l&apos;import peut donc être rejoué sans risque.
           </DialogDescription>
         </DialogHeader>

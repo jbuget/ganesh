@@ -10,6 +10,7 @@ from src.modules.entries.domain.repositories.user_mission_repository import (
     UserMissionRepository,
 )
 from src.modules.months.domain.repositories.month_repository import MonthRepository
+from src.modules.months.domain.services.month_period import first_day_of
 from src.modules.months.domain.services.month_rules import ensure_month_is_open
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import (
@@ -57,6 +58,16 @@ class RemoveMissionFromMonthUseCase:
 
         await self._user_missions.remove(
             command.target_user_id, command.project_id, command.month
+        )
+        # The row leaving is its own fact, said beside the entries it cleared:
+        # a row taken off while empty would otherwise leave nothing at all.
+        await self._audit_logs.add(
+            AuditLog.month_project_remove(
+                actor_id=command.actor_id,
+                target_user_id=command.target_user_id,
+                project_id=command.project_id,
+                month=first_day_of(command.month),
+            )
         )
 
         entries = [

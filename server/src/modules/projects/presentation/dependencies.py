@@ -306,14 +306,18 @@ def get_update_project_registry_use_case(
 def get_add_project_link_use_case(
     projects: ProjectRepository = Depends(get_project_repository),
     details: ProjectDetailRepository = Depends(get_project_detail_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> AddProjectLinkUseCase:
-    return AddProjectLinkUseCase(projects=projects, details=details)
+    return AddProjectLinkUseCase(
+        projects=projects, details=details, audit_logs=audit_logs
+    )
 
 
 def get_remove_project_link_use_case(
     details: ProjectDetailRepository = Depends(get_project_detail_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> RemoveProjectLinkUseCase:
-    return RemoveProjectLinkUseCase(details=details)
+    return RemoveProjectLinkUseCase(details=details, audit_logs=audit_logs)
 
 
 def get_update_description_use_case(

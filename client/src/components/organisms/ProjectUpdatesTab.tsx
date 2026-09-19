@@ -84,7 +84,7 @@ export function ProjectUpdatesTab({
 
       {thread.thread?.length === 0 && (
         <p className="py-6 text-center text-sm text-slate-400">
-          Aucune mise à jour. Racontez où en est la mission.
+          Aucune mise à jour. Racontez où en est le projet.
         </p>
       )}
 

@@ -154,10 +154,10 @@ describe("StatsPage", () => {
     renderPage();
 
     for (const title of [
-      "Mission ou hors projet",
+      "Projet ou hors projet",
       "Temps par phase",
       "Temps par axe stratégique",
-      "Missions les plus consommatrices",
+      "Projets les plus consommateurs",
     ]) {
       expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
     }

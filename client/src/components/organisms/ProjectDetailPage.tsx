@@ -43,7 +43,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
   if (sheet.notFound) {
     return (
       <PageLayout header={<BackToBoard />}>
-        <p className="text-sm text-slate-500">Cette mission n&apos;existe pas.</p>
+        <p className="text-sm text-slate-500">Ce projet n&apos;existe pas.</p>
       </PageLayout>
     );
   }
@@ -71,7 +71,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
 
             <EditableTitle
               label={project.label}
-              hint="Renommer la mission"
+              hint="Renommer le projet"
               onRename={sheet.rename}
               level={1}
             />

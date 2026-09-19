@@ -85,8 +85,8 @@ export function ProjectDependencies({
               type="text"
               autoFocus
               value={search}
-              placeholder="Rechercher une mission…"
-              aria-label="Rechercher une mission"
+              placeholder="Rechercher un projet…"
+              aria-label="Rechercher un projet"
               onChange={(event) => setSearch(event.target.value)}
               className="min-w-0 flex-1 bg-transparent py-0.5 text-sm focus:outline-none"
             />
@@ -94,7 +94,7 @@ export function ProjectDependencies({
 
           {offered.length === 0 ? (
             <p className="px-2 py-3 text-center text-sm text-slate-400">
-              Aucune mission ne correspond.
+              Aucun projet ne correspond.
             </p>
           ) : (
             <ul className="max-h-64 overflow-y-auto pt-1">

@@ -21,7 +21,7 @@ export function PlanSummaryBar({ summary }: PlanSummaryBarProps) {
       Icon: CircleCheck,
       tone: "text-emerald-600",
       value: String(summary.planned),
-      label: summary.planned > 1 ? "missions placées" : "mission placée",
+      label: summary.planned > 1 ? "projets placés" : "projet placé",
     },
     {
       key: "late",

@@ -41,7 +41,7 @@ export function ProjectPanel({
   const detail = sheet.detail;
 
   return (
-    <SidePanel label={detail ? detail.project.label : "Mission"} onClose={onClose}>
+    <SidePanel label={detail ? detail.project.label : "Projet"} onClose={onClose}>
       <header className="border-b border-slate-200 px-5 py-4">
         {/* Above the title, therefore read before it: which whole this
               mission is a part of comes before its own name. */}
@@ -52,7 +52,7 @@ export function ProjectPanel({
         <div className="flex items-center gap-2">
           <EditableTitle
             label={detail?.project.label ?? "Chargement…"}
-            hint="Renommer la mission"
+            hint="Renommer le projet"
             onRename={detail ? sheet.rename : undefined}
           />
 
@@ -76,7 +76,7 @@ export function ProjectPanel({
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4">
         {sheet.notFound && (
-          <p className="text-sm text-slate-500">Cette mission n&apos;existe pas.</p>
+          <p className="text-sm text-slate-500">Ce projet n&apos;existe pas.</p>
         )}
         {detail && (
           <ProjectTabs

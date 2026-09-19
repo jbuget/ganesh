@@ -62,6 +62,16 @@ class ProjectDetailRepository(ABC):
     async def add_link(self, link: ProjectLink) -> ProjectLink: ...
 
     @abstractmethod
+    async def get_link(self, link_id: int) -> ProjectLink | None:
+        """One link, read back before it is detached.
+
+        Removing it is traced against the project it hung on, and under the
+        name it was given: the id alone would say nothing to whoever reads the
+        log afterwards.
+        """
+        ...
+
+    @abstractmethod
     async def remove_link(self, link_id: int) -> None: ...
 
     @abstractmethod

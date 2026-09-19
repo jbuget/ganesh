@@ -309,8 +309,20 @@ class InMemoryAuditLogRepository(AuditLogRepository):
             and log.day.replace(day=1) == first
         ]
 
-    async def list_for_project(self, project_id: int) -> list[AuditLog]:
-        return [log for log in self.logs if log.project_id == project_id]
+    def _for_project(self, project_id: int) -> list[AuditLog]:
+        return sorted(
+            (log for log in self.logs if log.project_id == project_id),
+            key=lambda log: (log.at, log.id or 0),
+            reverse=True,
+        )
+
+    async def list_for_project(
+        self, project_id: int, limit: int, offset: int
+    ) -> list[AuditLog]:
+        return self._for_project(project_id)[offset : offset + limit]
+
+    async def count_for_project(self, project_id: int) -> int:
+        return len(self._for_project(project_id))
 
 
 class InMemoryProjectAssigneeRepository(ProjectAssigneeRepository):
@@ -378,6 +390,13 @@ class InMemoryProjectDetailRepository(ProjectDetailRepository):
         self._next_link_id += 1
         self._links.setdefault(link.project_id, []).append(link)
         return link
+
+    async def get_link(self, link_id: int) -> ProjectLink | None:
+        for links in self._links.values():
+            for link in links:
+                if link.id == link_id:
+                    return link
+        return None
 
     async def remove_link(self, link_id: int) -> None:
         for links in self._links.values():

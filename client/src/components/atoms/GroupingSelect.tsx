@@ -36,7 +36,7 @@ export function GroupingSelect({ value, onChange }: GroupingSelectProps) {
       </PopoverTrigger>
 
       <PopoverContent align="end" className={`${WIDTH} p-1`}>
-        <ul role="listbox" aria-label="Regroupement des missions">
+        <ul role="listbox" aria-label="Regroupement des projets">
           {GROUPINGS.map((grouping) => {
             const isChosen = grouping.value === value;
             return (

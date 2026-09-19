@@ -283,12 +283,15 @@ async def save_simulation(
 async def update_simulation(
     simulation_id: int,
     body: SaveSimulationRequest,
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
     use_case: UpdateSimulationUseCase = Depends(get_update_simulation_use_case),
 ) -> SimulationResponse:
     """Rewrites a scenario in place, so trying again costs no second row."""
-    rewritten = await use_case.execute(simulation_id, to_command(body))
+    assert current_user.id is not None
+    rewritten = await use_case.execute(
+        simulation_id, to_command(body), actor_id=current_user.id
+    )
     await session.commit()
     return to_simulation_response(rewritten)
 
@@ -300,7 +303,7 @@ async def update_simulation(
 )
 async def delete_simulation(
     simulation_id: int,
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
     use_case: DeleteSimulationUseCase = Depends(get_delete_simulation_use_case),
 ) -> Response:
@@ -309,7 +312,8 @@ async def delete_simulation(
     Anyone may, whoever wrote it: a simulation holds no declared time and
     changes nothing that was decided. Trust is the stance here as on the board.
     """
-    await use_case.execute(simulation_id)
+    assert current_user.id is not None
+    await use_case.execute(simulation_id, actor_id=current_user.id)
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

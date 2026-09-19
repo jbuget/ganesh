@@ -127,19 +127,19 @@ describe("TimesheetGrid", () => {
   it("shows a message when the month holds no mission", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid({ rows: [] })} />);
 
-    expect(screen.getByText(/Aucune mission pour ce mois/)).toBeInTheDocument();
+    expect(screen.getByText(/Aucun projet pour ce mois/)).toBeInTheDocument();
   });
 
   it("does not show that message as soon as a mission is there", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
-    expect(screen.queryByText(/Aucune mission pour ce mois/)).toBeNull();
+    expect(screen.queryByText(/Aucun projet pour ce mois/)).toBeNull();
   });
 
   it("closes the table with a strong rule even with no mission", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid({ rows: [] })} />);
 
-    const cell = screen.getByText(/Aucune mission pour ce mois/);
+    const cell = screen.getByText(/Aucun projet pour ce mois/);
     expect(cell.className).toContain("border-b-slate-500");
     expect(cell.className).toContain("border-r-slate-500");
   });
@@ -183,7 +183,7 @@ describe("TimesheetGrid", () => {
       />,
     );
 
-    expect(screen.queryByText(/Aucune mission pour ce mois/)).toBeNull();
+    expect(screen.queryByText(/Aucun projet pour ce mois/)).toBeNull();
     expect(screen.getByText("Ajouter un projet")).toBeInTheDocument();
   });
 

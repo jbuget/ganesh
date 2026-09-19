@@ -2,6 +2,10 @@
 
 from datetime import datetime
 
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
+from src.modules.audit_logs.domain.repositories.audit_log_repository import (
+    AuditLogRepository,
+)
 from src.modules.users.application.dtos.user_dto import EntraIdentity
 from src.modules.users.domain.entities.user import Role, User
 from src.modules.users.domain.repositories.user_repository import UserRepository
@@ -18,8 +22,9 @@ class ProvisionUserUseCase:
     the domain holds.
     """
 
-    def __init__(self, users: UserRepository) -> None:
+    def __init__(self, users: UserRepository, audit_logs: AuditLogRepository) -> None:
         self._users = users
+        self._audit_logs = audit_logs
 
     async def execute(
         self, identity: EntraIdentity, now: datetime | None = None
@@ -39,7 +44,7 @@ class ProvisionUserUseCase:
             seeded.record_login(now)
             return await self._users.update(seeded)
 
-        return await self._users.add(
+        created = await self._users.add(
             User(
                 id=None,
                 entra_oid=identity.oid,
@@ -49,3 +54,17 @@ class ProvisionUserUseCase:
                 last_login_at=now,
             )
         )
+        assert created.id is not None
+        # An account coming into being is traced like everything that happens
+        # to it afterwards. Only the creation: a line per sign-in would bury
+        # the log under what nobody decided.
+        await self._audit_logs.add(
+            AuditLog(
+                action=AuditAction.USER_CREATE,
+                actor_id=created.id,
+                target_user_id=created.id,
+                at=now,
+                new_value=created.email,
+            )
+        )
+        return created

@@ -13,6 +13,18 @@ from src.modules.api_keys.application.use_cases.authenticate_api_key import (
 )
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.api_keys.presentation.dependencies import require_scope
+from src.modules.audit_logs.application.use_cases.list_project_audit_log import (
+    ListProjectAuditLogUseCase,
+)
+from src.modules.audit_logs.presentation.api.mappers.audit_log_mapper import (
+    to_audit_log_page_response,
+)
+from src.modules.audit_logs.presentation.api.schemas.audit_log_schemas import (
+    AuditLogPageResponse,
+)
+from src.modules.audit_logs.presentation.dependencies import (
+    get_project_audit_log_use_case,
+)
 from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.projects.application.dtos.assignment_dto import AssignmentCommand
 from src.modules.projects.application.dtos.project_dto import (
@@ -598,12 +610,13 @@ async def add_project_link(
 async def remove_project_link(
     project_id: int,
     link_id: int,
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     use_case: RemoveProjectLinkUseCase = Depends(get_remove_project_link_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
     """Detaches a link from the mission."""
-    await use_case.execute(link_id)
+    assert current_user.id is not None
+    await use_case.execute(link_id, actor_id=current_user.id)
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -649,6 +662,24 @@ async def list_project_updates(
         to_project_update_response(signed, current_user.id)
         for signed in await use_case.execute(project_id)
     ]
+
+
+@router.get(
+    "/{project_id}/audit",
+    response_model=AuditLogPageResponse,
+    operation_id="listProjectAuditLog",
+)
+async def list_project_audit_log(
+    project_id: int,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    _: User = Depends(get_current_user),
+    use_case: ListProjectAuditLogUseCase = Depends(get_project_audit_log_use_case),
+) -> AuditLogPageResponse:
+    """Everything that happened to the mission, most recent first."""
+    return to_audit_log_page_response(
+        await use_case.execute(project_id=project_id, limit=limit, offset=offset)
+    )
 
 
 @router.post(

@@ -68,7 +68,7 @@ export function MissionMenu({
   return (
     <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger
-        aria-label="Actions sur la mission"
+        aria-label="Actions sur le projet"
         className="cursor-pointer rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
       >
         <MoreHorizontal className="size-4" aria-hidden />

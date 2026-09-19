@@ -25,6 +25,7 @@ import type {
   ArchiveProjectRequest,
   AssignMemberParams,
   AttachProjectRequest,
+  AuditLogPageResponse,
   BoardResponse,
   CatalogEntryResponse,
   ChangeStatusRequest,
@@ -33,6 +34,7 @@ import type {
   HTTPValidationError,
   ImportProjectsRequest,
   ImportReportResponse,
+  ListProjectAuditLogParams,
   ListProjectsParams,
   MoveProjectRequest,
   PostUpdateRequest,
@@ -3200,6 +3202,196 @@ export const usePostProjectUpdate = <TError = HTTPValidationError, TContext = un
 > => {
   return useMutation(getPostProjectUpdateMutationOptions(options), queryClient);
 };
+export type listProjectAuditLogResponse200 = {
+  data: AuditLogPageResponse;
+  status: 200;
+};
+
+export type listProjectAuditLogResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listProjectAuditLogResponseSuccess = listProjectAuditLogResponse200 & {
+  headers: Headers;
+};
+export type listProjectAuditLogResponseError = listProjectAuditLogResponse422 & {
+  headers: Headers;
+};
+
+export type listProjectAuditLogResponse =
+  listProjectAuditLogResponseSuccess | listProjectAuditLogResponseError;
+
+export const getListProjectAuditLogUrl = (
+  projectId: number,
+  params?: ListProjectAuditLogParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/projects/${projectId}/audit?${stringifiedParams}`
+    : `/api/v1/projects/${projectId}/audit`;
+};
+
+/**
+ * Everything that happened to the mission, most recent first.
+ * @summary List Project Audit Log
+ */
+export const listProjectAuditLog = async (
+  projectId: number,
+  params?: ListProjectAuditLogParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listProjectAuditLogResponse> => {
+  return bffFetcher<listProjectAuditLogResponse>(
+    getListProjectAuditLogUrl(projectId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListProjectAuditLogQueryKey = (
+  projectId: number,
+  params?: ListProjectAuditLogParams,
+) => {
+  return [`/api/v1/projects/${projectId}/audit`, ...(params ? [params] : [])] as const;
+};
+
+export const getListProjectAuditLogQueryOptions = <
+  TData = Awaited<ReturnType<typeof listProjectAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  params?: ListProjectAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectAuditLog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListProjectAuditLogQueryKey(projectId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectAuditLog>>> = ({
+    signal,
+  }) => listProjectAuditLog(projectId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listProjectAuditLog>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListProjectAuditLogQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listProjectAuditLog>>
+>;
+export type ListProjectAuditLogQueryError = HTTPValidationError;
+
+export function useListProjectAuditLog<
+  TData = Awaited<ReturnType<typeof listProjectAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  params: undefined | ListProjectAuditLogParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectAuditLog>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectAuditLog>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectAuditLog>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListProjectAuditLog<
+  TData = Awaited<ReturnType<typeof listProjectAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  params?: ListProjectAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectAuditLog>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectAuditLog>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectAuditLog>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjectAuditLog<
+  TData = Awaited<ReturnType<typeof listProjectAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  params?: ListProjectAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectAuditLog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Project Audit Log
+ */
+
+export function useListProjectAuditLog<
+  TData = Awaited<ReturnType<typeof listProjectAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  params?: ListProjectAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectAuditLog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListProjectAuditLogQueryOptions(projectId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export type editProjectUpdateResponse204 = {
   data: void;
   status: 204;

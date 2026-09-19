@@ -79,7 +79,7 @@ export function WorkloadTimeline({
   if (missions.length === 0) {
     return (
       <p className="py-12 text-center text-sm text-slate-400">
-        Aucune mission à planifier : tout ce qui n&apos;est pas en exploitation est
+        Aucun projet à planifier : tout ce qui n&apos;est pas en exploitation est
         terminé ou archivé.
       </p>
     );
@@ -99,7 +99,7 @@ export function WorkloadTimeline({
                 Rang
               </TableHead>
               <TableHead className="sticky left-[7.5rem] z-30 bg-slate-50">
-                Mission
+                Projet
               </TableHead>
               <TableHead className="w-40">Intervenants</TableHead>
               <TableHead className="w-24 text-right">Reste (j)</TableHead>

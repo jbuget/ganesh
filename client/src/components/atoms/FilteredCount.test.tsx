@@ -5,16 +5,16 @@ import { FilteredCount } from "./FilteredCount";
 
 describe("FilteredCount", () => {
   it("says what is seen against what could be seen", () => {
-    render(<FilteredCount visible={3} total={12} one="mission" many="missions" />);
+    render(<FilteredCount visible={3} total={12} one="projet" many="projets" />);
 
-    expect(screen.getByRole("status")).toHaveTextContent("3 missions sur 12");
+    expect(screen.getByRole("status")).toHaveTextContent("3 projets sur 12");
   });
 
   it("agrees the noun with what is counted", () => {
-    // « 1 missions sur 12 » is read as a typo, and a typo is read as a bug.
-    render(<FilteredCount visible={1} total={12} one="mission" many="missions" />);
+    // « 1 projets sur 12 » is read as a typo, and a typo is read as a bug.
+    render(<FilteredCount visible={1} total={12} one="projet" many="projets" />);
 
-    expect(screen.getByRole("status")).toHaveTextContent("1 mission sur 12");
+    expect(screen.getByRole("status")).toHaveTextContent("1 projet sur 12");
   });
 
   it("speaks a filter that leaves nothing aloud", () => {

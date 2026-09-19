@@ -7,12 +7,12 @@ describe("PageLayout", () => {
   it("shows the header and the content", () => {
     render(
       <PageLayout header={<h1>Référentiel</h1>}>
-        <p>Une mission</p>
+        <p>Un projet</p>
       </PageLayout>,
     );
 
     expect(screen.getByRole("heading", { name: "Référentiel" })).toBeInTheDocument();
-    expect(screen.getByText("Une mission")).toBeInTheDocument();
+    expect(screen.getByText("Un projet")).toBeInTheDocument();
   });
 
   it("keeps the header out of the scrolling area", () => {
@@ -20,11 +20,11 @@ describe("PageLayout", () => {
     // scrolling container, it would go off with the content.
     render(
       <PageLayout header={<h1>Référentiel</h1>}>
-        <p>Une mission</p>
+        <p>Un projet</p>
       </PageLayout>,
     );
 
-    const scroller = screen.getByText("Une mission").closest(".overflow-y-auto");
+    const scroller = screen.getByText("Un projet").closest(".overflow-y-auto");
 
     expect(scroller).not.toBeNull();
     expect(scroller).not.toContainElement(screen.getByRole("heading"));

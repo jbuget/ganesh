@@ -5,10 +5,10 @@ import { SearchField } from "./SearchField";
 
 describe("SearchField", () => {
   it("names the field the same way to the eye and to a screen reader", () => {
-    render(<SearchField value="" onChange={vi.fn()} label="Rechercher une mission" />);
+    render(<SearchField value="" onChange={vi.fn()} label="Rechercher un projet" />);
 
-    const field = screen.getByRole("searchbox", { name: "Rechercher une mission" });
-    expect(field).toHaveAttribute("placeholder", "Rechercher une mission");
+    const field = screen.getByRole("searchbox", { name: "Rechercher un projet" });
+    expect(field).toHaveAttribute("placeholder", "Rechercher un projet");
   });
 
   it("passes on every keystroke, without waiting for a confirmation", () => {

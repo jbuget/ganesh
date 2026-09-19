@@ -67,6 +67,34 @@ Two consequences worth knowing:
   wording. Only opening the screen catches it. Check in the browser after any
   broad rename.
 
+### One word for one thing: « projet »
+
+**What the user reads says « projet », never « mission ».** One thing carries
+one name, and a screen that calls it a mission where the sidebar calls it a
+project makes the reader wonder whether they are two. The word covers all
+three kinds — a project, a work package, off-project work — because it is the
+word the team already uses for the list they book against.
+
+The code keeps its English identifiers: `MissionRow`, `MissionsTable`,
+`useMissionFilters`, the `mission` query parameter, the `missions` field of an
+API response. Nobody reads them, and renaming them would cost a migration of
+the URLs people have bookmarked for nothing.
+
+**The rename crosses the agreement, and the type checker never sees it.**
+« mission » is feminine, « projet » is masculine, so everything that agrees
+with it moves too:
+
+| Before | After |
+|---|---|
+| Aucune mission | Aucun projet |
+| Cette mission a été archivée | Ce projet a été archivé |
+| Missions les plus consommatrices | Projets les plus consommateurs |
+| Ajoutez-en une pour commencer | Ajoutez-en un pour commencer |
+| `` `${n} livrée${s(n)}` `` | `` `${n} livré${s(n)}` `` |
+
+A label composed at run time is invisible to the type checker and to tests
+asserting on a count. Open the screen after any such change.
+
 ## Tables
 
 Every table of the application is drawn in the **same frame**, and a new one
