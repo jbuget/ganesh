@@ -20,10 +20,10 @@ export function BuildCost({ cost }: BuildCostProps) {
     ) : null;
   }
 
-  // Le rapport se lit toujours en entier, « 0/20 » compris : un nombre seul
-  // ne dirait pas s'il compte ce qui a ete consomme ou ce qui etait prevu, et
-  // un projet dont le build precede Timesheet se lirait comme un projet
-  // arrive pile sur son devis.
+  // The ratio always reads in full, « 0/20 » included: a lone figure would not
+  // say whether it counts what has been spent or what was planned, and a
+  // project whose build predates Timesheet would read as one that landed
+  // exactly on its quote.
   return (
     <span className={cost.has_overrun ? "text-red-700" : undefined}>
       {formatDecimalDays(cost.build_days)}/{formatDecimalDays(cost.estimated_days)} jrs.

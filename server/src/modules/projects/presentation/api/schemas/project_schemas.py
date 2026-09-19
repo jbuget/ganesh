@@ -85,11 +85,11 @@ class ProjectListItemResponse(BaseModel):
     project: ProjectResponse
     leads: list["BoardMemberResponse"]
     contributors: list["BoardMemberResponse"]
-    #: Jours declares, previsionnel exclu.
+    #: Days declared, forecast excluded.
     delivered_days: float
-    #: Ce que la mission a coute, seule.
+    #: What the mission cost on its own.
     cost: ProjectCostResponse
-    #: Le meme compte, augmente de ce que ses lots ont coute.
+    #: The same count, plus what its work packages cost.
     tree_cost: ProjectCostResponse
     #: Live updates in the follow-up thread.
     comments: int
@@ -165,7 +165,7 @@ class BoardCardResponse(BaseModel):
 
     project: ProjectResponse
     consumed_days: float
-    #: Jours de construction seuls : c'est ce que l'estime couvre.
+    #: Build days alone: that is what the estimate covers.
     build_days: float
     contributors: list[BoardMemberResponse]
     comments: int
