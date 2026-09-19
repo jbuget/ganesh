@@ -23,6 +23,7 @@ vi.mock("@/lib/use-project-detail", () => ({
     addSubProject: vi.fn(),
     archive: vi.fn(),
     unarchive: vi.fn(),
+    remove: vi.fn(),
   }),
 }));
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, ArchiveRestore, MoreHorizontal } from "lucide-react";
+import { Archive, ArchiveRestore, MoreHorizontal, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -12,6 +12,14 @@ interface MissionMenuProps {
   onArchive: () => void | Promise<void>;
   /** Puts it back into the reference list. */
   onUnarchive: () => void | Promise<void>;
+  /**
+   * Asks for the mission to disappear.
+   *
+   * Always offered, even on a mission that carries time: what answers is a
+   * dialog, which either confirms or explains the refusal. Greying the entry
+   * out would leave the question unanswered.
+   */
+  onDelete: () => void | Promise<void>;
 }
 
 /**
@@ -21,7 +29,12 @@ interface MissionMenuProps {
  * itself. Keeping them apart avoids archiving while aiming at a tab, and
  * leaves room for the next ones without redrawing the header.
  */
-export function MissionMenu({ archived, onArchive, onUnarchive }: MissionMenuProps) {
+export function MissionMenu({
+  archived,
+  onArchive,
+  onUnarchive,
+  onDelete,
+}: MissionMenuProps) {
   const [isOpen, setOpen] = useState(false);
 
   // A single entry, saying which way it moves the mission: offering both would
@@ -50,6 +63,22 @@ export function MissionMenu({ archived, onArchive, onUnarchive }: MissionMenuPro
             >
               <Icon className="size-4 shrink-0 text-slate-400" aria-hidden />
               {archived ? "Désarchiver" : "Archiver"}
+            </button>
+          </li>
+
+          {/* Under archiving, and last: the one action that loses something
+              sits where the hand does not land by accident. */}
+          <li>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                void onDelete();
+              }}
+              className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
+            >
+              <Trash2 className="size-4 shrink-0" aria-hidden />
+              Supprimer
             </button>
           </li>
         </ul>
