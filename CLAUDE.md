@@ -373,10 +373,23 @@ and saves the question as a simulation. Services in operations are out of it —
 `still_to_build()` drops them — and so is everything already delivered.
 
 **Feuille de route** asks *what we deliver, and when*. Over the whole
-portfolio, delivered services included, across a civil year. It is shown
+portfolio, delivered services included, over a rolling window. It is shown
 rather than arbitrated: to a committee, to a department. Where the plan reads
 `go_live_date` only to work out a delay, the roadmap makes the announced date
 its subject — and is the one place it can be posted.
+
+The window rolls rather than following the calendar, and that is a decision
+about where the width of the screen goes. A civil year read in September
+spends two thirds of it on a past nobody is deciding anything about;
+`rolling_window()` opens one month back and runs `months` ahead, both ends on
+month boundaries so the scale draws whole columns. `months` is what the screen
+asks with — 3, 6 or 12 — and naming `from_day` and `to_day` instead reads
+exactly that window, which is how a year already over is looked back on.
+
+A band folds away the missions that have neither a bar nor a date. They are
+counted in plain sight, never dropped: forty of them unfolded drown the dozen
+that have something to say, and the count itself is a fact about the
+portfolio.
 
 Three rules the drawing rests on:
 

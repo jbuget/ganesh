@@ -229,9 +229,13 @@ export const getReadRoadmapUrl = (params?: ReadRoadmapParams) => {
 /**
  * The portfolio over a window of time: what was delivered, what is promised.
  *
- * A GET, where the projection is a POST: a window is two dates, and two
- * dates go in a query string without anyone having to invent an encoding.
- * Leaving them out reads the civil year, which is what the screen opens on.
+ * A GET, where the projection is a POST: a span is a number and a window is
+ * two dates, and neither needs an encoding invented for it.
+ *
+ * `months` is what the screen asks with — how far ahead to look, the month
+ * in progress included, with the month before thrown in for context. Naming
+ * both dates instead reads exactly that window, which is how a year already
+ * over is looked back on.
  * @summary Read Roadmap
  */
 export const readRoadmap = async (

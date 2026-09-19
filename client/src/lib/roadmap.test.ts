@@ -7,6 +7,8 @@ import {
   daysBetween,
   groupingLabel,
   monthsOf,
+  silentNotice,
+  speaks,
   placeOn,
   positionOf,
   roadmapNotice,
@@ -169,6 +171,53 @@ describe("gathering lines into bands", () => {
     );
 
     expect(bands.map((band) => band.label)).toEqual(["Cadrage", "Exploitation"]);
+  });
+});
+
+describe("telling a line that speaks from one that does not", () => {
+  it("a bar is enough to speak", () => {
+    expect(
+      speaks(
+        aLine({
+          segments: [
+            {
+              kind: "lived",
+              status: "development",
+              starts_on: "2026-03-02",
+              ends_on: "2026-09-18",
+            },
+          ],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it("a date on its own is enough: the diamond sits on the axis", () => {
+    expect(speaks(aLine({ target_date: "2026-11-30" }))).toBe(true);
+  });
+
+  it("neither one nor the other and the line says nothing", () => {
+    expect(speaks(aLine())).toBe(false);
+  });
+
+  it("a band keeps its silent lines apart without losing them", () => {
+    const [band] = bandsOf(
+      [
+        aLine({ project_id: 1, target_date: "2026-11-30" }),
+        aLine({ project_id: 2 }),
+        aLine({ project_id: 3 }),
+      ],
+      "none",
+    );
+
+    expect(band.speaking).toHaveLength(1);
+    expect(band.silent).toHaveLength(2);
+    expect(band.missions).toHaveLength(3);
+  });
+
+  it("counts what is folded away, in words", () => {
+    expect(silentNotice(1)).toBe("1 mission sans rien à montrer");
+    expect(silentNotice(12)).toBe("12 missions sans rien à montrer");
   });
 });
 

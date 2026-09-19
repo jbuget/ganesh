@@ -277,8 +277,21 @@ class TestTheTallyAbove:
 
 
 class TestTheWindow:
-    async def test_it_opens_on_the_civil_year_when_nobody_says_otherwise(self) -> None:
+    async def test_it_rolls_from_the_month_before_when_nobody_says_otherwise(
+        self,
+    ) -> None:
+        # Six months ahead of a Friday in September, plus August for context.
         roadmap = await read([a_mission()], from_day=None, to_day=None)
+
+        assert (roadmap.from_day, roadmap.to_day) == (
+            date(2026, 8, 1),
+            date(2027, 2, 28),
+        )
+
+    async def test_a_window_given_by_hand_wins_over_the_span(self) -> None:
+        roadmap = await read(
+            [a_mission()], from_day=date(2026, 1, 1), to_day=date(2026, 12, 31)
+        )
 
         assert (roadmap.from_day, roadmap.to_day) == (
             date(2026, 1, 1),

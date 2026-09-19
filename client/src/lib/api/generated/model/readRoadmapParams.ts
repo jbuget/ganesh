@@ -6,6 +6,11 @@
  */
 
 export type ReadRoadmapParams = {
+  /**
+   * @minimum 1
+   * @maximum 24
+   */
+  months?: number;
   from_day?: string | null;
   to_day?: string | null;
 };

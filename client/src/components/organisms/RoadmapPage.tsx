@@ -4,13 +4,13 @@ import { GroupingSelect } from "@/components/atoms/GroupingSelect";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { RoadmapLegend } from "@/components/atoms/RoadmapLegend";
 import { RoadmapSummaryBar } from "@/components/atoms/RoadmapSummaryBar";
-import { YearSelect } from "@/components/atoms/YearSelect";
+import { SpanSelect } from "@/components/atoms/SpanSelect";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { RoadmapTimeline } from "@/components/organisms/RoadmapTimeline";
 import { useRoadmapScreen } from "@/lib/use-roadmap";
 
 /**
- * The portfolio over a year: what was delivered, what is promised, and when.
+ * The portfolio ahead: what was delivered, what is promised, and when.
  *
  * The other half of « Planification », and a different question. The plan
  * asks what fits and who carries it, week by week, over what is left to
@@ -26,8 +26,8 @@ export function RoadmapPage() {
     roadmap,
     isLoading,
     hasError,
-    year,
-    setYear,
+    months,
+    setMonths,
     grouping,
     setGrouping,
     saveFailed,
@@ -44,7 +44,7 @@ export function RoadmapPage() {
           actions={
             <>
               <GroupingSelect value={grouping} onChange={setGrouping} />
-              <YearSelect year={year} onChange={setYear} />
+              <SpanSelect months={months} onChange={setMonths} />
             </>
           }
         />

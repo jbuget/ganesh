@@ -31,8 +31,9 @@ export function RoadmapScale({ from, to, today }: RoadmapScaleProps) {
           style={{ width: `${month.width * 100}%` }}
           className="min-w-0 border-l border-slate-200 px-1 py-1 first:border-l-0"
         >
-          {/* No year: the picker in the header already says which one is
-              being read, and repeating it on January would say it twice. */}
+          {/* The month alone. A window runs from the month before today to a
+              handful ahead: which year each one belongs to is never in doubt,
+              and spelling it out would crowd a column of four characters. */}
           <span className="block truncate text-xs text-slate-500">{month.label}</span>
         </div>
       ))}

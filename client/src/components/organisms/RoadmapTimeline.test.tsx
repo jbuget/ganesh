@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import { RoadmapTimeline } from "./RoadmapTimeline";
 import type {
@@ -77,7 +78,7 @@ describe("RoadmapTimeline", () => {
   });
 
   it("links a mission to its sheet", () => {
-    draw([aLine()]);
+    draw([aLine({ segments: [lived("2026-03-02", TODAY)] })]);
 
     expect(screen.getByRole("link", { name: "Portail bailleurs" })).toHaveAttribute(
       "href",
@@ -123,10 +124,44 @@ describe("RoadmapTimeline", () => {
     expect(screen.getByText("35 jours de retard")).toBeInTheDocument();
   });
 
-  it("says why a mission has no bar rather than leaving the line blank", () => {
+  it("says why a mission has no bar, once its line is opened", async () => {
     draw([aLine({ blocker: "no_estimate", estimated_days: null })]);
 
+    await userEvent.click(screen.getByRole("button", { name: /sans rien à montrer/ }));
+
     expect(screen.getByText("Sans estimation")).toBeInTheDocument();
+  });
+
+  it("folds away the lines with nothing to show, and counts them", () => {
+    draw([
+      aLine({ project_id: 1, segments: [lived("2026-03-02", TODAY)] }),
+      aLine({ project_id: 2, label: "Sans rien", blocker: "no_estimate" }),
+      aLine({ project_id: 3, label: "Sans rien non plus", blocker: "no_assignee" }),
+    ]);
+
+    expect(screen.getByText("2 missions sans rien à montrer")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Sans rien" })).not.toBeInTheDocument();
+  });
+
+  it("opens them when asked", async () => {
+    draw([
+      aLine({ project_id: 1, segments: [lived("2026-03-02", TODAY)] }),
+      aLine({ project_id: 2, label: "Sans rien", blocker: "no_estimate" }),
+    ]);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /1 mission sans rien à montrer/ }),
+    );
+
+    expect(screen.getByRole("link", { name: "Sans rien" })).toBeInTheDocument();
+  });
+
+  it("leaves a dated mission in plain sight, bar or no bar", () => {
+    // Its diamond sits on the axis and can be read against the others.
+    draw([aLine({ label: "Promise", target_date: "2026-11-30" })]);
+
+    expect(screen.getByRole("link", { name: "Promise" })).toBeInTheDocument();
+    expect(screen.queryByText(/sans rien à montrer/)).not.toBeInTheDocument();
   });
 
   it("counts the missions of each band", () => {

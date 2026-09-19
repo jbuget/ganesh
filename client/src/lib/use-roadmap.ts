@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { readRoadmap } from "@/lib/api/generated/planning/planning";
 import { updateProject } from "@/lib/api/generated/projects/projects";
 import type { RoadmapResponse } from "@/lib/api/generated/model";
-import { civilYearOf, type Grouping } from "@/lib/roadmap";
+import { DEFAULT_SPAN, type Grouping } from "@/lib/roadmap";
 
 /**
  * State of the roadmap screen: a window, a grouping, and the drawing.
@@ -15,10 +15,10 @@ import { civilYearOf, type Grouping } from "@/lib/roadmap";
  * talking, and waiting on the server each time would break the conversation.
  */
 export function useRoadmapScreen() {
-  const [year, setYear] = useState<number>(() => new Date().getFullYear());
+  const [months, setMonths] = useState(DEFAULT_SPAN);
   const [grouping, setGrouping] = useState<Grouping>("category");
   const [roadmap, setRoadmap] = useState<RoadmapResponse | null>(null);
-  //: The year the drawing in hand was asked for. Comparing it to the one
+  //: The span the drawing in hand was asked for. Comparing it to the one
   //: being read is what says whether an answer is still on its way, without
   //: a flag to keep in step with the request.
   const [answered, setAnswered] = useState<number | null>(null);
@@ -28,10 +28,12 @@ export function useRoadmapScreen() {
   //: write lost, and saying « erreur » for both would tell the reader nothing.
   const [saveFailed, setSaveFailed] = useState(false);
 
-  const fetchYear = useCallback(
+  const fetchSpan = useCallback(
     (asked: number, isStillWanted: () => boolean = () => true) => {
-      const [from, to] = civilYearOf(asked);
-      return readRoadmap({ from_day: from, to_day: to })
+      // The window itself is worked out by the server: where it opens and
+      // how it lands on month boundaries is a rule, and a rule lives in one
+      // place or it drifts.
+      return readRoadmap({ months: asked })
         .then((response) => {
           if (!isStillWanted()) return;
           setRoadmap(response.data as RoadmapResponse);
@@ -47,18 +49,18 @@ export function useRoadmapScreen() {
 
   useEffect(() => {
     let alive = true;
-    void fetchYear(year, () => alive);
+    void fetchSpan(months, () => alive);
     return () => {
       alive = false;
     };
-  }, [year, fetchYear]);
+  }, [months, fetchSpan]);
 
   return {
     roadmap,
-    isLoading: answered !== year && failed !== year,
-    hasError: failed === year,
-    year,
-    setYear,
+    isLoading: answered !== months && failed !== months,
+    hasError: failed === months,
+    months,
+    setMonths,
     grouping,
     setGrouping,
     saveFailed,
@@ -82,7 +84,7 @@ export function useRoadmapScreen() {
       } catch {
         setSaveFailed(true);
       }
-      await fetchYear(year);
+      await fetchSpan(months);
     },
   };
 }

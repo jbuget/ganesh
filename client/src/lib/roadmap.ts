@@ -163,6 +163,23 @@ export interface Band {
   /** Tailwind class of the band's mark, when it carries one. */
   mark: string | null;
   missions: RoadmapMissionResponse[];
+  /** Those with a bar or a date: what the band is opened to read. */
+  speaking: RoadmapMissionResponse[];
+  /**
+   * Those with neither. Kept, counted and folded away: they are a fact about
+   * the portfolio, and forty of them unfolded drown the dozen that are not.
+   */
+  silent: RoadmapMissionResponse[];
+}
+
+/**
+ * Whether a line has anything to draw at all.
+ *
+ * A date on its own is enough: the diamond sits on the axis and can be read
+ * against the others, which a row of two grey words cannot.
+ */
+export function speaks(mission: RoadmapMissionResponse): boolean {
+  return mission.segments.length > 0 || mission.target_date !== null;
 }
 
 /** The label a band with nothing to name it reads under. */
@@ -185,9 +202,7 @@ export function bandsOf(
   grouping: Grouping,
 ): Band[] {
   if (grouping === "none") {
-    return missions.length
-      ? [{ key: "all", label: UNNAMED.none, mark: null, missions }]
-      : [];
+    return missions.length ? [band("all", UNNAMED.none, null, missions)] : [];
   }
 
   const order = keysInOrder(grouping);
@@ -199,12 +214,30 @@ export function bandsOf(
 
   return [...order, ""]
     .filter((key) => bands.has(key))
-    .map((key) => ({
-      key: key || "none",
-      label: key ? labelOf(key, grouping) : UNNAMED[grouping],
-      mark: key ? markOf(key, grouping) : null,
-      missions: bands.get(key) ?? [],
-    }));
+    .map((key) =>
+      band(
+        key || "none",
+        key ? labelOf(key, grouping) : UNNAMED[grouping],
+        key ? markOf(key, grouping) : null,
+        bands.get(key) ?? [],
+      ),
+    );
+}
+
+function band(
+  key: string,
+  label: string,
+  mark: string | null,
+  missions: RoadmapMissionResponse[],
+): Band {
+  return {
+    key,
+    label,
+    mark,
+    missions,
+    speaking: missions.filter(speaks),
+    silent: missions.filter((mission) => !speaks(mission)),
+  };
 }
 
 function keyOf(mission: RoadmapMissionResponse, grouping: Grouping): string | null {
@@ -229,6 +262,19 @@ function markOf(key: string, grouping: Grouping): string | null {
   if (grouping === "category") return axisOf(key as never)?.bullet ?? null;
   if (grouping === "status") return PHASES.find((p) => p.status === key)?.dot ?? null;
   return null;
+}
+
+/**
+ * What is folded away at the foot of a band.
+ *
+ * Composed here so a test can read it back: a French sentence built at run
+ * time is invisible to the type checker, and a rename crossing it would only
+ * show when somebody opened the page.
+ */
+export function silentNotice(count: number): string {
+  return count > 1
+    ? `${count} missions sans rien à montrer`
+    : "1 mission sans rien à montrer";
 }
 
 /**
@@ -274,7 +320,20 @@ export const SEGMENT_STYLES: Record<SegmentKind, { className: string; title: str
     running: { className: "opacity-100", title: "En exploitation" },
   };
 
-/** The civil year, as the two ISO days a window is asked for with. */
-export function civilYearOf(year: number): [string, string] {
-  return [`${year}-01-01`, `${year}-12-31`];
-}
+/**
+ * How far ahead a roadmap looks, in months.
+ *
+ * Nothing shorter than a quarter — below that one is reading a sprint, not a
+ * road — and nothing longer than a year, past which a fortnight of work is
+ * four pixels wide and the drawing says « somewhere in the spring ».
+ *
+ * The server throws in the month before on top, for context. It is not part
+ * of the count: one asks how far ahead to look, not how wide the picture is.
+ */
+export const SPANS = [
+  { months: 3, label: "3 mois" },
+  { months: 6, label: "6 mois" },
+  { months: 12, label: "12 mois" },
+] as const;
+
+export const DEFAULT_SPAN = 6;

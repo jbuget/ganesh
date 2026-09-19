@@ -7,7 +7,7 @@ privilege, and a projection writes nothing.
 
 from datetime import date
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
@@ -30,6 +30,10 @@ from src.modules.planning.application.use_cases.manage_simulations import (
 )
 from src.modules.planning.domain.entities.roadmap import Roadmap, RoadmapMission
 from src.modules.planning.domain.entities.simulation import Simulation
+from src.modules.planning.domain.services.roadmap_window import (
+    DEFAULT_ROADMAP_MONTHS,
+    MAX_ROADMAP_MONTHS,
+)
 from src.modules.planning.presentation.api.schemas.planning_schemas import (
     MissionWeekResponse,
     PersonLoadResponse,
@@ -167,6 +171,7 @@ def to_member_response(user: User) -> PlanMemberResponse:
     operation_id="readRoadmap",
 )
 async def read_roadmap(
+    months: int = Query(default=DEFAULT_ROADMAP_MONTHS, ge=1, le=MAX_ROADMAP_MONTHS),
     from_day: date | None = None,
     to_day: date | None = None,
     _: User = Depends(get_current_user),
@@ -174,11 +179,17 @@ async def read_roadmap(
 ) -> RoadmapResponse:
     """The portfolio over a window of time: what was delivered, what is promised.
 
-    A GET, where the projection is a POST: a window is two dates, and two
-    dates go in a query string without anyone having to invent an encoding.
-    Leaving them out reads the civil year, which is what the screen opens on.
+    A GET, where the projection is a POST: a span is a number and a window is
+    two dates, and neither needs an encoding invented for it.
+
+    `months` is what the screen asks with — how far ahead to look, the month
+    in progress included, with the month before thrown in for context. Naming
+    both dates instead reads exactly that window, which is how a year already
+    over is looked back on.
     """
-    return to_roadmap_response(await use_case.execute(from_day=from_day, to_day=to_day))
+    return to_roadmap_response(
+        await use_case.execute(months=months, from_day=from_day, to_day=to_day)
+    )
 
 
 def to_roadmap_response(roadmap: Roadmap) -> RoadmapResponse:

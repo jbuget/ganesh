@@ -36,8 +36,9 @@ from src.modules.planning.domain.services.projection import project_workload
 from src.modules.planning.domain.services.roadmap_drawing import draw_segments
 from src.modules.planning.domain.services.roadmap_summary import summarise_roadmap
 from src.modules.planning.domain.services.roadmap_window import (
-    civil_year_of,
+    DEFAULT_ROADMAP_MONTHS,
     ensure_ordered,
+    rolling_window,
 )
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_role import ProjectRole
@@ -77,12 +78,19 @@ class GetRoadmapUseCase:
 
     async def execute(
         self,
+        months: int = DEFAULT_ROADMAP_MONTHS,
         from_day: date | None = None,
         to_day: date | None = None,
         today: date | None = None,
     ) -> Roadmap:
+        """Draws the portfolio over a window.
+
+        `months` says how far ahead to look and is what the screen asks with.
+        A window given by hand overrides it whole: reading a year that is over
+        is a different question, and one the same control cannot serve.
+        """
         now = today or date.today()
-        default_from, default_to = civil_year_of(now)
+        default_from, default_to = rolling_window(now, months)
         window = ensure_ordered(from_day or default_from, to_day or default_to)
         opens_on, closes_on = window
 

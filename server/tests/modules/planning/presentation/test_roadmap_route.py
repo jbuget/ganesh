@@ -81,15 +81,32 @@ async def client() -> AsyncIterator[AsyncClient]:
     app.dependency_overrides.clear()
 
 
-async def test_the_roadmap_reads_the_civil_year_when_asked_for_nothing(
+async def test_the_roadmap_rolls_from_the_month_before_when_asked_for_nothing(
     client: AsyncClient,
 ) -> None:
     response = await client.get(URL)
 
     assert response.status_code == 200
     body = response.json()
-    assert body["from_day"].endswith("-01-01")
-    assert body["to_day"].endswith("-12-31")
+    # A rolling window always opens on the first of a month and closes on the
+    # last of one: the scale draws whole columns.
+    assert body["from_day"].endswith("-01")
+    assert body["from_day"] < body["today"] <= body["to_day"]
+
+
+async def test_a_span_says_how_far_ahead_to_look(client: AsyncClient) -> None:
+    quarter = (await client.get(URL, params={"months": 3})).json()
+    year = (await client.get(URL, params={"months": 12})).json()
+
+    assert quarter["to_day"] < year["to_day"]
+
+
+async def test_a_span_nobody_could_read_a_bar_in_is_refused(
+    client: AsyncClient,
+) -> None:
+    response = await client.get(URL, params={"months": 99})
+
+    assert response.status_code == 422
 
 
 async def test_a_window_is_read_from_the_query_string(client: AsyncClient) -> None:

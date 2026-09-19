@@ -1,9 +1,12 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
+import { useState } from "react";
+
 import { RoadmapScale } from "@/components/atoms/RoadmapScale";
 import { RoadmapRow } from "@/components/molecules/RoadmapRow";
 import type { RoadmapMissionResponse } from "@/lib/api/generated/model";
-import { bandsOf, positionOf, type Grouping } from "@/lib/roadmap";
+import { bandsOf, positionOf, silentNotice, type Grouping } from "@/lib/roadmap";
 
 interface RoadmapTimelineProps {
   missions: RoadmapMissionResponse[];
@@ -41,6 +44,19 @@ export function RoadmapTimeline({
   const bands = bandsOf(missions, grouping);
   const rule = positionOf(today, from, to);
   const showsRule = rule >= 0 && rule <= 1;
+
+  //: Which bands have had their silent lines opened. Folded by default, and
+  //: one band at a time: one goes looking for what is missing on a single
+  //: axis, not across the whole portfolio at once.
+  const [unfolded, setUnfolded] = useState<Set<string>>(new Set());
+
+  function toggle(key: string) {
+    setUnfolded((open) => {
+      const next = new Set(open);
+      if (!next.delete(key)) next.add(key);
+      return next;
+    });
+  }
 
   if (bands.length === 0) {
     return (
@@ -109,7 +125,7 @@ export function RoadmapTimeline({
               </h3>
 
               <div>
-                {band.missions.map((mission) => (
+                {band.speaking.map((mission) => (
                   <RoadmapRow
                     key={mission.project_id}
                     mission={mission}
@@ -118,6 +134,41 @@ export function RoadmapTimeline({
                     onDate={onDate}
                   />
                 ))}
+
+                {/* A mission nobody estimated and nobody dated is a fact
+                    about the portfolio, not a line worth a row of its own:
+                    counted and folded, forty of them stop drowning the dozen
+                    that have something to say. */}
+                {band.silent.length > 0 && (
+                  <>
+                    <button
+                      type="button"
+                      aria-expanded={unfolded.has(band.key)}
+                      onClick={() => toggle(band.key)}
+                      className="flex w-full cursor-pointer items-center gap-1.5 border-b border-slate-100 px-3 py-1.5 text-left text-xs text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
+                    >
+                      <ChevronRight
+                        aria-hidden
+                        className={[
+                          "size-3.5 shrink-0 transition-transform",
+                          unfolded.has(band.key) ? "rotate-90" : "",
+                        ].join(" ")}
+                      />
+                      {silentNotice(band.silent.length)}
+                    </button>
+
+                    {unfolded.has(band.key) &&
+                      band.silent.map((mission) => (
+                        <RoadmapRow
+                          key={mission.project_id}
+                          mission={mission}
+                          from={from}
+                          to={to}
+                          onDate={onDate}
+                        />
+                      ))}
+                  </>
+                )}
               </div>
             </section>
           ))}
