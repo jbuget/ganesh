@@ -20,6 +20,8 @@ from src.modules.entries.domain.repositories.user_mission_repository import (
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.domain.repositories.month_repository import MonthRepository
 from src.modules.months.domain.services.month_period import first_day_of
+from src.modules.moods.domain.entities.mood import Mood
+from src.modules.moods.domain.repositories.mood_repository import MoodRepository
 from src.modules.planning.domain.entities.simulation import Simulation
 from src.modules.planning.domain.repositories.simulation_repository import (
     SimulationRepository,
@@ -582,3 +584,46 @@ class InMemoryUserMissionRepository(UserMissionRepository):
 
     async def remove(self, user_id: int, project_id: int, month: date) -> None:
         self._rows.discard((user_id, project_id, first_day_of(month)))
+
+
+class InMemoryMoodRepository(MoodRepository):
+    def __init__(self, moods: list[Mood] | None = None) -> None:
+        self._moods: list[Mood] = list(moods or [])
+        self._next_id = 1
+
+    async def get(self, user_id: int, day: date) -> Mood | None:
+        return next(
+            (
+                mood
+                for mood in self._moods
+                if mood.user_id == user_id and mood.day == day
+            ),
+            None,
+        )
+
+    async def list_between(self, start: date, end: date) -> list[Mood]:
+        return [mood for mood in self._moods if start <= mood.day <= end]
+
+    async def list_for_user_between(
+        self, user_id: int, start: date, end: date
+    ) -> list[Mood]:
+        return [
+            mood
+            for mood in self._moods
+            if mood.user_id == user_id and start <= mood.day <= end
+        ]
+
+    async def upsert(self, mood: Mood) -> Mood:
+        existing = await self.get(mood.user_id, mood.day)
+        if existing is None:
+            mood.id = self._next_id
+            self._next_id += 1
+            self._moods.append(mood)
+            return mood
+        existing.level = mood.level
+        return existing
+
+    async def delete(self, user_id: int, day: date) -> None:
+        existing = await self.get(user_id, day)
+        if existing is not None:
+            self._moods.remove(existing)

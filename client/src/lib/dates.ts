@@ -121,6 +121,26 @@ export function formatShortDate(iso: string): string {
   return `${day}/${month}/${year}`;
 }
 
+// Read from a date built in UTC, never from a naive timestamp: parsed
+// locally, an ISO date slips back a day in the evening and would name the
+// weekday before.
+const WEEKDAYS = [
+  "dimanche",
+  "lundi",
+  "mardi",
+  "mercredi",
+  "jeudi",
+  "vendredi",
+  "samedi",
+];
+
+/** A day named and dated: « vendredi 18 sept. ». */
+export function formatWeekdayDate(iso: string): string {
+  const [year, month, day] = iso.slice(0, 10).split("-").map(Number);
+  const weekday = WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
+  return `${weekday} ${day} ${MONTH_ABBREVIATIONS[month - 1]}`;
+}
+
 /**
  * An ISO date spelled out and abbreviated: « 17 sept. 2026 ».
  *
