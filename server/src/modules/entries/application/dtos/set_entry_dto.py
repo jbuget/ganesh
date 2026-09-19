@@ -1,4 +1,4 @@
-"""Commands that write entries."""
+"""Commands that change what a month's grid holds."""
 
 from dataclasses import dataclass
 from datetime import date
@@ -32,6 +32,19 @@ class ClearEntryCommand:
 @dataclass(frozen=True)
 class RemoveMissionCommand:
     """Request to remove a whole mission from a month.
+
+    `month` may be any day of the month aimed at: only the month matters.
+    """
+
+    actor_id: int
+    target_user_id: int
+    project_id: int
+    month: date
+
+
+@dataclass(frozen=True)
+class AddMissionCommand:
+    """Request to put a mission on a month, before any time is entered on it.
 
     `month` may be any day of the month aimed at: only the month matters.
     """

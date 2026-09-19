@@ -18,6 +18,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryEntryRepository,
     InMemoryMonthRepository,
     InMemoryProjectRepository,
+    InMemoryUserMissionRepository,
     InMemoryUserRepository,
 )
 
@@ -39,12 +40,17 @@ ABSENCES = Project(id=11, label="Absences", kind=ProjectKind.OFF_PROJECT, status
 TODAY = date(2026, 9, 16)
 
 
-def build(entries: list[Entry] | None = None, months: list[Month] | None = None):
+def build(
+    entries: list[Entry] | None = None,
+    months: list[Month] | None = None,
+    declared: list[tuple[int, int, date]] | None = None,
+):
     return GetMonthGridUseCase(
         users=InMemoryUserRepository([USER]),
         projects=InMemoryProjectRepository([PORTAIL, ABSENCES]),
         entries=InMemoryEntryRepository(entries or []),
         months=InMemoryMonthRepository(months or []),
+        user_missions=InMemoryUserMissionRepository(declared or []),
     )
 
 
@@ -189,3 +195,39 @@ async def test_the_grid_carries_the_mission_labels() -> None:
     )
 
     assert grid.rows[0].label == "Absences"
+
+
+async def test_a_mission_put_on_the_month_holds_its_row_without_any_time() -> None:
+    """Lining up a mission is a gesture of its own: a reload must not undo it."""
+    grid = await build(declared=[(1, 10, date(2026, 9, 1))]).execute(
+        GetMonthGridQuery(user_id=1, month=date(2026, 9, 1))
+    )
+
+    assert [row.project_id for row in grid.rows] == [10]
+    assert grid.rows[0].values == {}
+    assert grid.rows[0].total == 0
+
+
+async def test_a_mission_both_put_on_the_month_and_filled_in_shows_one_row() -> None:
+    grid = await build(
+        [entry(10, 15, 1.0)], declared=[(1, 10, date(2026, 9, 1))]
+    ).execute(GetMonthGridQuery(user_id=1, month=date(2026, 9, 1)))
+
+    assert [row.project_id for row in grid.rows] == [10]
+    assert grid.rows[0].total == 1.0
+
+
+async def test_a_mission_put_on_another_month_stays_out_of_the_grid() -> None:
+    grid = await build(declared=[(1, 10, date(2026, 8, 1))]).execute(
+        GetMonthGridQuery(user_id=1, month=date(2026, 9, 1))
+    )
+
+    assert grid.rows == []
+
+
+async def test_a_mission_put_on_a_colleagues_month_stays_out_of_ours() -> None:
+    grid = await build(declared=[(2, 10, date(2026, 9, 1))]).execute(
+        GetMonthGridQuery(user_id=1, month=date(2026, 9, 1))
+    )
+
+    assert grid.rows == []

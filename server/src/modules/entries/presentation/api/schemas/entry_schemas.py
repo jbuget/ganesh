@@ -15,6 +15,13 @@ class SetEntryRequest(BaseModel):
     value: float = Field(description="0.5 for a half day, 1 for a full day")
 
 
+class AddMissionRequest(BaseModel):
+    """Request to put a mission on a month, before any time is entered on it."""
+
+    project_id: int
+    month: date = Field(description="Any day of the month aimed at")
+
+
 class EntryResponse(BaseModel):
     """A recorded entry."""
 

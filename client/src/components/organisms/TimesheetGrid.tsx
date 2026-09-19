@@ -8,11 +8,10 @@ import { DayHeader } from "@/components/atoms/DayHeader";
 import { DayTotalCell } from "@/components/atoms/DayTotalCell";
 import { MissionLabel } from "@/components/atoms/MissionLabel";
 import { TotalCell } from "@/components/atoms/TotalCell";
-import type { MonthGridResponse, ProjectResponse } from "@/lib/api/generated/model";
+import type { MonthGridResponse } from "@/lib/api/generated/model";
 
 interface TimesheetGridProps {
   grid: MonthGridResponse;
-  extraRows: ProjectResponse[];
   today: string;
   onSetValue: (projectId: number, day: string, value: DayValue) => void;
   /** Mission picker, housed in the last row. Absent when the month is closed. */
@@ -40,20 +39,19 @@ interface DisplayRow {
 /**
  * The entry grid: missions as rows, days of the month as columns.
  *
- * Rows added but still empty are kept locally: without that, a chosen mission
- * would disappear until a value was entered on it.
+ * A mission put on the month holds its row with nothing on it: the grid reads
+ * what was lined up as much as what was entered.
  */
 export function TimesheetGrid({
   grid,
-  extraRows,
   today,
   onSetValue,
   addingMission,
   onRemoveMission,
   onOpenMission,
 }: TimesheetGridProps) {
-  const rows: DisplayRow[] = [
-    ...grid.rows.map((row) => ({
+  const rows: DisplayRow[] = grid.rows
+    .map((row) => ({
       project_id: row.project_id,
       label: row.label,
       estimated_days: row.estimated_days ?? null,
@@ -62,20 +60,8 @@ export function TimesheetGrid({
       forecast_total: row.forecast_total,
       total: row.total,
       total_consumed_days: row.total_consumed_days,
-    })),
-    ...extraRows
-      .filter((p) => !grid.rows.some((row) => row.project_id === p.id))
-      .map((p) => ({
-        project_id: p.id,
-        label: p.label,
-        estimated_days: p.estimated_days ?? null,
-        values: {},
-        actual_total: 0,
-        forecast_total: 0,
-        total: 0,
-        total_consumed_days: 0,
-      })),
-  ].sort((a, b) => a.label.localeCompare(b.label, "fr"));
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, "fr"));
 
   const readOnly = !grid.is_writable;
   const totalByDate = new Map(grid.day_totals.map((total) => [total.day, total]));

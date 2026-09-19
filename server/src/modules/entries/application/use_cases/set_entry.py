@@ -12,6 +12,7 @@ from src.modules.entries.domain.repositories.entry_repository import EntryReposi
 from src.modules.entries.domain.services.entry_rules import ensure_day_is_workable
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.domain.repositories.month_repository import MonthRepository
+from src.modules.months.domain.services.month_rules import ensure_month_is_open
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
@@ -87,11 +88,7 @@ class SetEntryUseCase:
         return entry
 
     async def _ensure_open_month(self, user_id: int, day: date) -> Month:
+        """The month the entry lands on, opened on the fly if it is the first."""
         month = await self._months.get(user_id, day)
-        if month is None:
-            month = Month(user_id=user_id, month=day)
-        if not month.is_writable:
-            raise ForbiddenActionError(
-                "This month is validated: a manager must reopen it."
-            )
-        return month
+        ensure_month_is_open(month)
+        return month or Month(user_id=user_id, month=day)

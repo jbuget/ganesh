@@ -6,6 +6,8 @@
  */
 
 export * from "./addLinkRequest";
+export * from "./addMissionRequest";
+export * from "./addMissionToMonthParams";
 export * from "./adoptionResponse";
 export * from "./assignMemberParams";
 export * from "./boardCardResponse";
