@@ -6,6 +6,7 @@ a machine gets in only where a route asked for a scope.
 """
 
 from collections.abc import AsyncIterator
+from datetime import timedelta
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -15,6 +16,9 @@ from src.main import app
 from src.modules.api_keys.application.use_cases.authenticate_api_key import (
     AuthenticateApiKeyUseCase,
 )
+from src.modules.api_keys.application.use_cases.check_rate_limit import (
+    CheckRateLimitUseCase,
+)
 from src.modules.api_keys.application.use_cases.manage_api_keys import (
     CreateApiKeyUseCase,
     ListApiKeysUseCase,
@@ -22,8 +26,13 @@ from src.modules.api_keys.application.use_cases.manage_api_keys import (
 )
 from src.modules.api_keys.domain.entities.api_key import ApiKey, ApiKeyScope
 from src.modules.api_keys.domain.services import key_material
+from src.modules.api_keys.domain.services.rate_limit import RateLimit
+from src.modules.api_keys.infrastructure.rate_limit.in_memory_rate_limit_store import (
+    InMemoryRateLimitStore,
+)
 from src.modules.api_keys.presentation.dependencies import (
     get_authenticate_api_key_use_case,
+    get_check_rate_limit_use_case,
     get_create_api_key_use_case,
     get_list_api_keys_use_case,
     get_revoke_api_key_use_case,
@@ -67,10 +76,19 @@ class NoCommitSession:
     async def commit(self) -> None: ...
 
 
-def wire(keys: InMemoryApiKeyRepository) -> None:
+#: Small on purpose: three calls are enough to walk into the wall.
+TEST_LIMIT = RateLimit(allowance=3, window=timedelta(minutes=1))
+
+
+def wire(keys: InMemoryApiKeyRepository, limit: RateLimit = TEST_LIMIT) -> None:
     users = InMemoryUserRepository(TEAM)
     audit = InMemoryAuditLogRepository()
     app.dependency_overrides[get_db] = lambda: NoCommitSession()
+    # One store per wiring, built here rather than in the lambda: rebuilt per
+    # request it would hand every call a full bucket and limit nothing — which
+    # is exactly what `lru_cache` guards against in production.
+    rate_limit = CheckRateLimitUseCase(store=InMemoryRateLimitStore(), limit=limit)
+    app.dependency_overrides[get_check_rate_limit_use_case] = lambda: rate_limit
     app.dependency_overrides[get_authenticate_api_key_use_case] = (
         lambda: AuthenticateApiKeyUseCase(keys=keys, users=users)
     )
@@ -319,3 +337,107 @@ def test_a_key_entity_never_carries_its_secret() -> None:
         scopes=[ApiKeyScope.CATALOG_READ],
     )
     assert secret not in repr(key)
+
+
+class TestHowOftenAKeyMayCall:
+    """A limit turns a leaked key into a nuisance rather than an outage."""
+
+    @pytest.fixture
+    async def unauthenticated(self) -> AsyncIterator[AsyncClient]:
+        self.keys = InMemoryApiKeyRepository()
+        wire(self.keys)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as http:
+            yield http
+        app.dependency_overrides.clear()
+
+    async def a_key(self) -> str:
+        public_id, secret, token = key_material.generate()
+        await self.keys.add(
+            ApiKey(
+                id=None,
+                name="CI waat-tools",
+                public_id=public_id,
+                secret_hash=key_material.hash_secret(secret),
+                owner_id=1,
+                created_by=2,
+                scopes=[ApiKeyScope.CATALOG_READ],
+            )
+        )
+        return token
+
+    async def call(self, http: AsyncClient, token: str):
+        return await http.get(
+            "/api/v1/projects/catalog",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    @pytest.mark.asyncio
+    async def test_the_allowance_goes_through(
+        self, unauthenticated: AsyncClient
+    ) -> None:
+        token = await self.a_key()
+        for _ in range(TEST_LIMIT.allowance):
+            assert (await self.call(unauthenticated, token)).status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_the_call_after_is_turned_away(
+        self, unauthenticated: AsyncClient
+    ) -> None:
+        token = await self.a_key()
+        for _ in range(TEST_LIMIT.allowance):
+            await self.call(unauthenticated, token)
+
+        assert (await self.call(unauthenticated, token)).status_code == 429
+
+    @pytest.mark.asyncio
+    async def test_every_answer_says_what_is_left(
+        self, unauthenticated: AsyncClient
+    ) -> None:
+        # A caller should be able to slow down before being told to.
+        token = await self.a_key()
+        response = await self.call(unauthenticated, token)
+
+        assert response.headers["x-ratelimit-limit"] == str(TEST_LIMIT.allowance)
+        assert response.headers["x-ratelimit-remaining"] == str(
+            TEST_LIMIT.allowance - 1
+        )
+
+    @pytest.mark.asyncio
+    async def test_the_refusal_says_how_long_to_wait(
+        self, unauthenticated: AsyncClient
+    ) -> None:
+        token = await self.a_key()
+        for _ in range(TEST_LIMIT.allowance):
+            await self.call(unauthenticated, token)
+
+        refused = await self.call(unauthenticated, token)
+
+        assert refused.headers["x-ratelimit-remaining"] == "0"
+        assert int(refused.headers["retry-after"]) >= 1
+
+    @pytest.mark.asyncio
+    async def test_one_key_does_not_shut_the_door_on_another(
+        self, unauthenticated: AsyncClient
+    ) -> None:
+        spent = await self.a_key()
+        fresh = await self.a_key()
+        for _ in range(TEST_LIMIT.allowance + 1):
+            await self.call(unauthenticated, spent)
+
+        assert (await self.call(unauthenticated, fresh)).status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_a_key_turned_away_at_the_door_spends_nothing(
+        self, unauthenticated: AsyncClient
+    ) -> None:
+        # The limit guards against a caller holding a real key. Turning away a
+        # forged one costs a hash, and must not eat anyone's allowance.
+        token = await self.a_key()
+        _, _, forged = key_material.generate()
+        for _ in range(20):
+            await self.call(unauthenticated, forged)
+
+        for _ in range(TEST_LIMIT.allowance):
+            assert (await self.call(unauthenticated, token)).status_code == 200
