@@ -25,6 +25,7 @@ function aLine(
     parent_id: null,
     segments: [],
     target_date: null,
+    went_live_on: null,
     landing_date: null,
     slippage_days: null,
     is_late: false,

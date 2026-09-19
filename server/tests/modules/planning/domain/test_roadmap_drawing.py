@@ -7,6 +7,7 @@ from src.modules.planning.domain.services.roadmap_drawing import draw_segments
 from src.modules.projects.domain.entities.project import ProjectStatus
 
 TODAY = date(2026, 9, 18)
+WINDOW_START = date(2026, 1, 1)
 WINDOW_END = date(2026, 12, 31)
 
 
@@ -25,6 +26,7 @@ def segments(
         last_declared=last_declared,
         projected_end=projected_end,
         today=TODAY,
+        window_start=WINDOW_START,
         window_end=WINDOW_END,
         is_active=is_active,
     )
@@ -165,13 +167,36 @@ class TestAServiceThatRuns:
 
         assert [s.kind for s in drawn] == [SegmentKind.RUNNING]
 
-    def test_a_service_running_since_nobody_recorded_when_runs_from_today(
+    def test_a_service_running_since_nobody_recorded_when_opens_at_the_window(
         self,
     ) -> None:
+        # Nobody wrote down the day it went live, and it has no history
+        # either: it was already running when this window opened. Cutting the
+        # rule at the edge says exactly that. Opening it on today would draw
+        # a mise en service that never happened — and have the tally above
+        # count it.
         drawn = segments(status=ProjectStatus.OPERATIONS)
 
         assert [(s.kind, s.starts_on, s.ends_on) for s in drawn] == [
-            (SegmentKind.RUNNING, TODAY, WINDOW_END)
+            (SegmentKind.RUNNING, WINDOW_START, WINDOW_END)
+        ]
+
+    def test_a_service_with_a_history_but_no_go_live_runs_on_from_that_history(
+        self,
+    ) -> None:
+        # Here something *is* known: time was declared up to a day. The rule
+        # carries on from where the history stops rather than being dragged
+        # back across it.
+        drawn = segments(
+            status=ProjectStatus.OPERATIONS,
+            phases={ProjectStatus.DEVELOPMENT: date(2026, 5, 4)},
+            first_declared=date(2026, 5, 4),
+            last_declared=date(2026, 9, 1),
+        )
+
+        assert [(s.kind, s.starts_on, s.ends_on) for s in drawn] == [
+            (SegmentKind.LIVED, date(2026, 5, 4), date(2026, 9, 17)),
+            (SegmentKind.RUNNING, TODAY, WINDOW_END),
         ]
 
     def test_a_service_retired_stops_running_at_its_last_declared_day(self) -> None:

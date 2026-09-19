@@ -72,6 +72,11 @@ class RoadmapMission:
     #: The date the team announced. The subject of this screen, where the plan
     #: only ever reads it to work out a delay.
     target_date: date | None = None
+    #: The day the service was recorded as going live. None when nobody wrote
+    #: it down — which is not the same as « it never did », and is why the bar
+    #: cannot be asked the question: a rule has to open somewhere to be drawn,
+    #: and where it opens is not a fact.
+    went_live_on: date | None = None
     #: Where the projection lands it. None when it lands nowhere.
     landing_date: date | None = None
     #: Days between the two. Positive means late.

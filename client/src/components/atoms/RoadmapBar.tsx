@@ -1,6 +1,6 @@
 import type { RoadmapMissionResponse } from "@/lib/api/generated/model";
 import { phaseDot } from "@/lib/board";
-import { SEGMENT_STYLES, placeOn, positionOf } from "@/lib/roadmap";
+import { SEGMENT_STYLES, placeOn, positionOf, slipOf } from "@/lib/roadmap";
 
 interface RoadmapBarProps {
   mission: RoadmapMissionResponse;
@@ -17,21 +17,16 @@ interface RoadmapBarProps {
  * difference is carried by the texture and never by the colour alone, which
  * belongs to the phase.
  *
- * The diamond is the date the team announced. When the projection lands past
+ * The diamond is the date the team announced. When the mission lands past
  * it, a red thread joins the two: the only red on the page, and the one thing
- * the reader should leave with.
+ * the reader should leave with. That thread obeys the same rule as the bar —
+ * solid when the register holds the day it went live, dashed when only the
+ * projection supposes it.
  */
 export function RoadmapBar({ mission, from, to }: RoadmapBarProps) {
   const target = mission.target_date;
   const targetAt = target ? positionOf(target, from, to) : null;
-  const landingAt = mission.landing_date
-    ? positionOf(mission.landing_date, from, to)
-    : null;
-
-  const slip =
-    mission.is_late && targetAt !== null && landingAt !== null
-      ? { left: Math.max(0, targetAt), width: Math.max(0, landingAt - targetAt) }
-      : null;
+  const slip = slipOf(mission, from, to);
 
   return (
     <div className="relative h-6">
@@ -71,7 +66,20 @@ export function RoadmapBar({ mission, from, to }: RoadmapBarProps) {
         <span
           aria-hidden
           style={{ left: `${slip.left * 100}%`, width: `${slip.width * 100}%` }}
-          className="absolute top-1/2 h-px -translate-y-1/2 bg-red-500"
+          className={[
+            // Under the bar rather than through it. The thread measures the
+            // distance from the diamond to the landing, and the landing is
+            // the bar's own far end: drawn down the middle it would spend
+            // most of its length hidden behind the thing it measures, and
+            // read as stopping where the bar starts.
+            "absolute bottom-1",
+            // Constaté: the service went live, and the register holds the
+            // day. Projeté: it has not landed yet, and a dashed thread must
+            // never be read as a delay already taken.
+            slip.settled
+              ? "h-px bg-red-500"
+              : "h-0 border-t border-dashed border-red-500",
+          ].join(" ")}
         />
       )}
 

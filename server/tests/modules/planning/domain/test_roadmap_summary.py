@@ -21,6 +21,7 @@ def a_line(
     late: bool = False,
     estimated: float | None = 5.0,
     segments: list[RoadmapSegment] | None = None,
+    went_live: date | None = None,
 ) -> RoadmapMission:
     return RoadmapMission(
         project_id=project_id,
@@ -34,10 +35,11 @@ def a_line(
         target_date=target,
         is_late=late,
         estimated_days=estimated,
+        went_live_on=went_live,
     )
 
 
-def went_live_on(day: date) -> list[RoadmapSegment]:
+def runs_from(day: date) -> list[RoadmapSegment]:
     return [
         RoadmapSegment(
             kind=SegmentKind.RUNNING,
@@ -100,7 +102,8 @@ def test_a_service_that_went_live_inside_the_window_counts_as_delivered() -> Non
             a_line(
                 1,
                 status=ProjectStatus.OPERATIONS,
-                segments=went_live_on(date(2026, 4, 2)),
+                segments=runs_from(date(2026, 4, 2)),
+                went_live=date(2026, 4, 2),
             )
         ],
         FROM_DAY,
@@ -116,7 +119,28 @@ def test_a_service_that_went_live_before_the_window_is_not_delivered_in_it() -> 
             a_line(
                 1,
                 status=ProjectStatus.OPERATIONS,
-                segments=went_live_on(date(2024, 4, 2)),
+                segments=runs_from(date(2024, 4, 2)),
+                went_live=date(2024, 4, 2),
+            )
+        ],
+        FROM_DAY,
+        TO_DAY,
+    )
+
+    assert summary.delivered == 0
+
+
+def test_a_service_nobody_dated_the_go_live_of_is_not_delivered_in_the_window() -> None:
+    # The rule has to open somewhere to be drawn, and where it opens is not a
+    # date anybody recorded. Counting it would report a delivery the database
+    # never saw: « 23 mises en service » on a portfolio that shipped none.
+    summary = summarise_roadmap(
+        [
+            a_line(
+                1,
+                status=ProjectStatus.OPERATIONS,
+                segments=runs_from(FROM_DAY),
+                went_live=None,
             )
         ],
         FROM_DAY,
