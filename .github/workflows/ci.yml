@@ -126,3 +126,19 @@ jobs:
           push: false
           cache-from: type=gha,scope=api-ci
           cache-to: type=gha,mode=max,scope=api-ci
+
+  # A workflow referencing a context it is not allowed to read does not evaluate
+  # false — GitHub refuses the whole file, and the run fails before it creates a
+  # single job. Nothing in the repository caught that, and it cost a deploy to
+  # find out. actionlint reads the workflows the way GitHub does.
+  workflows:
+    name: Workflows — actionlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint the workflows
+        uses: docker://rhysd/actionlint:latest
+        with:
+          args: -color
+
