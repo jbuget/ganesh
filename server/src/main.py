@@ -17,6 +17,9 @@ from src.modules.months.presentation.api.routes.month_router import (
 from src.modules.projects.presentation.api.routes.project_router import (
     router as project_router,
 )
+from src.modules.stats.presentation.api.routes.statistics_router import (
+    router as statistics_router,
+)
 from src.modules.users.presentation.api.routes.user_router import router as user_router
 
 settings = get_settings()
@@ -44,6 +47,7 @@ for module_router in (
     entry_router,
     month_router,
     calendar_router,
+    statistics_router,
 ):
     app.include_router(module_router, prefix=settings.api_prefix)
 

@@ -6,7 +6,7 @@ framework: it belongs in the domain, just as `datetime` does.
 
 from calendar import monthrange
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from enum import StrEnum
 from functools import lru_cache
 
@@ -76,3 +76,20 @@ def days_of_month(year: int, month: int) -> list[CalendarDay]:
 def working_days_count(year: int, month: int) -> int:
     """Number of working days in the month, holidays and weekends excluded."""
     return sum(1 for day in days_of_month(year, month) if day.kind is DayKind.WORKING)
+
+
+def working_days_between(start: date, end: date) -> int:
+    """Number of working days between two dates, both bounds included.
+
+    Unlike `working_days_count`, this one spans any range: a statistics window
+    rarely lines up with a month. An inverted range holds nothing, and says so
+    with a zero rather than an error: it is a count, not a command.
+    """
+    if end < start:
+        return 0
+    days = (end - start).days + 1
+    return sum(
+        1
+        for offset in range(days)
+        if classify_day(start + timedelta(days=offset)) is DayKind.WORKING
+    )

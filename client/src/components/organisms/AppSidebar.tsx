@@ -2,6 +2,7 @@
 
 import {
   CalendarDays,
+  ChartNoAxesColumn,
   FolderKanban,
   KanbanSquare,
   PanelLeft,
@@ -20,6 +21,7 @@ const TABS = [
   { href: "/", label: "Activité", Icon: CalendarDays },
   { href: "/kanban", label: "Kanban", Icon: KanbanSquare },
   { href: "/projects", label: "Projets", Icon: FolderKanban },
+  { href: "/stats", label: "Statistiques", Icon: ChartNoAxesColumn },
   { href: "/users", label: "Utilisateurs", Icon: Users },
 ] as const;
 
