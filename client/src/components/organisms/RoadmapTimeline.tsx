@@ -74,8 +74,11 @@ export function RoadmapTimeline({
     // The scale stays put while the bands move under it. Sixty lines deep,
     // a reader who has lost the months no longer knows what they are looking
     // at: the axis is the reading, not an ornament at the top of it.
+    // `overflow-hidden` is what makes the rounded corners real: the header
+    // band paints its own background to the edge, and without it the grey
+    // squares off the two top corners the frame has just rounded.
     <div
-      className={`flex h-full min-h-0 flex-col rounded-md border bg-white ${STRONG_RULE}`}
+      className={`flex h-full min-h-0 flex-col overflow-hidden rounded-md border bg-white ${STRONG_RULE}`}
     >
       <div className={`flex shrink-0 items-end border-b bg-slate-50 ${STRONG_RULE}`}>
         <div className={`${HEADINGS} px-3 py-1`}>
@@ -124,7 +127,7 @@ export function RoadmapTimeline({
                 thick line. */}
               <h3
                 className={[
-                  "flex items-center gap-2 border-b bg-slate-50/70 px-3 py-1",
+                  "flex items-center gap-2 border-b bg-slate-200 px-3 py-1.5",
                   STRONG_RULE,
                   index === 0 ? "" : "border-t",
                 ].join(" ")}
@@ -135,10 +138,10 @@ export function RoadmapTimeline({
                     className={`size-2 shrink-0 ${band.mark} rounded-sm`}
                   />
                 )}
-                <span className="text-xs font-medium tracking-wide text-slate-600 uppercase">
+                <span className="text-xs font-semibold tracking-wide text-slate-700 uppercase">
                   {band.label}
                 </span>
-                <span className="text-xs text-slate-400">{band.missions.length}</span>
+                <span className="text-xs text-slate-500">{band.missions.length}</span>
               </h3>
 
               <div>
