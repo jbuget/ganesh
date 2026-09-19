@@ -1,4 +1,4 @@
-.PHONY: install lint format test test-cov archi check-schema migration migrate seed catalog run
+.PHONY: install lint format test test-cov archi check-schema migration migrate seed dump catalog run
 
 # Taken from the root .env when entering through `make -C server`: the
 # instance's ports stay described in a single place.
@@ -8,6 +8,8 @@ POSTGRES_PORT ?= 5432
 API_PORT ?= 8000
 # The test database follows the working one: same container, other schema.
 TEST_DATABASE_URL ?= postgresql+asyncpg://timesheet:timesheet@localhost:$(POSTGRES_PORT)/timesheet_test
+# The working database, as pg_dump and psql spell it — no async driver.
+PG_URL ?= postgresql://timesheet:timesheet@localhost:$(POSTGRES_PORT)/timesheet
 
 VENV := .venv
 PY := $(VENV)/bin/python
@@ -54,6 +56,12 @@ migrate:
 
 seed:
 	$(PY) -m scripts.seed
+
+# Writes the reference data — the team and the missions, never what people have
+# done with them — ready to be loaded into staging or production.
+DUMP ?= reference.sql
+dump:
+	./scripts/dump_reference.sh "$(PG_URL)" $(DUMP)
 
 # Writes the service catalogue. `OUT` points it at the catalogue's repository:
 # make catalog OUT=../../waat-tools/content/catalog.json

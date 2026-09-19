@@ -29,6 +29,17 @@ export function assignedMissionIds(
 }
 
 /**
+ * The order a French reader looks a mission up in.
+ *
+ * The database sorts under its own collation, which files « Évènementiel »
+ * after « Support » — past the end of the list, where nobody looks for it. The
+ * order is therefore settled here, where the language is known.
+ */
+function byLabel(a: ProjectResponse, b: ProjectResponse): number {
+  return a.label.localeCompare(b.label, "fr");
+}
+
+/**
  * Missions a user can still add to their grid.
  *
  * Those already there are ruled out: no two rows for the same mission. Those
@@ -49,9 +60,9 @@ export function availableMissions(
   const mine = available.filter((p) => assignedIds.includes(p.id));
   const rest = available.filter((p) => !assignedIds.includes(p.id));
   return {
-    mine,
-    projectMissions: rest.filter((p) => p.kind !== "off_project"),
-    offProject: rest.filter((p) => p.kind === "off_project"),
+    mine: [...mine].sort(byLabel),
+    projectMissions: rest.filter((p) => p.kind !== "off_project").sort(byLabel),
+    offProject: rest.filter((p) => p.kind === "off_project").sort(byLabel),
   };
 }
 
