@@ -14,7 +14,7 @@ import {
   type MissionFilters,
 } from "@/lib/mission-filters";
 import { NO_SORT, type MissionSort } from "@/lib/mission-sort";
-import { buildProjectTree, offProjectActivities } from "@/lib/project-tree";
+import { buildProjectTree } from "@/lib/project-tree";
 
 /**
  * State and actions of the reference list screen.
@@ -53,7 +53,6 @@ export function useProjectsScreen(
     isLoading,
     isManager: me?.role === "MANAGER",
     tree: buildProjectTree(kept, sorted),
-    activities: offProjectActivities(kept),
 
     /** Missions kept, and missions the reference list carries in all. */
     visible: kept.length,

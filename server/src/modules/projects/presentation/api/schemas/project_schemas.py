@@ -87,10 +87,12 @@ class ProjectListItemResponse(BaseModel):
     contributors: list["BoardMemberResponse"]
     #: Days declared, forecast excluded.
     delivered_days: float
-    #: What the mission cost on its own.
+    #: What the mission cost, on its own.
     cost: ProjectCostResponse
     #: The same count, plus what its work packages cost.
     tree_cost: ProjectCostResponse
+    #: The useful addresses attached to the mission.
+    links: list["ProjectLinkResponse"]
     #: Live updates in the follow-up thread.
     comments: int
     #: The latest of them, absent while there is nothing to read.

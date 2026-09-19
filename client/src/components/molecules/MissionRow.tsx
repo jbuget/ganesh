@@ -7,6 +7,7 @@ import { CategoryMark } from "@/components/atoms/CategoryMark";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import { PriorityMark } from "@/components/atoms/PriorityMark";
+import { ProjectLinks } from "@/components/atoms/ProjectLinks";
 import { RunCost } from "@/components/atoms/RunCost";
 import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -16,6 +17,7 @@ import {
   LEFT_MARGIN,
   NAME_COLUMN,
   SEPARATOR,
+  STRONG_SEPARATOR,
   THREAD_COLUMN,
 } from "@/lib/mission-columns";
 import { since } from "@/lib/relative-dates";
@@ -172,7 +174,7 @@ export function MissionRow({
           of. The icon already says what the number counts, hence the empty
           heading. */}
       <TableCell
-        className={[THREAD_COLUMN, SEPARATOR, "bg-inherit text-right"].join(" ")}
+        className={[THREAD_COLUMN, STRONG_SEPARATOR, "bg-inherit text-right"].join(" ")}
       >
         <UpdatesCounter
           count={mission.comments}
@@ -221,6 +223,13 @@ export function MissionRow({
 
       <TableCell>
         <MemberAvatars members={mission.contributors} />
+      </TableCell>
+
+      {/* Where the mission's work is written down. The icons stand on their
+          own: in a row there is no room for their labels, which come back on
+          hover. */}
+      <TableCell>
+        <ProjectLinks links={mission.links} />
       </TableCell>
     </TableRow>
   );

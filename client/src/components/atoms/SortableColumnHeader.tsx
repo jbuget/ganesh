@@ -19,9 +19,15 @@ interface SortableColumnHeaderProps {
 /**
  * A column header the table gets arranged by.
  *
- * The double arrow only appears when hovering the header aimed at: nine
- * columns calling for attention at once would no longer say which one orders
- * the list. The one that does keeps its arrow showing.
+ * The mark always shows, whether the column orders the list or not: a sort one
+ * has to hover to discover is a sort nobody uses. The idle one is a faint
+ * double chevron pointing both ways, the one in force a full arrow saying
+ * which way — shape and tint tell them apart at a glance, without either
+ * hiding.
+ *
+ * The whole cell answers the click, not the title alone: between two long
+ * column names, the target was a few characters wide and nothing said where it
+ * ended.
  */
 export function SortableColumnHeader({
   column,
@@ -35,15 +41,17 @@ export function SortableColumnHeader({
   const ascending = sorted.direction === "asc";
 
   return (
+    // No padding of its own: the button takes the whole cell, and it is the
+    // button that spaces the title off the edges.
     <TableHead
       aria-sort={isActive ? (ascending ? "ascending" : "descending") : "none"}
-      className={[alignRight ? "text-right" : "", className ?? ""].join(" ").trim()}
+      className={["p-0", className ?? ""].join(" ").trim()}
     >
       <button
         type="button"
         onClick={() => onToggle(column)}
-        className={`group -mx-1 flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 transition-colors hover:bg-slate-200 ${
-          alignRight ? "ml-auto" : ""
+        className={`group flex h-10 w-full cursor-pointer items-center gap-1 px-2 transition-colors hover:bg-slate-200 ${
+          alignRight ? "justify-end" : ""
         }`}
       >
         {label}
@@ -55,7 +63,9 @@ export function SortableColumnHeader({
           )
         ) : (
           <ChevronsUpDown
-            className="size-3.5 shrink-0 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100"
+            // Faint enough not to compete with the column in force, dark
+            // enough to be seen without hovering.
+            className="size-3.5 shrink-0 text-slate-400 transition-colors group-hover:text-slate-600"
             aria-hidden
           />
         )}

@@ -41,6 +41,7 @@ const mission = (
     delivered_days: (spent.build ?? 0) + (spent.run ?? 0),
     comments: 0,
     latest_update: null,
+    links: [],
   }) as ProjectListItemResponse;
 
 const labels = (missions: ProjectListItemResponse[], sorted: MissionSort) =>

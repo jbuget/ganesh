@@ -54,4 +54,4 @@ class ProjectLink:
         try:
             self.icon = LinkIcon(self.icon)
         except ValueError as error:
-            raise ValidationError(f"Icone inconnue : {self.icon}.") from error
+            raise ValidationError(f"Unknown icon: {self.icon}.") from error

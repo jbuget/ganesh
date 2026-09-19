@@ -274,6 +274,13 @@ class InMemoryProjectDetailRepository(ProjectDetailRepository):
     async def list_links(self, project_id: int) -> list[ProjectLink]:
         return list(self._links.get(project_id, []))
 
+    async def list_links_by_project(self) -> dict[int, list[ProjectLink]]:
+        return {
+            project_id: list(links)
+            for project_id, links in self._links.items()
+            if links
+        }
+
     async def add_link(self, link: ProjectLink) -> ProjectLink:
         link.id = self._next_link_id
         self._next_link_id += 1

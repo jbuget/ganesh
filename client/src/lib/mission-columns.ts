@@ -28,25 +28,37 @@ export const NAME_COLUMN = "sticky left-0 w-[400px] min-w-[400px]";
  *
  * It takes the page background, not the row's: the margin is not the row, and
  * tinting it on hover would spill the line outside the table.
+ *
+ * It stops one pixel short of the cell: flush against it, it painted over the
+ * left edge of the frame, which the pinned column carries.
  */
 export const LEFT_MARGIN =
-  "before:absolute before:inset-y-0 before:right-full before:z-10 before:w-6 before:bg-slate-50";
+  "before:absolute before:inset-y-0 before:right-[calc(100%+1px)] before:z-10 before:w-6 before:bg-slate-50";
 
 export const THREAD_COLUMN = "sticky left-[400px] w-12 min-w-12";
 
 /**
- * The line that detaches the name from the thread, and the thread from what
- * scrolls.
+ * The line that detaches the name from the thread.
  *
- * It only runs along the rows, never the header: as in Monday, it starts below
- * the column name. A bar reaching the top would cut the title band in two.
+ * It only runs along the rows, never the header: it separates two columns, and
+ * a bar reaching the top would cut the title band in two.
  *
- * An inner shadow rather than a border: the table collapses its borders, and a
- * collapsed border belongs to the table rather than to the cell — it would
- * stay behind while the pinned column does not move. The shadow follows the
- * cell.
+ * A border on the cell, not an inner shadow: an inset shadow stops at the
+ * padding edge, so the row's bottom border cut the line at every row. The
+ * table lays its borders out separately, and a cell's own border follows it
+ * when the column stays pinned.
  */
-export const SEPARATOR = "shadow-[inset_-1px_0_0_var(--color-slate-200)]";
+export const SEPARATOR = "border-r border-r-slate-200";
+
+/**
+ * The line that closes the pinned part, where the table starts scrolling.
+ *
+ * It is drawn strong, and over the full height, title band included: it does
+ * not separate two columns like its neighbour, it says where what stays in
+ * sight stops and what slides underneath begins. Same tint as the strong rules
+ * of the entry grid, so both tables mark a boundary the same way.
+ */
+export const STRONG_SEPARATOR = "border-r border-r-slate-500";
 
 /**
  * The width of the following columns, set once and for all on the header: in
@@ -73,6 +85,22 @@ export const MEMBERS_COLUMN = "w-[130px]";
  * the left while scrolling. Separated, each line belongs to its cell and stops
  * with it. The rows therefore carry none: the cells do the underlining, or
  * nothing would show.
+ *
+ * The frame is strong, the inner lines faint: the table then reads as one
+ * block rather than as a grid trailing off into the page. It is drawn by the
+ * cells at the edges and not by the table itself — a border on the table would
+ * scroll away while the pinned column stays, leaving it open on its left.
  */
-export const MISSIONS_TABLE =
-  "w-[1400px] table-fixed border-separate border-spacing-0 [&_tbody_td]:border-b [&_tbody_td]:border-slate-200";
+export const MISSIONS_TABLE = [
+  "w-[1500px] table-fixed border-separate border-spacing-0",
+  // The top of the frame travels with the pinned header.
+  "[&_th]:border-t [&_th]:border-t-slate-500",
+  "[&_th:first-child]:border-l [&_th:first-child]:border-l-slate-500",
+  "[&_th:last-child]:border-r [&_th:last-child]:border-r-slate-500",
+  "[&_tbody_td]:border-b [&_tbody_td]:border-b-slate-200",
+  "[&_tbody_td:first-child]:border-l [&_tbody_td:first-child]:border-l-slate-500",
+  "[&_tbody_td:last-child]:border-r [&_tbody_td:last-child]:border-r-slate-500",
+  // The last row closes the table, and carries the strong rule rather than the
+  // line that separates two rows.
+  "[&_tbody_tr:last-child_td]:border-b-slate-500",
+].join(" ");
