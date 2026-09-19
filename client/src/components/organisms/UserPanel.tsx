@@ -4,8 +4,8 @@ import { X } from "lucide-react";
 import { useState } from "react";
 
 import { DeactivateUserDialog } from "@/components/atoms/DeactivateUserDialog";
-import { DepartmentSelect } from "@/components/atoms/DepartmentSelect";
 import { InlineTextField } from "@/components/atoms/InlineTextField";
+import { OptionPicker } from "@/components/atoms/OptionPicker";
 import { RolePicker } from "@/components/atoms/RolePicker";
 import { SidePanel } from "@/components/atoms/SidePanel";
 import { StatusBadge } from "@/components/atoms/StatusBadge";
@@ -15,6 +15,7 @@ import type {
   UpdateUserIdentityRequest,
   UserResponse,
 } from "@/lib/api/generated/model";
+import { DEPARTMENTS } from "@/lib/departments";
 import { since } from "@/lib/relative-dates";
 
 interface UserPanelProps {
@@ -121,8 +122,14 @@ export function UserPanel({
         </Row>
 
         <Row title="Département">
-          <DepartmentSelect
+          {/* One department, where a mission may serve several: one works in a
+              department, one does not belong to two. The list is the missions'
+              own — steering compares the two sides, and could not if the names
+              drifted apart. */}
+          <OptionPicker
             value={user.department}
+            options={DEPARTMENTS}
+            label="Département"
             editable={editable}
             onChange={(department) => onUpdateIdentity(user, { department })}
           />
