@@ -1,16 +1,11 @@
 "use client";
 
 import { PageHeader } from "@/components/atoms/PageHeader";
-import { UserRow } from "@/components/molecules/UserRow";
 import { PageLayout } from "@/components/organisms/PageLayout";
+import { UserPanel } from "@/components/organisms/UserPanel";
+import { UsersTable } from "@/components/organisms/UsersTable";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { useOpenedUser } from "@/lib/opened-user";
 import { useUsersScreen } from "@/lib/use-users";
 
 /**
@@ -18,9 +13,14 @@ import { useUsersScreen } from "@/lib/use-users";
  *
  * Anyone may look at it: knowing who makes up the team and who can reopen a
  * validated month is no manager's secret. Only changing a role is.
+ *
+ * The list compares; the panel holds one teammate. A row therefore opens the
+ * panel, which is the only place a role or an access is given away.
  */
 export function UsersPage() {
   const screen = useUsersScreen();
+  const panel = useOpenedUser();
+  const opened = panel.openedUser ? screen.find(panel.openedUser) : null;
 
   return (
     <PageLayout
@@ -51,37 +51,23 @@ export function UsersPage() {
         )}
 
         {screen.users.length > 0 && (
-          // The same setting as the reference list: the shadcn container opens
-          // a scrolling context that would hold the header inside the table,
-          // and the background sits on the cells, not on the row.
-          <div className="[&_[data-slot=table-container]]:overflow-visible">
-            <Table>
-              <TableHeader className="sticky top-0 z-10 [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50">
-                <TableRow>
-                  <TableHead>Collaborateur</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Rôle</TableHead>
-                  <TableHead>Dernière connexion</TableHead>
-                  <TableHead>Statut</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {screen.users.map((teammate) => (
-                  <UserRow
-                    key={teammate.id}
-                    user={teammate}
-                    roleModifiable={screen.isManager}
-                    canChangeStatus={screen.isManager && teammate.id !== screen.meId}
-                    onChangeRole={screen.changeRole}
-                    onSetActive={screen.setActive}
-                    now={screen.now}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <UsersTable users={screen.users} now={screen.now} onOpen={panel.open} />
         )}
       </div>
+
+      {opened && (
+        <UserPanel
+          user={opened}
+          roleModifiable={screen.isManager}
+          canChangeStatus={screen.isManager && opened.id !== screen.meId}
+          editable={screen.isManager}
+          onChangeRole={screen.changeRole}
+          onSetActive={screen.setActive}
+          onUpdateIdentity={screen.updateIdentity}
+          now={screen.now}
+          onClose={panel.close}
+        />
+      )}
     </PageLayout>
   );
 }

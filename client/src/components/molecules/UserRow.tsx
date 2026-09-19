@@ -1,60 +1,66 @@
 "use client";
 
-import { useState } from "react";
-
-import { DeactivateUserDialog } from "@/components/atoms/DeactivateUserDialog";
-import { RolePicker } from "@/components/atoms/RolePicker";
 import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { UserAvatar } from "@/components/atoms/UserAvatar";
 import { TableCell, TableRow } from "@/components/ui/table";
-import type { Role, UserResponse } from "@/lib/api/generated/model";
+import type { UserResponse } from "@/lib/api/generated/model";
 import { since } from "@/lib/relative-dates";
+import { roleLabel } from "@/lib/roles";
+import { STRONG_SEPARATOR } from "@/lib/table-frame";
 
 interface UserRowProps {
   user: UserResponse;
-  /** Managing users is reserved for managers. */
-  roleModifiable: boolean;
-  /** False on one's own row: nobody cuts off their own access. */
-  canChangeStatus: boolean;
-  onChangeRole: (userId: number, role: Role) => void | Promise<void>;
-  onSetActive: (userId: number, is_active: boolean) => void | Promise<void>;
   /** Injected: a render dated by `new Date()` could not be tested. */
   now: Date;
+  onOpen: () => void;
 }
 
-/** A user: who they are, what they may do, when they last came by. */
-export function UserRow({
-  user,
-  roleModifiable,
-  canChangeStatus,
-  onChangeRole,
-  onSetActive,
-  now,
-}: UserRowProps) {
-  const [askingDeactivation, setAskingDeactivation] = useState(false);
-
+/**
+ * A user: who they are, what they may do, when they last came by.
+ *
+ * The row compares, it does not edit: like the mission reference list, it opens
+ * one thing only — the panel, where the role and the access are given away.
+ * Editing in two places would multiply the paths to the same data.
+ */
+export function UserRow({ user, now, onOpen }: UserRowProps) {
   return (
-    <TableRow className={user.is_active ? undefined : "text-slate-400"}>
-      <TableCell className="py-2">
+    // The row takes the page background, the name cell white: the teammate
+    // reads as the anchor of the line rather than as its first column. The cell
+    // follows the row one step behind — page background where it goes a shade
+    // darker — so hovering marks the whole line without flattening the relief.
+    <TableRow
+      onClick={onOpen}
+      className={`group cursor-pointer bg-slate-50 hover:bg-slate-100 ${
+        user.is_active ? "" : "text-slate-400"
+      }`}
+    >
+      <TableCell
+        className={`bg-white py-2 group-hover:bg-slate-50 ${STRONG_SEPARATOR}`}
+      >
         <span className="flex items-center gap-2.5">
           <UserAvatar
             initials={user.initials}
             name={user.display_name}
             dimmed={!user.is_active}
           />
-          <span className="min-w-0 truncate font-medium">{user.display_name}</span>
+          {/* The whole row responds to the mouse; this button gives the same
+              opening to the keyboard, without opening twice. */}
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpen();
+            }}
+            className="min-w-0 cursor-pointer truncate text-left font-medium"
+          >
+            {user.display_name}
+          </button>
         </span>
       </TableCell>
 
       <TableCell className="py-2 text-slate-500">{user.email}</TableCell>
 
-      <TableCell className="py-2">
-        <RolePicker
-          role={user.role}
-          modifiable={roleModifiable}
-          onChange={(role) => onChangeRole(user.id, role)}
-        />
-      </TableCell>
+      <TableCell className="py-2 text-slate-600">{roleLabel(user.role)}</TableCell>
 
       <TableCell className="py-2 text-slate-500">
         {/* An account that never came is not « long ago »: it never came. */}
@@ -68,25 +74,7 @@ export function UserRow({
       </TableCell>
 
       <TableCell className="py-2">
-        <StatusBadge
-          is_active={user.is_active}
-          modifiable={canChangeStatus}
-          // Cutting off access is confirmed; restoring it takes nothing from
-          // anyone.
-          onToggle={(is_active) =>
-            is_active ? onSetActive(user.id, true) : setAskingDeactivation(true)
-          }
-        />
-
-        <DeactivateUserDialog
-          open={askingDeactivation}
-          onOpenChange={setAskingDeactivation}
-          name={user.display_name}
-          onConfirm={() => {
-            setAskingDeactivation(false);
-            return onSetActive(user.id, false);
-          }}
-        />
+        <StatusBadge is_active={user.is_active} modifiable={false} />
       </TableCell>
     </TableRow>
   );
