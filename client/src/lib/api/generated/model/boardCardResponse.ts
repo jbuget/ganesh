@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { BoardMemberResponse } from "./boardMemberResponse";
+import type { Department } from "./department";
 import type { LastUpdateResponse } from "./lastUpdateResponse";
 import type { ParentResponse } from "./parentResponse";
 import type { ProjectResponse } from "./projectResponse";
@@ -19,6 +20,7 @@ export interface BoardCardResponse {
   contributors: BoardMemberResponse[];
   comments: number;
   latest_update: LastUpdateResponse | null;
+  departments: Department[];
   sub_projects: number;
   parent: ParentResponse | null;
 }

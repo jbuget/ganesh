@@ -35,6 +35,8 @@ const mission = (
       estimated_days: 12,
       parent_id: null,
       is_active: true,
+      is_published: false,
+      go_live_date: null,
       ...fields,
     },
     leads: [],
@@ -45,6 +47,7 @@ const mission = (
     comments: 0,
     latest_update: null,
     links: [],
+    departments: [],
   }) as unknown as ProjectListItemResponse;
 
 function line(content: React.ReactNode) {
@@ -69,34 +72,6 @@ describe("MissionRow", () => {
     expect(screen.getByText("Réalisation")).toBeInTheDocument();
     expect(screen.getByText("Automatiser & fluidifier")).toBeInTheDocument();
     expect(screen.getByText("5/12 jrs.")).toBeInTheDocument();
-  });
-
-  it("shows the mission's links, which the panel alone used to carry", () => {
-    line(
-      <MissionRow
-        mission={
-          {
-            ...mission({}),
-            links: [
-              {
-                id: 1,
-                label: "Le dépôt",
-                url: "https://github.com/waat/portail",
-                icon: "repository",
-              },
-            ],
-          } as ProjectListItemResponse
-        }
-        now={NOW}
-        onOpen={() => {}}
-        onOpenThread={() => {}}
-      />,
-    );
-
-    expect(screen.getByRole("link", { name: /Le dépôt/ })).toHaveAttribute(
-      "href",
-      "https://github.com/waat/portail",
-    );
   });
 
   it("flags a build past its estimate", () => {
@@ -552,5 +527,124 @@ describe("MissionRow", () => {
     );
 
     expect(screen.queryByText("Réalisation")).not.toBeInTheDocument();
+  });
+});
+
+describe("MissionRow — the departments a mission serves", () => {
+  it("names the first and counts the rest, which the column has no room for", () => {
+    line(
+      <MissionRow
+        mission={
+          {
+            ...mission({}),
+            departments: ["landlords", "condominium"],
+          } as unknown as ProjectListItemResponse
+        }
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("Bailleurs")).toBeInTheDocument();
+    expect(screen.getByText("+1")).toBeInTheDocument();
+  });
+
+  it("leaves the cell empty when the mission serves nobody in particular", () => {
+    line(
+      <MissionRow
+        mission={mission({})}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText("Bailleurs")).toBeNull();
+  });
+});
+
+describe("MissionRow — the announced date", () => {
+  it("reads the day the team posted", () => {
+    line(
+      <MissionRow
+        mission={mission({ go_live_date: "2026-11-15" })}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("15 nov. 2026")).toBeInTheDocument();
+  });
+
+  /** The line steering has to see: announced, past, and still not delivered. */
+  it("says so when the day has gone by and the mission has not landed", () => {
+    line(
+      <MissionRow
+        mission={mission({ go_live_date: "2026-06-30", status: "development" })}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("en retard")).toBeInTheDocument();
+  });
+
+  it("never calls a service already in operations late", () => {
+    line(
+      <MissionRow
+        mission={mission({ go_live_date: "2026-06-30", status: "operations" })}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("30 juin 2026")).toBeInTheDocument();
+    expect(screen.queryByText("en retard")).toBeNull();
+  });
+
+  it("leaves the cell empty rather than inventing a date", () => {
+    line(
+      <MissionRow
+        mission={mission({})}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText(/2026/)).toBeNull();
+  });
+});
+
+describe("MissionRow — the service catalogue", () => {
+  it("marks a mission waat.tools draws a card for", () => {
+    line(
+      <MissionRow
+        mission={mission({ is_published: true })}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("Publié")).toBeInTheDocument();
+  });
+
+  /** Fifty rows saying « non publié » would bury the dozen that are. */
+  it("says nothing of a mission with no service sheet yet", () => {
+    line(
+      <MissionRow
+        mission={mission({})}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText("Publié")).toBeNull();
   });
 });

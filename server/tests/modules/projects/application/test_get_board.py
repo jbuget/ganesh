@@ -13,9 +13,11 @@ from src.modules.projects.domain.entities.project import (
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.users.domain.entities.user import Role, User
+from src.shared.enums.department import Department
 from tests.helpers.in_memory_repositories import (
     InMemoryEntryRepository,
     InMemoryProjectAssigneeRepository,
+    InMemoryProjectDetailRepository,
     InMemoryProjectRepository,
     InMemoryProjectUpdateRepository,
     InMemoryUserRepository,
@@ -71,6 +73,7 @@ def build(
     entries: list[Entry] | None = None,
     assignments: dict[int, list[int]] | None = None,
     updates: InMemoryProjectUpdateRepository | None = None,
+    details: InMemoryProjectDetailRepository | None = None,
 ):
     return GetBoardUseCase(
         projects=InMemoryProjectRepository(projects),
@@ -83,6 +86,7 @@ def build(
             }
         ),
         updates=updates or InMemoryProjectUpdateRepository(),
+        details=details or InMemoryProjectDetailRepository(),
     )
 
 
@@ -411,3 +415,26 @@ async def test_a_work_package_card_carries_the_axis_of_its_project() -> None:
         ProjectCategory.STRUCTURE,
         ProjectCategory.STRUCTURE,
     ]
+
+
+async def test_a_card_carries_the_departments_of_its_mission() -> None:
+    """The board and the reference list filter on the same criteria.
+
+    A department criterion the board could not answer would empty it while the
+    list showed rows: two screens, one question, one answer.
+    """
+    details = InMemoryProjectDetailRepository()
+    await details.set_departments(1, [Department.CONDOMINIUM, Department.LANDLORDS])
+    board = await build([card(1)], details=details).execute(today=TODAY)
+
+    listed = next(c for column in board.columns for c in column.cards)
+
+    assert listed.departments == [Department.LANDLORDS, Department.CONDOMINIUM]
+
+
+async def test_a_card_without_a_department_carries_none() -> None:
+    board = await build([card(1)]).execute(today=TODAY)
+
+    listed = next(c for column in board.columns for c in column.cards)
+
+    assert listed.departments == []

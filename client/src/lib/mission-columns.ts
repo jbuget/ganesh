@@ -71,7 +71,9 @@ export { STRONG_SEPARATOR } from "@/lib/table-frame";
 export const PHASE_COLUMN = "w-[150px]";
 export const PRIORITY_COLUMN = "w-[120px]";
 export const CATEGORY_COLUMN = "w-[210px]";
+export const DEPARTMENTS_COLUMN = "w-[180px]";
 export const DAYS_COLUMN = "w-[100px]";
+export const GO_LIVE_COLUMN = "w-[160px]";
 export const MEMBERS_COLUMN = "w-[130px]";
 
 /**
@@ -91,11 +93,13 @@ export type ColumnKey =
   | "phase"
   | "priority"
   | "category"
+  | "departments"
   | "build"
   | "run"
+  | "goLive"
   | "leads"
   | "contributors"
-  | "links";
+  | "published";
 
 export interface HideableColumn {
   key: ColumnKey;
@@ -107,13 +111,15 @@ export const HIDEABLE_COLUMNS: readonly HideableColumn[] = [
   { key: "phase", label: "Phase", width: 150 },
   { key: "priority", label: "Priorité", width: 120 },
   { key: "category", label: "Catégorie", width: 210 },
+  { key: "departments", label: "Départements", width: 180 },
   { key: "build", label: "Build", width: 100 },
   { key: "run", label: "Run", width: 100 },
+  { key: "goLive", label: "Mise en service", width: 160 },
   { key: "leads", label: "Référents", width: 130 },
   { key: "contributors", label: "Intervenants", width: 130 },
-  // The links column carries no width class: it takes what is left of the
+  // The published column carries no width class: it takes what is left of the
   // table. What is left is this, and putting it away gives exactly this back.
-  { key: "links", label: "Liens", width: 112 },
+  { key: "published", label: "Publié", width: 100 },
 ];
 
 /** The name and the thread, which no choice ever takes away. */

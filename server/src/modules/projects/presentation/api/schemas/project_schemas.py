@@ -122,6 +122,8 @@ class ProjectListItemResponse(BaseModel):
     tree_cost: ProjectCostResponse
     #: The useful addresses attached to the mission.
     links: list["ProjectLinkResponse"]
+    #: The departments the mission serves, in the order they are declared.
+    departments: list[Department]
     #: Live updates in the follow-up thread.
     comments: int
     #: The latest of them, absent while there is nothing to read.
@@ -221,6 +223,9 @@ class BoardCardResponse(BaseModel):
     comments: int
     #: The latest message of the thread, absent while there is nothing to read.
     latest_update: LastUpdateResponse | None
+    #: The departments the mission serves. No card draws them: the filter bar
+    #: is shared with the reference list, and asks the board the same question.
+    departments: list[Department]
     sub_projects: int
     parent: ParentResponse | None
 

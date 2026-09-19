@@ -189,6 +189,7 @@ def get_board_use_case(
     users: UserRepository = Depends(get_user_repository),
     assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
     updates: ProjectUpdateRepository = Depends(get_project_update_repository),
+    details: ProjectDetailRepository = Depends(get_project_detail_repository),
 ) -> GetBoardUseCase:
     return GetBoardUseCase(
         projects=projects,
@@ -196,6 +197,7 @@ def get_board_use_case(
         users=users,
         assignees=assignees,
         updates=updates,
+        details=details,
     )
 
 

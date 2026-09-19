@@ -132,6 +132,7 @@ def to_listed_project_response(
         links=[to_link_response(link) for link in listed.links if link.id is not None],
         comments=listed.comments,
         latest_update=to_latest_update(listed.latest_update),
+        departments=listed.departments,
     )
 
 
@@ -155,6 +156,7 @@ def to_board_response(board: Board) -> BoardResponse:
                         ],
                         comments=card.comments,
                         latest_update=to_latest_update(card.latest_update),
+                        departments=card.departments,
                         sub_projects=card.sub_projects,
                         parent=(
                             ParentResponse(

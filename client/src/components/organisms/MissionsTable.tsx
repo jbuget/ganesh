@@ -15,6 +15,8 @@ import {
 import {
   CATEGORY_COLUMN,
   DAYS_COLUMN,
+  DEPARTMENTS_COLUMN,
+  GO_LIVE_COLUMN,
   LEFT_MARGIN,
   MEMBERS_COLUMN,
   MISSIONS_TABLE,
@@ -59,8 +61,8 @@ interface MissionsTableProps {
 }
 
 /**
- * The reference list as a table: ten columns, a project and its work packages
- * per block.
+ * The reference list as a table: twelve columns, a project and its work
+ * packages per block.
  *
  * It draws what it is given and asks for the rest: no criteria of its own, no
  * fetching, no opinion on what to show when there is nothing — the screen
@@ -157,6 +159,13 @@ export function MissionsTable({
                   className={CATEGORY_COLUMN}
                 />
               )}
+              {/* Who the mission serves does not sort: a column of chips has no
+                order the reader would have in mind. It follows the axis,
+                which answers the neighbouring question — what the mission is
+                for, then whom it is for. */}
+              {shows("departments") && (
+                <TableHead className={DEPARTMENTS_COLUMN}>Départements</TableHead>
+              )}
               {/* Build against its estimate, run apart: the two answer different
                 questions, and a single column carrying both would no longer
                 sort. */}
@@ -180,6 +189,18 @@ export function MissionsTable({
                   className={DAYS_COLUMN}
                 />
               )}
+              {/* What it weighs, then when it lands: the date the team announced,
+                the one the roadmap posts. It sorts, and that is what the
+                column is for — reading what comes next in order. */}
+              {shows("goLive") && (
+                <SortableColumnHeader
+                  column="goLive"
+                  label="Mise en service"
+                  sorted={sorted}
+                  onToggle={onSort}
+                  className={GO_LIVE_COLUMN}
+                />
+              )}
               {/* Who looks after it does not sort: a column of badges has no order
                 the reader would have in mind. */}
               {shows("leads") && (
@@ -189,8 +210,10 @@ export function MissionsTable({
                 <TableHead className={MEMBERS_COLUMN}>Intervenants</TableHead>
               )}
               {/* Last, and without a width: it takes what is left when the screen
-                is wider than the table. */}
-              {shows("links") && <TableHead>Liens</TableHead>}
+                is wider than the table. The catalogue is the end of the
+                reading — what the mission became public as, once everything
+                that steers it has been read. */}
+              {shows("published") && <TableHead>Publié</TableHead>}
             </TableRow>
           </TableHeader>
 

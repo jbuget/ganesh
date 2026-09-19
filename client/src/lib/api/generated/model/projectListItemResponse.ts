@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { BoardMemberResponse } from "./boardMemberResponse";
+import type { Department } from "./department";
 import type { LastUpdateResponse } from "./lastUpdateResponse";
 import type { ProjectCostResponse } from "./projectCostResponse";
 import type { ProjectLinkResponse } from "./projectLinkResponse";
@@ -21,6 +22,7 @@ export interface ProjectListItemResponse {
   cost: ProjectCostResponse;
   tree_cost: ProjectCostResponse;
   links: ProjectLinkResponse[];
+  departments: Department[];
   comments: number;
   latest_update: LastUpdateResponse | null;
 }
