@@ -4,7 +4,7 @@ They implement the same ports as the infrastructure: a use case that passes
 here passes in production, persistence aside.
 """
 
-from datetime import date
+from datetime import date, datetime
 
 from src.modules.api_keys.domain.entities.api_key import ApiKey
 from src.modules.api_keys.domain.repositories.api_key_repository import ApiKeyRepository
@@ -152,6 +152,11 @@ class InMemoryApiKeyRepository(ApiKeyRepository):
     async def update(self, key: ApiKey) -> None:
         if key.id is not None:
             self._keys[key.id] = key
+
+    async def record_use(self, key_id: int, used_at: datetime) -> None:
+        key = self._keys.get(key_id)
+        if key is not None:
+            key.last_used_at = used_at
 
 
 class InMemoryEntryRepository(EntryRepository):

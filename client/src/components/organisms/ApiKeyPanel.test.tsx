@@ -106,7 +106,7 @@ describe("ApiKeyPanel", () => {
   });
 
   describe("a key that is already cut", () => {
-    const revoked = {
+    const revoked: Partial<ApiKeyResponse> = {
       state: "revoked",
       revoked_at: "2026-06-01T10:00:00",
       revoked_by: { id: 2, display_name: "Jérémy BUGET", initials: "JB" },

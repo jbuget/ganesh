@@ -1,6 +1,7 @@
 """Port for the service accounts."""
 
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 from src.modules.api_keys.domain.entities.api_key import ApiKey
 
@@ -27,4 +28,16 @@ class ApiKeyRepository(ABC):
     async def list_all(self) -> list[ApiKey]: ...
 
     @abstractmethod
-    async def update(self, key: ApiKey) -> None: ...
+    async def update(self, key: ApiKey) -> None:
+        """Writes the key and the scopes it carries."""
+        ...
+
+    @abstractmethod
+    async def record_use(self, key_id: int, used_at: datetime) -> None:
+        """Stamps a call, and nothing else.
+
+        Apart from `update` on purpose: authenticating is a read path that
+        happens to leave a mark, and rewriting the scope rows on every call
+        would be write amplification for a column.
+        """
+        ...

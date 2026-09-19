@@ -20,29 +20,20 @@ from src.modules.api_keys.infrastructure.database.repositories.api_key_repositor
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
-from src.modules.audit_logs.infrastructure.database.repositories.audit_log_repository_impl import (
-    SqlAuditLogRepository,
+
+# Declared once, in the entries module, and imported from there by projects and
+# users alike: one provider per repository, whatever module asks for it.
+from src.modules.entries.presentation.dependencies import (
+    get_audit_log_repository,
+    get_user_repository,
 )
 from src.modules.users.domain.repositories.user_repository import UserRepository
-from src.modules.users.infrastructure.database.repositories.user_repository_impl import (
-    SqlUserRepository,
-)
 
 
 def get_api_key_repository(
     session: AsyncSession = Depends(get_db),
 ) -> ApiKeyRepository:
     return SqlApiKeyRepository(session)
-
-
-def get_user_repository(session: AsyncSession = Depends(get_db)) -> UserRepository:
-    return SqlUserRepository(session)
-
-
-def get_audit_log_repository(
-    session: AsyncSession = Depends(get_db),
-) -> AuditLogRepository:
-    return SqlAuditLogRepository(session)
 
 
 def get_authenticate_api_key_use_case(
@@ -70,9 +61,10 @@ def get_list_api_keys_use_case(
 
 def get_update_api_key_use_case(
     keys: ApiKeyRepository = Depends(get_api_key_repository),
+    users: UserRepository = Depends(get_user_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> UpdateApiKeyUseCase:
-    return UpdateApiKeyUseCase(keys=keys, audit_logs=audit_logs)
+    return UpdateApiKeyUseCase(keys=keys, users=users, audit_logs=audit_logs)
 
 
 def get_revoke_api_key_use_case(

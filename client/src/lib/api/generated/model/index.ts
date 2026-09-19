@@ -12,6 +12,7 @@ export * from "./adoptionResponse";
 export * from "./apiKeyOwnerResponse";
 export * from "./apiKeyResponse";
 export * from "./apiKeyScope";
+export * from "./apiKeyState";
 export * from "./assignMemberParams";
 export * from "./boardCardResponse";
 export * from "./boardColumnResponse";

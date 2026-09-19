@@ -8,6 +8,7 @@ from src.modules.api_keys.domain.entities.api_key import (
     USE_FRESHNESS,
     ApiKey,
     ApiKeyScope,
+    ApiKeyState,
 )
 from src.shared.exceptions.domain_exceptions import (
     ForbiddenActionError,
@@ -79,6 +80,28 @@ class TestState:
         key = make_key()
         key.revoke(by=20, at=NOW)
         assert key.is_usable(NOW) is False
+
+    # What a key is worth is decided here and nowhere else. The presentation
+    # layer used to make this call; a rule written twice ends up disagreeing
+    # with itself.
+
+    def test_a_fresh_key_reads_active(self) -> None:
+        assert make_key().state_at(NOW) is ApiKeyState.ACTIVE
+
+    def test_a_key_past_its_date_reads_expired(self) -> None:
+        key = make_key(expires_at=NOW + timedelta(days=1))
+        assert key.state_at(NOW + timedelta(days=2)) is ApiKeyState.EXPIRED
+
+    def test_a_cut_key_reads_revoked(self) -> None:
+        key = make_key()
+        key.revoke(by=20, at=NOW)
+        assert key.state_at(NOW) is ApiKeyState.REVOKED
+
+    def test_the_cut_weighs_more_than_the_date(self) -> None:
+        # A key cut before its expiry is « révoquée », not « expirée ».
+        key = make_key(expires_at=NOW + timedelta(days=1))
+        key.revoke(by=20, at=NOW)
+        assert key.state_at(NOW + timedelta(days=2)) is ApiKeyState.REVOKED
 
 
 class TestRevocation:

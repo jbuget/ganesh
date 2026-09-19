@@ -1,6 +1,8 @@
 """SQLAlchemy implementation of the ApiKeyRepository port."""
 
-from sqlalchemy import delete, select
+from datetime import datetime
+
+from sqlalchemy import delete, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -100,6 +102,13 @@ class SqlApiKeyRepository(ApiKeyRepository):
         model.revoked_by = key.revoked_by
         await self._write_scopes(key.id, key.scopes)
         await self._session.flush()
+
+    async def record_use(self, key_id: int, used_at: datetime) -> None:
+        await self._session.execute(
+            update(ApiKeyModel)
+            .where(ApiKeyModel.id == key_id)
+            .values(last_used_at=used_at)
+        )
 
     async def _read_scopes(self, key_id: int) -> list[ApiKeyScope]:
         result = await self._session.execute(

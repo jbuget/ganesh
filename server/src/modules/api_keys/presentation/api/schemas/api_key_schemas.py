@@ -4,7 +4,11 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from src.modules.api_keys.domain.entities.api_key import NAME_MAX_LENGTH, ApiKeyScope
+from src.modules.api_keys.domain.entities.api_key import (
+    NAME_MAX_LENGTH,
+    ApiKeyScope,
+    ApiKeyState,
+)
 
 
 class ApiKeyOwnerResponse(BaseModel):
@@ -35,8 +39,8 @@ class ApiKeyResponse(BaseModel):
     last_used_at: datetime | None
     revoked_at: datetime | None
     revoked_by: ApiKeyOwnerResponse | None
-    #: What the badge reads: active, expired or revoked.
-    state: str
+    #: What the badge reads. Derived by the entity, not recomputed anywhere.
+    state: ApiKeyState
 
 
 class CreateApiKeyRequest(BaseModel):

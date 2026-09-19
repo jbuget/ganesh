@@ -1,4 +1,9 @@
-"""Translating service accounts into API schemas."""
+"""Translating service accounts into API schemas.
+
+Translation only: what a key is worth is decided by the entity, never
+recomputed here. A rule written in two places is a rule that will disagree with
+itself.
+"""
 
 from datetime import datetime
 
@@ -10,20 +15,6 @@ from src.modules.api_keys.presentation.api.schemas.api_key_schemas import (
 )
 from src.modules.users.domain.entities.user import User
 from src.shared.utils.initials import initials
-
-#: What the badge reads. A revoked key is revoked whatever its expiry says:
-#: the cut is the fact that matters.
-ACTIVE = "active"
-EXPIRED = "expired"
-REVOKED = "revoked"
-
-
-def state_of(key: ApiKey, now: datetime) -> str:
-    if key.is_revoked:
-        return REVOKED
-    if key.is_expired(now):
-        return EXPIRED
-    return ACTIVE
 
 
 def to_owner_response(user: User | None) -> ApiKeyOwnerResponse | None:
@@ -42,10 +33,10 @@ UNKNOWN = ApiKeyOwnerResponse(id=0, display_name="Compte supprimé", initials="?
 
 
 def to_api_key_response(
-    key: ApiKey, people: dict[int, User], now: datetime | None = None
+    key: ApiKey, people: dict[int, User], now: datetime
 ) -> ApiKeyResponse:
+    """`now` is passed in, never read here: a mapper does not own a clock."""
     assert key.id is not None
-    moment = now or datetime.now()
     revoked_by = (
         to_owner_response(people.get(key.revoked_by))
         if key.revoked_by is not None
@@ -63,5 +54,5 @@ def to_api_key_response(
         last_used_at=key.last_used_at,
         revoked_at=key.revoked_at,
         revoked_by=revoked_by,
-        state=state_of(key, moment),
+        state=key.state_at(now),
     )

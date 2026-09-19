@@ -3,8 +3,10 @@
 from datetime import datetime
 
 from src.modules.api_keys.application.dtos.api_key_dto import (
+    ApiKeyListing,
     CreateApiKeyCommand,
     MintedApiKey,
+    NamedApiKey,
     RevokeApiKeyCommand,
     UpdateApiKeyCommand,
 )
@@ -18,6 +20,22 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError, ValidationError
+
+
+async def people_named_by(users: UserRepository, key: ApiKey) -> dict[int, User]:
+    """The two or three humans a key names, and no one else.
+
+    Looked up one by one rather than by reading the whole directory: a key
+    names an owner, whoever minted it and, sometimes, whoever cut it.
+    """
+    named: dict[int, User] = {}
+    for user_id in (key.owner_id, key.created_by, key.revoked_by):
+        if user_id is None or user_id in named:
+            continue
+        user = await users.get_by_id(user_id)
+        if user is not None:
+            named[user_id] = user
+    return named
 
 
 class CreateApiKeyUseCase:
@@ -68,7 +86,11 @@ class CreateApiKeyUseCase:
                 },
             )
         )
-        return MintedApiKey(key=key, token=token, owner=owner)
+        return MintedApiKey(
+            key=key,
+            token=token,
+            people=await people_named_by(self._users, key),
+        )
 
 
 class ListApiKeysUseCase:
@@ -82,14 +104,16 @@ class ListApiKeysUseCase:
         self._keys = keys
         self._users = users
 
-    async def execute(self) -> tuple[list[ApiKey], dict[int, User]]:
+    async def execute(self) -> ApiKeyListing:
         keys = await self._keys.list_all()
+        # The whole directory in one go: dozens of keys naming the same
+        # handful of people would otherwise be dozens of lookups.
         people = {
             user.id: user
             for user in await self._users.list_all(include_inactive=True)
             if user.id is not None
         }
-        return keys, people
+        return ApiKeyListing(keys=keys, people=people)
 
 
 class UpdateApiKeyUseCase:
@@ -102,12 +126,14 @@ class UpdateApiKeyUseCase:
     def __init__(
         self,
         keys: ApiKeyRepository,
+        users: UserRepository,
         audit_logs: AuditLogRepository,
     ) -> None:
         self._keys = keys
+        self._users = users
         self._audit_logs = audit_logs
 
-    async def execute(self, command: UpdateApiKeyCommand) -> ApiKey:
+    async def execute(self, command: UpdateApiKeyCommand) -> NamedApiKey:
         key = await self._keys.get_by_id(command.key_id)
         if key is None:
             raise EntityNotFoundError("The key cannot be found.")
@@ -127,8 +153,9 @@ class UpdateApiKeyUseCase:
             # list, and a screen sending one must be told.
             key.set_scopes(command.scopes)
 
+        named = NamedApiKey(key=key, people=await people_named_by(self._users, key))
         if not changes:
-            return key
+            return named
 
         await self._keys.update(key)
 
@@ -147,7 +174,7 @@ class UpdateApiKeyUseCase:
                     },
                 )
             )
-        return key
+        return named
 
 
 class RevokeApiKeyUseCase:

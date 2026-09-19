@@ -42,8 +42,28 @@ class RevokeApiKeyCommand:
 
 
 @dataclass(frozen=True)
+class NamedApiKey:
+    """A key and the people it names, so a screen can draw it whole.
+
+    Who owns a key, who minted it and who cut it live in another module: the
+    use case resolves them once rather than leaving every caller to.
+    """
+
+    key: ApiKey
+    people: dict[int, User]
+
+
+@dataclass(frozen=True)
+class ApiKeyListing:
+    """Every key, and the people they name between them."""
+
+    keys: list[ApiKey]
+    people: dict[int, User]
+
+
+@dataclass(frozen=True)
 class MintedApiKey:
-    """A freshly minted key and its secret, together, once.
+    """A freshly minted key, its secret, and the people it names — once.
 
     The token travels no further than the response that carries it: nothing
     stores it, and no route ever hands it over a second time.
@@ -51,5 +71,4 @@ class MintedApiKey:
 
     key: ApiKey
     token: str
-    #: Named on the key, and already looked up while minting it.
-    owner: User
+    people: dict[int, User]

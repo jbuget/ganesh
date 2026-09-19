@@ -1,4 +1,8 @@
-import type { ApiKeyResponse, ApiKeyScope } from "@/lib/api/generated/model";
+import type {
+  ApiKeyResponse,
+  ApiKeyScope,
+  ApiKeyState,
+} from "@/lib/api/generated/model";
 
 /**
  * What the team reads about a service account.
@@ -77,8 +81,14 @@ export function pruneCovered(scopes: ApiKeyScope[]): ApiKeyScope[] {
   return scopes.filter((scope) => coveredBy(scope, scopes) === null);
 }
 
-/** How the badge reads. `state` comes from the server: one truth, not two. */
-export const STATES: Record<string, { label: string; dot: string }> = {
+/**
+ * How the badge reads.
+ *
+ * `state` is derived by the entity and typed by the API: the record is exhaustive
+ * by construction, and a state added upstream breaks the build here rather than
+ * falling through to a blank badge.
+ */
+export const STATES: Record<ApiKeyState, { label: string; dot: string }> = {
   active: { label: "Active", dot: "bg-emerald-500" },
   expired: { label: "Expirée", dot: "bg-amber-500" },
   revoked: { label: "Révoquée", dot: "bg-slate-300" },

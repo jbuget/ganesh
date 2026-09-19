@@ -8,7 +8,7 @@ import { STATES } from "@/lib/api-keys";
  * expiry read two ways would eventually read two ways.
  */
 export function ApiKeyStateBadge({ state }: { state: ApiKeyResponse["state"] }) {
-  const shown = STATES[state] ?? { label: state, dot: "bg-slate-300" };
+  const shown = STATES[state];
 
   return (
     <span className="inline-flex items-center gap-1.5 text-sm text-slate-700">

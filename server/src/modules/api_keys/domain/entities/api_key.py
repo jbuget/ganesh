@@ -49,6 +49,19 @@ class ApiKeyScope(StrEnum):
         return self.value.endswith(":read")
 
 
+class ApiKeyState(StrEnum):
+    """What a key is worth right now, as the badge reads it.
+
+    Derived, never stored: `revoked_at` and `expires_at` are the facts, this is
+    what they add up to. Revocation wins over expiry — the cut is the fact that
+    matters, and a key cut before its date is not « expirée ».
+    """
+
+    ACTIVE = "active"
+    EXPIRED = "expired"
+    REVOKED = "revoked"
+
+
 @dataclass
 class ApiKey:
     """A service account: what it is called, who answers for it, what it opens."""
@@ -98,7 +111,15 @@ class ApiKey:
 
     def is_usable(self, now: datetime) -> bool:
         """Whether the key itself stands in the way. The owner is checked apart."""
-        return not self.is_revoked and not self.is_expired(now)
+        return self.state_at(now) is ApiKeyState.ACTIVE
+
+    def state_at(self, now: datetime) -> ApiKeyState:
+        """What the key is worth, the cut weighing more than the date."""
+        if self.is_revoked:
+            return ApiKeyState.REVOKED
+        if self.is_expired(now):
+            return ApiKeyState.EXPIRED
+        return ApiKeyState.ACTIVE
 
     def grants(self, scope: ApiKeyScope) -> bool:
         """Whether the key opens what a route asks for.

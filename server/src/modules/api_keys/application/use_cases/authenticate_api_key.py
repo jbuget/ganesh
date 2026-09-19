@@ -71,8 +71,9 @@ class AuthenticateApiKeyUseCase:
             )
 
         # Stamped through a window: without it the column would measure HTTP
-        # traffic rather than use, and write a row on every call.
-        if key.record_use(now):
-            await self._keys.update(key)
+        # traffic rather than use. One column, not the whole aggregate — this
+        # is the hot path, and the scopes have no business being rewritten.
+        if key.record_use(now) and key.id is not None:
+            await self._keys.record_use(key.id, now)
 
         return MachineCaller(key=key, owner=owner)

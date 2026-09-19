@@ -55,9 +55,11 @@ async def list_api_keys(
     Nothing here helps anyone use a key: the table carries the public half
     alone. Opening it is what puts eyes on a key nobody has called in months.
     """
-    keys, people = await use_case.execute()
+    listing = await use_case.execute()
+    # One reference instant for the whole table: two rows must not be dated
+    # against two different « now ».
     now = datetime.now()
-    return [to_api_key_response(key, people, now) for key in keys]
+    return [to_api_key_response(key, listing.people, now) for key in listing.keys]
 
 
 @router.post(
@@ -84,12 +86,9 @@ async def create_api_key(
         )
     )
     await session.commit()
-
-    # The only two people a fresh key names, both already in hand: no second
-    # trip to the database to answer.
-    people = {user.id: user for user in (minted.owner, manager) if user.id is not None}
     return MintedApiKeyResponse(
-        key=to_api_key_response(minted.key, people), token=minted.token
+        key=to_api_key_response(minted.key, minted.people, datetime.now()),
+        token=minted.token,
     )
 
 
@@ -99,12 +98,11 @@ async def update_api_key(
     payload: UpdateApiKeyRequest,
     manager: User = Depends(get_current_manager),
     use_case: UpdateApiKeyUseCase = Depends(get_update_api_key_use_case),
-    list_use_case: ListApiKeysUseCase = Depends(get_list_api_keys_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ApiKeyResponse:
     """Corrects what a key is called and what it opens. Nothing else."""
     assert manager.id is not None
-    key = await use_case.execute(
+    named = await use_case.execute(
         UpdateApiKeyCommand(
             actor_id=manager.id,
             key_id=key_id,
@@ -113,9 +111,7 @@ async def update_api_key(
         )
     )
     await session.commit()
-
-    _, people = await list_use_case.execute()
-    return to_api_key_response(key, people)
+    return to_api_key_response(named.key, named.people, datetime.now())
 
 
 @router.delete(

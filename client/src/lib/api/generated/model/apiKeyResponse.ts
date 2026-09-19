@@ -6,6 +6,7 @@
  */
 import type { ApiKeyOwnerResponse } from "./apiKeyOwnerResponse";
 import type { ApiKeyScope } from "./apiKeyScope";
+import type { ApiKeyState } from "./apiKeyState";
 
 /**
  * A key as the table shows it.
@@ -26,5 +27,5 @@ export interface ApiKeyResponse {
   last_used_at: string | null;
   revoked_at: string | null;
   revoked_by: ApiKeyOwnerResponse | null;
-  state: string;
+  state: ApiKeyState;
 }

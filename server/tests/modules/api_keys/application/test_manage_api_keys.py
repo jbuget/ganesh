@@ -133,17 +133,16 @@ class TestListing:
         create, listing, *_ = build()
         await create.execute(command())
 
-        keys, people = await listing.execute()
-        assert [key.name for key in keys] == ["CI waat-tools"]
-        assert people[10].display_name == "Toni DA RODDA"
+        read = await listing.execute()
+        assert [key.name for key in read.keys] == ["CI waat-tools"]
+        assert read.people[10].display_name == "Toni DA RODDA"
 
     @pytest.mark.asyncio
     async def test_a_deactivated_owner_is_still_named(self) -> None:
         # Hiding the line would hide the key, and a key nobody sees is a key
         # nobody revokes.
         _, listing, *_ = build()
-        _, people = await listing.execute()
-        assert 30 in people
+        assert 30 in (await listing.execute()).people
 
 
 class TestRevoking:
@@ -166,8 +165,7 @@ class TestRevoking:
             RevokeApiKeyCommand(actor_id=20, key_id=minted.key.id or 0)
         )
 
-        keys, _ = await listing.execute()
-        assert len(keys) == 1
+        assert len((await listing.execute()).keys) == 1
 
     @pytest.mark.asyncio
     async def test_cutting_twice_is_refused(self) -> None:
@@ -216,7 +214,7 @@ class TestEditing:
         users = InMemoryUserRepository([OWNER, MANAGER, GONE])
         return (
             CreateApiKeyUseCase(keys=keys, users=users, audit_logs=audit),
-            UpdateApiKeyUseCase(keys=keys, audit_logs=audit),
+            UpdateApiKeyUseCase(keys=keys, users=users, audit_logs=audit),
             RevokeApiKeyUseCase(keys=keys, audit_logs=audit),
             audit,
         )
@@ -231,7 +229,7 @@ class TestEditing:
                 actor_id=20, key_id=minted.key.id or 0, name="CI waat.tools"
             )
         )
-        assert changed.name == "CI waat.tools"
+        assert changed.key.name == "CI waat.tools"
 
     @pytest.mark.asyncio
     async def test_the_scopes_are_replaced(self) -> None:
@@ -245,7 +243,7 @@ class TestEditing:
                 scopes=[ApiKeyScope.ALL_READ],
             )
         )
-        assert changed.scopes == [ApiKeyScope.ALL_READ]
+        assert changed.key.scopes == [ApiKeyScope.ALL_READ]
 
     @pytest.mark.asyncio
     async def test_a_field_left_out_is_a_field_left_alone(self) -> None:
@@ -255,7 +253,7 @@ class TestEditing:
         changed = await update.execute(
             UpdateApiKeyCommand(actor_id=20, key_id=minted.key.id or 0, name="Autre")
         )
-        assert changed.scopes == [ApiKeyScope.CATALOG_READ]
+        assert changed.key.scopes == [ApiKeyScope.CATALOG_READ]
 
     @pytest.mark.asyncio
     async def test_the_secret_is_never_reissued(self) -> None:
@@ -266,8 +264,8 @@ class TestEditing:
         changed = await update.execute(
             UpdateApiKeyCommand(actor_id=20, key_id=minted.key.id or 0, name="Autre")
         )
-        assert changed.secret_hash == before
-        assert changed.public_id == minted.key.public_id
+        assert changed.key.secret_hash == before
+        assert changed.key.public_id == minted.key.public_id
 
     @pytest.mark.asyncio
     async def test_each_field_that_changed_leaves_one_trace(self) -> None:

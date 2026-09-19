@@ -32,6 +32,7 @@ OWNER = User(id=10, entra_oid="a", email="t.da@waat.fr", display_name="Toni DA R
 def build(
     scopes: list[ApiKeyScope] | None = None,
     owner: User = OWNER,
+    team: list[User] | None = None,
     **overrides: object,
 ):
     public_id, secret, token = key_material.generate()
@@ -47,8 +48,11 @@ def build(
     fields.update(overrides)
     key = ApiKey(**fields)  # type: ignore[arg-type]
     keys = InMemoryApiKeyRepository([key])
+    # `team` stands apart from `owner`: an empty directory is how a key whose
+    # owner was erased is reproduced.
     use_case = AuthenticateApiKeyUseCase(
-        keys=keys, users=InMemoryUserRepository([owner])
+        keys=keys,
+        users=InMemoryUserRepository([owner] if team is None else team),
     )
     return use_case, token, key
 
@@ -171,3 +175,40 @@ class TestRecordingUse:
         with pytest.raises(ForbiddenActionError):
             await use_case.execute(token, CATALOG)
         assert key.last_used_at is None
+
+
+@pytest.mark.asyncio
+async def test_stamping_a_call_does_not_rewrite_the_aggregate() -> None:
+    """Authenticating is a read path that happens to leave a mark.
+
+    It goes through `record_use`, not `update`: rewriting the scope rows on
+    every call would be write amplification for one column.
+    """
+    written: list[str] = []
+
+    class WatchfulRepository(InMemoryApiKeyRepository):
+        async def update(self, key: ApiKey) -> None:
+            written.append("update")
+            await super().update(key)
+
+        async def record_use(self, key_id: int, used_at: datetime) -> None:
+            written.append("record_use")
+            await super().record_use(key_id, used_at)
+
+    public_id, secret, token = key_material.generate()
+    key = ApiKey(
+        id=1,
+        name="CI",
+        public_id=public_id,
+        secret_hash=key_material.hash_secret(secret),
+        owner_id=10,
+        created_by=20,
+        scopes=[CATALOG],
+    )
+    use_case = AuthenticateApiKeyUseCase(
+        keys=WatchfulRepository([key]), users=InMemoryUserRepository([OWNER])
+    )
+
+    await use_case.execute(token, CATALOG)
+
+    assert written == ["record_use"]
