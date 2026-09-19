@@ -1,0 +1,120 @@
+"use client";
+
+import { RoadmapScale } from "@/components/atoms/RoadmapScale";
+import { RoadmapRow } from "@/components/molecules/RoadmapRow";
+import type { RoadmapMissionResponse } from "@/lib/api/generated/model";
+import { bandsOf, positionOf, type Grouping } from "@/lib/roadmap";
+
+interface RoadmapTimelineProps {
+  missions: RoadmapMissionResponse[];
+  from: string;
+  to: string;
+  today: string;
+  grouping: Grouping;
+  onDate: (projectId: number, target: string | null) => void | Promise<void>;
+}
+
+/** Width of the three fixed columns, so the rule lines up with the bars. */
+const HEADINGS = "w-72 shrink-0";
+const DATES = "w-36 shrink-0";
+const SLIPPAGE = "w-32 shrink-0";
+
+/**
+ * The whole drawing: an axis of months, bands of missions, one bar each.
+ *
+ * It fits the width it is given rather than scrolling sideways. A roadmap is
+ * shown — to a committee, to a department — and something one has to scroll
+ * to read whole is not shown, it is consulted.
+ *
+ * The « aujourd'hui » rule runs the full height, behind the bars: it is what
+ * separates what happened from what is supposed, and a mark confined to the
+ * header would say nothing about where any bar stands against it.
+ */
+export function RoadmapTimeline({
+  missions,
+  from,
+  to,
+  today,
+  grouping,
+  onDate,
+}: RoadmapTimelineProps) {
+  const bands = bandsOf(missions, grouping);
+  const rule = positionOf(today, from, to);
+  const showsRule = rule >= 0 && rule <= 1;
+
+  if (bands.length === 0) {
+    return (
+      <p className="py-12 text-center text-sm text-slate-400">
+        Aucune mission à montrer sur cette période.
+      </p>
+    );
+  }
+
+  return (
+    <div className="rounded-md border border-slate-300 bg-white">
+      <div className="flex items-end border-b border-slate-300 bg-slate-50">
+        <div className={`${HEADINGS} px-3 py-1`}>
+          <span className="text-xs text-slate-500">Mission</span>
+        </div>
+        <div className={`${DATES} pr-3 py-1`}>
+          <span className="text-xs text-slate-500">Annoncée</span>
+        </div>
+        <div className="min-w-0 flex-1 pr-3">
+          <RoadmapScale from={from} to={to} today={today} />
+        </div>
+        <div className={`${SLIPPAGE} pr-3 py-1 text-right`}>
+          <span className="text-xs text-slate-500">Écart</span>
+        </div>
+      </div>
+
+      <div className="relative">
+        {/* The rule is drawn on a layer laid out exactly like a row: same
+            columns, same widths, same padding. Placing it with a calc() over
+            the whole table would mean restating those widths somewhere else,
+            and the two would drift apart the first time one changed. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 flex">
+          <div className={HEADINGS} />
+          <div className={DATES} />
+          <div className="relative min-w-0 flex-1 pr-3">
+            {showsRule && (
+              <span
+                style={{ left: `${rule * 100}%` }}
+                className="absolute inset-y-0 w-px bg-sky-300"
+              />
+            )}
+          </div>
+          <div className={SLIPPAGE} />
+        </div>
+
+        {bands.map((band) => (
+          <section key={band.key}>
+            <h3 className="flex items-center gap-2 border-b border-slate-200 bg-slate-50/70 px-3 py-1">
+              {band.mark && (
+                <span
+                  aria-hidden
+                  className={`size-2 shrink-0 ${band.mark} rounded-sm`}
+                />
+              )}
+              <span className="text-xs font-medium tracking-wide text-slate-600 uppercase">
+                {band.label}
+              </span>
+              <span className="text-xs text-slate-400">{band.missions.length}</span>
+            </h3>
+
+            <div>
+              {band.missions.map((mission) => (
+                <RoadmapRow
+                  key={mission.project_id}
+                  mission={mission}
+                  from={from}
+                  to={to}
+                  onDate={onDate}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </div>
+  );
+}
