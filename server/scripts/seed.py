@@ -86,6 +86,8 @@ class Teammate:
     #: field stays per person: the day someone sits elsewhere, only their line
     #: changes.
     department: Department = Department.INFORMATION_SYSTEMS
+    #: Their handle on GitHub, which is where their contributions are found.
+    github_username: str | None = None
     #: Addresses this person was handed before: an account is found by its
     #: email, so a typo corrected in the list alone would create a second
     #: account beside the first rather than putting it right.
@@ -123,6 +125,7 @@ def load_team() -> list[Teammate]:
             department=Department(
                 row.get("department", Department.INFORMATION_SYSTEMS.value)
             ),
+            github_username=row.get("github_username"),
             previous_emails=tuple(row.get("previous_emails", ())),
         )
         for row in rows
@@ -283,6 +286,7 @@ async def seed_users(team: list[Teammate]) -> tuple[int, int]:
                         first_name=teammate.first_name,
                         last_name=teammate.last_name,
                         department=teammate.department,
+                        github_username=teammate.github_username,
                     )
                 )
                 created += 1
@@ -290,15 +294,23 @@ async def seed_users(team: list[Teammate]) -> tuple[int, int]:
 
             # The role and the access are left alone: they are given out from
             # the screen, and this script has no business taking them back.
+            # The handle is only ever added: a list that says nothing about
+            # someone's GitHub account does not say they have none.
             drifted = (
                 account.first_name != teammate.first_name
                 or account.last_name != teammate.last_name
                 or account.department is not teammate.department
+                or (
+                    teammate.github_username is not None
+                    and account.github_username != teammate.github_username
+                )
             )
             if drifted:
                 account.first_name = teammate.first_name
                 account.last_name = teammate.last_name
                 account.department = teammate.department
+                if teammate.github_username is not None:
+                    account.github_username = teammate.github_username
                 updated += 1
 
         await session.commit()
