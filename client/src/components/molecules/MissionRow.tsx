@@ -87,15 +87,16 @@ export function MissionRow({
   );
 
   return (
-    // The background sits on the row, and the pinned cells inherit it: they
-    // then have no colour of their own to keep up to date, while staying
-    // opaque so the columns sliding underneath do not read through. It matches
-    // the page — the row does not stand out from the background, only hover
-    // marks it — and the tints are solid, not transparent, or inheritance
-    // would let what scrolls show through.
+    // The row takes the page background, the pinned cells white: what stays in
+    // sight is thereby lifted off what scrolls underneath, and the name reads
+    // as the anchor of the line rather than as its first column. Those cells
+    // follow the row one step behind — page background where it goes a shade
+    // darker — so hovering marks the whole line without flattening the relief.
+    // Every tint is solid: a transparent one would let what slides underneath
+    // read through the pinned columns.
     <TableRow
       onClick={onOpen}
-      className="cursor-pointer bg-slate-50 hover:bg-slate-100 has-aria-expanded:bg-slate-100"
+      className="group cursor-pointer bg-slate-50 hover:bg-slate-100 has-aria-expanded:bg-slate-100"
     >
       {/* No `z`: a pinned cell already passes in front of ordinary cells, and
           claiming one would send it in front of the header, which must stay
@@ -105,7 +106,7 @@ export function MissionRow({
           NAME_COLUMN,
           LEFT_MARGIN,
           SEPARATOR,
-          "bg-inherit",
+          "bg-white group-hover:bg-slate-50 group-has-[[aria-expanded=true]]:bg-slate-50",
           isWorkPackage ? "pl-14" : "",
         ].join(" ")}
       >
@@ -174,7 +175,12 @@ export function MissionRow({
           of. The icon already says what the number counts, hence the empty
           heading. */}
       <TableCell
-        className={[THREAD_COLUMN, STRONG_SEPARATOR, "bg-inherit text-right"].join(" ")}
+        className={[
+          THREAD_COLUMN,
+          STRONG_SEPARATOR,
+          "bg-white group-hover:bg-slate-50 group-has-[[aria-expanded=true]]:bg-slate-50",
+          "text-right",
+        ].join(" ")}
       >
         <UpdatesCounter
           count={mission.comments}
