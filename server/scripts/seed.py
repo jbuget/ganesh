@@ -27,7 +27,11 @@ from src.modules.calendar.domain.services.working_days import (  # noqa: PLC2701
 from src.modules.calendar.infrastructure.database.models.holiday_model import (
     HolidayModel,
 )
-from src.modules.projects.domain.entities.project import ProjectKind, ProjectStatus
+from src.modules.projects.domain.entities.project import (
+    ProjectKind,
+    ProjectPriority,
+    ProjectStatus,
+)
 from src.modules.projects.domain.entities.service_registry import (
     Criticality,
     ServiceType,
@@ -111,6 +115,17 @@ HOLIDAY_YEARS = (2026, 2027, 2028)
 #: Janus, so reading it back in is how Janus becomes the source it is meant to
 #: be. The file is generated, then maintained by hand like any other reference.
 SERVICES_FILE = pathlib.Path(__file__).parent / "data" / "services.json"
+
+#: What the steering board says of a mission, and nothing else.
+#:
+#: Monday holds the priority; the catalogue never did. A mission is found by
+#: the board item it already carries — a label typed twice drifts, an id does
+#: not — and by its label only when the rattachement is still to be made.
+#:
+#: « Indeterminé » on the board comes here as no priority at all: a mission
+#: whose urgency has not been placed against the others says so by leaving the
+#: field empty, which is exactly what the board means.
+BOARD_FILE = pathlib.Path(__file__).parent / "data" / "monday.json"
 
 #: Sheet fields that go straight onto the mission, under the same name.
 SHEET_FIELDS = (
@@ -288,6 +303,40 @@ async def seed_services() -> tuple[int, int]:
     return created, filled
 
 
+async def seed_board_fields() -> tuple[int, int]:
+    """Brings over what the steering board holds: the rattachement, the priority."""
+    attached = 0
+    prioritised = 0
+    rows = json.loads(BOARD_FILE.read_text(encoding="utf-8"))
+
+    async with AsyncSessionLocal() as session:
+        for row in rows:
+            found = await session.execute(
+                select(ProjectModel).where(
+                    ProjectModel.monday_item_id == row["monday_item_id"]
+                )
+            )
+            mission = found.scalar_one_or_none()
+
+            if mission is None:
+                by_label = await session.execute(
+                    select(ProjectModel).where(ProjectModel.label == row["label"])
+                )
+                mission = by_label.scalar_one_or_none()
+                if mission is None:
+                    logger.warning("« %s » est introuvable.", row["label"])
+                    continue
+                mission.monday_item_id = row["monday_item_id"]
+                attached += 1
+
+            if row["priority"] is not None:
+                mission.priority = ProjectPriority(row["priority"])
+                prioritised += 1
+
+        await session.commit()
+    return attached, prioritised
+
+
 async def seed_off_project_activities() -> int:
     created = 0
     async with AsyncSessionLocal() as session:
@@ -330,6 +379,7 @@ async def main() -> None:
     corrected = await correct_emails()
     created, updated = await seed_users()
     missions, sheets = await seed_services()
+    attached, prioritised = await seed_board_fields()
     activities = await seed_off_project_activities()
     holidays = await seed_holidays()
 
@@ -338,6 +388,8 @@ async def main() -> None:
     logger.info("Collaborateurs mis a jour   : %s", updated)
     logger.info("Missions creees             : %s", missions)
     logger.info("Fiches service remplies     : %s", sheets)
+    logger.info("Missions reliees a Monday   : %s", attached)
+    logger.info("Priorites posees            : %s", prioritised)
     logger.info("Activites hors projet creees: %s", activities)
     logger.info("Jours feries crees          : %s", holidays)
     logger.info("Seed termine (%s).", date.today())
