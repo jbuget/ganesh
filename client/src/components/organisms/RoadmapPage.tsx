@@ -30,6 +30,7 @@ export function RoadmapPage() {
     setYear,
     grouping,
     setGrouping,
+    saveFailed,
     setTargetDate,
   } = useRoadmapScreen();
 
@@ -49,34 +50,45 @@ export function RoadmapPage() {
         />
       }
     >
-      {roadmap && <RoadmapSummaryBar summary={roadmap.summary} />}
+      <div className="flex h-full min-h-0 flex-col">
+        {roadmap && <RoadmapSummaryBar summary={roadmap.summary} />}
 
-      {isLoading && !roadmap && (
-        <p className="py-12 text-center text-sm text-slate-400">Lecture…</p>
-      )}
+        {saveFailed && (
+          <p className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">
+            La date n&apos;a pas pu être enregistrée. Celles affichées sont bien celles
+            que le serveur connaît.
+          </p>
+        )}
 
-      {hasError && (
-        <p className="py-12 text-center text-sm text-red-600">
-          La feuille de route n&apos;a pas pu être lue.
-        </p>
-      )}
+        {isLoading && !roadmap && (
+          <p className="py-12 text-center text-sm text-slate-400">Lecture…</p>
+        )}
 
-      {roadmap && (
-        <>
-          <RoadmapTimeline
-            missions={roadmap.missions}
-            from={roadmap.from_day}
-            to={roadmap.to_day}
-            today={roadmap.today}
-            grouping={grouping}
-            onDate={setTargetDate}
-          />
+        {hasError && (
+          <p className="py-12 text-center text-sm text-red-600">
+            La feuille de route n&apos;a pas pu être lue.
+          </p>
+        )}
 
-          <div className="mt-3">
-            <RoadmapLegend />
-          </div>
-        </>
-      )}
+        {roadmap && (
+          <>
+            <div className="min-h-0 flex-1">
+              <RoadmapTimeline
+                missions={roadmap.missions}
+                from={roadmap.from_day}
+                to={roadmap.to_day}
+                today={roadmap.today}
+                grouping={grouping}
+                onDate={setTargetDate}
+              />
+            </div>
+
+            <div className="mt-3 shrink-0">
+              <RoadmapLegend />
+            </div>
+          </>
+        )}
+      </div>
     </PageLayout>
   );
 }

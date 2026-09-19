@@ -23,6 +23,10 @@ export function useRoadmapScreen() {
   //: a flag to keep in step with the request.
   const [answered, setAnswered] = useState<number | null>(null);
   const [failed, setFailed] = useState<number | null>(null);
+  //: Whether the last date posted was refused. Held apart from a read that
+  //: failed: one leaves the screen empty, the other leaves it right and the
+  //: write lost, and saying « erreur » for both would tell the reader nothing.
+  const [saveFailed, setSaveFailed] = useState(false);
 
   const fetchYear = useCallback(
     (asked: number, isStillWanted: () => boolean = () => true) => {
@@ -57,6 +61,7 @@ export function useRoadmapScreen() {
     setYear,
     grouping,
     setGrouping,
+    saveFailed,
 
     /**
      * Posts the date a mission is announced for.
@@ -65,9 +70,18 @@ export function useRoadmapScreen() {
      * patched: moving a date moves nothing else, but the tally above it does,
      * and a screen whose bars and tally disagree is worse than one that waits
      * a moment.
+     *
+     * A refusal is caught and said out loud. Letting it through would leave
+     * the row showing a date the server never took, which is the one thing a
+     * screen about commitments must not do.
      */
     async setTargetDate(projectId: number, target: string | null) {
-      await updateProject(projectId, { go_live_date: target });
+      try {
+        await updateProject(projectId, { go_live_date: target });
+        setSaveFailed(false);
+      } catch {
+        setSaveFailed(true);
+      }
       await fetchYear(year);
     },
   };

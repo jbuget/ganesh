@@ -51,8 +51,11 @@ export function RoadmapTimeline({
   }
 
   return (
-    <div className="rounded-md border border-slate-300 bg-white">
-      <div className="flex items-end border-b border-slate-300 bg-slate-50">
+    // The scale stays put while the bands move under it. Sixty lines deep,
+    // a reader who has lost the months no longer knows what they are looking
+    // at: the axis is the reading, not an ornament at the top of it.
+    <div className="flex h-full min-h-0 flex-col rounded-md border border-slate-300 bg-white">
+      <div className="flex shrink-0 items-end border-b border-slate-300 bg-slate-50">
         <div className={`${HEADINGS} px-3 py-1`}>
           <span className="text-xs text-slate-500">Mission</span>
         </div>
@@ -67,53 +70,58 @@ export function RoadmapTimeline({
         </div>
       </div>
 
-      <div className="relative">
-        {/* The rule is drawn on a layer laid out exactly like a row: same
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {/* Positioned here and not on the scroller: `inset-0` covers what its
+            positioned parent covers, and the rule has to run the whole height
+            of the content, not of the window onto it. */}
+        <div className="relative">
+          {/* The rule is drawn on a layer laid out exactly like a row: same
             columns, same widths, same padding. Placing it with a calc() over
             the whole table would mean restating those widths somewhere else,
             and the two would drift apart the first time one changed. */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 flex">
-          <div className={HEADINGS} />
-          <div className={DATES} />
-          <div className="relative min-w-0 flex-1 pr-3">
-            {showsRule && (
-              <span
-                style={{ left: `${rule * 100}%` }}
-                className="absolute inset-y-0 w-px bg-sky-300"
-              />
-            )}
-          </div>
-          <div className={SLIPPAGE} />
-        </div>
-
-        {bands.map((band) => (
-          <section key={band.key}>
-            <h3 className="flex items-center gap-2 border-b border-slate-200 bg-slate-50/70 px-3 py-1">
-              {band.mark && (
+          <div aria-hidden className="pointer-events-none absolute inset-0 flex">
+            <div className={HEADINGS} />
+            <div className={DATES} />
+            <div className="relative min-w-0 flex-1 pr-3">
+              {showsRule && (
                 <span
-                  aria-hidden
-                  className={`size-2 shrink-0 ${band.mark} rounded-sm`}
+                  style={{ left: `${rule * 100}%` }}
+                  className="absolute inset-y-0 w-px bg-sky-300"
                 />
               )}
-              <span className="text-xs font-medium tracking-wide text-slate-600 uppercase">
-                {band.label}
-              </span>
-              <span className="text-xs text-slate-400">{band.missions.length}</span>
-            </h3>
-
-            <div>
-              {band.missions.map((mission) => (
-                <RoadmapRow
-                  key={mission.project_id}
-                  mission={mission}
-                  from={from}
-                  to={to}
-                  onDate={onDate}
-                />
-              ))}
             </div>
-          </section>
-        ))}
+            <div className={SLIPPAGE} />
+          </div>
+
+          {bands.map((band) => (
+            <section key={band.key}>
+              <h3 className="flex items-center gap-2 border-b border-slate-200 bg-slate-50/70 px-3 py-1">
+                {band.mark && (
+                  <span
+                    aria-hidden
+                    className={`size-2 shrink-0 ${band.mark} rounded-sm`}
+                  />
+                )}
+                <span className="text-xs font-medium tracking-wide text-slate-600 uppercase">
+                  {band.label}
+                </span>
+                <span className="text-xs text-slate-400">{band.missions.length}</span>
+              </h3>
+
+              <div>
+                {band.missions.map((mission) => (
+                  <RoadmapRow
+                    key={mission.project_id}
+                    mission={mission}
+                    from={from}
+                    to={to}
+                    onDate={onDate}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       </div>
     </div>
   );

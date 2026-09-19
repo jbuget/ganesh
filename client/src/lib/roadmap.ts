@@ -102,8 +102,6 @@ export interface MonthTick {
   /** `YYYY-MM`, which is what React keys on. */
   key: string;
   label: string;
-  /** Whether the month opens a year, which is when the year is spelled out. */
-  opensYear: boolean;
   /** Share of the window's width this month covers. */
   width: number;
 }
@@ -133,7 +131,6 @@ export function monthsOf(from: string, to: string): MonthTick[] {
     ticks.push({
       key: `${year}-${String(month).padStart(2, "0")}`,
       label: MONTH_ABBREVIATIONS[month - 1],
-      opensYear: month === 1 || ticks.length === 0,
       width: daysBetween(opens, closes) / total,
     });
 
@@ -154,6 +151,11 @@ export const GROUPINGS: { value: Grouping; label: string }[] = [
   { value: "priority", label: "Par priorité" },
   { value: "none", label: "Sans regroupement" },
 ];
+
+/** The grouping in force, named. */
+export function groupingLabel(value: Grouping): string {
+  return GROUPINGS.find((one) => one.value === value)?.label ?? value;
+}
 
 export interface Band {
   key: string;

@@ -5,6 +5,7 @@ import {
   bandsOf,
   dayAfter,
   daysBetween,
+  groupingLabel,
   monthsOf,
   placeOn,
   positionOf,
@@ -103,6 +104,10 @@ describe("the scale of months", () => {
     const total = monthsOf(FROM, TO).reduce((sum, tick) => sum + tick.width, 0);
 
     expect(total).toBeCloseTo(1, 5);
+  });
+
+  it("names the grouping in force", () => {
+    expect(groupingLabel("category")).toBe("Par axe stratégique");
   });
 
   it("handles a window opening mid-month", () => {

@@ -53,7 +53,7 @@ export function RoadmapRow({ mission, from, to, onDate }: RoadmapRowProps) {
         </Link>
 
         <span className="shrink-0">
-          <PriorityMark value={mission.priority} />
+          <PriorityMark value={mission.priority} compact />
         </span>
       </div>
 
