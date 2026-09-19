@@ -470,3 +470,110 @@ export function useGetTeamMoods<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type clearMoodResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type clearMoodResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type clearMoodResponseSuccess = clearMoodResponse204 & {
+  headers: Headers;
+};
+export type clearMoodResponseError = clearMoodResponse422 & {
+  headers: Headers;
+};
+
+export type clearMoodResponse = clearMoodResponseSuccess | clearMoodResponseError;
+
+export const getClearMoodUrl = (day: string) => {
+  return `/api/v1/moods/${day}`;
+};
+
+/**
+ * Takes back what was posted on a day, while that day is still open.
+ * @summary Clear Mood
+ */
+export const clearMood = async (
+  day: string,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<clearMoodResponse> => {
+  return bffFetcher<clearMoodResponse>(getClearMoodUrl(day), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getClearMoodMutationKey = () => ["clearMood"] as const;
+
+export const getClearMoodMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clearMood>>,
+    TError,
+    ClearMoodMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof clearMood>>,
+  TError,
+  ClearMoodMutationVariables,
+  TContext
+> => {
+  const mutationKey = getClearMoodMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof clearMood>>,
+    ClearMoodMutationVariables
+  > = (props) => {
+    const { day } = props ?? {};
+
+    return clearMood(day, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClearMoodMutationResult = NonNullable<
+  Awaited<ReturnType<typeof clearMood>>
+>;
+
+export type ClearMoodMutationError = HTTPValidationError;
+export type ClearMoodMutationVariables = { day: string };
+
+/**
+ * @summary Clear Mood
+ */
+export const useClearMood = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof clearMood>>,
+      TError,
+      ClearMoodMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof clearMood>>,
+  TError,
+  ClearMoodMutationVariables,
+  TContext
+> => {
+  return useMutation(getClearMoodMutationOptions(options), queryClient);
+};

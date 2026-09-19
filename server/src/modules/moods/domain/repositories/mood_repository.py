@@ -28,3 +28,12 @@ class MoodRepository(ABC):
     async def upsert(self, mood: Mood) -> Mood:
         """Writes the mood of a day, or changes the one already posted there."""
         ...
+
+    @abstractmethod
+    async def delete(self, user_id: int, day: date) -> None:
+        """Takes back the mood of a day. A day carrying none is left alone.
+
+        A day one has taken back is a day one has not answered for, not a day
+        answered neutral: the row has to go, rather than be blanked.
+        """
+        ...

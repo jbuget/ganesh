@@ -5,12 +5,18 @@ deliberate: the screen is a mirror the team holds up to itself, not a measure
 taken of it.
 """
 
-from fastapi import APIRouter, Depends
+from datetime import date
+
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
 from src.modules.auth.presentation.dependencies import get_current_user
-from src.modules.moods.application.dtos.mood_dtos import SetMoodCommand
+from src.modules.moods.application.dtos.mood_dtos import (
+    ClearMoodCommand,
+    SetMoodCommand,
+)
+from src.modules.moods.application.use_cases.clear_mood import ClearMoodUseCase
 from src.modules.moods.application.use_cases.get_my_moods import GetMyMoodsUseCase
 from src.modules.moods.application.use_cases.get_team_moods import GetTeamMoodsUseCase
 from src.modules.moods.application.use_cases.set_mood import SetMoodUseCase
@@ -26,6 +32,7 @@ from src.modules.moods.presentation.api.schemas.mood_schemas import (
     TeamMoodsResponse,
 )
 from src.modules.moods.presentation.dependencies import (
+    get_clear_mood_use_case,
     get_my_moods_use_case,
     get_set_mood_use_case,
     get_team_moods_use_case,
@@ -68,3 +75,21 @@ async def get_team_moods(
 ) -> TeamMoodsResponse:
     """The team's morale over the last fortnight. Everyone reads it."""
     return to_team_moods_response(await use_case.execute())
+
+
+@router.delete(
+    "/{day}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="clearMood",
+)
+async def clear_mood(
+    day: date,
+    current_user: User = Depends(get_current_user),
+    use_case: ClearMoodUseCase = Depends(get_clear_mood_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Takes back what was posted on a day, while that day is still open."""
+    assert current_user.id is not None
+    await use_case.execute(ClearMoodCommand(user_id=current_user.id, day=day))
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

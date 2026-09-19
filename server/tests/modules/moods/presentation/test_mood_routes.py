@@ -10,12 +10,14 @@ from httpx import ASGITransport, AsyncClient
 from src.core.config import get_settings
 from src.main import app
 from src.modules.auth.presentation.dependencies import get_current_user
+from src.modules.moods.application.use_cases.clear_mood import ClearMoodUseCase
 from src.modules.moods.application.use_cases.get_my_moods import GetMyMoodsUseCase
 from src.modules.moods.application.use_cases.get_team_moods import GetTeamMoodsUseCase
 from src.modules.moods.application.use_cases.set_mood import SetMoodUseCase
 from src.modules.moods.domain.entities.mood import Mood, MoodLevel
 from src.modules.moods.domain.services.mood_window import open_days
 from src.modules.moods.presentation.dependencies import (
+    get_clear_mood_use_case,
     get_my_moods_use_case,
     get_set_mood_use_case,
     get_team_moods_use_case,
@@ -62,6 +64,9 @@ class Screen:
             MOODS, json={"day": day.isoformat(), "level": level}
         )
 
+    async def take_back(self, day: date):
+        return await self.client.delete(f"{MOODS}/{day.isoformat()}")
+
 
 def sign_in(moods: list[Mood] | None = None) -> Screen:
     repository = InMemoryMoodRepository(moods)
@@ -75,6 +80,9 @@ def sign_in(moods: list[Mood] | None = None) -> Screen:
         moods=repository
     )
     app.dependency_overrides[get_team_moods_use_case] = lambda: GetTeamMoodsUseCase(
+        users=users, moods=repository
+    )
+    app.dependency_overrides[get_clear_mood_use_case] = lambda: ClearMoodUseCase(
         users=users, moods=repository
     )
     return Screen(
@@ -144,3 +152,23 @@ async def test_the_team_window_names_who_posted() -> None:
     assert today["average"] == 1.0
     assert today["counts"]["bad"] == 1
     assert today["counts"]["excellent"] == 0
+
+
+async def test_a_teammate_takes_back_the_mood_of_the_day(screen: Screen) -> None:
+    await screen.post(LATEST, "bad")
+
+    response = await screen.take_back(LATEST)
+
+    assert response.status_code == 204
+    assert await screen.moods.get(1, LATEST) is None
+
+
+async def test_taking_back_a_closed_day_is_refused(screen: Screen) -> None:
+    response = await screen.take_back(date(2020, 1, 2))
+
+    assert response.status_code == 422
+    assert "closed" in response.json()["detail"]
+
+
+async def test_a_day_that_is_not_a_date_is_refused(screen: Screen) -> None:
+    assert (await screen.client.delete(f"{MOODS}/hier")).status_code == 422

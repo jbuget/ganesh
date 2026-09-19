@@ -610,3 +610,8 @@ class InMemoryMoodRepository(MoodRepository):
             return mood
         existing.level = mood.level
         return existing
+
+    async def delete(self, user_id: int, day: date) -> None:
+        existing = await self.get(user_id, day)
+        if existing is not None:
+            self._moods.remove(existing)

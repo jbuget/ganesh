@@ -109,3 +109,24 @@ async def test_the_level_is_stored_under_the_name_of_its_member(
         {"user_id": alice},
     )
     assert stored.scalar_one() == "EXCELLENT"
+
+
+async def test_a_mood_taken_back_leaves_no_row(db_session: AsyncSession) -> None:
+    """A day taken back is a day one has not answered for, not a day answered
+    neutral: the row goes rather than being blanked."""
+    alice, _ = await seed(db_session)
+    moods = SqlMoodRepository(db_session)
+    await moods.upsert(Mood(id=None, user_id=alice, day=TUESDAY, level=MoodLevel.BAD))
+
+    await moods.delete(alice, TUESDAY)
+
+    assert await moods.get(alice, TUESDAY) is None
+    assert await moods.list_between(TUESDAY, TUESDAY) == []
+
+
+async def test_taking_back_a_day_carrying_nothing_is_harmless(
+    db_session: AsyncSession,
+) -> None:
+    alice, _ = await seed(db_session)
+
+    await SqlMoodRepository(db_session).delete(alice, MONDAY)

@@ -4,6 +4,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
+from src.modules.moods.application.use_cases.clear_mood import ClearMoodUseCase
 from src.modules.moods.application.use_cases.get_my_moods import GetMyMoodsUseCase
 from src.modules.moods.application.use_cases.get_team_moods import GetTeamMoodsUseCase
 from src.modules.moods.application.use_cases.set_mood import SetMoodUseCase
@@ -43,3 +44,10 @@ def get_team_moods_use_case(
     moods: MoodRepository = Depends(get_mood_repository),
 ) -> GetTeamMoodsUseCase:
     return GetTeamMoodsUseCase(users=users, moods=moods)
+
+
+def get_clear_mood_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    moods: MoodRepository = Depends(get_mood_repository),
+) -> ClearMoodUseCase:
+    return ClearMoodUseCase(users=users, moods=moods)

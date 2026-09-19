@@ -19,6 +19,10 @@ interface MoodPickerProps {
  * without being read, and the row still offers the four other answers — one
  * changes one's mind about a day, and the grid must not have to be emptied
  * first.
+ *
+ * Clicking the face already chosen takes the answer back, which is why it
+ * reads « Retirer » on hover: five small faces are easily mis-clicked, and the
+ * whole team reads the result under one's name. The way out is the way in.
  */
 export function MoodPicker({ value, onPick, disabled = false }: MoodPickerProps) {
   return (
@@ -33,8 +37,8 @@ export function MoodPicker({ value, onPick, disabled = false }: MoodPickerProps)
             type="button"
             role="radio"
             aria-checked={picked}
-            aria-label={level.label}
-            title={level.label}
+            aria-label={picked ? `${level.label} — retirer` : level.label}
+            title={picked ? "Retirer" : level.label}
             disabled={disabled}
             onClick={() => onPick(level.value)}
             className={[

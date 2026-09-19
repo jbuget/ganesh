@@ -25,7 +25,7 @@ describe("MoodPicker", () => {
   it("marks the level already answered, and it alone", () => {
     render(<MoodPicker value="hard" onPick={vi.fn()} />);
 
-    expect(screen.getByRole("radio", { name: "Difficile" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: /^Difficile/ })).toBeChecked();
     expect(screen.getByRole("radio", { name: "Bonne" })).not.toBeChecked();
   });
 
@@ -36,6 +36,15 @@ describe("MoodPicker", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Excellente" }));
 
     expect(pick).toHaveBeenCalledWith("excellent");
+  });
+
+  it("says of the face already chosen that clicking it takes the answer back", () => {
+    render(<MoodPicker value="hard" onPick={vi.fn()} />);
+
+    expect(screen.getByRole("radio", { name: "Difficile — retirer" })).toHaveAttribute(
+      "title",
+      "Retirer",
+    );
   });
 
   it("still offers the other levels once one has answered", () => {

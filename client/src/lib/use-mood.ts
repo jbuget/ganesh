@@ -4,7 +4,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import type { MoodLevel } from "@/lib/api/generated/model";
-import { getGetMyMoodsQueryKey, setMood } from "@/lib/api/generated/moods/moods";
+import {
+  clearMood,
+  getGetMyMoodsQueryKey,
+  setMood,
+} from "@/lib/api/generated/moods/moods";
 import { useMyMoods } from "@/lib/api/queries";
 import { todayIso } from "@/lib/dates";
 
@@ -29,10 +33,22 @@ export function useMood() {
     today: todayIso(),
     savingDay,
 
+    /**
+     * Answers for a day, or takes the answer back.
+     *
+     * Picking the face already chosen removes it: a day one has answered and
+     * then thought better of is a day one has not answered for, and the gesture
+     * that undoes is the same as the one that did.
+     */
     async post(day: string, level: MoodLevel) {
+      const posted = days.find((open) => open.day === day)?.level;
       setSavingDay(day);
       try {
-        await setMood({ day, level });
+        if (posted === level) {
+          await clearMood(day);
+        } else {
+          await setMood({ day, level });
+        }
         await queryClient.invalidateQueries({ queryKey: getGetMyMoodsQueryKey() });
       } finally {
         setSavingDay(null);

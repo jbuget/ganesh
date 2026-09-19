@@ -66,3 +66,9 @@ class SqlMoodRepository(MoodRepository):
         await self._session.flush()
         mood.id = model.id
         return mood
+
+    async def delete(self, user_id: int, day: date) -> None:
+        model = await self._get_model(user_id, day)
+        if model is not None:
+            await self._session.delete(model)
+            await self._session.flush()

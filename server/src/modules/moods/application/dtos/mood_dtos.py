@@ -22,6 +22,17 @@ class SetMoodCommand:
 
 
 @dataclass(frozen=True)
+class ClearMoodCommand:
+    """Request to take back the mood posted on a day.
+
+    Nobody takes back anybody else's, for the same reason nobody posts one.
+    """
+
+    user_id: int
+    day: date
+
+
+@dataclass(frozen=True)
 class OpenDay:
     """A day one may still answer for, and what one has already said of it."""
 

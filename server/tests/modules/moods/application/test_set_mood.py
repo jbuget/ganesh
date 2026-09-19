@@ -1,10 +1,14 @@
-"""Posting how a day felt."""
+"""Posting how a day felt, and taking it back."""
 
 from datetime import date
 
 import pytest
 
-from src.modules.moods.application.dtos.mood_dtos import SetMoodCommand
+from src.modules.moods.application.dtos.mood_dtos import (
+    ClearMoodCommand,
+    SetMoodCommand,
+)
+from src.modules.moods.application.use_cases.clear_mood import ClearMoodUseCase
 from src.modules.moods.application.use_cases.set_mood import SetMoodUseCase
 from src.modules.moods.domain.entities.mood import Mood, MoodLevel
 from src.modules.users.domain.entities.user import Role, User
@@ -123,3 +127,45 @@ async def test_an_unknown_user_is_not_found() -> None:
         await use_case.execute(
             SetMoodCommand(user_id=99, day=TUESDAY, level=MoodLevel.GOOD), today=TUESDAY
         )
+
+
+async def test_a_teammate_takes_back_the_mood_of_the_day() -> None:
+    use_case, moods = build([Mood(id=1, user_id=1, day=TUESDAY, level=MoodLevel.BAD)])
+    clear = ClearMoodUseCase(users=InMemoryUserRepository([ALICE, GONE]), moods=moods)
+
+    await clear.execute(ClearMoodCommand(user_id=1, day=TUESDAY), today=TUESDAY)
+
+    assert await moods.get(1, TUESDAY) is None
+
+
+async def test_taking_back_a_day_one_never_answered_is_harmless() -> None:
+    _, moods = build()
+    clear = ClearMoodUseCase(users=InMemoryUserRepository([ALICE, GONE]), moods=moods)
+
+    await clear.execute(ClearMoodCommand(user_id=1, day=TUESDAY), today=TUESDAY)
+
+    assert await moods.get(1, TUESDAY) is None
+
+
+async def test_a_closed_day_can_no_longer_be_taken_back() -> None:
+    """The window governs both ways: what one can no longer write, one can no
+    longer unwrite. Otherwise a fortnight could be emptied after the fact."""
+    _, moods = build(
+        [Mood(id=1, user_id=1, day=date(2026, 9, 11), level=MoodLevel.BAD)]
+    )
+    clear = ClearMoodUseCase(users=InMemoryUserRepository([ALICE, GONE]), moods=moods)
+
+    with pytest.raises(ValidationError):
+        await clear.execute(
+            ClearMoodCommand(user_id=1, day=date(2026, 9, 11)), today=TUESDAY
+        )
+
+    assert await moods.get(1, date(2026, 9, 11)) is not None
+
+
+async def test_a_deactivated_teammate_takes_nothing_back() -> None:
+    _, moods = build([Mood(id=1, user_id=2, day=TUESDAY, level=MoodLevel.BAD)])
+    clear = ClearMoodUseCase(users=InMemoryUserRepository([ALICE, GONE]), moods=moods)
+
+    with pytest.raises(ForbiddenActionError):
+        await clear.execute(ClearMoodCommand(user_id=2, day=TUESDAY), today=TUESDAY)
