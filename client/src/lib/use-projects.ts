@@ -4,7 +4,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 
 import { createProject, importProjects } from "@/lib/api/generated/projects/projects";
-import type { ImportReportResponse, ProjectKind } from "@/lib/api/generated/model";
+import type {
+  ImportReportResponse,
+  ProjectKind,
+  ProjectResponse,
+} from "@/lib/api/generated/model";
 import { mutationResult, useCurrentUser, useProjects } from "@/lib/api/queries";
 import { parseProjectsCsv } from "@/lib/csv-import";
 import {
@@ -73,7 +77,7 @@ export function useProjectsScreen(
         ...(parentId ? { parent_id: parentId } : {}),
       });
       await refresh();
-      return mutationResult(created);
+      return mutationResult<ProjectResponse>(created);
     },
 
     async importCsv(content: string): Promise<ImportReportResponse> {

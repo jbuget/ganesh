@@ -112,8 +112,13 @@ export function ProjectsPage() {
       <DeclareProjectDialog
         open={declaring}
         onOpenChange={setDeclaration}
+        // A name declares a mission but does not steer it: phase, priority,
+        // estimate and people are still to be given. The panel is where they
+        // are given, so one is taken there rather than left before a list to
+        // search for what one has just created.
         onConfirm={async (label) => {
-          await screen.declare(label, "project");
+          const created = await screen.declare(label, "project");
+          panel.open(created.id);
         }}
       />
 
