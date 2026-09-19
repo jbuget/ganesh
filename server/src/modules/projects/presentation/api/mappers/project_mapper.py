@@ -8,6 +8,7 @@ from src.modules.projects.application.use_cases.get_project_detail import Projec
 from src.modules.projects.application.use_cases.list_projects import ListedProject
 from src.modules.projects.application.use_cases.project_updates import SignedUpdate
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
+from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.services.phase_history import transition_label
 from src.modules.projects.domain.services.project_cost import ProjectCost
 from src.modules.projects.presentation.api.schemas.project_schemas import (
@@ -78,6 +79,14 @@ def to_latest_update(latest: LastUpdate | None) -> LastUpdateResponse | None:
     )
 
 
+def to_link_response(link: ProjectLink) -> ProjectLinkResponse:
+    """A useful address, as the sheet and the reference list both show it."""
+    assert link.id is not None
+    return ProjectLinkResponse(
+        id=link.id, label=link.label, url=link.url, icon=link.icon
+    )
+
+
 def to_cost_response(cost: ProjectCost, today: date) -> ProjectCostResponse:
     return ProjectCostResponse(
         build_days=cost.build_days,
@@ -99,6 +108,7 @@ def to_listed_project_response(
         delivered_days=listed.delivered_days,
         cost=to_cost_response(listed.cost, day),
         tree_cost=to_cost_response(listed.tree_cost, day),
+        links=[to_link_response(link) for link in listed.links if link.id is not None],
         comments=listed.comments,
         latest_update=to_latest_update(listed.latest_update),
     )
@@ -145,13 +155,7 @@ def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
     return ProjectDetailResponse(
         project=to_project_response(detail.project),
         departments=detail.departments,
-        links=[
-            ProjectLinkResponse(
-                id=link.id, label=link.label, url=link.url, icon=link.icon
-            )
-            for link in detail.links
-            if link.id is not None
-        ],
+        links=[to_link_response(link) for link in detail.links if link.id is not None],
         # Phases read in nominal order, not the order the database returns
         # them: a timeline is followed from start to finish.
         phases=[

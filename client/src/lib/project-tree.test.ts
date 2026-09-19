@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildProjectTree, offProjectActivities } from "./project-tree";
+import { buildProjectTree } from "./project-tree";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 
 const mission = (
@@ -116,18 +116,6 @@ describe("buildProjectTree", () => {
     const tree = buildProjectTree([mission(1, "Portail", "project")]);
 
     expect(tree[0].workPackages).toEqual([]);
-  });
-});
-
-describe("offProjectActivities", () => {
-  it("keeps only off-project work, sorted", () => {
-    const activities = offProjectActivities([
-      mission(1, "Portail", "project"),
-      mission(3, "Formation", "off_project"),
-      mission(2, "Absences", "off_project"),
-    ]);
-
-    expect(activities.map((a) => a.project.label)).toEqual(["Absences", "Formation"]);
   });
 });
 

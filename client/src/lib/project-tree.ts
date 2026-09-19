@@ -7,8 +7,6 @@ export interface ProjectNode {
   workPackages: ProjectListItemResponse[];
 }
 
-const OFF_PROJECT = "off_project";
-
 /**
  * Arranges the reference list as a tree: each project followed by its packages.
  *
@@ -42,13 +40,4 @@ export function buildProjectTree(
     .map((workPackage) => ({ mission: workPackage, workPackages: [] }));
 
   return [...nodes, ...orphans];
-}
-
-/** Off-project work, listed apart: it has neither package nor estimate. */
-export function offProjectActivities(
-  missions: ProjectListItemResponse[],
-): ProjectListItemResponse[] {
-  return missions
-    .filter((m) => m.project.kind === OFF_PROJECT)
-    .sort(sortComparator(NO_SORT));
 }
