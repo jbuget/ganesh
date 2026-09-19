@@ -34,7 +34,7 @@ class SqlProjectDetailRepository(ProjectDetailRepository):
                 ProjectDepartmentModel.project_id == project_id
             )
         )
-        return list(result.scalars().all())
+        return in_declared_order(list(result.scalars().all()))
 
     async def list_departments_by_project(self) -> dict[int, list[Department]]:
         result = await self._session.execute(

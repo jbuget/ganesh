@@ -349,7 +349,7 @@ class InMemoryProjectDetailRepository(ProjectDetailRepository):
         self._next_link_id = 1
 
     async def list_departments(self, project_id: int) -> list[Department]:
-        return list(self._departments.get(project_id, []))
+        return in_declared_order(self._departments.get(project_id, []))
 
     async def list_departments_by_project(self) -> dict[int, list[Department]]:
         return {

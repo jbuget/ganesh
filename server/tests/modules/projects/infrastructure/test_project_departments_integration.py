@@ -56,6 +56,27 @@ async def test_groups_the_departments_by_mission(db_session: AsyncSession) -> No
     assert by_project[extranet] == [Department.CUSTOMER_SERVICE]
 
 
+async def test_one_mission_reads_its_departments_in_the_same_order(
+    db_session: AsyncSession,
+) -> None:
+    """The panel and the reference list show one mission, and must agree.
+
+    Nothing in the table says in which order the departments were stored: read
+    as they come, the same mission reads one way in its panel and another in
+    the column, and its chips move about from one load to the next.
+    """
+    (portail,) = await _missions(db_session, "Portail")
+    details = SqlProjectDetailRepository(db_session)
+    await details.set_departments(
+        portail, [Department.CONDOMINIUM, Department.LANDLORDS]
+    )
+
+    assert await details.list_departments(portail) == [
+        Department.LANDLORDS,
+        Department.CONDOMINIUM,
+    ]
+
+
 async def test_a_mission_without_a_department_is_absent(
     db_session: AsyncSession,
 ) -> None:
