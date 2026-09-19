@@ -15,6 +15,7 @@ from src.modules.audit_logs.infrastructure.database.repositories.audit_log_repos
     SqlAuditLogRepository,
 )
 from src.modules.auth.infrastructure.entra_token_validator import EntraTokenValidator
+from src.modules.auth.infrastructure.local_tokens import LocalTokenService
 from src.modules.auth.presentation.identity import identity_from_claims
 from src.modules.users.application.dtos.user_dto import EntraIdentity
 from src.modules.users.application.use_cases.provision_user import ProvisionUserUseCase
@@ -32,6 +33,18 @@ DEV_IDENTITY = EntraIdentity(
     email="j.buget@waat.fr",
     display_name="J. Buget (dev)",
 )
+
+
+def local_token_service(settings: Settings) -> LocalTokenService:
+    """The fallback door, refusing to exist without a key to sign with."""
+    if not settings.secret_key:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="SECRET_KEY est absent : la connexion locale ne peut pas signer.",
+        )
+    return LocalTokenService(
+        secret_key=settings.secret_key, email=settings.auth_local_email
+    )
 
 
 async def get_current_user(
@@ -73,12 +86,17 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    validator = EntraTokenValidator(
-        tenant_id=settings.azure_ad_tenant_id,
-        client_id=settings.azure_ad_client_id,
-    )
+    token = authorization.split(" ", 1)[1]
     try:
-        claims = await validator.validate(authorization.split(" ", 1)[1])
+        # Two doors, one shape of claims behind them: what follows never has to
+        # know which one was used.
+        if settings.auth_entra:
+            claims = await EntraTokenValidator(
+                tenant_id=settings.azure_ad_tenant_id,
+                client_id=settings.azure_ad_client_id,
+            ).validate(token)
+        else:
+            claims = local_token_service(settings).validate(token)
         identity = identity_from_claims(claims)
     except ForbiddenActionError as error:
         raise HTTPException(

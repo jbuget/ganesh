@@ -34,7 +34,46 @@ function detailOf(data: unknown): string | undefined {
   return typeof detail === "string" ? detail : undefined;
 }
 
-export const bffFetcher = async <T>(url: string, options?: RequestInit): Promise<T> => {
+/**
+ * The browser, as the fetcher needs it — so a test can hand it another one.
+ *
+ * `at` says where we are, or nothing when there is no browser at all.
+ */
+export interface Browser {
+  at: () => string | null;
+  goTo: (url: string) => void;
+}
+
+const THE_BROWSER: Browser = {
+  at: () =>
+    typeof window === "undefined"
+      ? null
+      : `${window.location.pathname}${window.location.search}`,
+  goTo: (url) => {
+    window.location.assign(url);
+  },
+};
+
+/**
+ * Back to the sign-in screen, remembering where the person was.
+ *
+ * A full page load rather than a router push: everything held in memory is
+ * built on a session that is over, and keeping it would show stale screens
+ * behind a sign-in that has not happened yet.
+ */
+export function signInAgain(browser: Browser = THE_BROWSER): void {
+  const here = browser.at();
+  if (here === null) return;
+  // Already there: redirecting would only lose the reason shown on it.
+  if (here.startsWith("/connexion")) return;
+  browser.goTo(`/connexion?from=${encodeURIComponent(here)}`);
+}
+
+export const bffFetcher = async <T>(
+  url: string,
+  options?: RequestInit,
+  browser: Browser = THE_BROWSER,
+): Promise<T> => {
   const response = await fetch(url, { ...options, cache: "no-store" });
   const body = await response.text();
   /*
@@ -46,6 +85,10 @@ export const bffFetcher = async <T>(url: string, options?: RequestInit): Promise
   const data = parsed(body);
 
   if (!response.ok) {
+    // 401 is the BFF or the API saying the session is over. Nothing the
+    // screen can do about it, so say it where it shows: on the sign-in page.
+    // 403 is another matter — the person is known and simply not allowed.
+    if (response.status === 401) signInAgain(browser);
     throw new ApiError(response.status, detailOf(data) ?? response.statusText);
   }
 

@@ -172,6 +172,14 @@ Terraform state is not a vault.
    | `AZURE_AD_CLIENT_ID` | `c03d14e8-e876-4703-94a0-99bbda5d5d9d` |
    | `AZURE_AD_CLIENT_SECRET` | the WAATcher app registration's secret |
    | `AZURE_AD_REDIRECT_URI` | `https://ganesh.waat.tools/api/auth/callback/azure-ad` |
+   | `SESSION_SECRET` | a long random string, this environment's own |
+   | `ALLOWED_EMAIL_DOMAIN` | `waat.fr` |
+   | `AUTH_ENTRA` | `true`, or `false` to open the fallback door |
+
+   `SESSION_SECRET` seals the session cookie, and nothing works without it:
+   the Entra callback fails for everyone, and every visitor reads as signed
+   out. Generate one per environment — sharing it between two would let a
+   session forged in one be spent in the other.
 
    `API_URL`, `API_PREFIX` and `APP_URL` are not here: `amplify.yml` writes them
    into `.env.production` at build time, so they stay readable in the
@@ -238,13 +246,15 @@ deploy: the host only reads the parameter when it deploys.
 
 ## What is not done yet
 
-**The sign-in flow does not exist.** The BFF carries `/api/auth/signout` and
-the API proxy, and no `/api/auth/callback/azure-ad`: the `timesheet_token`
-cookie is never set by anything. So production starts with `REQUIRE_AUTH=false`
-and **the application is open to whoever knows the address**. That is a
-deliberate, temporary step, not a state to settle into — the Entra flow is the
-next piece, and the day it lands, `REQUIRE_AUTH=true` goes into the parameter
-and the deploy that follows closes the door.
+**Waiting on the app registration.** Entra will only send people back to an
+address it has been told about, and declaring
+`https://ganesh.waat.tools/api/auth/callback/azure-ad` is the ops' to do. Until
+it is declared, deploy with `AUTH_ENTRA=false`: the fallback door opens on a
+single account with a password, and `REQUIRE_AUTH` stays `true` throughout —
+the application is never open to whoever knows the address.
+
+The day the redirect URI is declared, `AUTH_ENTRA=true` goes into the parameter
+on both sides, and the deploy that follows hands everyone their own account.
 
 Also left for later, in rough order of how much they will be missed:
 
