@@ -13,9 +13,14 @@ what-if be run on a hypothetical order without writing anything down.
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date
 
-from src.modules.planning.domain.entities.capacity import EPSILON, Capacity
+from src.modules.planning.domain.entities.capacity import (
+    EPSILON,
+    WEEKLY_RESERVE_DAYS,
+    Capacity,
+    week_of,
+)
 from src.modules.planning.domain.entities.workload_plan import (
     MissionWeek,
     PersonPlan,
@@ -25,11 +30,6 @@ from src.modules.planning.domain.entities.workload_plan import (
     WeeklyLoad,
     WorkloadPlan,
 )
-
-
-def week_of(day: date) -> date:
-    """The Monday of the week a day belongs to."""
-    return day - timedelta(days=day.weekday())
 
 
 def project_workload(
@@ -183,6 +183,8 @@ def _person_plan(
                 capacity=round(capacity.get(week, 0.0), 2),
                 booked=round(declared.get(week, 0.0), 2),
                 projected=round(projected.get(week, 0.0), 2),
+                # A week the window sees nothing of holds nothing back either.
+                reserved=(WEEKLY_RESERVE_DAYS if capacity.get(week, 0.0) > 0 else 0.0),
             )
             for week in weeks
         ],

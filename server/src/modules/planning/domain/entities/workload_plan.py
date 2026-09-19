@@ -79,12 +79,22 @@ class WeeklyLoad:
     booked: float
     #: What the projection placed on top.
     projected: float
+    #: The half day held back for what nobody saw coming.
+    reserved: float = 0.0
 
     @property
     def free(self) -> float:
-        """Room the week still leaves. Never negative: an over-booked week
-        offers nothing, it does not borrow from the next one."""
-        return max(0.0, round(self.capacity - self.booked - self.projected, 2))
+        """Room the week still leaves **to plan on**.
+
+        The reserve is not free: it is held back on purpose, and reporting it
+        as available would invite someone to plan the very half day that keeps
+        the plan honest. Never negative either — an over-booked week offers
+        nothing, it does not borrow from the next one.
+        """
+        return max(
+            0.0,
+            round(self.capacity - self.reserved - self.booked - self.projected, 2),
+        )
 
     @property
     def is_overloaded(self) -> bool:

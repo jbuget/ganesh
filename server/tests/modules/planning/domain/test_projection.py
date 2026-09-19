@@ -133,10 +133,10 @@ class TestWhatIsAlreadyBooked:
 class TestWeekends:
     def test_the_projection_skips_the_days_it_is_not_given(self) -> None:
         """Only working days are handed in, so a mission spanning a weekend
-        lands on the Tuesday after, not on the Saturday."""
+        lands the week after, never on the Saturday."""
         plan = project_workload([a_mission(remaining=7.0)], FORTNIGHT, {}, [ALICE])
 
-        assert mission_in(plan, 10).ends_on == date(2026, 9, 22)
+        assert mission_in(plan, 10).ends_on == date(2026, 9, 23)
 
 
 class TestWhatCannotBePlanned:
@@ -171,7 +171,7 @@ class TestWhatCannotBePlanned:
         must not pretend the week was idle."""
         plan = project_workload([a_mission(remaining=7.0)], WEEK, {}, [ALICE])
 
-        assert mission_in(plan, 10).scheduled_days == 5.0
+        assert mission_in(plan, 10).scheduled_days == 4.5
 
     def test_an_unplannable_mission_eats_no_capacity(self) -> None:
         """The mission behind it must land exactly as if it were alone."""
@@ -193,8 +193,8 @@ class TestWeeklyReading:
         plan = project_workload([a_mission(remaining=7.0)], FORTNIGHT, {}, [ALICE])
 
         assert [(w.week, w.days) for w in mission_in(plan, 10).weeks] == [
-            (MONDAY, 5.0),
-            (date(2026, 9, 21), 2.0),
+            (MONDAY, 4.5),
+            (date(2026, 9, 21), 2.5),
         ]
 
     def test_the_weeks_of_the_horizon_are_listed_in_order(self) -> None:
@@ -222,17 +222,81 @@ class TestPeopleLoad:
         week = self.person(plan, ALICE).weeks[0]
         assert (week.booked, week.projected) == (1.0, 2.0)
 
-    def test_a_week_reports_the_room_it_still_leaves(self) -> None:
+    def test_a_week_reports_the_room_it_still_leaves_to_plan_on(self) -> None:
+        """Five days, half a one held back, two placed: two and a half left."""
         plan = project_workload([a_mission(remaining=2.0)], WEEK, {}, [ALICE])
 
-        assert self.person(plan, ALICE).weeks[0].free == 3.0
+        assert self.person(plan, ALICE).weeks[0].free == 2.5
 
     def test_a_person_nothing_was_placed_on_is_free_all_along(self) -> None:
+        """Bar the half day nobody may plan on."""
         plan = project_workload([], WEEK, {}, [ALICE, BOB])
 
-        assert self.person(plan, BOB).free_days == 5.0
+        assert self.person(plan, BOB).free_days == 4.5
 
     def test_the_first_week_with_room_is_announced(self) -> None:
         plan = project_workload([a_mission(remaining=5.0)], FORTNIGHT, {}, [ALICE])
 
         assert self.person(plan, ALICE).first_free_week == date(2026, 9, 21)
+
+
+class TestTheWeeklyReserve:
+    """Half a day a week is held back, for the meetings and the absences
+    nobody saw coming. A plan that booked every last half day would be wrong
+    every week, and a plan that is always wrong steers nothing."""
+
+    def person(self, plan, user_id: int):
+        return next(p for p in plan.people if p.user_id == user_id)
+
+    def test_a_full_week_places_four_days_and_a_half_at_most(self) -> None:
+        plan = project_workload([a_mission(remaining=5.0)], WEEK, {}, [ALICE])
+
+        assert mission_in(plan, 10).scheduled_days == 4.5
+
+    def test_the_reserve_holds_even_when_the_day_itself_is_free(self) -> None:
+        """Friday is empty; the week is not. The two limits are not the same
+        thing, and the tighter one wins."""
+        plan = project_workload([a_mission(remaining=5.0)], WEEK, {}, [ALICE])
+
+        assert [(w.week, w.days) for w in mission_in(plan, 10).weeks] == [(MONDAY, 4.5)]
+
+    def test_the_reserve_comes_off_every_week_of_a_longer_run(self) -> None:
+        plan = project_workload([a_mission(remaining=9.0)], FORTNIGHT, {}, [ALICE])
+
+        assert [w.days for w in mission_in(plan, 10).weeks] == [4.5, 4.5]
+
+    def test_what_is_already_declared_eats_into_the_same_week(self) -> None:
+        """Two days declared leaves two and a half to plan, not four and a
+        half: the reserve is held back once, not once per source."""
+        plan = project_workload(
+            [a_mission(remaining=5.0)],
+            WEEK,
+            {ALICE: {MONDAY: 1.0, date(2026, 9, 15): 1.0}},
+            [ALICE],
+        )
+
+        assert mission_in(plan, 10).scheduled_days == 2.5
+
+    def test_a_week_already_full_holds_nothing_back_because_it_has_nothing(
+        self,
+    ) -> None:
+        plan = project_workload(
+            [a_mission(remaining=5.0)],
+            WEEK,
+            {ALICE: {day: 1.0 for day in WEEK}},
+            [ALICE],
+        )
+
+        assert mission_in(plan, 10).scheduled_days == 0.0
+
+    def test_a_week_says_how_much_it_holds_back(self) -> None:
+        plan = project_workload([], WEEK, {}, [ALICE])
+
+        assert self.person(plan, ALICE).weeks[0].reserved == 0.5
+
+    def test_the_reserve_is_not_reported_as_room_to_plan_on(self) -> None:
+        """Announcing it as free would invite someone to plan the very half
+        day that keeps the plan honest."""
+        plan = project_workload([a_mission(remaining=4.5)], WEEK, {}, [ALICE])
+
+        assert self.person(plan, ALICE).weeks[0].free == 0.0
