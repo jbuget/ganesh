@@ -7,6 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import Settings, get_settings
 from src.core.database import get_db
+
+# The one thing this module needs of the keys: recognising one at the door.
+# Admitting a machine lives in the api_keys module, beside what it admits.
+from src.modules.api_keys.domain.services import key_material
 from src.modules.auth.infrastructure.entra_token_validator import EntraTokenValidator
 from src.modules.auth.presentation.identity import identity_from_claims
 from src.modules.users.application.dtos.user_dto import EntraIdentity
@@ -38,6 +42,17 @@ async def get_current_user(
     without having declared the redirect URI on the Entra side. This mode must
     never be active in production.
     """
+    # An API key is not a person. Every route that leans on this dependency is
+    # human-only, and stays so: a machine reaches a route by that route asking
+    # for a scope, never by turning up with a key on a human door.
+    if authorization and key_material.looks_like_ours(
+        authorization.removeprefix("Bearer ").removeprefix("bearer ")
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="An API key cannot be used on this route.",
+        )
+
     provision = ProvisionUserUseCase(users=SqlUserRepository(session))
 
     if not settings.require_auth:

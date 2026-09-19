@@ -4,8 +4,10 @@ They implement the same ports as the infrastructure: a use case that passes
 here passes in production, persistence aside.
 """
 
-from datetime import date
+from datetime import date, datetime
 
+from src.modules.api_keys.domain.entities.api_key import ApiKey
+from src.modules.api_keys.domain.repositories.api_key_repository import ApiKeyRepository
 from src.modules.audit_logs.domain.entities.audit_log import AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
@@ -122,6 +124,39 @@ class InMemoryProjectRepository(ProjectRepository):
 
     async def delete(self, project_id: int) -> None:
         self._projects.pop(project_id, None)
+
+
+class InMemoryApiKeyRepository(ApiKeyRepository):
+    def __init__(self, keys: list[ApiKey] | None = None) -> None:
+        self._keys: dict[int, ApiKey] = {}
+        self._next_id = 1
+        for key in keys or []:
+            self._keys[key.id or self._next_id] = key
+            self._next_id = max(self._next_id, (key.id or 0) + 1)
+
+    async def add(self, key: ApiKey) -> ApiKey:
+        key.id = self._next_id
+        self._next_id += 1
+        self._keys[key.id] = key
+        return key
+
+    async def get_by_id(self, key_id: int) -> ApiKey | None:
+        return self._keys.get(key_id)
+
+    async def get_by_public_id(self, public_id: str) -> ApiKey | None:
+        return next((k for k in self._keys.values() if k.public_id == public_id), None)
+
+    async def list_all(self) -> list[ApiKey]:
+        return sorted(self._keys.values(), key=lambda k: k.created_at, reverse=True)
+
+    async def update(self, key: ApiKey) -> None:
+        if key.id is not None:
+            self._keys[key.id] = key
+
+    async def record_use(self, key_id: int, used_at: datetime) -> None:
+        key = self._keys.get(key_id)
+        if key is not None:
+            key.last_used_at = used_at
 
 
 class InMemoryEntryRepository(EntryRepository):

@@ -67,6 +67,36 @@ Two consequences worth knowing:
   wording. Only opening the screen catches it. Check in the browser after any
   broad rename.
 
+## Tables
+
+Every table of the application is drawn in the **same frame**, and a new one
+does not get to invent its own. It is described in `client/src/lib/table-frame.ts`:
+
+```tsx
+<Table className={`border-separate border-spacing-0 ${TABLE_FRAME}`}>
+  <TableHeader className={TABLE_HEADER}>
+    <TableRow>
+      <TableHead className={STRONG_SEPARATOR}>Ce qui nomme la ligne</TableHead>
+      …
+```
+
+- `TABLE_FRAME` — the strong rule around, the faint lines within. Drawn by the
+  cells at the edges, never by the table itself.
+- `TABLE_HEADER` — the band of titles, white, pinned, closed by a strong rule.
+- `STRONG_SEPARATOR` — closes the column that **names** the row, off from those
+  that describe it.
+
+The row takes the page's tint (`bg-slate-50 hover:bg-slate-100`) and the naming
+cell stays white, one step behind on hover: the subject of the line reads as its
+anchor rather than as its first column. `MissionsTable`, `UsersTable` and
+`ApiKeysTable` all read this way — two tables that read alike must not be able
+to drift apart.
+
+Wrap the table in
+`<div className="[&_[data-slot=table-container]]:overflow-visible">`: the shadcn
+container otherwise opens a scrolling context that would hold the pinned header
+inside the table.
+
 ## One visual grammar
 
 Phase, priority and category all read the same way: **a coloured mark, then a

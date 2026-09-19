@@ -91,6 +91,20 @@ describe("sortUsers", () => {
     ]);
   });
 
+  it("leaves a teammate with no GitHub handle at the end, whichever way round", () => {
+    // The row shows « — » there: an absence, not a name that sorts last.
+    const team = [teammate("Sans"), teammate("Avec", { github_username: "avec" })];
+
+    expect(names(sortUsers(team, { column: "github", direction: "asc" }))).toEqual([
+      "Avec",
+      "Sans",
+    ]);
+    expect(names(sortUsers(team, { column: "github", direction: "desc" }))).toEqual([
+      "Avec",
+      "Sans",
+    ]);
+  });
+
   it("orders by status, open access first", () => {
     const team = [teammate("Partie", { is_active: false }), teammate("Présente")];
 

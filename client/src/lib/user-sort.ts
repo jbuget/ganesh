@@ -10,14 +10,21 @@ import {
 } from "@/lib/table-sort";
 
 /** The team list columns the list can be ordered by. */
-export type UserSortColumn = "name" | "email" | "role" | "login" | "status";
+export type UserSortColumn = "name" | "email" | "github" | "role" | "login" | "status";
 
 /** The column asked for, or `null` for the team list's own order. */
 export type UserSort = ColumnSort<UserSortColumn>;
 
 export const NO_USER_SORT: UserSort = NO_COLUMN_SORT;
 
-const COLUMNS: UserSortColumn[] = ["name", "email", "role", "login", "status"];
+const COLUMNS: UserSortColumn[] = [
+  "name",
+  "email",
+  "github",
+  "role",
+  "login",
+  "status",
+];
 
 /** From the least to the most empowered, as the roles are declared. */
 const ROLE_RANKS = new Map(ROLES.map((role, rank) => [role.value, rank]));
@@ -28,11 +35,13 @@ const ROLE_RANKS = new Map(ROLES.map((role, rank) => [role.value, rank]));
  * A missing value is `null`: it does not compare, and the sort puts it at the
  * end of the list rather than inventing a rank for it. An account that never
  * came is the case that matters — « jamais » is not « il y a très longtemps »,
- * and must not take the top of a descending sort.
+ * and must not take the top of a descending sort. A teammate with no GitHub
+ * handle reads the same way: the « — » the row shows is not a name to sort.
  */
 const VALUES: Record<UserSortColumn, (user: UserResponse) => string | number | null> = {
   name: (user) => user.display_name,
   email: (user) => user.email,
+  github: (user) => user.github_username ?? null,
   role: (user) => ROLE_RANKS.get(user.role) ?? null,
   login: (user) => (user.last_login_at ? new Date(user.last_login_at).getTime() : null),
   status: (user) => (user.is_active ? 0 : 1),

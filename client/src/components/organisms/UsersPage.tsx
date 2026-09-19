@@ -60,8 +60,8 @@ export function UsersPage() {
         </>
       }
     >
-      {/* The list stays narrow: five columns spread over 2000 px stop being readable. */}
-      <div className="max-w-[900px]">
+      {/* The list stays narrow: columns spread over 2000 px stop being readable. */}
+      <div className="max-w-[1050px]">
         {screen.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
         {/* An empty list is answered here and not by the table: the reason is

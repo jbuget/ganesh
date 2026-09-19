@@ -37,9 +37,9 @@ export function UsersTable({ users, sorted, onSort, now, onOpen }: UsersTablePro
       <Table className={`border-separate border-spacing-0 ${TABLE_FRAME}`}>
         <TableHeader className={TABLE_HEADER}>
           <TableRow>
-            {/* Every column sorts: four of the five carry an order the reader
-                already has in mind — the alphabet, the ladder of roles, how
-                long ago someone came by, whether the access is open. */}
+            {/* Every column sorts: each of the six carries an order the
+                reader already has in mind — the alphabet, the ladder of roles,
+                how long ago someone came by, whether the access is open. */}
             <SortableColumnHeader
               column="name"
               label="Collaborateur"
@@ -50,6 +50,12 @@ export function UsersTable({ users, sorted, onSort, now, onOpen }: UsersTablePro
             <SortableColumnHeader
               column="email"
               label="Email"
+              sorted={sorted}
+              onToggle={onSort}
+            />
+            <SortableColumnHeader
+              column="github"
+              label="GitHub"
               sorted={sorted}
               onToggle={onSort}
             />

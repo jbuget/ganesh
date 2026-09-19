@@ -21,4 +21,5 @@ export interface UserResponse {
   first_name?: string | null;
   last_name?: string | null;
   department?: Department | null;
+  github_username?: string | null;
 }

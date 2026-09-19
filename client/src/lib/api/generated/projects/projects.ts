@@ -901,6 +901,10 @@ export const getExportCatalogUrl = () => {
 
 /**
  * The published services, in the vocabulary of the public catalogue.
+ *
+ * The one route a machine may reach in V1. It asks for `catalog:read` and
+ * nothing else opens by accident: every other route still depends on
+ * `get_current_user`, which turns keys away.
  * @summary Export Catalog
  */
 export const exportCatalog = async (

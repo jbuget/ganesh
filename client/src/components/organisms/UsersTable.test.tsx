@@ -16,6 +16,7 @@ const TEAM: UserResponse[] = [
     role: "MANAGER",
     is_active: true,
     last_login_at: "2026-09-17T09:00:00",
+    github_username: "jbuget",
   },
   {
     id: 2,
@@ -56,6 +57,7 @@ describe("UsersTable", () => {
     for (const title of [
       "Collaborateur",
       "Email",
+      "GitHub",
       "Rôle",
       "Dernière connexion",
       "Statut",
@@ -69,6 +71,13 @@ describe("UsersTable", () => {
 
     expect(screen.getByText("Jérémy Buget")).toBeInTheDocument();
     expect(screen.getByText("L. Chen")).toBeInTheDocument();
+  });
+
+  it("names the GitHub handle, and marks the accounts that have none", () => {
+    renderTable();
+
+    expect(screen.getByText("jbuget")).toBeInTheDocument();
+    expect(screen.getByText("—")).toBeInTheDocument();
   });
 
   it("opens the teammate a row names", async () => {

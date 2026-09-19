@@ -71,16 +71,17 @@ export function useUsersScreen(
     },
 
     /**
-     * Who a teammate is, and where they work.
+     * Who a teammate is, where they work, and where one finds them on GitHub.
      *
-     * The three fields go to the API together — what is left out is emptied —
-     * so a change to one carries the other two as they stand.
+     * The four fields go to the API together — what is left out is emptied —
+     * so a change to one carries the other three as they stand.
      */
     async updateIdentity(user: UserResponse, change: UpdateUserIdentityRequest) {
       await updateUserIdentity(user.id, {
         first_name: user.first_name ?? null,
         last_name: user.last_name ?? null,
         department: user.department ?? null,
+        github_username: user.github_username ?? null,
         ...change,
       });
       await queryClient.invalidateQueries();

@@ -74,10 +74,22 @@ describe("UserPanel", () => {
     expect(screen.getByText("Système d'information")).toBeInTheDocument();
   });
 
-  it("says what nobody has filled in yet, rather than leaving a blank", () => {
-    openPanel({ first_name: null, last_name: null, department: null });
+  it("gives where one finds a teammate on GitHub", () => {
+    openPanel({ github_username: "jbuget" });
 
-    expect(screen.getAllByText("Non renseigné")).toHaveLength(3);
+    expect(screen.getByText("jbuget")).toBeInTheDocument();
+    expect(screen.getByText("github.com/")).toBeInTheDocument();
+  });
+
+  it("says what nobody has filled in yet, rather than leaving a blank", () => {
+    openPanel({
+      first_name: null,
+      last_name: null,
+      department: null,
+      github_username: null,
+    });
+
+    expect(screen.getAllByText("Non renseigné")).toHaveLength(4);
   });
 
   it("does not offer writing the sheet without management rights", () => {
@@ -98,6 +110,20 @@ describe("UserPanel", () => {
 
     expect(onUpdateIdentity).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }), {
       first_name: "Jérémy",
+    });
+  });
+
+  it("lets a manager say where a teammate is found on GitHub", async () => {
+    openPanel({ github_username: null }, { editable: true });
+
+    await userEvent.click(screen.getByRole("button", { name: "GitHub" }));
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "GitHub" }),
+      "jbuget{Enter}",
+    );
+
+    expect(onUpdateIdentity).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }), {
+      github_username: "jbuget",
     });
   });
 

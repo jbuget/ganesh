@@ -6,6 +6,7 @@ import {
   FolderKanban,
   GanttChartSquare,
   KanbanSquare,
+  KeyRound,
   PanelLeft,
   Users,
 } from "lucide-react";
@@ -24,6 +25,11 @@ const TABS = [
   { href: "/projects", label: "Projets", Icon: FolderKanban },
   { href: "/planning", label: "Planification", Icon: GanttChartSquare },
   { href: "/users", label: "Utilisateurs", Icon: Users },
+  // Shown to everyone, as « Utilisateurs » is: the navigation says what
+  // exists, and the permission lives on the actions.
+  { href: "/api-keys", label: "API", Icon: KeyRound },
+  // « Statistiques » closes the list, and stays there: it reads the others
+  // rather than standing beside them. A new screen goes above it, never after.
   { href: "/stats", label: "Statistiques", Icon: ChartNoAxesColumn },
 ] as const;
 

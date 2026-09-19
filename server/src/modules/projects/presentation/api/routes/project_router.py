@@ -8,6 +8,11 @@ from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
+from src.modules.api_keys.application.use_cases.authenticate_api_key import (
+    MachineCaller,
+)
+from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
+from src.modules.api_keys.presentation.dependencies import require_scope
 from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.projects.application.dtos.assignment_dto import AssignmentCommand
 from src.modules.projects.application.dtos.project_dto import (
@@ -126,6 +131,10 @@ from src.modules.projects.presentation.dependencies import (
 from src.modules.users.domain.entities.user import User
 
 router = APIRouter(prefix="/projects", tags=["projects"])
+
+#: Built once: a dependency is a value, and calling it in an argument default
+#: would rebuild it on every import of this module.
+catalog_reader = require_scope(ApiKeyScope.CATALOG_READ)
 
 
 @router.get(
@@ -262,10 +271,15 @@ async def delete_project(
     operation_id="exportCatalog",
 )
 async def export_catalog(
-    _: User = Depends(get_current_user),
+    _: MachineCaller = Depends(catalog_reader),
     use_case: ExportCatalogUseCase = Depends(get_export_catalog_use_case),
 ) -> list[CatalogEntryResponse]:
-    """The published services, in the vocabulary of the public catalogue."""
+    """The published services, in the vocabulary of the public catalogue.
+
+    The one route a machine may reach in V1. It asks for `catalog:read` and
+    nothing else opens by accident: every other route still depends on
+    `get_current_user`, which turns keys away.
+    """
     return [to_catalog_entry_response(entry) for entry in await use_case.execute()]
 
 

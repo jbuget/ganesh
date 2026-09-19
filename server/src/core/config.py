@@ -32,6 +32,13 @@ class Settings(BaseSettings):
     azure_ad_client_id: str = ""
     require_auth: bool = True
 
+    # How often one API key may call, as a token bucket. Counted per process:
+    # behind several workers the effective allowance is multiplied by their
+    # number. Generous on purpose — this is a guard rail against a runaway
+    # client or a leaked key, not a quota anyone should feel.
+    api_key_rate_allowance: int = 120
+    api_key_rate_window_seconds: int = 60
+
 
 @lru_cache
 def get_settings() -> Settings:

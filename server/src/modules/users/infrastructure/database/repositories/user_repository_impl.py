@@ -20,6 +20,7 @@ def to_entity(model: UserModel) -> User:
         first_name=model.first_name,
         last_name=model.last_name,
         department=model.department,
+        github_username=model.github_username,
     )
 
 
@@ -65,6 +66,7 @@ class SqlUserRepository(UserRepository):
             first_name=user.first_name,
             last_name=user.last_name,
             department=user.department,
+            github_username=user.github_username,
         )
         self._session.add(model)
         await self._session.flush()
@@ -86,5 +88,6 @@ class SqlUserRepository(UserRepository):
         model.first_name = user.first_name
         model.last_name = user.last_name
         model.department = user.department
+        model.github_username = user.github_username
         await self._session.flush()
         return user
