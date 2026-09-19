@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!--
+    The same mark as client/src/components/atoms/Logo.tsx, written out flat: a
+    favicon is a file the browser fetches, not a component it renders. Change
+    one and change the other.
+
+    The colour is set here rather than inherited: nothing surrounds a favicon.
+  -->
+  <style>
+    :root { fill: #0f172a; }
+    @media (prefers-color-scheme: dark) {
+      :root { fill: #e2e8f0; }
+    }
+  </style>
+  <rect x="19.29" y="10.15" width="7.13" height="7.13" rx="1.14" />
+  <rect x="28.43" y="10.15" width="7.13" height="7.13" rx="1.14" />
+  <rect x="37.58" y="10.15" width="7.13" height="7.13" rx="1.14" />
+  <rect x="10.15" y="19.29" width="7.13" height="7.13" rx="1.14" />
+  <rect x="10.15" y="28.43" width="7.13" height="7.13" rx="1.14" />
+  <rect x="37.58" y="28.43" width="7.13" height="7.13" rx="1.14" />
+  <rect x="46.72" y="28.43" width="7.13" height="7.13" rx="1.14" />
+  <rect x="10.15" y="37.58" width="7.13" height="7.13" rx="1.14" />
+  <rect x="46.72" y="37.58" width="7.13" height="7.13" rx="1.14" />
+  <rect x="19.29" y="46.72" width="7.13" height="7.13" rx="1.14" />
+  <rect x="28.43" y="46.72" width="7.13" height="7.13" rx="1.14" />
+  <rect x="37.58" y="46.72" width="7.13" height="7.13" rx="1.14" />
+</svg>
