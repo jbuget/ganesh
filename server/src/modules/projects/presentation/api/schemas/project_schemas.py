@@ -155,8 +155,9 @@ class BoardMemberResponse(BaseModel):
     initials: str
 
 
-class BoardParentResponse(BaseModel):
-    """The project a work package belongs to, as announced on its card."""
+class ParentResponse(BaseModel):
+    """The project a work package belongs to, as announced on its card and on
+    its sheet."""
 
     id: int
     label: str
@@ -174,7 +175,7 @@ class BoardCardResponse(BaseModel):
     #: The latest message of the thread, absent while there is nothing to read.
     latest_update: LastUpdateResponse | None
     sub_projects: int
-    parent: BoardParentResponse | None
+    parent: ParentResponse | None
 
 
 class BoardColumnResponse(BaseModel):
@@ -246,6 +247,8 @@ class ProjectDetailResponse(BaseModel):
     consumed_days: float
     contributions: list[ProjectContributionResponse]
     sub_projects: list[ProjectResponse]
+    #: The project this one belongs to, absent when it is a project itself.
+    parent: ParentResponse | None
 
 
 class UpdateProjectDetailRequest(BaseModel):

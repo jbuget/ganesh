@@ -198,3 +198,18 @@ async def test_the_packages_of_a_sheet_show_the_axis_of_their_project() -> None:
     ).execute(10)
 
     assert [p.category for p in detail.sub_projects] == [ProjectCategory.AUTOMATE]
+
+
+async def test_a_project_has_no_parent_to_announce() -> None:
+    detail = await build().execute(10)
+
+    assert detail.parent is None
+
+
+async def test_the_sheet_of_a_work_package_names_the_project_it_belongs_to() -> None:
+    """A sheet opened on its own says nothing of the whole it is part of."""
+    detail = await build(work_packages=[work_package(11, "Lot API")]).execute(11)
+
+    assert detail.parent is not None
+    assert detail.parent.id == 10
+    assert detail.parent.label == "Portail"
