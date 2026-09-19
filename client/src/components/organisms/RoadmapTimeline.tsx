@@ -14,6 +14,8 @@ interface RoadmapTimelineProps {
   to: string;
   today: string;
   grouping: Grouping;
+  /** Opens a mission beside the drawing. */
+  onOpen: (projectId: number) => void;
   onDate: (projectId: number, target: string | null) => void | Promise<void>;
 }
 
@@ -39,6 +41,7 @@ export function RoadmapTimeline({
   to,
   today,
   grouping,
+  onOpen,
   onDate,
 }: RoadmapTimelineProps) {
   const bands = bandsOf(missions, grouping);
@@ -131,6 +134,7 @@ export function RoadmapTimeline({
                     mission={mission}
                     from={from}
                     to={to}
+                    onOpen={onOpen}
                     onDate={onDate}
                   />
                 ))}
@@ -164,6 +168,7 @@ export function RoadmapTimeline({
                           mission={mission}
                           from={from}
                           to={to}
+                          onOpen={onOpen}
                           onDate={onDate}
                         />
                       ))}

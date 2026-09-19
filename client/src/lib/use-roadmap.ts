@@ -65,6 +65,11 @@ export function useRoadmapScreen() {
     setGrouping,
     saveFailed,
 
+    /** Reads the drawing again, after something changed it from elsewhere. */
+    async refresh() {
+      await fetchSpan(months);
+    },
+
     /**
      * Posts the date a mission is announced for.
      *

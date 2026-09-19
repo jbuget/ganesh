@@ -6,7 +6,9 @@ import { RoadmapLegend } from "@/components/atoms/RoadmapLegend";
 import { RoadmapSummaryBar } from "@/components/atoms/RoadmapSummaryBar";
 import { SpanSelect } from "@/components/atoms/SpanSelect";
 import { PageLayout } from "@/components/organisms/PageLayout";
+import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { RoadmapTimeline } from "@/components/organisms/RoadmapTimeline";
+import { useOpenedMission } from "@/lib/opened-mission";
 import { useRoadmapScreen } from "@/lib/use-roadmap";
 
 /**
@@ -32,7 +34,10 @@ export function RoadmapPage() {
     setGrouping,
     saveFailed,
     setTargetDate,
+    refresh,
   } = useRoadmapScreen();
+
+  const panel = useOpenedMission();
 
   return (
     <PageLayout
@@ -79,6 +84,7 @@ export function RoadmapPage() {
                 to={roadmap.to_day}
                 today={roadmap.today}
                 grouping={grouping}
+                onOpen={(projectId) => panel.open(projectId)}
                 onDate={setTargetDate}
               />
             </div>
@@ -89,6 +95,22 @@ export function RoadmapPage() {
           </>
         )}
       </div>
+
+      {panel.openedMission && (
+        <ProjectPanel
+          // The tab is part of the key: reopening the same mission on its
+          // thread must remount the panel, which picks its tab on opening.
+          key={`${panel.openedMission}:${panel.openTab ?? ""}`}
+          projectId={panel.openedMission}
+          tab={panel.openTab}
+          onClose={panel.close}
+          // A phase changed in the panel moves a segment out here, and an
+          // estimate given lands a bar that was not there: the drawing is
+          // read again rather than left saying what was true a moment ago.
+          onMissionChanged={refresh}
+          onOpenMission={(projectId) => panel.open(projectId)}
+        />
+      )}
     </PageLayout>
   );
 }

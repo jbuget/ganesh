@@ -41,7 +41,12 @@ function lived(startsOn: string, endsOn: string): RoadmapSegmentResponse {
   return { kind: "lived", status: "development", starts_on: startsOn, ends_on: endsOn };
 }
 
-function draw(missions: RoadmapMissionResponse[], onDate = vi.fn()) {
+function draw(
+  missions: RoadmapMissionResponse[],
+  handlers: { onOpen?: () => void; onDate?: () => void } = {},
+) {
+  const onOpen = handlers.onOpen ?? vi.fn();
+  const onDate = handlers.onDate ?? vi.fn();
   render(
     <RoadmapTimeline
       missions={missions}
@@ -49,10 +54,11 @@ function draw(missions: RoadmapMissionResponse[], onDate = vi.fn()) {
       to={TO}
       today={TODAY}
       grouping="category"
+      onOpen={onOpen}
       onDate={onDate}
     />,
   );
-  return onDate;
+  return { onOpen, onDate };
 }
 
 describe("RoadmapTimeline", () => {
@@ -77,13 +83,28 @@ describe("RoadmapTimeline", () => {
     ).toBeInTheDocument();
   });
 
-  it("links a mission to its sheet", () => {
-    draw([aLine({ segments: [lived("2026-03-02", TODAY)] })]);
+  it("opens the mission beside the drawing when its line is clicked", async () => {
+    const onOpen = vi.fn();
+    draw([aLine({ segments: [lived("2026-03-02", TODAY)] })], { onOpen });
 
-    expect(screen.getByRole("link", { name: "Portail bailleurs" })).toHaveAttribute(
-      "href",
-      "/projects/1",
+    await userEvent.click(
+      screen.getByRole("button", { name: "Ouvrir Portail bailleurs" }),
     );
+
+    expect(onOpen).toHaveBeenCalledWith(1);
+  });
+
+  it("does not open the mission when the date is what was aimed at", async () => {
+    // Posting a commitment is an act of its own: it must not be swallowed by
+    // the row underneath it.
+    const onOpen = vi.fn();
+    draw([aLine({ segments: [lived("2026-03-02", TODAY)] })], { onOpen });
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /Date annoncée pour Portail bailleurs/ }),
+    );
+
+    expect(onOpen).not.toHaveBeenCalled();
   });
 
   it("tells what was lived from what is supposed", () => {
@@ -140,7 +161,9 @@ describe("RoadmapTimeline", () => {
     ]);
 
     expect(screen.getByText("2 missions sans rien à montrer")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Sans rien" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Ouvrir Sans rien" }),
+    ).not.toBeInTheDocument();
   });
 
   it("opens them when asked", async () => {
@@ -153,14 +176,16 @@ describe("RoadmapTimeline", () => {
       screen.getByRole("button", { name: /1 mission sans rien à montrer/ }),
     );
 
-    expect(screen.getByRole("link", { name: "Sans rien" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Ouvrir Sans rien" }),
+    ).toBeInTheDocument();
   });
 
   it("leaves a dated mission in plain sight, bar or no bar", () => {
     // Its diamond sits on the axis and can be read against the others.
     draw([aLine({ label: "Promise", target_date: "2026-11-30" })]);
 
-    expect(screen.getByRole("link", { name: "Promise" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ouvrir Promise" })).toBeInTheDocument();
     expect(screen.queryByText(/sans rien à montrer/)).not.toBeInTheDocument();
   });
 

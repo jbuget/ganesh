@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-
 import { PlanBlockerNote } from "@/components/atoms/PlanBlockerNote";
 import { PriorityMark } from "@/components/atoms/PriorityMark";
 import { RoadmapBar } from "@/components/atoms/RoadmapBar";
@@ -14,6 +12,8 @@ interface RoadmapRowProps {
   mission: RoadmapMissionResponse;
   from: string;
   to: string;
+  /** Opens the mission beside the drawing. */
+  onOpen: (projectId: number) => void;
   /** Posts the date the mission is announced for. */
   onDate: (projectId: number, target: string | null) => void | Promise<void>;
 }
@@ -21,15 +21,31 @@ interface RoadmapRowProps {
 /**
  * One line of the roadmap: what the mission is, and where it sits in time.
  *
- * The name is a link and the bar is not: one goes to the sheet to act, and
- * stays here to read. A work package is set in from its project, so a family
- * reads as a family without a band of its own.
+ * The whole row opens the mission, as a row of the reference list does — one
+ * reads a bar, wonders what is behind it, and the sheet comes to the side
+ * without the drawing being lost. The one place that does not open it is the
+ * date: posting a commitment is an act of its own, and it happens here.
+ *
+ * A work package is set in from its project, so a family reads as a family
+ * without a band of its own.
  */
-export function RoadmapRow({ mission, from, to, onDate }: RoadmapRowProps) {
+export function RoadmapRow({ mission, from, to, onOpen, onDate }: RoadmapRowProps) {
   const isWorkPackage = mission.kind === "work_package";
 
   return (
-    <div className="flex items-center border-b border-slate-100 last:border-b-0 hover:bg-slate-50">
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Ouvrir ${mission.label}`}
+      onClick={() => onOpen(mission.project_id)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpen(mission.project_id);
+        }
+      }}
+      className="flex cursor-pointer items-center border-b border-slate-100 last:border-b-0 hover:bg-slate-50"
+    >
       <div
         className={[
           "flex w-72 shrink-0 items-center gap-2 py-1.5 pr-3",
@@ -44,20 +60,26 @@ export function RoadmapRow({ mission, from, to, onDate }: RoadmapRowProps) {
           />
         )}
 
-        <Link
-          href={`/projects/${mission.project_id}`}
+        <span
           title={mission.label}
-          className="min-w-0 flex-1 cursor-pointer truncate text-sm text-slate-800 hover:underline"
+          className="min-w-0 flex-1 truncate text-sm text-slate-800"
         >
           {mission.label}
-        </Link>
+        </span>
 
         <span className="shrink-0">
           <PriorityMark value={mission.priority} compact />
         </span>
       </div>
 
-      <div className="w-36 shrink-0 pr-3">
+      {/* The date does not open the mission: it is the one act this screen
+          carries, and a click meant for it must not be swallowed by the row. */}
+      <div
+        className="w-36 shrink-0 pr-3"
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+        role="presentation"
+      >
         <TargetDateField
           value={mission.target_date}
           missionLabel={mission.label}
