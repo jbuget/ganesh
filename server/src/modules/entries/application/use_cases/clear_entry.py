@@ -7,6 +7,7 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 from src.modules.entries.application.dtos.set_entry_dto import ClearEntryCommand
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.months.domain.repositories.month_repository import MonthRepository
+from src.modules.months.domain.services.month_rules import ensure_month_is_open
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
@@ -42,11 +43,9 @@ class ClearEntryUseCase:
                 "A deactivated user can no longer change an entry."
             )
 
-        month = await self._months.get(command.target_user_id, command.day)
-        if month is not None and not month.is_writable:
-            raise ForbiddenActionError(
-                "This month is validated: a manager must reopen it."
-            )
+        ensure_month_is_open(
+            await self._months.get(command.target_user_id, command.day)
+        )
 
         existing = await self._entries.get(
             command.target_user_id, command.project_id, command.day

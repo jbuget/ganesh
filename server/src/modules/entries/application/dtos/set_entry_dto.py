@@ -1,4 +1,4 @@
-"""Commands that write entries."""
+"""Commands that change what a month's grid holds."""
 
 from dataclasses import dataclass
 from datetime import date

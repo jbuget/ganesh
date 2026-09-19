@@ -11,6 +11,9 @@ class UserMissionRepository(ABC):
     time is entered on it: preparing a month is a gesture of its own, and it
     must survive leaving the screen. What carries time needs no such record —
     an entry already says its mission is there.
+
+    Every method takes any day of the month aimed at: only the month matters,
+    and holding it by its first day is the implementation's business.
     """
 
     @abstractmethod

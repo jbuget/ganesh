@@ -10,6 +10,7 @@ from src.modules.entries.domain.repositories.user_mission_repository import (
     UserMissionRepository,
 )
 from src.modules.months.domain.repositories.month_repository import MonthRepository
+from src.modules.months.domain.services.month_rules import ensure_month_is_open
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
@@ -50,14 +51,12 @@ class RemoveMissionFromMonthUseCase:
                 "A deactivated user can no longer change an entry."
             )
 
-        month = await self._months.get(command.target_user_id, command.month)
-        if month is not None and not month.is_writable:
-            raise ForbiddenActionError(
-                "This month is validated: a manager must reopen it."
-            )
+        ensure_month_is_open(
+            await self._months.get(command.target_user_id, command.month)
+        )
 
         await self._user_missions.remove(
-            command.target_user_id, command.project_id, command.month.replace(day=1)
+            command.target_user_id, command.project_id, command.month
         )
 
         entries = [

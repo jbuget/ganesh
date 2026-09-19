@@ -5,6 +5,7 @@ from src.modules.entries.domain.repositories.user_mission_repository import (
     UserMissionRepository,
 )
 from src.modules.months.domain.repositories.month_repository import MonthRepository
+from src.modules.months.domain.services.month_rules import ensure_month_is_open
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
@@ -50,11 +51,10 @@ class AddMissionToMonthUseCase:
         if await self._projects.get_by_id(command.project_id) is None:
             raise EntityNotFoundError("The mission cannot be found.")
 
-        month = command.month.replace(day=1)
-        month_status = await self._months.get(command.target_user_id, month)
-        if month_status is not None and not month_status.is_writable:
-            raise ForbiddenActionError(
-                "This month is validated: a manager must reopen it."
-            )
+        ensure_month_is_open(
+            await self._months.get(command.target_user_id, command.month)
+        )
 
-        await self._user_missions.add(command.target_user_id, command.project_id, month)
+        await self._user_missions.add(
+            command.target_user_id, command.project_id, command.month
+        )

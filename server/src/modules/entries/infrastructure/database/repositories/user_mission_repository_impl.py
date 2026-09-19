@@ -11,6 +11,7 @@ from src.modules.entries.domain.repositories.user_mission_repository import (
 from src.modules.entries.infrastructure.database.models.entry_model import (
     UserMissionModel,
 )
+from src.modules.months.domain.services.month_period import first_day_of
 
 
 class SqlUserMissionRepository(UserMissionRepository):
@@ -32,7 +33,7 @@ class SqlUserMissionRepository(UserMissionRepository):
                 and_(
                     UserMissionModel.user_id == user_id,
                     UserMissionModel.project_id == project_id,
-                    UserMissionModel.month == month.replace(day=1),
+                    UserMissionModel.month == first_day_of(month),
                 )
             )
         )
@@ -44,7 +45,7 @@ class SqlUserMissionRepository(UserMissionRepository):
             .where(
                 and_(
                     UserMissionModel.user_id == user_id,
-                    UserMissionModel.month == month.replace(day=1),
+                    UserMissionModel.month == first_day_of(month),
                 )
             )
             .order_by(UserMissionModel.project_id)
@@ -58,7 +59,7 @@ class SqlUserMissionRepository(UserMissionRepository):
             UserMissionModel(
                 user_id=user_id,
                 project_id=project_id,
-                month=month.replace(day=1),
+                month=first_day_of(month),
             )
         )
         await self._session.flush()

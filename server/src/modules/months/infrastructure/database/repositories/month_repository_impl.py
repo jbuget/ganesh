@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.domain.repositories.month_repository import MonthRepository
+from src.modules.months.domain.services.month_period import first_day_of
 from src.modules.months.infrastructure.database.models.month_model import MonthModel
 
 
@@ -34,7 +35,7 @@ class SqlMonthRepository(MonthRepository):
             select(MonthModel).where(
                 and_(
                     MonthModel.user_id == user_id,
-                    MonthModel.month == month.replace(day=1),
+                    MonthModel.month == first_day_of(month),
                 )
             )
         )
@@ -43,7 +44,7 @@ class SqlMonthRepository(MonthRepository):
 
     async def list_for_month(self, month: date) -> list[Month]:
         result = await self._session.execute(
-            select(MonthModel).where(MonthModel.month == month.replace(day=1))
+            select(MonthModel).where(MonthModel.month == first_day_of(month))
         )
         return [to_entity(model) for model in result.scalars().all()]
 
