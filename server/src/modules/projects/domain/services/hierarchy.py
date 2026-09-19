@@ -1,9 +1,40 @@
 """Structural rules of the reference list."""
 
 from dataclasses import replace
+from enum import StrEnum
 
 from src.modules.projects.domain.entities.project import Project, ProjectKind
 from src.shared.exceptions.domain_exceptions import ValidationError
+
+
+class SubProjectPolicy(StrEnum):
+    """What becomes of the work packages when their project is archived.
+
+    Archiving a project says nothing of its slices on its own, and the two
+    honest answers are not the same gesture: either they leave with it, or they
+    carry on as projects in their own right. The choice exists so that nobody
+    has to guess which one the team meant.
+    """
+
+    ARCHIVE = "archive"
+    DETACH = "detach"
+
+
+def ensure_sub_projects_are_settled(
+    project: Project, sub_projects: int, policy: SubProjectPolicy | None
+) -> None:
+    """Refuses archiving a project whose slices nobody decided about.
+
+    A package left behind goes on being steered — it holds its rank in the plan
+    and its card on the board — while the project it belongs to has left the
+    reference list. Saying nothing is therefore not a neutral answer, and this
+    is where it stops being one.
+    """
+    if sub_projects > 0 and policy is None:
+        raise ValidationError(
+            f"« {project.label} » carries {sub_projects} sub-project(s): "
+            "say whether they are archived with it or detached from it."
+        )
 
 
 def ensure_can_be_parent(parent: Project) -> None:

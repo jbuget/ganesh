@@ -13,10 +13,12 @@ from src.modules.projects.domain.entities.service_registry import (
     ServiceType,
 )
 from src.modules.projects.domain.services.hierarchy import (
+    SubProjectPolicy,
     ensure_can_be_attached,
     ensure_can_be_detached,
     ensure_can_be_parent,
     ensure_carries_no_own_category,
+    ensure_sub_projects_are_settled,
     with_resolved_category,
 )
 from src.shared.exceptions.domain_exceptions import ValidationError
@@ -168,3 +170,23 @@ class TestDetaching:
     def test_a_project_is_not_attached_to_anything(self) -> None:
         with pytest.raises(ValidationError, match="sub-project"):
             ensure_can_be_detached(project())
+
+
+class TestArchivingAProjectCutIntoPackages:
+    def test_a_project_with_no_package_is_archived_without_a_word(self) -> None:
+        ensure_sub_projects_are_settled(project(), sub_projects=0, policy=None)
+
+    def test_its_packages_may_leave_with_it(self) -> None:
+        ensure_sub_projects_are_settled(
+            project(), sub_projects=3, policy=SubProjectPolicy.ARCHIVE
+        )
+
+    def test_its_packages_may_carry_on_as_projects_of_their_own(self) -> None:
+        ensure_sub_projects_are_settled(
+            project(), sub_projects=3, policy=SubProjectPolicy.DETACH
+        )
+
+    def test_saying_nothing_of_them_is_refused(self) -> None:
+        """Left behind, they would be steered on behalf of a project gone."""
+        with pytest.raises(ValidationError, match="sub-project"):
+            ensure_sub_projects_are_settled(project(), sub_projects=3, policy=None)

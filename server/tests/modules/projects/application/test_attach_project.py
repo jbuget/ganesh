@@ -236,7 +236,10 @@ class TestDetaching:
         assert mission.kind is ProjectKind.PROJECT
         assert mission.parent_id is None
 
-    async def test_the_detached_mission_carries_no_axis_of_its_own_yet(self) -> None:
+    async def test_the_detached_mission_takes_over_the_axis_it_was_reading(
+        self,
+    ) -> None:
+        """It was on that axis too, under the project's name rather than its own."""
         package = Project(
             id=30,
             label="DOE",
@@ -245,6 +248,29 @@ class TestDetaching:
             parent_id=10,
         )
         _, detach, _, _ = build([edit(), package])
+
+        answered = await detach.execute(DetachProjectCommand(actor_id=1, project_id=30))
+
+        assert answered.category is ProjectCategory.AUTOMATE
+
+    async def test_a_mission_leaving_an_unqualified_project_comes_out_blank(
+        self,
+    ) -> None:
+        """Nothing is invented: there was no axis to hand down."""
+        parent = Project(
+            id=40,
+            label="Interne",
+            kind=ProjectKind.PROJECT,
+            status=ProjectStatus.SCOPING,
+        )
+        package = Project(
+            id=30,
+            label="DOE",
+            kind=ProjectKind.WORK_PACKAGE,
+            status=ProjectStatus.SCOPING,
+            parent_id=40,
+        )
+        _, detach, _, _ = build([parent, package])
 
         answered = await detach.execute(DetachProjectCommand(actor_id=1, project_id=30))
 
@@ -265,6 +291,7 @@ class TestDetaching:
         assert [entry.payload["field"] for entry in audit.logs] == [
             "kind",
             "parent_id",
+            "category",
         ]
 
     async def test_a_project_attached_to_nothing_is_refused(self) -> None:

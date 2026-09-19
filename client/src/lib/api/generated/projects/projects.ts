@@ -22,6 +22,7 @@ import type {
 
 import type {
   AddLinkRequest,
+  ArchiveProjectRequest,
   AssignMemberParams,
   AttachProjectRequest,
   BoardResponse,
@@ -986,6 +987,251 @@ export const useDetachProject = <TError = HTTPValidationError, TContext = unknow
   TContext
 > => {
   return useMutation(getDetachProjectMutationOptions(options), queryClient);
+};
+export type archiveProjectResponse200 = {
+  data: ProjectResponse;
+  status: 200;
+};
+
+export type archiveProjectResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type archiveProjectResponseSuccess = archiveProjectResponse200 & {
+  headers: Headers;
+};
+export type archiveProjectResponseError = archiveProjectResponse422 & {
+  headers: Headers;
+};
+
+export type archiveProjectResponse =
+  archiveProjectResponseSuccess | archiveProjectResponseError;
+
+export const getArchiveProjectUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/archive`;
+};
+
+/**
+ * Takes a mission out of the reference list, without losing anything.
+ *
+ * A project cut into packages says what becomes of them in the same breath:
+ * archiving is not an edit of one field, it is a gesture that reaches what
+ * hangs from the mission.
+ * @summary Archive Project
+ */
+export const archiveProject = async (
+  projectId: number,
+  archiveProjectRequest: ArchiveProjectRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<archiveProjectResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<archiveProjectResponse>(getArchiveProjectUrl(projectId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(archiveProjectRequest),
+  });
+};
+
+export const getArchiveProjectMutationKey = () => ["archiveProject"] as const;
+
+export const getArchiveProjectMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof archiveProject>>,
+    TError,
+    ArchiveProjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof archiveProject>>,
+  TError,
+  ArchiveProjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getArchiveProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof archiveProject>>,
+    ArchiveProjectMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return archiveProject(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ArchiveProjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof archiveProject>>
+>;
+export type ArchiveProjectMutationBody = ArchiveProjectRequest;
+export type ArchiveProjectMutationError = HTTPValidationError;
+export type ArchiveProjectMutationVariables = {
+  projectId: number;
+  data: ArchiveProjectRequest;
+};
+
+/**
+ * @summary Archive Project
+ */
+export const useArchiveProject = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof archiveProject>>,
+      TError,
+      ArchiveProjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof archiveProject>>,
+  TError,
+  ArchiveProjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getArchiveProjectMutationOptions(options), queryClient);
+};
+export type unarchiveProjectResponse200 = {
+  data: ProjectResponse;
+  status: 200;
+};
+
+export type unarchiveProjectResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type unarchiveProjectResponseSuccess = unarchiveProjectResponse200 & {
+  headers: Headers;
+};
+export type unarchiveProjectResponseError = unarchiveProjectResponse422 & {
+  headers: Headers;
+};
+
+export type unarchiveProjectResponse =
+  unarchiveProjectResponseSuccess | unarchiveProjectResponseError;
+
+export const getUnarchiveProjectUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/unarchive`;
+};
+
+/**
+ * Puts a mission back into the reference list. It comes back on its own.
+ * @summary Unarchive Project
+ */
+export const unarchiveProject = async (
+  projectId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<unarchiveProjectResponse> => {
+  return bffFetcher<unarchiveProjectResponse>(getUnarchiveProjectUrl(projectId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getUnarchiveProjectMutationKey = () => ["unarchiveProject"] as const;
+
+export const getUnarchiveProjectMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof unarchiveProject>>,
+    TError,
+    UnarchiveProjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof unarchiveProject>>,
+  TError,
+  UnarchiveProjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUnarchiveProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof unarchiveProject>>,
+    UnarchiveProjectMutationVariables
+  > = (props) => {
+    const { projectId } = props ?? {};
+
+    return unarchiveProject(projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UnarchiveProjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof unarchiveProject>>
+>;
+
+export type UnarchiveProjectMutationError = HTTPValidationError;
+export type UnarchiveProjectMutationVariables = { projectId: number };
+
+/**
+ * @summary Unarchive Project
+ */
+export const useUnarchiveProject = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof unarchiveProject>>,
+      TError,
+      UnarchiveProjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof unarchiveProject>>,
+  TError,
+  UnarchiveProjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getUnarchiveProjectMutationOptions(options), queryClient);
 };
 export type importProjectsResponse200 = {
   data: ImportReportResponse;

@@ -181,8 +181,18 @@ class TestAttachment:
         assert package.kind is ProjectKind.PROJECT
         assert package.parent_id is None
 
-    def test_a_detached_mission_carries_no_axis_until_one_is_given(self) -> None:
-        """It had none to carry: what it read came from the project it left."""
+    def test_a_detached_mission_keeps_the_axis_it_was_reading(self) -> None:
+        """The slice was on that axis too: coming out blank would lose it."""
+        package = make_project(kind=ProjectKind.WORK_PACKAGE, parent_id=9)
+
+        package.detach(ProjectCategory.SUSTAIN)
+
+        assert package.category is ProjectCategory.SUSTAIN
+
+    def test_a_detached_mission_carries_no_axis_when_its_project_had_none(
+        self,
+    ) -> None:
+        """Nothing is invented: an unqualified project hands down nothing."""
         package = make_project(kind=ProjectKind.WORK_PACKAGE, parent_id=9)
 
         package.detach()

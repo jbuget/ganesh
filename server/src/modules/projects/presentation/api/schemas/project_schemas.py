@@ -16,6 +16,7 @@ from src.modules.projects.domain.entities.service_registry import (
     Criticality,
     ServiceType,
 )
+from src.modules.projects.domain.services.hierarchy import SubProjectPolicy
 from src.shared.enums.department import Department
 
 
@@ -33,6 +34,17 @@ class AttachProjectRequest(BaseModel):
     """Naming the project a mission becomes a slice of."""
 
     parent_id: int
+
+
+class ArchiveProjectRequest(BaseModel):
+    """Taking a mission out of the reference list.
+
+    `sub_projects` is what a project cut into packages is archived with: the
+    packages leave with it, or carry on as projects of their own. Left out
+    where the question does not arise, and refused when it does.
+    """
+
+    sub_projects: SubProjectPolicy | None = None
 
 
 class ChangeStatusRequest(BaseModel):
@@ -137,7 +149,6 @@ class UpdateProjectRequest(BaseModel):
     category: ProjectCategory | None = None
     priority: ProjectPriority | None = None
     go_live_date: date | None = None
-    is_active: bool | None = None
     monday_item_id: str | None = None
     monday_subitem_id: str | None = None
 

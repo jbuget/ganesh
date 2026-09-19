@@ -14,6 +14,10 @@ from src.modules.entries.presentation.dependencies import (
     get_project_repository,
     get_user_repository,
 )
+from src.modules.projects.application.use_cases.archive_project import (
+    ArchiveProjectUseCase,
+    UnarchiveProjectUseCase,
+)
 from src.modules.projects.application.use_cases.assign_member import (
     AssignMemberUseCase,
     UnassignMemberUseCase,
@@ -165,6 +169,24 @@ def get_detach_project_use_case(
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> DetachProjectUseCase:
     return DetachProjectUseCase(users=users, projects=projects, audit_logs=audit_logs)
+
+
+def get_archive_project_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> ArchiveProjectUseCase:
+    return ArchiveProjectUseCase(users=users, projects=projects, audit_logs=audit_logs)
+
+
+def get_unarchive_project_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> UnarchiveProjectUseCase:
+    return UnarchiveProjectUseCase(
+        users=users, projects=projects, audit_logs=audit_logs
+    )
 
 
 def get_update_project_use_case(

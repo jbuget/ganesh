@@ -93,17 +93,6 @@ async def test_a_field_left_out_is_not_touched() -> None:
     assert project.status is ProjectStatus.SCOPING
 
 
-async def test_a_project_can_be_archived() -> None:
-    use_case, repo, _ = build()
-
-    await use_case.execute(
-        UpdateProjectCommand(actor_id=1, project_id=10, is_active=False)
-    )
-
-    assert await repo.get_by_id(10) is not None
-    assert [p.id for p in await repo.list_all()] == []
-
-
 async def test_a_project_can_be_linked_to_monday() -> None:
     use_case, repo, _ = build()
 
@@ -188,34 +177,6 @@ async def test_an_untouched_priority_survives_another_change() -> None:
     project = await repo.get_by_id(10)
     assert project is not None
     assert project.priority is ProjectPriority.LOW
-
-
-async def test_archiving_a_project_dates_its_exit() -> None:
-    use_case, repo, _ = build()
-
-    await use_case.execute(
-        UpdateProjectCommand(actor_id=1, project_id=10, is_active=False)
-    )
-
-    archived = await repo.get_by_id(10)
-    assert archived is not None
-    assert archived.archived_at is not None
-
-
-async def test_unarchiving_a_project_clears_its_exit_date() -> None:
-    use_case, repo, _ = build()
-    await use_case.execute(
-        UpdateProjectCommand(actor_id=1, project_id=10, is_active=False)
-    )
-
-    await use_case.execute(
-        UpdateProjectCommand(actor_id=1, project_id=10, is_active=True)
-    )
-
-    reloaded = await repo.get_by_id(10)
-    assert reloaded is not None
-    assert reloaded.is_active is True
-    assert reloaded.archived_at is None
 
 
 async def test_a_work_package_is_refused_an_axis_of_its_own() -> None:

@@ -1,9 +1,9 @@
 """Changes a mission in the reference list."""
 
-from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
+from src.modules.projects.application.audit import ProjectChange, trace_project_changes
 from src.modules.projects.application.dtos.project_dto import (
     ABSENT,
     UpdateProjectCommand,
@@ -27,7 +27,6 @@ EDITABLE_FIELDS = (
     "category",
     "priority",
     "go_live_date",
-    "is_active",
     "monday_item_id",
     "monday_subitem_id",
     # Service sheet.
@@ -77,7 +76,7 @@ class UpdateProjectUseCase:
             if holder is not None and holder.id != project.id:
                 raise ConflictError(f"The slug « {slug} » is already taken.")
 
-        changes: list[tuple[str, object, object]] = []
+        changes: list[ProjectChange] = []
         for field in EDITABLE_FIELDS:
             requested = getattr(command, field)
             if requested is ABSENT:
@@ -86,12 +85,7 @@ class UpdateProjectUseCase:
             if previous == requested:
                 continue
             changes.append((field, previous, requested))
-            if field == "is_active":
-                # Leaving the reference list is dated, coming back clears the
-                # date: the entity holds that rule, not the assignment.
-                project.archive() if requested is False else project.unarchive()
-            else:
-                setattr(project, field, requested)
+            setattr(project, field, requested)
 
         # Replays the entity invariants on the resulting state.
         project.__post_init__()
@@ -99,17 +93,9 @@ class UpdateProjectUseCase:
 
         await self._projects.update(project)
 
-        for field, previous, new_one in changes:
-            await self._audit_logs.add(
-                AuditLog(
-                    action=AuditAction.PROJECT_UPDATE,
-                    actor_id=command.actor_id,
-                    project_id=project.id,
-                    old_value=None if previous is None else str(previous),
-                    new_value=None if new_one is None else str(new_one),
-                    payload={"field": field},
-                )
-            )
+        await trace_project_changes(
+            self._audit_logs, command.actor_id, project, changes
+        )
 
         # A work package answers with the axis of its project, the one every
         # screen already shows it under.
