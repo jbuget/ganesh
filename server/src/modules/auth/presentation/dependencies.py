@@ -1,23 +1,16 @@
 """Authenticating requests and resolving the current user."""
 
 import logging
-from collections.abc import Callable, Coroutine
-from typing import Any
 
 from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import Settings, get_settings
 from src.core.database import get_db
-from src.modules.api_keys.application.use_cases.authenticate_api_key import (
-    AuthenticateApiKeyUseCase,
-    MachineCaller,
-)
-from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
+
+# The one thing this module needs of the keys: recognising one at the door.
+# Admitting a machine lives in the api_keys module, beside what it admits.
 from src.modules.api_keys.domain.services import key_material
-from src.modules.api_keys.presentation.dependencies import (
-    get_authenticate_api_key_use_case,
-)
 from src.modules.auth.infrastructure.entra_token_validator import EntraTokenValidator
 from src.modules.auth.presentation.identity import identity_from_claims
 from src.modules.users.application.dtos.user_dto import EntraIdentity
@@ -110,48 +103,3 @@ async def get_current_manager(
             detail="This action is reserved for managers.",
         )
     return user
-
-
-def require_scope(
-    scope: ApiKeyScope,
-) -> Callable[..., Coroutine[Any, Any, MachineCaller]]:
-    """Opens one route to a machine carrying one scope.
-
-    A key opens nothing by default. A route becomes machine-reachable by
-    asking for it here, explicitly, one route at a time — which is why adding
-    a key to Janus changes the reach of no existing route.
-
-    Unknown, malformed, expired, revoked, owner deactivated: all five answer
-    `401`, and none of them says which. Telling an expired key from an unknown
-    one hands an attacker a way to enumerate. A valid key without the scope
-    answers `403`, because there the caller needs to know what to ask for.
-    """
-
-    async def dependency(
-        authorization: str | None = Header(default=None),
-        use_case: AuthenticateApiKeyUseCase = Depends(
-            get_authenticate_api_key_use_case
-        ),
-        session: AsyncSession = Depends(get_db),
-    ) -> MachineCaller:
-        if not authorization or not authorization.lower().startswith("bearer "):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Missing API key.",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
-        caller = await use_case.execute(authorization.split(" ", 1)[1], scope)
-        if caller is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid API key.",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
-        # `last_used_at` is written through a freshness window, so this commits
-        # at most once every quarter of an hour per key.
-        await session.commit()
-        return caller
-
-    return dependency

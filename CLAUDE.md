@@ -402,6 +402,9 @@ whole design leans on, and the one to respect when adding a route:
   implying reading.
 - The secret is shown once, at creation, and stored as a SHA-256. There is no
   route that hands it over again.
+- A key may only call so often. The bucket is counted **per process**, in
+  memory, behind a `RateLimitStore` port — never in the database, which would
+  mean a write on every call.
 
 The whole team reads the table of keys; only a manager mints or revokes one.
 See `docs/api-keys.md`.

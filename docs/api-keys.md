@@ -310,6 +310,46 @@ and `API_KEY_REVOKE`. A correction traces one line per field that changed.
 - **Never return a secret twice.** There is no « reveal » endpoint, because
   there is nothing left to reveal.
 
+## How often a key may call
+
+A leaked key is not only read by whoever should not have it: it is read
+*fast*. A limit is what turns a leak into a nuisance rather than an outage,
+and what keeps a looping script from taking the API down for everyone else.
+
+**A token bucket, not a fixed window.** A window lets a caller fire its whole
+allowance at the end of one and again at the start of the next — twice the
+limit at the very moment it matters. A bucket refills steadily, so a burst is
+bounded by what has actually accrued.
+
+**A refused call spends nothing.** Hammering a closed door does not hold it
+shut for longer: that is the difference between a limit and a punishment.
+
+**Only a key that has proved itself is counted.** The limit guards against a
+caller holding a real key; turning away a forged one costs a hash and must not
+eat anyone's allowance.
+
+Every answer carries `X-RateLimit-Limit` and `X-RateLimit-Remaining` — a
+caller should be able to slow down before being told to — and a `429` adds
+`Retry-After`, rounded up, because « wait 0 s » invites an instant retry.
+
+```
+API_KEY_RATE_ALLOWANCE=120       # calls
+API_KEY_RATE_WINDOW_SECONDS=60   # over this long
+```
+
+> **The counters live in the memory of the process.** Behind several workers
+> the effective allowance is multiplied by their number, and a restart hands
+> everyone a full bucket. Both are accepted for now, and both are why this
+> sits behind a `RateLimitStore` port: moving the counters to Redis changes
+> one file.
+>
+> Counting in the database was turned down on purpose — it would mean a write
+> on every single call, which is exactly the amplification that was taken off
+> the authentication path.
+
+Not per key: one allowance for all of them. A CI that legitimately needs more
+than a script is a reason to add a column, and a reason to have the UI say so.
+
 ## The screen
 
 A new view, `/api`, reachable from the sidebar by everyone.
@@ -352,8 +392,6 @@ Named so nobody wonders whether they were forgotten:
 - **Rotation with an overlap window.** V1 rotation is: create the new one, move
   the consumer over, revoke the old one. Two live keys for one account is V2,
   and it is what would make a mandatory expiry bearable.
-- **Rate limiting per key.** Nothing throttles a key. Worth settling before the
-  first write scope is wired to a route.
 - **IP allowlists.**
 - **A true machine actor in the audit.** See *Traceability*.
 
