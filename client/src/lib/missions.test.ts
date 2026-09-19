@@ -25,10 +25,36 @@ const PROJECTS = [
 ];
 
 describe("availableMissions", () => {
+  /**
+   * The database sorts under its own collation, which files « Évènementiel »
+   * after « Support » — a French reader finds it nowhere near where they look.
+   */
+  it("orders each group as French reads, accents included", () => {
+    const accented = [
+      project(1, "Support", "off_project"),
+      project(2, "Évènementiel / communication", "off_project"),
+      project(3, "Absences", "off_project"),
+      project(4, "Étude d'implantation", "project"),
+      project(5, "Formation", "project"),
+    ];
+
+    const { projectMissions, offProject } = availableMissions(accented, [], []);
+
+    expect(offProject.map((m) => m.label)).toEqual([
+      "Absences",
+      "Évènementiel / communication",
+      "Support",
+    ]);
+    expect(projectMissions.map((m) => m.label)).toEqual([
+      "Étude d'implantation",
+      "Formation",
+    ]);
+  });
+
   it("separates projects and work packages from off-project work", () => {
     const { projectMissions, offProject } = availableMissions(PROJECTS, [], []);
 
-    expect(projectMissions.map((p) => p.label)).toEqual(["Portail bailleurs", "Lot 1"]);
+    expect(projectMissions.map((p) => p.label)).toEqual(["Lot 1", "Portail bailleurs"]);
     expect(offProject.map((p) => p.label)).toEqual(["Absences"]);
   });
 
@@ -96,7 +122,7 @@ describe("availableMissions", () => {
       [1, 2],
     );
 
-    expect(mine.map((p) => p.label)).toEqual(["Portail bailleurs", "Absences"]);
+    expect(mine.map((p) => p.label)).toEqual(["Absences", "Portail bailleurs"]);
     // A mission belongs to one group only: offered twice, it would read as two.
     expect(projectMissions.map((p) => p.label)).toEqual(["Lot 1"]);
     expect(offProject).toEqual([]);
