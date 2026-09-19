@@ -71,6 +71,8 @@ export function useTimesheetMonth() {
     teammates,
     projects,
     extraRows,
+    /** Replays the month's queries — what a panel edit changes shows here. */
+    refresh,
 
     targetUserId: viewedUserId ?? me?.id ?? null,
     currentUserId: me?.id ?? null,
