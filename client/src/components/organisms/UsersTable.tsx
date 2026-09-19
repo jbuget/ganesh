@@ -1,19 +1,17 @@
 "use client";
 
+import { SortableColumnHeader } from "@/components/atoms/SortableColumnHeader";
 import { UserRow } from "@/components/molecules/UserRow";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import type { UserResponse } from "@/lib/api/generated/model";
 import { STRONG_SEPARATOR, TABLE_FRAME, TABLE_HEADER } from "@/lib/table-frame";
+import type { UserSort, UserSortColumn } from "@/lib/user-sort";
 
 interface UsersTableProps {
   /** The teammates to draw, already filtered and already in order. */
   users: UserResponse[];
+  sorted: UserSort;
+  onSort: (column: UserSortColumn) => void;
   /** One reference time for every row, so « il y a 3 h » does not drift. */
   now: Date;
   onOpen: (userId: number) => void;
@@ -30,7 +28,7 @@ interface UsersTableProps {
  * grid: a strong rule around, a strong rule under the titles, and the column
  * that names the teammate closed off from those that describe them.
  */
-export function UsersTable({ users, now, onOpen }: UsersTableProps) {
+export function UsersTable({ users, sorted, onSort, now, onOpen }: UsersTableProps) {
   return (
     // The shadcn container opens a scrolling context that would hold the header
     // inside the table: we neutralise it so the `sticky` latches onto the
@@ -39,12 +37,46 @@ export function UsersTable({ users, now, onOpen }: UsersTableProps) {
       <Table className={`border-separate border-spacing-0 ${TABLE_FRAME}`}>
         <TableHeader className={TABLE_HEADER}>
           <TableRow>
-            <TableHead className={STRONG_SEPARATOR}>Collaborateur</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>GitHub</TableHead>
-            <TableHead>Rôle</TableHead>
-            <TableHead>Dernière connexion</TableHead>
-            <TableHead>Statut</TableHead>
+            {/* Every column sorts: each of the six carries an order the
+                reader already has in mind — the alphabet, the ladder of roles,
+                how long ago someone came by, whether the access is open. */}
+            <SortableColumnHeader
+              column="name"
+              label="Collaborateur"
+              sorted={sorted}
+              onToggle={onSort}
+              className={STRONG_SEPARATOR}
+            />
+            <SortableColumnHeader
+              column="email"
+              label="Email"
+              sorted={sorted}
+              onToggle={onSort}
+            />
+            <SortableColumnHeader
+              column="github"
+              label="GitHub"
+              sorted={sorted}
+              onToggle={onSort}
+            />
+            <SortableColumnHeader
+              column="role"
+              label="Rôle"
+              sorted={sorted}
+              onToggle={onSort}
+            />
+            <SortableColumnHeader
+              column="login"
+              label="Dernière connexion"
+              sorted={sorted}
+              onToggle={onSort}
+            />
+            <SortableColumnHeader
+              column="status"
+              label="Statut"
+              sorted={sorted}
+              onToggle={onSort}
+            />
           </TableRow>
         </TableHeader>
 

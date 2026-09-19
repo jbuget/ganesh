@@ -1,7 +1,6 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 
 import {
   changeUserRole,
@@ -14,25 +13,29 @@ import type {
   UserResponse,
 } from "@/lib/api/generated/model";
 import { useCurrentUser, useTeammates } from "@/lib/api/queries";
+import { NO_USER_FILTER, filterUsers, type UserFilters } from "@/lib/user-filters";
+import { NO_USER_SORT, sortUsers, type UserSort } from "@/lib/user-sort";
 
 /**
  * State and actions of the teammates screen.
  *
  * As everywhere else, coordination lives in a hook so the component carries
- * only the rendering.
+ * only the rendering. Filtering and ordering are part of it, as on the mission
+ * reference list: the screen receives the criteria and the order, and renders
+ * the list already reduced and arranged, without having to know how.
  */
-export function useUsersScreen() {
+export function useUsersScreen(
+  filters: UserFilters = NO_USER_FILTER,
+  sorted: UserSort = NO_USER_SORT,
+) {
   const queryClient = useQueryClient();
   const { user: me } = useCurrentUser();
-  const [withInactive, setWithInactive] = useState(false);
   // The management screen always asks for everyone, and hides rather than
   // re-fetches: a panel opened by a link on a deactivated account must find it,
   // whatever the list is showing at that moment.
   const { teammates, isLoading } = useTeammates(true);
 
-  const visible = withInactive
-    ? teammates
-    : teammates.filter((teammate) => teammate.is_active);
+  const kept = filterUsers(teammates, filters);
 
   return {
     isLoading,
@@ -40,18 +43,23 @@ export function useUsersScreen() {
     // Nobody cuts off their own access: the account would be turned away on
     // the next request, and no one could reopen it from inside.
     meId: me?.id,
-    withInactive,
 
     // One reference instant per render: without it, two rows of the same list
     // would compare against two different « now ».
     now: new Date(),
 
-    toggleInactive: () => setWithInactive((current) => !current),
+    users: sortUsers(kept, sorted),
 
-    /** By name, the only order one finds by eye in a team list. */
-    users: [...visible].sort((a, b) =>
-      a.display_name.localeCompare(b.display_name, "fr"),
-    ),
+    /**
+     * Teammates kept, and teammates one would see with no criterion.
+     *
+     * What one is compared against is the list without its criteria, not the
+     * whole table: deactivated accounts are hidden until they are asked for, so
+     * counting them in would promise rows that clearing the filters would not
+     * bring back. Asking for them raises both numbers at once.
+     */
+    visible: kept.length,
+    total: filterUsers(teammates, { ...NO_USER_FILTER, states: filters.states }).length,
 
     /** The teammate a panel is opened on, deactivated or not. */
     find: (userId: number) =>

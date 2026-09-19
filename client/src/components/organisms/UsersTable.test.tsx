@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { UserResponse } from "@/lib/api/generated/model";
+import { NO_USER_SORT } from "@/lib/user-sort";
 
 import { UsersTable } from "./UsersTable";
 
@@ -30,13 +31,25 @@ const TEAM: UserResponse[] = [
 
 const NOW = new Date("2026-09-17T12:00:00");
 const onOpen = vi.fn();
+const onSort = vi.fn();
 
 function renderTable(users: UserResponse[] = TEAM) {
-  return render(<UsersTable users={users} now={NOW} onOpen={onOpen} />);
+  return render(
+    <UsersTable
+      users={users}
+      sorted={NO_USER_SORT}
+      onSort={onSort}
+      now={NOW}
+      onOpen={onOpen}
+    />,
+  );
 }
 
 describe("UsersTable", () => {
-  beforeEach(() => onOpen.mockClear());
+  beforeEach(() => {
+    onOpen.mockClear();
+    onSort.mockClear();
+  });
 
   it("names the columns one compares the team under", () => {
     renderTable();
@@ -73,6 +86,35 @@ describe("UsersTable", () => {
     await userEvent.click(screen.getByText("L. Chen"));
 
     expect(onOpen).toHaveBeenCalledWith(2);
+  });
+
+  it("asks for a column to sort by when its title is clicked", () => {
+    renderTable();
+
+    return userEvent
+      .click(screen.getByRole("button", { name: "Dernière connexion" }))
+      .then(() => expect(onSort).toHaveBeenCalledWith("login"));
+  });
+
+  it("says which column arranges the list, and which way round", () => {
+    render(
+      <UsersTable
+        users={TEAM}
+        sorted={{ column: "role", direction: "desc" }}
+        onSort={onSort}
+        now={NOW}
+        onOpen={onOpen}
+      />,
+    );
+
+    expect(screen.getByRole("columnheader", { name: /Rôle/ })).toHaveAttribute(
+      "aria-sort",
+      "descending",
+    );
+    expect(screen.getByRole("columnheader", { name: "Email" })).toHaveAttribute(
+      "aria-sort",
+      "none",
+    );
   });
 
   it("closes the column naming the teammate with a strong rule", () => {

@@ -1,9 +1,9 @@
 "use client";
 
-import { Search, X } from "lucide-react";
-
+import { ClearFilters } from "@/components/atoms/ClearFilters";
 import { FilterSelect } from "@/components/atoms/FilterSelect";
-import { Input } from "@/components/ui/input";
+import { FilteredCount } from "@/components/atoms/FilteredCount";
+import { SearchField } from "@/components/atoms/SearchField";
 import type {
   ProjectCategory,
   ProjectKind,
@@ -63,20 +63,11 @@ export function MissionFilters({
           the criteria sit on the bar's own line, and what accompanies them is
           not part of the search. */}
       <div role="search" aria-label="Filtrer les missions" className="contents">
-        <div className="relative">
-          <Search
-            className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-slate-400"
-            aria-hidden
-          />
-          <Input
-            type="search"
-            value={filters.name}
-            onChange={(event) => onChange({ name: event.target.value })}
-            placeholder="Rechercher une mission"
-            aria-label="Rechercher une mission"
-            className="h-9 w-64 pl-8"
-          />
-        </div>
+        <SearchField
+          value={filters.name}
+          onChange={(name) => onChange({ name })}
+          label="Rechercher une mission"
+        />
 
         <FilterSelect
           label="Phase"
@@ -147,30 +138,19 @@ export function MissionFilters({
           onChange={(values) => onChange({ states: values as MissionState[] })}
         />
 
-        {hasFilter && (
-          <button
-            type="button"
-            onClick={onClear}
-            className="flex cursor-pointer items-center gap-1 rounded-md px-2 py-1.5 text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
-          >
-            <X className="size-3.5" aria-hidden />
-            Effacer
-          </button>
-        )}
+        {hasFilter && <ClearFilters onClear={onClear} />}
       </div>
 
       {/* Pushed to the far end: what one reads about the list, and what one
           sets about how to read it, away from the criteria themselves. */}
       <div className="ml-auto flex items-center gap-2">
         {hasFilter && (
-          /*
-            The count is spoken aloud: a filter that leaves nothing cannot be
-            seen when one is not looking at the screen, and `status` announces
-            it without interrupting typing.
-          */
-          <p role="status" className="text-sm tabular-nums text-slate-500">
-            {visible} mission{visible > 1 ? "s" : ""} sur {total}
-          </p>
+          <FilteredCount
+            visible={visible}
+            total={total}
+            one="mission"
+            many="missions"
+          />
         )}
         {trailing}
       </div>

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { UsersPage } from "./UsersPage";
@@ -28,9 +28,9 @@ const USERS = [
 const state = vi.hoisted(() => ({
   isLoading: false,
   isManager: false,
-  withInactive: false,
-  toggleInactive: vi.fn(),
   users: [] as Record<string, unknown>[],
+  visible: 2,
+  total: 2,
   find: vi.fn(),
   changeRole: vi.fn(),
   updateIdentity: vi.fn(),
@@ -45,8 +45,22 @@ const panel = vi.hoisted(() => ({
   close: vi.fn(),
 }));
 
+const criteria = vi.hoisted(() => ({
+  filters: { name: "", roles: [] as string[], states: [] as string[] },
+  hasFilter: false,
+  set: vi.fn(),
+  clear: vi.fn(),
+}));
+
+const order = vi.hoisted(() => ({
+  sorted: { column: null as string | null, direction: "asc" as const },
+  toggle: vi.fn(),
+}));
+
 vi.mock("@/lib/use-users", () => ({ useUsersScreen: () => state }));
 vi.mock("@/lib/opened-user", () => ({ useOpenedUser: () => panel }));
+vi.mock("@/lib/use-user-filters", () => ({ useUserFilters: () => criteria }));
+vi.mock("@/lib/use-user-sort", () => ({ useUserSort: () => order }));
 
 describe("UsersPage", () => {
   beforeEach(() => {
@@ -58,6 +72,11 @@ describe("UsersPage", () => {
     );
     panel.openedUser = null;
     panel.open.mockClear();
+    criteria.filters = { name: "", roles: [], states: [] };
+    criteria.hasFilter = false;
+    criteria.set.mockClear();
+    order.sorted = { column: null, direction: "asc" };
+    order.toggle.mockClear();
   });
 
   it("lists the teammates", () => {
@@ -68,14 +87,36 @@ describe("UsersPage", () => {
   });
 
   it("makes it possible to bring up deactivated accounts", async () => {
-    state.withInactive = false;
+    render(<UsersPage />);
+
+    // The filter bar, not the column of the same name: the two are told apart
+    // on screen by where they sit, and here by the search group around them.
+    const bar = within(screen.getByRole("search"));
+    await userEvent.click(bar.getByRole("button", { name: "Statut" }));
+    await userEvent.click(screen.getByRole("button", { name: "Désactivés" }));
+
+    expect(criteria.set).toHaveBeenCalledWith({ states: ["inactive"] });
+  });
+
+  it("searches a colleague by name or by email", async () => {
+    render(<UsersPage />);
+
+    await userEvent.type(
+      screen.getByRole("searchbox", { name: "Rechercher un collaborateur" }),
+      "z",
+    );
+
+    expect(criteria.set).toHaveBeenCalledWith({ name: "z" });
+  });
+
+  it("arranges the list by the column whose title is clicked", async () => {
     render(<UsersPage />);
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Afficher les inactifs" }),
+      within(screen.getByRole("columnheader", { name: "Rôle" })).getByRole("button"),
     );
 
-    expect(state.toggleInactive).toHaveBeenCalledTimes(1);
+    expect(order.toggle).toHaveBeenCalledWith("role");
   });
 
   it("gives everyone's last login", () => {
@@ -168,5 +209,17 @@ describe("UsersPage", () => {
 
     expect(screen.getByText(/Aucun utilisateur/)).toBeInTheDocument();
     expect(screen.queryByRole("table")).toBeNull();
+  });
+
+  it("says a filter is what empties the list, not an empty team", () => {
+    // « Aucun utilisateur » before a filter that keeps nobody would send one
+    // looking for a bug in the accounts rather than at the criteria set.
+    state.users = [];
+    criteria.hasFilter = true;
+    render(<UsersPage />);
+
+    expect(
+      screen.getByText(/Aucun collaborateur ne répond aux filtres/),
+    ).toBeInTheDocument();
   });
 });
