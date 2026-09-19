@@ -126,7 +126,7 @@ def require_scope(
 
     A key opens nothing by default. A route becomes machine-reachable by
     asking for it here, explicitly, one route at a time — which is why adding
-    a key to Janus changes the reach of no existing route.
+    a key to Ganesh changes the reach of no existing route.
 
     Unknown, malformed, expired, revoked, owner deactivated: all five answer
     `401`, and none of them says which. Telling an expired key from an unknown

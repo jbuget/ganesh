@@ -15,7 +15,7 @@ class Settings(BaseSettings):
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
 
-    app_name: str = "Janus API"
+    app_name: str = "Ganesh API"
     environment: str = "development"
     debug: bool = False
 

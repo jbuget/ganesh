@@ -1,7 +1,7 @@
 """Writes the service catalogue to a file.
 
 The catalogue is served by `GET /api/v1/projects/catalog`, which is where
-waat.tools will read it once Janus is deployed. Until then this script does
+waat.tools will read it once Ganesh is deployed. Until then this script does
 the same work against the database directly, so the file can be committed into
 the catalogue's repository and the two sides can already be wired together.
 

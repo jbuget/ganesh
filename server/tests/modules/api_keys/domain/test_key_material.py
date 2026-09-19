@@ -41,7 +41,7 @@ class TestParse:
 
 
 class TestLooksLikeOurs:
-    def test_a_janus_key_announces_itself(self) -> None:
+    def test_a_ganesh_key_announces_itself(self) -> None:
         assert key_material.looks_like_ours("jns_abc_def") is True
 
     def test_an_entra_token_does_not(self) -> None:

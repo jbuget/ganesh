@@ -15,9 +15,9 @@ import { useOpenedMission } from "@/lib/opened-mission";
 /**
  * The screen one lands on: what is waiting, and what one is working on.
  *
- * Janus looks at what has been and at what comes with the same glance, and
- * this is where the two meet — the month behind still to close, the missions
- * running, the news published on them since one last looked.
+ * Ganesh is the one invoked at the opening of every undertaking, and this is
+ * where a month opens — the month behind still to close, the missions running,
+ * the news published on them since one last looked.
  *
  * It reads and never writes. Every line hands over to the screen that acts:
  * the grid for time, the mission panel for the rest. Keeping it that way is

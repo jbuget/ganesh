@@ -70,7 +70,7 @@ export function AppSidebar() {
       >
         {!collapsed && (
           <span className="min-w-0">
-            <span className="block text-sm font-semibold tracking-tight">Janus</span>
+            <span className="block text-sm font-semibold tracking-tight">Ganesh</span>
             <span className="block text-xs text-slate-500">WAAT</span>
           </span>
         )}
