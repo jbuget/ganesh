@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { TeammateSelector } from "@/components/atoms/TeammateSelector";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,7 +15,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ApiKeyScope, UserResponse } from "@/lib/api/generated/model";
-import { SCOPES, oneYearFromNow } from "@/lib/api-keys";
+import {
+  SCOPES,
+  coveredBy,
+  oneYearFromNow,
+  pruneCovered,
+  scopeLabel,
+} from "@/lib/api-keys";
 
 interface CreateApiKeyDialogProps {
   open: boolean;
@@ -76,7 +83,8 @@ export function CreateApiKeyDialog({
       await onCreate({
         name: name.trim(),
         owner_id: ownerId,
-        scopes,
+        // Only what the server needs: it derives the rest from the broad ones.
+        scopes: pruneCovered(scopes),
         expires_at: expiresAt || null,
       });
       onOpenChange(false);
@@ -121,20 +129,16 @@ export function CreateApiKeyDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="api-key-owner">Responsable</Label>
-            <select
+            {/* The same control as the activity screen, search included: a
+                team of twenty is found by typing three letters. */}
+            <TeammateSelector
+              stacked
               id="api-key-owner"
-              value={ownerId ?? ""}
-              onChange={(event) => setOwnerId(Number(event.target.value) || null)}
-              className="h-9 w-full cursor-pointer rounded-md border border-slate-300 bg-white px-3 text-sm"
-            >
-              <option value="">Choisir…</option>
-              {teammates.map((teammate) => (
-                <option key={teammate.id} value={teammate.id}>
-                  {teammate.display_name}
-                </option>
-              ))}
-            </select>
+              label="Compte associé"
+              teammates={teammates}
+              selectedId={ownerId}
+              onSelect={setOwnerId}
+            />
             <p className="text-xs text-slate-500">
               Qui répond de ce que fait cette machine. La clé cesse de fonctionner si ce
               compte est désactivé.
@@ -144,23 +148,36 @@ export function CreateApiKeyDialog({
           <fieldset className="space-y-1.5">
             <legend className="text-sm font-medium">Périmètres</legend>
             <div className="space-y-1.5">
-              {SCOPES.map((scope) => (
-                <label
-                  key={scope.value}
-                  className="flex cursor-pointer items-start gap-2 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    checked={scopes.includes(scope.value)}
-                    onChange={() => toggleScope(scope.value)}
-                    className="mt-0.5 size-4 cursor-pointer rounded border-slate-300"
-                  />
-                  <span>
-                    <span className="text-slate-800">{scope.label}</span>
-                    <span className="block text-xs text-slate-500">{scope.hint}</span>
-                  </span>
-                </label>
-              ))}
+              {SCOPES.map((scope) => {
+                // A broad scope ticks and locks what it carries: the reach of
+                // « Tous » is seen where it is decided, not discovered later.
+                const covering = coveredBy(scope.value, scopes);
+                return (
+                  <label
+                    key={scope.value}
+                    className={[
+                      "flex items-start gap-2 text-sm",
+                      covering ? "cursor-default" : "cursor-pointer",
+                    ].join(" ")}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={covering !== null || scopes.includes(scope.value)}
+                      disabled={covering !== null}
+                      onChange={() => toggleScope(scope.value)}
+                      className="mt-0.5 size-4 rounded border-slate-300 enabled:cursor-pointer disabled:cursor-default"
+                    />
+                    <span className={covering ? "opacity-50" : undefined}>
+                      <span className="text-slate-800">{scope.label}</span>
+                      <span className="block text-xs text-slate-500">
+                        {covering
+                          ? `Inclus dans « ${scopeLabel(covering)} »`
+                          : scope.hint}
+                      </span>
+                    </span>
+                  </label>
+                );
+              })}
             </div>
           </fieldset>
 

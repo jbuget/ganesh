@@ -9,6 +9,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import type { ApiKeyResponse } from "@/lib/api/generated/model";
 import { isUsable, scopeLabel } from "@/lib/api-keys";
 import { formatSpelledDate } from "@/lib/dates";
+import { STRONG_SEPARATOR } from "@/lib/table-frame";
 
 interface ApiKeyRowProps {
   apiKey: ApiKeyResponse;
@@ -35,37 +36,46 @@ export function ApiKeyRow({ apiKey, canRevoke, onRevoke }: ApiKeyRowProps) {
   const spent = !isUsable(apiKey);
 
   return (
-    <TableRow className={spent ? "text-slate-400" : undefined}>
-      <TableCell>
+    // The row takes the page background, the name cell white: the key reads as
+    // the anchor of the line rather than as its first column. The same grammar
+    // as the teammates table.
+    <TableRow
+      className={`group bg-slate-50 hover:bg-slate-100 ${
+        spent ? "text-slate-400" : ""
+      }`}
+    >
+      <TableCell
+        className={`bg-white py-2 group-hover:bg-slate-50 ${STRONG_SEPARATOR}`}
+      >
         <span className="font-medium text-slate-900">{apiKey.name}</span>
         <code className="mt-0.5 block font-mono text-xs text-slate-500">
           {apiKey.masked}
         </code>
       </TableCell>
 
-      <TableCell>
+      <TableCell className="py-2">
         <span className="text-slate-700">
           {apiKey.scopes.map(scopeLabel).join(", ")}
         </span>
       </TableCell>
 
-      <TableCell>
+      <TableCell className="py-2">
         <span className="text-slate-700">{apiKey.owner.display_name}</span>
       </TableCell>
 
-      <TableCell>
+      <TableCell className="py-2">
         <Day iso={apiKey.last_used_at} />
       </TableCell>
 
-      <TableCell>
+      <TableCell className="py-2">
         <Day iso={apiKey.expires_at} />
       </TableCell>
 
-      <TableCell>
+      <TableCell className="py-2">
         <ApiKeyStateBadge state={apiKey.state} />
       </TableCell>
 
-      <TableCell className="text-right">
+      <TableCell className="py-2 text-right">
         {canRevoke && isUsable(apiKey) && (
           <>
             <Button

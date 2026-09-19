@@ -116,3 +116,40 @@ class TestRecordUse:
     def test_a_call_past_the_window_is(self) -> None:
         key = make_key(last_used_at=NOW)
         assert key.record_use(NOW + USE_FRESHNESS) is True
+
+
+class TestBroadScopes:
+    """« Tous » covers its own verb, and nothing beyond it."""
+
+    def test_all_read_opens_every_read(self) -> None:
+        key = make_key(scopes=[ApiKeyScope.ALL_READ])
+        for scope in (ApiKeyScope.CATALOG_READ, ApiKeyScope.ENTRIES_READ):
+            assert key.grants(scope) is True
+
+    def test_all_read_opens_no_write(self) -> None:
+        key = make_key(scopes=[ApiKeyScope.ALL_READ])
+        assert key.grants(ApiKeyScope.PROJECTS_WRITE) is False
+
+    def test_all_write_opens_every_write(self) -> None:
+        key = make_key(scopes=[ApiKeyScope.ALL_WRITE])
+        assert key.grants(ApiKeyScope.PROJECTS_WRITE) is True
+
+    def test_all_write_opens_no_read(self) -> None:
+        # Writing does not imply reading: a key that only writes is not handed
+        # every read behind the reader's back.
+        key = make_key(scopes=[ApiKeyScope.ALL_WRITE])
+        assert key.grants(ApiKeyScope.CATALOG_READ) is False
+
+    def test_carrying_both_opens_everything(self) -> None:
+        key = make_key(scopes=[ApiKeyScope.ALL_READ, ApiKeyScope.ALL_WRITE])
+        for scope in ApiKeyScope:
+            assert key.grants(scope) is True
+
+    def test_a_precise_scope_opens_nothing_else(self) -> None:
+        key = make_key(scopes=[ApiKeyScope.CATALOG_READ])
+        assert key.grants(ApiKeyScope.ENTRIES_READ) is False
+        assert key.grants(ApiKeyScope.ALL_READ) is False
+
+    def test_every_scope_says_whether_it_reads(self) -> None:
+        assert ApiKeyScope.CATALOG_READ.is_read is True
+        assert ApiKeyScope.PROJECTS_WRITE.is_read is False

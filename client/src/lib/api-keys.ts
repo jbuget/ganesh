@@ -9,23 +9,72 @@ import type { ApiKeyResponse, ApiKeyScope } from "@/lib/api/generated/model";
 
 export const SCOPES: { value: ApiKeyScope; label: string; hint: string }[] = [
   {
+    value: "all:read",
+    label: "Tous (lecture)",
+    hint: "Tout ce que l'API expose en lecture, y compris ce qui s'y ajoutera",
+  },
+  {
+    value: "all:write",
+    label: "Tous (écriture)",
+    hint: "Toutes les écritures, y compris celles qui s'y ajouteront",
+  },
+  {
     value: "catalog:read",
-    label: "Catalogue",
+    label: "Catalogue (lecture)",
     hint: "Lire les services publiés, ce que fait waat.tools",
   },
-  { value: "projects:read", label: "Missions", hint: "Lire le référentiel" },
+  {
+    value: "projects:read",
+    label: "Projets (lecture)",
+    hint: "Lire le référentiel des missions",
+  },
   {
     value: "projects:write",
-    label: "Missions (écriture)",
+    label: "Projets (écriture)",
     hint: "Créer et modifier des missions",
   },
-  { value: "entries:read", label: "Temps", hint: "Lire les temps déclarés" },
+  {
+    value: "entries:read",
+    label: "Temps (lecture)",
+    hint: "Lire les temps déclarés",
+  },
 ];
 
 const SCOPE_LABELS = new Map(SCOPES.map((scope) => [scope.value, scope.label]));
 
 export function scopeLabel(scope: ApiKeyScope): string {
   return SCOPE_LABELS.get(scope) ?? scope;
+}
+
+/**
+ * Which broad scope already grants a precise one.
+ *
+ * The same rule the server applies in `ApiKey.grants`: each « Tous » covers
+ * the scopes of its own verb, and no other. The two are independent — neither
+ * locks the other — so a key that reads and writes everything carries both,
+ * and each stays untickable back.
+ *
+ * The form ticks and locks what a broad scope carries, so its reach is seen
+ * where it is decided rather than discovered later in a log.
+ */
+export function coveredBy(
+  scope: ApiKeyScope,
+  chosen: ApiKeyScope[],
+): ApiKeyScope | null {
+  if (scope === "all:read" || scope === "all:write") return null;
+  const broad = scope.endsWith(":read") ? "all:read" : "all:write";
+  return chosen.includes(broad) ? broad : null;
+}
+
+/**
+ * What is worth sending: the covered ones are dropped.
+ *
+ * A key granted « Tous (lecture) » needs nothing else recorded — the server
+ * derives the rest, and a stored list of redundant scopes would only make the
+ * table harder to read.
+ */
+export function pruneCovered(scopes: ApiKeyScope[]): ApiKeyScope[] {
+  return scopes.filter((scope) => coveredBy(scope, scopes) === null);
 }
 
 /** How the badge reads. `state` comes from the server: one truth, not two. */

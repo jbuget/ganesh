@@ -8,12 +8,20 @@
 /**
  * What a key is allowed to reach.
  *
- * A closed catalogue: it grows by adding a member, never by a wildcard. Each
- * one names what a route needs, not what a screen shows.
+ * A closed catalogue, `resource:verb`. Each member names what a route needs,
+ * not what a screen shows.
+ *
+ * Two of them are broad: `all:read` covers every read, `all:write` covers
+ * everything. They are real members rather than a pattern matched at run
+ * time, so a key can still be read off the table and told what it opens —
+ * but they cover scopes that **do not exist yet**, which is the price of
+ * breadth and the reason the form says so.
  */
 export type ApiKeyScope = (typeof ApiKeyScope)[keyof typeof ApiKeyScope];
 
 export const ApiKeyScope = {
+  "all:read": "all:read",
+  "all:write": "all:write",
   "catalog:read": "catalog:read",
   "projects:read": "projects:read",
   "projects:write": "projects:write",

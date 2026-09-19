@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import type { ApiKeyResponse } from "@/lib/api/generated/model";
-import { isUsable, oneYearFromNow, scopeLabel, sortKeys } from "@/lib/api-keys";
+import {
+  coveredBy,
+  isUsable,
+  oneYearFromNow,
+  pruneCovered,
+  scopeLabel,
+  sortKeys,
+} from "@/lib/api-keys";
 
 const key = (overrides: Partial<ApiKeyResponse> = {}) =>
   ({
@@ -16,7 +23,7 @@ const key = (overrides: Partial<ApiKeyResponse> = {}) =>
 
 describe("scopeLabel", () => {
   it("reads a scope in French", () => {
-    expect(scopeLabel("catalog:read")).toBe("Catalogue");
+    expect(scopeLabel("catalog:read")).toBe("Catalogue (lecture)");
   });
 
   it("falls back to the raw scope rather than showing nothing", () => {
@@ -76,5 +83,65 @@ describe("oneYearFromNow", () => {
 
   it("gives a day, which is what a date field takes", () => {
     expect(oneYearFromNow()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe("coveredBy", () => {
+  it("leaves a precise scope alone when nothing broad is ticked", () => {
+    expect(coveredBy("catalog:read", ["catalog:read"])).toBeNull();
+  });
+
+  it("says which broad scope already covers a read", () => {
+    expect(coveredBy("catalog:read", ["all:read"])).toBe("all:read");
+  });
+
+  it("says which broad scope already covers a write", () => {
+    expect(coveredBy("projects:write", ["all:write"])).toBe("all:write");
+  });
+
+  it("does not let one verb cover the other", () => {
+    expect(coveredBy("projects:write", ["all:read"])).toBeNull();
+    expect(coveredBy("catalog:read", ["all:write"])).toBeNull();
+  });
+
+  it("never lets one broad scope lock the other", () => {
+    // Otherwise ticking « Tous (écriture) » would trap « Tous (lecture) »
+    // checked and unremovable.
+    expect(coveredBy("all:read", ["all:write"])).toBeNull();
+    expect(coveredBy("all:write", ["all:read"])).toBeNull();
+  });
+
+  it("never reports a broad scope as covering itself", () => {
+    expect(coveredBy("all:write", ["all:write"])).toBeNull();
+    expect(coveredBy("all:read", ["all:read"])).toBeNull();
+  });
+});
+
+describe("pruneCovered", () => {
+  it("leaves precise scopes alone when none is broad", () => {
+    expect(pruneCovered(["catalog:read", "projects:write"])).toEqual([
+      "catalog:read",
+      "projects:write",
+    ]);
+  });
+
+  it("drops the reads « Tous (lecture) » already carries", () => {
+    expect(pruneCovered(["all:read", "catalog:read", "entries:read"])).toEqual([
+      "all:read",
+    ]);
+  });
+
+  it("keeps a write beside « Tous (lecture) »", () => {
+    expect(pruneCovered(["all:read", "projects:write"])).toEqual([
+      "all:read",
+      "projects:write",
+    ]);
+  });
+
+  it("keeps both broad scopes when both were chosen", () => {
+    expect(pruneCovered(["all:read", "all:write", "catalog:read"])).toEqual([
+      "all:read",
+      "all:write",
+    ]);
   });
 });

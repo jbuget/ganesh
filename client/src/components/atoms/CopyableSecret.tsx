@@ -23,7 +23,10 @@ export function CopyableSecret({ value }: { value: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    // `min-w-0`: the dialog lays its children out in a grid, where a track is
+    // `min-width: auto` and refuses to shrink under its content. Without it the
+    // token pushes the panel past its own edge and `truncate` never applies.
+    <div className="flex min-w-0 items-center gap-2">
       <code className="min-w-0 flex-1 truncate rounded border border-slate-300 bg-white px-2 py-1.5 font-mono text-sm text-slate-800">
         {value}
       </code>

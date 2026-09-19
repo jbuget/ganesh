@@ -24,14 +24,29 @@ NAME_MAX_LENGTH = 64
 class ApiKeyScope(StrEnum):
     """What a key is allowed to reach.
 
-    A closed catalogue: it grows by adding a member, never by a wildcard. Each
-    one names what a route needs, not what a screen shows.
+    A closed catalogue, `resource:verb`. Each member names what a route needs,
+    not what a screen shows.
+
+    Two of them are broad, one per verb: `all:read` covers every read,
+    `all:write` every write. They are independent — a key that both reads and
+    writes everything carries the two — and they are real members rather than a
+    pattern matched at run time, so a key can still be read off the table and
+    told what it opens.
+
+    What they cover includes scopes that **do not exist yet**: that is the
+    price of breadth, and the reason the form says so.
     """
 
+    ALL_READ = "all:read"
+    ALL_WRITE = "all:write"
     CATALOG_READ = "catalog:read"
     PROJECTS_READ = "projects:read"
     PROJECTS_WRITE = "projects:write"
     ENTRIES_READ = "entries:read"
+
+    @property
+    def is_read(self) -> bool:
+        return self.value.endswith(":read")
 
 
 @dataclass
@@ -86,7 +101,17 @@ class ApiKey:
         return not self.is_revoked and not self.is_expired(now)
 
     def grants(self, scope: ApiKeyScope) -> bool:
-        return scope in self.scopes
+        """Whether the key opens what a route asks for.
+
+        A broad scope covers the precise ones **of its own verb**, and no
+        other: writing does not imply reading. Two switches rather than a
+        ladder — a key that does both says so by carrying both, and one that
+        only writes is not granted every read behind the reader's back.
+        """
+        if scope in self.scopes:
+            return True
+        broad = ApiKeyScope.ALL_READ if scope.is_read else ApiKeyScope.ALL_WRITE
+        return broad in self.scopes
 
     def revoke(self, by: int, at: datetime) -> None:
         """Cuts the key for good.

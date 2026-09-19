@@ -19,6 +19,17 @@ interface TeammateSelectorProps {
   teammates: UserResponse[];
   selectedId: number | null;
   onSelect: (userId: number) => void;
+  /** What the field asks for. « Collaborateur » on the activity screen. */
+  label?: string;
+  /** Ties the label to the field, and tells two selectors on one page apart. */
+  id?: string;
+  /**
+   * Label above rather than beside.
+   *
+   * A toolbar reads across, a form reads down: the same control, laid out the
+   * way the screen around it is.
+   */
+  stacked?: boolean;
 }
 
 /** An offered teammate: `value` / `label` is the shape Base UI can read. */
@@ -37,6 +48,9 @@ export function TeammateSelector({
   teammates,
   selectedId,
   onSelect,
+  label = "Collaborateur",
+  id = "teammate",
+  stacked = false,
 }: TeammateSelectorProps) {
   const items: TeammateItem[] = useMemo(
     () => teammates.map((user) => ({ value: user.id, label: user.display_name })),
@@ -46,9 +60,9 @@ export function TeammateSelector({
   const selection = items.find((item) => item.value === selectedId) ?? null;
 
   return (
-    <div className="flex items-center gap-2">
-      <Label htmlFor="teammate" className="text-muted-foreground">
-        Collaborateur
+    <div className={stacked ? "space-y-1.5" : "flex items-center gap-2"}>
+      <Label htmlFor={id} className={stacked ? undefined : "text-muted-foreground"}>
+        {label}
       </Label>
 
       <Combobox
@@ -59,8 +73,8 @@ export function TeammateSelector({
           if (teammate) onSelect((teammate as TeammateItem).value);
         }}
       >
-        <ComboboxTrigger id="teammate" className="w-52">
-          <ComboboxValue placeholder="Collaborateur" />
+        <ComboboxTrigger id={id} className={stacked ? "w-full" : "w-52"}>
+          <ComboboxValue placeholder={label} />
         </ComboboxTrigger>
 
         <ComboboxContent>

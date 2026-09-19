@@ -68,7 +68,7 @@ describe("ApiKeysPage", () => {
 
   it("reads the scopes in French", () => {
     view();
-    expect(screen.getByText("Catalogue")).toBeInTheDocument();
+    expect(screen.getByText("Catalogue (lecture)")).toBeInTheDocument();
   });
 
   describe("what a teammate may do", () => {
