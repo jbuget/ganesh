@@ -20,6 +20,9 @@ from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.entries.infrastructure.database.repositories.entry_repository_impl import (
     SqlEntryRepository,
 )
+from src.modules.entries.infrastructure.database.repositories.user_mission_repository_impl import (
+    SqlUserMissionRepository,
+)
 from src.modules.months.infrastructure.database.repositories.month_repository_impl import (
     SqlMonthRepository,
 )
@@ -93,6 +96,7 @@ def build(session: AsyncSession) -> RemoveMissionFromMonthUseCase:
         entries=SqlEntryRepository(session),
         months=SqlMonthRepository(session),
         audit_logs=SqlAuditLogRepository(session),
+        user_missions=SqlUserMissionRepository(session),
     )
 
 
@@ -129,3 +133,21 @@ async def test_a_month_without_the_mission_is_left_untouched(
 
     assert removed == 0
     assert len(await SqlEntryRepository(db_session).list_for_month(user_id, MONTH)) == 1
+
+
+async def test_a_mission_lined_up_without_time_leaves_the_month_for_good(
+    db_session: AsyncSession,
+) -> None:
+    user_id, target, spared = await seed(db_session)
+    rows = SqlUserMissionRepository(db_session)
+    await rows.add(user_id, target, MONTH)
+    await rows.add(user_id, spared, MONTH)
+
+    removed = await build(db_session).execute(
+        RemoveMissionCommand(
+            actor_id=user_id, target_user_id=user_id, project_id=target, month=MONTH
+        )
+    )
+
+    assert removed == 0
+    assert await rows.list_for_month(user_id, MONTH) == [spared]

@@ -9,6 +9,9 @@ from src.modules.calendar.domain.services.working_days import (
     working_days_count,
 )
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
+from src.modules.entries.domain.repositories.user_mission_repository import (
+    UserMissionRepository,
+)
 from src.modules.entries.domain.services.day_total import day_total, exceeds_one_day
 from src.modules.months.domain.repositories.month_repository import MonthRepository
 from src.modules.projects.domain.entities.project import ProjectKind
@@ -88,11 +91,13 @@ class GetMonthGridUseCase:
         projects: ProjectRepository,
         entries: EntryRepository,
         months: MonthRepository,
+        user_missions: UserMissionRepository,
     ) -> None:
         self._users = users
         self._projects = projects
         self._entries = entries
         self._months = months
+        self._user_missions = user_missions
 
     async def _project_consumption(self, project_id: int, today: date) -> float:
         """Time already consumed on a project, forecast excluded."""
@@ -131,6 +136,24 @@ class GetMonthGridUseCase:
                 row.forecast_total = round(row.forecast_total + float(entry.value), 2)
             else:
                 row.actual_total = round(row.actual_total + float(entry.value), 2)
+
+        # Missions lined up for the month, with nothing entered on them yet:
+        # they hold an empty row, which says « not entered yet » and never
+        # « nothing done ».
+        for project_id in await self._user_missions.list_for_month(
+            query.user_id, month
+        ):
+            if project_id in rows:
+                continue
+            project = await self._projects.get_by_id(project_id)
+            if project is None:
+                continue
+            rows[project_id] = GridRow(
+                project_id=project_id,
+                label=project.label,
+                kind=project.kind,
+                estimated_days=project.estimated_days,
+            )
 
         for row in rows.values():
             row.total_consumed_days = await self._project_consumption(

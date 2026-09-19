@@ -6,6 +6,9 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 )
 from src.modules.entries.application.dtos.set_entry_dto import RemoveMissionCommand
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
+from src.modules.entries.domain.repositories.user_mission_repository import (
+    UserMissionRepository,
+)
 from src.modules.months.domain.repositories.month_repository import MonthRepository
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import (
@@ -19,7 +22,8 @@ class RemoveMissionFromMonthUseCase:
 
     Removing a row from the grid erases the time it carries: the operation is
     grouped so a month never ends up half cleaned, and each entry keeps its
-    trace, with its former value.
+    trace, with its former value. The row itself goes too — otherwise a mission
+    taken off would come straight back on the next reload.
     """
 
     def __init__(
@@ -28,11 +32,13 @@ class RemoveMissionFromMonthUseCase:
         entries: EntryRepository,
         months: MonthRepository,
         audit_logs: AuditLogRepository,
+        user_missions: UserMissionRepository,
     ) -> None:
         self._users = users
         self._entries = entries
         self._months = months
         self._audit_logs = audit_logs
+        self._user_missions = user_missions
 
     async def execute(self, command: RemoveMissionCommand) -> float:
         """Returns how many days were removed."""
@@ -49,6 +55,10 @@ class RemoveMissionFromMonthUseCase:
             raise ForbiddenActionError(
                 "This month is validated: a manager must reopen it."
             )
+
+        await self._user_missions.remove(
+            command.target_user_id, command.project_id, command.month.replace(day=1)
+        )
 
         entries = [
             entry

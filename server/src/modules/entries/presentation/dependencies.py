@@ -10,6 +10,9 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 from src.modules.audit_logs.infrastructure.database.repositories.audit_log_repository_impl import (
     SqlAuditLogRepository,
 )
+from src.modules.entries.application.use_cases.add_mission_to_month import (
+    AddMissionToMonthUseCase,
+)
 from src.modules.entries.application.use_cases.clear_entry import ClearEntryUseCase
 from src.modules.entries.application.use_cases.get_month_grid import GetMonthGridUseCase
 from src.modules.entries.application.use_cases.remove_mission_from_month import (
@@ -17,8 +20,14 @@ from src.modules.entries.application.use_cases.remove_mission_from_month import 
 )
 from src.modules.entries.application.use_cases.set_entry import SetEntryUseCase
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
+from src.modules.entries.domain.repositories.user_mission_repository import (
+    UserMissionRepository,
+)
 from src.modules.entries.infrastructure.database.repositories.entry_repository_impl import (
     SqlEntryRepository,
+)
+from src.modules.entries.infrastructure.database.repositories.user_mission_repository_impl import (
+    SqlUserMissionRepository,
 )
 from src.modules.months.domain.repositories.month_repository import MonthRepository
 from src.modules.months.infrastructure.database.repositories.month_repository_impl import (
@@ -54,6 +63,12 @@ def get_month_repository(session: AsyncSession = Depends(get_db)) -> MonthReposi
     return SqlMonthRepository(session)
 
 
+def get_user_mission_repository(
+    session: AsyncSession = Depends(get_db),
+) -> UserMissionRepository:
+    return SqlUserMissionRepository(session)
+
+
 def get_audit_log_repository(
     session: AsyncSession = Depends(get_db),
 ) -> AuditLogRepository:
@@ -81,9 +96,25 @@ def get_month_grid_use_case(
     projects: ProjectRepository = Depends(get_project_repository),
     entries: EntryRepository = Depends(get_entry_repository),
     months: MonthRepository = Depends(get_month_repository),
+    user_missions: UserMissionRepository = Depends(get_user_mission_repository),
 ) -> GetMonthGridUseCase:
     return GetMonthGridUseCase(
-        users=users, projects=projects, entries=entries, months=months
+        users=users,
+        projects=projects,
+        entries=entries,
+        months=months,
+        user_missions=user_missions,
+    )
+
+
+def get_add_mission_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    months: MonthRepository = Depends(get_month_repository),
+    user_missions: UserMissionRepository = Depends(get_user_mission_repository),
+) -> AddMissionToMonthUseCase:
+    return AddMissionToMonthUseCase(
+        users=users, projects=projects, months=months, user_missions=user_missions
     )
 
 
@@ -103,7 +134,12 @@ def get_remove_mission_use_case(
     entries: EntryRepository = Depends(get_entry_repository),
     months: MonthRepository = Depends(get_month_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    user_missions: UserMissionRepository = Depends(get_user_mission_repository),
 ) -> RemoveMissionFromMonthUseCase:
     return RemoveMissionFromMonthUseCase(
-        users=users, entries=entries, months=months, audit_logs=audit_logs
+        users=users,
+        entries=entries,
+        months=months,
+        audit_logs=audit_logs,
+        user_missions=user_missions,
     )

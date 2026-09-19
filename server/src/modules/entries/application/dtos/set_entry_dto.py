@@ -40,3 +40,16 @@ class RemoveMissionCommand:
     target_user_id: int
     project_id: int
     month: date
+
+
+@dataclass(frozen=True)
+class AddMissionCommand:
+    """Request to put a mission on a month, before any time is entered on it.
+
+    `month` may be any day of the month aimed at: only the month matters.
+    """
+
+    actor_id: int
+    target_user_id: int
+    project_id: int
+    month: date
