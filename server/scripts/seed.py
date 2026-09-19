@@ -34,6 +34,7 @@ from src.modules.calendar.infrastructure.database.models.holiday_model import (
 from src.modules.moods.domain.entities.mood import MoodLevel
 from src.modules.moods.infrastructure.database.models.mood_model import MoodModel
 from src.modules.projects.domain.entities.project import (
+    ProjectCategory,
     ProjectKind,
     ProjectPriority,
     ProjectStatus,
@@ -398,9 +399,14 @@ async def seed_services() -> tuple[int, int]:
 
 
 async def seed_board_fields() -> tuple[int, int]:
-    """Brings over what the steering board holds: the rattachement, the priority."""
+    """Brings over what the steering board holds, and it alone.
+
+    Priority, strategic axis and estimate are maintained on the board and
+    nowhere else — unlike the phase, which the wall carries. What the board
+    leaves empty is left alone here: it says nothing, it does not say « none ».
+    """
     attached = 0
-    prioritised = 0
+    filled = 0
     rows = read_data(BOARD_FILE, "les priorites")
     if rows is None:
         return 0, 0
@@ -425,12 +431,29 @@ async def seed_board_fields() -> tuple[int, int]:
                 mission.monday_item_id = row["monday_item_id"]
                 attached += 1
 
-            if row["priority"] is not None:
-                mission.priority = ProjectPriority(row["priority"])
-                prioritised += 1
+            # Counted only when it changes something: every other line of the
+            # report reads as « what moved », and a replay must show zeros.
+            changed = False
+            priority = ProjectPriority(row["priority"]) if row["priority"] else None
+            if priority is not None and mission.priority is not priority:
+                mission.priority = priority
+                changed = True
+
+            category = ProjectCategory(row["category"]) if row.get("category") else None
+            if category is not None and mission.category is not category:
+                mission.category = category
+                changed = True
+
+            estimate = row.get("estimated_days")
+            if estimate is not None and mission.estimated_days != estimate:
+                mission.estimated_days = estimate
+                changed = True
+
+            if changed:
+                filled += 1
 
         await session.commit()
-    return attached, prioritised
+    return attached, filled
 
 
 async def seed_kanban() -> tuple[int, int]:
@@ -694,7 +717,7 @@ async def main() -> None:
     corrected = await correct_emails(team)
     created, updated = await seed_users(team)
     missions, sheets = await seed_services()
-    attached, prioritised = await seed_board_fields()
+    attached, filled = await seed_board_fields()
     moved, assigned = await seed_kanban()
     posted, orphans = await seed_updates()
     activities = await seed_off_project_activities()
@@ -707,7 +730,7 @@ async def main() -> None:
     logger.info("Missions creees             : %s", missions)
     logger.info("Fiches service remplies     : %s", sheets)
     logger.info("Missions reliees a Monday   : %s", attached)
-    logger.info("Priorites posees            : %s", prioritised)
+    logger.info("Missions renseignees        : %s", filled)
     logger.info("Missions deplacees de phase : %s", moved)
     logger.info("Intervenants affectes       : %s", assigned)
     logger.info("Mises a jour publiees       : %s", posted)
