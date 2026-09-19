@@ -15,38 +15,206 @@
     "LTA": "l.waguet.ext@waat.fr",
     "LNA": "l.nicolas.ext@waat.fr"
   },
-  "unknown_handles": ["MAM", "JOT", "BO", "DR"],
+  "unknown_handles": [
+    "MAM",
+    "JOT",
+    "BO",
+    "DR"
+  ],
   "cards": [
-    { "column": "idees", "label": "Automatisation de la création des notes de calcul (Caneco)", "contributors": ["VLS"] },
-    { "column": "idees", "label": "Outil de chiffrage Bailleurs", "contributors": ["VLS"] },
-
-    { "column": "cadrage", "label": "API Consuel", "contributors": [] },
-    { "column": "cadrage", "label": "Initialisation des demandes de raccordement Enedis", "contributors": ["FLE"] },
-    { "column": "cadrage", "label": "NETSUITE - Branchement et association indice de revalorisation contrat tertiaire", "contributors": ["VLS"] },
-    { "column": "cadrage", "label": "LOGIVOLT - Initialisation des dossiers", "contributors": ["FLE"] },
-    { "column": "cadrage", "label": "Remplissage automatique des fiches SC143", "contributors": ["LCH", "VLS"] },
-    { "column": "cadrage", "label": "SALSA - ADVENIR infra / copro", "contributors": ["FLE"] },
-
-    { "column": "delivery", "label": "Remplissage automatique des BPU", "contributors": ["GBE", "VLS"] },
-    { "column": "delivery", "label": "MyWAAT API TRAXIt", "contributors": ["FLE", "LTA"] },
-    { "column": "delivery", "label": "API Sitetracker", "contributors": ["NBO"] },
-    { "column": "delivery", "label": "Création automatisé des Dossiers d'Ouvrages Exécutés (DOE)", "contributors": ["DDE", "VLS", "TBG"] },
-    { "column": "delivery", "label": "Waathome 2026", "contributors": ["FLE"] },
-    { "column": "delivery", "label": "WAAT / Suez - SFTP d'échange de fichiers CSV", "contributors": ["JBU"] },
-
-    { "column": "exploitation", "label": "ASTRE - Suivi mensuel consommation énergétique", "contributors": [] },
-    { "column": "exploitation", "label": "GOOD - Outil de signature élect & Génération de liasses de docs", "contributors": ["NBO"] },
-    { "column": "exploitation", "label": "SALSA - Initialisation des dossiers ADVENIR", "contributors": ["FLE", "NGA"] },
-    { "column": "exploitation", "label": "WAATcher", "contributors": ["JBU", "CDE"] },
-    { "column": "exploitation", "label": "Formulaires RGPD - Outil d'aide à la complétion", "contributors": [] },
-    { "column": "exploitation", "label": "NOMAD - Formulaire en ligne de normalisation documentaire", "contributors": ["NGA"] },
-    { "column": "exploitation", "label": "ALICE - API éligibilité", "contributors": ["DDE"] },
-    { "column": "exploitation", "label": "AGICAP – Facture électronique & flux achats", "contributors": ["LTA"] },
-    { "column": "exploitation", "label": "Calculatrice Tertiaire", "contributors": [] },
-    { "column": "exploitation", "label": "ATAC - Outil d'automatisation de Sellsy - ClicData", "contributors": [] },
-    { "column": "exploitation", "label": "Monta Toolbox: intégration de la création API user/membre/CP/Team/sponsored", "contributors": ["NGA"] },
-    { "column": "exploitation", "label": "EDIT V1 - Consolidation du socle technico-fonctionnel", "contributors": ["JBU", "VLS", "DDE"] },
-    { "column": "exploitation", "label": "BACAO: formulaire de commande badge connecté à Odoo", "contributors": [] },
-    { "column": "exploitation", "label": "BAPPE - Bailleurs synchronisation Airtable Sellsy", "contributors": [] }
+    {
+      "column": "idees",
+      "label": "Automatisation de la création des notes de calcul (Caneco)",
+      "contributors": [
+        "VLS"
+      ]
+    },
+    {
+      "column": "idees",
+      "label": "Outil de chiffrage Bailleurs",
+      "contributors": [
+        "VLS"
+      ]
+    },
+    {
+      "column": "cadrage",
+      "label": "API Consuel",
+      "contributors": []
+    },
+    {
+      "column": "cadrage",
+      "label": "Initialisation des demandes de raccordement Enedis",
+      "contributors": [
+        "FLE"
+      ]
+    },
+    {
+      "column": "cadrage",
+      "label": "NETSUITE - Branchement et association indice de revalorisation contrat tertiaire",
+      "contributors": [
+        "VLS"
+      ]
+    },
+    {
+      "column": "cadrage",
+      "label": "LOGIVOLT - Initialisation des dossiers",
+      "contributors": [
+        "FLE"
+      ]
+    },
+    {
+      "column": "cadrage",
+      "label": "Remplissage automatique des fiches SC143",
+      "contributors": [
+        "LCH",
+        "VLS"
+      ]
+    },
+    {
+      "column": "cadrage",
+      "label": "SALSA - ADVENIR infra / copro",
+      "contributors": [
+        "FLE"
+      ]
+    },
+    {
+      "column": "delivery",
+      "label": "Remplissage automatique des BPU",
+      "contributors": [
+        "GBE",
+        "VLS"
+      ]
+    },
+    {
+      "column": "delivery",
+      "label": "MyWAAT API TRAXIt",
+      "contributors": [
+        "FLE",
+        "LTA"
+      ]
+    },
+    {
+      "column": "delivery",
+      "label": "API Sitetracker",
+      "contributors": [
+        "NBO"
+      ]
+    },
+    {
+      "column": "delivery",
+      "label": "Création automatisé des Dossiers d'Ouvrages Exécutés (DOE)",
+      "contributors": [
+        "DDE",
+        "VLS",
+        "TBG"
+      ]
+    },
+    {
+      "column": "delivery",
+      "label": "Waathome 2026",
+      "contributors": [
+        "FLE"
+      ]
+    },
+    {
+      "column": "delivery",
+      "label": "WAAT / Suez - SFTP d'échange de fichiers CSV",
+      "contributors": [
+        "JBU"
+      ]
+    },
+    {
+      "column": "exploitation",
+      "label": "ASTRE - Suivi mensuel consommation énergétique",
+      "contributors": []
+    },
+    {
+      "column": "exploitation",
+      "label": "GOOD - Outil de signature élect & Génération de liasses de docs",
+      "contributors": [
+        "NBO"
+      ]
+    },
+    {
+      "column": "exploitation",
+      "label": "SALSA - Initialisation des dossiers ADVENIR",
+      "contributors": [
+        "FLE",
+        "NGA"
+      ]
+    },
+    {
+      "column": "exploitation",
+      "label": "WAATcher",
+      "contributors": [
+        "JBU",
+        "CDE"
+      ]
+    },
+    {
+      "column": "exploitation",
+      "label": "Formulaires RGPD - Outil d'aide à la complétion",
+      "contributors": []
+    },
+    {
+      "column": "exploitation",
+      "label": "NOMAD - Formulaire en ligne de normalisation documentaire",
+      "contributors": [
+        "NGA"
+      ],
+      "leads": [
+        "FLE"
+      ]
+    },
+    {
+      "column": "exploitation",
+      "label": "ALICE - API éligibilité",
+      "contributors": [
+        "DDE"
+      ]
+    },
+    {
+      "column": "exploitation",
+      "label": "AGICAP – Facture électronique & flux achats",
+      "contributors": [
+        "LTA"
+      ]
+    },
+    {
+      "column": "exploitation",
+      "label": "Calculatrice Tertiaire",
+      "contributors": []
+    },
+    {
+      "column": "exploitation",
+      "label": "ATAC - Outil d'automatisation de Sellsy - ClicData",
+      "contributors": []
+    },
+    {
+      "column": "exploitation",
+      "label": "Monta Toolbox: intégration de la création API user/membre/CP/Team/sponsored",
+      "contributors": [
+        "NGA"
+      ]
+    },
+    {
+      "column": "exploitation",
+      "label": "EDIT V1 - Consolidation du socle technico-fonctionnel",
+      "contributors": [
+        "JBU",
+        "VLS",
+        "DDE"
+      ]
+    },
+    {
+      "column": "exploitation",
+      "label": "BACAO: formulaire de commande badge connecté à Odoo",
+      "contributors": []
+    },
+    {
+      "column": "exploitation",
+      "label": "BAPPE - Bailleurs synchronisation Airtable Sellsy",
+      "contributors": []
+    }
   ]
 }

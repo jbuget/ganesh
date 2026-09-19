@@ -285,6 +285,9 @@ async def seed_services() -> tuple[int, int]:
                 session.add(mission)
                 await session.flush()
                 created += 1
+                is_new = True
+            else:
+                is_new = False
 
             for field in SHEET_FIELDS:
                 if service.get(field) is not None:
@@ -295,7 +298,10 @@ async def seed_services() -> tuple[int, int]:
                 # A sheet complete enough to have been published on waat.tools
                 # is complete enough to be published from here.
                 mission.is_published = True
-            if service.get("status"):
+            # Only on creation: the catalogue says what a service is, the wall
+            # says how far its mission has got. Written on every run, the two
+            # swapped the phase back and forth at each seed.
+            if is_new and service.get("status"):
                 mission.status = ProjectStatus(service["status"])
             if service.get("criticality"):
                 mission.criticality = Criticality(service["criticality"])
@@ -362,6 +368,11 @@ async def seed_kanban() -> tuple[int, int]:
 
     The contributors are replaced, not added to: the wall is a photograph of
     the moment, and someone who has left a mission left it.
+
+    A lead is added and never removed. The wall carries no lead badge, so a
+    card saying nothing about who answers for a mission is a card saying
+    nothing — not a card saying « nobody ». Leads are named in review, and come
+    here from there.
     """
     moved = 0
     assigned = 0
@@ -416,6 +427,28 @@ async def seed_kanban() -> tuple[int, int]:
                         project_id=mission.id,
                         user_id=user_id,
                         role=ProjectRole.CONTRIBUTOR,
+                    )
+                )
+                assigned += 1
+
+            for handle in card.get("leads", []):
+                lead_email = handles.get(handle, "")
+                if lead_email not in people:
+                    continue
+                held = await session.execute(
+                    select(ProjectAssigneeModel).where(
+                        ProjectAssigneeModel.project_id == mission.id,
+                        ProjectAssigneeModel.user_id == people[lead_email],
+                        ProjectAssigneeModel.role == ProjectRole.LEAD,
+                    )
+                )
+                if held.scalar_one_or_none() is not None:
+                    continue
+                session.add(
+                    ProjectAssigneeModel(
+                        project_id=mission.id,
+                        user_id=people[lead_email],
+                        role=ProjectRole.LEAD,
                     )
                 )
                 assigned += 1
