@@ -113,6 +113,26 @@ class ApiKey:
         broad = ApiKeyScope.ALL_READ if scope.is_read else ApiKeyScope.ALL_WRITE
         return broad in self.scopes
 
+    def rename(self, name: str) -> None:
+        """Changes what the table calls it. Refused once the key is cut.
+
+        A revoked key is a piece of the audit: it says what a machine was
+        called while it worked, and renaming it afterwards would rewrite that.
+        """
+        self._ensure_still_open()
+        self.name = name
+        self.__post_init__()
+
+    def set_scopes(self, scopes: list[ApiKeyScope]) -> None:
+        """Replaces what the key opens. The screen sends what it displays."""
+        self._ensure_still_open()
+        self.scopes = scopes
+        self.__post_init__()
+
+    def _ensure_still_open(self) -> None:
+        if self.is_revoked:
+            raise ForbiddenActionError("A revoked key can no longer be changed.")
+
     def revoke(self, by: int, at: datetime) -> None:
         """Cuts the key for good.
 

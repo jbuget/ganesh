@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { TeammateSelector } from "@/components/atoms/TeammateSelector";
+import { ScopePicker } from "@/components/molecules/ScopePicker";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,13 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ApiKeyScope, UserResponse } from "@/lib/api/generated/model";
-import {
-  SCOPES,
-  coveredBy,
-  oneYearFromNow,
-  pruneCovered,
-  scopeLabel,
-} from "@/lib/api-keys";
+import { oneYearFromNow, pruneCovered } from "@/lib/api-keys";
 
 interface CreateApiKeyDialogProps {
   open: boolean;
@@ -65,14 +60,6 @@ export function CreateApiKeyDialog({
     setScopes([]);
     setExpiresAt(oneYearFromNow());
     setError(null);
-  }
-
-  function toggleScope(scope: ApiKeyScope) {
-    setScopes((current) =>
-      current.includes(scope)
-        ? current.filter((kept) => kept !== scope)
-        : [...current, scope],
-    );
   }
 
   async function submit() {
@@ -147,38 +134,7 @@ export function CreateApiKeyDialog({
 
           <fieldset className="space-y-1.5">
             <legend className="text-sm font-medium">Périmètres</legend>
-            <div className="space-y-1.5">
-              {SCOPES.map((scope) => {
-                // A broad scope ticks and locks what it carries: the reach of
-                // « Tous » is seen where it is decided, not discovered later.
-                const covering = coveredBy(scope.value, scopes);
-                return (
-                  <label
-                    key={scope.value}
-                    className={[
-                      "flex items-start gap-2 text-sm",
-                      covering ? "cursor-default" : "cursor-pointer",
-                    ].join(" ")}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={covering !== null || scopes.includes(scope.value)}
-                      disabled={covering !== null}
-                      onChange={() => toggleScope(scope.value)}
-                      className="mt-0.5 size-4 rounded border-slate-300 enabled:cursor-pointer disabled:cursor-default"
-                    />
-                    <span className={covering ? "opacity-50" : undefined}>
-                      <span className="text-slate-800">{scope.label}</span>
-                      <span className="block text-xs text-slate-500">
-                        {covering
-                          ? `Inclus dans « ${scopeLabel(covering)} »`
-                          : scope.hint}
-                      </span>
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
+            <ScopePicker value={scopes} onChange={setScopes} />
           </fieldset>
 
           <div className="space-y-1.5">

@@ -100,6 +100,7 @@ export * from "./statusShareResponse";
 export * from "./steeringResponse";
 export * from "./teammateResponse";
 export * from "./unassignMemberParams";
+export * from "./updateApiKeyRequest";
 export * from "./updateDescriptionRequest";
 export * from "./updateProjectDetailRequest";
 export * from "./updateProjectRegistryRequest";

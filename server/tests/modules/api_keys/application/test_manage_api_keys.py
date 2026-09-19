@@ -7,11 +7,13 @@ import pytest
 from src.modules.api_keys.application.dtos.api_key_dto import (
     CreateApiKeyCommand,
     RevokeApiKeyCommand,
+    UpdateApiKeyCommand,
 )
 from src.modules.api_keys.application.use_cases.manage_api_keys import (
     CreateApiKeyUseCase,
     ListApiKeysUseCase,
     RevokeApiKeyUseCase,
+    UpdateApiKeyUseCase,
 )
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.api_keys.domain.services import key_material
@@ -203,3 +205,121 @@ async def test_an_expiry_travels_to_the_key() -> None:
     expiry = datetime.now() + timedelta(days=365)
     minted = await create.execute(command(expires_at=expiry))
     assert minted.key.expires_at == expiry
+
+
+class TestEditing:
+    """Only what a mistake at creation leaves wrong: the name and the scopes."""
+
+    def use_cases(self):
+        keys = InMemoryApiKeyRepository()
+        audit = InMemoryAuditLogRepository()
+        users = InMemoryUserRepository([OWNER, MANAGER, GONE])
+        return (
+            CreateApiKeyUseCase(keys=keys, users=users, audit_logs=audit),
+            UpdateApiKeyUseCase(keys=keys, audit_logs=audit),
+            RevokeApiKeyUseCase(keys=keys, audit_logs=audit),
+            audit,
+        )
+
+    @pytest.mark.asyncio
+    async def test_a_key_is_renamed(self) -> None:
+        create, update, _, _ = self.use_cases()
+        minted = await create.execute(command())
+
+        changed = await update.execute(
+            UpdateApiKeyCommand(
+                actor_id=20, key_id=minted.key.id or 0, name="CI waat.tools"
+            )
+        )
+        assert changed.name == "CI waat.tools"
+
+    @pytest.mark.asyncio
+    async def test_the_scopes_are_replaced(self) -> None:
+        create, update, _, _ = self.use_cases()
+        minted = await create.execute(command())
+
+        changed = await update.execute(
+            UpdateApiKeyCommand(
+                actor_id=20,
+                key_id=minted.key.id or 0,
+                scopes=[ApiKeyScope.ALL_READ],
+            )
+        )
+        assert changed.scopes == [ApiKeyScope.ALL_READ]
+
+    @pytest.mark.asyncio
+    async def test_a_field_left_out_is_a_field_left_alone(self) -> None:
+        create, update, _, _ = self.use_cases()
+        minted = await create.execute(command())
+
+        changed = await update.execute(
+            UpdateApiKeyCommand(actor_id=20, key_id=minted.key.id or 0, name="Autre")
+        )
+        assert changed.scopes == [ApiKeyScope.CATALOG_READ]
+
+    @pytest.mark.asyncio
+    async def test_the_secret_is_never_reissued(self) -> None:
+        create, update, _, _ = self.use_cases()
+        minted = await create.execute(command())
+        before = minted.key.secret_hash
+
+        changed = await update.execute(
+            UpdateApiKeyCommand(actor_id=20, key_id=minted.key.id or 0, name="Autre")
+        )
+        assert changed.secret_hash == before
+        assert changed.public_id == minted.key.public_id
+
+    @pytest.mark.asyncio
+    async def test_each_field_that_changed_leaves_one_trace(self) -> None:
+        create, update, _, audit = self.use_cases()
+        minted = await create.execute(command())
+        audit.logs.clear()
+
+        await update.execute(
+            UpdateApiKeyCommand(
+                actor_id=20,
+                key_id=minted.key.id or 0,
+                name="Autre",
+                scopes=[ApiKeyScope.ALL_READ],
+            )
+        )
+        assert sorted(log.payload["field"] for log in audit.logs) == ["name", "scopes"]
+
+    @pytest.mark.asyncio
+    async def test_changing_nothing_leaves_no_trace(self) -> None:
+        create, update, _, audit = self.use_cases()
+        minted = await create.execute(command())
+        audit.logs.clear()
+
+        await update.execute(
+            UpdateApiKeyCommand(
+                actor_id=20,
+                key_id=minted.key.id or 0,
+                name="CI waat-tools",
+                scopes=[ApiKeyScope.CATALOG_READ],
+            )
+        )
+        assert audit.logs == []
+
+    @pytest.mark.asyncio
+    async def test_a_revoked_key_is_frozen(self) -> None:
+        create, update, revoke, _ = self.use_cases()
+        minted = await create.execute(command())
+        await revoke.execute(
+            RevokeApiKeyCommand(actor_id=20, key_id=minted.key.id or 0)
+        )
+
+        with pytest.raises(ForbiddenActionError):
+            await update.execute(
+                UpdateApiKeyCommand(
+                    actor_id=20, key_id=minted.key.id or 0, name="Autre"
+                )
+            )
+
+    @pytest.mark.asyncio
+    async def test_an_unknown_key_is_refused(self) -> None:
+        _, update, _, _ = self.use_cases()
+        with pytest.raises(EntityNotFoundError):
+            await update.execute(
+                UpdateApiKeyCommand(actor_id=20, key_id=999, name="Autre")
+            )

@@ -11,6 +11,7 @@ from src.modules.api_keys.application.use_cases.manage_api_keys import (
     CreateApiKeyUseCase,
     ListApiKeysUseCase,
     RevokeApiKeyUseCase,
+    UpdateApiKeyUseCase,
 )
 from src.modules.api_keys.domain.repositories.api_key_repository import ApiKeyRepository
 from src.modules.api_keys.infrastructure.database.repositories.api_key_repository_impl import (
@@ -65,6 +66,13 @@ def get_list_api_keys_use_case(
     users: UserRepository = Depends(get_user_repository),
 ) -> ListApiKeysUseCase:
     return ListApiKeysUseCase(keys=keys, users=users)
+
+
+def get_update_api_key_use_case(
+    keys: ApiKeyRepository = Depends(get_api_key_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> UpdateApiKeyUseCase:
+    return UpdateApiKeyUseCase(keys=keys, audit_logs=audit_logs)
 
 
 def get_revoke_api_key_use_case(

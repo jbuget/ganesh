@@ -14,9 +14,7 @@ import { STRONG_SEPARATOR, TABLE_FRAME, TABLE_HEADER } from "@/lib/table-frame";
 interface ApiKeysTableProps {
   /** The keys to draw, already in order. */
   keys: ApiKeyResponse[];
-  /** Only a manager cuts a key. The server refuses anyone else regardless. */
-  canRevoke: boolean;
-  onRevoke: (keyId: number) => void | Promise<void>;
+  onOpen: (keyId: number) => void;
 }
 
 /**
@@ -31,7 +29,7 @@ interface ApiKeysTableProps {
  * list: a strong rule around, a strong rule under the titles, and the column
  * that names the key closed off from those that describe it.
  */
-export function ApiKeysTable({ keys, canRevoke, onRevoke }: ApiKeysTableProps) {
+export function ApiKeysTable({ keys, onOpen }: ApiKeysTableProps) {
   return (
     // The shadcn container opens a scrolling context that would hold the header
     // inside the table: we neutralise it so the `sticky` latches onto the
@@ -46,7 +44,6 @@ export function ApiKeysTable({ keys, canRevoke, onRevoke }: ApiKeysTableProps) {
             <TableHead>Dernière utilisation</TableHead>
             <TableHead>Expiration</TableHead>
             <TableHead>État</TableHead>
-            <TableHead />
           </TableRow>
         </TableHeader>
 
@@ -55,8 +52,7 @@ export function ApiKeysTable({ keys, canRevoke, onRevoke }: ApiKeysTableProps) {
             <ApiKeyRow
               key={apiKey.id}
               apiKey={apiKey}
-              canRevoke={canRevoke}
-              onRevoke={onRevoke}
+              onOpen={() => onOpen(apiKey.id)}
             />
           ))}
         </TableBody>

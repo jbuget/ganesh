@@ -19,6 +19,21 @@ class CreateApiKeyCommand:
 
 
 @dataclass(frozen=True)
+class UpdateApiKeyCommand:
+    """Changing a key. A field left out is a field left alone.
+
+    Only what a mistake at creation would leave wrong: the name it is read by
+    and what it opens. An expiry is not moved and an owner is not swapped —
+    those are reasons to mint a new key, not to bend an old one.
+    """
+
+    actor_id: int
+    key_id: int
+    name: str | None = None
+    scopes: list[ApiKeyScope] | None = None
+
+
+@dataclass(frozen=True)
 class RevokeApiKeyCommand:
     """Cutting a key for good."""
 

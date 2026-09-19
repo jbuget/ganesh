@@ -272,8 +272,19 @@ the table, it is also the column that lets anyone raise the question.
 ```
 GET    /api/v1/api-keys          list, any signed-in teammate
 POST   /api/v1/api-keys          create, managers only — returns the secret ONCE
+PATCH  /api/v1/api-keys/{id}     correct the name and the scopes, managers only
 DELETE /api/v1/api-keys/{id}     revoke, managers only
 ```
+
+`PATCH` carries **the name and the scopes, and nothing else**. The secret is
+not reissued, the owner is not swapped, the expiry is not moved: those are
+reasons to mint a new key, not to bend an old one. A field left out is a field
+left alone.
+
+**A revoked key is frozen.** It says what a machine was called while it
+worked, and the audit refers to that — rewriting it afterwards would rewrite
+the trace. An expired key may still be renamed: pointless for the machine,
+useful for whoever reads the table.
 
 These three are human routes: they depend on `get_current_user`, so a key can
 never manage keys.
@@ -281,7 +292,8 @@ never manage keys.
 The listing never returns a secret, only `jns_<public_id>`. `POST` is the one
 and only response that carries the whole key.
 
-Audit: two new `AuditAction` members, `API_KEY_CREATE` and `API_KEY_REVOKE`.
+Audit: three new `AuditAction` members — `API_KEY_CREATE`, `API_KEY_UPDATE`
+and `API_KEY_REVOKE`. A correction traces one line per field that changed.
 
 ### Status codes
 
@@ -318,8 +330,14 @@ appears **once**, in a panel that says so unambiguously, with a copy button.
 Closing it is final. That panel is the single most important screen of the
 feature: everything else is recoverable, this is not.
 
-**Revoking** — managers only. A confirmation naming the key, and a sentence
-saying that whatever uses it will stop working. Immediate and irreversible.
+**Opening one** — the whole row opens a panel beside the list, as a teammate's
+does. The name is corrected in the header, under the pencil; the scopes just
+below. Both are a manager's, and a teammate reads the same panel without a box
+to tick.
+
+**Revoking** — managers only, from the panel. A confirmation naming the key,
+and a sentence saying that whatever uses it will stop working. Immediate and
+irreversible.
 
 **Empty state** — for a manager, say what a key is for before showing the
 button. For everyone else, « Aucune clé » and nothing to click.

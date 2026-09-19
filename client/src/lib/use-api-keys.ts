@@ -6,6 +6,7 @@ import {
   createApiKey,
   listApiKeys,
   revokeApiKey,
+  updateApiKey,
 } from "@/lib/api/generated/api-keys/api-keys";
 import type {
   ApiKeyResponse,
@@ -32,6 +33,8 @@ export function useApiKeysScreen() {
    * from the server. Closing the panel loses it for good, which is the point.
    */
   const [minted, setMinted] = useState<MintedApiKeyResponse | null>(null);
+  /** The key opened beside the list, by id: the row itself comes from `keys`. */
+  const [openedId, setOpenedId] = useState<number | null>(null);
 
   const reload = useCallback(async () => {
     const response = await listApiKeys();
@@ -60,6 +63,10 @@ export function useApiKeysScreen() {
     isLoading,
     isManager: me?.role === "MANAGER",
     minted,
+    /** Read from the list rather than held apart: one truth on screen. */
+    opened: keys.find((key) => key.id === openedId) ?? null,
+    open: setOpenedId,
+    close: () => setOpenedId(null),
 
     /** One reference instant per render, as the teammates screen does. */
     now: new Date(),
@@ -82,9 +89,21 @@ export function useApiKeysScreen() {
     /** Closing the panel is what loses the token. Nothing else holds it. */
     dismissMinted: () => setMinted(null),
 
+    async rename(keyId: number, name: string) {
+      await updateApiKey(keyId, { name });
+      await reload();
+    },
+
+    async changeScopes(keyId: number, scopes: ApiKeyScope[]) {
+      await updateApiKey(keyId, { scopes });
+      await reload();
+    },
+
     async revoke(keyId: number) {
       await revokeApiKey(keyId);
       await reload();
+      // Nothing left to correct on a cut key: the panel steps aside.
+      setOpenedId(null);
     },
   };
 }

@@ -153,3 +153,42 @@ class TestBroadScopes:
     def test_every_scope_says_whether_it_reads(self) -> None:
         assert ApiKeyScope.CATALOG_READ.is_read is True
         assert ApiKeyScope.PROJECTS_WRITE.is_read is False
+
+
+class TestEditing:
+    def test_a_key_is_renamed(self) -> None:
+        key = make_key()
+        key.rename("  CI waat.tools  ")
+        assert key.name == "CI waat.tools"
+
+    def test_a_rename_still_obeys_the_invariants(self) -> None:
+        key = make_key()
+        with pytest.raises(ValidationError):
+            key.rename("   ")
+
+    def test_the_scopes_are_replaced_whole(self) -> None:
+        key = make_key(scopes=[ApiKeyScope.CATALOG_READ])
+        key.set_scopes([ApiKeyScope.ALL_READ, ApiKeyScope.PROJECTS_WRITE])
+        assert key.scopes == [ApiKeyScope.ALL_READ, ApiKeyScope.PROJECTS_WRITE]
+
+    def test_a_key_cannot_be_left_without_a_scope(self) -> None:
+        key = make_key()
+        with pytest.raises(ValidationError):
+            key.set_scopes([])
+
+    def test_a_revoked_key_is_frozen(self) -> None:
+        # It is a piece of the audit: it says what a machine was called while
+        # it worked, and rewriting that afterwards would rewrite the trace.
+        key = make_key()
+        key.revoke(by=20, at=NOW)
+
+        with pytest.raises(ForbiddenActionError):
+            key.rename("Autre chose")
+        with pytest.raises(ForbiddenActionError):
+            key.set_scopes([ApiKeyScope.ALL_READ])
+
+    def test_an_expired_key_may_still_be_renamed(self) -> None:
+        # Pointless for the machine, useful for whoever reads the table.
+        key = make_key(expires_at=NOW + timedelta(days=1))
+        key.rename("Ancienne CI")
+        assert key.name == "Ancienne CI"

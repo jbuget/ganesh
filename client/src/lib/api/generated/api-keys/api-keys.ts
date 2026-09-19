@@ -25,6 +25,7 @@ import type {
   CreateApiKeyRequest,
   HTTPValidationError,
   MintedApiKeyResponse,
+  UpdateApiKeyRequest,
 } from "../model";
 
 import { bffFetcher } from "../../fetcher";
@@ -329,6 +330,140 @@ export const useCreateApiKey = <TError = HTTPValidationError, TContext = unknown
   TContext
 > => {
   return useMutation(getCreateApiKeyMutationOptions(options), queryClient);
+};
+export type updateApiKeyResponse200 = {
+  data: ApiKeyResponse;
+  status: 200;
+};
+
+export type updateApiKeyResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type updateApiKeyResponseSuccess = updateApiKeyResponse200 & {
+  headers: Headers;
+};
+export type updateApiKeyResponseError = updateApiKeyResponse422 & {
+  headers: Headers;
+};
+
+export type updateApiKeyResponse =
+  updateApiKeyResponseSuccess | updateApiKeyResponseError;
+
+export const getUpdateApiKeyUrl = (keyId: number) => {
+  return `/api/v1/api-keys/${keyId}`;
+};
+
+/**
+ * Corrects what a key is called and what it opens. Nothing else.
+ * @summary Update Api Key
+ */
+export const updateApiKey = async (
+  keyId: number,
+  updateApiKeyRequest: UpdateApiKeyRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<updateApiKeyResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<updateApiKeyResponse>(getUpdateApiKeyUrl(keyId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateApiKeyRequest),
+  });
+};
+
+export const getUpdateApiKeyMutationKey = () => ["updateApiKey"] as const;
+
+export const getUpdateApiKeyMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateApiKey>>,
+    TError,
+    UpdateApiKeyMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateApiKey>>,
+  TError,
+  UpdateApiKeyMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateApiKeyMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateApiKey>>,
+    UpdateApiKeyMutationVariables
+  > = (props) => {
+    const { keyId, data } = props ?? {};
+
+    return updateApiKey(keyId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateApiKeyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateApiKey>>
+>;
+export type UpdateApiKeyMutationBody = UpdateApiKeyRequest;
+export type UpdateApiKeyMutationError = HTTPValidationError;
+export type UpdateApiKeyMutationVariables = {
+  keyId: number;
+  data: UpdateApiKeyRequest;
+};
+
+/**
+ * @summary Update Api Key
+ */
+export const useUpdateApiKey = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateApiKey>>,
+      TError,
+      UpdateApiKeyMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateApiKey>>,
+  TError,
+  UpdateApiKeyMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateApiKeyMutationOptions(options), queryClient);
 };
 export type revokeApiKeyResponse204 = {
   data: void;

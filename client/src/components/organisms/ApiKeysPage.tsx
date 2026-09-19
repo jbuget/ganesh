@@ -5,6 +5,7 @@ import { useState } from "react";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { CreateApiKeyDialog } from "@/components/molecules/CreateApiKeyDialog";
 import { MintedApiKeyPanel } from "@/components/molecules/MintedApiKeyPanel";
+import { ApiKeyPanel } from "@/components/organisms/ApiKeyPanel";
 import { ApiKeysTable } from "@/components/organisms/ApiKeysTable";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { Button } from "@/components/ui/button";
@@ -55,11 +56,7 @@ export function ApiKeysPage() {
         )}
 
         {screen.keys.length > 0 && (
-          <ApiKeysTable
-            keys={screen.keys}
-            canRevoke={screen.isManager}
-            onRevoke={screen.revoke}
-          />
+          <ApiKeysTable keys={screen.keys} onOpen={screen.open} />
         )}
       </div>
 
@@ -69,6 +66,17 @@ export function ApiKeysPage() {
         teammates={teammates}
         onCreate={screen.create}
       />
+
+      {screen.opened && (
+        <ApiKeyPanel
+          apiKey={screen.opened}
+          editable={screen.isManager}
+          onRename={screen.rename}
+          onChangeScopes={screen.changeScopes}
+          onRevoke={screen.revoke}
+          onClose={screen.close}
+        />
+      )}
 
       <MintedApiKeyPanel minted={screen.minted} onClose={screen.dismissMinted} />
     </PageLayout>

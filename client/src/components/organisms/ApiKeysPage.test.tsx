@@ -29,9 +29,14 @@ const screenState = {
   isLoading: false,
   isManager: true,
   minted: null,
+  opened: null as ApiKeyResponse | null,
   now: new Date("2026-09-19T12:00:00"),
   create: vi.fn(),
   dismissMinted: vi.fn(),
+  open: vi.fn(),
+  close: vi.fn(),
+  rename: vi.fn(),
+  changeScopes: vi.fn(),
   revoke: vi.fn(),
 };
 
@@ -49,6 +54,7 @@ function view(state: Partial<typeof screenState> = {}) {
     isLoading: false,
     isManager: true,
     minted: null,
+    opened: null,
     ...state,
   });
   render(<ApiKeysPage />);
@@ -84,11 +90,12 @@ describe("ApiKeysPage", () => {
       ).not.toBeInTheDocument();
     });
 
-    it("is offered nothing to revoke", () => {
-      view({ isManager: false });
-      expect(
-        screen.queryByRole("button", { name: "Révoquer" }),
-      ).not.toBeInTheDocument();
+    it("opens a key beside the list, to read it", async () => {
+      view({ isManager: false, open: vi.fn() });
+
+      await userEvent.click(screen.getByText("CI waat-tools"));
+
+      expect(screenState.open).toHaveBeenCalledWith(1);
     });
 
     it("sees an empty state with nothing to click", () => {
@@ -108,16 +115,12 @@ describe("ApiKeysPage", () => {
       expect(screen.getByText(/service externe/i)).toBeInTheDocument();
     });
 
-    it("may revoke a usable key", () => {
-      view();
-      expect(screen.getByRole("button", { name: "Révoquer" })).toBeInTheDocument();
-    });
+    it("opens a key beside the list, to correct it", async () => {
+      view({ open: vi.fn() });
 
-    it("is offered nothing on a key already cut", () => {
-      view({ keys: [key({ state: "revoked" })] });
-      expect(
-        screen.queryByRole("button", { name: "Révoquer" }),
-      ).not.toBeInTheDocument();
+      await userEvent.click(screen.getByText("CI waat-tools"));
+
+      expect(screenState.open).toHaveBeenCalledWith(1);
     });
   });
 

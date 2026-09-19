@@ -1,10 +1,4 @@
-"use client";
-
-import { useState } from "react";
-
 import { ApiKeyStateBadge } from "@/components/atoms/ApiKeyStateBadge";
-import { RevokeApiKeyDialog } from "@/components/atoms/RevokeApiKeyDialog";
-import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ApiKeyResponse } from "@/lib/api/generated/model";
 import { isUsable, scopeLabel } from "@/lib/api-keys";
@@ -13,9 +7,7 @@ import { STRONG_SEPARATOR } from "@/lib/table-frame";
 
 interface ApiKeyRowProps {
   apiKey: ApiKeyResponse;
-  /** Only a manager cuts a key. The server refuses anyone else regardless. */
-  canRevoke: boolean;
-  onRevoke: (keyId: number) => void | Promise<void>;
+  onOpen: () => void;
 }
 
 /** A date, or a dash where there is nothing to say. */
@@ -27,12 +19,15 @@ function Day({ iso }: { iso: string | null }) {
 /**
  * One service account in the table.
  *
+ * The whole row opens the panel beside the list, as a teammate's does: what
+ * one does to a key is done there, not from a button hidden at the end of a
+ * line.
+ *
  * A key that no longer opens anything is dimmed rather than hidden: the audit
  * refers to it, and « revoked three months ago » is an answer the table owes
  * whoever comes looking.
  */
-export function ApiKeyRow({ apiKey, canRevoke, onRevoke }: ApiKeyRowProps) {
-  const [confirming, setConfirming] = useState(false);
+export function ApiKeyRow({ apiKey, onOpen }: ApiKeyRowProps) {
   const spent = !isUsable(apiKey);
 
   return (
@@ -40,7 +35,8 @@ export function ApiKeyRow({ apiKey, canRevoke, onRevoke }: ApiKeyRowProps) {
     // the anchor of the line rather than as its first column. The same grammar
     // as the teammates table.
     <TableRow
-      className={`group bg-slate-50 hover:bg-slate-100 ${
+      onClick={onOpen}
+      className={`group cursor-pointer bg-slate-50 hover:bg-slate-100 ${
         spent ? "text-slate-400" : ""
       }`}
     >
@@ -73,27 +69,6 @@ export function ApiKeyRow({ apiKey, canRevoke, onRevoke }: ApiKeyRowProps) {
 
       <TableCell className="py-2">
         <ApiKeyStateBadge state={apiKey.state} />
-      </TableCell>
-
-      <TableCell className="py-2 text-right">
-        {canRevoke && isUsable(apiKey) && (
-          <>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700"
-              onClick={() => setConfirming(true)}
-            >
-              Révoquer
-            </Button>
-            <RevokeApiKeyDialog
-              open={confirming}
-              onOpenChange={setConfirming}
-              name={apiKey.name}
-              onConfirm={() => void onRevoke(apiKey.id)}
-            />
-          </>
-        )}
       </TableCell>
     </TableRow>
   );

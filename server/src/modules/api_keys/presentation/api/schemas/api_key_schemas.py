@@ -48,6 +48,17 @@ class CreateApiKeyRequest(BaseModel):
     expires_at: datetime | None = None
 
 
+class UpdateApiKeyRequest(BaseModel):
+    """Partial change: a field left out is a field left alone.
+
+    The secret, the owner and the expiry are not here. Reissuing a secret is
+    minting a key; the other two are reasons to mint one too.
+    """
+
+    name: str | None = Field(default=None, min_length=1, max_length=NAME_MAX_LENGTH)
+    scopes: list[ApiKeyScope] | None = Field(default=None, min_length=1)
+
+
 class MintedApiKeyResponse(BaseModel):
     """The one and only response that carries a whole key.
 

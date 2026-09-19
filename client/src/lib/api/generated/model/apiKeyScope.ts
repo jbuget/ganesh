@@ -11,11 +11,14 @@
  * A closed catalogue, `resource:verb`. Each member names what a route needs,
  * not what a screen shows.
  *
- * Two of them are broad: `all:read` covers every read, `all:write` covers
- * everything. They are real members rather than a pattern matched at run
- * time, so a key can still be read off the table and told what it opens —
- * but they cover scopes that **do not exist yet**, which is the price of
- * breadth and the reason the form says so.
+ * Two of them are broad, one per verb: `all:read` covers every read,
+ * `all:write` every write. They are independent — a key that both reads and
+ * writes everything carries the two — and they are real members rather than a
+ * pattern matched at run time, so a key can still be read off the table and
+ * told what it opens.
+ *
+ * What they cover includes scopes that **do not exist yet**: that is the
+ * price of breadth, and the reason the form says so.
  */
 export type ApiKeyScope = (typeof ApiKeyScope)[keyof typeof ApiKeyScope];
 

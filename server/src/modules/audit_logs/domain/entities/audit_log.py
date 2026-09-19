@@ -31,6 +31,7 @@ class AuditAction(StrEnum):
     USER_DEACTIVATE = "user.deactivate"
     USER_ACTIVATE = "user.activate"
     API_KEY_CREATE = "api_key.create"
+    API_KEY_UPDATE = "api_key.update"
     API_KEY_REVOKE = "api_key.revoke"
 
 

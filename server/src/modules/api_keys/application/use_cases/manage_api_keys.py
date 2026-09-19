@@ -6,6 +6,7 @@ from src.modules.api_keys.application.dtos.api_key_dto import (
     CreateApiKeyCommand,
     MintedApiKey,
     RevokeApiKeyCommand,
+    UpdateApiKeyCommand,
 )
 from src.modules.api_keys.domain.entities.api_key import ApiKey
 from src.modules.api_keys.domain.repositories.api_key_repository import ApiKeyRepository
@@ -89,6 +90,64 @@ class ListApiKeysUseCase:
             if user.id is not None
         }
         return keys, people
+
+
+class UpdateApiKeyUseCase:
+    """Corrects what a key is called and what it opens.
+
+    Nothing else: the secret is not reissued, the owner is not swapped and the
+    expiry is not moved. Those are reasons to mint a new key.
+    """
+
+    def __init__(
+        self,
+        keys: ApiKeyRepository,
+        audit_logs: AuditLogRepository,
+    ) -> None:
+        self._keys = keys
+        self._audit_logs = audit_logs
+
+    async def execute(self, command: UpdateApiKeyCommand) -> ApiKey:
+        key = await self._keys.get_by_id(command.key_id)
+        if key is None:
+            raise EntityNotFoundError("The key cannot be found.")
+
+        changes: list[tuple[str, str, str]] = []
+
+        if command.name is not None and command.name.strip() != key.name:
+            changes.append(("name", key.name, command.name.strip()))
+            key.rename(command.name)
+
+        if command.scopes is not None:
+            before = sorted(scope.value for scope in key.scopes)
+            after = sorted(scope.value for scope in command.scopes)
+            if before != after:
+                changes.append(("scopes", ", ".join(before), ", ".join(after)))
+            # Replayed even when equal: the entity is what refuses an empty
+            # list, and a screen sending one must be told.
+            key.set_scopes(command.scopes)
+
+        if not changes:
+            return key
+
+        await self._keys.update(key)
+
+        # One trace per field, as editing a mission already does.
+        for field, before_value, after_value in changes:
+            await self._audit_logs.add(
+                AuditLog(
+                    action=AuditAction.API_KEY_UPDATE,
+                    actor_id=command.actor_id,
+                    target_user_id=key.owner_id,
+                    old_value=before_value[:64],
+                    new_value=after_value[:64],
+                    payload={
+                        "field": field,
+                        "api_key": key_material.masked(key.public_id),
+                    },
+                )
+            )
+        return key
 
 
 class RevokeApiKeyUseCase:

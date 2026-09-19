@@ -13,11 +13,13 @@ from src.core.database import get_db
 from src.modules.api_keys.application.dtos.api_key_dto import (
     CreateApiKeyCommand,
     RevokeApiKeyCommand,
+    UpdateApiKeyCommand,
 )
 from src.modules.api_keys.application.use_cases.manage_api_keys import (
     CreateApiKeyUseCase,
     ListApiKeysUseCase,
     RevokeApiKeyUseCase,
+    UpdateApiKeyUseCase,
 )
 from src.modules.api_keys.presentation.api.mappers.api_key_mapper import (
     to_api_key_response,
@@ -26,11 +28,13 @@ from src.modules.api_keys.presentation.api.schemas.api_key_schemas import (
     ApiKeyResponse,
     CreateApiKeyRequest,
     MintedApiKeyResponse,
+    UpdateApiKeyRequest,
 )
 from src.modules.api_keys.presentation.dependencies import (
     get_create_api_key_use_case,
     get_list_api_keys_use_case,
     get_revoke_api_key_use_case,
+    get_update_api_key_use_case,
 )
 from src.modules.auth.presentation.dependencies import (
     get_current_manager,
@@ -87,6 +91,31 @@ async def create_api_key(
     return MintedApiKeyResponse(
         key=to_api_key_response(minted.key, people), token=minted.token
     )
+
+
+@router.patch("/{key_id}", response_model=ApiKeyResponse, operation_id="updateApiKey")
+async def update_api_key(
+    key_id: int,
+    payload: UpdateApiKeyRequest,
+    manager: User = Depends(get_current_manager),
+    use_case: UpdateApiKeyUseCase = Depends(get_update_api_key_use_case),
+    list_use_case: ListApiKeysUseCase = Depends(get_list_api_keys_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> ApiKeyResponse:
+    """Corrects what a key is called and what it opens. Nothing else."""
+    assert manager.id is not None
+    key = await use_case.execute(
+        UpdateApiKeyCommand(
+            actor_id=manager.id,
+            key_id=key_id,
+            name=payload.name,
+            scopes=payload.scopes,
+        )
+    )
+    await session.commit()
+
+    _, people = await list_use_case.execute()
+    return to_api_key_response(key, people)
 
 
 @router.delete(
