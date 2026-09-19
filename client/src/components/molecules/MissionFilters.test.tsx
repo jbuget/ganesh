@@ -37,6 +37,16 @@ const bar = (over: Partial<Criteria> = {}, props: Record<string, unknown> = {}) 
 };
 
 describe("MissionFilters", () => {
+  /**
+   * The kanban offers nothing there, the reference list puts the choice of
+   * columns in it: the bar holds the place without knowing what goes in it.
+   */
+  it("hangs what the screen gives it at the far end of the bar", () => {
+    bar({}, { trailing: <button type="button">Colonnes</button> });
+
+    expect(screen.getByRole("button", { name: "Colonnes" })).toBeInTheDocument();
+  });
+
   it("offers the five criteria", () => {
     bar();
 

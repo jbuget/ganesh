@@ -3,6 +3,7 @@
 import { Plus, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { ColumnsSelect } from "@/components/atoms/ColumnsSelect";
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { ImportProjectsDialog } from "@/components/atoms/ImportProjectsDialog";
 import { PageHeader } from "@/components/atoms/PageHeader";
@@ -12,6 +13,7 @@ import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { Button } from "@/components/ui/button";
 import { useOpenedMission } from "@/lib/opened-mission";
+import { useMissionColumns } from "@/lib/use-mission-columns";
 import { useMissionFilters } from "@/lib/use-mission-filters";
 import { useMissionSort } from "@/lib/use-mission-sort";
 import { useProjectsScreen } from "@/lib/use-projects";
@@ -35,6 +37,11 @@ export function ProjectsPage() {
   // Ordering follows the same path as the filters: the address carries it, and
   // the screen hook renders the tree already in the order asked for.
   const { sorted, toggle: sortBy } = useMissionSort();
+  // A steering meeting opens on the whole panorama, then works on four
+  // columns: what is read once takes up room afterwards. The address carries
+  // that choice like the rest, so the screen one has set up is shared by a
+  // link.
+  const columns = useMissionColumns(sorted);
   const screen = useProjectsScreen(filters, sorted);
   // One reference time for every row: « il y a 3 h » must not depend
   // on when each one renders.
@@ -76,6 +83,13 @@ export function ProjectsPage() {
             onClear={clear}
             visible={screen.visible}
             total={screen.total}
+            trailing={
+              <ColumnsSelect
+                hidden={columns.hidden}
+                onToggle={columns.toggle}
+                onShowAll={columns.showAll}
+              />
+            }
           />
         </>
       }
@@ -105,6 +119,7 @@ export function ProjectsPage() {
             now={now}
             onOpen={(projectId) => panel.open(projectId)}
             onOpenThread={(projectId) => panel.open(projectId, "updates")}
+            hidden={columns.hidden}
           />
         )}
       </div>

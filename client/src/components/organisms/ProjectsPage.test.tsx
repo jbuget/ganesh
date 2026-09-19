@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { ProjectsPage } from "./ProjectsPage";
@@ -71,5 +71,76 @@ describe("ProjectsPage", () => {
     await declare("Portail");
 
     expect(await screen.findByLabelText("Mission 42")).toBeInTheDocument();
+  });
+});
+
+/**
+ * A steering meeting opens on the whole panorama, then works on four columns.
+ * What is asked here is the whole chain: the choice made in the bar, the
+ * column gone from the table.
+ */
+describe("the columns one puts away", () => {
+  const mission = {
+    project: {
+      id: 1,
+      label: "Portail",
+      kind: "project",
+      status: "development",
+      priority: null,
+      category: null,
+      estimated_days: null,
+      parent_id: null,
+      is_active: true,
+    },
+    leads: [],
+    contributors: [],
+    delivered_days: 0,
+    cost: { build_days: 0, run_days: 0, estimated_days: null },
+    tree_cost: { build_days: 0, run_days: 0, estimated_days: null },
+    comments: 0,
+    latest_update: null,
+    links: [],
+  };
+
+  beforeEach(() => {
+    state.tree = [{ mission, workPackages: [] }];
+  });
+
+  afterEach(() => {
+    state.tree = [];
+  });
+
+  const columnsMenu = async () => {
+    await userEvent.click(screen.getByRole("button", { name: /Colonnes/ }));
+    return within(screen.getByRole("dialog"));
+  };
+
+  it("shows the whole panorama to start with", () => {
+    render(<ProjectsPage />);
+
+    expect(
+      within(screen.getByRole("table")).getByText("Catégorie"),
+    ).toBeInTheDocument();
+  });
+
+  it("drops from the table the column put away", async () => {
+    render(<ProjectsPage />);
+
+    const menu = await columnsMenu();
+    await userEvent.click(menu.getByRole("button", { name: "Catégorie" }));
+
+    expect(within(screen.getByRole("table")).queryByText("Catégorie")).toBeNull();
+  });
+
+  it("brings the whole panorama back at once", async () => {
+    render(<ProjectsPage />);
+
+    const menu = await columnsMenu();
+    await userEvent.click(menu.getByRole("button", { name: "Catégorie" }));
+    await userEvent.click(menu.getByRole("button", { name: "Tout afficher" }));
+
+    expect(
+      within(screen.getByRole("table")).getByText("Catégorie"),
+    ).toBeInTheDocument();
   });
 });
