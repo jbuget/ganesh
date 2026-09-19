@@ -1,0 +1,132 @@
+name: CD — production (API host)
+
+# Deploys the API host on every push to main, and on demand. The Next.js
+# client is deployed by AWS Amplify, which watches the same branch on its own
+# (see `amplify.yml`) — the two are independent, and a change touching only the
+# client never wakes this workflow.
+#
+# Authentication is OIDC alone: no SSH key, no AWS key. The runner assumes a
+# role for a few minutes and deploys through SSM Run Command, so the host has
+# no inbound port at all.
+#
+# The host is ARM (t4g), so the image is built for linux/arm64. Do not drop the
+# platform: an amd64 image pulls fine and then refuses to start.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "server/**"
+      - "docker-compose.prod.yml"
+      - "Caddyfile"
+      - ".github/workflows/cd-production.yml"
+      - ".github/scripts/ssm-deploy.sh"
+  workflow_dispatch:
+
+# Least privilege for the workflow token: mint the OIDC JWT, read the
+# checkout. Nothing else.
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: cd-production
+  cancel-in-progress: false
+
+env:
+  API_IMAGE: ghcr.io/waat-fr/ganesh-api
+
+jobs:
+  # Built on the amd64 runner FOR linux/arm64 and pushed to GHCR with the
+  # workflow token. The nano-sized host only ever pulls.
+  build-and-push:
+    name: Build and push the API image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push (arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ${{ env.API_IMAGE }}:latest
+            ${{ env.API_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha,scope=api-prod
+          cache-to: type=gha,mode=max,scope=api-prod
+
+  deploy:
+    name: Deploy to the production host
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    # The environment name is part of the OIDC `sub` claim the trust policy
+    # matches: repo:waat-fr@<id>/ganesh@<id>:environment:production. It must
+    # stay in step with var.github_environment in terraform/.
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE }}
+          aws-region: eu-west-3
+
+      - name: Deploy through SSM
+        env:
+          AWS_REGION: eu-west-3
+          PROJECT_NAME: ganesh
+          ENVIRONMENT: production
+          DEPLOY_REF: main
+          GIT_REPO: waat-fr/ganesh
+          # The exact image built above, never :latest — a deploy names what it
+          # deploys.
+          API_IMAGE: ${{ env.API_IMAGE }}:${{ github.sha }}
+        run: ./.github/scripts/ssm-deploy.sh
+
+      - name: Notify Teams — success
+        if: success()
+        env:
+          ENV: production
+          SERVICE: Ganesh
+          BRANCH: ${{ github.ref_name }}
+          COMMIT: ${{ github.sha }}
+          AUTHOR: ${{ github.actor }}
+          MESSAGE: ${{ github.event.head_commit.message }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+        run: |
+          chmod +x .github/scripts/notify-teams.sh
+          ./.github/scripts/notify-teams.sh success
+
+      - name: Notify Teams — failure
+        if: failure()
+        env:
+          ENV: production
+          SERVICE: Ganesh
+          BRANCH: ${{ github.ref_name }}
+          COMMIT: ${{ github.sha }}
+          AUTHOR: ${{ github.actor }}
+          MESSAGE: ${{ github.event.head_commit.message }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+        run: |
+          chmod +x .github/scripts/notify-teams.sh
+          ./.github/scripts/notify-teams.sh failure

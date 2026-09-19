@@ -1,0 +1,18 @@
+# The image carries the application, not the workshop.
+.venv/
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.import_linter_cache/
+.coverage
+htmlcov/
+tests/
+conftest.py
+.env
+.env.*
+!.env.example
+Makefile
+openapi.json
+scripts/data/

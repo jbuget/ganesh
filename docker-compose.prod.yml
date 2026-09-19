@@ -1,0 +1,58 @@
+# ---------------------------------------------------------------------------
+# Production stack for the Ganesh API host (EC2, ARM).
+#   caddy → TLS termination and reverse proxy, the only thing on 80/443
+#   api   → FastAPI / uvicorn, reachable on the compose network alone
+#
+# The Next.js client is NOT here: it is served by AWS Amplify (see
+# `amplify.yml`), and its BFF calls this host over https://api.ganesh.waat.tools.
+#
+# PostgreSQL is managed RDS (see `terraform/rds.tf`), never a container: the
+# `db` service of `docker-compose.yml` is for development alone.
+#
+# The API image is built and pushed to GHCR by CI; the host only ever pulls it.
+# Deployed by `.github/scripts/ssm-deploy.sh`, which runs on the host:
+#   docker compose -f docker-compose.prod.yml --env-file server/.env pull
+#   docker compose -f docker-compose.prod.yml --env-file server/.env up -d
+#   docker compose -f docker-compose.prod.yml --env-file server/.env exec -T api alembic upgrade head
+# ---------------------------------------------------------------------------
+services:
+  api:
+    # Built and pushed by CI; the exact tag is injected by the deploy script.
+    image: ${API_IMAGE:-ghcr.io/waat-fr/ganesh-api:latest}
+    container_name: ganesh-api
+    restart: unless-stopped
+    env_file:
+      - server/.env
+    expose:
+      - "8000"
+    networks:
+      - ganesh-net
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: ganesh-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+    networks:
+      - ganesh-net
+
+# Named explicitly, with no compose-project prefix: the deploy directory can be
+# renamed without orphaning the volume that holds Caddy's certificates — and a
+# lost certificate store means a fresh ACME issuance, rate limits included.
+volumes:
+  caddy-data:
+    name: ganesh-caddy-data
+  caddy-config:
+    name: ganesh-caddy-config
+
+networks:
+  ganesh-net:
+    driver: bridge

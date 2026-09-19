@@ -1,0 +1,45 @@
+# ---------------------------------------------------------------------------
+# AWS Amplify build for the Ganesh client (https://ganesh.waat.tools).
+#
+# The client is a BFF: its Route Handlers carry the Entra flow and relay to the
+# API, so this is an SSR deployment (Amplify's WEB_COMPUTE platform), never a
+# static export. Amplify detects it from `.next` — do not add an `out`
+# directory or `output: "export"` to next.config.ts.
+#
+# Two kinds of variable, and the difference matters:
+#   - The ones written to `.env.production` below are version-controlled and
+#     baked into the build. Nothing secret goes there: the artefact is not a
+#     vault.
+#   - The Entra secrets (AZURE_AD_CLIENT_SECRET above all) are declared in the
+#     Amplify console's environment variables, read at run time by the compute
+#     role. See `docs/deployment.md`.
+# ---------------------------------------------------------------------------
+version: 1
+applications:
+  - appRoot: client
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            # pnpm, at the version the lockfile was written with. Corepack
+            # ships with the Node 22 image Amplify runs.
+            - corepack enable
+            - corepack prepare pnpm@10.29.2 --activate
+            - pnpm install --frozen-lockfile
+            # What the BFF needs to reach the API, and where it answers from.
+            # Written here rather than in the console so it survives the app
+            # being recreated, and so it is readable in the repository.
+            - echo "API_URL=https://api.ganesh.waat.tools" > .env.production
+            - echo "API_PREFIX=/api/v1" >> .env.production
+            - echo "APP_URL=https://ganesh.waat.tools" >> .env.production
+        build:
+          commands:
+            - pnpm build
+      artifacts:
+        baseDirectory: .next
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - node_modules/**/*
+          - .next/cache/**/*

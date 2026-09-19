@@ -519,6 +519,40 @@ See `docs/api-keys.md`.
 
 ---
 
+## Production
+
+One push to `main` deploys the API. Nothing else deploys it: no laptop builds
+the production image, and no one holds a key to the host.
+
+The client is on **AWS Amplify** at `ganesh.waat.tools`, the API on one **EC2
+host behind Caddy** at `api.ganesh.waat.tools`, the database on **managed
+RDS**. Same shape as NOMAD and SALSA, so that whoever is on call recognises
+what they are looking at — and the runbook is `docs/deployment.md`.
+
+Four rules worth knowing before touching `terraform/`, `docker-compose.prod.yml`
+or the CD workflow:
+
+- **The host is ARM.** The image is built for `linux/arm64`, and an amd64 one
+  pulls without complaint before refusing to start. Never drop the platform
+  from the build.
+- **No secret goes through Terraform.** The state file is not a vault: the
+  parameters are created empty and filled out of band with `put-parameter`.
+  Nor does a secret go through the SSM payload, which is logged — the host
+  reads Parameter Store itself.
+- **The instance and the database carry `prevent_destroy`.** A plan that says
+  `replace` on either is a plan to read again, not to apply: the instance holds
+  Caddy's certificate store, the database holds everyone's declared months.
+- **A deploy ends on the health check.** The API answering is what makes a
+  deploy a success, and the migration runs once, inside the container, rather
+  than in each worker as it boots.
+
+**The sign-in flow does not exist yet**, so production runs `REQUIRE_AUTH=false`
+and the application is open to whoever knows the address. That is a step, not a
+state: the day the Entra callback lands in the BFF, the parameter flips and the
+next deploy closes the door.
+
+---
+
 ## Code conventions
 
 ### Python (backend)
