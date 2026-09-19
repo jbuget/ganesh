@@ -19,6 +19,11 @@ interface TimesheetGridProps {
   addingMission?: React.ReactNode;
   /** Removing a mission. Absent when the month is closed. */
   onRemoveMission?: (projectId: number) => void;
+  /**
+   * Opening a mission in the side panel. Available whatever the month's state:
+   * reading a mission's sheet is not writing on it.
+   */
+  onOpenMission?: (projectId: number) => void;
 }
 
 interface DisplayRow {
@@ -45,6 +50,7 @@ export function TimesheetGrid({
   onSetValue,
   addingMission,
   onRemoveMission,
+  onOpenMission,
 }: TimesheetGridProps) {
   const rows: DisplayRow[] = [
     ...grid.rows.map((row) => ({
@@ -181,11 +187,29 @@ export function TimesheetGrid({
                     : "border-b-slate-300",
                 ].join(" ")}
               >
-                <MissionLabel
-                  label={row.label}
-                  consumedDays={row.total_consumed_days}
-                  estimatedDays={row.estimated_days}
-                />
+                {/* The name is the way in: from one's month one opens the
+                    very same panel the kanban and the reference list open,
+                    rather than going looking for the mission elsewhere. */}
+                {onOpenMission ? (
+                  <button
+                    type="button"
+                    aria-label={`Ouvrir ${row.label}`}
+                    onClick={() => onOpenMission(row.project_id)}
+                    className="flex w-full min-w-0 cursor-pointer text-left hover:underline"
+                  >
+                    <MissionLabel
+                      label={row.label}
+                      consumedDays={row.total_consumed_days}
+                      estimatedDays={row.estimated_days}
+                    />
+                  </button>
+                ) : (
+                  <MissionLabel
+                    label={row.label}
+                    consumedDays={row.total_consumed_days}
+                    estimatedDays={row.estimated_days}
+                  />
+                )}
               </th>
               {grid.days.map((day, dayIndex) => (
                 <DayCell

@@ -6,7 +6,7 @@ responses. No framework dependency here.
 
 
 class DomainError(Exception):
-    """Erreur metier generique."""
+    """Generic business error."""
 
 
 class EntityNotFoundError(DomainError):

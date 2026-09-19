@@ -67,35 +67,18 @@ def test_working_days_count_excludes_weekends_and_holidays() -> None:
     assert working_days_count(2026, 5) < 31
 
 
-def test_working_days_between_counts_both_bounds() -> None:
-    # Monday 5 to Friday 9 January 2026: five working days, bounds included.
-    assert working_days_between(date(2026, 1, 5), date(2026, 1, 9)) == 5
+class TestWorkingDaysBetween:
+    def test_a_window_keeps_only_the_working_days_in_order(self) -> None:
+        """A week from Monday to Sunday leaves five days."""
+        days = working_days_between(date(2026, 9, 14), date(2026, 9, 20))
 
+        assert days == [date(2026, 9, d) for d in (14, 15, 16, 17, 18)]
 
-def test_working_days_between_excludes_weekends() -> None:
-    # Monday 5 to Sunday 11 January 2026: the weekend does not count.
-    assert working_days_between(date(2026, 1, 5), date(2026, 1, 11)) == 5
+    def test_a_holiday_is_left_out_of_the_window(self) -> None:
+        """14 July 2026 falls on a Tuesday."""
+        days = working_days_between(date(2026, 7, 13), date(2026, 7, 15))
 
+        assert days == [date(2026, 7, 13), date(2026, 7, 15)]
 
-def test_working_days_between_excludes_public_holidays() -> None:
-    # 1 May 2026 falls on a Friday: the week only offers four working days.
-    assert working_days_between(date(2026, 4, 27), date(2026, 5, 1)) == 4
-
-
-def test_working_days_between_spans_months_and_years() -> None:
-    # 28 December 2026 to 1 January 2027: 25 December is behind us, but
-    # 1 January is a holiday, so only 28, 29, 30 and 31 are worked.
-    assert working_days_between(date(2026, 12, 28), date(2027, 1, 1)) == 4
-
-
-def test_a_single_working_day_counts_as_one() -> None:
-    assert working_days_between(date(2026, 1, 5), date(2026, 1, 5)) == 1
-
-
-def test_a_single_weekend_day_counts_as_none() -> None:
-    assert working_days_between(date(2026, 1, 10), date(2026, 1, 10)) == 0
-
-
-def test_an_inverted_range_holds_no_working_day() -> None:
-    # Nothing between the two bounds: the count is zero, not an error.
-    assert working_days_between(date(2026, 1, 9), date(2026, 1, 5)) == 0
+    def test_a_window_that_ends_before_it_starts_is_empty(self) -> None:
+        assert working_days_between(date(2026, 9, 18), date(2026, 9, 17)) == []

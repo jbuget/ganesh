@@ -55,7 +55,7 @@ class Period:
     @property
     def working_days(self) -> int:
         """Days the team was expected in, weekends and holidays excluded."""
-        return working_days_between(self.start, self.end)
+        return len(working_days_between(self.start, self.end))
 
     def previous(self) -> "Period":
         """The window of the same length that ends the day before this one.

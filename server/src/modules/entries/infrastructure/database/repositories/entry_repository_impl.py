@@ -110,6 +110,27 @@ class SqlEntryRepository(EntryRepository):
             sums.setdefault(project_id, {})[status] = float(total)
         return sums
 
+    async def sum_forecast_by_project(self, today: date) -> dict[int, float]:
+        result = await self._session.execute(
+            select(EntryModel.project_id, func.sum(EntryModel.value))
+            .where(EntryModel.day > today)
+            .group_by(EntryModel.project_id)
+        )
+        return {project_id: float(total) for project_id, total in result.all()}
+
+    async def sum_by_user_and_day(
+        self, start: date, end: date
+    ) -> dict[int, dict[date, float]]:
+        result = await self._session.execute(
+            select(EntryModel.user_id, EntryModel.day, func.sum(EntryModel.value))
+            .where(and_(EntryModel.day >= start, EntryModel.day <= end))
+            .group_by(EntryModel.user_id, EntryModel.day)
+        )
+        diaries: dict[int, dict[date, float]] = {}
+        for user_id, day, total in result.all():
+            diaries.setdefault(user_id, {})[day] = float(total)
+        return diaries
+
     async def upsert(self, entry: Entry) -> Entry:
         model = await self._get_model(entry.user_id, entry.project_id, entry.day)
         if model is None:

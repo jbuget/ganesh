@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Upload } from "lucide-react";
+import { Download, Plus, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { ColumnsSelect } from "@/components/atoms/ColumnsSelect";
@@ -59,6 +59,16 @@ export function ProjectsPage() {
             subtitle="Gestion des projets et sous-projets"
             actions={
               <>
+                {/* The reference list goes out whole, filters aside: one
+                    exports it to work on it elsewhere. */}
+                <Button
+                  variant="outline"
+                  disabled={screen.isExporting}
+                  onClick={screen.exportToExcel}
+                >
+                  <Download />
+                  {screen.isExporting ? "Export en cours…" : "Exporter"}
+                </Button>
                 {screen.isManager && (
                   <Button variant="outline" onClick={() => setImporting(true)}>
                     <Upload />

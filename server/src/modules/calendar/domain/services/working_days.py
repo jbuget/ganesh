@@ -78,18 +78,16 @@ def working_days_count(year: int, month: int) -> int:
     return sum(1 for day in days_of_month(year, month) if day.kind is DayKind.WORKING)
 
 
-def working_days_between(start: date, end: date) -> int:
-    """Number of working days between two dates, both bounds included.
+def working_days_between(start: date, end: date) -> list[date]:
+    """Working days from `start` to `end`, both included, in order.
 
-    Unlike `working_days_count`, this one spans any range: a statistics window
-    rarely lines up with a month. An inverted range holds nothing, and says so
-    with a zero rather than an error: it is a count, not a command.
+    An empty window when `end` precedes `start`: a projection over no time
+    places nothing, and that is a legitimate answer rather than an error.
     """
-    if end < start:
-        return 0
-    days = (end - start).days + 1
-    return sum(
-        1
-        for offset in range(days)
-        if classify_day(start + timedelta(days=offset)) is DayKind.WORKING
-    )
+    days: list[date] = []
+    day = start
+    while day <= end:
+        if classify_day(day) is DayKind.WORKING:
+            days.append(day)
+        day += timedelta(days=1)
+    return days
