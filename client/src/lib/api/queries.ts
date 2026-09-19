@@ -10,11 +10,13 @@
 import { useGetMonthGrid } from "@/lib/api/generated/entries/entries";
 import type {
   MonthGridResponse,
+  MyMoodsResponse,
   PeriodRange,
   ProjectListItemResponse,
   StatisticsResponse,
   UserResponse,
 } from "@/lib/api/generated/model";
+import { useGetMyMoods } from "@/lib/api/generated/moods/moods";
 import { useGetStatistics } from "@/lib/api/generated/stats/stats";
 import { useListProjects } from "@/lib/api/generated/projects/projects";
 import { useGetMe, useListUsers } from "@/lib/api/generated/users/users";
@@ -81,4 +83,10 @@ export function useMonthGrid(month: string, userId: number | null, enabled: bool
 export function useStatistics(range: PeriodRange) {
   const query = useGetStatistics({ range });
   return { ...query, statistics: successOf<StatisticsResponse>(query.data) };
+}
+
+/** The days one may still answer for, and what one already said of them. */
+export function useMyMoods() {
+  const query = useGetMyMoods();
+  return { ...query, days: successOf<MyMoodsResponse>(query.data)?.days ?? [] };
 }

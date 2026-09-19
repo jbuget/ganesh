@@ -6,10 +6,12 @@ import { useMemo } from "react";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { MissionCard } from "@/components/molecules/MissionCard";
 import { MonthBriefing } from "@/components/molecules/MonthBriefing";
+import { MoodCheckIn } from "@/components/molecules/MoodCheckIn";
 import { UpdateFeedItem } from "@/components/molecules/UpdateFeedItem";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { useHome } from "@/lib/use-home";
+import { useMood } from "@/lib/use-mood";
 import { useOpenedMission } from "@/lib/opened-mission";
 
 /**
@@ -19,12 +21,19 @@ import { useOpenedMission } from "@/lib/opened-mission";
  * this is where the two meet — the month behind still to close, the missions
  * running, the news published on them since one last looked.
  *
- * It reads and never writes. Every line hands over to the screen that acts:
- * the grid for time, the mission panel for the rest. Keeping it that way is
- * what stops it from slowly becoming a second Activité.
+ * It hands over rather than acting: the grid for time, the mission panel for
+ * the rest. Keeping it that way is what stops it from slowly becoming a second
+ * Activité.
+ *
+ * The mood is the one exception, and it is a deliberate one. Answering is a
+ * one-second gesture on a window that closes the next working day; behind a
+ * link, it would simply never be made, and a morale nobody posts measures
+ * nothing. It sits at the top for the same reason, above the month it is not
+ * about: what costs one click must not be reached by scrolling.
  */
 export function HomePage() {
   const home = useHome();
+  const mood = useMood();
   const panel = useOpenedMission();
   const now = useMemo(() => new Date(), []);
 
@@ -43,6 +52,18 @@ export function HomePage() {
         />
       }
     >
+      {/* The mood block stands outside the month gate: it carries its own
+        query, and holding it behind four grids would close the window on
+        whoever lands while they load. */}
+      <div className="mb-6">
+        <MoodCheckIn
+          days={mood.days}
+          today={mood.today}
+          savingDay={mood.savingDay}
+          onPick={mood.post}
+        />
+      </div>
+
       {/*
         Nothing shows until the months have arrived. Every block here reads
         « nothing to report » from an empty answer — « Tout est à jour », « Aucun

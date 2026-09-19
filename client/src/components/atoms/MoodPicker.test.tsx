@@ -1,0 +1,48 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
+import { MoodPicker } from "./MoodPicker";
+
+describe("MoodPicker", () => {
+  it("offers the five levels, from the best to the worst", () => {
+    render(<MoodPicker value={null} onPick={vi.fn()} />);
+
+    expect(
+      screen.getAllByRole("radio").map((face) => face.getAttribute("aria-label")),
+    ).toEqual(["Excellente", "Bonne", "Neutre", "Difficile", "Mauvaise"]);
+  });
+
+  it("marks the level already answered, and it alone", () => {
+    render(<MoodPicker value="hard" onPick={vi.fn()} />);
+
+    expect(screen.getByRole("radio", { name: "Difficile" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Bonne" })).not.toBeChecked();
+  });
+
+  it("hands over the level that was picked", () => {
+    const pick = vi.fn();
+    render(<MoodPicker value={null} onPick={pick} />);
+
+    fireEvent.click(screen.getByRole("radio", { name: "Excellente" }));
+
+    expect(pick).toHaveBeenCalledWith("excellent");
+  });
+
+  it("still offers the other levels once one has answered", () => {
+    const pick = vi.fn();
+    render(<MoodPicker value="good" onPick={pick} />);
+
+    fireEvent.click(screen.getByRole("radio", { name: "Mauvaise" }));
+
+    expect(pick).toHaveBeenCalledWith("bad");
+  });
+
+  it("refuses a second click while the answer travels", () => {
+    const pick = vi.fn();
+    render(<MoodPicker value={null} onPick={pick} disabled />);
+
+    fireEvent.click(screen.getByRole("radio", { name: "Bonne" }));
+
+    expect(pick).not.toHaveBeenCalled();
+  });
+});

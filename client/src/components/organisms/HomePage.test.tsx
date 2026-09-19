@@ -29,8 +29,12 @@ const listed = (
 const home = vi.hoisted(() => ({
   state: {} as Record<string, unknown>,
 }));
+const mood = vi.hoisted(() => ({
+  state: {} as Record<string, unknown>,
+}));
 
 vi.mock("@/lib/use-home", () => ({ useHome: () => home.state }));
+vi.mock("@/lib/use-mood", () => ({ useMood: () => mood.state }));
 vi.mock("@/lib/opened-mission", () => ({
   useOpenedMission: () => ({
     openedMission: null,
@@ -40,7 +44,18 @@ vi.mock("@/lib/opened-mission", () => ({
   }),
 }));
 
-function show(overrides: Record<string, unknown> = {}) {
+function show(
+  overrides: Record<string, unknown> = {},
+  moodOverrides: Record<string, unknown> = {},
+) {
+  mood.state = {
+    isLoading: false,
+    days: [],
+    today: "2026-09-19",
+    savingDay: null,
+    post: vi.fn(),
+    ...moodOverrides,
+  };
   home.state = {
     me: { id: 1, display_name: "Jérémy Buget" },
     today: "2026-09-19",
@@ -125,5 +140,21 @@ describe("HomePage", () => {
       screen.queryByText(/Aucun projet ne vous est assigné/),
     ).not.toBeInTheDocument();
     expect(screen.queryByText(/Quoi de neuf/)).not.toBeInTheDocument();
+  });
+
+  it("asks how the day went, and does so first", () => {
+    show({}, { days: [{ day: "2026-09-19", level: null }] });
+
+    expect(screen.getByText("Mon moral")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Bonne" })).toBeInTheDocument();
+  });
+
+  it("asks how the day went even while the months load", () => {
+    // The mood carries its own query: holding it behind four grids would
+    // close the window on whoever lands while they are still travelling.
+    show({ isLoading: true }, { days: [{ day: "2026-09-19", level: null }] });
+
+    expect(screen.getByText("Chargement…")).toBeInTheDocument();
+    expect(screen.getByText("Mon moral")).toBeInTheDocument();
   });
 });
