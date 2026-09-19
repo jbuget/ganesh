@@ -1,15 +1,14 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
 import { useState } from "react";
 
 import { HorizonSelect } from "@/components/atoms/HorizonSelect";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { PlanSummaryBar } from "@/components/atoms/PlanSummaryBar";
+import { SimulationBar } from "@/components/molecules/SimulationBar";
 import { CapacityTimeline } from "@/components/organisms/CapacityTimeline";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { WorkloadTimeline } from "@/components/organisms/WorkloadTimeline";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatShortDate } from "@/lib/dates";
 import { useWorkloadPlanScreen } from "@/lib/use-workload-plan";
@@ -41,6 +40,14 @@ export function PlanningPage() {
     staff,
     isHypothesis,
     reset,
+    simulations,
+    opened,
+    saveError,
+    hasUnsavedChanges,
+    open,
+    saveAs,
+    saveOver,
+    remove,
   } = useWorkloadPlanScreen();
   const [tab, setTab] = useState("missions");
 
@@ -59,17 +66,18 @@ export function PlanningPage() {
           }
           actions={
             <>
-              {isHypothesis && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="cursor-pointer"
-                  onClick={reset}
-                >
-                  <RotateCcw className="size-4" />
-                  Revenir à l&apos;ordre de l&apos;équipe
-                </Button>
-              )}
+              <SimulationBar
+                simulations={simulations}
+                opened={opened}
+                isHypothesis={isHypothesis}
+                hasUnsavedChanges={hasUnsavedChanges}
+                saveError={saveError}
+                onOpen={open}
+                onSaveAs={saveAs}
+                onSaveOver={saveOver}
+                onDelete={remove}
+                onReset={reset}
+              />
               <HorizonSelect months={horizonMonths} onChange={setHorizon} />
             </>
           }
@@ -78,8 +86,9 @@ export function PlanningPage() {
     >
       {isHypothesis && (
         <p className="mb-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
-          Hypothèse en cours : rien n&apos;est enregistré. Pour la rendre réelle,
-          changez la priorité et les intervenants sur la fiche du projet.
+          {opened
+            ? `Simulation « ${opened.name} »${hasUnsavedChanges ? " · modifiée depuis son enregistrement" : ""}. Elle ne change rien au réel : pour arbitrer, changez la priorité et les intervenants sur la fiche du projet.`
+            : "Hypothèse en cours : rien n'est enregistré. Enregistrez-la pour la retrouver, ou reportez-la sur la fiche du projet pour la rendre réelle."}
         </p>
       )}
 

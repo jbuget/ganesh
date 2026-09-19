@@ -4,23 +4,51 @@
  * Timesheet API
  * OpenAPI spec version: 0.1.0
  */
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult,
 } from "@tanstack/react-query";
 
 import type {
   HTTPValidationError,
   ProjectionRequest,
+  SaveSimulationRequest,
+  SimulationResponse,
   WorkloadPlanResponse,
 } from "../model";
 
 import { bffFetcher } from "../../fetcher";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+const withQueryKey = <T extends object, K>(
+  query: T,
+  queryKey: K,
+): T & { queryKey: K } => {
+  const result = { queryKey } as T & { queryKey: K };
+  for (const key of Object.keys(query)) {
+    // The explicit queryKey always wins, matching the previous
+    // `{ ...query, queryKey }` spread where it was set last.
+    if (key === "queryKey") continue;
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      configurable: true,
+      get: () => (query as Record<string, unknown>)[key],
+    });
+  }
+  return result;
+};
 
 export type projectWorkloadResponse200 = {
   data: WorkloadPlanResponse;
@@ -160,4 +188,530 @@ export const useProjectWorkload = <TError = HTTPValidationError, TContext = unkn
   TContext
 > => {
   return useMutation(getProjectWorkloadMutationOptions(options), queryClient);
+};
+export type listSimulationsResponse200 = {
+  data: SimulationResponse[];
+  status: 200;
+};
+
+export type listSimulationsResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listSimulationsResponseSuccess = listSimulationsResponse200 & {
+  headers: Headers;
+};
+export type listSimulationsResponseError = listSimulationsResponse422 & {
+  headers: Headers;
+};
+
+export type listSimulationsResponse =
+  listSimulationsResponseSuccess | listSimulationsResponseError;
+
+export const getListSimulationsUrl = () => {
+  return `/api/v1/planning/simulations`;
+};
+
+/**
+ * The scenarios the team kept, most recently touched first.
+ *
+ * Whole, not as a list of names: each holds a handful of numbers, and
+ * picking one must not cost a round trip before the plan can be redrawn.
+ * @summary List Simulations
+ */
+export const listSimulations = async (
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listSimulationsResponse> => {
+  return bffFetcher<listSimulationsResponse>(getListSimulationsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSimulationsQueryKey = () => {
+  return [`/api/v1/planning/simulations`] as const;
+};
+
+export const getListSimulationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSimulations>>,
+  TError = HTTPValidationError,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof listSimulations>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSimulationsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSimulations>>> = ({
+    signal,
+  }) => listSimulations({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listSimulations>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListSimulationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSimulations>>
+>;
+export type ListSimulationsQueryError = HTTPValidationError;
+
+export function useListSimulations<
+  TData = Awaited<ReturnType<typeof listSimulations>>,
+  TError = HTTPValidationError,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSimulations>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSimulations>>,
+          TError,
+          Awaited<ReturnType<typeof listSimulations>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListSimulations<
+  TData = Awaited<ReturnType<typeof listSimulations>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSimulations>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSimulations>>,
+          TError,
+          Awaited<ReturnType<typeof listSimulations>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSimulations<
+  TData = Awaited<ReturnType<typeof listSimulations>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSimulations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Simulations
+ */
+
+export function useListSimulations<
+  TData = Awaited<ReturnType<typeof listSimulations>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSimulations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListSimulationsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type saveSimulationResponse201 = {
+  data: SimulationResponse;
+  status: 201;
+};
+
+export type saveSimulationResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type saveSimulationResponseSuccess = saveSimulationResponse201 & {
+  headers: Headers;
+};
+export type saveSimulationResponseError = saveSimulationResponse422 & {
+  headers: Headers;
+};
+
+export type saveSimulationResponse =
+  saveSimulationResponseSuccess | saveSimulationResponseError;
+
+export const getSaveSimulationUrl = () => {
+  return `/api/v1/planning/simulations`;
+};
+
+/**
+ * Writes a scenario down, under a name nobody else is using.
+ * @summary Save Simulation
+ */
+export const saveSimulation = async (
+  saveSimulationRequest: SaveSimulationRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<saveSimulationResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<saveSimulationResponse>(getSaveSimulationUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveSimulationRequest),
+  });
+};
+
+export const getSaveSimulationMutationKey = () => ["saveSimulation"] as const;
+
+export const getSaveSimulationMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveSimulation>>,
+    TError,
+    SaveSimulationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveSimulation>>,
+  TError,
+  SaveSimulationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSaveSimulationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveSimulation>>,
+    SaveSimulationMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return saveSimulation(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveSimulationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveSimulation>>
+>;
+export type SaveSimulationMutationBody = SaveSimulationRequest;
+export type SaveSimulationMutationError = HTTPValidationError;
+export type SaveSimulationMutationVariables = { data: SaveSimulationRequest };
+
+/**
+ * @summary Save Simulation
+ */
+export const useSaveSimulation = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof saveSimulation>>,
+      TError,
+      SaveSimulationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof saveSimulation>>,
+  TError,
+  SaveSimulationMutationVariables,
+  TContext
+> => {
+  return useMutation(getSaveSimulationMutationOptions(options), queryClient);
+};
+export type updateSimulationResponse200 = {
+  data: SimulationResponse;
+  status: 200;
+};
+
+export type updateSimulationResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type updateSimulationResponseSuccess = updateSimulationResponse200 & {
+  headers: Headers;
+};
+export type updateSimulationResponseError = updateSimulationResponse422 & {
+  headers: Headers;
+};
+
+export type updateSimulationResponse =
+  updateSimulationResponseSuccess | updateSimulationResponseError;
+
+export const getUpdateSimulationUrl = (simulationId: number) => {
+  return `/api/v1/planning/simulations/${simulationId}`;
+};
+
+/**
+ * Rewrites a scenario in place, so trying again costs no second row.
+ * @summary Update Simulation
+ */
+export const updateSimulation = async (
+  simulationId: number,
+  saveSimulationRequest: SaveSimulationRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<updateSimulationResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<updateSimulationResponse>(getUpdateSimulationUrl(simulationId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveSimulationRequest),
+  });
+};
+
+export const getUpdateSimulationMutationKey = () => ["updateSimulation"] as const;
+
+export const getUpdateSimulationMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSimulation>>,
+    TError,
+    UpdateSimulationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateSimulation>>,
+  TError,
+  UpdateSimulationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateSimulationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateSimulation>>,
+    UpdateSimulationMutationVariables
+  > = (props) => {
+    const { simulationId, data } = props ?? {};
+
+    return updateSimulation(simulationId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateSimulationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateSimulation>>
+>;
+export type UpdateSimulationMutationBody = SaveSimulationRequest;
+export type UpdateSimulationMutationError = HTTPValidationError;
+export type UpdateSimulationMutationVariables = {
+  simulationId: number;
+  data: SaveSimulationRequest;
+};
+
+/**
+ * @summary Update Simulation
+ */
+export const useUpdateSimulation = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateSimulation>>,
+      TError,
+      UpdateSimulationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateSimulation>>,
+  TError,
+  UpdateSimulationMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateSimulationMutationOptions(options), queryClient);
+};
+export type deleteSimulationResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteSimulationResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type deleteSimulationResponseSuccess = deleteSimulationResponse204 & {
+  headers: Headers;
+};
+export type deleteSimulationResponseError = deleteSimulationResponse422 & {
+  headers: Headers;
+};
+
+export type deleteSimulationResponse =
+  deleteSimulationResponseSuccess | deleteSimulationResponseError;
+
+export const getDeleteSimulationUrl = (simulationId: number) => {
+  return `/api/v1/planning/simulations/${simulationId}`;
+};
+
+/**
+ * Drops a scenario.
+ *
+ * Anyone may, whoever wrote it: a simulation holds no declared time and
+ * changes nothing that was decided. Trust is the stance here as on the board.
+ * @summary Delete Simulation
+ */
+export const deleteSimulation = async (
+  simulationId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<deleteSimulationResponse> => {
+  return bffFetcher<deleteSimulationResponse>(getDeleteSimulationUrl(simulationId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteSimulationMutationKey = () => ["deleteSimulation"] as const;
+
+export const getDeleteSimulationMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteSimulation>>,
+    TError,
+    DeleteSimulationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteSimulation>>,
+  TError,
+  DeleteSimulationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteSimulationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteSimulation>>,
+    DeleteSimulationMutationVariables
+  > = (props) => {
+    const { simulationId } = props ?? {};
+
+    return deleteSimulation(simulationId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteSimulationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteSimulation>>
+>;
+
+export type DeleteSimulationMutationError = HTTPValidationError;
+export type DeleteSimulationMutationVariables = { simulationId: number };
+
+/**
+ * @summary Delete Simulation
+ */
+export const useDeleteSimulation = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteSimulation>>,
+      TError,
+      DeleteSimulationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteSimulation>>,
+  TError,
+  DeleteSimulationMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteSimulationMutationOptions(options), queryClient);
 };

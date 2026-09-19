@@ -74,3 +74,36 @@ export function fillRatio(capacity: number, booked: number, projected: number): 
   if (capacity <= 0) return 0;
   return (booked + projected) / capacity;
 }
+
+/** A what-if: a queue to serve, and who carries what. */
+export interface Scenario {
+  horizonMonths: number;
+  order: number[];
+  staffing: Record<number, number[]>;
+}
+
+/**
+ * The same scenario spelled the same way every time.
+ *
+ * Two scenarios are the same hypothesis whatever order their keys happen to
+ * come in: a record built by clicking Alice then Bob must not read as
+ * different from one loaded back from the database the other way round.
+ */
+function canonical(scenario: Scenario): string {
+  const staffing = Object.keys(scenario.staffing)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map((id) => `${id}:${[...scenario.staffing[id]].sort((a, b) => a - b).join(",")}`)
+    .join("|");
+  return `${scenario.horizonMonths}/${scenario.order.join(",")}/${staffing}`;
+}
+
+/** Whether two scenarios suppose exactly the same thing. */
+export function sameScenario(left: Scenario, right: Scenario): boolean {
+  return canonical(left) === canonical(right);
+}
+
+/** Whether a scenario supposes anything at all. */
+export function supposesSomething(scenario: Scenario): boolean {
+  return scenario.order.length > 0 || Object.keys(scenario.staffing).length > 0;
+}

@@ -4,17 +4,17 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { useCallback, useEffect, useState } from "react";
 
 import { projectWorkload } from "@/lib/api/generated/planning/planning";
-import type { WorkloadPlanResponse } from "@/lib/api/generated/model";
-import { DEFAULT_HORIZON } from "@/lib/planning";
-
-/** A what-if, as the screen holds it: a queue to serve, and who is on what. */
-interface Scenario {
-  horizonMonths: number;
-  /** Missions to serve first. Empty means the order the team decided. */
-  order: number[];
-  /** Who to put on a mission. Absent means the team it actually has. */
-  staffing: Record<number, number[]>;
-}
+import type {
+  SimulationResponse,
+  WorkloadPlanResponse,
+} from "@/lib/api/generated/model";
+import {
+  DEFAULT_HORIZON,
+  sameScenario,
+  supposesSomething,
+  type Scenario,
+} from "@/lib/planning";
+import { scenarioOf, useSimulations } from "@/lib/use-simulations";
 
 const NO_SCENARIO: Scenario = {
   horizonMonths: DEFAULT_HORIZON,
@@ -22,29 +22,27 @@ const NO_SCENARIO: Scenario = {
   staffing: {},
 };
 
-/** Whether anything has been supposed, which is what the screen announces. */
-function isHypothesis(scenario: Scenario): boolean {
-  return scenario.order.length > 0 || Object.keys(scenario.staffing).length > 0;
-}
-
 /**
  * State of the planning screen: a scenario, and what it would cost.
  *
- * The scenario lives here and nowhere else. Moving a mission or putting
- * somebody on it changes what is asked of the server, never what the server
- * holds: one reads who lands later for it, and the board only moves if someone
- * decides to move it. Leaving the screen forgets the scenario, which is the
- * point — a hypothesis nobody acted on must not survive as a half-decision.
+ * The scenario is edited here and projected by the server, which writes
+ * nothing: moving a mission or putting somebody on it asks what that would
+ * cost, it does not decide it. Saving is the one deliberate act that makes a
+ * hypothesis survive the session — and even then it saves the question, never
+ * the answer.
  */
 export function useWorkloadPlanScreen() {
   const [scenario, setScenario] = useState<Scenario>(NO_SCENARIO);
+  //: Which saved simulation is open, if any. A scenario edited afterwards
+  //: stays attached to it until someone saves or picks another.
+  const [openedId, setOpenedId] = useState<number | null>(null);
   const [plan, setPlan] = useState<WorkloadPlanResponse | null>(null);
   //: The scenario the answer in hand was asked for. Comparing it to the one
-  //: being edited is what says whether a projection is still on its way —
-  //: raising a flag on the way into the effect would cost a render for
-  //: nothing, and React says so out loud.
+  //: being edited is what says whether a projection is still on its way.
   const [answered, setAnswered] = useState<Scenario | null>(null);
   const [failed, setFailed] = useState<Scenario | null>(null);
+
+  const shelf = useSimulations();
 
   useEffect(() => {
     let alive = true;
@@ -66,12 +64,11 @@ export function useWorkloadPlanScreen() {
     };
   }, [scenario]);
 
-  const isLoading = answered !== scenario && failed !== scenario;
-  const hasError = failed === scenario;
-
   const missions = plan?.missions ?? [];
   // The order the server actually served, which is what a move rearranges.
   const served = missions.map((mission) => mission.project_id);
+
+  const opened = shelf.simulations.find((s) => s.id === openedId) ?? null;
 
   const reorder = useCallback(
     (projectId: number, to: number) => {
@@ -86,13 +83,50 @@ export function useWorkloadPlanScreen() {
     [served],
   );
 
+  /** Loads a saved scenario, or comes back to the order the team decided. */
+  function open(simulation: SimulationResponse | null) {
+    setScenario(simulation ? scenarioOf(simulation) : NO_SCENARIO);
+    setOpenedId(simulation?.id ?? null);
+    shelf.clearError();
+  }
+
+  async function saveAs(name: string) {
+    const saved = await shelf.save(name, scenario);
+    if (saved) setOpenedId(saved.id);
+    return saved !== null;
+  }
+
+  async function saveOver() {
+    if (!opened) return;
+    await shelf.rewrite(opened, scenario);
+  }
+
+  async function remove(simulationId: number) {
+    await shelf.remove(simulationId);
+    // Dropping the scenario one was reading leaves the plan on it rather than
+    // snapping back: what is on screen is still a legitimate question, it is
+    // simply no longer written down anywhere.
+    if (simulationId === openedId) setOpenedId(null);
+  }
+
   return {
     plan,
     missions,
-    isLoading,
-    hasError,
+    isLoading: answered !== scenario && failed !== scenario,
+    hasError: failed === scenario,
     horizonMonths: scenario.horizonMonths,
-    isHypothesis: isHypothesis(scenario),
+    isHypothesis: supposesSomething(scenario),
+
+    simulations: shelf.simulations,
+    opened,
+    saveError: shelf.error,
+    /** Whether what is on screen has drifted from the scenario that was saved. */
+    hasUnsavedChanges: opened !== null && !sameScenario(scenario, scenarioOf(opened)),
+
+    open,
+    saveAs,
+    saveOver,
+    remove,
 
     setHorizon: (months: number) =>
       setScenario((current) => ({ ...current, horizonMonths: months })),
@@ -112,10 +146,12 @@ export function useWorkloadPlanScreen() {
       })),
 
     /** Drops every hypothesis, keeping how far ahead one is looking. */
-    reset: () =>
+    reset: () => {
       setScenario((current) => ({
         ...NO_SCENARIO,
         horizonMonths: current.horizonMonths,
-      })),
+      }));
+      setOpenedId(null);
+    },
   };
 }
