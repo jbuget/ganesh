@@ -29,6 +29,7 @@ import type {
   PlannedMissionResponse,
 } from "@/lib/api/generated/model";
 import { formatMonthOf } from "@/lib/dates";
+import { opensMonth } from "@/lib/planning";
 
 interface WorkloadTimelineProps {
   missions: PlannedMissionResponse[];
@@ -42,12 +43,6 @@ interface WorkloadTimelineProps {
   onDown: (projectId: number) => void;
   /** Supposes a mission is carried by these people, and nobody else. */
   onStaff: (projectId: number, userIds: number[]) => void;
-}
-
-/** Whether a week opens a month, which is where the month label goes. */
-function opensMonth(weeks: string[], index: number): boolean {
-  if (index === 0) return true;
-  return weeks[index].slice(0, 7) !== weeks[index - 1].slice(0, 7);
 }
 
 /**

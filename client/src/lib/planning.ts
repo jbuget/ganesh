@@ -69,12 +69,6 @@ export function slippageLabel(days: number, isLate: boolean): string {
   return "Dans les temps";
 }
 
-/** How full a week is, from what is declared and what is projected on it. */
-export function fillRatio(capacity: number, booked: number, projected: number): number {
-  if (capacity <= 0) return 0;
-  return (booked + projected) / capacity;
-}
-
 /** A what-if: a queue to serve, and who carries what. */
 export interface Scenario {
   horizonMonths: number;
@@ -106,4 +100,35 @@ export function sameScenario(left: Scenario, right: Scenario): boolean {
 /** Whether a scenario supposes anything at all. */
 export function supposesSomething(scenario: Scenario): boolean {
   return scenario.order.length > 0 || Object.keys(scenario.staffing).length > 0;
+}
+
+/**
+ * Whether a week column opens a new month.
+ *
+ * Twenty-six columns of « 14 sept. » and one no longer knows what quarter one
+ * is reading: the month is spelled out again on the week that opens it.
+ */
+export function opensMonth(weeks: string[], index: number): boolean {
+  if (index === 0) return true;
+  return weeks[index].slice(0, 7) !== weeks[index - 1].slice(0, 7);
+}
+
+/**
+ * What the banner says about the scenario on screen.
+ *
+ * Composed here rather than in the component so it can be read back by a
+ * test: a French label built at run time is invisible to the type checker,
+ * and a rename that crosses it would go unnoticed until someone opened the
+ * page.
+ */
+export function scenarioNotice(
+  simulationName: string | null,
+  hasUnsavedChanges: boolean,
+): string {
+  if (simulationName === null) {
+    return "Hypothèse en cours : rien n'est enregistré. Enregistrez-la pour la retrouver, ou reportez-la sur la fiche du projet pour la rendre réelle.";
+  }
+
+  const drift = hasUnsavedChanges ? " · modifiée depuis son enregistrement" : "";
+  return `Simulation « ${simulationName} »${drift}. Elle ne change rien au réel : pour arbitrer, changez la priorité et les intervenants sur la fiche du projet.`;
 }

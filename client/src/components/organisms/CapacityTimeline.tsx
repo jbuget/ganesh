@@ -11,15 +11,11 @@ import {
 } from "@/components/ui/table";
 import type { PersonLoadResponse } from "@/lib/api/generated/model";
 import { formatMonthOf } from "@/lib/dates";
+import { opensMonth } from "@/lib/planning";
 
 interface CapacityTimelineProps {
   people: PersonLoadResponse[];
   weeks: string[];
-}
-
-function opensMonth(weeks: string[], index: number): boolean {
-  if (index === 0) return true;
-  return weeks[index].slice(0, 7) !== weeks[index - 1].slice(0, 7);
 }
 
 /**

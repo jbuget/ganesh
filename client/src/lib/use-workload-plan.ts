@@ -69,6 +69,9 @@ export function useWorkloadPlanScreen() {
   const served = missions.map((mission) => mission.project_id);
 
   const opened = shelf.simulations.find((s) => s.id === openedId) ?? null;
+  const isHypothesis = supposesSomething(scenario);
+  const hasUnsavedChanges =
+    opened !== null && !sameScenario(scenario, scenarioOf(opened));
 
   const reorder = useCallback(
     (projectId: number, to: number) => {
@@ -115,13 +118,21 @@ export function useWorkloadPlanScreen() {
     isLoading: answered !== scenario && failed !== scenario,
     hasError: failed === scenario,
     horizonMonths: scenario.horizonMonths,
-    isHypothesis: supposesSomething(scenario),
+    isHypothesis,
 
     simulations: shelf.simulations,
     opened,
     saveError: shelf.error,
     /** Whether what is on screen has drifted from the scenario that was saved. */
-    hasUnsavedChanges: opened !== null && !sameScenario(scenario, scenarioOf(opened)),
+    hasUnsavedChanges,
+    /**
+     * Whether walking away would lose something.
+     *
+     * A saved simulation one has since changed, or a hypothesis nobody has
+     * written down at all: both are lost the same way, so both are worth a
+     * question before they are.
+     */
+    hasWorkToLose: hasUnsavedChanges || (isHypothesis && opened === null),
 
     open,
     saveAs,

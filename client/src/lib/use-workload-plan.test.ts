@@ -324,6 +324,34 @@ describe("useWorkloadPlanScreen", () => {
       await waitFor(() => expect(result.current.simulations).toHaveLength(0));
     });
 
+    it("says nothing would be lost by walking away from an untouched plan", async () => {
+      const result = await aScreen();
+
+      expect(result.current.hasWorkToLose).toBe(false);
+    });
+
+    it("counts a hypothesis nobody wrote down as work to lose", async () => {
+      const result = await aScreen();
+
+      act(() => result.current.moveToTop(30));
+
+      await waitFor(() => expect(result.current.hasWorkToLose).toBe(true));
+    });
+
+    it("counts a saved scenario one has since changed as work to lose", async () => {
+      shelf.rows = [aSavedScenario()];
+      const result = await aScreen();
+      await waitFor(() => expect(result.current.simulations).toHaveLength(1));
+
+      act(() => result.current.open(result.current.simulations[0]));
+      await waitFor(() => expect(result.current.opened).not.toBeNull());
+      expect(result.current.hasWorkToLose).toBe(false);
+
+      act(() => result.current.staff(10, [3]));
+
+      await waitFor(() => expect(result.current.hasWorkToLose).toBe(true));
+    });
+
     it("dropping the one being read leaves the plan on it", async () => {
       // What is on screen is still a legitimate question; it is simply no
       // longer written down anywhere.

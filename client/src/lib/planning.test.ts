@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   blocker,
-  fillRatio,
+  opensMonth,
   sameScenario,
+  scenarioNotice,
   slippage,
   slippageLabel,
   supposesSomething,
@@ -59,20 +60,6 @@ describe("blocker", () => {
   });
 });
 
-describe("fillRatio", () => {
-  it("adds what is declared to what is projected", () => {
-    expect(fillRatio(5, 2, 1)).toBeCloseTo(0.6);
-  });
-
-  it("goes past one on an over-booked week", () => {
-    expect(fillRatio(5, 4, 2)).toBeCloseTo(1.2);
-  });
-
-  it("stays at nothing on a week with no working day", () => {
-    expect(fillRatio(0, 0, 0)).toBe(0);
-  });
-});
-
 describe("sameScenario", () => {
   const base = { horizonMonths: 6, order: [10, 20], staffing: { 10: [1, 2] } };
 
@@ -121,5 +108,49 @@ describe("supposesSomething", () => {
     expect(
       supposesSomething({ horizonMonths: 6, order: [], staffing: { 10: [] } }),
     ).toBe(true);
+  });
+});
+
+describe("opensMonth", () => {
+  const weeks = ["2026-09-21", "2026-09-28", "2026-10-05"];
+
+  it("the first column always names its month", () => {
+    expect(opensMonth(weeks, 0)).toBe(true);
+  });
+
+  it("a week inside the same month names nothing", () => {
+    expect(opensMonth(weeks, 1)).toBe(false);
+  });
+
+  it("the week that opens a month names it", () => {
+    expect(opensMonth(weeks, 2)).toBe(true);
+  });
+});
+
+describe("scenarioNotice", () => {
+  it("names the simulation being read", () => {
+    expect(scenarioNotice("Priorité bailleurs", false)).toContain(
+      "« Priorité bailleurs »",
+    );
+  });
+
+  it("says when it has drifted from what was saved", () => {
+    expect(scenarioNotice("Priorité bailleurs", true)).toContain(
+      "modifiée depuis son enregistrement",
+    );
+  });
+
+  it("says nothing of a drift there is none of", () => {
+    expect(scenarioNotice("Priorité bailleurs", false)).not.toContain("modifiée");
+  });
+
+  it("says a hypothesis nobody named is not written down", () => {
+    expect(scenarioNotice(null, false)).toContain("rien n'est enregistré");
+  });
+
+  it("always says the plan changes nothing real", () => {
+    // The one thing nobody must misread: a scenario steers no decision.
+    expect(scenarioNotice("Piste", false)).toContain("ne change rien au réel");
+    expect(scenarioNotice(null, false)).toContain("fiche du projet");
   });
 });

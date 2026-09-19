@@ -12,6 +12,7 @@ import { PageLayout } from "@/components/organisms/PageLayout";
 import { WorkloadTimeline } from "@/components/organisms/WorkloadTimeline";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatShortDate } from "@/lib/dates";
+import { scenarioNotice } from "@/lib/planning";
 import { useUnsavedChangesGuard } from "@/lib/use-unsaved-changes-guard";
 import { useWorkloadPlanScreen } from "@/lib/use-workload-plan";
 
@@ -46,6 +47,7 @@ export function PlanningPage() {
     opened,
     saveError,
     hasUnsavedChanges,
+    hasWorkToLose,
     open,
     saveAs,
     saveOver,
@@ -53,10 +55,7 @@ export function PlanningPage() {
   } = useWorkloadPlanScreen();
   const [tab, setTab] = useState("missions");
 
-  // Work worth warning about: a saved simulation one has since changed, or a
-  // hypothesis nobody has written down at all. Both are lost the same way by
-  // walking off the page, so both are held back the same way.
-  const guard = useUnsavedChangesGuard(hasUnsavedChanges || (isHypothesis && !opened));
+  const guard = useUnsavedChangesGuard(hasWorkToLose);
 
   const weeks = plan?.weeks ?? [];
 
@@ -93,9 +92,7 @@ export function PlanningPage() {
     >
       {isHypothesis && (
         <p className="mb-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
-          {opened
-            ? `Simulation « ${opened.name} »${hasUnsavedChanges ? " · modifiée depuis son enregistrement" : ""}. Elle ne change rien au réel : pour arbitrer, changez la priorité et les intervenants sur la fiche du projet.`
-            : "Hypothèse en cours : rien n'est enregistré. Enregistrez-la pour la retrouver, ou reportez-la sur la fiche du projet pour la rendre réelle."}
+          {scenarioNotice(opened?.name ?? null, hasUnsavedChanges)}
         </p>
       )}
 
