@@ -41,6 +41,7 @@ export function UsersTable({ users, now, onOpen }: UsersTableProps) {
           <TableRow>
             <TableHead className={STRONG_SEPARATOR}>Collaborateur</TableHead>
             <TableHead>Email</TableHead>
+            <TableHead>GitHub</TableHead>
             <TableHead>Rôle</TableHead>
             <TableHead>Dernière connexion</TableHead>
             <TableHead>Statut</TableHead>

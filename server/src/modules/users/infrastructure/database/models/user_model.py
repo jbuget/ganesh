@@ -34,3 +34,5 @@ class UserModel(Base):
         Enum(Department, name="department", native_enum=False, length=32),
         nullable=True,
     )
+    # The handle alone, never « @lea-chen »: the domain trims it on the way in.
+    github_username: Mapped[str | None] = mapped_column(String(255), nullable=True)

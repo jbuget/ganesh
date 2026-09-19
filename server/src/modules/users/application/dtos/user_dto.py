@@ -37,7 +37,7 @@ class SetUserActiveCommand:
 class UpdateUserIdentityCommand:
     """Who a teammate is and where they work. Managers only.
 
-    The three fields travel together: the sheet is written as a whole, and a
+    The four fields travel together: the sheet is written as a whole, and a
     field left blank is a field one has decided to empty.
     """
 
@@ -46,3 +46,4 @@ class UpdateUserIdentityCommand:
     first_name: str | None
     last_name: str | None
     department: Department | None
+    github_username: str | None

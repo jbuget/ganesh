@@ -22,6 +22,16 @@ def _trimmed(value: str | None) -> str | None:
     return cleaned or None
 
 
+def _handle(value: str | None) -> str | None:
+    """The handle alone, however it was written.
+
+    « @lea-chen » is how one writes a GitHub handle; « lea-chen » is what it
+    is, and what an address is built from.
+    """
+    trimmed = _trimmed(value)
+    return _trimmed(trimmed.lstrip("@")) if trimmed else None
+
+
 class Role(StrEnum):
     """What a user is allowed to do."""
 
@@ -47,26 +57,32 @@ class User:
     #: The department this teammate belongs to. Named from the same list as the
     #: missions: steering compares the two sides, and cannot if the names drift.
     department: Department | None = None
+    #: The handle alone — « lea-chen », never « @lea-chen » nor a full URL:
+    #: it is what the profile address is built from.
+    github_username: str | None = None
 
     def __post_init__(self) -> None:
         self.email = self.email.strip().lower()
         self.first_name = _trimmed(self.first_name)
         self.last_name = _trimmed(self.last_name)
+        self.github_username = _handle(self.github_username)
 
     def set_identity(
         self,
         first_name: str | None,
         last_name: str | None,
         department: Department | None,
+        github_username: str | None,
     ) -> None:
         """Gives away who this teammate is, and where they work.
 
-        The three go together: the sheet is written as a whole, and a field
+        The four go together: the sheet is written as a whole, and a field
         left out is a field one has decided to empty.
         """
         self.first_name = _trimmed(first_name)
         self.last_name = _trimmed(last_name)
         self.department = department
+        self.github_username = _handle(github_username)
 
     @property
     def label(self) -> str:

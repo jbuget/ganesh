@@ -37,10 +37,11 @@ class UpdateUserIdentityUseCase:
             first_name=command.first_name,
             last_name=command.last_name,
             department=command.department,
+            github_username=command.github_username,
         )
         await self._users.update(target)
 
-        # Three fields at once: the trace carries them as a payload rather than
+        # Four fields at once: the trace carries them as a payload rather than
         # as one before/after pair, which could only say one of them.
         await self._audit_logs.add(
             AuditLog(
@@ -53,6 +54,7 @@ class UpdateUserIdentityUseCase:
                     "department": (
                         target.department.value if target.department else None
                     ),
+                    "github_username": target.github_username,
                 },
             )
         )

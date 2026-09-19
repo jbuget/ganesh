@@ -110,7 +110,7 @@ async def update_identity(
     use_case: UpdateUserIdentityUseCase = Depends(get_update_user_identity_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> UserResponse:
-    """Gives away who a teammate is, and where they work. Managers only."""
+    """Gives away who a teammate is, and how one reaches them. Managers only."""
     assert manager.id is not None
     user = await use_case.execute(
         UpdateUserIdentityCommand(
@@ -119,6 +119,7 @@ async def update_identity(
             first_name=payload.first_name,
             last_name=payload.last_name,
             department=payload.department,
+            github_username=payload.github_username,
         )
     )
     await session.commit()

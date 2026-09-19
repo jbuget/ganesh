@@ -129,7 +129,12 @@ def test_a_deactivated_manager_can_no_longer_deactivate_anyone() -> None:
 
 def test_a_civil_name_is_trimmed() -> None:
     user = make_user()
-    user.set_identity(first_name="  Léa  ", last_name=" Chen ", department=None)
+    user.set_identity(
+        first_name="  Léa  ",
+        last_name=" Chen ",
+        department=None,
+        github_username=None,
+    )
 
     assert user.first_name == "Léa"
     assert user.last_name == "Chen"
@@ -138,7 +143,9 @@ def test_a_civil_name_is_trimmed() -> None:
 def test_a_blank_name_reads_as_unknown_rather_than_empty() -> None:
     """« » and « nothing » say the same thing; the database should say it once."""
     user = make_user()
-    user.set_identity(first_name="   ", last_name="", department=None)
+    user.set_identity(
+        first_name="   ", last_name="", department=None, github_username=None
+    )
 
     assert user.first_name is None
     assert user.last_name is None
@@ -147,7 +154,10 @@ def test_a_blank_name_reads_as_unknown_rather_than_empty() -> None:
 def test_a_teammate_belongs_to_one_department() -> None:
     user = make_user()
     user.set_identity(
-        first_name="Léa", last_name="Chen", department=Department.CUSTOMER_SERVICE
+        first_name="Léa",
+        last_name="Chen",
+        department=Department.CUSTOMER_SERVICE,
+        github_username=None,
     )
 
     assert user.department is Department.CUSTOMER_SERVICE
@@ -155,14 +165,18 @@ def test_a_teammate_belongs_to_one_department() -> None:
 
 def test_the_name_one_reads_is_the_civil_one_once_it_is_known() -> None:
     user = make_user()
-    user.set_identity(first_name="Léa", last_name="Chen", department=None)
+    user.set_identity(
+        first_name="Léa", last_name="Chen", department=None, github_username=None
+    )
 
     assert user.label == "Léa Chen"
 
 
 def test_a_half_known_name_is_still_better_than_the_account_one() -> None:
     user = make_user()
-    user.set_identity(first_name="Léa", last_name=None, department=None)
+    user.set_identity(
+        first_name="Léa", last_name=None, department=None, github_username=None
+    )
 
     assert user.label == "Léa"
 
@@ -170,3 +184,22 @@ def test_a_half_known_name_is_still_better_than_the_account_one() -> None:
 def test_the_account_name_stands_in_as_long_as_nobody_has_said_who_it_is() -> None:
     """Entra names the account; it does not say who one is talking to."""
     assert make_user().label == "D. Dehe"
+
+
+def test_a_github_handle_is_kept_as_the_handle_alone() -> None:
+    """« @lea-chen » is how one writes a handle; « lea-chen » is what it is."""
+    user = make_user()
+    user.set_identity(
+        first_name=None, last_name=None, department=None, github_username=" @lea-chen "
+    )
+
+    assert user.github_username == "lea-chen"
+
+
+def test_a_blank_github_handle_reads_as_unknown() -> None:
+    user = make_user()
+    user.set_identity(
+        first_name=None, last_name=None, department=None, github_username="  "
+    )
+
+    assert user.github_username is None

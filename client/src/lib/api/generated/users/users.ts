@@ -641,7 +641,7 @@ export const getUpdateUserIdentityUrl = (userId: number) => {
 };
 
 /**
- * Gives away who a teammate is, and where they work. Managers only.
+ * Gives away who a teammate is, and how one reaches them. Managers only.
  * @summary Update Identity
  */
 export const updateUserIdentity = async (

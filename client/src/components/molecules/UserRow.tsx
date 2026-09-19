@@ -60,6 +60,12 @@ export function UserRow({ user, now, onOpen }: UserRowProps) {
 
       <TableCell className="py-2 text-slate-500">{user.email}</TableCell>
 
+      <TableCell className="py-2 text-slate-500">
+        {/* The handle alone, as it is stored: the row compares the team, it
+            does not walk off to GitHub. */}
+        {user.github_username ?? <span className="text-slate-400">—</span>}
+      </TableCell>
+
       <TableCell className="py-2 text-slate-600">{roleLabel(user.role)}</TableCell>
 
       <TableCell className="py-2 text-slate-500">

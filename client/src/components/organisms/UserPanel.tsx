@@ -56,7 +56,8 @@ function Row({ title, children }: { title: string; children: React.ReactNode }) 
  * A teammate, opened beside the list.
  *
  * What one reads about an account comes from Entra and cannot be edited here:
- * only what Janus decides — the role and access — is given away. The list
+ * only what Janus decides — who is behind it, where they work, the role and
+ * the access — is given away. The list
  * behind stays visible, so one compares two colleagues without walking back
  * through a page each time.
  */
@@ -119,6 +120,19 @@ export function UserPanel({
         <Row title="Email">
           {/* Entra's, and Entra's alone: it identifies the account. */}
           <span className="text-slate-700">{user.email}</span>
+        </Row>
+
+        <Row title="GitHub">
+          {/* The handle alone: the prefix says the address is already known,
+              and what is asked for is the part that completes it. */}
+          <InlineTextField
+            value={user.github_username}
+            label="GitHub"
+            prefix="github.com/"
+            placeholder="identifiant"
+            editable={editable}
+            onChange={(github_username) => onUpdateIdentity(user, { github_username })}
+          />
         </Row>
 
         <Row title="Département">

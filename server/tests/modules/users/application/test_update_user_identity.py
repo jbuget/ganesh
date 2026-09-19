@@ -52,6 +52,7 @@ def command(**overrides) -> UpdateUserIdentityCommand:
         "first_name": "Léa",
         "last_name": "Chen",
         "department": Department.CUSTOMER_SERVICE,
+        "github_username": "lea-chen",
     }
     fields.update(overrides)
     return UpdateUserIdentityCommand(**fields)
@@ -72,16 +73,19 @@ async def test_a_manager_gives_away_who_a_teammate_is() -> None:
 async def test_what_is_left_blank_is_emptied() -> None:
     """The sheet is written whole: an emptied field is a decision, not a gap."""
     teammate = make_teammate()
-    teammate.set_identity("Léa", "Chen", Department.CUSTOMER_SERVICE)
+    teammate.set_identity("Léa", "Chen", Department.CUSTOMER_SERVICE, "lea-chen")
     use_case, repo, _ = build([make_manager(), teammate])
 
-    await use_case.execute(command(first_name=None, last_name=None, department=None))
+    await use_case.execute(
+        command(first_name=None, last_name=None, department=None, github_username=None)
+    )
 
     stored = await repo.get_by_id(2)
     assert stored is not None
     assert stored.first_name is None
     assert stored.last_name is None
     assert stored.department is None
+    assert stored.github_username is None
 
 
 async def test_a_teammate_cannot_rewrite_a_colleague() -> None:
@@ -118,4 +122,5 @@ async def test_the_change_is_traced() -> None:
         "first_name": "Léa",
         "last_name": "Chen",
         "department": "customer_service",
+        "github_username": "lea-chen",
     }
