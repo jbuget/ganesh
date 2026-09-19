@@ -32,9 +32,13 @@ from src.modules.projects.domain.entities.project import (
     ProjectPriority,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.entities.service_registry import (
     Criticality,
     ServiceType,
+)
+from src.modules.projects.infrastructure.database.models.project_assignee_model import (
+    ProjectAssigneeModel,
 )
 from src.modules.projects.infrastructure.database.models.project_detail_models import (
     ProjectStackModel,
@@ -81,6 +85,7 @@ TEAM: list[Teammate] = [
     Teammate("l.chen@waat.fr", "Lucas", "CHEN"),
     Teammate("l.watrelot.ext@waat.fr", "Laurène", "WATRELOT"),
     Teammate("l.nicolas.ext@waat.fr", "Laurent", "NICOLAS"),
+    Teammate("l.waguet.ext@waat.fr", "Louis", "WAGUET"),
     Teammate("n.garo.ext@waat.fr", "Nino", "GARO"),
     Teammate("t.vandemeulebroucke@waat.fr", "Thomas", "VANDEMEULEBROUCKE"),
     Teammate("n.taleb@waat.fr", "Nora", "TALEB"),
@@ -126,6 +131,21 @@ SERVICES_FILE = pathlib.Path(__file__).parent / "data" / "services.json"
 #: whose urgency has not been placed against the others says so by leaving the
 #: field empty, which is exactly what the board means.
 BOARD_FILE = pathlib.Path(__file__).parent / "data" / "monday.json"
+
+#: The wall the team reviews every week, as photographed.
+#:
+#: It says two things nothing else does: who has their hands on a mission right
+#: now, and which column it sits in. The columns map onto the phases — a PoC is
+#: still a framing exercise, so it lands on « cadrage » like the rest of
+#: Discovery's right-hand side.
+KANBAN_FILE = pathlib.Path(__file__).parent / "data" / "kanban.json"
+
+COLUMN_PHASES = {
+    "idees": ProjectStatus.EXPLORATION,
+    "cadrage": ProjectStatus.SCOPING,
+    "delivery": ProjectStatus.DEVELOPMENT,
+    "exploitation": ProjectStatus.OPERATIONS,
+}
 
 #: Sheet fields that go straight onto the mission, under the same name.
 SHEET_FIELDS = (
@@ -337,6 +357,73 @@ async def seed_board_fields() -> tuple[int, int]:
     return attached, prioritised
 
 
+async def seed_kanban() -> tuple[int, int]:
+    """Moves each mission to the column it sits in, and names who is on it.
+
+    The contributors are replaced, not added to: the wall is a photograph of
+    the moment, and someone who has left a mission left it.
+    """
+    moved = 0
+    assigned = 0
+    board = json.loads(KANBAN_FILE.read_text(encoding="utf-8"))
+    handles: dict[str, str] = board["handles"]
+
+    async with AsyncSessionLocal() as session:
+        people = {}
+        for email in set(handles.values()):
+            accounts = await session.execute(
+                select(UserModel).where(UserModel.email == email)
+            )
+            account = accounts.scalar_one_or_none()
+            if account is None:
+                logger.warning("« %s » n'a pas de compte.", email)
+                continue
+            people[email] = account.id
+
+        for card in board["cards"]:
+            missions = await session.execute(
+                select(ProjectModel).where(ProjectModel.label == card["label"])
+            )
+            mission = missions.scalar_one_or_none()
+            if mission is None:
+                logger.warning("« %s » est introuvable.", card["label"])
+                continue
+
+            phase = COLUMN_PHASES[card["column"]]
+            if mission.status is not phase:
+                mission.status = phase
+                moved += 1
+
+            wanted = {
+                people[handles[handle]]
+                for handle in card["contributors"]
+                if handle in handles and handles[handle] in people
+            }
+            current = await session.execute(
+                select(ProjectAssigneeModel).where(
+                    ProjectAssigneeModel.project_id == mission.id,
+                    ProjectAssigneeModel.role == ProjectRole.CONTRIBUTOR,
+                )
+            )
+            for row in current.scalars().all():
+                if row.user_id in wanted:
+                    wanted.discard(row.user_id)
+                else:
+                    await session.delete(row)
+            for user_id in wanted:
+                session.add(
+                    ProjectAssigneeModel(
+                        project_id=mission.id,
+                        user_id=user_id,
+                        role=ProjectRole.CONTRIBUTOR,
+                    )
+                )
+                assigned += 1
+
+        await session.commit()
+    return moved, assigned
+
+
 async def seed_off_project_activities() -> int:
     created = 0
     async with AsyncSessionLocal() as session:
@@ -380,6 +467,7 @@ async def main() -> None:
     created, updated = await seed_users()
     missions, sheets = await seed_services()
     attached, prioritised = await seed_board_fields()
+    moved, assigned = await seed_kanban()
     activities = await seed_off_project_activities()
     holidays = await seed_holidays()
 
@@ -390,6 +478,8 @@ async def main() -> None:
     logger.info("Fiches service remplies     : %s", sheets)
     logger.info("Missions reliees a Monday   : %s", attached)
     logger.info("Priorites posees            : %s", prioritised)
+    logger.info("Missions deplacees de phase : %s", moved)
+    logger.info("Intervenants affectes       : %s", assigned)
     logger.info("Activites hors projet creees: %s", activities)
     logger.info("Jours feries crees          : %s", holidays)
     logger.info("Seed termine (%s).", date.today())
