@@ -142,7 +142,7 @@ describe("InlineTextField", () => {
     render(
       <InlineTextField
         value="lorem-ipsum"
-        label="Identifiant"
+        label="Slug"
         prefix="waat.tools/services/"
         onChange={onChange}
       />,
@@ -156,13 +156,13 @@ describe("InlineTextField", () => {
     render(
       <InlineTextField
         value={null}
-        label="Identifiant"
+        label="Slug"
         prefix="waat.tools/services/"
         onChange={onChange}
       />,
     );
 
-    await userEvent.click(screen.getByRole("button", { name: "Identifiant" }));
+    await userEvent.click(screen.getByRole("button", { name: "Slug" }));
 
     expect(screen.getByText("waat.tools/services/")).toBeInTheDocument();
   });
@@ -171,15 +171,15 @@ describe("InlineTextField", () => {
     render(
       <InlineTextField
         value={null}
-        label="Identifiant au catalogue"
+        label="Slug"
         prefix="waat.tools/services/"
         placeholder="portail-bailleurs"
         onChange={onChange}
       />,
     );
 
-    expect(
-      screen.getByRole("button", { name: "Identifiant au catalogue" }),
-    ).toHaveTextContent("waat.tools/services/portail-bailleurs");
+    expect(screen.getByRole("button", { name: "Slug" })).toHaveTextContent(
+      "waat.tools/services/portail-bailleurs",
+    );
   });
 });

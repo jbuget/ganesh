@@ -89,9 +89,7 @@ describe("ProjectSheetTab", () => {
       sheet();
 
       expect(
-        screen.getByText(
-          "Il manque l'identifiant au catalogue, le résumé, la criticité et le type.",
-        ),
+        screen.getByText("Il manque le slug, le résumé, la criticité et le type."),
       ).toBeInTheDocument();
     });
 
@@ -206,7 +204,7 @@ describe("cancelling a field", () => {
   });
 });
 
-describe("the catalogue identifier", () => {
+describe("the slug", () => {
   it("shows the address it completes, so one sees what is being typed", () => {
     sheet({ project: { slug: "lorem-ipsum" } });
 
@@ -216,19 +214,17 @@ describe("the catalogue identifier", () => {
   it("shows that address on an empty field too: that is where one wonders", () => {
     sheet();
 
-    expect(
-      screen.getByRole("button", { name: "Identifiant au catalogue" }),
-    ).toHaveTextContent("waat.tools/services/portail-bailleurs");
+    expect(screen.getByRole("button", { name: "Slug" })).toHaveTextContent(
+      "waat.tools/services/portail-bailleurs",
+    );
   });
 
-  it("refuses a pasted URL where the catalogue expects an identifier", async () => {
+  it("refuses a pasted URL where the catalogue expects a slug", async () => {
     const { updateFields } = sheet();
 
-    await userEvent.click(
-      screen.getAllByRole("button", { name: "Identifiant au catalogue" })[0],
-    );
+    await userEvent.click(screen.getAllByRole("button", { name: "Slug" })[0]);
     await userEvent.type(
-      screen.getByRole("textbox", { name: "Identifiant au catalogue" }),
+      screen.getByRole("textbox", { name: "Slug" }),
       "https://lorem-ipsum.waat.tools{Enter}",
     );
 
@@ -236,14 +232,12 @@ describe("the catalogue identifier", () => {
     expect(screen.getByText(/pas une URL entière/)).toBeInTheDocument();
   });
 
-  it("writes an identifier the catalogue can read", async () => {
+  it("writes a slug the catalogue can read", async () => {
     const { updateFields } = sheet();
 
-    await userEvent.click(
-      screen.getAllByRole("button", { name: "Identifiant au catalogue" })[0],
-    );
+    await userEvent.click(screen.getAllByRole("button", { name: "Slug" })[0]);
     await userEvent.type(
-      screen.getByRole("textbox", { name: "Identifiant au catalogue" }),
+      screen.getByRole("textbox", { name: "Slug" }),
       "lorem-ipsum{Enter}",
     );
 

@@ -183,10 +183,10 @@ export function ProjectSheetTab({
             />
           </SheetRow>
 
-          <SheetRow title="Identifiant">
+          <SheetRow title="Slug">
             <InlineTextField
               value={project.slug}
-              label="Identifiant au catalogue"
+              label="Slug"
               prefix={CATALOG_ADDRESS}
               placeholder="portail-bailleurs"
               suggestion={suggested || null}
