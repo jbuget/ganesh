@@ -44,6 +44,16 @@ def test_http_and_https_are_accepted(url: str) -> None:
     assert a_link(url=url).url == url
 
 
+@pytest.mark.parametrize("url", ["wss://ocpp.ai.waat.tools", "ws://localhost:9000"])
+def test_websocket_addresses_are_accepted(url: str) -> None:
+    """Some services are reached over a socket, not a page.
+
+    An OCPP bridge answers on `wss://` and has no other address to give: the
+    catalogue would either say nothing about it, or say something false.
+    """
+    assert a_link(url=url).url == url
+
+
 def test_a_link_carries_the_generic_icon_by_default() -> None:
     assert a_link().icon is LinkIcon.LINK
 

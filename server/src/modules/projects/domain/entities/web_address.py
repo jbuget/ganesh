@@ -3,11 +3,15 @@
 A link opens with a plain click, wherever it is shown: `javascript:` and its
 kin have no business there. The rule lives here alone, so the named links of
 the service sheet and the free list of secondary links cannot drift apart.
+
+Sockets are addresses too: a bridge speaking OCPP answers on `wss://` and has
+no page to offer instead. Refusing them would leave the catalogue either
+silent about such a service, or wrong about where it lives.
 """
 
 from src.shared.exceptions.domain_exceptions import ValidationError
 
-ALLOWED_SCHEMES = ("http://", "https://")
+ALLOWED_SCHEMES = ("http://", "https://", "ws://", "wss://")
 
 
 def clean_address(url: str | None) -> str | None:
@@ -23,7 +27,9 @@ def clean_address(url: str | None) -> str | None:
     if not cleaned:
         return None
     if not cleaned.startswith(ALLOWED_SCHEMES):
-        raise ValidationError("A link must start with http:// or https://.")
+        raise ValidationError(
+            "A link must start with http://, https://, ws:// or wss://."
+        )
     return cleaned
 
 
