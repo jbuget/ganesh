@@ -136,6 +136,11 @@ In `waat-fr/ganesh`:
 
 ## 5. First deploy
 
+The workflow carries `if: github.repository == 'waat-fr/ganesh'`: it runs in
+the fork and nowhere else, so a merge on the development repository does not
+open a run that cannot succeed. Production therefore deploys from `main` **on
+the fork** — after a merge upstream, sync it.
+
 Push to `main`, or run the workflow by hand. It builds the API image for
 **linux/arm64** (the host is Graviton; an amd64 image pulls fine and then
 refuses to start), pushes it to GHCR, and hands the tag to the host over SSM.
@@ -228,3 +233,8 @@ Also left for later, in rough order of how much they will be missed:
   the `backend` block moves.
 - **Backups beyond RDS's seven days**, if the retention ever needs to outlive
   the instance.
+- **Alarms.** The logs are shipped and the health check gates the deploy, but
+  nothing watches the host between two deploys: a CPU credit balance hitting
+  zero, a disk filling up or the API falling over at three in the morning are
+  found by whoever opens the application next. Neither NOMAD nor SALSA has them
+  either — which makes it a gap in the pattern, not in this stack.

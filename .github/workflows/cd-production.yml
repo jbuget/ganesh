@@ -41,6 +41,11 @@ jobs:
   # workflow token. The nano-sized host only ever pulls.
   build-and-push:
     name: Build and push the API image
+    # Production lives in the fork, and only the fork holds the deploy role and
+    # the `production` environment. Without this guard every merge on the
+    # development repository opens a run that cannot succeed, and a permanently
+    # red main teaches everyone to stop reading the red.
+    if: github.repository == 'waat-fr/ganesh'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -75,6 +80,7 @@ jobs:
   deploy:
     name: Deploy to the production host
     needs: build-and-push
+    if: github.repository == 'waat-fr/ganesh'
     runs-on: ubuntu-latest
     # The environment name is part of the OIDC `sub` claim the trust policy
     # matches: repo:waat-fr@<id>/ganesh@<id>:environment:production. It must
