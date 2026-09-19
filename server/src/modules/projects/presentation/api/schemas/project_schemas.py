@@ -6,7 +6,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 from src.modules.projects.domain.entities.project import (
-    Department,
     ProjectCategory,
     ProjectKind,
     ProjectPriority,
@@ -17,6 +16,7 @@ from src.modules.projects.domain.entities.service_registry import (
     Criticality,
     ServiceType,
 )
+from src.shared.enums.department import Department
 
 
 class CreateProjectRequest(BaseModel):

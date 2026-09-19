@@ -99,6 +99,7 @@ export * from "./updateDescriptionRequest";
 export * from "./updateProjectDetailRequest";
 export * from "./updateProjectRegistryRequest";
 export * from "./updateProjectRequest";
+export * from "./updateUserIdentityRequest";
 export * from "./userResponse";
 export * from "./validationError";
 export * from "./weeklyLoadResponse";

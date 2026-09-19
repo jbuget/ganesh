@@ -115,7 +115,7 @@ class ListProjectsUseCase:
             known = [
                 users[uid] for uid in by_role[role].get(project_id, []) if uid in users
             ]
-            return sorted(known, key=lambda u: u.display_name)
+            return sorted(known, key=lambda u: u.label)
 
         def latest(project_id: int) -> LastUpdate | None:
             update = latest_by_project.get(project_id)

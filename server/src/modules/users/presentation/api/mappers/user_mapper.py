@@ -10,9 +10,12 @@ def to_user_response(user: User) -> UserResponse:
     return UserResponse(
         id=user.id,
         email=user.email,
-        display_name=user.display_name,
-        initials=initials(user.display_name),
+        display_name=user.label,
+        initials=initials(user.label),
         role=user.role,
         is_active=user.is_active,
         last_login_at=user.last_login_at,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        department=user.department,
     )

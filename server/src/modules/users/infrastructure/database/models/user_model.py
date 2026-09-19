@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
 from src.modules.users.domain.entities.user import Role
+from src.shared.enums.department import Department
 
 
 class UserModel(Base):
@@ -25,3 +26,11 @@ class UserModel(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     # Nullable: accounts pre-assigned by the seed have never logged in.
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # Nullable all three: an account exists from its first login, long before
+    # anyone has said who is behind it.
+    first_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    last_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    department: Mapped[Department | None] = mapped_column(
+        Enum(Department, name="department", native_enum=False, length=32),
+        nullable=True,
+    )

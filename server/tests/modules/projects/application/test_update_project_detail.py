@@ -12,11 +12,11 @@ from src.modules.projects.application.use_cases.update_project_detail import (
     UpdateProjectDetailUseCase,
 )
 from src.modules.projects.domain.entities.project import (
-    Department,
     Project,
     ProjectKind,
     ProjectStatus,
 )
+from src.shared.enums.department import Department
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,

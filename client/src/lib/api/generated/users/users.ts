@@ -25,6 +25,7 @@ import type {
   HTTPValidationError,
   ListUsersParams,
   SetActiveRequest,
+  UpdateUserIdentityRequest,
   UserResponse,
 } from "../model";
 
@@ -614,4 +615,138 @@ export const useSetUserActive = <TError = HTTPValidationError, TContext = unknow
   TContext
 > => {
   return useMutation(getSetUserActiveMutationOptions(options), queryClient);
+};
+export type updateUserIdentityResponse200 = {
+  data: UserResponse;
+  status: 200;
+};
+
+export type updateUserIdentityResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type updateUserIdentityResponseSuccess = updateUserIdentityResponse200 & {
+  headers: Headers;
+};
+export type updateUserIdentityResponseError = updateUserIdentityResponse422 & {
+  headers: Headers;
+};
+
+export type updateUserIdentityResponse =
+  updateUserIdentityResponseSuccess | updateUserIdentityResponseError;
+
+export const getUpdateUserIdentityUrl = (userId: number) => {
+  return `/api/v1/users/${userId}/identity`;
+};
+
+/**
+ * Gives away who a teammate is, and where they work. Managers only.
+ * @summary Update Identity
+ */
+export const updateUserIdentity = async (
+  userId: number,
+  updateUserIdentityRequest: UpdateUserIdentityRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<updateUserIdentityResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<updateUserIdentityResponse>(getUpdateUserIdentityUrl(userId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateUserIdentityRequest),
+  });
+};
+
+export const getUpdateUserIdentityMutationKey = () => ["updateUserIdentity"] as const;
+
+export const getUpdateUserIdentityMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateUserIdentity>>,
+    TError,
+    UpdateUserIdentityMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateUserIdentity>>,
+  TError,
+  UpdateUserIdentityMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateUserIdentityMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateUserIdentity>>,
+    UpdateUserIdentityMutationVariables
+  > = (props) => {
+    const { userId, data } = props ?? {};
+
+    return updateUserIdentity(userId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateUserIdentityMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateUserIdentity>>
+>;
+export type UpdateUserIdentityMutationBody = UpdateUserIdentityRequest;
+export type UpdateUserIdentityMutationError = HTTPValidationError;
+export type UpdateUserIdentityMutationVariables = {
+  userId: number;
+  data: UpdateUserIdentityRequest;
+};
+
+/**
+ * @summary Update Identity
+ */
+export const useUpdateUserIdentity = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateUserIdentity>>,
+      TError,
+      UpdateUserIdentityMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateUserIdentity>>,
+  TError,
+  UpdateUserIdentityMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateUserIdentityMutationOptions(options), queryClient);
 };

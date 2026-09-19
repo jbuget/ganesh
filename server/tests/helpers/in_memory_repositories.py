@@ -23,7 +23,6 @@ from src.modules.planning.domain.repositories.simulation_repository import (
     SimulationRepository,
 )
 from src.modules.projects.domain.entities.project import (
-    Department,
     Project,
     ProjectCategory,
     ProjectKind,
@@ -50,6 +49,7 @@ from src.modules.stats.domain.repositories.statistics_repository import (
 )
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.shared.enums.department import Department
 
 
 class InMemoryUserRepository(UserRepository):

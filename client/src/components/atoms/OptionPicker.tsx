@@ -15,6 +15,13 @@ interface OptionPickerProps<T extends string> {
   options: readonly Option<T>[];
   /** What the row asks for: the empty state and the accessible name. */
   label: string;
+  /**
+   * Whether the reader may choose.
+   *
+   * Editable by default: a field one cannot change is the exception, and a
+   * screen that only reads says so on its own.
+   */
+  editable?: boolean;
   onChange: (value: T | null) => void | Promise<void>;
 }
 
@@ -28,10 +35,19 @@ export function OptionPicker<T extends string>({
   value,
   options,
   label,
+  editable = true,
   onChange,
 }: OptionPickerProps<T>) {
   const [isOpen, setOpen] = useState(false);
   const chosen = options.find((option) => option.value === value);
+
+  if (!editable) {
+    return chosen ? (
+      <span className="text-sm text-slate-700">{chosen.label}</span>
+    ) : (
+      <span className="text-sm text-slate-400">Non renseigné</span>
+    );
+  }
 
   return (
     <Popover open={isOpen} onOpenChange={setOpen}>

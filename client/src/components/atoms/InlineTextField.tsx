@@ -10,6 +10,13 @@ interface InlineTextFieldProps {
   placeholder?: string;
   /** Offered while the field is empty, one click away from being accepted. */
   suggestion?: string | null;
+  /**
+   * Whether the reader may write.
+   *
+   * Editable by default: a field one cannot change is the exception, and a
+   * screen that only reads says so on its own.
+   */
+  editable?: boolean;
   onChange: (value: string | null) => void | Promise<void>;
 }
 
@@ -24,6 +31,7 @@ export function InlineTextField({
   label,
   placeholder,
   suggestion,
+  editable = true,
   onChange,
 }: InlineTextFieldProps) {
   const [entry, setEntry] = useState<string | null>(null);
@@ -34,6 +42,14 @@ export function InlineTextField({
     setEntry(null);
     const next = trimmed === "" ? null : trimmed;
     if (next !== (value ?? null)) void onChange(next);
+  }
+
+  if (!editable) {
+    return value ? (
+      <span className="text-sm text-slate-700">{value}</span>
+    ) : (
+      <span className="text-sm text-slate-400">Non renseigné</span>
+    );
   }
 
   if (entry !== null) {

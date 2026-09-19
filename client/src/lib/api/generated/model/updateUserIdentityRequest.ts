@@ -5,19 +5,13 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Department } from "./department";
-import type { Role } from "./role";
 
 /**
- * A teammate.
+ * Who a teammate is, and where they work.
+ *
+ * The three fields travel together: what is left out is emptied.
  */
-export interface UserResponse {
-  id: number;
-  email: string;
-  display_name: string;
-  initials: string;
-  role: Role;
-  is_active: boolean;
-  last_login_at?: string | null;
+export interface UpdateUserIdentityRequest {
   first_name?: string | null;
   last_name?: string | null;
   department?: Department | null;

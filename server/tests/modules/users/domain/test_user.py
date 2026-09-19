@@ -5,6 +5,7 @@ from datetime import datetime
 import pytest
 
 from src.modules.users.domain.entities.user import Role, User
+from src.shared.enums.department import Department
 
 
 def make_user(role: Role = Role.TEAMMATE, is_active: bool = True) -> User:
@@ -124,3 +125,48 @@ def test_a_deactivated_manager_can_no_longer_deactivate_anyone() -> None:
     other = with_id(make_user(Role.TEAMMATE), 2)
 
     assert manager.can_deactivate(other) is False
+
+
+def test_a_civil_name_is_trimmed() -> None:
+    user = make_user()
+    user.set_identity(first_name="  Léa  ", last_name=" Chen ", department=None)
+
+    assert user.first_name == "Léa"
+    assert user.last_name == "Chen"
+
+
+def test_a_blank_name_reads_as_unknown_rather_than_empty() -> None:
+    """« » and « nothing » say the same thing; the database should say it once."""
+    user = make_user()
+    user.set_identity(first_name="   ", last_name="", department=None)
+
+    assert user.first_name is None
+    assert user.last_name is None
+
+
+def test_a_teammate_belongs_to_one_department() -> None:
+    user = make_user()
+    user.set_identity(
+        first_name="Léa", last_name="Chen", department=Department.CUSTOMER_SERVICE
+    )
+
+    assert user.department is Department.CUSTOMER_SERVICE
+
+
+def test_the_name_one_reads_is_the_civil_one_once_it_is_known() -> None:
+    user = make_user()
+    user.set_identity(first_name="Léa", last_name="Chen", department=None)
+
+    assert user.label == "Léa Chen"
+
+
+def test_a_half_known_name_is_still_better_than_the_account_one() -> None:
+    user = make_user()
+    user.set_identity(first_name="Léa", last_name=None, department=None)
+
+    assert user.label == "Léa"
+
+
+def test_the_account_name_stands_in_as_long_as_nobody_has_said_who_it_is() -> None:
+    """Entra names the account; it does not say who one is talking to."""
+    assert make_user().label == "D. Dehe"
