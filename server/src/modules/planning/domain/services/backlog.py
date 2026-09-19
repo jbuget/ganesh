@@ -1,4 +1,4 @@
-"""The order the backlog is served in.
+"""What the backlog is made of, and in what order it is served.
 
 Nothing here is stored: the order is read from what the team already tells the
 board — how urgent a mission is, how far along it is, where its card sits in
@@ -9,13 +9,14 @@ A what-if overrides that reading for the length of one request, and writes
 nothing down.
 """
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectPriority,
     ProjectStatus,
 )
+from src.modules.projects.domain.services.project_cost import split_delivered
 
 #: Most urgent first. A mission nobody ranked comes after every ranked one:
 #: not having placed it against the others must not push it ahead of them.
@@ -72,3 +73,49 @@ def apply_explicit_order(
     ]
     chosen = {mission.id for mission in named}
     return named + [mission for mission in derived if mission.id not in chosen]
+
+
+def still_to_build(missions: Iterable[Project]) -> list[Project]:
+    """What the plan steers: missions being built, not ones being kept alive.
+
+    A work package stands on its own line: it carries its own estimate and its
+    own people, and folding it into its parent would place the same days twice.
+    """
+    return [
+        mission
+        for mission in missions
+        if mission.appears_on_board and mission.status is not ProjectStatus.OPERATIONS
+    ]
+
+
+def remaining_build(
+    estimated_days: float | None,
+    delivered_by_status: Mapping[ProjectStatus | None, float],
+    forecast_days: float,
+) -> float | None:
+    """Build left to place on a mission.
+
+    The estimate, less what has been delivered on the build, less what has
+    already been forecast by hand: a forecast is a piece of the plan somebody
+    made, and planning it again would book the same days twice.
+
+    None when nobody estimated it: a mission with no volume is not a mission
+    with nothing left to do, and the plan must be able to say which it is.
+    """
+    if estimated_days is None:
+        return None
+
+    cost = split_delivered(delivered_by_status, estimated_days=estimated_days)
+    return round(max(0.0, estimated_days - cost.build_days - forecast_days), 2)
+
+
+def staffed(
+    assigned: Mapping[int, list[int]], supposed: Mapping[int, list[int]]
+) -> dict[int, list[int]]:
+    """Who the work may be placed on, the hypothesis having its say.
+
+    A mission the hypothesis names takes the people it names, and only them:
+    naming nobody is how one asks what happens if a mission is left unstaffed.
+    Missions it does not name keep the team they actually have.
+    """
+    return {**assigned, **supposed}

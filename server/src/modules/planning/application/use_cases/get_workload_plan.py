@@ -15,14 +15,19 @@ from src.modules.planning.application.dtos.workload_dto import (
     WorkloadReading,
 )
 from src.modules.planning.domain.entities.workload_plan import PlannedMission
-from src.modules.planning.domain.services.backlog_ordering import apply_explicit_order
+from src.modules.planning.domain.services.backlog import (
+    apply_explicit_order,
+    remaining_build,
+    staffed,
+    still_to_build,
+)
 from src.modules.planning.domain.services.horizon import (
     DEFAULT_HORIZON_MONTHS,
     horizon_end,
 )
 from src.modules.planning.domain.services.plan_summary import summarise
 from src.modules.planning.domain.services.projection import project_workload
-from src.modules.projects.domain.entities.project import Project, ProjectStatus
+from src.modules.projects.domain.entities.project import Project
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
@@ -30,7 +35,6 @@ from src.modules.projects.domain.repositories.project_assignee_repository import
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
-from src.modules.projects.domain.services.project_cost import split_delivered
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
@@ -67,11 +71,11 @@ class GetWorkloadPlanUseCase:
         end = horizon_end(start, horizon_months)
 
         backlog = apply_explicit_order(
-            _still_to_build(await self._projects.list_all()), order or []
+            still_to_build(await self._projects.list_all()), order or []
         )
 
         remaining = await self._remaining_days(backlog, start)
-        contributors = _staffed(
+        contributors = staffed(
             await self._assignees.list_all(ProjectRole.CONTRIBUTOR), staffing or {}
         )
 
@@ -129,54 +133,19 @@ class GetWorkloadPlanUseCase:
     async def _remaining_days(
         self, backlog: list[Project], today: date
     ) -> dict[int, float | None]:
-        """Build left on each mission of the backlog.
-
-        What is left is the estimate, less what has been delivered on the
-        build, less what has already been forecast by hand: a forecast is a
-        piece of the plan already made, and planning it again would book the
-        same days twice. A mission nobody estimated has no volume to place, and
-        says so rather than counting as nothing to do.
-        """
+        """Build left on each mission, read in two queries whatever the count."""
         by_status = await self._entries.sum_realised_by_project_and_status(today)
         forecast = await self._entries.sum_forecast_by_project(today)
 
-        left: dict[int, float | None] = {}
-        for mission in backlog:
-            project_id = mission.id or 0
-            if mission.estimated_days is None:
-                left[project_id] = None
-                continue
-            cost = split_delivered(
-                by_status.get(project_id, {}), estimated_days=mission.estimated_days
+        return {
+            mission.id
+            or 0: remaining_build(
+                estimated_days=mission.estimated_days,
+                delivered_by_status=by_status.get(mission.id or 0, {}),
+                forecast_days=forecast.get(mission.id or 0, 0.0),
             )
-            spent = cost.build_days + forecast.get(project_id, 0.0)
-            left[project_id] = round(max(0.0, mission.estimated_days - spent), 2)
-        return left
-
-
-def _staffed(
-    assigned: dict[int, list[int]], staffing: dict[int, list[int]]
-) -> dict[int, list[int]]:
-    """Who the work may be placed on, the hypothesis having its say.
-
-    A mission named in the hypothesis takes the people it names, and only
-    them: naming nobody is how one asks what happens if a mission is left
-    unstaffed. Missions it does not name keep the team they actually have.
-    """
-    return {**assigned, **staffing}
-
-
-def _still_to_build(missions: list[Project]) -> list[Project]:
-    """What the plan steers: missions being built, not ones being kept alive.
-
-    A work package stands on its own line: it carries its own estimate and its
-    own people, and folding it into its parent would place the same days twice.
-    """
-    return [
-        mission
-        for mission in missions
-        if mission.appears_on_board and mission.status is not ProjectStatus.OPERATIONS
-    ]
+            for mission in backlog
+        }
 
 
 def _people(user_ids: list[int], by_user: dict[int | None, User]) -> list[User]:

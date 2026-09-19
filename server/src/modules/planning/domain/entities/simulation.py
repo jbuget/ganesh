@@ -15,7 +15,7 @@ from datetime import datetime
 
 from src.modules.planning.domain.services.horizon import (
     DEFAULT_HORIZON_MONTHS,
-    MAX_HORIZON_MONTHS,
+    ensure_readable,
 )
 from src.shared.exceptions.domain_exceptions import ValidationError
 
@@ -43,6 +43,10 @@ class Simulation:
     updated_at: datetime | None = None
 
     def __post_init__(self) -> None:
+        self._validate()
+
+    def _validate(self) -> None:
+        """Everything a simulation must hold true, wherever it comes from."""
         self.name = self.name.strip()
         if not self.name:
             raise ValidationError("A simulation must be named.")
@@ -50,21 +54,7 @@ class Simulation:
             raise ValidationError(
                 f"A simulation name runs to {NAME_MAX_LENGTH} characters at most."
             )
-        if not 1 <= self.horizon_months <= MAX_HORIZON_MONTHS:
-            raise ValidationError(
-                f"A horizon runs from 1 to {MAX_HORIZON_MONTHS} months, "
-                f"not {self.horizon_months}."
-            )
-
-    @property
-    def is_empty(self) -> bool:
-        """Whether it supposes anything at all.
-
-        A simulation that supposes nothing is the team's own plan under another
-        name: worth keeping if someone chose to, but it must not read as a
-        hypothesis on the screen.
-        """
-        return not self.order and not self.staffing
+        ensure_readable(self.horizon_months)
 
     def restate(
         self,
@@ -78,4 +68,4 @@ class Simulation:
         self.horizon_months = horizon_months
         self.order = order
         self.staffing = staffing
-        self.__post_init__()
+        self._validate()

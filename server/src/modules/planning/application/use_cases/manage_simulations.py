@@ -10,7 +10,8 @@ from src.modules.planning.domain.entities.simulation import Simulation
 from src.modules.planning.domain.repositories.simulation_repository import (
     SimulationRepository,
 )
-from src.shared.exceptions.domain_exceptions import ConflictError, EntityNotFoundError
+from src.modules.planning.domain.services.simulation_naming import ensure_name_is_free
+from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 
 @dataclass(frozen=True)
@@ -40,7 +41,7 @@ class SaveSimulationUseCase:
         self._simulations = simulations
 
     async def execute(self, command: SimulationCommand, author_id: int) -> Simulation:
-        await _refuse_a_taken_name(self._simulations, command.name, keeping=None)
+        await ensure_name_is_free(self._simulations, command.name)
 
         return await self._simulations.add(
             Simulation(
@@ -67,7 +68,7 @@ class UpdateSimulationUseCase:
         if simulation is None:
             raise EntityNotFoundError("The simulation cannot be found.")
 
-        await _refuse_a_taken_name(
+        await ensure_name_is_free(
             self._simulations, command.name, keeping=simulation_id
         )
 
@@ -97,12 +98,3 @@ class DeleteSimulationUseCase:
             raise EntityNotFoundError("The simulation cannot be found.")
 
         await self._simulations.delete(simulation_id)
-
-
-async def _refuse_a_taken_name(
-    simulations: SimulationRepository, name: str, keeping: int | None
-) -> None:
-    """Two scenarios of the same name would make choosing one a guess."""
-    existing = await simulations.find_by_name(name.strip())
-    if existing is not None and existing.id != keeping:
-        raise ConflictError(f"A simulation is already named « {name.strip()} ».")

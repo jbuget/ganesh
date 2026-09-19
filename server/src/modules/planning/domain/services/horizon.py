@@ -17,13 +17,22 @@ DEFAULT_HORIZON_MONTHS = 6
 MAX_HORIZON_MONTHS = 24
 
 
-def horizon_end(start: date, months: int = DEFAULT_HORIZON_MONTHS) -> date:
-    """The last day a projection starting on `start` may fill."""
-    if months < 1 or months > MAX_HORIZON_MONTHS:
+def ensure_readable(months: int) -> int:
+    """Refuses a horizon nobody could read anything into. Returns it.
+
+    The one place the bounds are spelled out: a projection and a simulation
+    must not be able to disagree on what a legitimate horizon is.
+    """
+    if not 1 <= months <= MAX_HORIZON_MONTHS:
         raise ValidationError(
             f"A horizon runs from 1 to {MAX_HORIZON_MONTHS} months, not {months}."
         )
-    return _months_later(start, months) - timedelta(days=1)
+    return months
+
+
+def horizon_end(start: date, months: int = DEFAULT_HORIZON_MONTHS) -> date:
+    """The last day a projection starting on `start` may fill."""
+    return _months_later(start, ensure_readable(months)) - timedelta(days=1)
 
 
 def _months_later(day: date, months: int) -> date:

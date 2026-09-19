@@ -34,17 +34,6 @@ class TestHorizon:
             a_simulation(horizon_months=months)
 
 
-class TestWhatItSupposes:
-    def test_a_scenario_supposing_nothing_is_not_a_hypothesis(self) -> None:
-        assert a_simulation().is_empty is True
-
-    def test_an_order_makes_it_a_hypothesis(self) -> None:
-        assert a_simulation(order=[10, 20]).is_empty is False
-
-    def test_staffing_makes_it_one_too(self) -> None:
-        assert a_simulation(staffing={10: [1]}).is_empty is False
-
-
 class TestRestating:
     def test_it_takes_the_new_scenario(self) -> None:
         simulation = a_simulation(order=[10])
