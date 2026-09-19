@@ -18,20 +18,20 @@ describe("RoadmapSummaryBar", () => {
     );
 
     expect(screen.getByText("14")).toBeInTheDocument();
-    expect(screen.getByText("missions")).toBeInTheDocument();
+    expect(screen.getByText("projets")).toBeInTheDocument();
     expect(screen.getByText("en retard")).toBeInTheDocument();
     expect(screen.getByText("sans date")).toBeInTheDocument();
     expect(screen.getByText("sans estimation")).toBeInTheDocument();
   });
 
-  it("speaks of one mission in the singular", () => {
+  it("speaks of one project in the singular", () => {
     render(
       <RoadmapSummaryBar
         summary={{ missions: 1, late: 0, undated: 0, unestimated: 0, delivered: 1 }}
       />,
     );
 
-    expect(screen.getByText("mission")).toBeInTheDocument();
+    expect(screen.getByText("projet")).toBeInTheDocument();
     expect(screen.getByText("mise en service")).toBeInTheDocument();
   });
 });

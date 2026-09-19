@@ -120,7 +120,7 @@ export function ProjectsPage() {
         {screen.tree.length === 0 && !screen.isLoading && (
           <p className="py-8 text-center text-sm text-slate-500">
             {hasFilter
-              ? "Aucune mission ne répond aux filtres."
+              ? "Aucun projet ne répond aux filtres."
               : "Aucun projet. Déclarez-en un ou importez votre référentiel."}
           </p>
         )}

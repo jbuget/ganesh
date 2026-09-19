@@ -79,6 +79,33 @@ the UI:
   saying what becomes of them.
 - Every action that matters is traced in `audit_log`.
 
+### What the log holds
+
+Every use case that writes takes an `AuditLogRepository`, and a new one that
+does not is a gap, not a choice. The « Journal » tab of a project reads back
+everything carrying its `project_id` — time declared included, which is most
+of it: a log that sorted out what deserves to be in it would stop answering
+the question one opens it with. Length is met by paging, never by filtering.
+
+- **A gesture touching several projects writes one line per project.** An
+  import of twelve rows writes twelve lines, each against the project it
+  created. A single summary line would live in no project's log, and opening
+  one of them nothing would say where it came from. That one click did all
+  twelve is read from the timestamps.
+- **A gesture is named rather than described.** « a archivé le projet », not
+  « is_active : oui → non ». The API says what happened in the domain's
+  vocabulary and the interface says it in French, in
+  `client/src/lib/audit-log.ts` — under test, because a log nobody can read is
+  not one.
+- **Two things are deliberately outside it**, and adding them would be a
+  decision, not a fix: the rank of a card within a kanban column, which
+  decides nothing and would bury everything else, and every sign-in, which is
+  stamped on `last_login_at` and nowhere else. Moods are outside it too — they
+  are given in confidence, and a log of who felt what is not a log.
+- Deleting a project sets its lines' `project_id` to `NULL`: the log survives,
+  the tab it was read in does not. That is right — there is no project left to
+  open.
+
 ### Leaving the reference list
 
 A mission that is over — delivered, abandoned, or never really started — is
@@ -149,6 +176,12 @@ Three consequences:
   type checker and to the tests, which assert on the count and not the wording.
   Only opening the screen catches it. **Check in the browser after any broad
   rename.**
+- **What the user reads says « projet », never « mission ».** One thing carries
+  one name; the code keeps `MissionRow` and the `mission` query parameter,
+  which nobody reads. The rename crosses the agreement — « Aucune mission »
+  becomes « Aucun projet », `` `${n} livrée${s(n)}` `` becomes `` `${n}
+  livré${s(n)}` `` — and neither the type checker nor a test asserting on a
+  count will catch it. See `AGENTS.md`.
 - To find what is still French, do not search with a list of words: it only
   finds what one already has in mind. Extract every identifier, split it into
   words, and read the sorted column of distinct words — what is French stands

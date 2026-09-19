@@ -86,7 +86,7 @@ export function BoardColumn({
         {/* A <ul> only takes <li>: a bare <p> would break hydration. */}
         {cards.length === 0 && (
           <li className="px-1 py-6 text-center text-xs text-slate-400">
-            {frozen ? "Aucune mission ne répond aux filtres" : "Aucune mission"}
+            {frozen ? "Aucun projet ne répond aux filtres" : "Aucun projet"}
           </li>
         )}
       </ul>

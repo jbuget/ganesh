@@ -177,6 +177,6 @@ describe("WorkloadTimeline", () => {
   it("announces an empty backlog in its own words", () => {
     draw([]);
 
-    expect(screen.getByText(/Aucune mission à planifier/)).toBeInTheDocument();
+    expect(screen.getByText(/Aucun projet à planifier/)).toBeInTheDocument();
   });
 });

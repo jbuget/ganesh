@@ -132,14 +132,14 @@ export function StatsPage() {
             pour dire.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <ShareBreakdown title="Mission ou hors projet" rows={kindRows(steering)} />
+            <ShareBreakdown title="Projet ou hors projet" rows={kindRows(steering)} />
             <ShareBreakdown title="Temps par phase" rows={phaseRows(steering)} />
             <ShareBreakdown
               title="Temps par axe stratégique"
               rows={categoryRows(steering)}
             />
             <ShareBreakdown
-              title="Missions les plus consommatrices"
+              title="Projets les plus consommateurs"
               rows={missionRows(steering)}
             />
           </div>
@@ -150,11 +150,11 @@ export function StatsPage() {
             Santé du référentiel
           </h2>
           <p className="mb-3 text-sm text-slate-500">
-            Le référentiel de missions reflète-t-il le travail réel ?
+            Le référentiel de projets reflète-t-il le travail réel ?
           </p>
           <dl className="grid gap-3 sm:grid-cols-3">
             <MetricTile
-              label="Missions actives"
+              label="Projets actifs"
               value={String(registry.active_missions)}
               hint={
                 registry.usage_rate === null || registry.usage_rate === undefined
@@ -165,10 +165,10 @@ export function StatsPage() {
             <MetricTile
               label="Sans aucun temps"
               value={String(registry.missions_without_time)}
-              hint="missions actives que personne n'a servies"
+              hint="projets actifs que personne n'a servis"
             />
             <MetricTile
-              label="Missions créées"
+              label="Projets créés"
               value={String(registry.created)}
               hint="ajoutées au référentiel sur la période"
             />

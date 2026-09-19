@@ -21,7 +21,7 @@ export function RoadmapSummaryBar({ summary }: RoadmapSummaryBarProps) {
       Icon: CircleCheck,
       tone: "text-slate-400",
       value: String(summary.missions),
-      label: summary.missions > 1 ? "missions" : "mission",
+      label: summary.missions > 1 ? "projets" : "projet",
     },
     {
       key: "delivered",

@@ -50,7 +50,7 @@ describe("MissionFilters", () => {
   it("offers the five criteria", () => {
     bar();
 
-    expect(screen.getByLabelText("Rechercher une mission")).toBeInTheDocument();
+    expect(screen.getByLabelText("Rechercher un projet")).toBeInTheDocument();
     ["Phase", "Catégorie", "Priorité", "Intervenant", "Type", "État"].forEach(
       (criterion) => {
         expect(
@@ -63,7 +63,7 @@ describe("MissionFilters", () => {
   it("reports the search typed", () => {
     const { onChange } = bar();
 
-    fireEvent.change(screen.getByLabelText("Rechercher une mission"), {
+    fireEvent.change(screen.getByLabelText("Rechercher un projet"), {
       target: { value: "portail" },
     });
 
@@ -132,14 +132,14 @@ describe("MissionFilters", () => {
   it("says what is seen against what the screen carries", () => {
     bar({ phases: ["scoping"] });
 
-    expect(screen.getByRole("status")).toHaveTextContent("3 missions sur 12");
+    expect(screen.getByRole("status")).toHaveTextContent("3 projets sur 12");
   });
 
   it("announces itself as a search group", () => {
     bar();
 
     expect(
-      screen.getByRole("search", { name: "Filtrer les missions" }),
+      screen.getByRole("search", { name: "Filtrer les projets" }),
     ).toBeInTheDocument();
   });
 });

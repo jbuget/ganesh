@@ -8,7 +8,7 @@ interface SearchFieldProps {
   value: string;
   onChange: (value: string) => void;
   /**
-   * What is being searched: « Rechercher une mission ».
+   * What is being searched: « Rechercher un projet ».
    *
    * It labels the field and shows inside it while it is empty. The two must say
    * the same thing: a placeholder is not a label, and a field named one way to

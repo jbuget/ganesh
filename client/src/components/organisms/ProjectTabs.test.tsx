@@ -73,12 +73,12 @@ function tabs(project: Sheet) {
 }
 
 async function askToDelete() {
-  await userEvent.click(screen.getByRole("button", { name: "Actions sur la mission" }));
+  await userEvent.click(screen.getByRole("button", { name: "Actions sur le projet" }));
   await userEvent.click(screen.getByRole("button", { name: "Supprimer" }));
 }
 
 async function askToArchive() {
-  await userEvent.click(screen.getByRole("button", { name: "Actions sur la mission" }));
+  await userEvent.click(screen.getByRole("button", { name: "Actions sur le projet" }));
   await userEvent.click(screen.getByRole("button", { name: "Archiver" }));
 }
 
@@ -89,7 +89,7 @@ describe("ProjectTabs", () => {
     await askToDelete();
     expect(deleteMission).not.toHaveBeenCalled();
 
-    await userEvent.click(screen.getByRole("button", { name: "Supprimer la mission" }));
+    await userEvent.click(screen.getByRole("button", { name: "Supprimer le projet" }));
 
     expect(deleteMission).toHaveBeenCalledTimes(1);
   });
@@ -100,7 +100,7 @@ describe("ProjectTabs", () => {
     await askToDelete();
 
     expect(screen.getByText("Suppression impossible")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Supprimer la mission" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Supprimer le projet" })).toBeNull();
     expect(deleteMission).not.toHaveBeenCalled();
   });
 

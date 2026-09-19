@@ -16,7 +16,7 @@ describe("MissionMenu", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: "Actions sur la mission" }),
+      screen.getByRole("button", { name: "Actions sur le projet" }),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Archiver" })).toBeNull();
   });
@@ -32,7 +32,7 @@ describe("MissionMenu", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Actions sur la mission" }),
+      screen.getByRole("button", { name: "Actions sur le projet" }),
     );
 
     expect(screen.getByRole("button", { name: "Archiver" })).toBeInTheDocument();
@@ -50,7 +50,7 @@ describe("MissionMenu", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Actions sur la mission" }),
+      screen.getByRole("button", { name: "Actions sur le projet" }),
     );
     await userEvent.click(screen.getByRole("button", { name: "Archiver" }));
 
@@ -68,7 +68,7 @@ describe("MissionMenu", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Actions sur la mission" }),
+      screen.getByRole("button", { name: "Actions sur le projet" }),
     );
     await userEvent.click(screen.getByRole("button", { name: "Archiver" }));
 
@@ -85,7 +85,7 @@ describe("MissionMenu", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Actions sur la mission" }),
+      screen.getByRole("button", { name: "Actions sur le projet" }),
     );
 
     expect(screen.getByRole("button", { name: "Désarchiver" })).toBeInTheDocument();
@@ -104,7 +104,7 @@ describe("MissionMenu", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Actions sur la mission" }),
+      screen.getByRole("button", { name: "Actions sur le projet" }),
     );
     await userEvent.click(screen.getByRole("button", { name: "Désarchiver" }));
 
@@ -126,7 +126,7 @@ describe("MissionMenu", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Actions sur la mission" }),
+      screen.getByRole("button", { name: "Actions sur le projet" }),
     );
 
     const entries = screen.getAllByRole("listitem").map((entry) => entry.textContent);
@@ -145,7 +145,7 @@ describe("MissionMenu", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Actions sur la mission" }),
+      screen.getByRole("button", { name: "Actions sur le projet" }),
     );
     await userEvent.click(screen.getByRole("button", { name: "Supprimer" }));
 
@@ -164,7 +164,7 @@ describe("MissionMenu", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Actions sur la mission" }),
+      screen.getByRole("button", { name: "Actions sur le projet" }),
     );
     await userEvent.click(screen.getByRole("button", { name: "Supprimer" }));
 
@@ -186,7 +186,7 @@ describe("MissionMenu", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Actions sur la mission" }),
+      screen.getByRole("button", { name: "Actions sur le projet" }),
     );
 
     expect(screen.getByRole("button", { name: "Supprimer" })).toBeInTheDocument();
@@ -207,7 +207,7 @@ describe("MissionMenu — where the mission sits", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Actions sur la mission" }),
+      screen.getByRole("button", { name: "Actions sur le projet" }),
     );
     await userEvent.click(
       screen.getByRole("button", { name: "Rattacher à un projet…" }),
@@ -230,7 +230,7 @@ describe("MissionMenu — where the mission sits", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Actions sur la mission" }),
+      screen.getByRole("button", { name: "Actions sur le projet" }),
     );
     await userEvent.click(screen.getByRole("button", { name: /Détacher de/ }));
 
@@ -248,7 +248,7 @@ describe("MissionMenu — where the mission sits", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Actions sur la mission" }),
+      screen.getByRole("button", { name: "Actions sur le projet" }),
     );
 
     expect(screen.queryByRole("button", { name: /Rattacher/ })).toBeNull();

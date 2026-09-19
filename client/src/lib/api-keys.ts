@@ -30,12 +30,12 @@ export const SCOPES: { value: ApiKeyScope; label: string; hint: string }[] = [
   {
     value: "projects:read",
     label: "Projets (lecture)",
-    hint: "Lire le référentiel des missions",
+    hint: "Lire le référentiel des projets",
   },
   {
     value: "projects:write",
     label: "Projets (écriture)",
-    hint: "Créer et modifier des missions",
+    hint: "Créer et modifier des projets",
   },
   {
     value: "entries:read",

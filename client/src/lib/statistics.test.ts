@@ -198,7 +198,7 @@ describe("breakdown rows", () => {
 
   it("splits the time between missions and what surrounds them", () => {
     expect(kindRows(steering)).toEqual([
-      { key: "project", label: "Sur mission", days: 18, share: 0.9 },
+      { key: "project", label: "Sur projet", days: 18, share: 0.9 },
       {
         key: "off_project",
         label: "Hors projet",

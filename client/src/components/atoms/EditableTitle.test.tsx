@@ -6,7 +6,7 @@ import { EditableTitle } from "./EditableTitle";
 
 const baseProps = {
   label: "Portail bailleurs",
-  hint: "Renommer la mission",
+  hint: "Renommer le projet",
   onRename: vi.fn(),
 };
 
@@ -22,7 +22,7 @@ describe("EditableTitle", () => {
   it("opens a pre-filled field on a click on the pencil", async () => {
     render(<EditableTitle {...baseProps} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Renommer la mission" }));
+    await userEvent.click(screen.getByRole("button", { name: "Renommer le projet" }));
 
     expect(screen.getByRole("textbox")).toHaveValue("Portail bailleurs");
   });
@@ -31,7 +31,7 @@ describe("EditableTitle", () => {
     const onRename = vi.fn();
     render(<EditableTitle {...baseProps} onRename={onRename} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Renommer la mission" }));
+    await userEvent.click(screen.getByRole("button", { name: "Renommer le projet" }));
     await userEvent.clear(screen.getByRole("textbox"));
     await userEvent.type(screen.getByRole("textbox"), "Extranet copropriété");
     await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
@@ -43,7 +43,7 @@ describe("EditableTitle", () => {
     const onRename = vi.fn();
     render(<EditableTitle {...baseProps} onRename={onRename} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Renommer la mission" }));
+    await userEvent.click(screen.getByRole("button", { name: "Renommer le projet" }));
     await userEvent.clear(screen.getByRole("textbox"));
     await userEvent.type(screen.getByRole("textbox"), "Extranet{Enter}");
 
@@ -54,7 +54,7 @@ describe("EditableTitle", () => {
     const onRename = vi.fn();
     render(<EditableTitle {...baseProps} onRename={onRename} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Renommer la mission" }));
+    await userEvent.click(screen.getByRole("button", { name: "Renommer le projet" }));
     await userEvent.type(screen.getByRole("textbox"), " bis");
     await userEvent.click(screen.getByRole("button", { name: "Annuler" }));
 
@@ -66,7 +66,7 @@ describe("EditableTitle", () => {
     const onRename = vi.fn();
     render(<EditableTitle {...baseProps} onRename={onRename} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Renommer la mission" }));
+    await userEvent.click(screen.getByRole("button", { name: "Renommer le projet" }));
     await userEvent.type(screen.getByRole("textbox"), "{Escape}");
 
     expect(onRename).not.toHaveBeenCalled();
@@ -77,7 +77,7 @@ describe("EditableTitle", () => {
     const onRename = vi.fn();
     render(<EditableTitle {...baseProps} onRename={onRename} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Renommer la mission" }));
+    await userEvent.click(screen.getByRole("button", { name: "Renommer le projet" }));
     await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
 
     expect(onRename).not.toHaveBeenCalled();
@@ -88,7 +88,7 @@ describe("EditableTitle", () => {
     const onRename = vi.fn();
     render(<EditableTitle {...baseProps} onRename={onRename} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Renommer la mission" }));
+    await userEvent.click(screen.getByRole("button", { name: "Renommer le projet" }));
     await userEvent.clear(screen.getByRole("textbox"));
 
     expect(screen.getByRole("button", { name: "Enregistrer" })).toBeDisabled();
@@ -98,7 +98,7 @@ describe("EditableTitle", () => {
     const onRename = vi.fn().mockRejectedValue(new Error("boom"));
     render(<EditableTitle {...baseProps} onRename={onRename} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Renommer la mission" }));
+    await userEvent.click(screen.getByRole("button", { name: "Renommer le projet" }));
     await userEvent.clear(screen.getByRole("textbox"));
     await userEvent.type(screen.getByRole("textbox"), "Extranet");
     await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
@@ -112,7 +112,7 @@ describe("EditableTitle", () => {
     render(<EditableTitle {...baseProps} onRename={undefined} />);
 
     expect(
-      screen.queryByRole("button", { name: "Renommer la mission" }),
+      screen.queryByRole("button", { name: "Renommer le projet" }),
     ).not.toBeInTheDocument();
   });
 });

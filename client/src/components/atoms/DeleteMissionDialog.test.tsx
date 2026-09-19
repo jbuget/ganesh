@@ -39,7 +39,7 @@ describe("DeleteMissionDialog", () => {
   it("deletes the mission once confirmed", async () => {
     const { onConfirm } = open();
 
-    await userEvent.click(screen.getByRole("button", { name: "Supprimer la mission" }));
+    await userEvent.click(screen.getByRole("button", { name: "Supprimer le projet" }));
 
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
@@ -104,7 +104,7 @@ describe("DeleteMissionDialog", () => {
   it("offers no deletion when it is refused", () => {
     open({ deletable: false, consumedDays: 1 });
 
-    expect(screen.queryByRole("button", { name: "Supprimer la mission" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Supprimer le projet" })).toBeNull();
     expect(screen.getByRole("button", { name: "Fermer" })).toBeInTheDocument();
   });
 });

@@ -187,7 +187,7 @@ const UNNAMED: Record<Grouping, string> = {
   category: "Sans axe",
   status: "Sans phase",
   priority: "Sans priorité",
-  none: "Toutes les missions",
+  none: "Tous les projets",
 };
 
 /**
@@ -273,8 +273,8 @@ function markOf(key: string, grouping: Grouping): string | null {
  */
 export function silentNotice(count: number): string {
   return count > 1
-    ? `${count} missions sans rien à montrer`
-    : "1 mission sans rien à montrer";
+    ? `${count} projets sans rien à montrer`
+    : "1 projet sans rien à montrer";
 }
 
 /**
@@ -285,9 +285,9 @@ export function silentNotice(count: number): string {
  * show when somebody opened the page.
  */
 export function roadmapNotice(summary: RoadmapSummaryResponse): string {
-  const parts = [`${summary.missions} ${plural(summary.missions, "mission")}`];
+  const parts = [`${summary.missions} ${plural(summary.missions, "projet")}`];
   if (summary.delivered > 0)
-    parts.push(`${summary.delivered} livrée${s(summary.delivered)}`);
+    parts.push(`${summary.delivered} livré${s(summary.delivered)}`);
   if (summary.late > 0) parts.push(`${summary.late} en retard`);
   if (summary.undated > 0) parts.push(`${summary.undated} sans date`);
   if (summary.unestimated > 0) parts.push(`${summary.unestimated} sans estimation`);

@@ -65,7 +65,7 @@ export function RoadmapTimeline({
   if (bands.length === 0) {
     return (
       <p className="py-12 text-center text-sm text-slate-400">
-        Aucune mission à montrer sur cette période.
+        Aucun projet à montrer sur cette période.
       </p>
     );
   }
@@ -80,7 +80,7 @@ export function RoadmapTimeline({
     <div className={`flex h-full min-h-0 flex-col border bg-white ${STRONG_RULE}`}>
       <div className={`flex shrink-0 items-end border-b bg-slate-50 ${STRONG_RULE}`}>
         <div className={`${HEADINGS} px-3 py-1`}>
-          <span className="text-xs text-slate-500">Mission</span>
+          <span className="text-xs text-slate-500">Projet</span>
         </div>
         <div className={`${DATES} pr-3 py-1`}>
           <span className="text-xs text-slate-500">Annoncée</span>

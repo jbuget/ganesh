@@ -63,7 +63,7 @@ describe("BoardColumn", () => {
   it("invites a drop when the phase is empty", () => {
     show([]);
 
-    expect(screen.getByText("Aucune mission")).toBeInTheDocument();
+    expect(screen.getByText("Aucun projet")).toBeInTheDocument();
     expect(screen.queryAllByRole("heading", { level: 3 })).toHaveLength(0);
   });
 
@@ -91,7 +91,7 @@ describe("BoardColumn", () => {
   it("shows the prompt only on an empty phase", () => {
     show([card(1, "Portail bailleurs")]);
 
-    expect(screen.queryByText("Aucune mission")).not.toBeInTheDocument();
+    expect(screen.queryByText("Aucun projet")).not.toBeInTheDocument();
   });
 
   it("puts only <li> in the list, on pain of breaking hydration", () => {
@@ -121,8 +121,6 @@ describe("a column frozen by a filter", () => {
   it("explains an emptiness caused by filters rather than a plain emptiness", () => {
     show([], true);
 
-    expect(
-      screen.getByText("Aucune mission ne répond aux filtres"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Aucun projet ne répond aux filtres")).toBeInTheDocument();
   });
 });

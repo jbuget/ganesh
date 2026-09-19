@@ -169,7 +169,7 @@ export function kindRows(steering: SteeringResponse): BreakdownRow[] {
   return [
     {
       key: "project",
-      label: "Sur mission",
+      label: "Sur projet",
       days: steering.project_days,
       share: shareOf(steering.project_days),
     },
