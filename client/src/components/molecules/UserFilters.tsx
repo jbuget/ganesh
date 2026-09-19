@@ -1,9 +1,9 @@
 "use client";
 
-import { Search, X } from "lucide-react";
-
+import { ClearFilters } from "@/components/atoms/ClearFilters";
 import { FilterSelect } from "@/components/atoms/FilterSelect";
-import { Input } from "@/components/ui/input";
+import { FilteredCount } from "@/components/atoms/FilteredCount";
+import { SearchField } from "@/components/atoms/SearchField";
 import type { Role } from "@/lib/api/generated/model";
 import { ROLES } from "@/lib/roles";
 import {
@@ -17,7 +17,7 @@ interface UserFiltersProps {
   hasFilter: boolean;
   onChange: (change: Partial<Criteria>) => void;
   onClear: () => void;
-  /** Teammates shown, and teammates the screen carries in all. */
+  /** Teammates shown, and teammates one would see with no criterion. */
   visible: number;
   total: number;
 }
@@ -43,20 +43,11 @@ export function UserFilters({
       {/* An announced search group: a screen reader must be able to jump to the
           criteria, and know what they govern. */}
       <div role="search" aria-label="Filtrer les collaborateurs" className="contents">
-        <div className="relative">
-          <Search
-            className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-slate-400"
-            aria-hidden
-          />
-          <Input
-            type="search"
-            value={filters.name}
-            onChange={(event) => onChange({ name: event.target.value })}
-            placeholder="Rechercher un collaborateur"
-            aria-label="Rechercher un collaborateur"
-            className="h-9 w-64 pl-8"
-          />
-        </div>
+        <SearchField
+          value={filters.name}
+          onChange={(name) => onChange({ name })}
+          label="Rechercher un collaborateur"
+        />
 
         <FilterSelect
           label="Rôle"
@@ -72,27 +63,18 @@ export function UserFilters({
           onChange={(values) => onChange({ states: values as UserState[] })}
         />
 
-        {hasFilter && (
-          <button
-            type="button"
-            onClick={onClear}
-            className="flex cursor-pointer items-center gap-1 rounded-md px-2 py-1.5 text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
-          >
-            <X className="size-3.5" aria-hidden />
-            Effacer
-          </button>
-        )}
+        {hasFilter && <ClearFilters onClear={onClear} />}
       </div>
 
       {hasFilter && (
-        /*
-          The count is spoken aloud: a filter that leaves nothing cannot be seen
-          when one is not looking at the screen, and `status` announces it
-          without interrupting typing.
-        */
-        <p role="status" className="ml-auto text-sm tabular-nums text-slate-500">
-          {visible} collaborateur{visible > 1 ? "s" : ""} sur {total}
-        </p>
+        <div className="ml-auto">
+          <FilteredCount
+            visible={visible}
+            total={total}
+            one="collaborateur"
+            many="collaborateurs"
+          />
+        </div>
       )}
     </div>
   );
