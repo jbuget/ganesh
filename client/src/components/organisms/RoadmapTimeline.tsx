@@ -7,6 +7,7 @@ import { RoadmapScale } from "@/components/atoms/RoadmapScale";
 import { RoadmapRow } from "@/components/molecules/RoadmapRow";
 import type { RoadmapMissionResponse } from "@/lib/api/generated/model";
 import { bandsOf, positionOf, silentNotice, type Grouping } from "@/lib/roadmap";
+import { STRONG_RULE } from "@/lib/table-frame";
 
 interface RoadmapTimelineProps {
   missions: RoadmapMissionResponse[];
@@ -73,8 +74,10 @@ export function RoadmapTimeline({
     // The scale stays put while the bands move under it. Sixty lines deep,
     // a reader who has lost the months no longer knows what they are looking
     // at: the axis is the reading, not an ornament at the top of it.
-    <div className="flex h-full min-h-0 flex-col rounded-md border border-slate-300 bg-white">
-      <div className="flex shrink-0 items-end border-b border-slate-300 bg-slate-50">
+    <div
+      className={`flex h-full min-h-0 flex-col rounded-md border bg-white ${STRONG_RULE}`}
+    >
+      <div className={`flex shrink-0 items-end border-b bg-slate-50 ${STRONG_RULE}`}>
         <div className={`${HEADINGS} px-3 py-1`}>
           <span className="text-xs text-slate-500">Mission</span>
         </div>
@@ -112,9 +115,20 @@ export function RoadmapTimeline({
             <div className={SLIPPAGE} />
           </div>
 
-          {bands.map((band) => (
+          {bands.map((band, index) => (
             <section key={band.key}>
-              <h3 className="flex items-center gap-2 border-b border-slate-200 bg-slate-50/70 px-3 py-1">
+              {/* A band's title is a break in the reading, not a row: it
+                carries the strong rule above and below, as the frame does.
+                The first one sits straight under the header, whose rule
+                already closes the band of titles — two would read as one
+                thick line. */}
+              <h3
+                className={[
+                  "flex items-center gap-2 border-b bg-slate-50/70 px-3 py-1",
+                  STRONG_RULE,
+                  index === 0 ? "" : "border-t",
+                ].join(" ")}
+              >
                 {band.mark && (
                   <span
                     aria-hidden

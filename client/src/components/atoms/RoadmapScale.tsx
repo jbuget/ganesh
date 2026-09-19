@@ -24,7 +24,9 @@ export function RoadmapScale({ from, to, today }: RoadmapScaleProps) {
   const showsRule = rule >= 0 && rule <= 1;
 
   return (
-    <div className="relative flex border-b border-slate-300">
+    // No rule of its own: the header band it sits in already closes with
+    // one, and a second would double it.
+    <div className="relative flex">
       {months.map((month) => (
         <div
           key={month.key}
