@@ -539,9 +539,10 @@ whole design leans on, and the one to respect when adding a route:
 - **A scope that opens no route is a bug**, and a test says so. The table of
   keys is read by the whole team to know what a key opens; a member the form
   offers and no route honours makes it say that wrong.
-- A key belongs to a **service account**, never to a person, and that account
-  carries a **human owner** who answers for it. An API call records the owner
-  as the actor and names the key in the payload.
+- A key is used by a machine and carries a **named human owner** who answers
+  for it — a key per teammate is no anomaly. What a key never does is act *as*
+  that person. An API call records the owner as the actor and names the key in
+  the payload.
 - A key never inherits its owner's role: its power comes from its scopes alone.
 - Scopes read `resource:verb`. The two broad ones, `all:read` and `all:write`,
   are independent — one per verb, neither covering the other, and writing never

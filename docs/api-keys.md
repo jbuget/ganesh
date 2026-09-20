@@ -26,7 +26,7 @@ precisely because there is no way to authenticate the CI.
 
 | Question | Decision |
 |---|---|
-| What a key is attached to | A **service account**, never a person |
+| What a key is attached to | A machine, and the **named human** who answers for it |
 | What a key can do | Read **and** write, each behind an explicit scope |
 | What a key opens by default | **Nothing.** A route opts in, one at a time |
 | Who creates and revokes | Managers only |
@@ -34,7 +34,12 @@ precisely because there is no way to authenticate the CI.
 | Expiry | Optional, one year offered in the form |
 | Who answers for a key | Its owner, a named human |
 
-### Why no keys bound to a person
+### Why a key never acts *as* a person
+
+**A key is already attached to a person.** `owner_id` is required and points at
+`users`; `MachineCaller.actor_id` hands that owner to every use case, so a write
+made with a key is traced to a named human. What a key never does is act *as*
+that human.
 
 A key acting as a user would be « limited by that user's data scope ». That
 scope does not exist. In `entry_router.py` the target is a plain query
@@ -49,6 +54,11 @@ guards exactly three routes in the whole product: reopening a validated month,
 and the two user-management ones. A key « as Jérémy » would therefore be
 limited by nothing, while doubling the model. Revisit the day a real per-user
 data scope exists.
+
+So the rule to hold is not « never a person ». It is: **a key carries a human
+who answers for it, and never that human's role.** One key per teammate — a
+terminal client reaching Ganesh on their behalf — breaks nothing here, and the
+audit reads better for it than a shared key would.
 
 ## A key opens nothing by default
 
@@ -201,7 +211,7 @@ nothing at all. A promise the API does not keep is worse than a missing box.
 | `catalog:read` | `GET /projects/catalog` — machine-only | — |
 | `roadmap:read` | `GET /planning/roadmap` | the projection and the simulations: an arbitration, not a reading |
 | `stats:read` | `GET /stats` | — |
-| `projects:read` | `GET /projects`, `/projects/{id}`, `/projects/board` | — |
+| `projects:read` | `GET /projects`, `/projects/{id}/detail`, `/projects/board` | — |
 | `projects:write` | create, correct, change phase, archive, unarchive, import | delete, attach/detach, staff, move a card, and the whole service sheet |
 | `updates:write` | `POST /projects/{id}/updates` | correcting and removing a post |
 | `entries:read` | `GET /entries/export` | writing time, in any form |
@@ -231,8 +241,10 @@ nothing at all. A promise the API does not keep is worse than a missing box.
   given in confidence; a log of who felt what is not a log, and a scope that
   opened them would be a broken promise, not a feature.
 
-A key with no scope can do nothing — that is a valid, useless key, and the form
-does not produce one.
+**A key must carry at least one scope**, and that is enforced rather than
+merely unoffered: `ApiKey.__post_init__` refuses an empty list, and
+`CreateApiKeyRequest` declares `Field(min_length=1)`. A key that opens nothing
+is a credential somebody has to reason about later for no reason at all.
 
 ### The two broad ones
 
@@ -424,9 +436,11 @@ shut for longer: that is the difference between a limit and a punishment.
 caller holding a real key; turning away a forged one costs a hash and must not
 eat anyone's allowance.
 
-Every answer carries `X-RateLimit-Limit` and `X-RateLimit-Remaining` — a
-caller should be able to slow down before being told to — and a `429` adds
-`Retry-After`, rounded up, because « wait 0 s » invites an instant retry.
+Every answer **to a key that has proved itself** carries `X-RateLimit-Limit`
+and `X-RateLimit-Remaining` — a caller should be able to slow down before being
+told to — and a `429` adds `Retry-After`, rounded up, because « wait 0 s »
+invites an instant retry. A `401` and a `403` carry neither, which follows from
+the rule just above: the bucket is only consulted once the key is known.
 
 ```
 API_KEY_RATE_ALLOWANCE=120       # calls
@@ -448,7 +462,8 @@ than a script is a reason to add a column, and a reason to have the UI say so.
 
 ## The screen
 
-A new view, `/api`, reachable from the sidebar by everyone.
+A new view, `/api-keys`, reachable from the sidebar by everyone, where it
+reads « API ». The path is not `/api`: under Next.js that belongs to the BFF.
 
 The sidebar (`client/src/components/organisms/AppSidebar.tsx`) filters nothing
 by role, and « API » does not change that: « Utilisateurs » already shows for
@@ -482,7 +497,8 @@ button. For everyone else, « Aucune clé » and nothing to click.
 
 Named so nobody wonders whether they were forgotten:
 
-- **Keys bound to a person.** See *Why no keys bound to a person*.
+- **A key inheriting its owner's role or data scope.** See *Why a key never
+  acts as a person*.
 - **Service accounts as objects of their own.** A key is one, for now.
   Splitting them is what rotation needs.
 - **Rotation with an overlap window.** V1 rotation is: create the new one, move
