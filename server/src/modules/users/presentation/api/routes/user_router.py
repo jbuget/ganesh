@@ -13,9 +13,11 @@ from src.modules.users.application.dtos.user_dto import (
     SetUserActiveCommand,
     UpdateUserIdentityCommand,
 )
+from src.modules.users.application.dtos.user_record_dto import GetUserRecordQuery
 from src.modules.users.application.use_cases.change_user_role import (
     ChangeUserRoleUseCase,
 )
+from src.modules.users.application.use_cases.get_user_record import GetUserRecordUseCase
 from src.modules.users.application.use_cases.list_users import ListUsersUseCase
 from src.modules.users.application.use_cases.set_user_active import SetUserActiveUseCase
 from src.modules.users.application.use_cases.update_user_identity import (
@@ -23,6 +25,12 @@ from src.modules.users.application.use_cases.update_user_identity import (
 )
 from src.modules.users.domain.entities.user import User
 from src.modules.users.presentation.api.mappers.user_mapper import to_user_response
+from src.modules.users.presentation.api.mappers.user_record_mapper import (
+    to_user_record_response,
+)
+from src.modules.users.presentation.api.schemas.user_record_schemas import (
+    UserRecordResponse,
+)
 from src.modules.users.presentation.api.schemas.user_schemas import (
     ChangeRoleRequest,
     SetActiveRequest,
@@ -34,6 +42,7 @@ from src.modules.users.presentation.dependencies import (
     get_list_users_use_case,
     get_set_user_active_use_case,
     get_update_user_identity_use_case,
+    get_user_record_use_case,
 )
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -54,6 +63,27 @@ async def list_users(
     """Lists the teammates. Anyone may look at anyone's month."""
     users = await use_case.execute(include_inactive=include_inactive)
     return [to_user_response(user) for user in users]
+
+
+@router.get(
+    "/{user_id}/record",
+    response_model=UserRecordResponse,
+    operation_id="getUserRecord",
+)
+async def get_user_record(
+    user_id: int,
+    _: User = Depends(get_current_user),
+    use_case: GetUserRecordUseCase = Depends(get_user_record_use_case),
+) -> UserRecordResponse:
+    """What the register holds on a teammate. Open to the whole team.
+
+    Anyone may look at anyone's month, so anyone may read what leads to it:
+    the missions somebody is attached to, the time they declared lately, and
+    where their months stand. Nothing here is a manager's secret — changing a
+    role or an access still is.
+    """
+    record = await use_case.execute(GetUserRecordQuery(user_id=user_id))
+    return to_user_record_response(record)
 
 
 @router.patch(
