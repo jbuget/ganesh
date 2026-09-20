@@ -1,6 +1,12 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { landingUrl, openPending, safeLanding, sealPending } from "./pending";
+import {
+  appOrigin,
+  landingUrl,
+  openPending,
+  safeLanding,
+  sealPending,
+} from "./pending";
 
 describe("the secrets of a sign-in under way", () => {
   beforeEach(() => {
@@ -84,5 +90,43 @@ describe("the final address", () => {
       `${origin}/`,
     );
     expect(landingUrl("", origin).toString()).toBe(`${origin}/`);
+  });
+});
+
+describe("the origin the application answers from", () => {
+  const initial = { ...process.env };
+  afterEach(() => {
+    process.env = { ...initial };
+  });
+
+  /**
+   * Behind CloudFront the compute server knows itself as localhost:3000, and a
+   * redirect built from the request sent people to an address that is not the
+   * site. What the environment says the application answers from is the only
+   * thing that survives the hops.
+   */
+  it("prefers what the environment declares over what the request believes", () => {
+    process.env.APP_URL = "https://ganesh.waat.tools";
+
+    expect(appOrigin("https://localhost:3000")).toBe("https://ganesh.waat.tools");
+  });
+
+  it("keeps the origin alone, whatever path APP_URL carries", () => {
+    process.env.APP_URL = "https://ganesh.waat.tools/quelque-part";
+
+    expect(appOrigin("https://localhost:3000")).toBe("https://ganesh.waat.tools");
+  });
+
+  it("falls back on the request when nothing is declared", () => {
+    delete process.env.APP_URL;
+
+    expect(appOrigin("http://localhost:3005")).toBe("http://localhost:3005");
+  });
+
+  /** An unusable APP_URL must not take the sign-in down with it. */
+  it("falls back on the request when what is declared makes no sense", () => {
+    process.env.APP_URL = "pas-une-adresse";
+
+    expect(appOrigin("http://localhost:3005")).toBe("http://localhost:3005");
   });
 });

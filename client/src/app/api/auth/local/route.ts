@@ -11,7 +11,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 
-import { landingUrl, safeLanding } from "@/lib/auth/pending";
+import { appOrigin, landingUrl, safeLanding } from "@/lib/auth/pending";
 import { sealSession, sessionCookie } from "@/lib/auth/session";
 
 const API_URL = process.env.API_URL ?? "http://localhost:8000";
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   });
 
   if (!answer.ok) {
-    const url = new URL("/connexion", request.nextUrl.origin);
+    const url = new URL("/connexion", appOrigin(request.nextUrl.origin));
     url.searchParams.set(
       "erreur",
       answer.status === 404 ? "hors-service" : "identifiants",
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   };
 
   const response = NextResponse.redirect(
-    landingUrl(landing, request.nextUrl.origin),
+    landingUrl(landing, appOrigin(request.nextUrl.origin)),
     // 303: what follows a form is a GET, not a second POST on the landing page.
     { status: 303 },
   );
