@@ -51,7 +51,7 @@ export function RoadmapPage() {
       header={
         <PageHeader
           title="Feuille de route"
-          subtitle="Ce qui a été livré, ce qui est annoncé, et ce que la projection en dit"
+          subtitle="Ce qu'on a livré, ce qu'on annonce, et ce que la projection en dit."
           // The window and the grouping stay up here, apart from the criteria.
           // They settle *how* the drawing is read — over what stretch, gathered
           // under what — where the bar below settles *what* is drawn. Two

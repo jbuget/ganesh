@@ -36,7 +36,7 @@ export function StatsPage() {
       subtitle={
         statistics
           ? summarise(statistics.period)
-          : "Mesure de l'usage et de la valeur de Timesheet"
+          : "Ce que vaut cet outil : sa couverture, sa fiabilité, son usage."
       }
       actions={<RangeSelect value={range} onChange={setRange} />}
     />

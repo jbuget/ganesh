@@ -32,7 +32,7 @@ export function MoodPage() {
   const header = (
     <PageHeader
       title="Moral de l'équipe"
-      subtitle="Les 14 derniers jours, jours ouvrés seulement. Chacun répond depuis son Accueil."
+      subtitle="Comment va l'équipe, sur les quatorze derniers jours ouvrés."
     />
   );
 
