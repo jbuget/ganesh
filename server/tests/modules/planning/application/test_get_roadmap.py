@@ -8,14 +8,20 @@ from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.planning.application.use_cases.get_roadmap import GetRoadmapUseCase
 from src.modules.planning.domain.entities.roadmap import SegmentKind
 from src.modules.planning.domain.entities.workload_plan import PlanBlocker
+from src.modules.planning.domain.services.roadmap_filtering import (
+    NO_ROADMAP_FILTER,
+    RoadmapFilters,
+)
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectCategory,
     ProjectKind,
+    ProjectPriority,
     ProjectStatus,
 )
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.users.domain.entities.user import User
+from src.shared.enums.department import Department
 from src.shared.exceptions.domain_exceptions import ValidationError
 from tests.helpers.in_memory_repositories import (
     InMemoryEntryRepository,
@@ -43,6 +49,7 @@ def a_mission(
     category: ProjectCategory | None = None,
     is_active: bool = True,
     parent_id: int | None = None,
+    priority: ProjectPriority | None = None,
 ) -> Project:
     return Project(
         id=project_id,
@@ -54,6 +61,7 @@ def a_mission(
         category=category,
         is_active=is_active,
         parent_id=parent_id,
+        priority=priority,
     )
 
 
@@ -78,11 +86,15 @@ async def read(
     assigned: bool = True,
     from_day: date | None = FROM_DAY,
     to_day: date | None = TO_DAY,
+    departments: dict[int, list[Department]] | None = None,
+    filters: RoadmapFilters = NO_ROADMAP_FILTER,
 ):
     details = InMemoryProjectDetailRepository()
     for project_id, crossings in (phases or {}).items():
         for status, day in crossings.items():
             await details.mark_phase_reached(project_id, status, day)
+    for project_id, served in (departments or {}).items():
+        await details.set_departments(project_id, served)
 
     assignees = InMemoryProjectAssigneeRepository()
     if assigned:
@@ -97,7 +109,9 @@ async def read(
         assignees=assignees,
         users=InMemoryUserRepository([ALICE]),
     )
-    return await use_case.execute(from_day=from_day, to_day=to_day, today=TODAY)
+    return await use_case.execute(
+        from_day=from_day, to_day=to_day, today=TODAY, filters=filters
+    )
 
 
 class TestWhatTheRoadmapShows:
@@ -371,3 +385,84 @@ class TestTheWindow:
     async def test_a_window_read_upside_down_is_refused(self) -> None:
         with pytest.raises(ValidationError):
             await read([a_mission()], from_day=TO_DAY, to_day=FROM_DAY)
+
+
+class TestNarrowingWhatIsShown:
+    """Filtering a roadmap is choosing what to show, not what exists."""
+
+    async def test_nothing_asked_for_shows_the_whole_portfolio(self) -> None:
+        roadmap = await read([a_mission(10), a_mission(11, "Extranet")])
+
+        assert len(roadmap.missions) == 2
+
+    async def test_a_phase_asked_for_leaves_the_others_out(self) -> None:
+        roadmap = await read(
+            [
+                a_mission(10, "Portail"),
+                a_mission(11, "Extranet", status=ProjectStatus.OPERATIONS),
+            ],
+            filters=RoadmapFilters(phases=(ProjectStatus.DEVELOPMENT,)),
+        )
+
+        assert [line.label for line in roadmap.missions] == ["Portail"]
+
+    async def test_the_tally_counts_what_was_kept_and_nothing_else(self) -> None:
+        # The reason this is narrowed here rather than in the browser: the
+        # figures above the bars must speak of the bars below them.
+        roadmap = await read(
+            [
+                a_mission(10, "Portail", estimated=None),
+                a_mission(11, "Extranet", status=ProjectStatus.OPERATIONS),
+                a_mission(12, "Intranet", status=ProjectStatus.OPERATIONS),
+            ],
+            filters=RoadmapFilters(phases=(ProjectStatus.DEVELOPMENT,)),
+        )
+
+        assert (roadmap.summary.missions, roadmap.summary.unestimated) == (1, 1)
+
+    async def test_a_department_asked_for_keeps_the_missions_serving_it(self) -> None:
+        roadmap = await read(
+            [a_mission(10, "Portail"), a_mission(11, "Extranet")],
+            departments={
+                10: [Department.LANDLORDS],
+                11: [Department.CONDOMINIUM],
+            },
+            filters=RoadmapFilters(departments=(Department.LANDLORDS,)),
+        )
+
+        assert [line.label for line in roadmap.missions] == ["Portail"]
+
+    async def test_a_work_package_is_judged_on_the_axis_of_its_project(self) -> None:
+        # It carries none of its own, and the band it is drawn in is its
+        # project's: filtering on that axis must not make it vanish.
+        roadmap = await read(
+            [
+                a_mission(10, "Portail", category=ProjectCategory.SUSTAIN),
+                a_mission(11, "Lot 1", kind=ProjectKind.WORK_PACKAGE, parent_id=10),
+            ],
+            filters=RoadmapFilters(categories=(ProjectCategory.SUSTAIN,)),
+        )
+
+        assert [line.label for line in roadmap.missions] == ["Lot 1", "Portail"]
+
+    async def test_a_mission_hidden_by_a_filter_still_takes_the_team_s_time(
+        self,
+    ) -> None:
+        """The rule the whole ordering of the use case exists for.
+
+        Two missions on one person, and the urgent one is served first. Hiding
+        it must not bring the other forward: a roadmap whose dates move when a
+        box is ticked is one nobody can take to a committee.
+        """
+        portfolio = [
+            a_mission(10, "Refonte", estimated=20.0, priority=ProjectPriority.CRITICAL),
+            a_mission(11, "Extranet", estimated=5.0, priority=ProjectPriority.LOW),
+        ]
+
+        whole = await read(portfolio)
+        narrowed = await read(portfolio, filters=RoadmapFilters(name="extranet"))
+
+        [extranet] = [line for line in whole.missions if line.label == "Extranet"]
+        [alone] = narrowed.missions
+        assert alone.landing_date is not None
+        assert alone.landing_date == extranet.landing_date

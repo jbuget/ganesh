@@ -54,6 +54,42 @@ export interface MissionFilters {
   publications: PublicationState[];
 }
 
+/**
+ * One question a mission screen can ask.
+ *
+ * Screens do not all ask the same ones: the reference list tends the
+ * catalogue and asks about publication, the roadmap is shown to a committee
+ * and asks nothing of the sort. Naming the criteria lets one bar serve the
+ * three without any of them growing a copy of it.
+ */
+export type Criterion = keyof MissionFilters;
+
+/** Every question there is, in the order the bar asks them. */
+export const EVERY_CRITERION: Criterion[] = [
+  "name",
+  "phases",
+  "categories",
+  "departments",
+  "priorities",
+  "contributors",
+  "types",
+  "publications",
+  "states",
+];
+
+/** Whether a criterion is asking anything, criterion by criterion. */
+const IS_SET: Record<Criterion, (filters: MissionFilters) => boolean> = {
+  name: (filters) => filters.name.trim() !== "",
+  phases: (filters) => filters.phases.length > 0,
+  categories: (filters) => filters.categories.length > 0,
+  departments: (filters) => filters.departments.length > 0,
+  priorities: (filters) => filters.priorities.length > 0,
+  contributors: (filters) => filters.contributors.length > 0,
+  types: (filters) => filters.types.length > 0,
+  publications: (filters) => filters.publications.length > 0,
+  states: (filters) => filters.states.length > 0,
+};
+
 /** The whole board: no criterion set. */
 export const NO_FILTER: MissionFilters = {
   name: "",
@@ -110,18 +146,18 @@ function normalise(body: string): string {
     .toLowerCase();
 }
 
-export function hasActiveFilter(filters: MissionFilters): boolean {
-  return (
-    filters.name.trim() !== "" ||
-    filters.phases.length > 0 ||
-    filters.categories.length > 0 ||
-    filters.priorities.length > 0 ||
-    filters.contributors.length > 0 ||
-    filters.departments.length > 0 ||
-    filters.types.length > 0 ||
-    filters.states.length > 0 ||
-    filters.publications.length > 0
-  );
+/**
+ * Whether anything is being asked, among the criteria the screen offers.
+ *
+ * A screen that does not offer a criterion must not light up « Effacer » for
+ * one: an address carrying `publication=published` opened on the roadmap
+ * would otherwise show a filter nobody can see, let alone undo.
+ */
+export function hasActiveFilter(
+  filters: MissionFilters,
+  criteria: Criterion[] = EVERY_CRITERION,
+): boolean {
+  return criteria.some((criterion) => IS_SET[criterion](filters));
 }
 
 /**
@@ -236,9 +272,28 @@ function knownValues<T extends string>(
  * The filters as the URL carries them.
  *
  * An unknown value is ignored: a mistyped address must show the board, not an
- * empty screen with no explanation.
+ * empty screen with no explanation. So is a criterion the screen does not
+ * offer, for the same reason: it could neither be read nor undone.
  */
-export function readFilters(params: URLSearchParams): MissionFilters {
+export function readFilters(
+  params: URLSearchParams,
+  criteria: Criterion[] = EVERY_CRITERION,
+): MissionFilters {
+  return restrictedTo(readEveryFilter(params), criteria);
+}
+
+/** Blanks out whatever the screen does not ask about. */
+function restrictedTo(filters: MissionFilters, criteria: Criterion[]): MissionFilters {
+  // Starts from nothing asked and copies back what the screen offers, rather
+  // than listing the nine criteria a fourth time: adding one must not mean
+  // remembering to come back here.
+  return criteria.reduce<MissionFilters>(
+    (kept, criterion) => ({ ...kept, [criterion]: filters[criterion] }),
+    { ...NO_FILTER },
+  );
+}
+
+function readEveryFilter(params: URLSearchParams): MissionFilters {
   return {
     name: params.get(PARAMETERS.name) ?? "",
     phases: knownValues<ProjectStatus>(params, PARAMETERS.phase, KNOWN_PHASES),

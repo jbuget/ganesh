@@ -2,17 +2,22 @@ import { describe, expect, it } from "vitest";
 
 import type { RoadmapMissionResponse } from "@/lib/api/generated/model";
 import {
+  DEFAULT_GROUPING,
+  DEFAULT_SPAN,
   bandsOf,
   dayAfter,
   daysBetween,
   groupingLabel,
   monthsOf,
+  readGrouping,
+  readSpan,
   silentNotice,
   speaks,
   placeOn,
   positionOf,
   roadmapNotice,
   slipOf,
+  writeView,
 } from "@/lib/roadmap";
 
 const FROM = "2026-01-01";
@@ -334,5 +339,46 @@ describe("the thread between what was announced and where it lands", () => {
   it("draws nothing when either end is missing", () => {
     expect(slipOf(late({ target_date: "2026-04-01" }), FROM, TO)).toBeNull();
     expect(slipOf(late({ landing_date: "2026-07-01" }), FROM, TO)).toBeNull();
+  });
+});
+
+describe("the view held by the address", () => {
+  it("reads back the span and the grouping it wrote", () => {
+    const params = new URLSearchParams();
+    writeView(params, { months: 12, grouping: "status" });
+
+    expect(readSpan(params)).toBe(12);
+    expect(readGrouping(params)).toBe("status");
+  });
+
+  it("writes nothing for what was left as it was", () => {
+    // An address one can read says what was chosen, not what was not.
+    const params = new URLSearchParams("mission=12");
+    writeView(params, { months: DEFAULT_SPAN, grouping: DEFAULT_GROUPING });
+
+    expect(params.toString()).toBe("mission=12");
+  });
+
+  it("drops a setting that went back to its default", () => {
+    const params = new URLSearchParams("months=12&grouping=status");
+    writeView(params, { months: DEFAULT_SPAN, grouping: DEFAULT_GROUPING });
+
+    expect(params.toString()).toBe("");
+  });
+
+  it("falls back on the usual view rather than emptying the screen", () => {
+    // A mistyped address must show a roadmap, not a blank page.
+    const params = new URLSearchParams("months=42&grouping=sieste");
+
+    expect(readSpan(params)).toBe(DEFAULT_SPAN);
+    expect(readGrouping(params)).toBe(DEFAULT_GROUPING);
+  });
+
+  it("leaves the other parameters in place", () => {
+    const params = new URLSearchParams("mission=12&phase=scoping");
+    writeView(params, { months: 3, grouping: "priority" });
+
+    expect(params.get("mission")).toBe("12");
+    expect(params.getAll("phase")).toEqual(["scoping"]);
   });
 });

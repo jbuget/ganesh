@@ -30,6 +30,7 @@ from src.modules.planning.application.use_cases.manage_simulations import (
 )
 from src.modules.planning.domain.entities.roadmap import Roadmap, RoadmapMission
 from src.modules.planning.domain.entities.simulation import Simulation
+from src.modules.planning.domain.services.roadmap_filtering import RoadmapFilters
 from src.modules.planning.domain.services.roadmap_window import (
     DEFAULT_ROADMAP_MONTHS,
     MAX_ROADMAP_MONTHS,
@@ -58,7 +59,14 @@ from src.modules.planning.presentation.dependencies import (
     get_update_simulation_use_case,
     get_workload_plan_use_case,
 )
+from src.modules.projects.domain.entities.project import (
+    ProjectCategory,
+    ProjectKind,
+    ProjectPriority,
+    ProjectStatus,
+)
 from src.modules.users.domain.entities.user import User
+from src.shared.enums.department import Department
 from src.shared.utils.initials import initials
 
 router = APIRouter(prefix="/planning", tags=["planning"])
@@ -174,6 +182,15 @@ async def read_roadmap(
     months: int = Query(default=DEFAULT_ROADMAP_MONTHS, ge=1, le=MAX_ROADMAP_MONTHS),
     from_day: date | None = None,
     to_day: date | None = None,
+    name: str = Query(default=""),
+    phase: list[ProjectStatus] = Query(default=[]),
+    category: list[ProjectCategory] = Query(default=[]),
+    priority: list[ProjectPriority] = Query(default=[]),
+    # Named `kinds` here and `type` in the address: the URL vocabulary is the
+    # one the kanban already uses, and a parameter called `type` would shadow
+    # the builtin inside this function.
+    kinds: list[ProjectKind] = Query(default=[], alias="type"),
+    department: list[Department] = Query(default=[]),
     _: User = Depends(get_current_user),
     use_case: GetRoadmapUseCase = Depends(get_roadmap_use_case),
 ) -> RoadmapResponse:
@@ -186,9 +203,30 @@ async def read_roadmap(
     in progress included, with the month before thrown in for context. Naming
     both dates instead reads exactly that window, which is how a year already
     over is looked back on.
+
+    The criteria are named as the kanban and the reference list already name
+    them in their address — `phase`, `category`, `priority`, `type`,
+    `department` — so that one vocabulary covers the three screens. Repeating
+    a parameter adds a value to its criterion; an empty one takes nothing
+    away.
+
+    Narrowing here rather than in the browser is what keeps the tally honest:
+    the figures above the bars are read off the lines that were kept.
     """
     return to_roadmap_response(
-        await use_case.execute(months=months, from_day=from_day, to_day=to_day)
+        await use_case.execute(
+            months=months,
+            from_day=from_day,
+            to_day=to_day,
+            filters=RoadmapFilters(
+                name=name,
+                phases=tuple(phase),
+                categories=tuple(category),
+                priorities=tuple(priority),
+                kinds=tuple(kinds),
+                departments=tuple(department),
+            ),
+        )
     )
 
 

@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/atoms/PageHeader";
 import { RoadmapLegend } from "@/components/atoms/RoadmapLegend";
 import { RoadmapSummaryBar } from "@/components/atoms/RoadmapSummaryBar";
 import { SpanSelect } from "@/components/atoms/SpanSelect";
+import { MissionFilters } from "@/components/molecules/MissionFilters";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { RoadmapTimeline } from "@/components/organisms/RoadmapTimeline";
@@ -32,6 +33,11 @@ export function RoadmapPage() {
     setMonths,
     grouping,
     setGrouping,
+    filters,
+    hasFilter,
+    setFilters,
+    clearFilters,
+    criteria,
     saveFailed,
     setTargetDate,
     refresh,
@@ -46,6 +52,11 @@ export function RoadmapPage() {
         <PageHeader
           title="Feuille de route"
           subtitle="Ce qui a été livré, ce qui est annoncé, et ce que la projection en dit"
+          // The window and the grouping stay up here, apart from the criteria.
+          // They settle *how* the drawing is read — over what stretch, gathered
+          // under what — where the bar below settles *what* is drawn. Two
+          // questions, two places, and the one that governs the whole screen
+          // sits with its title.
           actions={
             <>
               <GroupingSelect value={grouping} onChange={setGrouping} />
@@ -56,6 +67,14 @@ export function RoadmapPage() {
       }
     >
       <div className="flex h-full min-h-0 flex-col">
+        <MissionFilters
+          filters={filters}
+          hasFilter={hasFilter}
+          onChange={setFilters}
+          onClear={clearFilters}
+          criteria={criteria}
+        />
+
         {roadmap && <RoadmapSummaryBar summary={roadmap.summary} />}
 
         {saveFailed && (
