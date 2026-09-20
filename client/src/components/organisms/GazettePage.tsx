@@ -39,7 +39,7 @@ export function GazettePage() {
   const header = (
     <PageHeader
       title="La Gazette"
-      subtitle="Ce que le mois a laissé au journal"
+      subtitle="Ce que le mois a changé, projet par projet."
       actions={
         <>
           {digest && digest.version !== null && (

@@ -115,7 +115,7 @@ export function BoardPage() {
             // and the header says why rather than leaving one to wonder.
             hasFilter
               ? "Tableau filtré : les cartes ne se déplacent plus. Effacez les filtres pour les réorganiser."
-              : "Glissez un projet pour changer sa phase ou le réordonner. L'ordre choisi est conservé."
+              : "Où en est chaque projet, phase par phase."
           }
         />
       }

@@ -42,8 +42,8 @@ export function ApiMcpPage() {
           title="API / MCP"
           subtitle={
             screen.isManager
-              ? "Les clés qui ouvrent l'API, et de quoi brancher un client MCP dessus. Chaque création et chaque révocation est tracée."
-              : "Consultable par toute l'équipe. Seul un manager crée ou révoque une clé."
+              ? "Quelles machines accèdent à Ganesh, ce que chaque clé ouvre, et comment y brancher un terminal. Chaque création et chaque révocation est tracée."
+              : "Quelles machines accèdent à Ganesh, ce que chaque clé ouvre, et comment y brancher un terminal. Seul un manager crée ou révoque une clé."
           }
           actions={
             screen.isManager && tab === "api" ? (

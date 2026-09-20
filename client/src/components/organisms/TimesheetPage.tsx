@@ -55,7 +55,7 @@ export function TimesheetPage() {
       header={
         <PageHeader
           title="Saisie des temps"
-          subtitle="Déclarez votre temps en journées ou demi-journées. Tant que le mois n'est pas validé, tout reste modifiable."
+          subtitle="Où est passé votre temps ce mois-ci, et ce qu'il reste à déclarer."
           actions={
             <>
               <TeammateSelector

@@ -68,7 +68,7 @@ export function PlanningPage() {
           subtitle={
             plan
               ? `Du ${formatShortDate(plan.from_day)} au ${formatShortDate(plan.to_day)} · 4,5 j planifiables par personne et par semaine`
-              : "Projection du reste à faire sur les disponibilités déclarées"
+              : "Ce qui tient dans les semaines à venir, et qui le porte."
           }
           actions={
             <>

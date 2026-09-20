@@ -19,11 +19,13 @@ function show(overrides: Record<string, unknown> = {}) {
 }
 
 describe("MoodPage", () => {
-  it("says the window it reads, and where one answers", () => {
+  it("says the window it reads", () => {
     show();
 
     expect(screen.getByText("Moral de l'équipe")).toBeInTheDocument();
-    expect(screen.getByText(/Chacun répond depuis son Accueil/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/sur les quatorze derniers jours ouvrés/),
+    ).toBeInTheDocument();
   });
 
   it("lays the fortnight out, the most recent day first", () => {
