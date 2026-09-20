@@ -1,7 +1,12 @@
+"use client";
+
+import { ChevronRight } from "lucide-react";
+import { useState } from "react";
+
 import { DigestFactLine } from "@/components/atoms/DigestFactLine";
 import type { ChapterResponse, MovementKind } from "@/lib/api/generated/model";
 import { formatShortDate } from "@/lib/dates";
-import { chapterTitle, movementPredicate } from "@/lib/gazette";
+import { chapterLine, chapterTitle } from "@/lib/gazette";
 
 interface DigestChaptersProps {
   chapters: ChapterResponse[];
@@ -29,58 +34,74 @@ const DOTS: Record<MovementKind, string> = {
 };
 
 /**
- * The month, mission by mission, each one day after day.
+ * The month, project by project, each one day after day.
  *
  * Gathered rather than flat: a single list of everything that happened reads
- * as the log it came from, where the same mission is picked up and dropped
- * ten times over. Under its own heading, a mission's month reads as a story —
- * and its work packages are told inside it, because that is where their month
- * belongs.
+ * as the log it came from, where the same project is picked up and dropped
+ * ten times over. Under its own heading, a project's month reads as a story —
+ * and a work package's facts are told among its project's, because a lot's
+ * month is part of its project's month, not a chronicle of its own.
  *
- * The heading names the mission, so the lines under it do not: « est passé en
- * exploitation », not « WAATcher est passé en exploitation » under a heading
- * already reading « WAATcher ».
+ * Closed to begin with, all of them. A month of tidying-up touches a dozen
+ * projects, and a dozen chronicles unfolded bury the two that had something
+ * to say. Folded, the section is first read as what it is — the list of
+ * projects the month touched, and how much happened to each.
  */
 export function DigestChapters({ chapters }: DigestChaptersProps) {
-  return (
-    <div className="flex flex-col gap-4">
-      {chapters.map((chapter) => (
-        <section key={chapter.project_id ?? "team"}>
-          <h4 className="text-sm font-medium text-slate-900">
-            {chapterTitle(chapter)}
-          </h4>
-          <Lines chapter={chapter} />
+  const [opened, setOpened] = useState<(number | null)[]>([]);
 
-          {chapter.packages.map((packageChapter) => (
-            // Indented and named again: a package's month is its own, told
-            // inside its project rather than merged into it.
-            <div
-              key={packageChapter.project_id}
-              className="mt-1 border-l border-slate-200 pl-3"
+  return (
+    <ul className="overflow-hidden rounded-lg border border-slate-200">
+      {chapters.map((chapter) => {
+        const isOpen = opened.includes(chapter.project_id);
+        const title = chapterTitle(chapter);
+
+        return (
+          <li
+            key={chapter.project_id ?? "team"}
+            className="border-b border-slate-100 last:border-b-0"
+          >
+            <button
+              type="button"
+              aria-expanded={isOpen}
+              className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-slate-50"
+              onClick={() =>
+                setOpened((open) =>
+                  isOpen
+                    ? open.filter((it) => it !== chapter.project_id)
+                    : [...open, chapter.project_id],
+                )
+              }
             >
-              <h5 className="text-sm text-slate-600">{chapterTitle(packageChapter)}</h5>
-              <Lines chapter={packageChapter} />
-            </div>
-          ))}
-        </section>
-      ))}
-    </div>
-  );
-}
+              <ChevronRight
+                className={`size-4 shrink-0 text-slate-400 transition-transform ${
+                  isOpen ? "rotate-90" : ""
+                }`}
+                aria-hidden
+              />
+              <span className="min-w-0 flex-1 truncate text-sm text-slate-900">
+                {title}
+              </span>
+              <span className="shrink-0 text-xs tabular-nums text-slate-500">
+                {chapter.movements.length}
+              </span>
+            </button>
 
-function Lines({ chapter }: { chapter: ChapterResponse }) {
-  if (chapter.movements.length === 0) return null;
-
-  return (
-    <ul>
-      {chapter.movements.map((movement, rank) => (
-        <DigestFactLine
-          key={`${movement.at}-${movement.kind}-${rank}`}
-          sentence={movementPredicate(movement)}
-          dot={DOTS[movement.kind] ?? "bg-slate-300"}
-          when={formatShortDate(movement.at)}
-        />
-      ))}
+            {isOpen && (
+              <ul className="px-3 pb-2 pl-9">
+                {chapter.movements.map((movement, rank) => (
+                  <DigestFactLine
+                    key={`${movement.at}-${movement.kind}-${rank}`}
+                    sentence={chapterLine(movement, chapter)}
+                    dot={DOTS[movement.kind] ?? "bg-slate-300"}
+                    when={formatShortDate(movement.at)}
+                  />
+                ))}
+              </ul>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

@@ -141,6 +141,25 @@ export interface ProseSegment {
 }
 
 /**
+ * One line of a chapter's chronicle.
+ *
+ * The heading names the project, so a line about the project itself does not
+ * repeat it. A line about one of its work packages does: under « WAATcher »,
+ * « Lot API a été archivé » is the only way to know which lot moved.
+ *
+ * The chapter about no project names every subject: what its heading says is
+ * « L'équipe », which identifies nobody.
+ */
+export function chapterLine(
+  movement: MovementResponse,
+  chapter: ChapterResponse,
+): string {
+  const isTheChapterItself =
+    chapter.project_id !== null && movement.project_id === chapter.project_id;
+  return isTheChapterItself ? movementPredicate(movement) : movementSentence(movement);
+}
+
+/**
  * What a chapter is called on screen.
  *
  * A chapter about no mission is named here rather than by the server: the
@@ -151,10 +170,13 @@ export function chapterTitle(chapter: ChapterResponse): string {
   return chapter.label === null ? "L'équipe" : missionName(chapter.label);
 }
 
-/** Every mission a chapter names, its packages counted in. */
+/** Every project a chapter names: its own, and those of its packages. */
 function namesIn(chapter: ChapterResponse): string[] {
   const own = chapter.label === null ? [] : [chapter.label];
-  return [...own, ...chapter.packages.flatMap(namesIn)];
+  const packages = chapter.movements
+    .filter((movement) => movement.project_id !== chapter.project_id)
+    .map((movement) => movement.subject);
+  return [...own, ...packages];
 }
 
 /**

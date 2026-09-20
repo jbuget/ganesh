@@ -570,14 +570,25 @@ Two things it will not do, and adding either would be a decision:
 - **Tell its own story.** Generating a digest is traced like any other gesture
   and left out of the next one, or the gazette would fill up with itself.
 
-**The month is told mission by mission, not as one list.** A flat chronology
-reads as the log it came from, the same mission picked up and dropped ten
-times over; gathered under its own heading, a mission's month reads as a
-story, and a work package is told inside its project. The heading names the
-mission, so the lines under it do not. The grouping is computed in the domain,
-as the Synthèse d'activité already folds packages into their project, and each
-movement carries the parent it had **the day the digest was read** — a package
-detached since must still be told where its month happened.
+**The month is told project by project, not as one list.** A flat chronology
+reads as the log it came from, the same project picked up and dropped ten
+times over; gathered under its own heading, a project's month reads as a
+story. The heading names the project, so the lines under it do not — except a
+line about one of its work packages, which names the lot, since the heading
+cannot.
+
+**A work package has no chronicle of its own**: its month is part of its
+project's. The grouping is computed in the domain, as the Synthèse d'activité
+already folds packages into their project, and each movement carries the
+parent it had **the day the digest was read** — a package detached since must
+still be told where its month happened. A parent the reference list can no
+longer name is no parent at all: the gazette does not open a chapter it would
+have to leave untitled.
+
+**Every chronicle is closed until it is asked for.** A month of tidying-up
+touches a dozen projects, and a dozen chronicles unfolded bury the two that
+had something to say. Folded, the section reads first as what it is: the list
+of projects the month touched, and how much happened to each.
 
 A label typed with a full stop at the end — several were written as sentences
 — loses it wherever the gazette builds the sentence itself: « … dans les PDF a

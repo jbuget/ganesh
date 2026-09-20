@@ -8,6 +8,7 @@ import type {
   TallyResponse,
 } from "@/lib/api/generated/model";
 import {
+  chapterLine,
   chapterTitle,
   emphasiseProjects,
   highlightSentence,
@@ -37,7 +38,6 @@ function chapter(fields: Partial<ChapterResponse>): ChapterResponse {
     project_id: 7,
     label: "Ganesh",
     movements: [],
-    packages: [],
     ...fields,
   };
 }
@@ -258,7 +258,7 @@ describe("projectLabels", () => {
     chapters: [
       chapter({
         label: "Ganesh",
-        packages: [chapter({ project_id: 9, label: "Lot API" })],
+        movements: [movement({ subject: "Lot API", project_id: 9 })],
       }),
       chapter({ project_id: null, label: null }),
     ],
@@ -269,7 +269,7 @@ describe("projectLabels", () => {
     versions: [],
   } satisfies DigestResponse;
 
-  it("gathers the projects the digest names, packages counted in", () => {
+  it("gathers the projects the digest names, its packages counted in", () => {
     expect(projectLabels(digest)).toEqual(["Ganesh", "Lot API", "WAATcher"]);
   });
 
@@ -416,5 +416,33 @@ describe("chapterTitle", () => {
 
   it("names in French the chapter that is about no mission", () => {
     expect(chapterTitle(chapter({ project_id: null, label: null }))).toBe("L'équipe");
+  });
+});
+
+describe("chapterLine", () => {
+  const ganesh = chapter({ project_id: 7, label: "Ganesh" });
+
+  it("leaves the project unnamed: its heading says it already", () => {
+    expect(
+      chapterLine(movement({ kind: "project_archived", project_id: 7 }), ganesh),
+    ).toBe("a été archivé");
+  });
+
+  it("names the work package, which the heading does not", () => {
+    expect(
+      chapterLine(
+        movement({ kind: "project_archived", subject: "Lot API", project_id: 9 }),
+        ganesh,
+      ),
+    ).toBe("Lot API a été archivé");
+  });
+
+  it("names the person in the chapter about no project", () => {
+    expect(
+      chapterLine(
+        movement({ kind: "teammate_joined", subject: "Sam", project_id: null }),
+        chapter({ project_id: null, label: null }),
+      ),
+    ).toBe("Sam a rejoint l'équipe");
   });
 });

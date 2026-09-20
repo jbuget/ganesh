@@ -50,7 +50,6 @@ def _to_chapter(chapter: Chapter) -> ChapterResponse:
         project_id=chapter.project_id,
         label=chapter.label,
         movements=[_to_movement(movement) for movement in chapter.movements],
-        packages=[_to_chapter(package) for package in chapter.packages],
     )
 
 

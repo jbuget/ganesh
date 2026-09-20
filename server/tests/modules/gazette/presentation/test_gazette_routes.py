@@ -221,7 +221,6 @@ async def test_the_month_comes_back_gathered_by_mission(screen: Screen) -> None:
 
     assert [chapter["label"] for chapter in body["chapters"]] == ["Ganesh"]
     assert len(body["chapters"][0]["movements"]) == 1
-    assert body["chapters"][0]["packages"] == []
 
 
 @pytest.mark.asyncio

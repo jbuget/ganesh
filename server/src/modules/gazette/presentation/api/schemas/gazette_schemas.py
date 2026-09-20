@@ -38,15 +38,17 @@ class MovementResponse(BaseModel):
 
 
 class ChapterResponse(BaseModel):
-    """One mission's month, its work packages told inside it."""
+    """One project's month, its work packages' facts told among its own."""
 
-    #: Nothing when the chapter gathers what was about no mission — somebody
+    #: Nothing when the chapter gathers what was about no project — somebody
     #: joining the team, or leaving it. What such a chapter is called is for
     #: the reading side to say, in French.
     project_id: int | None
     label: str | None
+    #: Everything that happened to the project and to its packages, in the
+    #: order it happened. A movement still says what it was about, so a line
+    #: about a package can name it where a line about the project need not.
     movements: list[MovementResponse]
-    packages: list["ChapterResponse"]
 
 
 class HighlightResponse(BaseModel):

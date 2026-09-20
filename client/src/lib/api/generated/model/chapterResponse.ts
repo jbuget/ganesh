@@ -7,11 +7,10 @@
 import type { MovementResponse } from "./movementResponse";
 
 /**
- * One mission's month, its work packages told inside it.
+ * One project's month, its work packages' facts told among its own.
  */
 export interface ChapterResponse {
   project_id: number | null;
   label: string | null;
   movements: MovementResponse[];
-  packages: ChapterResponse[];
 }

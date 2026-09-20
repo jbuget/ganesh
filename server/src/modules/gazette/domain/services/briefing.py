@@ -185,8 +185,11 @@ def _parent(
     package = projects.get(log.project_id) if log.project_id is not None else None
     if package is None or package.parent_id is None:
         return None, None
+
+    # A parent the reference list can no longer name is no parent at all: the
+    # gazette does not open a chapter it would have to leave untitled.
     parent = projects.get(package.parent_id)
-    return package.parent_id, parent.label if parent else None
+    return (package.parent_id, parent.label) if parent else (None, None)
 
 
 def _label(log: AuditLog, projects: Mapping[int, Project]) -> str | None:

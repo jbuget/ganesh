@@ -48,7 +48,6 @@ function aDigest(over: Partial<DigestResponse> = {}): DigestResponse {
             to_status: "operations",
           },
         ],
-        packages: [],
       },
     ] satisfies ChapterResponse[],
     highlights: [
@@ -122,9 +121,8 @@ describe("GazettePage", () => {
     render(<GazettePage />);
 
     expect(screen.queryByText(/rédigé par/)).toBeNull();
-    // Once as a fait marquant; the chronicle says it under its own heading.
     expect(screen.getByText(/WAATcher est passé en exploitation/)).toBeVisible();
-    expect(screen.getByText("est passé en exploitation")).toBeVisible();
+    expect(screen.getByRole("button", { name: /WAATcher/ })).toBeVisible();
   });
 
   it("reads the facts in French, never in the register's words", () => {
@@ -183,48 +181,58 @@ describe("GazettePage", () => {
     expect(gazette.generateDigest).toHaveBeenCalledTimes(1);
   });
 
-  it("names each mission once, over its own chronicle", () => {
+  it("keeps every chronicle closed until it is asked for", async () => {
+    /* A month of tidying-up touches a dozen projects; a dozen chronicles
+       unfolded bury the two that had something to say. */
+    render(<GazettePage />);
+
+    expect(screen.queryByText("est passé en exploitation")).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: /WAATcher/ }));
+
+    expect(screen.getByText("est passé en exploitation")).toBeVisible();
+  });
+
+  it("says how much happened to a project before it is opened", () => {
+    render(<GazettePage />);
+
+    expect(screen.getByRole("button", { name: /WAATcher/ })).toHaveTextContent("1");
+  });
+
+  it("names each project once, over its own chronicle", async () => {
     /* « WAATcher est passé en exploitation » under a heading reading
        « WAATcher » says it twice. */
     render(<GazettePage />);
 
-    expect(screen.getByRole("heading", { name: "WAATcher" })).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: /WAATcher/ }));
+
     expect(screen.getByText("est passé en exploitation")).toBeVisible();
   });
 
-  it("tells a work package inside its project", () => {
+  it("names a work package on its line, inside its project", async () => {
     gazette.digest = aDigest({
       chapters: [
         {
           project_id: 2,
           label: "WAATcher",
-          movements: [],
-          packages: [
+          movements: [
             {
+              kind: "project_archived",
+              at: "2026-09-20T09:00:00",
+              subject: "Lot API",
               project_id: 9,
-              label: "Lot API",
-              movements: [
-                {
-                  kind: "project_archived",
-                  at: "2026-09-20T09:00:00",
-                  subject: "Lot API",
-                  project_id: 9,
-                  from_status: null,
-                  to_status: null,
-                },
-              ],
-              packages: [],
+              from_status: null,
+              to_status: null,
             },
           ],
         },
       ],
     });
-
     render(<GazettePage />);
 
-    expect(screen.getByRole("heading", { name: "WAATcher" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Lot API" })).toBeVisible();
-    expect(screen.getByText("a été archivé")).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: /WAATcher/ }));
+
+    expect(screen.getByText("Lot API a été archivé")).toBeVisible();
   });
 
   it("drops the full stop a project name was typed with", () => {
@@ -234,16 +242,15 @@ describe("GazettePage", () => {
           project_id: 3,
           label: "Lecture des fichiers tableurs.",
           movements: [],
-          packages: [],
         },
       ],
     });
 
     render(<GazettePage />);
 
-    expect(
-      screen.getByRole("heading", { name: "Lecture des fichiers tableurs" }),
-    ).toBeVisible();
+    const opener = screen.getByRole("button", { name: /Lecture des fichiers/ });
+    expect(opener).toHaveTextContent("Lecture des fichiers tableurs");
+    expect(opener.textContent).not.toContain("tableurs.");
   });
 
   it("says plainly when a month left nothing behind", () => {

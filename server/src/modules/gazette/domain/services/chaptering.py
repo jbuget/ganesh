@@ -1,6 +1,6 @@
-"""Gathering a month's movements under the missions they are about.
+"""Gathering a month's movements under the projects they are about.
 
-Nothing is added and nothing is dropped: the same facts, read by mission
+Nothing is added and nothing is dropped: the same facts, read by project
 instead of by the clock. Within a chapter the clock still runs, which is what
 makes it a chronicle rather than a list.
 """
@@ -11,23 +11,22 @@ from datetime import datetime
 from src.modules.gazette.domain.entities.chapter import Chapter
 from src.modules.gazette.domain.entities.movement import Movement
 
-#: What a chapter about no mission is sorted as: after everything else,
+#: What a chapter about no project is sorted as: after everything else,
 #: whenever it happened. Who joined the team is context around the month's
 #: work rather than work itself, and opening on it would bury the month.
 _LAST = datetime.max
 
 
 def into_chapters(movements: Sequence[Movement]) -> list[Chapter]:
-    """The month, one chapter per mission, packages told inside their project.
+    """The month, one chapter per project, packages told among their project.
 
-    Chapters open in the order their missions first appear, a project counting
-    its packages' movements as its own for that: the chronicle keeps its
-    chronological spine, one step up.
+    A work package has no chapter of its own: its month is part of its
+    project's month. Chapters open in the order their projects first appear,
+    a project counting its packages' movements as its own for that — the
+    chronicle keeps its chronological spine, one step up.
     """
-    own: dict[int, list[Movement]] = {}
+    gathered: dict[int, list[Movement]] = {}
     labels: dict[int, str] = {}
-    packages: dict[int, list[int]] = {}
-    parents: dict[int, int] = {}
     teamless: list[Movement] = []
 
     for movement in movements:
@@ -35,57 +34,27 @@ def into_chapters(movements: Sequence[Movement]) -> list[Chapter]:
             teamless.append(movement)
             continue
 
-        own.setdefault(movement.project_id, []).append(movement)
-        labels[movement.project_id] = movement.subject
+        # A package is told under its project. Its own name stays on the
+        # movement, so the line can say which lot it was about.
+        told_under = movement.parent_id or movement.project_id
+        gathered.setdefault(told_under, []).append(movement)
 
         if movement.parent_id is None:
-            continue
-
-        # A package's project opens a chapter even when nothing happened to
-        # the project itself: a package read on its own would be taken for a
-        # project it is not.
-        parents[movement.project_id] = movement.parent_id
-        own.setdefault(movement.parent_id, [])
-        if movement.parent_label is not None:
-            labels.setdefault(movement.parent_id, movement.parent_label)
-        under = packages.setdefault(movement.parent_id, [])
-        if movement.project_id not in under:
-            under.append(movement.project_id)
+            labels[told_under] = movement.subject
+        elif movement.parent_label is not None:
+            labels.setdefault(told_under, movement.parent_label)
 
     chapters = [
-        _chapter(project_id, own, labels, packages)
-        for project_id in own
-        if project_id not in parents
+        Chapter(project_id=project_id, label=labels.get(project_id), movements=told)
+        for project_id, told in gathered.items()
     ]
-    chapters.sort(key=lambda chapter: _opens_on(chapter))
+    chapters.sort(key=_opens_on)
 
     if teamless:
         chapters.append(Chapter(project_id=None, label=None, movements=teamless))
     return chapters
 
 
-def _chapter(
-    project_id: int,
-    own: dict[int, list[Movement]],
-    labels: dict[int, str],
-    packages: dict[int, list[int]],
-) -> Chapter:
-    """One mission's chapter, its packages gathered under it."""
-    inside = [
-        _chapter(package_id, own, labels, packages)
-        for package_id in packages.get(project_id, [])
-    ]
-    inside.sort(key=lambda chapter: _opens_on(chapter))
-    return Chapter(
-        project_id=project_id,
-        label=labels.get(project_id),
-        movements=own.get(project_id, []),
-        packages=inside,
-    )
-
-
 def _opens_on(chapter: Chapter) -> datetime:
-    """The first thing that happened in a chapter, its packages counted in."""
-    moments = [movement.at for movement in chapter.movements]
-    moments += [_opens_on(package) for package in chapter.packages]
-    return min(moments) if moments else _LAST
+    """The first thing that happened in a chapter."""
+    return min((movement.at for movement in chapter.movements), default=_LAST)

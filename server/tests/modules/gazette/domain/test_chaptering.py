@@ -60,7 +60,8 @@ class TestIntoChapters:
 
         assert [chapter.label for chapter in chapters] == ["Ganesh", "NOMAD"]
 
-    def test_a_package_is_told_inside_its_project(self) -> None:
+    def test_a_package_has_no_chapter_of_its_own(self) -> None:
+        """A lot's month is part of its project's month, not a story apart."""
         chapters = into_chapters(
             [
                 a_movement("Ganesh", project_id=7, day=1),
@@ -70,9 +71,24 @@ class TestIntoChapters:
             ]
         )
 
-        assert len(chapters) == 1
+        assert [chapter.label for chapter in chapters] == ["Ganesh"]
+        assert [m.subject for m in chapters[0].movements] == ["Ganesh", "Lot API"]
+
+    def test_a_package_line_keeps_its_own_name(self) -> None:
+        """The chapter is the project's; the line still says which lot moved."""
+        chapters = into_chapters(
+            [
+                a_movement(
+                    "Lot API", project_id=9, day=2, parent_id=7, parent_label="Ganesh"
+                )
+            ]
+        )
+
+        assert chapters[0].project_id == 7
         assert chapters[0].label == "Ganesh"
-        assert [package.label for package in chapters[0].packages] == ["Lot API"]
+        assert [(m.subject, m.project_id) for m in chapters[0].movements] == [
+            ("Lot API", 9)
+        ]
 
     def test_a_project_untouched_but_whose_package_moved_still_opens(self) -> None:
         """A package on its own would be read as a project it is not."""
@@ -85,22 +101,6 @@ class TestIntoChapters:
         )
 
         assert [chapter.label for chapter in chapters] == ["Ganesh"]
-        assert chapters[0].movements == []
-        assert [package.label for package in chapters[0].packages] == ["Lot API"]
-
-    def test_a_package_carries_its_own_movements(self) -> None:
-        chapters = into_chapters(
-            [
-                a_movement(
-                    "Lot API", project_id=9, day=2, parent_id=7, parent_label="Ganesh"
-                ),
-                a_movement(
-                    "Lot API", project_id=9, day=8, parent_id=7, parent_label="Ganesh"
-                ),
-            ]
-        )
-
-        assert [m.at.day for m in chapters[0].packages[0].movements] == [2, 8]
 
     def test_a_project_opens_on_the_earliest_of_its_own_and_its_packages(self) -> None:
         chapters = into_chapters(
@@ -114,7 +114,7 @@ class TestIntoChapters:
 
         assert [chapter.label for chapter in chapters] == ["Ganesh", "NOMAD"]
 
-    def test_packages_of_one_project_read_in_the_order_they_appear(self) -> None:
+    def test_the_packages_of_a_project_share_its_one_chronicle(self) -> None:
         chapters = into_chapters(
             [
                 a_movement(
@@ -126,7 +126,8 @@ class TestIntoChapters:
             ]
         )
 
-        assert [package.label for package in chapters[0].packages] == ["Lot A", "Lot B"]
+        assert len(chapters) == 1
+        assert [m.subject for m in chapters[0].movements] == ["Lot B", "Lot A"]
 
     def test_what_is_about_no_mission_gathers_on_its_own(self) -> None:
         chapters = into_chapters(
