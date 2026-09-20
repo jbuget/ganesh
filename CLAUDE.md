@@ -600,6 +600,14 @@ A phase move reaches the register by two routes — dragging a card traces
 the briefing reads both. Reading only the first would quietly miss every move
 made from the form.
 
+**The model is configured in the environment, and nowhere else.**
+`GEMINI_MODEL` names it (default `gemini-2.5-flash`) and `GEMINI_API_KEY`
+carries the key — in `server/.env` locally, in Parameter Store in production.
+Changing either therefore takes a restart, and a deploy in production. That is
+deliberate: a key the application could hand back through a screen is a key
+worth stealing, and a provider picker offering one provider is furniture. The
+day a second provider is actually implemented, both become worth a screen.
+
 `GEMINI_API_KEY` is optional everywhere. Without it nothing breaks: digests are
 generated with their facts and no chapeau.
 
