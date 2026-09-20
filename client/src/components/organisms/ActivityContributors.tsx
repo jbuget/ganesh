@@ -1,21 +1,18 @@
 "use client";
 
-import { ContributorMissions } from "@/components/atoms/ContributorMissions";
+import { ContributorRow } from "@/components/molecules/ContributorRow";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type {
   ActivitySummaryResponse,
   ContributorResponse,
 } from "@/lib/api/generated/model";
-import { formatDays, missionsOf } from "@/lib/activity";
-import { NOTHING, formatPersonDays, formatShare } from "@/lib/statistics";
+import { missionsOf } from "@/lib/activity";
 import { STRONG_SEPARATOR, TABLE_FRAME, TABLE_HEADER } from "@/lib/table-frame";
 
 interface ActivityContributorsProps {
@@ -57,49 +54,13 @@ export function ActivityContributors({
             </TableRow>
           </TableHeader>
 
-          {/* The whole row opens the breakdown, not just the name: a row is
-              what one aims at, and a name is a small target among four columns
-              of figures. `tabIndex` keeps it reachable from the keyboard,
-              which the pointer alone would not. */}
           <TableBody>
             {contributors.map((someone) => (
-              // Follows the cursor: the trigger is a whole row, and a
-              // breakdown anchored to its middle would sit far from wherever
-              // the eye actually is.
-              <Tooltip key={someone.id} trackCursorAxis="both">
-                <TooltipTrigger
-                  render={
-                    <TableRow
-                      tabIndex={0}
-                      className="cursor-help bg-slate-50 hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:outline-none"
-                    />
-                  }
-                >
-                  <TableCell
-                    className={`bg-white font-medium group-hover:bg-slate-50 ${STRONG_SEPARATOR}`}
-                  >
-                    {someone.display_name}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatDays(someone.declared_days)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums text-slate-500">
-                    {formatPersonDays(someone.expected_days)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatShare(someone.coverage)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums text-slate-500">
-                    {someone.missions === 0 ? NOTHING : someone.missions}
-                  </TableCell>
-                </TooltipTrigger>
-                <TooltipContent align="start">
-                  <ContributorMissions
-                    missions={missionsOf(summary, someone.id)}
-                    declaredDays={someone.declared_days}
-                  />
-                </TooltipContent>
-              </Tooltip>
+              <ContributorRow
+                key={someone.id}
+                contributor={someone}
+                missions={missionsOf(summary, someone.id)}
+              />
             ))}
           </TableBody>
         </Table>
