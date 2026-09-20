@@ -177,14 +177,27 @@ Terraform state is not a vault.
    | `AUTH_ENTRA` | `true`, or `false` to open the fallback door |
 
    `SESSION_SECRET` seals the session cookie, and nothing works without it:
-   the Entra callback fails for everyone, and every visitor reads as signed
-   out. Generate one per environment — sharing it between two would let a
-   session forged in one be spent in the other.
+   sign-in answers 500 for everyone. Generate one per environment — sharing it
+   between two would let a session forged in one be spent in the other. The
+   build fails outright when it is unset, rather than shipping a client nobody
+   can sign in to.
 
-   `API_URL`, `API_PREFIX` and `APP_URL` are not here: `amplify.yml` writes them
-   into `.env.production` at build time, so they stay readable in the
-   repository and survive the application being recreated. Secrets do not get
-   that treatment — the build artefact is not a vault either.
+   **The console hands these to the build, not to the running server.** A route
+   handler reading `process.env.SESSION_SECRET` at run time finds nothing, and
+   signing in answers 500 with `SESSION_SECRET est absent` in the logs. So
+   `amplify.yml` copies every one of them into `.env.production` at build time,
+   which is how Next reads server environment here. There is no other way in
+   short of giving the branch a compute role.
+
+   The secrets therefore live in the build artefact. That cost is weighed and
+   accepted: the artefact is readable by whoever can read the Amplify
+   deployment — the same people who can read the console variables they come
+   from. Nothing reaches the browser: only `NEXT_PUBLIC_` names would, and
+   there are none.
+
+   `API_URL`, `API_PREFIX` and `APP_URL` are not in the console at all:
+   `amplify.yml` writes them straight in, so they stay readable in the
+   repository and survive the application being recreated.
 4. Custom domain `ganesh.waat.tools`, then the CNAME of step 3.
 5. On the Entra app registration (shared with WAATcher), declare the redirect
    URI `https://ganesh.waat.tools/api/auth/callback/azure-ad`.

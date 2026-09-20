@@ -6,13 +6,20 @@
 # static export. Amplify detects it from `.next` — do not add an `out`
 # directory or `output: "export"` to next.config.ts.
 #
-# Two kinds of variable, and the difference matters:
-#   - The ones written to `.env.production` below are version-controlled and
-#     baked into the build. Nothing secret goes there: the artefact is not a
-#     vault.
-#   - The Entra secrets (AZURE_AD_CLIENT_SECRET above all) are declared in the
-#     Amplify console's environment variables, read at run time by the compute
-#     role. See `docs/deployment.md`.
+# Every variable the server reads at run time has to go through
+# `.env.production`, written here at build time.
+#
+# The console's environment variables are handed to the *build*, not to the
+# SSR compute: a route handler asking for `process.env.SESSION_SECRET` at run
+# time finds nothing, and signing in answers 500. Copying them into
+# `.env.production` is what carries them across — it is how Next reads server
+# environment on Amplify, and there is no other way in without a compute role.
+#
+# So the secrets do end up in the build artefact. That is a real cost, weighed
+# and accepted: the artefact is readable by whoever can read the Amplify
+# deployment, which is the same set of people who can read the console
+# variables they come from. Nothing here is ever exposed to the browser —
+# only `NEXT_PUBLIC_` names are, and there are none.
 # ---------------------------------------------------------------------------
 version: 1
 applications:
@@ -32,6 +39,20 @@ applications:
             - echo "API_URL=https://api.ganesh.waat.tools" > .env.production
             - echo "API_PREFIX=/api/v1" >> .env.production
             - echo "APP_URL=https://ganesh.waat.tools" >> .env.production
+            # A build that ships a client nobody can sign in to is a failed
+            # build, not a deployed one. Said here rather than discovered in a
+            # 500 an hour later.
+            - test -n "$SESSION_SECRET" || { echo "SESSION_SECRET is unset in the Amplify console."; exit 1; }
+            # From the console, because they differ per environment or must
+            # not be committed. Quoted: a base64 secret carries `+`, `/` and
+            # `=`, and an unquoted `#` would start a comment.
+            - echo "SESSION_SECRET=\"$SESSION_SECRET\"" >> .env.production
+            - echo "ALLOWED_EMAIL_DOMAIN=\"$ALLOWED_EMAIL_DOMAIN\"" >> .env.production
+            - echo "AUTH_ENTRA=\"$AUTH_ENTRA\"" >> .env.production
+            - echo "AZURE_AD_TENANT_ID=\"$AZURE_AD_TENANT_ID\"" >> .env.production
+            - echo "AZURE_AD_CLIENT_ID=\"$AZURE_AD_CLIENT_ID\"" >> .env.production
+            - echo "AZURE_AD_CLIENT_SECRET=\"$AZURE_AD_CLIENT_SECRET\"" >> .env.production
+            - echo "AZURE_AD_REDIRECT_URI=\"$AZURE_AD_REDIRECT_URI\"" >> .env.production
         build:
           commands:
             - pnpm build
