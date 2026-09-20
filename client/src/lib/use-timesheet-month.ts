@@ -10,7 +10,7 @@ import {
   setEntry,
 } from "@/lib/api/generated/entries/entries";
 import type { ProjectResponse } from "@/lib/api/generated/model";
-import { useValidateMonth } from "@/lib/api/generated/months/months";
+import { useReopenMonth, useValidateMonth } from "@/lib/api/generated/months/months";
 import { useCreateProject } from "@/lib/api/generated/projects/projects";
 import {
   mutationResult,
@@ -57,6 +57,7 @@ export function useTimesheetMonth() {
   const { missions, projects } = useProjects();
   const createProject = useCreateProject();
   const validateMonth = useValidateMonth();
+  const reopenMonth = useReopenMonth();
 
   const gridQuery = useMonthGrid(month, viewedUserId, Boolean(me?.id));
   const grid = gridQuery.grid;
@@ -73,6 +74,7 @@ export function useTimesheetMonth() {
   }
 
   const isOwnMonth = viewedUserId === null || viewedUserId === me?.id;
+  const targetUserId = viewedUserId ?? me?.id ?? null;
   const isCurrentMonth =
     cursor.year === Number(today.slice(0, 4)) &&
     cursor.month === Number(today.slice(5, 7));
@@ -91,9 +93,25 @@ export function useTimesheetMonth() {
     /** Replays the month's queries — what a panel edit changes shows here. */
     refresh,
 
-    targetUserId: viewedUserId ?? me?.id ?? null,
+    targetUserId,
     currentUserId: me?.id ?? null,
     isOwnMonth,
+
+    /** Whose month is shown, when it is not one's own. */
+    viewedTeammateName: isOwnMonth
+      ? null
+      : (teammates.find((user) => user.id === viewedUserId)?.display_name ?? null),
+
+    /**
+     * The two gestures a month is committed or given back with.
+     *
+     * They never cross, and neither depends on the dimension the other reads:
+     * validating is about the month being one's own, whatever the role;
+     * reopening is about being a manager, whoever the month belongs to. The
+     * state of the month is what tells them apart, so they never show together.
+     */
+    canValidate: Boolean(grid?.is_writable) && isOwnMonth,
+    canReopen: Boolean(grid && !grid.is_writable) && me?.role === "MANAGER",
 
     /** Missions the viewer contributes to, offered first when adding a row. */
     assignedIds: assignedMissionIds(missions, me?.id ?? null),
@@ -165,6 +183,18 @@ export function useTimesheetMonth() {
 
     async validate() {
       await validateMonth.mutateAsync({ month });
+      await refresh();
+    },
+
+    /**
+     * Gives a validated month back to entry. Managers only.
+     *
+     * The month reopened is the one shown, which the selector names: unlike
+     * validation, the route has to be told whose it is.
+     */
+    async reopen() {
+      if (targetUserId === null) return;
+      await reopenMonth.mutateAsync({ month, params: { user_id: targetUserId } });
       await refresh();
     },
   };
