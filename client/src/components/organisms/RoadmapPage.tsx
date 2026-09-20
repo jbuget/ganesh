@@ -52,26 +52,27 @@ export function RoadmapPage() {
         <PageHeader
           title="Feuille de route"
           subtitle="Ce qui a été livré, ce qui est annoncé, et ce que la projection en dit"
+          // The window and the grouping stay up here, apart from the criteria.
+          // They settle *how* the drawing is read — over what stretch, gathered
+          // under what — where the bar below settles *what* is drawn. Two
+          // questions, two places, and the one that governs the whole screen
+          // sits with its title.
+          actions={
+            <>
+              <GroupingSelect value={grouping} onChange={setGrouping} />
+              <SpanSelect months={months} onChange={setMonths} />
+            </>
+          }
         />
       }
     >
       <div className="flex h-full min-h-0 flex-col">
-        {/* The window and the grouping sit at the far end of the filter bar,
-            where the reference list puts its choice of columns: they settle
-            how the drawing is read, next to what it is narrowed to, and not
-            among the page's title. */}
         <MissionFilters
           filters={filters}
           hasFilter={hasFilter}
           onChange={setFilters}
           onClear={clearFilters}
           criteria={criteria}
-          trailing={
-            <>
-              <GroupingSelect value={grouping} onChange={setGrouping} />
-              <SpanSelect months={months} onChange={setMonths} />
-            </>
-          }
         />
 
         {roadmap && <RoadmapSummaryBar summary={roadmap.summary} />}
