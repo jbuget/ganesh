@@ -17,6 +17,11 @@ python-jose[cryptography]==3.3.0
 # HTTP client
 httpx==0.28.1
 
+# La Gazette's chapeau. The current SDK rather than WAATcher's retired
+# google-generativeai: this one answers async natively, which the project asks
+# for on every I/O.
+google-genai==1.46.0
+
 # Utilities
 python-dotenv==1.0.1
 python-dateutil==2.9.0.post0

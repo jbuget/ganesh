@@ -525,6 +525,59 @@ criticality publish. A field belongs to one side or the other, never to both.
 
 ---
 
+## La Gazette
+
+The register is written into all day long and, until now, only ever read one
+project at a time by whoever already knew what they were looking for. La
+Gazette reads it across, a month at a time: what was created, archived, moved
+on, given up on, and who joined or left.
+
+**The register counts, the model only turns the phrase.** That division is the
+whole design, and it is enforced rather than asked for politely:
+
+- Every fact and every figure is computed by the domain from `audit_log` and
+  from the reference list. The model is handed them and writes two or three
+  sentences over the top.
+- **`Prose` refuses any text carrying a figure**, in digits or written out.
+  Not a rule in the prompt — a rule in the entity, so no adapter can widen it.
+  A chapeau that counted is dropped and the digest goes out on its facts.
+- **Saliency is a set of business rules**, tested like any other. A model asked
+  to underline what stands out underlines something even the month nothing
+  happened.
+- **Nothing is invented.** A log line whose mission was deleted cannot be named
+  and is not printed. A phase the register never recorded is not supplied.
+
+**A digest is never rewritten.** Asking for a month again writes the next
+version beside the last; the screen reads the highest and the picker opens the
+others. What somebody quoted has to still be in the digest they quoted it from,
+which is also why the facts are stored rather than the way to recompute them —
+missions get renamed, archived and delivered, and rebuilding March in September
+would give another March.
+
+Anyone may ask for one: the facts come from a register the whole team already
+has open, and reserving the gesture would only mean waiting for somebody.
+Generation is manual — there is no scheduler, and mail is deliberately out of
+scope for now.
+
+Two things it will not do, and adding either would be a decision:
+
+- **Name anybody in a bad light.** The figures are aggregates and the
+  highlights are about missions, by construction rather than by omission. A
+  gazette that said who was late would be read as a list of names, whatever
+  else it said.
+- **Tell its own story.** Generating a digest is traced like any other gesture
+  and left out of the next one, or the gazette would fill up with itself.
+
+A phase move reaches the register by two routes — dragging a card traces
+`project.status_change`, editing the mission traces a plain field change — and
+the briefing reads both. Reading only the first would quietly miss every move
+made from the form.
+
+`GEMINI_API_KEY` is optional everywhere. Without it nothing breaks: digests are
+generated with their facts and no chapeau.
+
+---
+
 ## API keys
 
 A machine reaches Ganesh with a key, never with a user account. The rule the

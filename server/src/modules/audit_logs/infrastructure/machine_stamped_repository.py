@@ -10,9 +10,10 @@ the log never has to learn what a machine is, which is exactly what the design
 promised when the keys shipped.
 """
 
+from collections.abc import Collection
 from datetime import date, datetime
 
-from src.modules.audit_logs.domain.entities.audit_log import AuditLog
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
@@ -60,3 +61,11 @@ class MachineStampedAuditLog(AuditLogRepository):
 
     async def count_all(self, since: datetime | None = None) -> int:
         return await self._inner.count_all(since)
+
+    async def list_between(
+        self,
+        start: datetime,
+        end: datetime,
+        actions: Collection[AuditAction] | None = None,
+    ) -> list[AuditLog]:
+        return await self._inner.list_between(start, end, actions)

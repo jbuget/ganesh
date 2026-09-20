@@ -4,6 +4,8 @@ They implement the same ports as the infrastructure: a use case that passes
 here passes in production, persistence aside.
 """
 
+from collections.abc import Collection
+from dataclasses import replace
 from datetime import date, datetime
 
 from src.modules.activity.domain.repositories.activity_repository import (
@@ -13,7 +15,7 @@ from src.modules.activity.domain.repositories.activity_repository import (
 )
 from src.modules.api_keys.domain.entities.api_key import ApiKey
 from src.modules.api_keys.domain.repositories.api_key_repository import ApiKeyRepository
-from src.modules.audit_logs.domain.entities.audit_log import AuditLog
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
@@ -23,6 +25,8 @@ from src.modules.entries.domain.repositories.entry_repository import EntryReposi
 from src.modules.entries.domain.repositories.user_mission_repository import (
     UserMissionRepository,
 )
+from src.modules.gazette.domain.entities.digest import Digest, DigestVersion
+from src.modules.gazette.domain.repositories.digest_repository import DigestRepository
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.domain.repositories.month_repository import MonthRepository
 from src.modules.months.domain.services.month_period import first_day_of
@@ -368,6 +372,21 @@ class InMemoryAuditLogRepository(AuditLogRepository):
 
     async def count_all(self, since: datetime | None = None) -> int:
         return len(self._all(since))
+
+    async def list_between(
+        self,
+        start: datetime,
+        end: datetime,
+        actions: Collection[AuditAction] | None = None,
+    ) -> list[AuditLog]:
+        return sorted(
+            (
+                log
+                for log in self.logs
+                if start <= log.at <= end and (actions is None or log.action in actions)
+            ),
+            key=lambda log: (log.at, log.id or 0),
+        )
 
 
 class InMemoryProjectAssigneeRepository(ProjectAssigneeRepository):
@@ -739,3 +758,40 @@ class InMemoryMoodRepository(MoodRepository):
         existing = await self.get(user_id, day)
         if existing is not None:
             self._moods.remove(existing)
+
+
+class InMemoryDigestRepository(DigestRepository):
+    def __init__(self) -> None:
+        self.digests: list[Digest] = []
+
+    def _for(self, month: date) -> list[Digest]:
+        return sorted(
+            (digest for digest in self.digests if digest.month == month),
+            key=lambda digest: digest.version,
+            reverse=True,
+        )
+
+    async def get_latest(self, month: date) -> Digest | None:
+        found = self._for(month)
+        return found[0] if found else None
+
+    async def get_version(self, month: date, version: int) -> Digest | None:
+        return next(
+            (digest for digest in self._for(month) if digest.version == version),
+            None,
+        )
+
+    async def list_versions(self, month: date) -> list[DigestVersion]:
+        return [
+            DigestVersion(
+                version=digest.version,
+                generated_at=digest.generated_at,
+                requested_by=digest.requested_by,
+            )
+            for digest in self._for(month)
+        ]
+
+    async def add(self, digest: Digest) -> Digest:
+        stored = replace(digest, id=len(self.digests) + 1)
+        self.digests.append(stored)
+        return stored
