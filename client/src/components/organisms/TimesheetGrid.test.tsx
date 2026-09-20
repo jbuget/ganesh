@@ -130,6 +130,24 @@ describe("TimesheetGrid", () => {
     expect(screen.getByText(/Aucun projet pour ce mois/)).toBeInTheDocument();
   });
 
+  /**
+   * A validated month accepts nothing: inviting to add a mission there offers a
+   * gesture the grid refuses.
+   */
+  it("states emptiness rather than inviting to add on a validated month", () => {
+    render(
+      <TimesheetGrid
+        {...baseProps}
+        grid={makeGrid({ rows: [], is_writable: false })}
+      />,
+    );
+
+    expect(
+      screen.getByText(/Aucun projet n'a été déclaré sur ce mois/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Ajoutez-en un/)).toBeNull();
+  });
+
   it("does not show that message as soon as a mission is there", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
