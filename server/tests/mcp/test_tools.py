@@ -249,7 +249,7 @@ class TestWhatChanged:
         ):
             said = await what_changed(7, "2026-09-01")
 
-        assert "cadrage" in said and "construction" in said
+        assert "passé de cadrage à construction" in said
         assert "08/09" in said
 
     @pytest.mark.asyncio
@@ -303,3 +303,54 @@ class TestWhatChanged:
             said = await what_changed(404, "2026-09-01")
         assert "404" in said
         assert "find_project" in said
+
+
+class TestMyMonthReadsAsFrench:
+    """The agreement is what only a reader catches. See `tests/mcp/test_say.py`."""
+
+    @pytest.mark.asyncio
+    async def test_an_empty_month_does_not_say_aucun_jour_declares(self) -> None:
+        grid = a_grid([], working(1, 2), [], working_days=22)
+        with Wired(grid=grid), standing(a_machine()):
+            said = await my_month("2026-09")
+
+        assert "Aucun jour déclaré sur 22 ouvrés en septembre 2026." in said
+        assert "déclarés" not in said
+
+    @pytest.mark.asyncio
+    async def test_a_single_day_agrees_in_the_singular(self) -> None:
+        row = GridRow(
+            project_id=7,
+            label="WAATcher",
+            kind=ProjectKind.PROJECT,
+            estimated_days=None,
+            actual_total=1.0,
+        )
+        grid = a_grid(
+            [row],
+            working(1),
+            [DayTotal(day=date(2026, 9, 1), total=1.0, exceeds_capacity=False)],
+            working_days=22,
+        )
+        with Wired(grid=grid), standing(a_machine()):
+            said = await my_month("2026-09")
+
+        assert "1 jour déclaré" in said
+        assert "1 réalisé, 0 prévisionnel." in said
+
+    @pytest.mark.asyncio
+    async def test_a_project_with_nothing_on_it_is_left_out_of_the_split(
+        self,
+    ) -> None:
+        """A row at zero is a mission opened and not filled. It says nothing."""
+        empty = GridRow(
+            project_id=8,
+            label="ACHATS",
+            kind=ProjectKind.PROJECT,
+            estimated_days=None,
+        )
+        grid = a_grid([empty], working(1), [], working_days=22)
+        with Wired(grid=grid), standing(a_machine()):
+            said = await my_month("2026-09")
+
+        assert "Répartition" not in said

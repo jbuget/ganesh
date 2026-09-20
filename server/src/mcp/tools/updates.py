@@ -70,8 +70,8 @@ async def what_changed(project_id: int, since: str | None = None) -> str:
     label = named.project.label
     moved = _read(lines)
     if not moved:
-        return f"Rien n'a bougé sur {label} depuis le {say.day(opened.date())}."
-    return f"Sur {label}, depuis le {say.day(opened.date())} :\n" + "\n".join(moved)
+        return f"Rien n'a bougé sur {label} depuis le {say.dated(opened.date())}."
+    return f"Sur {label}, depuis le {say.dated(opened.date())} :\n" + "\n".join(moved)
 
 
 def _moment(since: str | None) -> datetime | None:
@@ -98,7 +98,7 @@ def _read(lines: list[SignedAuditLog]) -> list[str]:
     for line in reversed(phases):
         was = STATUSES.get(line.log.old_value or "", line.log.old_value or "?")
         now = STATUSES.get(line.log.new_value or "", line.log.new_value or "?")
-        said.append(f"- passé de {was} à {now} le {say.day(line.log.at.date())}")
+        said.append(f"- passé {say.of(was)} à {now} le {say.day(line.log.at.date())}")
     named += len(phases)
 
     entries = [

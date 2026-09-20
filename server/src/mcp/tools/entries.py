@@ -62,16 +62,23 @@ def _first_day_of(month: str | None) -> date | None:
 def _read(grid: MonthGrid, asked: date) -> str:
     """The month as a sentence: what is in it, what is missing, whether it moves."""
     declared = round(grid.actual_total + grid.forecast_total, 2)
-    lines = [
-        f"{say.days(declared)} déclarés sur {grid.working_days} ouvrés "
-        f"en {say.month(asked)} : {say.number(grid.actual_total)} réalisés, "
-        f"{say.number(grid.forecast_total)} prévisionnels."
-    ]
+    where = f"sur {grid.working_days} ouvrés en {say.month(asked)}"
+    if declared == 0:
+        lines = [f"Aucun jour déclaré {where}."]
+    else:
+        lines = [
+            f"{say.days(declared)} déclaré{'s' if declared >= 2 else ''} {where} : "
+            f"{say.agreeing(grid.actual_total, 'réalisé')}, "
+            f"{say.agreeing(grid.forecast_total, 'prévisionnel')}."
+        ]
 
-    if grid.rows:
+    # A row at zero is a mission opened and not filled: it carries nothing to
+    # read, and listing it would make the split contradict the total above.
+    filled = [row for row in grid.rows if row.total > 0]
+    if filled:
         lines.append(
             "Répartition : "
-            + say.listed([f"{row.label} {say.number(row.total)}" for row in grid.rows])
+            + say.listed([f"{row.label} {say.days(row.total)}" for row in filled])
             + "."
         )
 

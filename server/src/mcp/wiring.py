@@ -11,8 +11,15 @@ same tree by hand, with the same three answers:
 - `get_db` resolves to the session at hand;
 - an override registered on the app wins, which is what lets a test stand a
   use case in for another exactly as it does for a route;
-- anything else — a `Header`, a `Query` — keeps its default, which is what a
-  tool wants: there is no request for it to read.
+- anything else — a `Header`, a `Query` — is handed **the value behind the
+  marker**, which is what a tool wants: there is no request for it to read.
+  Handing over the marker itself is what made a tool come back as « Error
+  executing tool » against a running API, the audit repository having called
+  `removeprefix` on a `Header` object.
+
+The day a tool writes, the token of the calling key will have to reach
+`get_audit_log_repository` here, so that the line it writes names the key. A
+read needs nothing of the sort, and V1 only reads.
 """
 
 import inspect
@@ -52,6 +59,14 @@ async def resolve(provider: Callable[..., T], session: AsyncSession) -> T:
             if dependency is None:  # pragma: no cover — FastAPI's own shorthand
                 raise TypeError(f"« {name} » depends on its own annotation.")
             arguments[name] = await resolve(dependency, session)
+        elif isinstance(default, params.Param):
+            # A `Header`, a `Query`: the marker carries the value behind it.
+            # Required with no default means a request said it — and there is
+            # none here, so nothing is what the provider gets.
+            given = default.default
+            arguments[name] = (
+                None if given is ... or repr(given).endswith("Undefined") else given
+            )
 
     built = provider(**arguments)
     if inspect.isawaitable(built):

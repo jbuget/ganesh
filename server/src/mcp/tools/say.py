@@ -24,11 +24,25 @@ MONTHS = {
 
 
 def days(count: float) -> str:
-    """« 1,5 jour », « 12 jours », « aucun jour »."""
+    """« 1,5 jour », « 12 jours », « aucun jour ».
+
+    The plural starts at two, as it does in French and not as it does in
+    English: « 1,5 jour » carries a singular, « 2 jours » a plural.
+    """
     if count == 0:
         return "aucun jour"
-    written = f"{count:.1f}".replace(".0", "").replace(".", ",")
-    return f"{written} jour" if count <= 1 else f"{written} jours"
+    return agreeing(count, "jour")
+
+
+def agreeing(count: float, word: str) -> str:
+    """« 0 réalisé », « 9 réalisés » — the word follows the count it qualifies.
+
+    This is the line no type checker reads and no assertion on a figure
+    catches: a suite can be green while the sentence says « aucun jour
+    déclarés ». Only somebody reading it sees that.
+    """
+    written = number(count)
+    return f"{written} {word}s" if count >= 2 else f"{written} {word}"
 
 
 def number(count: float) -> str:
@@ -39,6 +53,25 @@ def number(count: float) -> str:
 def day(moment: date) -> str:
     """« 08/09 » — the day and its month, which is what a reader needs."""
     return moment.strftime("%d/%m")
+
+
+def dated(moment: date) -> str:
+    """« 01/01/2026 » — a day far enough back to need its year.
+
+    `day` drops the year on purpose: a phase changed « le 08/09 » reads inside
+    the window being asked about. The edge of that window does not — « depuis
+    le 01/01 », read in September, asks which January.
+    """
+    return moment.strftime("%d/%m/%Y")
+
+
+def of(word: str) -> str:
+    """« d'exploration », « de cadrage » — the elision French requires.
+
+    No type checker reads this line, and no assertion on a phase catches it:
+    only somebody reading the sentence sees « passé de exploration ».
+    """
+    return f"d'{word}" if word[:1].lower() in "aeiouyéèêàâîôûh" else f"de {word}"
 
 
 def month(first: date) -> str:
