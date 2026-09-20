@@ -35,14 +35,25 @@ class ApiKeyScope(StrEnum):
 
     What they cover includes scopes that **do not exist yet**: that is the
     price of breadth, and the reason the form says so.
+
+    **A broad scope covers what a route opens to machines, never what the API
+    knows.** The distinction only became worth writing down once the product
+    held something deliberately closed: the moods are given in confidence, and
+    no scope reaches them because no route asks for one. A resource stays shut
+    by a route not opting in, and `all:read` cannot talk it open.
     """
 
     ALL_READ = "all:read"
     ALL_WRITE = "all:write"
     CATALOG_READ = "catalog:read"
+    ROADMAP_READ = "roadmap:read"
+    STATS_READ = "stats:read"
     PROJECTS_READ = "projects:read"
     PROJECTS_WRITE = "projects:write"
+    UPDATES_WRITE = "updates:write"
     ENTRIES_READ = "entries:read"
+    USERS_READ = "users:read"
+    AUDIT_READ = "audit:read"
 
     @property
     def is_read(self) -> bool:

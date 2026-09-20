@@ -4,7 +4,7 @@ from datetime import date
 
 from pydantic import BaseModel, Field
 
-from src.modules.projects.domain.entities.project import ProjectKind
+from src.modules.projects.domain.entities.project import ProjectKind, ProjectStatus
 
 
 class SetEntryRequest(BaseModel):
@@ -73,3 +73,27 @@ class MonthGridResponse(BaseModel):
     is_writable: bool
     actual_total: float
     forecast_total: float
+
+
+class ExportedEntryResponse(BaseModel):
+    """One declared day, as an export hands it over.
+
+    Ids and labels together: the labels make the row readable on its own, the
+    ids make two pulls reconcilable.
+    """
+
+    day: date
+    value: float
+    status_at_entry: ProjectStatus | None
+    user_id: int
+    user_label: str
+    project_id: int
+    project_label: str
+
+
+class EntriesExportResponse(BaseModel):
+    """Everything declared over a window, and the window it was read over."""
+
+    from_day: date
+    to_day: date
+    entries: list[ExportedEntryResponse]

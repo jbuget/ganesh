@@ -8,7 +8,7 @@ from httpx import ASGITransport, AsyncClient
 
 from src.core.config import get_settings
 from src.main import app
-from src.modules.auth.presentation.dependencies import get_current_user
+from src.modules.api_keys.presentation.dependencies import teammate_or_machine
 from src.modules.projects.domain.entities.project import (
     ProjectCategory,
     ProjectKind,
@@ -57,7 +57,7 @@ def use_case() -> ComputeStatisticsUseCase:
 
 @pytest.fixture
 async def client() -> AsyncIterator[AsyncClient]:
-    app.dependency_overrides[get_current_user] = lambda: READER
+    app.dependency_overrides[teammate_or_machine] = lambda: READER
     app.dependency_overrides[get_compute_statistics_use_case] = use_case
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as http:

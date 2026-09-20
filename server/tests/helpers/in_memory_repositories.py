@@ -265,6 +265,12 @@ class InMemoryEntryRepository(EntryRepository):
             diary[entry.day] = round(diary.get(entry.day, 0.0) + float(entry.value), 2)
         return diaries
 
+    async def list_over(self, start: date, end: date) -> list[Entry]:
+        return sorted(
+            (e for e in self._entries if start <= e.day <= end),
+            key=lambda e: (e.day, e.user_id, e.project_id),
+        )
+
     async def upsert(self, entry: Entry) -> Entry:
         existing = await self.get(entry.user_id, entry.project_id, entry.day)
         if existing is not None:
@@ -347,6 +353,21 @@ class InMemoryAuditLogRepository(AuditLogRepository):
 
     async def count_for_project(self, project_id: int) -> int:
         return len(self._for_project(project_id))
+
+    def _all(self, since: datetime | None) -> list[AuditLog]:
+        return sorted(
+            (log for log in self.logs if since is None or log.at >= since),
+            key=lambda log: (log.at, log.id or 0),
+            reverse=True,
+        )
+
+    async def list_all(
+        self, limit: int, offset: int, since: datetime | None = None
+    ) -> list[AuditLog]:
+        return self._all(since)[offset : offset + limit]
+
+    async def count_all(self, since: datetime | None = None) -> int:
+        return len(self._all(since))
 
 
 class InMemoryProjectAssigneeRepository(ProjectAssigneeRepository):

@@ -96,6 +96,16 @@ class EntryRepository(ABC):
         ...
 
     @abstractmethod
+    async def list_over(self, start: date, end: date) -> list[Entry]:
+        """Every entry of a window, whoever declared it, on whatever mission.
+
+        What an export reads. The other listings answer one person's question
+        — my month, my day — and looping over them to build a register would
+        make the caller do the join this does once.
+        """
+        ...
+
+    @abstractmethod
     async def upsert(self, entry: Entry) -> Entry: ...
 
     @abstractmethod
