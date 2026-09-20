@@ -152,7 +152,7 @@ function destination(line: NotificationResponse): string | undefined {
     return line.day ? `/timesheet?month=${line.day.slice(0, 7)}` : "/timesheet";
   }
   if (line.kind === "user.role_changed") return undefined;
-  if (line.kind.startsWith("api_key.")) return "/api-keys";
+  if (line.kind.startsWith("api_key.")) return "/api-mcp";
   return line.project ? `/projects/${line.project.id}` : undefined;
 }
 

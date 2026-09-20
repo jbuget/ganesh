@@ -2,7 +2,7 @@
 
 > **Built.** This was the design brief; it is now the reference for what
 > shipped. The module lives in `server/src/modules/api_keys/`, the screen in
-> `client/src/components/organisms/ApiKeysPage.tsx`, and *Out of scope for V1*
+> `client/src/components/organisms/ApiMcpPage.tsx`, and *Out of scope for V1*
 > still says what was deliberately left out.
 
 ## The gap it closes
@@ -462,11 +462,13 @@ than a script is a reason to add a column, and a reason to have the UI say so.
 
 ## The screen
 
-A new view, `/api-keys`, reachable from the sidebar by everyone, where it
-reads « API ». The path is not `/api`: under Next.js that belongs to the BFF.
+A new view, `/api-mcp`, reachable from the sidebar by everyone, where it
+reads « API / MCP ». The path is not `/api`: under Next.js that belongs to the
+BFF. Two tabs: « API » carries the table of keys, « MCP » says how a terminal
+client branches onto the server with one — see `docs/mcp.md`.
 
 The sidebar (`client/src/components/organisms/AppSidebar.tsx`) filters nothing
-by role, and « API » does not change that: « Utilisateurs » already shows for
+by role, and « API / MCP » does not change that: « Utilisateurs » already shows for
 the whole team though managing teammates is a manager's job. One rule for the
 navigation — it shows what exists — and the permission lives on the actions.
 
