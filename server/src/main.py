@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.common.exception_handlers import register_domain_exception_handlers
 from src.core.config import get_settings
+from src.mcp.server import ToolServer
 from src.modules.activity.presentation.api.routes.activity_router import (
     router as activity_router,
 )
@@ -40,11 +41,16 @@ from src.modules.users.presentation.api.routes.user_router import router as user
 
 settings = get_settings()
 
+#: The tools the team reaches from a terminal client. One server, started once.
+tools = ToolServer()
+
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
     openapi_url=f"{settings.api_prefix}/openapi.json",
     docs_url=f"{settings.api_prefix}/docs" if settings.debug else None,
+    # The MCP server's session manager has to run for as long as the API does.
+    lifespan=tools.lifespan,
 )
 
 app.add_middleware(
@@ -72,6 +78,11 @@ for module_router in (
     statistics_router,
 ):
     app.include_router(module_router, prefix=settings.api_prefix)
+
+# The tools, at `/mcp`: the same use cases the routers reach, answered to a
+# terminal client rather than to a screen. Mounted last, so that nothing of
+# `/api/v1` can be shadowed by it.
+tools.attach(app)
 
 
 @app.get(f"{settings.api_prefix}/health", tags=["health"], operation_id="health")

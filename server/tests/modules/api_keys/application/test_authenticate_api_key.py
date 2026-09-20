@@ -212,3 +212,37 @@ async def test_stamping_a_call_does_not_rewrite_the_aggregate() -> None:
     await use_case.execute(token, CATALOG)
 
     assert written == ["record_use"]
+
+
+class TestIdentifyingWithoutAskingWhatFor:
+    """The door of the MCP server reads the envelope, not the letter.
+
+    Which scope is needed there depends on the tool being asked for, so the
+    door identifies the key and the tool checks its own scope. What must not
+    change is which keys are turned away: the same five, for the same reasons.
+    """
+
+    @pytest.mark.asyncio
+    async def test_a_good_key_is_identified_whatever_it_carries(self) -> None:
+        use_case, token, key = build(scopes=[ApiKeyScope.ENTRIES_READ])
+        caller = await use_case.identify(token)
+
+        assert caller is not None
+        assert caller.key.id == key.id
+        assert caller.owner.id == 10
+
+    @pytest.mark.asyncio
+    async def test_a_revoked_key_is_turned_away_all_the_same(self) -> None:
+        use_case, token, _ = build(revoked_at=datetime.now(), revoked_by=20)
+        assert await use_case.identify(token) is None
+
+    @pytest.mark.asyncio
+    async def test_a_key_whose_owner_left_is_turned_away(self) -> None:
+        use_case, token, _ = build(team=[])
+        assert await use_case.identify(token) is None
+
+    @pytest.mark.asyncio
+    async def test_identifying_stamps_the_call(self) -> None:
+        use_case, token, key = build()
+        await use_case.identify(token)
+        assert key.last_used_at is not None
