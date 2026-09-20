@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GazettePage } from "./GazettePage";
-import type { DigestResponse } from "@/lib/api/generated/model";
+import type { ChapterResponse, DigestResponse } from "@/lib/api/generated/model";
 
 const gazette = vi.hoisted(() => ({
   cursor: { year: 2026, month: 9 },
@@ -34,16 +34,23 @@ function aDigest(over: Partial<DigestResponse> = {}): DigestResponse {
       news_posted: 0,
       months_validated: 9,
     },
-    movements: [
+    chapters: [
       {
-        kind: "went_live",
-        at: "2026-09-12T14:00:00",
-        subject: "WAATcher",
         project_id: 2,
-        from_status: "deployment",
-        to_status: "operations",
+        label: "WAATcher",
+        movements: [
+          {
+            kind: "went_live",
+            at: "2026-09-12T14:00:00",
+            subject: "WAATcher",
+            project_id: 2,
+            from_status: "deployment",
+            to_status: "operations",
+          },
+        ],
+        packages: [],
       },
-    ],
+    ] satisfies ChapterResponse[],
     highlights: [
       { kind: "went_live", tone: "notable", project_id: 2, label: "WAATcher" },
       {
@@ -115,8 +122,9 @@ describe("GazettePage", () => {
     render(<GazettePage />);
 
     expect(screen.queryByText(/rédigé par/)).toBeNull();
-    // Twice over: once as a fait marquant, once in the chronology.
-    expect(screen.getAllByText(/WAATcher est passé en exploitation/)).toHaveLength(2);
+    // Once as a fait marquant; the chronicle says it under its own heading.
+    expect(screen.getByText(/WAATcher est passé en exploitation/)).toBeVisible();
+    expect(screen.getByText("est passé en exploitation")).toBeVisible();
   });
 
   it("reads the facts in French, never in the register's words", () => {
@@ -175,8 +183,71 @@ describe("GazettePage", () => {
     expect(gazette.generateDigest).toHaveBeenCalledTimes(1);
   });
 
+  it("names each mission once, over its own chronicle", () => {
+    /* « WAATcher est passé en exploitation » under a heading reading
+       « WAATcher » says it twice. */
+    render(<GazettePage />);
+
+    expect(screen.getByRole("heading", { name: "WAATcher" })).toBeVisible();
+    expect(screen.getByText("est passé en exploitation")).toBeVisible();
+  });
+
+  it("tells a work package inside its project", () => {
+    gazette.digest = aDigest({
+      chapters: [
+        {
+          project_id: 2,
+          label: "WAATcher",
+          movements: [],
+          packages: [
+            {
+              project_id: 9,
+              label: "Lot API",
+              movements: [
+                {
+                  kind: "project_archived",
+                  at: "2026-09-20T09:00:00",
+                  subject: "Lot API",
+                  project_id: 9,
+                  from_status: null,
+                  to_status: null,
+                },
+              ],
+              packages: [],
+            },
+          ],
+        },
+      ],
+    });
+
+    render(<GazettePage />);
+
+    expect(screen.getByRole("heading", { name: "WAATcher" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Lot API" })).toBeVisible();
+    expect(screen.getByText("a été archivé")).toBeVisible();
+  });
+
+  it("drops the full stop a project name was typed with", () => {
+    gazette.digest = aDigest({
+      chapters: [
+        {
+          project_id: 3,
+          label: "Lecture des fichiers tableurs.",
+          movements: [],
+          packages: [],
+        },
+      ],
+    });
+
+    render(<GazettePage />);
+
+    expect(
+      screen.getByRole("heading", { name: "Lecture des fichiers tableurs" }),
+    ).toBeVisible();
+  });
+
   it("says plainly when a month left nothing behind", () => {
-    gazette.digest = aDigest({ movements: [], highlights: [] });
+    gazette.digest = aDigest({ chapters: [], highlights: [] });
 
     render(<GazettePage />);
 

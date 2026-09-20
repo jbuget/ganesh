@@ -11,6 +11,7 @@
  * wrote it.
  */
 import type {
+  ChapterResponse,
   DigestResponse,
   HighlightResponse,
   MovementResponse,
@@ -18,30 +19,70 @@ import type {
 } from "@/lib/api/generated/model";
 import { phaseLabel } from "@/lib/board";
 
+/**
+ * A project's name, ready to have a verb put after it.
+ *
+ * Several labels were typed with a full stop at the end — they were written
+ * as sentences. Left on, the gazette reads « … dans les PDF. a été archivé ».
+ * The stop is the label's, not the sentence's: it goes wherever we are the
+ * ones building the sentence.
+ *
+ * It is applied to missions alone. A person's name is left exactly as it was
+ * given, whatever it ends with.
+ */
+export function missionName(label: string): string {
+  return label.replace(/[.\s]+$/, "") || label;
+}
+
 /** One movement of the month, said in French. */
 export function movementSentence(movement: MovementResponse): string {
+  const subject = subjectOf(movement);
+  // The news is what happened; the project is where it landed. Turning it
+  // round — « Ganesh a reçu une actualité » — is not how anyone says it.
+  if (movement.kind === "news_posted") {
+    return `Une actualité a été publiée sur ${subject}`;
+  }
+  return `${subject} ${movementPredicate(movement)}`;
+}
+
+/**
+ * The same fact with its subject left off, for a line read under a heading
+ * that already names it.
+ *
+ * « WAATcher est passé en exploitation » under a heading reading « WAATcher »
+ * says it twice; the predicate alone reads as the chronicle it is.
+ */
+export function movementPredicate(movement: MovementResponse): string {
   switch (movement.kind) {
     case "project_created":
-      return `${movement.subject} a rejoint la liste des projets`;
+      return "a rejoint la liste des projets";
     case "project_archived":
-      return `${movement.subject} a été archivé`;
+      return "a été archivé";
     case "project_revived":
-      return `${movement.subject} est revenu dans la liste des projets`;
+      return "est revenu dans la liste des projets";
     case "went_live":
-      return `${movement.subject} est passé en exploitation`;
+      return "est passé en exploitation";
     case "phase_advanced":
-      return `${movement.subject} est passé ${phaseMove(movement)}`;
+      return `est passé ${phaseMove(movement)}`;
     case "phase_stepped_back":
-      return `${movement.subject} est revenu ${phaseMove(movement)}`;
+      return `est revenu ${phaseMove(movement)}`;
     case "news_posted":
-      return `Une actualité a été publiée sur ${movement.subject}`;
+      return "une actualité a été publiée";
     case "teammate_joined":
-      return `${movement.subject} a rejoint l'équipe`;
+      return "a rejoint l'équipe";
+    case "teammate_returned":
+      return "est revenu dans l'équipe";
     case "teammate_left":
-      return `${movement.subject} a quitté l'équipe`;
+      return "a quitté l'équipe";
     default:
-      return movement.subject;
+      return "";
   }
+}
+
+function subjectOf(movement: MovementResponse): string {
+  return movement.project_id === null
+    ? movement.subject
+    : missionName(movement.subject);
 }
 
 /**
@@ -70,17 +111,26 @@ function from_(phase: string): string {
 
 /** One fact worth reading twice, said in French. */
 export function highlightSentence(highlight: HighlightResponse): string {
+  const subject =
+    highlight.project_id === null ? highlight.label : missionName(highlight.label);
+
   switch (highlight.kind) {
     case "went_live":
-      return `${highlight.label} est passé en exploitation`;
+      return `${subject} est passé en exploitation`;
     case "phase_stepped_back":
-      return `${highlight.label} est revenu à une phase antérieure`;
+      return `${subject} est revenu à une phase antérieure`;
     case "archived_before_delivery":
-      return `${highlight.label} a été archivé sans avoir été mis en service`;
+      return `${subject} a été archivé sans avoir été mis en service`;
     case "go_live_overdue":
-      return `${highlight.label} a dépassé sa date de mise en service annoncée`;
+      return `${subject} a dépassé sa date de mise en service annoncée`;
+    case "teammate_joined":
+      return `${subject} a rejoint l'équipe`;
+    case "teammate_returned":
+      return `${subject} est revenu dans l'équipe`;
+    case "teammate_left":
+      return `${subject} a quitté l'équipe`;
     default:
-      return highlight.label;
+      return subject;
   }
 }
 
@@ -88,6 +138,23 @@ export function highlightSentence(highlight: HighlightResponse): string {
 export interface ProseSegment {
   text: string;
   isProject: boolean;
+}
+
+/**
+ * What a chapter is called on screen.
+ *
+ * A chapter about no mission is named here rather than by the server: the
+ * domain says « this is about no mission », and saying it in French is the
+ * interface's business.
+ */
+export function chapterTitle(chapter: ChapterResponse): string {
+  return chapter.label === null ? "L'équipe" : missionName(chapter.label);
+}
+
+/** Every mission a chapter names, its packages counted in. */
+function namesIn(chapter: ChapterResponse): string[] {
+  const own = chapter.label === null ? [] : [chapter.label];
+  return [...own, ...chapter.packages.flatMap(namesIn)];
 }
 
 /**
@@ -100,10 +167,10 @@ export interface ProseSegment {
 export function projectLabels(digest: DigestResponse): string[] {
   return [
     ...new Set([
-      ...digest.movements
-        .filter((movement) => movement.project_id !== null)
-        .map((movement) => movement.subject),
-      ...digest.highlights.map((highlight) => highlight.label),
+      ...digest.chapters.flatMap(namesIn),
+      ...digest.highlights
+        .filter((highlight) => highlight.project_id !== null)
+        .map((highlight) => highlight.label),
     ]),
   ];
 }
@@ -144,9 +211,7 @@ export function emphasiseProjects(prose: string, labels: string[]): ProseSegment
  */
 function recognisable(labels: string[]): string[] {
   return [
-    ...new Set(
-      labels.flatMap((label) => [label, label.replace(/[.\s]+$/, "")]).filter(Boolean),
-    ),
+    ...new Set(labels.flatMap((label) => [label, missionName(label)]).filter(Boolean)),
   ].sort((a, b) => b.length - a.length);
 }
 
@@ -189,7 +254,7 @@ function line(value: number, one: string, many: string): TallyLine {
 
 /** Whether a month left anything at all in the register. */
 export function isQuietMonth(digest: DigestResponse): boolean {
-  return digest.movements.length === 0 && digest.highlights.length === 0;
+  return digest.chapters.length === 0 && digest.highlights.length === 0;
 }
 
 /**

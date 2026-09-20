@@ -36,6 +36,8 @@ def to_json(brief: Brief) -> dict[str, Any]:
                 "at": movement.at.isoformat(),
                 "subject": movement.subject,
                 "project_id": movement.project_id,
+                "parent_id": movement.parent_id,
+                "parent_label": movement.parent_label,
                 "from_status": _phase(movement.from_status),
                 "to_status": _phase(movement.to_status),
             }
@@ -79,6 +81,8 @@ def _movement(row: dict[str, Any]) -> Movement:
         at=datetime.fromisoformat(row["at"]),
         subject=row["subject"],
         project_id=row.get("project_id"),
+        parent_id=row.get("parent_id"),
+        parent_label=row.get("parent_label"),
         from_status=_read_phase(row.get("from_status")),
         to_status=_read_phase(row.get("to_status")),
     )

@@ -8,11 +8,14 @@ import type { HighlightKind } from "./highlightKind";
 import type { Tone } from "./tone";
 
 /**
- * One fact worth reading twice. It is about a mission, never a person.
+ * One fact worth reading twice.
+ *
+ * A worry is always about a mission; an arrival or a departure names the
+ * person, and carries no mission.
  */
 export interface HighlightResponse {
   kind: HighlightKind;
   tone: Tone;
-  project_id: number;
+  project_id: number | null;
   label: string;
 }

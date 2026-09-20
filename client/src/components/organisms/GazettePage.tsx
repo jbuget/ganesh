@@ -9,7 +9,7 @@ import { DigestVersionPicker } from "@/components/atoms/DigestVersionPicker";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { RegenerateDigestDialog } from "@/components/atoms/RegenerateDigestDialog";
 import { DigestHighlights } from "@/components/molecules/DigestHighlights";
-import { DigestMovements } from "@/components/molecules/DigestMovements";
+import { DigestChapters } from "@/components/molecules/DigestChapters";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { Button } from "@/components/ui/button";
 import { formatMonth } from "@/lib/dates";
@@ -145,12 +145,12 @@ export function GazettePage() {
               <DigestHighlights highlights={digest.highlights} />
             )}
 
-            {digest.movements.length > 0 && (
+            {digest.chapters.length > 0 && (
               <section>
-                <h3 className="mb-1 text-sm font-semibold text-slate-900">
-                  Le mois au fil des jours
+                <h3 className="mb-2 text-sm font-semibold text-slate-900">
+                  Le mois, projet par projet
                 </h3>
-                <DigestMovements movements={digest.movements} />
+                <DigestChapters chapters={digest.chapters} />
               </section>
             )}
           </>

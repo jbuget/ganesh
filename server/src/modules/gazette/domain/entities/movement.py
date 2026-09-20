@@ -31,6 +31,7 @@ class MovementKind(StrEnum):
     NEWS_POSTED = "news_posted"
     TEAMMATE_JOINED = "teammate_joined"
     TEAMMATE_LEFT = "teammate_left"
+    TEAMMATE_RETURNED = "teammate_returned"
 
 
 @dataclass(frozen=True)
@@ -44,5 +45,11 @@ class Movement:
     #: A fact whose subject cannot be named is not printed at all.
     subject: str
     project_id: int | None = None
+    #: The project a work package belongs to, and its name, recorded the day
+    #: the digest was read. Kept on the movement rather than looked up later:
+    #: a digest is an archive, and a package detached since must still be told
+    #: inside the project it belonged to that month.
+    parent_id: int | None = None
+    parent_label: str | None = None
     from_status: ProjectStatus | None = None
     to_status: ProjectStatus | None = None

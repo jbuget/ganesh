@@ -2,7 +2,9 @@
 
 from datetime import date, datetime
 
-from src.modules.gazette.domain.entities.highlight import HighlightKind, Tone
+import pytest
+
+from src.modules.gazette.domain.entities.highlight import Highlight, HighlightKind, Tone
 from src.modules.gazette.domain.entities.movement import Movement, MovementKind
 from src.modules.gazette.domain.services.saliency import find_highlights
 from src.modules.projects.domain.entities.project import (
@@ -10,6 +12,7 @@ from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectStatus,
 )
+from src.shared.exceptions.domain_exceptions import ValidationError
 
 MONTH = date(2026, 9, 1)
 
@@ -32,7 +35,7 @@ def a_project(
 
 
 def a_movement(
-    kind: MovementKind, project_id: int = 7, subject: str = "WAATcher"
+    kind: MovementKind, project_id: int | None = 7, subject: str = "WAATcher"
 ) -> Movement:
     return Movement(
         kind=kind, at=datetime(2026, 9, 3, 9), subject=subject, project_id=project_id
@@ -172,3 +175,89 @@ class TestFindHighlights:
             (HighlightKind.PHASE_STEPPED_BACK, "B"),
             (HighlightKind.GO_LIVE_OVERDUE, "A"),
         ]
+
+
+class TestTheTeam:
+    def test_somebody_joining_is_worth_telling(self) -> None:
+        highlights = find_highlights(
+            MONTH,
+            [
+                a_movement(
+                    MovementKind.TEAMMATE_JOINED, project_id=None, subject="Sam Okafor"
+                )
+            ],
+            {},
+        )
+
+        assert [(h.kind, h.label) for h in highlights] == [
+            (HighlightKind.TEAMMATE_JOINED, "Sam Okafor")
+        ]
+        assert highlights[0].tone is Tone.NOTABLE
+
+    def test_somebody_leaving_is_told_too(self) -> None:
+        highlights = find_highlights(
+            MONTH,
+            [a_movement(MovementKind.TEAMMATE_LEFT, project_id=None, subject="Léa")],
+            {},
+        )
+
+        assert [h.kind for h in highlights] == [HighlightKind.TEAMMATE_LEFT]
+        assert highlights[0].tone is Tone.NOTABLE
+
+    def test_somebody_coming_back_is_told(self) -> None:
+        highlights = find_highlights(
+            MONTH,
+            [
+                a_movement(
+                    MovementKind.TEAMMATE_RETURNED, project_id=None, subject="Léa"
+                )
+            ],
+            {},
+        )
+
+        assert [h.kind for h in highlights] == [HighlightKind.TEAMMATE_RETURNED]
+
+    def test_two_people_are_told_apart(self) -> None:
+        """Both carry no mission: it is the name that tells them apart."""
+        highlights = find_highlights(
+            MONTH,
+            [
+                a_movement(
+                    MovementKind.TEAMMATE_JOINED, project_id=None, subject="Sam"
+                ),
+                a_movement(
+                    MovementKind.TEAMMATE_JOINED, project_id=None, subject="Léa"
+                ),
+            ],
+            {},
+        )
+
+        assert [h.label for h in highlights] == ["Léa", "Sam"]
+
+    def test_the_team_reads_after_what_the_work_achieved(self) -> None:
+        highlights = find_highlights(
+            MONTH,
+            [
+                a_movement(
+                    MovementKind.TEAMMATE_JOINED, project_id=None, subject="Sam"
+                ),
+                a_movement(MovementKind.WENT_LIVE),
+            ],
+            {7: a_project(7, status=ProjectStatus.OPERATIONS)},
+        )
+
+        assert [h.kind for h in highlights] == [
+            HighlightKind.WENT_LIVE,
+            HighlightKind.TEAMMATE_JOINED,
+        ]
+
+    def test_a_worry_can_never_be_about_a_person(self) -> None:
+        """The protection is in the entity, not in whoever adds the next rule.
+
+        A gazette that named who was late would be read as a list of names,
+        whatever else it said.
+        """
+        with pytest.raises(ValidationError):
+            Highlight(
+                kind=HighlightKind.GO_LIVE_OVERDUE, project_id=None, label="Léa Chen"
+            )

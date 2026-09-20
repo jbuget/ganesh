@@ -2,13 +2,14 @@
 
 from collections.abc import Iterator
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from src.core.config import get_settings
 from src.main import app
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.gazette.application.use_cases.generate_digest import (
     GenerateDigestUseCase,
@@ -124,6 +125,7 @@ async def test_a_month_nobody_asked_for_reads_from_the_register(
     assert body["version"] is None
     assert body["prose"] is None
     assert body["versions"] == []
+    assert body["chapters"] == []
 
 
 @pytest.mark.asyncio
@@ -201,3 +203,42 @@ async def test_the_digest_holds_without_a_chapeau() -> None:
     assert body["is_generated"] is True
     assert body["prose"] is None
     assert body["prose_model"] is None
+
+
+@pytest.mark.asyncio
+async def test_the_month_comes_back_gathered_by_mission(screen: Screen) -> None:
+    """A flat list would read as the log it came from."""
+    await screen.audit_logs.add(
+        AuditLog(
+            action=AuditAction.PROJECT_CREATE,
+            actor_id=1,
+            project_id=7,
+            at=datetime(2026, 9, 3, 9),
+        )
+    )
+
+    body = (await screen.read()).json()
+
+    assert [chapter["label"] for chapter in body["chapters"]] == ["Ganesh"]
+    assert len(body["chapters"][0]["movements"]) == 1
+    assert body["chapters"][0]["packages"] == []
+
+
+@pytest.mark.asyncio
+async def test_what_was_about_nobody_s_mission_comes_back_unnamed(
+    screen: Screen,
+) -> None:
+    await screen.audit_logs.add(
+        AuditLog(
+            action=AuditAction.USER_CREATE,
+            actor_id=1,
+            target_user_id=1,
+            at=datetime(2026, 9, 3, 9),
+        )
+    )
+
+    body = (await screen.read()).json()
+
+    assert body["chapters"][0]["label"] is None
+    assert body["chapters"][0]["project_id"] is None
+    assert [h["label"] for h in body["highlights"]] == ["L. Chen"]

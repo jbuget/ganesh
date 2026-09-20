@@ -8,13 +8,17 @@
 /**
  * The rules that make a fact stand out.
  *
- * Each one is computed from the register and from the reference list, and
- * each one carries the mission it is about.
+ * Declared in the order a numéro reads them: what was achieved, who the team
+ * gained and lost, then what went back, what was given up on, and what is
+ * owed and late.
  */
 export type HighlightKind = (typeof HighlightKind)[keyof typeof HighlightKind];
 
 export const HighlightKind = {
   went_live: "went_live",
+  teammate_joined: "teammate_joined",
+  teammate_returned: "teammate_returned",
+  teammate_left: "teammate_left",
   phase_stepped_back: "phase_stepped_back",
   archived_before_delivery: "archived_before_delivery",
   go_live_overdue: "go_live_overdue",

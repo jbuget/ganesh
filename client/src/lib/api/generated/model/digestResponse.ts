@@ -4,9 +4,9 @@
  * Ganesh API
  * OpenAPI spec version: 0.1.0
  */
+import type { ChapterResponse } from "./chapterResponse";
 import type { DigestVersionResponse } from "./digestVersionResponse";
 import type { HighlightResponse } from "./highlightResponse";
-import type { MovementResponse } from "./movementResponse";
 import type { TallyResponse } from "./tallyResponse";
 
 /**
@@ -21,7 +21,7 @@ export interface DigestResponse {
   prose: string | null;
   prose_model: string | null;
   tally: TallyResponse;
-  movements: MovementResponse[];
+  chapters: ChapterResponse[];
   highlights: HighlightResponse[];
   versions: DigestVersionResponse[];
 }

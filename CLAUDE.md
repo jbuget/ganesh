@@ -561,12 +561,28 @@ scope for now.
 
 Two things it will not do, and adding either would be a decision:
 
-- **Name anybody in a bad light.** The figures are aggregates and the
-  highlights are about missions, by construction rather than by omission. A
-  gazette that said who was late would be read as a list of names, whatever
-  else it said.
+- **Name anybody in a bad light.** Every figure is an aggregate, and **a
+  point d'attention is about a mission, never about a person** — `Highlight`
+  refuses the combination rather than trusting whoever adds the next rule. An
+  arrival, a return or a departure does name the person, plainly: that is a
+  fact of the month, not a reproach. A gazette that said who was late would be
+  read as a list of names, whatever else it said.
 - **Tell its own story.** Generating a digest is traced like any other gesture
   and left out of the next one, or the gazette would fill up with itself.
+
+**The month is told mission by mission, not as one list.** A flat chronology
+reads as the log it came from, the same mission picked up and dropped ten
+times over; gathered under its own heading, a mission's month reads as a
+story, and a work package is told inside its project. The heading names the
+mission, so the lines under it do not. The grouping is computed in the domain,
+as the Synthèse d'activité already folds packages into their project, and each
+movement carries the parent it had **the day the digest was read** — a package
+detached since must still be told where its month happened.
+
+A label typed with a full stop at the end — several were written as sentences
+— loses it wherever the gazette builds the sentence itself: « … dans les PDF a
+été archivé ». The stop belongs to the label, not to our sentence. Applied to
+missions alone; a person's name is left exactly as it was given.
 
 A phase move reaches the register by two routes — dragging a card traces
 `project.status_change`, editing the mission traces a plain field change — and

@@ -24,4 +24,5 @@ export const MovementKind = {
   news_posted: "news_posted",
   teammate_joined: "teammate_joined",
   teammate_left: "teammate_left",
+  teammate_returned: "teammate_returned",
 } as const;

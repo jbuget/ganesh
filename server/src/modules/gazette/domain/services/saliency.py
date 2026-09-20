@@ -41,7 +41,7 @@ def _from_movements(
     highlights = []
     for movement in movements:
         kind = _stands_out(movement, projects)
-        if kind is not None and movement.project_id is not None:
+        if kind is not None:
             highlights.append(
                 Highlight(
                     kind=kind,
@@ -52,11 +52,22 @@ def _from_movements(
     return highlights
 
 
+#: Movements that stand out on their own, whatever else the month held. Who
+#: the team gained and lost is a fact of the month like any other, and naming
+#: the person is right: an arrival is not a reproach.
+_ON_THEIR_OWN = {
+    MovementKind.WENT_LIVE: HighlightKind.WENT_LIVE,
+    MovementKind.TEAMMATE_JOINED: HighlightKind.TEAMMATE_JOINED,
+    MovementKind.TEAMMATE_RETURNED: HighlightKind.TEAMMATE_RETURNED,
+    MovementKind.TEAMMATE_LEFT: HighlightKind.TEAMMATE_LEFT,
+}
+
+
 def _stands_out(
     movement: Movement, projects: Mapping[int, Project]
 ) -> HighlightKind | None:
-    if movement.kind is MovementKind.WENT_LIVE:
-        return HighlightKind.WENT_LIVE
+    if movement.kind in _ON_THEIR_OWN:
+        return _ON_THEIR_OWN[movement.kind]
     if movement.kind is MovementKind.PHASE_STEPPED_BACK:
         return HighlightKind.PHASE_STEPPED_BACK
     if movement.kind is MovementKind.PROJECT_ARCHIVED and _never_delivered(
@@ -101,4 +112,4 @@ def _once(highlights: Sequence[Highlight]) -> list[Highlight]:
     Two phase moves back in one month is one worry; printing it twice would
     make a hesitant month look like a failing one.
     """
-    return list({(h.kind, h.project_id): h for h in highlights}.values())
+    return list({(h.kind, h.project_id, h.label): h for h in highlights}.values())

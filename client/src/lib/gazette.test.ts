@@ -1,15 +1,19 @@
 import { describe, expect, it } from "vitest";
 
 import type {
+  ChapterResponse,
   DigestResponse,
   HighlightResponse,
   MovementResponse,
   TallyResponse,
 } from "@/lib/api/generated/model";
 import {
+  chapterTitle,
   emphasiseProjects,
   highlightSentence,
   isQuietMonth,
+  missionName,
+  movementPredicate,
   movementSentence,
   projectLabels,
   tallyLines,
@@ -24,6 +28,16 @@ function movement(fields: Partial<MovementResponse>): MovementResponse {
     project_id: 7,
     from_status: null,
     to_status: null,
+    ...fields,
+  };
+}
+
+function chapter(fields: Partial<ChapterResponse>): ChapterResponse {
+  return {
+    project_id: 7,
+    label: "Ganesh",
+    movements: [],
+    packages: [],
     ...fields,
   };
 }
@@ -209,7 +223,7 @@ describe("isQuietMonth", () => {
     prose: null,
     prose_model: null,
     tally: NOTHING,
-    movements: [],
+    chapters: [],
     highlights: [],
     versions: [],
   } satisfies DigestResponse;
@@ -218,8 +232,8 @@ describe("isQuietMonth", () => {
     expect(isQuietMonth(digest)).toBe(true);
   });
 
-  it("is not quiet as soon as one fact was recorded", () => {
-    expect(isQuietMonth({ ...digest, movements: [movement({})] })).toBe(false);
+  it("is not quiet as soon as one mission has a chapter", () => {
+    expect(isQuietMonth({ ...digest, chapters: [chapter({})] })).toBe(false);
   });
 });
 
@@ -241,17 +255,22 @@ describe("projectLabels", () => {
     prose: null,
     prose_model: null,
     tally: NOTHING,
-    movements: [
-      movement({ subject: "Ganesh", project_id: 7 }),
-      movement({ subject: "Ganesh", project_id: 7 }),
-      movement({ kind: "teammate_joined", subject: "Sam Okafor", project_id: null }),
+    chapters: [
+      chapter({
+        label: "Ganesh",
+        packages: [chapter({ project_id: 9, label: "Lot API" })],
+      }),
+      chapter({ project_id: null, label: null }),
     ],
-    highlights: [highlight({ label: "WAATcher", project_id: 2 })],
+    highlights: [
+      highlight({ label: "WAATcher", project_id: 2 }),
+      highlight({ kind: "teammate_joined", label: "Sam Okafor", project_id: null }),
+    ],
     versions: [],
   } satisfies DigestResponse;
 
-  it("gathers the projects the digest names, once each", () => {
-    expect(projectLabels(digest)).toEqual(["Ganesh", "WAATcher"]);
+  it("gathers the projects the digest names, packages counted in", () => {
+    expect(projectLabels(digest)).toEqual(["Ganesh", "Lot API", "WAATcher"]);
   });
 
   it("leaves out the people: only projects are set apart", () => {
@@ -338,5 +357,64 @@ describe("emphasiseProjects", () => {
     ]);
 
     expect(segments.some((piece) => piece.isProject)).toBe(false);
+  });
+});
+
+describe("missionName", () => {
+  it("drops the full stop a label was typed with", () => {
+    /* Left on, the gazette reads « … dans les PDF. a été archivé ». */
+    expect(missionName("Lecture des fichiers tableurs.")).toBe(
+      "Lecture des fichiers tableurs",
+    );
+  });
+
+  it("leaves a name that carries none alone", () => {
+    expect(missionName("WAATcher")).toBe("WAATcher");
+  });
+
+  it("never empties a name made of nothing else", () => {
+    expect(missionName("...")).toBe("...");
+  });
+});
+
+describe("movementPredicate", () => {
+  it("leaves the subject out, for a line read under a heading", () => {
+    expect(movementPredicate(movement({ kind: "went_live" }))).toBe(
+      "est passé en exploitation",
+    );
+  });
+
+  it("keeps both ends of a phase that moved", () => {
+    expect(
+      movementPredicate(
+        movement({
+          kind: "phase_advanced",
+          from_status: "scoping",
+          to_status: "development",
+        }),
+      ),
+    ).toBe("est passé de Cadrage à Réalisation");
+  });
+
+  it("says a news was posted without turning the sentence round", () => {
+    expect(movementPredicate(movement({ kind: "news_posted" }))).toBe(
+      "une actualité a été publiée",
+    );
+  });
+});
+
+describe("chapterTitle", () => {
+  it("names the mission a chapter is about", () => {
+    expect(chapterTitle(chapter({ label: "WAATcher" }))).toBe("WAATcher");
+  });
+
+  it("drops the full stop the label was typed with", () => {
+    expect(chapterTitle(chapter({ label: "Lecture des tableurs." }))).toBe(
+      "Lecture des tableurs",
+    );
+  });
+
+  it("names in French the chapter that is about no mission", () => {
+    expect(chapterTitle(chapter({ project_id: null, label: null }))).toBe("L'équipe");
   });
 });

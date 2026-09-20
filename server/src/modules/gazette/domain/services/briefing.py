@@ -29,6 +29,7 @@ READ_ACTIONS = frozenset(
         AuditAction.UPDATE_POST,
         AuditAction.USER_CREATE,
         AuditAction.USER_DEACTIVATE,
+        AuditAction.USER_ACTIVATE,
         AuditAction.MONTH_VALIDATE,
     }
 )
@@ -77,6 +78,8 @@ def _read(
         return _about_teammate(MovementKind.TEAMMATE_JOINED, log, people)
     if log.action is AuditAction.USER_DEACTIVATE:
         return _about_teammate(MovementKind.TEAMMATE_LEFT, log, people)
+    if log.action is AuditAction.USER_ACTIVATE:
+        return _about_teammate(MovementKind.TEAMMATE_RETURNED, log, people)
     if log.action is AuditAction.PROJECT_STATUS_CHANGE:
         return _phase_move(log, projects)
     if log.action is AuditAction.PROJECT_UPDATE:
@@ -108,11 +111,14 @@ def _phase_move(log: AuditLog, projects: Mapping[int, Project]) -> Movement | No
         return None
 
     came_from = _phase(log.old_value) if log.old_value else None
+    parent_id, parent_label = _parent(log, projects)
     return Movement(
         kind=_direction(came_from, went_to),
         at=log.at,
         subject=label,
         project_id=log.project_id,
+        parent_id=parent_id,
+        parent_label=parent_label,
         from_status=came_from,
         to_status=went_to,
     )
@@ -147,7 +153,15 @@ def _about_mission(
     label = _label(log, projects)
     if label is None:
         return None
-    return Movement(kind=kind, at=log.at, subject=label, project_id=log.project_id)
+    parent_id, parent_label = _parent(log, projects)
+    return Movement(
+        kind=kind,
+        at=log.at,
+        subject=label,
+        project_id=log.project_id,
+        parent_id=parent_id,
+        parent_label=parent_label,
+    )
 
 
 def _about_teammate(
@@ -157,6 +171,22 @@ def _about_teammate(
     if name is None:
         return None
     return Movement(kind=kind, at=log.at, subject=name)
+
+
+def _parent(
+    log: AuditLog, projects: Mapping[int, Project]
+) -> tuple[int | None, str | None]:
+    """The project a work package belongs to, named here and now.
+
+    Recorded on the movement rather than looked up when the digest is read: a
+    package detached or archived since must still be told inside the project
+    it belonged to that month.
+    """
+    package = projects.get(log.project_id) if log.project_id is not None else None
+    if package is None or package.parent_id is None:
+        return None, None
+    parent = projects.get(package.parent_id)
+    return package.parent_id, parent.label if parent else None
 
 
 def _label(log: AuditLog, projects: Mapping[int, Project]) -> str | None:

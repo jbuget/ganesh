@@ -37,12 +37,28 @@ class MovementResponse(BaseModel):
     to_status: ProjectStatus | None
 
 
+class ChapterResponse(BaseModel):
+    """One mission's month, its work packages told inside it."""
+
+    #: Nothing when the chapter gathers what was about no mission — somebody
+    #: joining the team, or leaving it. What such a chapter is called is for
+    #: the reading side to say, in French.
+    project_id: int | None
+    label: str | None
+    movements: list[MovementResponse]
+    packages: list["ChapterResponse"]
+
+
 class HighlightResponse(BaseModel):
-    """One fact worth reading twice. It is about a mission, never a person."""
+    """One fact worth reading twice.
+
+    A worry is always about a mission; an arrival or a departure names the
+    person, and carries no mission.
+    """
 
     kind: HighlightKind
     tone: Tone
-    project_id: int
+    project_id: int | None
     label: str
 
 
@@ -69,7 +85,9 @@ class DigestResponse(BaseModel):
     prose: str | None
     prose_model: str | None
     tally: TallyResponse
-    movements: list[MovementResponse]
+    #: The month gathered under the missions it is about, in the order they
+    #: first appear. A flat list would read as the log it came from.
+    chapters: list[ChapterResponse]
     highlights: list[HighlightResponse]
     #: Every generation of this month, most recent first.
     versions: list[DigestVersionResponse]
