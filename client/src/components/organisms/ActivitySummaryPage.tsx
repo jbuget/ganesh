@@ -7,7 +7,7 @@ import { ActivityContributors } from "@/components/organisms/ActivityContributor
 import { ActivityMatrix } from "@/components/organisms/ActivityMatrix";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ACTIVITY_RANGES } from "@/lib/activity";
+import { ACTIVITY_RANGES, previousRangeLabel } from "@/lib/activity";
 import { summarise } from "@/lib/statistics";
 import { useActivityScreen, type ActivityView } from "@/lib/use-activity-summary";
 
@@ -50,6 +50,7 @@ export function ActivitySummaryPage() {
     );
   }
 
+  const against = previousRangeLabel(range);
   const silent = summary.contributors
     .filter((someone) => someone.declared_days === 0)
     .map((someone) => someone.display_name);
@@ -80,6 +81,7 @@ export function ActivitySummaryPage() {
               lines={summary.projects}
               contributors={summary.contributors}
               totalDays={summary.project_days}
+              against={against}
               empty="Aucun temps déclaré sur un projet pour cette période."
             />
             <ActivityMatrix
@@ -87,6 +89,7 @@ export function ActivitySummaryPage() {
               lines={summary.off_project}
               contributors={summary.contributors}
               totalDays={summary.off_project_days}
+              against={against}
               empty="Aucun temps hors projet déclaré pour cette période."
             />
           </TabsContent>

@@ -22,6 +22,8 @@ interface ActivityMatrixProps {
   contributors: ContributorResponse[];
   /** Days the whole block weighs, drawn on its closing row. */
   totalDays: number;
+  /** What the movement column is measured against, named. */
+  against: string;
   empty: string;
 }
 
@@ -38,11 +40,20 @@ export function ActivityMatrix({
   lines,
   contributors,
   totalDays,
+  against,
   empty,
 }: ActivityMatrixProps) {
   return (
     <section>
       <h2 className="mb-2 text-sm font-semibold text-slate-900">{title}</h2>
+      {/* Three columns nobody can read on their own: the unit, the
+          denominator and the point of comparison are all invisible from the
+          headings alone. */}
+      <p className="mb-3 text-sm text-slate-500">
+        Jours déclarés sur la période. La part se lit sur tout le temps déclaré, hors
+        projet compris — les lignes d&apos;un bloc ne font donc pas 100 %.
+        L&apos;évolution compare à {against}.
+      </p>
 
       {lines.length === 0 ? (
         <p className="text-sm text-slate-500">{empty}</p>
@@ -52,9 +63,22 @@ export function ActivityMatrix({
             <TableHeader className={TABLE_HEADER}>
               <TableRow>
                 <TableHead className="sticky left-0 z-20 bg-white">Projet</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead className="text-right">Part</TableHead>
-                <TableHead className={`text-right ${STRONG_SEPARATOR}`}>
+                <TableHead
+                  className="text-right"
+                  title="Jours déclarés sur la période, lots compris"
+                >
+                  Jours
+                </TableHead>
+                <TableHead
+                  className="text-right"
+                  title="Part de tout le temps déclaré sur la période, hors projet compris"
+                >
+                  Part du déclaré
+                </TableHead>
+                <TableHead
+                  className={`text-right whitespace-nowrap ${STRONG_SEPARATOR}`}
+                  title={`Jours gagnés ou perdus par rapport à ${against}`}
+                >
                   Évolution
                 </TableHead>
                 {contributors.map((someone) => (
@@ -71,6 +95,7 @@ export function ActivityMatrix({
                   key={line.project_id}
                   line={line}
                   contributors={contributors}
+                  against={against}
                 />
               ))}
 

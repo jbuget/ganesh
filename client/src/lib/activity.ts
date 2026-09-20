@@ -25,6 +25,30 @@ export const ACTIVITY_RANGES: { value: PeriodRange; label: string }[] = [
 /** The window the screen opens on: what a Monday-morning reading asks for. */
 export const DEFAULT_ACTIVITY_RANGE: PeriodRange = "last_week";
 
+/**
+ * What the window before this one is called, said as one compares against it.
+ *
+ * Named rather than left to « la période précédente »: a month still running
+ * is compared against the same stretch of the one before, not against a whole
+ * month, and a reader who assumes otherwise misreads every movement.
+ */
+export function previousRangeLabel(range: PeriodRange): string {
+  switch (range) {
+    case "this_week":
+      return "la même période de la semaine précédente";
+    case "last_week":
+      return "la semaine d'avant";
+    case "last_two_weeks":
+      return "les deux semaines d'avant";
+    case "this_month":
+      return "la même période du mois précédent";
+    case "last_month":
+      return "le mois d'avant";
+    default:
+      return "la période précédente";
+  }
+}
+
 /** Days, or an em dash: an empty cell is not a zero, it is nothing declared. */
 export function formatDays(days: number): string {
   return days === 0 ? NOTHING : formatPersonDays(days);

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { ACTIVITY_RANGES, formatDays, formatMovement } from "./activity";
+import {
+  ACTIVITY_RANGES,
+  formatDays,
+  formatMovement,
+  previousRangeLabel,
+} from "./activity";
 
 describe("activity windows", () => {
   it("offers anchored windows only", () => {
@@ -41,5 +46,22 @@ describe("formatMovement", () => {
 
   it("uses a true minus sign for a fall", () => {
     expect(formatMovement(-3)).toBe("−3 j");
+  });
+});
+
+describe("previousRangeLabel", () => {
+  it("names a running month as the same stretch of the one before", () => {
+    // Not « le mois dernier »: a month still running is compared against as
+    // much of the one before, and a reader who assumes otherwise misreads
+    // every movement on the screen.
+    expect(previousRangeLabel("this_month")).toBe("la même période du mois précédent");
+  });
+
+  it("names a closed month as the whole month before", () => {
+    expect(previousRangeLabel("last_month")).toBe("le mois d'avant");
+  });
+
+  it("falls back on a plain wording for a window it does not know", () => {
+    expect(previousRangeLabel("last_90_days")).toBe("la période précédente");
   });
 });

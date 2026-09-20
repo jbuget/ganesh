@@ -5,6 +5,8 @@ interface MovementBadgeProps {
   days: number;
   /** Whether the mission received nothing at all over the window before. */
   isNew?: boolean;
+  /** What is being compared against, for whoever reads with a screen reader. */
+  against: string;
 }
 
 /**
@@ -14,10 +16,10 @@ interface MovementBadgeProps {
  * NOMAD », they need to be told it is three days down. A mission appearing
  * is said apart from one growing — they are two different pieces of news.
  *
- * Nothing is drawn when nothing moved: a « +0 j » would claim a stability
- * that is only an absence of change.
+ * A mission that did not move reads « stable » rather than empty: an empty
+ * cell is indistinguishable from one nobody could fill.
  */
-export function MovementBadge({ days, isNew = false }: MovementBadgeProps) {
+export function MovementBadge({ days, isNew = false, against }: MovementBadgeProps) {
   if (isNew && days > 0) {
     return (
       <span className="rounded bg-sky-50 px-1.5 py-0.5 text-xs font-medium text-sky-700">
@@ -27,7 +29,9 @@ export function MovementBadge({ days, isNew = false }: MovementBadgeProps) {
   }
 
   const movement = formatMovement(days);
-  if (movement === null) return null;
+  if (movement === null) {
+    return <span className="text-xs text-slate-400">stable</span>;
+  }
 
   return (
     <span
@@ -36,7 +40,7 @@ export function MovementBadge({ days, isNew = false }: MovementBadgeProps) {
       }`}
     >
       {movement}
-      <span className="sr-only"> par rapport à la période précédente</span>
+      <span className="sr-only"> par rapport à {against}</span>
     </span>
   );
 }

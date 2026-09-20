@@ -17,6 +17,8 @@ import { formatShare } from "@/lib/statistics";
 interface ActivityMatrixRowProps {
   line: ActivityLineResponse;
   contributors: ContributorResponse[];
+  /** What the movement is measured against, named. */
+  against: string;
   /** Whether the line is a work package, drawn under its project. */
   isPackage?: boolean;
 }
@@ -32,6 +34,7 @@ interface ActivityMatrixRowProps {
 export function ActivityMatrixRow({
   line,
   contributors,
+  against,
   isPackage = false,
 }: ActivityMatrixRowProps) {
   const [isOpen, setOpen] = useState(false);
@@ -93,7 +96,7 @@ export function ActivityMatrixRow({
           {formatShare(line.share)}
         </TableCell>
         <TableCell className={`text-right ${STRONG_SEPARATOR}`}>
-          <MovementBadge days={line.movement} isNew={line.is_new} />
+          <MovementBadge days={line.movement} isNew={line.is_new} against={against} />
         </TableCell>
 
         {contributors.map((someone) => (
@@ -120,6 +123,7 @@ export function ActivityMatrixRow({
                 packages: [],
               }}
               contributors={contributors}
+              against={against}
               isPackage
             />
           )}
@@ -128,6 +132,7 @@ export function ActivityMatrixRow({
               key={each.project_id}
               line={each}
               contributors={contributors}
+              against={against}
               isPackage
             />
           ))}
