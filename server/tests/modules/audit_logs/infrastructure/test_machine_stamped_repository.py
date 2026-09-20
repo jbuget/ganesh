@@ -5,7 +5,7 @@ key's owner — the one who answers for it. That alone would make a machine's
 line indistinguishable from the owner's own, so the key is named beside it.
 """
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 
 import pytest
 
@@ -13,6 +13,7 @@ from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditL
 from src.modules.audit_logs.infrastructure.machine_stamped_repository import (
     MachineStampedAuditLog,
 )
+from src.shared.utils import clock
 from tests.helpers.in_memory_repositories import InMemoryAuditLogRepository
 
 KEY = "jns_ab12cd34ef56"
@@ -77,5 +78,5 @@ async def test_reading_the_log_back_is_untouched() -> None:
     assert len(await stamped.list_for_project(3, limit=10, offset=0)) == 1
     assert await stamped.count_for_project(3) == 1
     assert await stamped.count_all() == 1
-    assert await stamped.list_for_user_month(7, date.today()) == []
+    assert await stamped.list_for_user_month(7, clock.today()) == []
     assert await stamped.count_all(since=datetime(2099, 1, 1, tzinfo=UTC)) == 0
