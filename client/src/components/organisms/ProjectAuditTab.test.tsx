@@ -44,7 +44,7 @@ describe("ProjectAuditTab", () => {
   });
 
   it("gathers the gestures under the day they were made", async () => {
-    served(2, [line(1, "2026-09-17T14:05:00"), line(2, "2026-09-16T09:00:00")]);
+    served(2, [line(1, "2026-09-17T12:05:00Z"), line(2, "2026-09-16T07:00:00Z")]);
 
     render(<ProjectAuditTab projectId={7} />);
 
@@ -53,7 +53,7 @@ describe("ProjectAuditTab", () => {
   });
 
   it("counts the whole log, not the page one is reading", async () => {
-    served(340, [line(1, "2026-09-17T14:05:00")]);
+    served(340, [line(1, "2026-09-17T12:05:00Z")]);
 
     render(<ProjectAuditTab projectId={7} />);
 
@@ -61,7 +61,7 @@ describe("ProjectAuditTab", () => {
   });
 
   it("offers the rest of the log, and asks for the page after the one read", async () => {
-    served(3, [line(1, "2026-09-17T14:05:00")]);
+    served(3, [line(1, "2026-09-17T12:05:00Z")]);
 
     render(<ProjectAuditTab projectId={7} />);
     await userEvent.click(await screen.findByRole("button", { name: "Voir plus" }));
@@ -75,7 +75,7 @@ describe("ProjectAuditTab", () => {
   });
 
   it("offers nothing more once the whole log is on screen", async () => {
-    served(1, [line(1, "2026-09-17T14:05:00")]);
+    served(1, [line(1, "2026-09-17T12:05:00Z")]);
 
     render(<ProjectAuditTab projectId={7} />);
 

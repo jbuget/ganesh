@@ -9,7 +9,7 @@ const LIN = { id: 1, display_name: "Lin Chen", initials: "LC" };
 function entry(over: Partial<AuditLogEntryResponse> = {}): AuditLogEntryResponse {
   return {
     id: 1,
-    at: "2026-09-17T14:05:00",
+    at: "2026-09-17T12:05:00Z",
     action: "project.create",
     actor: LIN,
     target_user: null,
@@ -36,6 +36,14 @@ describe("AuditLogRow", () => {
     expect(screen.getByText("Lin Chen")).toBeInTheDocument();
     expect(screen.getByText("a créé le projet")).toBeInTheDocument();
     expect(screen.getByText("14:05")).toBeInTheDocument();
+  });
+
+  it("tells the hour on the Paris clock, not the one the API counted in", () => {
+    // The API records the instant in UTC; production counts in UTC too, and
+    // showing that hour straight is what made a gesture read two hours early.
+    row({ at: "2026-09-17T21:40:00Z" });
+
+    expect(screen.getByText("23:40")).toBeInTheDocument();
   });
 
   it("shows both ends of a change", () => {

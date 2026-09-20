@@ -16,7 +16,7 @@ const jeremy: UserResponse = {
   is_active: true,
 };
 
-const NOW = new Date("2026-09-17T12:00:00");
+const NOW = new Date("2026-09-17T10:00:00Z");
 
 const onOpen = vi.fn();
 
@@ -66,7 +66,7 @@ describe("UserRow", () => {
   });
 
   it("says how long since the account last logged in", () => {
-    renderRow({ ...jeremy, last_login_at: "2026-09-17T09:00:00" });
+    renderRow({ ...jeremy, last_login_at: "2026-09-17T07:00:00Z" });
 
     expect(screen.getByText("il y a 3 h")).toBeInTheDocument();
   });

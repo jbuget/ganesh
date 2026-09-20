@@ -1,6 +1,7 @@
 import { Archive } from "lucide-react";
 
 import { formatShortDate } from "@/lib/dates";
+import { parisDay } from "@/lib/instants";
 
 interface ArchivedCalloutProps {
   /** When the mission left the reference list, if the date is known. */
@@ -25,7 +26,7 @@ export function ArchivedCallout({ archivedAt }: ArchivedCalloutProps) {
     >
       <Archive className="size-4 shrink-0 text-amber-600" aria-hidden />
       {archivedAt
-        ? `Ce projet a été archivé le ${formatShortDate(archivedAt)}.`
+        ? `Ce projet a été archivé le ${formatShortDate(parisDay(archivedAt))}.`
         : "Ce projet est archivé."}
     </p>
   );

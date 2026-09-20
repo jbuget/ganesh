@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { SimulationResponse } from "@/lib/api/generated/model";
 import { formatShortDate } from "@/lib/dates";
+import { parisDay } from "@/lib/instants";
 
 interface SimulationPickerProps {
   simulations: SimulationResponse[];
@@ -83,7 +84,7 @@ export function SimulationPicker({
                       {simulation.name}
                     </span>
                     <span className="block text-xs text-slate-400">
-                      {formatShortDate(simulation.updated_at)}
+                      {formatShortDate(parisDay(simulation.updated_at))}
                     </span>
                   </span>
                   {isOpened && (
