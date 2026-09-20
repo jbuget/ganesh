@@ -24,11 +24,14 @@ from src.modules.gazette.domain.services.prompts.chapeau_prompt import compose
 
 logger = logging.getLogger(__name__)
 
-#: A chapeau is two or three sentences. The budget is what stops a model that
-#: has decided to write an essay, and it is shared with the model's own
-#: reasoning — which is why that is turned off below rather than left to eat
-#: the whole allowance and return a truncated sentence.
-MAX_OUTPUT_TOKENS = 400
+#: A chapeau is two or three sentences — forty tokens or so. The rest of this
+#: budget is for the model's own reasoning, which is billed as output and
+#: cannot be turned off: `thinking_budget=0` is quietly ignored by the recent
+#: Flash models, which spent eleven hundred tokens thinking about three
+#: sentences when this was measured. Sized for that, with room to spare:
+#: too small and the reasoning eats the whole allowance, the answer is cut,
+#: and what comes back is the model's scratchpad rather than its chapeau.
+MAX_OUTPUT_TOKENS = 2000
 
 #: Low, not zero. The chapeau is a reading of facts, not a variation on them.
 TEMPERATURE = 0.3
@@ -59,13 +62,17 @@ class GeminiProseWriter(ProseWriter):
                 config=types.GenerateContentConfig(
                     temperature=TEMPERATURE,
                     max_output_tokens=MAX_OUTPUT_TOKENS,
-                    # The chapeau restates facts it has been handed. Thinking
-                    # buys nothing here and spends the output budget.
-                    thinking_config=types.ThinkingConfig(thinking_budget=0),
                 ),
             )
         except Exception as error:
             logger.warning("Gemini wrote no chapeau for %s: %s", brief.month, error)
+            return None
+
+        if not _finished(response):
+            # Cut off mid-thought, what comes back is working-out rather than
+            # a chapeau — and working-out carries no figure, so the rule that
+            # guards the prose would let it through. Refused here instead.
+            logger.warning("Gemini was cut short on %s; no chapeau.", brief.month)
             return None
 
         text = response.text
@@ -79,3 +86,11 @@ class GeminiProseWriter(ProseWriter):
                 "The chapeau written for %s counted, and was dropped.", brief.month
             )
         return prose
+
+
+def _finished(response: types.GenerateContentResponse) -> bool:
+    """Whether the model stopped because it had finished, not because it ran out."""
+    candidates = response.candidates or []
+    if not candidates:
+        return False
+    return candidates[0].finish_reason is types.FinishReason.STOP
