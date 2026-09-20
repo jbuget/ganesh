@@ -20,6 +20,19 @@ class EntryRepository(ABC):
     async def list_for_day(self, user_id: int, day: date) -> list[Entry]: ...
 
     @abstractmethod
+    async def list_for_user_between(
+        self, user_id: int, start: date, end: date
+    ) -> list[Entry]:
+        """Everything one person declared over a window, day by day.
+
+        The entries themselves rather than sums: what is read from them —
+        days per mission, the filling of each month, delivered told from
+        forecast — is the domain's business, and a port that answered each of
+        those questions on its own would state the same window three times.
+        """
+        ...
+
+    @abstractmethod
     async def list_for_project(self, project_id: int) -> list[Entry]: ...
 
     @abstractmethod

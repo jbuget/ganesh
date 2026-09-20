@@ -40,6 +40,18 @@ class SqlProjectAssigneeRepository(ProjectAssigneeRepository):
             by_project.setdefault(project_id, []).append(user_id)
         return by_project
 
+    async def list_for_user(self, user_id: int) -> dict[int, list[ProjectRole]]:
+        """Every mission one person is attached to, both roles at once."""
+        result = await self._session.execute(
+            select(ProjectAssigneeModel.project_id, ProjectAssigneeModel.role).where(
+                ProjectAssigneeModel.user_id == user_id
+            )
+        )
+        by_project: dict[int, list[ProjectRole]] = {}
+        for project_id, role in result.all():
+            by_project.setdefault(project_id, []).append(role)
+        return by_project
+
     async def assign(self, project_id: int, user_id: int, role: ProjectRole) -> None:
         # The primary key carries both columns: letting the database ignore
         # the duplicate avoids a round trip to check on every click.

@@ -190,6 +190,18 @@ class InMemoryEntryRepository(EntryRepository):
             and e.day.month == month.month
         ]
 
+    async def list_for_user_between(
+        self, user_id: int, start: date, end: date
+    ) -> list[Entry]:
+        return sorted(
+            (
+                e
+                for e in self._entries
+                if e.user_id == user_id and start <= e.day <= end
+            ),
+            key=lambda e: e.day,
+        )
+
     async def list_for_day(self, user_id: int, day: date) -> list[Entry]:
         return [e for e in self._entries if e.user_id == user_id and e.day == day]
 
@@ -285,6 +297,13 @@ class InMemoryMonthRepository(MonthRepository):
         first = month.replace(day=1)
         return [m for m in self._months if m.month == first]
 
+    async def list_for_user(self, user_id: int, since: date) -> list[Month]:
+        first = first_day_of(since)
+        return sorted(
+            (m for m in self._months if m.user_id == user_id and m.month >= first),
+            key=lambda m: m.month,
+        )
+
     async def save(self, month: Month) -> Month:
         existing = await self.get(month.user_id, month.month)
         if existing is not None:
@@ -343,6 +362,13 @@ class InMemoryProjectAssigneeRepository(ProjectAssigneeRepository):
         return {
             pid: list(ids) for (pid, r), ids in self._by_project.items() if r is role
         }
+
+    async def list_for_user(self, user_id: int) -> dict[int, list[ProjectRole]]:
+        by_project: dict[int, list[ProjectRole]] = {}
+        for (project_id, role), members in self._by_project.items():
+            if user_id in members:
+                by_project.setdefault(project_id, []).append(role)
+        return by_project
 
     async def assign(self, project_id: int, user_id: int, role: ProjectRole) -> None:
         members = self._by_project.setdefault((project_id, role), [])
