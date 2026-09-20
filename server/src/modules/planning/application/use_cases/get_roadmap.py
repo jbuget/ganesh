@@ -33,6 +33,11 @@ from src.modules.planning.domain.services.backlog import (
 from src.modules.planning.domain.services.horizon import horizon_end, months_to_cover
 from src.modules.planning.domain.services.projection import project_workload
 from src.modules.planning.domain.services.roadmap_drawing import draw_segments
+from src.modules.planning.domain.services.roadmap_filtering import (
+    NO_ROADMAP_FILTER,
+    RoadmapFilters,
+    keeps,
+)
 from src.modules.planning.domain.services.roadmap_slippage import slippage_of
 from src.modules.planning.domain.services.roadmap_summary import summarise_roadmap
 from src.modules.planning.domain.services.roadmap_window import (
@@ -53,6 +58,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 )
 from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.shared.enums.department import Department
 
 #: Sorts last the missions whose bar starts nowhere. They have nothing to place
 #: on the axis, and pushing them to the bottom keeps the diagonal readable.
@@ -82,12 +88,17 @@ class GetRoadmapUseCase:
         from_day: date | None = None,
         to_day: date | None = None,
         today: date | None = None,
+        filters: RoadmapFilters = NO_ROADMAP_FILTER,
     ) -> Roadmap:
-        """Draws the portfolio over a window.
+        """Draws the portfolio over a window, narrowed to what was asked for.
 
         `months` says how far ahead to look and is what the screen asks with.
         A window given by hand overrides it whole: reading a year that is over
         is a different question, and one the same control cannot serve.
+
+        `filters` narrows what is drawn. The tally is read off what was kept,
+        which is the whole point of narrowing here rather than in the browser:
+        « 8 projets, 2 en retard » above eight bars, and never above forty.
         """
         now = today or date.today()
         default_from, default_to = rolling_window(now, months)
@@ -104,6 +115,9 @@ class GetRoadmapUseCase:
         ]
         by_id = {mission.id: mission for mission in missions}
 
+        # Read before anything is narrowed: the projection places the whole
+        # backlog on the whole team, and what the reader chose to look at has
+        # no bearing on when the work lands.
         landings = await self._project(missions, now, closes_on)
         history = await self._details.list_phases_reached_by_project()
         spans = await self._entries.span_by_project()
@@ -112,7 +126,7 @@ class GetRoadmapUseCase:
 
         lines = [
             self._draw(
-                mission=with_resolved_category(mission, by_id.get(mission.parent_id)),
+                mission=mission,
                 phases=history.get(mission.id or 0, {}),
                 span=spans.get(mission.id or 0),
                 landing=landings.get(mission.id or 0),
@@ -122,7 +136,7 @@ class GetRoadmapUseCase:
                 window_start=opens_on,
                 window_end=closes_on,
             )
-            for mission in missions
+            for mission in await self._narrow(missions, by_id, filters)
         ]
         shown = sorted(
             (line for line in lines if line.shows_between(opens_on, closes_on, now)),
@@ -136,6 +150,36 @@ class GetRoadmapUseCase:
             missions=shown,
             summary=summarise_roadmap(shown, opens_on, closes_on),
         )
+
+    async def _narrow(
+        self,
+        missions: list[Project],
+        by_id: dict[int | None, Project],
+        filters: RoadmapFilters,
+    ) -> list[Project]:
+        """The missions the reader asked for, each carrying its resolved axis.
+
+        Narrowing happens **after** the projection and before the drawing. A
+        mission hidden by a filter still takes the team's time: dropping it
+        from the backlog would move the landing dates of the ones left on
+        screen, and a roadmap whose dates shift when a box is ticked is one
+        nobody can take to a committee.
+
+        The axis is resolved first, so that a work package is judged on the
+        axis every screen shows it under rather than on the empty column it
+        carries.
+        """
+        departments: dict[int, list[Department]] = (
+            await self._details.list_departments_by_project()
+        )
+        return [
+            resolved
+            for resolved in (
+                with_resolved_category(mission, by_id.get(mission.parent_id))
+                for mission in missions
+            )
+            if keeps(resolved, departments.get(resolved.id or 0, []), filters)
+        ]
 
     async def _project(
         self, missions: list[Project], today: date, window_end: date
