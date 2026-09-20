@@ -80,3 +80,34 @@ async def test_an_async_provider_is_awaited() -> None:
         return "built"
 
     assert await wiring(a_session()).resolve(provider) == "built"
+
+
+@pytest.mark.asyncio
+async def test_a_header_the_call_carries_reaches_the_provider() -> None:
+    """A write has to name the key that made it.
+
+    `get_audit_log_repository` reads the token off the `Authorization` header
+    to stamp every line with the key. A tool reads no request, so the door
+    hands over what it read at the door — otherwise a line written by a
+    machine would name nobody.
+    """
+
+    def provider(authorization: str | None = Header(default=None)) -> Repository:
+        return Repository(None, stamped_by=authorization)
+
+    built = await Wiring(
+        session=None,  # type: ignore[arg-type]
+        overrides={},
+        headers={"authorization": "Bearer jns_abc_def"},
+    ).resolve(provider)
+
+    assert built.stamped_by == "Bearer jns_abc_def"
+
+
+@pytest.mark.asyncio
+async def test_a_header_nothing_carries_keeps_its_default() -> None:
+    def provider(authorization: str | None = Header(default=None)) -> Repository:
+        return Repository(None, stamped_by=authorization)
+
+    built = await wiring(a_session()).resolve(provider)
+    assert built.stamped_by is None

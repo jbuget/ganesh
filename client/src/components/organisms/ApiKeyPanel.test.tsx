@@ -85,7 +85,9 @@ describe("ApiKeyPanel", () => {
     it("lets a manager change what the key opens", async () => {
       const { onChangeScopes } = panel();
 
-      await userEvent.click(screen.getByRole("checkbox", { name: /Temps/ }));
+      await userEvent.click(
+        screen.getByRole("checkbox", { name: /Temps \(lecture\)/ }),
+      );
 
       expect(onChangeScopes).toHaveBeenCalledWith(7, ["catalog:read", "entries:read"]);
     });

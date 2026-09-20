@@ -211,8 +211,12 @@ class TestAMachineComesThroughToo:
         assert "X-RateLimit-Limit" not in response.headers
 
 
-def test_every_scope_the_form_offers_opens_a_route() -> None:
-    """No scope may promise what no route keeps.
+def test_every_scope_the_form_offers_opens_a_door() -> None:
+    """No scope may promise what nothing keeps.
+
+    A door, not a route: a tool opens one too, through `@answers`, and
+    `moods:read` is opened by a tool alone. What the test is for is unchanged —
+    the table of keys says what a key opens, and says it right.
 
     The two broad ones are the exception by construction: they open nothing of
     their own and are honoured by `ApiKey.grants`, which is what lets them

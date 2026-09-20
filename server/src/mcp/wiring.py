@@ -24,7 +24,7 @@ read needs nothing of the sort, and V1 only reads.
 import inspect
 from collections.abc import AsyncIterator, Callable, Mapping
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, TypeVar, cast
 
 from fastapi import params
@@ -49,6 +49,10 @@ class Wiring:
 
     session: AsyncSession
     overrides: Mapping[Provider, Provider]
+    #: What the call carried, by header name in lower case. A tool reads no
+    #: request, so the door hands over what it read at the door — which is how
+    #: `get_audit_log_repository` comes to name the key on a line it writes.
+    headers: Mapping[str, str] = field(default_factory=dict)
 
     async def resolve(self, provider: Callable[..., T]) -> T:
         """Builds what a provider provides, resolving its `Depends` underneath."""
@@ -74,8 +78,16 @@ class Wiring:
                 raise TypeError(f"« {parameter.name} » depends on its annotation.")
             return await self.resolve(marker.dependency)
 
-        # A `Header`, a `Query`: what a request would have carried. Required
-        # with no default means a request said it, and there is none here.
+        # A `Header` the call carried is handed over: a line written by a
+        # machine has to name the key that wrote it, and that is read off the
+        # `Authorization` header.
+        if isinstance(marker, params.Header):
+            carried = self.headers.get(parameter.name.replace("_", "-").lower())
+            if carried is not None:
+                return carried
+
+        # Otherwise, what a request would have carried. Required with no
+        # default means a request said it, and there is none here.
         given = marker.default
         return None if given is ... or given is PydanticUndefined else given
 

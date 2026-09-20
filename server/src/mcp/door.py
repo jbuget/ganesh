@@ -154,10 +154,18 @@ class MachineDoor:
             return
 
         async with session_scope() as session:
-            wiring = Wiring(session=session, overrides=self._overrides)
+            # What the call carried comes along: a line written by a tool has
+            # to name the key that wrote it, and `get_audit_log_repository`
+            # reads that off the `Authorization` header.
+            carried = _header(scope, b"authorization")
+            wiring = Wiring(
+                session=session,
+                overrides=self._overrides,
+                headers={} if carried is None else {"authorization": carried},
+            )
             authenticate = await wiring.resolve(get_authenticate_api_key_use_case)
             rate_limit = await wiring.resolve(get_check_rate_limit_use_case)
-            token = bearer_token(_header(scope, b"authorization"))
+            token = bearer_token(carried)
             admitted = await self._admit(token, session, authenticate, rate_limit)
             if isinstance(admitted, JSONResponse):
                 await admitted(scope, receive, send)

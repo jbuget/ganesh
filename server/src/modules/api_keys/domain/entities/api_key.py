@@ -39,11 +39,12 @@ class ApiKeyScope(StrEnum):
     What they cover includes scopes that **do not exist yet**: that is the
     price of breadth, and the reason the form says so.
 
-    **A broad scope covers what a route opens to machines, never what the API
-    knows.** The distinction only became worth writing down once the product
-    held something deliberately closed: the moods are given in confidence, and
-    no scope reaches them because no route asks for one. A resource stays shut
-    by a route not opting in, and `all:read` cannot talk it open.
+    **A broad scope covers what is opened to machines, never what the API
+    knows.** A resource stays shut by nothing opting in, and `all:read` cannot
+    talk it open.
+
+    `moods:read` goes further: it is opened, and breadth still does not reach
+    it. See `NEVER_BROAD`.
     """
 
     ALL_READ = "all:read"
@@ -55,12 +56,31 @@ class ApiKeyScope(StrEnum):
     PROJECTS_WRITE = "projects:write"
     UPDATES_WRITE = "updates:write"
     ENTRIES_READ = "entries:read"
+    ENTRIES_WRITE = "entries:write"
     USERS_READ = "users:read"
     AUDIT_READ = "audit:read"
+    #: Last, and on its own: the one scope no breadth covers. See `NEVER_BROAD`.
+    MOODS_READ = "moods:read"
 
     @property
     def is_read(self) -> bool:
         return self.value.endswith(":read")
+
+    @property
+    def is_broad(self) -> bool:
+        return self in (ApiKeyScope.ALL_READ, ApiKeyScope.ALL_WRITE)
+
+
+#: Scopes no breadth covers: they are carried on purpose or not at all.
+#:
+#: Every other scope is covered by the « Tous » of its own verb, deliberately —
+#: that is what lets a key minted today reach a route added tomorrow, and the
+#: price of breadth the form says out loud. These are the exception, and the
+#: reason is not that they are sensitive in the abstract: the moods are given
+#: in confidence, to a screen the team holds up to itself. Reaching them from
+#: outside has to be a decision somebody took, on a key the whole team can read
+#: off the table — never something a key inherited by being broad.
+NEVER_BROAD = frozenset({ApiKeyScope.MOODS_READ})
 
 
 class ApiKeyState(StrEnum):
@@ -136,15 +156,19 @@ class ApiKey:
         return ApiKeyState.ACTIVE
 
     def grants(self, scope: ApiKeyScope) -> bool:
-        """Whether the key opens what a route asks for.
+        """Whether the key opens what a route or a tool asks for.
 
         A broad scope covers the precise ones **of its own verb**, and no
         other: writing does not imply reading. Two switches rather than a
         ladder — a key that does both says so by carrying both, and one that
         only writes is not granted every read behind the reader's back.
+
+        What `NEVER_BROAD` holds is carried explicitly or not at all.
         """
         if scope in self.scopes:
             return True
+        if scope in NEVER_BROAD:
+            return False
         broad = ApiKeyScope.ALL_READ if scope.is_read else ApiKeyScope.ALL_WRITE
         return broad in self.scopes
 

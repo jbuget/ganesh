@@ -29,7 +29,10 @@ from fastapi import FastAPI
 from mcp.server.mcpserver import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 from src.mcp.door import MachineDoor
+from src.mcp.tools.declaring import declare_time
 from src.mcp.tools.entries import my_month
+from src.mcp.tools.mood import team_mood
+from src.mcp.tools.portfolio import portfolio_status
 from src.mcp.tools.projects import find_project
 from src.mcp.tools.updates import what_changed
 
@@ -38,7 +41,14 @@ from src.mcp.tools.updates import what_changed
 PATH = "/mcp"
 
 #: Every tool the server offers. A tool is a question somebody asks.
-TOOLS = (find_project, my_month, what_changed)
+TOOLS = (
+    find_project,
+    my_month,
+    what_changed,
+    portfolio_status,
+    team_mood,
+    declare_time,
+)
 
 INSTRUCTIONS = """\
 Ganesh est le registre des temps et des projets de Waat : qui a travaillé sur

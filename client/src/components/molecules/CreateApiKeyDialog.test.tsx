@@ -66,7 +66,7 @@ describe("CreateApiKeyDialog", () => {
 
       await userEvent.click(screen.getByRole("checkbox", { name: /Tous \(lecture\)/ }));
 
-      for (const name of [/Catalogue/, /Projets \(lecture\)/, /Temps/]) {
+      for (const name of [/Catalogue/, /Projets \(lecture\)/, /Temps \(lecture\)/]) {
         const box = screen.getByRole("checkbox", { name });
         expect(box).toBeChecked();
         expect(box).toBeDisabled();

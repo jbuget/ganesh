@@ -65,6 +65,11 @@ export const SCOPES: { value: ApiKeyScope; label: string; hint: string }[] = [
     hint: "Exporter les temps déclarés sur une période",
   },
   {
+    value: "entries:write",
+    label: "Temps (écriture)",
+    hint: "Déclarer du temps, sur le mois du propriétaire de la clé uniquement",
+  },
+  {
     value: "users:read",
     label: "Équipe (lecture)",
     hint: "Lire l'annuaire des coéquipiers",
@@ -74,6 +79,11 @@ export const SCOPES: { value: ApiKeyScope; label: string; hint: string }[] = [
     label: "Journal (lecture)",
     hint: "Lire le journal des actions",
   },
+  {
+    value: "moods:read",
+    label: "Moral de l'équipe (lecture)",
+    hint: "Le moral de la quinzaine, en chiffres d'ensemble et sans aucun nom. Jamais couvert par « Tous »",
+  },
 ];
 
 const SCOPE_LABELS = new Map(SCOPES.map((scope) => [scope.value, scope.label]));
@@ -81,6 +91,16 @@ const SCOPE_LABELS = new Map(SCOPES.map((scope) => [scope.value, scope.label]));
 export function scopeLabel(scope: ApiKeyScope): string {
   return SCOPE_LABELS.get(scope) ?? scope;
 }
+
+/**
+ * Scopes no breadth covers: carried on purpose, or not at all.
+ *
+ * The same set the server holds in `NEVER_BROAD`. The moods are given in
+ * confidence, to a screen the team holds up to itself; reaching them from
+ * outside has to be a decision somebody took, never something a key inherited
+ * by being broad.
+ */
+const NEVER_BROAD: ApiKeyScope[] = ["moods:read"];
 
 /**
  * Which broad scope already grants a precise one.
@@ -98,6 +118,7 @@ export function coveredBy(
   chosen: ApiKeyScope[],
 ): ApiKeyScope | null {
   if (scope === "all:read" || scope === "all:write") return null;
+  if (NEVER_BROAD.includes(scope)) return null;
   const broad = scope.endsWith(":read") ? "all:read" : "all:write";
   return chosen.includes(broad) ? broad : null;
 }

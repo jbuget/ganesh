@@ -101,6 +101,17 @@ def number(count: float) -> str:
     return f"{count:.1f}".replace(".0", "").replace(".", ",")
 
 
+def as_given(value: float) -> str:
+    """A figure quoted the way it was written, never rounded.
+
+    `number` rounds to a decimal, which is right for a mean and wrong for a
+    refusal: « jamais 0,8 » told somebody who had written 0,75 that they had
+    written something else. What a refusal reproaches has to be what was said.
+    """
+    written = f"{value:g}".replace(".", ",")
+    return written
+
+
 def agreed(word: str, with_: float) -> str:
     """The word alone, agreeing with a count said elsewhere.
 

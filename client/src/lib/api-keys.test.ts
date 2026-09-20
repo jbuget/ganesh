@@ -163,3 +163,28 @@ describe("the catalogue the form offers", () => {
     }
   });
 });
+
+describe("coveredBy", () => {
+  it("a broad scope covers the precise ones of its own verb", () => {
+    expect(coveredBy("entries:read", ["all:read"])).toBe("all:read");
+    expect(coveredBy("entries:write", ["all:write"])).toBe("all:write");
+  });
+
+  it("writing everything does not cover a read", () => {
+    expect(coveredBy("entries:read", ["all:write"])).toBeNull();
+  });
+
+  it("the moods are never covered by breadth", () => {
+    // The same exception the server holds in `NEVER_BROAD`: a form that ticked
+    // and locked this box would say a key opens the moods when it does not.
+    expect(coveredBy("moods:read", ["all:read"])).toBeNull();
+    expect(coveredBy("moods:read", ["all:read", "all:write"])).toBeNull();
+  });
+
+  it("keeps the moods in what is sent, rather than pruning them away", () => {
+    expect(pruneCovered(["all:read", "moods:read", "entries:read"])).toEqual([
+      "all:read",
+      "moods:read",
+    ]);
+  });
+});

@@ -650,13 +650,14 @@ See `docs/api-keys.md`.
 
 Ganesh answers an MCP client at `/mcp/`, mounted inside the API: the same use
 cases the routers reach, said to a terminal rather than drawn on a screen. The
-server is `server/src/mcp/`, the brief is `docs/mcp.md`, and four rules hold it
-together:
+server is `server/src/mcp/`, the brief is `docs/mcp.md`, and five rules hold
+it together:
 
 - **A tool is a question somebody asks, never a route.** Sixty routes turned
   into sixty tools is a model chaining six calls to answer one question and
-  getting three of them wrong. `find_project`, `my_month`, `what_changed` — and
-  the next one earns its place by being asked for.
+  getting three of them wrong. `find_project`, `my_month`, `what_changed`,
+  `portfolio_status`, `team_mood`, `declare_time` — and the next one earns its
+  place by being asked for.
 - **A tool answers in sentences.** « 1,5 jour déclaré », never a field called
   `total`; and what it does not know, it **says** — an absent field is a field
   a model fills in on its own. `src/mcp/tools/say.py` is where a figure or a
@@ -665,11 +666,19 @@ together:
   which registers it in `OPENED_SCOPES` and turns a domain refusal into a
   sentence the client can read. A scope opening nothing is still a bug, and
   the same test still says so.
-- **A tool reads for the owner of the key.** `my_month` carries no `user_id`
-  and that is the guarantee rather than an omission: there is no colleague to
-  hit by mistake. V1 is read-only for the same reason — a validated month and a
-  day that is not a working one are rules a person argues with on screen, and a
-  machine would only ever be told « 422 ».
+- **A tool answers for the owner of the key, and writes for nobody else.**
+  `my_month` and `declare_time` carry no `user_id`, and that is the guarantee
+  rather than an omission: there is no colleague to hit by mistake. A write is
+  refused **out loud** — a validated month, a day that is not a working one, a
+  value the grid does not hold — because a tool can say what a route can only
+  answer « 422 » to. And a refusal is **raised**, never returned: a write that
+  did not happen must not read like one that did.
+- **What the moods say is read by one tool, in aggregate, and by nothing
+  else.** `team_mood` returns no name, no initials and no identifier, and a day
+  fewer than three people answered is announced rather than averaged. Its scope
+  is the one thing `NEVER_BROAD` holds: no « Tous » reaches it. Tell the team
+  before the tool reaches them — the moods were given to an internal screen,
+  and a frame changed quietly is what costs the answering rate.
 
 ---
 
