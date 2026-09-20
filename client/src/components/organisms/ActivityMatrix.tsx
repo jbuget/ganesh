@@ -52,7 +52,7 @@ export function ActivityMatrix({
       <p className="mb-3 text-sm text-slate-500">
         Jours déclarés sur la période. La part se lit sur tout le temps déclaré, hors
         projet compris — les lignes d&apos;un bloc ne font donc pas 100 %.
-        L&apos;évolution compare à {against}.
+        L&apos;évolution compare {against}.
       </p>
 
       {lines.length === 0 ? (
@@ -89,7 +89,7 @@ export function ActivityMatrix({
                 </TableHead>
                 <TableHead
                   className={`text-right whitespace-nowrap ${STRONG_SEPARATOR}`}
-                  title={`Jours gagnés ou perdus par rapport à ${against}`}
+                  title={`Jours gagnés ou perdus par rapport ${against}`}
                 >
                   Évolution
                 </TableHead>
@@ -112,7 +112,7 @@ export function ActivityMatrix({
               ))}
 
               <TableRow className="bg-slate-50 font-medium">
-                <TableCell className="sticky left-0 z-10 bg-white">Total</TableCell>
+                <TableCell className="sticky left-0 z-0 bg-white">Total</TableCell>
                 <TableCell className="text-right tabular-nums">
                   {formatDays(totalDays)}
                 </TableCell>

@@ -40,7 +40,7 @@ export function MovementBadge({ days, isNew = false, against }: MovementBadgePro
       }`}
     >
       {movement}
-      <span className="sr-only"> par rapport à {against}</span>
+      <span className="sr-only"> par rapport {against}</span>
     </span>
   );
 }

@@ -44,7 +44,7 @@ export function ActivityMatrixRow({
     <>
       <TableRow className="bg-slate-50 hover:bg-slate-100">
         <TableCell
-          className={`sticky left-0 z-10 bg-white group-hover:bg-slate-50 ${
+          className={`sticky left-0 z-0 bg-white group-hover:bg-slate-50 ${
             isPackage ? "pl-8" : ""
           }`}
         >

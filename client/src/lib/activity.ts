@@ -26,26 +26,31 @@ export const ACTIVITY_RANGES: { value: PeriodRange; label: string }[] = [
 export const DEFAULT_ACTIVITY_RANGE: PeriodRange = "last_week";
 
 /**
- * What the window before this one is called, said as one compares against it.
+ * What a movement is measured against, ready to follow « par rapport ».
  *
  * Named rather than left to « la période précédente »: a month still running
  * is compared against the same stretch of the one before, not against a whole
  * month, and a reader who assumes otherwise misreads every movement.
+ *
+ * The « à » is carried here, contracted, rather than written in the sentence:
+ * « à le mois d\'avant » and « à les deux semaines » are what a sentence
+ * built by concatenation produces, and neither the type checker nor a test
+ * asserting on a figure ever sees them.
  */
-export function previousRangeLabel(range: PeriodRange): string {
+export function comparedWith(range: PeriodRange): string {
   switch (range) {
     case "this_week":
-      return "la même période de la semaine précédente";
+      return "à la même période de la semaine précédente";
     case "last_week":
-      return "la semaine d'avant";
+      return "à la semaine d\'avant";
     case "last_two_weeks":
-      return "les deux semaines d'avant";
+      return "aux deux semaines d\'avant";
     case "this_month":
-      return "la même période du mois précédent";
+      return "à la même période du mois précédent";
     case "last_month":
-      return "le mois d'avant";
+      return "au mois d\'avant";
     default:
-      return "la période précédente";
+      return "à la période précédente";
   }
 }
 
