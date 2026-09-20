@@ -40,8 +40,8 @@ export function UsersPage() {
             title="Utilisateurs"
             subtitle={
               screen.isManager
-                ? "Vous pouvez promouvoir un utilisateur. Chaque changement est tracé."
-                : "Consultable par toute l'équipe. Seul un manager change un rôle."
+                ? "Qui compose l'équipe, et qui peut quoi. Chaque changement est tracé."
+                : "Qui compose l'équipe, et qui peut quoi. Seul un manager change un rôle."
             }
           />
 

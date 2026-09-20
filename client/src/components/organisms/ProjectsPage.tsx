@@ -56,7 +56,7 @@ export function ProjectsPage() {
         <>
           <PageHeader
             title="Projets"
-            subtitle="Gestion des projets et sous-projets"
+            subtitle="La liste de référence : ce contre quoi l'équipe déclare son temps."
             actions={
               <>
                 {/* The reference list goes out whole, filters aside: one

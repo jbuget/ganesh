@@ -31,8 +31,8 @@ export function ApiKeysPage() {
           title="API"
           subtitle={
             screen.isManager
-              ? "Les comptes de service qui accèdent à l'API. Chaque création et chaque révocation est tracée."
-              : "Consultable par toute l'équipe. Seul un manager crée ou révoque une clé."
+              ? "Quelles machines accèdent à Ganesh, et ce que chaque clé ouvre. Chaque création et chaque révocation est tracée."
+              : "Quelles machines accèdent à Ganesh, et ce que chaque clé ouvre. Seul un manager crée ou révoque une clé."
           }
           actions={
             screen.isManager ? (
