@@ -5,10 +5,12 @@ import { PageHeader } from "@/components/atoms/PageHeader";
 import { RangeSelect } from "@/components/atoms/RangeSelect";
 import { ActivityContributors } from "@/components/organisms/ActivityContributors";
 import { ActivityMatrix } from "@/components/organisms/ActivityMatrix";
+import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ACTIVITY_RANGES, comparedWith } from "@/lib/activity";
 import { summarise } from "@/lib/statistics";
+import { useOpenedMission } from "@/lib/opened-mission";
 import { useActivityScreen, type ActivityView } from "@/lib/use-activity-summary";
 
 /**
@@ -24,7 +26,11 @@ import { useActivityScreen, type ActivityView } from "@/lib/use-activity-summary
  * costly fiction.
  */
 export function ActivitySummaryPage() {
-  const { range, setRange, view, setView, summary, isLoading } = useActivityScreen();
+  const { range, setRange, view, setView, summary, isLoading, refresh } =
+    useActivityScreen();
+  // The same panel the reference list opens, held by the URL: a reading is
+  // shared by a link, and going back closes what it opened.
+  const panel = useOpenedMission();
 
   const header = (
     <PageHeader
@@ -82,6 +88,7 @@ export function ActivitySummaryPage() {
               contributors={summary.contributors}
               totalDays={summary.project_days}
               against={against}
+              onOpen={panel.open}
               empty="Aucun temps déclaré sur un projet pour cette période."
             />
             <ActivityMatrix
@@ -90,6 +97,7 @@ export function ActivitySummaryPage() {
               contributors={summary.contributors}
               totalDays={summary.off_project_days}
               against={against}
+              onOpen={panel.open}
               empty="Aucun temps hors projet déclaré pour cette période."
             />
           </TabsContent>
@@ -102,6 +110,18 @@ export function ActivitySummaryPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {panel.openedMission && (
+        <ProjectPanel
+          key={`${panel.openedMission}:${panel.openTab ?? ""}`}
+          projectId={panel.openedMission}
+          tab={panel.openTab}
+          onClose={panel.close}
+          // A phase changed in the panel moves the figures behind it.
+          onMissionChanged={refresh}
+          onOpenMission={(projectId) => panel.open(projectId)}
+        />
+      )}
     </PageLayout>
   );
 }

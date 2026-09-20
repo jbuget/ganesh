@@ -24,6 +24,8 @@ interface ActivityMatrixProps {
   totalDays: number;
   /** What the movement column is measured against, named. */
   against: string;
+  /** Opens the mission beside the reading, as the reference list does. */
+  onOpen: (projectId: number) => void;
   empty: string;
 }
 
@@ -41,6 +43,7 @@ export function ActivityMatrix({
   contributors,
   totalDays,
   against,
+  onOpen,
   empty,
 }: ActivityMatrixProps) {
   return (
@@ -108,6 +111,7 @@ export function ActivityMatrix({
                   line={line}
                   contributors={contributors}
                   against={against}
+                  onOpen={onOpen}
                 />
               ))}
 

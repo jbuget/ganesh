@@ -93,12 +93,21 @@ export function missionsOf(
   summary: ActivitySummaryResponse,
   contributorId: number,
 ): MissionShare[] {
-  const shares = [
-    ...summary.projects.map((line) => share(line, contributorId, false)),
-    ...summary.off_project.map((line) => share(line, contributorId, true)),
+  return [
+    ...ranked(summary.projects, contributorId, false),
+    // After the missions, never mixed in among them: leave and training are
+    // declared time, but they are not what the week was spent building.
+    ...ranked(summary.off_project, contributorId, true),
   ];
+}
 
-  return shares
+function ranked(
+  lines: ActivityLineResponse[],
+  contributorId: number,
+  isOffProject: boolean,
+): MissionShare[] {
+  return lines
+    .map((line) => share(line, contributorId, isOffProject))
     .filter((mission) => mission.days > 0)
     .sort((a, b) => b.days - a.days || a.label.localeCompare(b.label, "fr"));
 }

@@ -28,5 +28,9 @@ export function useActivityScreen() {
     setView,
     summary: query.summary,
     isLoading: query.isLoading,
+    /** Re-reads the window: what the panel changes shows here too. */
+    async refresh(): Promise<void> {
+      await query.refetch();
+    },
   };
 }

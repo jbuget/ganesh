@@ -19,6 +19,8 @@ interface ActivityMatrixRowProps {
   contributors: ContributorResponse[];
   /** What the movement is measured against, named. */
   against: string;
+  /** Opens the mission beside the reading, as the reference list does. */
+  onOpen: (projectId: number) => void;
   /** Whether the line is a work package, drawn under its project. */
   isPackage?: boolean;
 }
@@ -35,6 +37,7 @@ export function ActivityMatrixRow({
   line,
   contributors,
   against,
+  onOpen,
   isPackage = false,
 }: ActivityMatrixRowProps) {
   const [isOpen, setOpen] = useState(false);
@@ -42,7 +45,10 @@ export function ActivityMatrixRow({
 
   return (
     <>
-      <TableRow className="bg-slate-50 hover:bg-slate-100">
+      <TableRow
+        onClick={() => onOpen(line.project_id)}
+        className="cursor-pointer bg-slate-50 hover:bg-slate-100"
+      >
         <TableCell
           className={`sticky left-0 z-0 bg-white group-hover:bg-slate-50 ${
             isPackage ? "pl-8" : ""
@@ -52,7 +58,11 @@ export function ActivityMatrixRow({
             {packages.length > 0 ? (
               <button
                 type="button"
-                onClick={() => setOpen(!isOpen)}
+                onClick={(event) => {
+                  // Folding a project is not opening it.
+                  event.stopPropagation();
+                  setOpen(!isOpen);
+                }}
                 aria-expanded={isOpen}
                 aria-label={`${isOpen ? "Replier" : "Déplier"} les lots de ${line.label}`}
                 className="cursor-pointer text-slate-400 transition-colors hover:text-slate-700"
@@ -124,6 +134,7 @@ export function ActivityMatrixRow({
               }}
               contributors={contributors}
               against={against}
+              onOpen={onOpen}
               isPackage
             />
           )}
@@ -133,6 +144,7 @@ export function ActivityMatrixRow({
               line={each}
               contributors={contributors}
               against={against}
+              onOpen={onOpen}
               isPackage
             />
           ))}

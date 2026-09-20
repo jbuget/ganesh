@@ -157,9 +157,20 @@ describe("missionsOf", () => {
     );
 
     expect(missionsOf(summary, 7)).toEqual([
-      { projectId: 9, label: "Congés", days: 3, isOffProject: true },
       { projectId: 1, label: "WAATcher", days: 2, isOffProject: false },
+      { projectId: 9, label: "Congés", days: 3, isOffProject: true },
     ]);
+  });
+
+  it("puts off-project work after the missions, however heavy it is", () => {
+    // Three days of leave weigh more than one on a mission, and still read
+    // last: the missions are what the window is opened for.
+    const summary = aSummary(
+      [aLine({ project_id: 1, label: "WAATcher", days_by_contributor: { 7: 1 } })],
+      [aLine({ project_id: 9, label: "Congés", days_by_contributor: { 7: 3 } })],
+    );
+
+    expect(missionsOf(summary, 7).map((m) => m.label)).toEqual(["WAATcher", "Congés"]);
   });
 
   it("says nothing for someone who declared nothing", () => {
