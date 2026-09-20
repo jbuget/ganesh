@@ -66,9 +66,8 @@ export function useRoadmapScreen() {
   const { filters, hasFilter, set, clear } = useMissionFilters(ROADMAP_CRITERIA);
 
   const [roadmap, setRoadmap] = useState<RoadmapResponse | null>(null);
-  //: The reading the drawing in hand answers. Comparing it to the one being
-  //: asked for is what says whether an answer is still on its way, without a
-  //: flag to keep in step with the request.
+  //: The reading the drawing in hand answers, and the one that failed. Both
+  //: hold a reading rather than a flag — see `reading` below.
   const [answered, setAnswered] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
   //: Whether the last date posted was refused. Held apart from a read that
@@ -85,8 +84,21 @@ export function useRoadmapScreen() {
     return () => clearTimeout(timer);
   }, [filters.name]);
 
-  const asked = useMemo<ReadRoadmapParams>(
-    () => ({
+  /**
+   * The reading being asked for, as one string.
+   *
+   * A reading is identified by its content, never by the object carrying it:
+   * that object is rebuilt on every render — the address changes at every
+   * keystroke, and with it every list of criteria — while what it asks stays
+   * the same. Keying on the content is what keeps a re-render, or a letter
+   * typed and wiped, from asking the server the same question twice.
+   *
+   * It is also what says whether the drawing in hand answers the question on
+   * screen: `answered` and `failed` hold one, and comparing them to this needs
+   * no flag kept in step with the request.
+   */
+  const reading = useMemo(() => {
+    const asked: ReadRoadmapParams = {
       months,
       ...(settled.trim() ? { name: settled.trim() } : {}),
       ...(filters.phases.length ? { phase: filters.phases } : {}),
@@ -94,30 +106,24 @@ export function useRoadmapScreen() {
       ...(filters.priorities.length ? { priority: filters.priorities } : {}),
       ...(filters.types.length ? { type: filters.types } : {}),
       ...(filters.departments.length ? { department: filters.departments } : {}),
-    }),
-    [months, settled, filters],
-  );
+    };
+    return JSON.stringify(asked);
+  }, [months, settled, filters]);
 
-  //: The reading, as one string. `asked` is rebuilt on every render and its
-  //: content is not: what the screen reads depends on the content, and keying
-  //: on it is what keeps a re-render from asking the same question twice.
-  const key = JSON.stringify(asked);
-
-  const fetchAsked = useCallback(
-    (request: ReadRoadmapParams, isStillWanted: () => boolean = () => true) => {
-      const reading = JSON.stringify(request);
+  const fetchReading = useCallback(
+    (asked: string, isStillWanted: () => boolean = () => true) => {
       // The window itself is worked out by the server: where it opens and
       // how it lands on month boundaries is a rule, and a rule lives in one
       // place or it drifts.
-      return readRoadmap(request)
+      return readRoadmap(JSON.parse(asked) as ReadRoadmapParams)
         .then((response) => {
           if (!isStillWanted()) return;
           setRoadmap(response.data as RoadmapResponse);
-          setAnswered(reading);
+          setAnswered(asked);
           setFailed(null);
         })
         .catch(() => {
-          if (isStillWanted()) setFailed(reading);
+          if (isStillWanted()) setFailed(asked);
         });
     },
     [],
@@ -125,13 +131,11 @@ export function useRoadmapScreen() {
 
   useEffect(() => {
     let alive = true;
-    // Read back out of the key rather than closed over: the effect must
-    // depend on what was asked, not on the object that carried it.
-    void fetchAsked(JSON.parse(key) as ReadRoadmapParams, () => alive);
+    void fetchReading(reading, () => alive);
     return () => {
       alive = false;
     };
-  }, [key, fetchAsked]);
+  }, [reading, fetchReading]);
 
   function setView(change: { months?: number; grouping?: Grouping }) {
     writeUrl(
@@ -146,12 +150,12 @@ export function useRoadmapScreen() {
 
   return {
     roadmap,
-    isLoading: answered !== key && failed !== key,
-    hasError: failed === key,
+    isLoading: answered !== reading && failed !== reading,
+    hasError: failed === reading,
     months,
-    setMonths: (asked: number) => setView({ months: asked }),
+    setMonths: (span: number) => setView({ months: span }),
     grouping,
-    setGrouping: (asked: Grouping) => setView({ grouping: asked }),
+    setGrouping: (gathering: Grouping) => setView({ grouping: gathering }),
     filters,
     hasFilter,
     setFilters: set,
@@ -161,7 +165,7 @@ export function useRoadmapScreen() {
 
     /** Reads the drawing again, after something changed it from elsewhere. */
     async refresh() {
-      await fetchAsked(asked);
+      await fetchReading(reading);
     },
 
     /**
@@ -183,7 +187,7 @@ export function useRoadmapScreen() {
       } catch {
         setSaveFailed(true);
       }
-      await fetchAsked(asked);
+      await fetchReading(reading);
     },
   };
 }

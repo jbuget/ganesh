@@ -284,22 +284,13 @@ export function readFilters(
 
 /** Blanks out whatever the screen does not ask about. */
 function restrictedTo(filters: MissionFilters, criteria: Criterion[]): MissionFilters {
-  const asked = new Set<Criterion>(criteria);
-  return {
-    name: asked.has("name") ? filters.name : NO_FILTER.name,
-    phases: asked.has("phases") ? filters.phases : NO_FILTER.phases,
-    categories: asked.has("categories") ? filters.categories : NO_FILTER.categories,
-    departments: asked.has("departments") ? filters.departments : NO_FILTER.departments,
-    priorities: asked.has("priorities") ? filters.priorities : NO_FILTER.priorities,
-    contributors: asked.has("contributors")
-      ? filters.contributors
-      : NO_FILTER.contributors,
-    types: asked.has("types") ? filters.types : NO_FILTER.types,
-    publications: asked.has("publications")
-      ? filters.publications
-      : NO_FILTER.publications,
-    states: asked.has("states") ? filters.states : NO_FILTER.states,
-  };
+  // Starts from nothing asked and copies back what the screen offers, rather
+  // than listing the nine criteria a fourth time: adding one must not mean
+  // remembering to come back here.
+  return criteria.reduce<MissionFilters>(
+    (kept, criterion) => ({ ...kept, [criterion]: filters[criterion] }),
+    { ...NO_FILTER },
+  );
 }
 
 function readEveryFilter(params: URLSearchParams): MissionFilters {

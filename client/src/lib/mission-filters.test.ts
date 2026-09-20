@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  EVERY_CRITERION,
   NO_FILTER,
   writeFilters,
   hasActiveFilter,
@@ -260,6 +261,15 @@ describe("the questions a screen asks", () => {
 
     expect(hasActiveFilter(set, ["phases"])).toBe(false);
     expect(hasActiveFilter(set)).toBe(true);
+  });
+
+  /**
+   * `IS_SET` is a Record and the type checker keeps it complete; this list is
+   * a plain array and nothing would notice a criterion left out of it — it
+   * would simply stop being readable from the address, on every screen.
+   */
+  it("names every criterion there is", () => {
+    expect([...EVERY_CRITERION].sort()).toEqual(Object.keys(NO_FILTER).sort());
   });
 
   it("asks every question when the screen says nothing", () => {

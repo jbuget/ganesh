@@ -58,7 +58,6 @@ from src.modules.projects.domain.repositories.project_repository import (
 )
 from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.users.domain.repositories.user_repository import UserRepository
-from src.shared.enums.department import Department
 
 #: Sorts last the missions whose bar starts nowhere. They have nothing to place
 #: on the axis, and pushing them to the bottom keeps the diagonal readable.
@@ -124,6 +123,7 @@ class GetRoadmapUseCase:
         consumed = await self._entries.sum_realised_by_project(now)
         remaining = await remaining_by_mission(self._entries, missions, now)
 
+        kept = await self._narrow(missions, by_id, filters)
         lines = [
             self._draw(
                 mission=mission,
@@ -136,7 +136,7 @@ class GetRoadmapUseCase:
                 window_start=opens_on,
                 window_end=closes_on,
             )
-            for mission in await self._narrow(missions, by_id, filters)
+            for mission in kept
         ]
         shown = sorted(
             (line for line in lines if line.shows_between(opens_on, closes_on, now)),
@@ -169,9 +169,7 @@ class GetRoadmapUseCase:
         axis every screen shows it under rather than on the empty column it
         carries.
         """
-        departments: dict[int, list[Department]] = (
-            await self._details.list_departments_by_project()
-        )
+        departments = await self._details.list_departments_by_project()
         return [
             resolved
             for resolved in (

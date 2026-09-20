@@ -8,7 +8,10 @@ from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.planning.application.use_cases.get_roadmap import GetRoadmapUseCase
 from src.modules.planning.domain.entities.roadmap import SegmentKind
 from src.modules.planning.domain.entities.workload_plan import PlanBlocker
-from src.modules.planning.domain.services.roadmap_filtering import RoadmapFilters
+from src.modules.planning.domain.services.roadmap_filtering import (
+    NO_ROADMAP_FILTER,
+    RoadmapFilters,
+)
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectCategory,
@@ -84,7 +87,7 @@ async def read(
     from_day: date | None = FROM_DAY,
     to_day: date | None = TO_DAY,
     departments: dict[int, list[Department]] | None = None,
-    filters: RoadmapFilters | None = None,
+    filters: RoadmapFilters = NO_ROADMAP_FILTER,
 ):
     details = InMemoryProjectDetailRepository()
     for project_id, crossings in (phases or {}).items():
@@ -107,10 +110,7 @@ async def read(
         users=InMemoryUserRepository([ALICE]),
     )
     return await use_case.execute(
-        from_day=from_day,
-        to_day=to_day,
-        today=TODAY,
-        **({"filters": filters} if filters else {}),
+        from_day=from_day, to_day=to_day, today=TODAY, filters=filters
     )
 
 

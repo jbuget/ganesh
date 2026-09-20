@@ -186,7 +186,10 @@ async def read_roadmap(
     phase: list[ProjectStatus] = Query(default=[]),
     category: list[ProjectCategory] = Query(default=[]),
     priority: list[ProjectPriority] = Query(default=[]),
-    type: list[ProjectKind] = Query(default=[]),
+    # Named `kinds` here and `type` in the address: the URL vocabulary is the
+    # one the kanban already uses, and a parameter called `type` would shadow
+    # the builtin inside this function.
+    kinds: list[ProjectKind] = Query(default=[], alias="type"),
     department: list[Department] = Query(default=[]),
     _: User = Depends(get_current_user),
     use_case: GetRoadmapUseCase = Depends(get_roadmap_use_case),
@@ -220,7 +223,7 @@ async def read_roadmap(
                 phases=tuple(phase),
                 categories=tuple(category),
                 priorities=tuple(priority),
-                kinds=tuple(type),
+                kinds=tuple(kinds),
                 departments=tuple(department),
             ),
         )

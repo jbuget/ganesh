@@ -23,6 +23,8 @@ filled in from the parent.
 import unicodedata
 from collections.abc import Sequence
 from dataclasses import dataclass
+from enum import StrEnum
+from typing import TypeVar
 
 from src.modules.projects.domain.entities.project import (
     Project,
@@ -57,6 +59,11 @@ class RoadmapFilters:
 NO_ROADMAP_FILTER = RoadmapFilters()
 
 
+#: Any of the enumerations a criterion is expressed in. Bound rather than
+#: `object`, so that a phase can never be checked against a list of axes.
+Value = TypeVar("Value", bound=StrEnum)
+
+
 def keeps(
     mission: Project,
     departments: Sequence[Department],
@@ -68,31 +75,41 @@ def keeps(
     ones declared on it — neither is read from the database here, since the
     domain does not know where they come from.
 
-    Several values of one criterion add up, and the criteria stack with each
-    other: « Réalisation » and « Bailleurs » shows what is in development
-    *and* serves landlords.
+    The criteria stack: « Réalisation » and « Bailleurs » shows what is in
+    development *and* serves landlords.
     """
-    search = _normalise(filters.name.strip())
-    if search and search not in _normalise(mission.label):
-        return False
-
-    if filters.phases and mission.status not in filters.phases:
-        return False
-
-    if filters.categories and mission.category not in filters.categories:
-        return False
-
-    if filters.priorities and mission.priority not in filters.priorities:
-        return False
-
-    if filters.kinds and mission.kind not in filters.kinds:
-        return False
-
-    # Whom the mission is for, not whom it is only for: one serving landlords
-    # and customer service answers to either.
-    return not filters.departments or any(
-        served in filters.departments for served in departments
+    return (
+        _named(mission.label, filters.name)
+        and _among(mission.status, filters.phases)
+        and _among(mission.category, filters.categories)
+        and _among(mission.priority, filters.priorities)
+        and _among(mission.kind, filters.kinds)
+        and _serves(departments, filters.departments)
     )
+
+
+def _among(value: Value | None, asked: tuple[Value, ...]) -> bool:
+    """The two rules of this module, written once, for every criterion.
+
+    An empty criterion takes nothing away; a value that carries nothing never
+    passes an active one.
+    """
+    return not asked or value in asked
+
+
+def _serves(departments: Sequence[Department], asked: tuple[Department, ...]) -> bool:
+    """Whom the mission is for, not whom it is only for.
+
+    A mission serving landlords and customer service answers to either, which
+    is why this one criterion reads a list against a list.
+    """
+    return not asked or any(served in asked for served in departments)
+
+
+def _named(label: str, search: str) -> bool:
+    """Whether the label carries the fragment searched for, accents aside."""
+    wanted = _normalise(search.strip())
+    return not wanted or wanted in _normalise(label)
 
 
 def _normalise(body: str) -> str:
