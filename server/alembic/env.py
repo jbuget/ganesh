@@ -23,6 +23,9 @@ from src.modules.api_keys.infrastructure.database.models import (  # noqa: F401,
 from src.modules.entries.infrastructure.database.models import (  # noqa: F401, E402
     entry_model,
 )
+from src.modules.gazette.infrastructure.database.models import (  # noqa: F401, E402
+    gazette_digest_model,
+)
 from src.modules.months.infrastructure.database.models import (  # noqa: F401, E402
     month_model,
 )

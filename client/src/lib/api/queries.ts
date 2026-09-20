@@ -8,7 +8,9 @@
  * casts across the components.
  */
 import { useGetMonthGrid } from "@/lib/api/generated/entries/entries";
+import { useGetDigest } from "@/lib/api/generated/gazette/gazette";
 import type {
+  DigestResponse,
   MonthGridResponse,
   MyMoodsResponse,
   PeriodRange,
@@ -121,4 +123,16 @@ export function useMyMoods() {
 export function useTeamMoods() {
   const query = useGetTeamMoods();
   return { ...query, window: successOf<TeamMoodsResponse>(query.data) };
+}
+
+/**
+ * One month of La Gazette, in the generation asked for.
+ *
+ * No version names the latest, which is what the screen opens on. A month
+ * nobody has asked for yet comes back all the same, read live from the
+ * register and carrying no chapeau.
+ */
+export function useDigest(month: string, version: number | null) {
+  const query = useGetDigest({ month, ...(version === null ? {} : { version }) });
+  return { ...query, digest: successOf<DigestResponse>(query.data) };
 }

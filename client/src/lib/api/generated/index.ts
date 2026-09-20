@@ -4,6 +4,7 @@ export * from "./audit-logs/audit-logs";
 export * from "./auth/auth";
 export * from "./calendar/calendar";
 export * from "./entries/entries";
+export * from "./gazette/gazette";
 export * from "./health/health";
 export * from "./months/months";
 export * from "./moods/moods";

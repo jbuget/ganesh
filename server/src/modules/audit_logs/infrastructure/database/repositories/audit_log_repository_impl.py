@@ -1,11 +1,12 @@
 """SQLAlchemy implementation of the AuditLogRepository port."""
 
+from collections.abc import Collection
 from datetime import date, datetime
 
 from sqlalchemy import and_, extract, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.audit_logs.domain.entities.audit_log import AuditLog
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
@@ -113,3 +114,19 @@ class SqlAuditLogRepository(AuditLogRepository):
             query = query.where(AuditLogModel.at >= since)
         result = await self._session.execute(query)
         return result.scalar_one()
+
+    async def list_between(
+        self,
+        start: datetime,
+        end: datetime,
+        actions: Collection[AuditAction] | None = None,
+    ) -> list[AuditLog]:
+        query = select(AuditLogModel).where(
+            and_(AuditLogModel.at >= start, AuditLogModel.at <= end)
+        )
+        if actions is not None:
+            query = query.where(AuditLogModel.action.in_(list(actions)))
+        result = await self._session.execute(
+            query.order_by(AuditLogModel.at, AuditLogModel.id)
+        )
+        return [to_entity(model) for model in result.scalars().all()]

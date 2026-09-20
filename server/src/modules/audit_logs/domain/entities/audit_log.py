@@ -39,6 +39,7 @@ class AuditAction(StrEnum):
     API_KEY_CREATE = "api_key.create"
     API_KEY_UPDATE = "api_key.update"
     API_KEY_REVOKE = "api_key.revoke"
+    GAZETTE_GENERATE = "gazette.generate"
 
 
 def _as_text(value: Any | None) -> str | None:
