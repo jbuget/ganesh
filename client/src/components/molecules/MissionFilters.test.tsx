@@ -161,6 +161,30 @@ describe("MissionFilters", () => {
     expect(screen.getByRole("status")).toHaveTextContent("3 projets sur 12");
   });
 
+  /**
+   * The roadmap is shown to a committee: it asks about phases and axes, never
+   * about the catalogue. One bar, three screens, no copy of it anywhere.
+   */
+  it("asks only the questions the screen offers", () => {
+    bar({}, { criteria: ["phases", "categories"] });
+
+    expect(screen.getByRole("button", { name: /Phase/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Catégorie/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Publication/ })).toBeNull();
+    expect(screen.queryByLabelText("Rechercher un projet")).toBeNull();
+  });
+
+  /**
+   * A screen narrowing on the server no longer holds the unfiltered total:
+   * « 8 sur 8 » would be a figure invented to fill the place of the real one.
+   */
+  it("says nothing of a count the screen did not give it", () => {
+    bar({ phases: ["development"] }, { visible: undefined, total: undefined });
+
+    expect(screen.queryByText(/sur/)).toBeNull();
+    expect(screen.getByRole("button", { name: /Effacer/ })).toBeInTheDocument();
+  });
+
   it("announces itself as a search group", () => {
     bar();
 

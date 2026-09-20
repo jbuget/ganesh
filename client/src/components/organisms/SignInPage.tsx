@@ -12,22 +12,22 @@ import { buttonVariants } from "@/components/ui/button";
  * logs. What is shown here says what happened and what to do about it.
  */
 const REASONS: Record<string, string> = {
-  refus: "La connexion a été refusée. Vous pouvez réessayer.",
-  incomplet: "Microsoft n'a pas renvoyé de quoi vous identifier. Réessayez.",
-  expire: "La connexion a pris trop de temps. Il faut la reprendre.",
-  etat: "Cette connexion ne vient pas de cet onglet. Reprenez depuis ici.",
-  echange: "Microsoft n'a pas accepté la connexion. Réessayez dans un instant.",
-  jeton: "La réponse de Microsoft est illisible. Reprenez la connexion.",
+  denied: "La connexion a été refusée. Vous pouvez réessayer.",
+  incomplete: "Microsoft n'a pas renvoyé de quoi vous identifier. Réessayez.",
+  expired: "La connexion a pris trop de temps. Il faut la reprendre.",
+  state: "Cette connexion ne vient pas de cet onglet. Reprenez depuis ici.",
+  exchange: "Microsoft n'a pas accepté la connexion. Réessayez dans un instant.",
+  token: "La réponse de Microsoft est illisible. Reprenez la connexion.",
   nonce: "Cette connexion ne correspond pas à celle demandée ici. Reprenez-la.",
-  "sans-adresse": "Votre compte Microsoft n'expose pas d'adresse e-mail.",
-  domaine: "Seules les adresses @waat.fr ont accès à Ganesh.",
-  identifiants: "Identifiant ou mot de passe incorrect.",
-  "hors-service": "Cette façon de se connecter n'est pas active ici.",
+  "no-email": "Votre compte Microsoft n'expose pas d'adresse e-mail.",
+  domain: "Seules les adresses @waat.fr ont accès à Ganesh.",
+  credentials: "Identifiant ou mot de passe incorrect.",
+  disabled: "Cette façon de se connecter n'est pas active ici.",
 };
 
 function SignIn({ entra }: { entra: boolean }) {
   const params = useSearchParams();
-  const reason = params.get("erreur");
+  const reason = params.get("reason");
   const from = params.get("from");
 
   const href = from

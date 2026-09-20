@@ -4,7 +4,7 @@ import { isAuthDisabled, isOpenPath } from "./guard";
 
 describe("the open addresses", () => {
   it("lets the sign-in screen through, and what signing in needs", () => {
-    expect(isOpenPath("/connexion")).toBe(true);
+    expect(isOpenPath("/sign-in")).toBe(true);
     expect(isOpenPath("/api/auth/login")).toBe(true);
     expect(isOpenPath("/api/auth/callback/azure-ad")).toBe(true);
   });

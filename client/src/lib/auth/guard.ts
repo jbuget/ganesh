@@ -5,7 +5,7 @@
  * is not named here is protected, so forgetting to add a screen closes it
  * rather than opens it.
  */
-const OPEN_PATHS = ["/connexion"];
+const OPEN_PATHS = ["/sign-in"];
 const OPEN_PREFIXES = ["/api/auth/", "/_next/", "/favicon", "/icon"];
 
 export function isOpenPath(pathname: string): boolean {

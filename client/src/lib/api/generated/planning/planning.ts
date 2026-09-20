@@ -214,6 +214,15 @@ export const getReadRoadmapUrl = (params?: ReadRoadmapParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["phase", "category", "priority", "type", "department"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? "null" : String(v));
+      });
+      return;
+    }
+
     if (value !== undefined) {
       normalizedParams.append(key, value === null ? "null" : String(value));
     }
@@ -236,6 +245,15 @@ export const getReadRoadmapUrl = (params?: ReadRoadmapParams) => {
  * in progress included, with the month before thrown in for context. Naming
  * both dates instead reads exactly that window, which is how a year already
  * over is looked back on.
+ *
+ * The criteria are named as the kanban and the reference list already name
+ * them in their address — `phase`, `category`, `priority`, `type`,
+ * `department` — so that one vocabulary covers the three screens. Repeating
+ * a parameter adds a value to its criterion; an empty one takes nothing
+ * away.
+ *
+ * Narrowing here rather than in the browser is what keeps the tally honest:
+ * the figures above the bars are read off the lines that were kept.
  * @summary Read Roadmap
  */
 export const readRoadmap = async (

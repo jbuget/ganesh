@@ -4,6 +4,11 @@
  * Ganesh API
  * OpenAPI spec version: 0.1.0
  */
+import type { Department } from "./department";
+import type { ProjectCategory } from "./projectCategory";
+import type { ProjectKind } from "./projectKind";
+import type { ProjectPriority } from "./projectPriority";
+import type { ProjectStatus } from "./projectStatus";
 
 export type ReadRoadmapParams = {
   /**
@@ -13,4 +18,10 @@ export type ReadRoadmapParams = {
   months?: number;
   from_day?: string | null;
   to_day?: string | null;
+  name?: string;
+  phase?: ProjectStatus[];
+  category?: ProjectCategory[];
+  priority?: ProjectPriority[];
+  type?: ProjectKind[];
+  department?: Department[];
 };

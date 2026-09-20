@@ -65,8 +65,8 @@ export function signInAgain(browser: Browser = THE_BROWSER): void {
   const here = browser.at();
   if (here === null) return;
   // Already there: redirecting would only lose the reason shown on it.
-  if (here.startsWith("/connexion")) return;
-  browser.goTo(`/connexion?from=${encodeURIComponent(here)}`);
+  if (here.startsWith("/sign-in")) return;
+  browser.goTo(`/sign-in?from=${encodeURIComponent(here)}`);
 }
 
 export const bffFetcher = async <T>(

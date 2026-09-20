@@ -81,7 +81,7 @@ describe("bffFetcher", () => {
     ).rejects.toMatchObject({ status: 401 });
 
     // Where they were, so signing in brings them back rather than home.
-    expect(gone).toEqual(["/connexion?from=%2Fprojets%3Fmois%3D2026-09"]);
+    expect(gone).toEqual(["/sign-in?from=%2Fprojets%3Fmois%3D2026-09"]);
   });
 
   it("does not send back to sign in from the sign-in screen itself", async () => {
@@ -90,7 +90,7 @@ describe("bffFetcher", () => {
 
     await expect(
       bffFetcher("/api/v1/projects", undefined, {
-        at: () => "/connexion",
+        at: () => "/sign-in",
         goTo: (url) => gone.push(url),
       }),
     ).rejects.toMatchObject({ status: 401 });
