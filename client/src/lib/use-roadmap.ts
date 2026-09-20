@@ -1,47 +1,123 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { readRoadmap } from "@/lib/api/generated/planning/planning";
 import { updateProject } from "@/lib/api/generated/projects/projects";
-import type { RoadmapResponse } from "@/lib/api/generated/model";
-import { DEFAULT_SPAN, type Grouping } from "@/lib/roadmap";
+import type { ReadRoadmapParams, RoadmapResponse } from "@/lib/api/generated/model";
+import type { Criterion } from "@/lib/mission-filters";
+import { readGrouping, readSpan, writeView, type Grouping } from "@/lib/roadmap";
+import { useMissionFilters } from "@/lib/use-mission-filters";
+import { writeUrl, useQueryString } from "@/lib/url-state";
 
 /**
- * State of the roadmap screen: a window, a grouping, and the drawing.
+ * What the roadmap asks about, and what it deliberately does not.
  *
- * The window is the only thing that costs a request. The grouping regroups
- * what is already in hand — a committee flips from axes to phases while
- * talking, and waiting on the server each time would break the conversation.
+ * Publication is the catalogue's question, and the roadmap is shown to a
+ * committee rather than used to tend waat.tools. « État » is left out for a
+ * different reason: its empty value is not neutral on the board, which shows
+ * active missions alone, whereas a roadmap reads the archived ones on
+ * purpose — a service delivered in March belongs to the year whether or not
+ * it is still on the reference list. And nobody asks a committee who is on
+ * what, which is the plan's question.
+ *
+ * Declared here rather than at the call site: the filters are read against
+ * this list, and one rebuilt on every render would hand back new filters
+ * each time, which the reading would take for a change.
+ */
+const ROADMAP_CRITERIA: Criterion[] = [
+  "name",
+  "phases",
+  "categories",
+  "departments",
+  "priorities",
+  "types",
+];
+
+/**
+ * How long a search waits before it is sent.
+ *
+ * The criteria are narrowed on the server, so a keystroke is a request. Long
+ * enough that typing « bailleurs » asks once rather than nine times, short
+ * enough that one does not wonder whether the screen heard.
+ */
+const SETTLING_DELAY = 300;
+
+/**
+ * State of the roadmap screen: a window, a grouping, criteria, and the
+ * drawing.
+ *
+ * All four live in the address. A roadmap is prepared once — the phases that
+ * matter, the right span — and shown from a link, to a committee or to a
+ * department; a link restoring half of that would rebuild half a screen,
+ * which is worse than rebuilding none of it.
+ *
+ * Unlike the grouping, which regroups what is already in hand, narrowing
+ * costs a request: the tally above the bars is read off the lines the server
+ * kept, and a figure counting forty missions above eight bars would be worse
+ * than no figure at all.
  */
 export function useRoadmapScreen() {
-  const [months, setMonths] = useState(DEFAULT_SPAN);
-  const [grouping, setGrouping] = useState<Grouping>("category");
+  const query = useQueryString();
+  const params = useMemo(() => new URLSearchParams(query), [query]);
+  const months = readSpan(params);
+  const grouping = readGrouping(params);
+
+  const { filters, hasFilter, set, clear } = useMissionFilters(ROADMAP_CRITERIA);
+
   const [roadmap, setRoadmap] = useState<RoadmapResponse | null>(null);
-  //: The span the drawing in hand was asked for. Comparing it to the one
-  //: being read is what says whether an answer is still on its way, without
-  //: a flag to keep in step with the request.
-  const [answered, setAnswered] = useState<number | null>(null);
-  const [failed, setFailed] = useState<number | null>(null);
+  //: The reading the drawing in hand answers. Comparing it to the one being
+  //: asked for is what says whether an answer is still on its way, without a
+  //: flag to keep in step with the request.
+  const [answered, setAnswered] = useState<string | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
   //: Whether the last date posted was refused. Held apart from a read that
   //: failed: one leaves the screen empty, the other leaves it right and the
   //: write lost, and saying « erreur » for both would tell the reader nothing.
   const [saveFailed, setSaveFailed] = useState(false);
 
-  const fetchSpan = useCallback(
-    (asked: number, isStillWanted: () => boolean = () => true) => {
+  //: The search as it stands once the typing has stopped. The address follows
+  //: every keystroke, as it does on the board; only the request waits.
+  const [settled, setSettled] = useState(filters.name);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSettled(filters.name), SETTLING_DELAY);
+    return () => clearTimeout(timer);
+  }, [filters.name]);
+
+  const asked = useMemo<ReadRoadmapParams>(
+    () => ({
+      months,
+      ...(settled.trim() ? { name: settled.trim() } : {}),
+      ...(filters.phases.length ? { phase: filters.phases } : {}),
+      ...(filters.categories.length ? { category: filters.categories } : {}),
+      ...(filters.priorities.length ? { priority: filters.priorities } : {}),
+      ...(filters.types.length ? { type: filters.types } : {}),
+      ...(filters.departments.length ? { department: filters.departments } : {}),
+    }),
+    [months, settled, filters],
+  );
+
+  //: The reading, as one string. `asked` is rebuilt on every render and its
+  //: content is not: what the screen reads depends on the content, and keying
+  //: on it is what keeps a re-render from asking the same question twice.
+  const key = JSON.stringify(asked);
+
+  const fetchAsked = useCallback(
+    (request: ReadRoadmapParams, isStillWanted: () => boolean = () => true) => {
+      const reading = JSON.stringify(request);
       // The window itself is worked out by the server: where it opens and
       // how it lands on month boundaries is a rule, and a rule lives in one
       // place or it drifts.
-      return readRoadmap({ months: asked })
+      return readRoadmap(request)
         .then((response) => {
           if (!isStillWanted()) return;
           setRoadmap(response.data as RoadmapResponse);
-          setAnswered(asked);
+          setAnswered(reading);
           setFailed(null);
         })
         .catch(() => {
-          if (isStillWanted()) setFailed(asked);
+          if (isStillWanted()) setFailed(reading);
         });
     },
     [],
@@ -49,25 +125,43 @@ export function useRoadmapScreen() {
 
   useEffect(() => {
     let alive = true;
-    void fetchSpan(months, () => alive);
+    // Read back out of the key rather than closed over: the effect must
+    // depend on what was asked, not on the object that carried it.
+    void fetchAsked(JSON.parse(key) as ReadRoadmapParams, () => alive);
     return () => {
       alive = false;
     };
-  }, [months, fetchSpan]);
+  }, [key, fetchAsked]);
+
+  function setView(change: { months?: number; grouping?: Grouping }) {
+    writeUrl(
+      (next) =>
+        writeView(next, {
+          months: change.months ?? months,
+          grouping: change.grouping ?? grouping,
+        }),
+      "replace",
+    );
+  }
 
   return {
     roadmap,
-    isLoading: answered !== months && failed !== months,
-    hasError: failed === months,
+    isLoading: answered !== key && failed !== key,
+    hasError: failed === key,
     months,
-    setMonths,
+    setMonths: (asked: number) => setView({ months: asked }),
     grouping,
-    setGrouping,
+    setGrouping: (asked: Grouping) => setView({ grouping: asked }),
+    filters,
+    hasFilter,
+    setFilters: set,
+    clearFilters: clear,
+    criteria: ROADMAP_CRITERIA,
     saveFailed,
 
     /** Reads the drawing again, after something changed it from elsewhere. */
     async refresh() {
-      await fetchSpan(months);
+      await fetchAsked(asked);
     },
 
     /**
@@ -89,7 +183,7 @@ export function useRoadmapScreen() {
       } catch {
         setSaveFailed(true);
       }
-      await fetchSpan(months);
+      await fetchAsked(asked);
     },
   };
 }

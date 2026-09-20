@@ -378,3 +378,56 @@ export const SPANS = [
 ] as const;
 
 export const DEFAULT_SPAN = 6;
+
+/**
+ * The grouping a roadmap opens on.
+ *
+ * Axes, because that is the question a steering committee comes with: where
+ * the effort is going, before how far along any of it is.
+ */
+export const DEFAULT_GROUPING: Grouping = "category";
+
+/**
+ * How the screen's own settings are named in the address.
+ *
+ * The window and the grouping live there alongside the criteria, because a
+ * roadmap is prepared once and shown from a link. A link restoring the
+ * filters but not the span would rebuild half the screen, which is worse
+ * than rebuilding none of it.
+ */
+const VIEW_PARAMETERS = {
+  months: "months",
+  grouping: "grouping",
+} as const;
+
+/** The span the address asks for, or the usual one when it says nothing. */
+export function readSpan(params: URLSearchParams): number {
+  const asked = Number(params.get(VIEW_PARAMETERS.months));
+  return SPANS.some((span) => span.months === asked) ? asked : DEFAULT_SPAN;
+}
+
+/** The grouping the address asks for, or the usual one. */
+export function readGrouping(params: URLSearchParams): Grouping {
+  const asked = params.get(VIEW_PARAMETERS.grouping);
+  return GROUPINGS.some((grouping) => grouping.value === asked)
+    ? (asked as Grouping)
+    : DEFAULT_GROUPING;
+}
+
+/**
+ * Writes the window and the grouping into the address, leaving the rest of
+ * the parameters alone.
+ *
+ * What is already the default is written as nothing: an address one can read
+ * says what was chosen, not what was left as it was.
+ */
+export function writeView(
+  params: URLSearchParams,
+  view: { months: number; grouping: Grouping },
+): void {
+  if (view.months === DEFAULT_SPAN) params.delete(VIEW_PARAMETERS.months);
+  else params.set(VIEW_PARAMETERS.months, String(view.months));
+
+  if (view.grouping === DEFAULT_GROUPING) params.delete(VIEW_PARAMETERS.grouping);
+  else params.set(VIEW_PARAMETERS.grouping, view.grouping);
+}

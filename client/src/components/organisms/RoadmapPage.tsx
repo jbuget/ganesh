@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/atoms/PageHeader";
 import { RoadmapLegend } from "@/components/atoms/RoadmapLegend";
 import { RoadmapSummaryBar } from "@/components/atoms/RoadmapSummaryBar";
 import { SpanSelect } from "@/components/atoms/SpanSelect";
+import { MissionFilters } from "@/components/molecules/MissionFilters";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { RoadmapTimeline } from "@/components/organisms/RoadmapTimeline";
@@ -32,6 +33,11 @@ export function RoadmapPage() {
     setMonths,
     grouping,
     setGrouping,
+    filters,
+    hasFilter,
+    setFilters,
+    clearFilters,
+    criteria,
     saveFailed,
     setTargetDate,
     refresh,
@@ -46,16 +52,28 @@ export function RoadmapPage() {
         <PageHeader
           title="Feuille de route"
           subtitle="Ce qui a été livré, ce qui est annoncé, et ce que la projection en dit"
-          actions={
+        />
+      }
+    >
+      <div className="flex h-full min-h-0 flex-col">
+        {/* The window and the grouping sit at the far end of the filter bar,
+            where the reference list puts its choice of columns: they settle
+            how the drawing is read, next to what it is narrowed to, and not
+            among the page's title. */}
+        <MissionFilters
+          filters={filters}
+          hasFilter={hasFilter}
+          onChange={setFilters}
+          onClear={clearFilters}
+          criteria={criteria}
+          trailing={
             <>
               <GroupingSelect value={grouping} onChange={setGrouping} />
               <SpanSelect months={months} onChange={setMonths} />
             </>
           }
         />
-      }
-    >
-      <div className="flex h-full min-h-0 flex-col">
+
         {roadmap && <RoadmapSummaryBar summary={roadmap.summary} />}
 
         {saveFailed && (
