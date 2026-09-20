@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from src.modules.stats.domain.entities.period import Period, PeriodRange
+from src.modules.calendar.domain.entities.period import Period, PeriodRange
 from src.modules.stats.domain.services.expectations import (
     closed_months_covered_by,
     expected_days,

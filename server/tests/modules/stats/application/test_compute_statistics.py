@@ -4,6 +4,7 @@ from datetime import date
 
 import pytest
 
+from src.modules.calendar.domain.entities.period import PeriodRange
 from src.modules.projects.domain.entities.project import (
     ProjectCategory,
     ProjectKind,
@@ -13,7 +14,6 @@ from src.modules.stats.application.dtos.statistics_dto import StatisticsQuery
 from src.modules.stats.application.use_cases.compute_statistics import (
     ComputeStatisticsUseCase,
 )
-from src.modules.stats.domain.entities.period import PeriodRange
 from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
     InMemoryStatisticsRepository,

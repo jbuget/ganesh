@@ -2,7 +2,7 @@
 
 from datetime import date, timedelta
 
-from src.modules.stats.domain.entities.period import Period
+from src.modules.calendar.domain.entities.period import Period
 
 
 def expected_days(period: Period, teammates: int) -> float:

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import date
 
-from src.modules.stats.domain.entities.period import PeriodRange
+from src.modules.calendar.domain.entities.period import PeriodRange
 
 
 @dataclass(frozen=True)
