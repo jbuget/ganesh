@@ -90,12 +90,9 @@ def keeps(
 
     # Whom the mission is for, not whom it is only for: one serving landlords
     # and customer service answers to either.
-    if filters.departments and not any(
+    return not filters.departments or any(
         served in filters.departments for served in departments
-    ):
-        return False
-
-    return True
+    )
 
 
 def _normalise(body: str) -> str:

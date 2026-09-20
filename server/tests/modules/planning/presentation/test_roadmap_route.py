@@ -19,6 +19,7 @@ from src.modules.projects.domain.entities.project import (
 )
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.users.domain.entities.user import Role, User
+from src.shared.enums.department import Department
 from tests.helpers.in_memory_repositories import (
     InMemoryEntryRepository,
     InMemoryProjectAssigneeRepository,
@@ -50,6 +51,7 @@ URL = f"{get_settings().api_prefix}/planning/roadmap"
 async def client() -> AsyncIterator[AsyncClient]:
     details = InMemoryProjectDetailRepository()
     await details.mark_phase_reached(10, ProjectStatus.DEVELOPMENT, date(2026, 5, 4))
+    await details.set_departments(10, [Department.LANDLORDS])
 
     assignees = InMemoryProjectAssigneeRepository()
     await assignees.assign(10, 1, ProjectRole.CONTRIBUTOR)
@@ -143,3 +145,52 @@ async def test_the_tally_comes_with_the_drawing(client: AsyncClient) -> None:
     response = await client.get(URL)
 
     assert response.json()["summary"]["missions"] == 1
+
+
+class TestNarrowingFromTheQueryString:
+    """The criteria are named as the kanban names them: one vocabulary."""
+
+    async def test_a_phase_asked_for_leaves_the_other_lines_out(
+        self, client: AsyncClient
+    ) -> None:
+        response = await client.get(URL, params={"phase": "operations"})
+
+        assert response.status_code == 200
+        assert response.json()["missions"] == []
+
+    async def test_the_tally_speaks_of_what_was_kept(self, client: AsyncClient) -> None:
+        # The whole reason the narrowing happens here: the figures above the
+        # bars must count the bars below them.
+        response = await client.get(URL, params={"phase": "operations"})
+
+        assert response.json()["summary"]["missions"] == 0
+
+    async def test_repeating_a_criterion_adds_a_value_to_it(
+        self, client: AsyncClient
+    ) -> None:
+        response = await client.get(URL, params={"phase": ["scoping", "development"]})
+
+        assert len(response.json()["missions"]) == 1
+
+    async def test_a_department_keeps_the_missions_serving_it(
+        self, client: AsyncClient
+    ) -> None:
+        served = await client.get(URL, params={"department": "landlords"})
+        elsewhere = await client.get(URL, params={"department": "condominium"})
+
+        assert len(served.json()["missions"]) == 1
+        assert elsewhere.json()["missions"] == []
+
+    async def test_a_name_is_searched_without_case_or_accents(
+        self, client: AsyncClient
+    ) -> None:
+        response = await client.get(URL, params={"name": "BAILLEURS"})
+
+        assert len(response.json()["missions"]) == 1
+
+    async def test_a_criterion_nobody_knows_how_to_read_is_refused(
+        self, client: AsyncClient
+    ) -> None:
+        response = await client.get(URL, params={"phase": "recette"})
+
+        assert response.status_code == 422
