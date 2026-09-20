@@ -58,11 +58,17 @@ export function ActivityMatrix({
       {lines.length === 0 ? (
         <p className="text-sm text-slate-500">{empty}</p>
       ) : (
-        <div className="overflow-x-auto">
+        // No scrolling container of its own. PageLayout already scrolls, and
+        // on both axes: a second one nested inside swallows the wheel, and the
+        // page reads as frozen the moment the pointer is over the table.
+        // Leaving it to the page also gives the pinned header back.
+        <div className="[&_[data-slot=table-container]]:overflow-visible">
           <Table className={`border-separate border-spacing-0 ${TABLE_FRAME}`}>
             <TableHeader className={TABLE_HEADER}>
               <TableRow>
-                <TableHead className="sticky left-0 z-20 bg-white">Projet</TableHead>
+                <TableHead className="sticky left-0 z-20 bg-white shadow-[-24px_0_0_0_#fff]">
+                  Projet
+                </TableHead>
                 <TableHead
                   className="text-right"
                   title="Jours déclarés sur la période, lots compris"
@@ -100,7 +106,9 @@ export function ActivityMatrix({
               ))}
 
               <TableRow className="bg-slate-50 font-medium">
-                <TableCell className="sticky left-0 z-10 bg-white">Total</TableCell>
+                <TableCell className="sticky left-0 z-10 bg-white shadow-[-24px_0_0_0_#fff]">
+                  Total
+                </TableCell>
                 <TableCell className="text-right tabular-nums">
                   {formatDays(totalDays)}
                 </TableCell>
