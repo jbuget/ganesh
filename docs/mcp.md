@@ -32,7 +32,7 @@ much smaller problem.
 | What a tool calls | **A use case**, never the API's own HTTP routes |
 | What a tool returns | Sentences carrying facts, not a JSON row |
 | Client | Claude Code and Claude Desktop, by static header |
-| V1 verbs | **Read only** |
+| V1 verbs | Five reads, and one write — on the caller's own month |
 
 ## Where it lives
 
@@ -127,17 +127,18 @@ A tool that cannot answer says why, in words: « Aucun projet ne porte
 l'identifiant 404 », « Le mois est validé : plus rien ne s'y écrit ». Every
 `DomainError` raised underneath becomes one, through `@answers`. This is the
 same reason `entry_router` gives for leaving writes human — and the reason
-writing is out of V1 rather than out forever.
+writing is out of V1 rather than out forever — and `declare_time` is what it
+became once a tool could say those refusals in words.
 
-## The three tools
+## The tools
 
-Each is `src/mcp/tools/<name>.py`, and each answers in sentences built through
+Six, each `src/mcp/tools/<name>.py`, each answering in sentences built through
 `src/mcp/tools/say.py` — « 1,5 jour », « 08/09 », « septembre 2026 ». A number
 handed over raw is a number a model words itself, and words wrong.
 
 ### `find_project(query: str)`
 
-**Scope** `projects:read`. The resolver the other two lean on, and the reason a
+**Scope** `projects:read`. The resolver the others lean on, and the reason a
 model stops inventing identifiers.
 
 Takes what a person would say — « waatcher », « le catalogue » — and returns the
@@ -192,6 +193,49 @@ words it uses.
 > personnes y ont déclaré 23 jours. Deux mises à jour postées, la dernière le
 > 16. L'estimation n'a pas bougé.
 
+### `portfolio_status(months?: int)`
+
+**Scope** `roadmap:read`. The roadmap — the screen that is *shown* to a
+committee rather than arbitrated. Planification answers a different question,
+and it is arbitrated: a machine has no arbitration to make.
+
+It does **not** read the bars out line by line: forty of them recited is the
+screen without the drawing. The tally first, then the lines that put the
+drawing in doubt — what is late, against the date announced, and what the
+projection could not place at all.
+
+> 64 projets sur la fenêtre, 0 en retard, aucune mise en service. À lire en
+> sachant que 53 n'ont pas de date annoncée et 27 n'ont pas d'estimation.
+
+### `team_mood()`
+
+**Scope** `moods:read`, which no breadth covers. The fortnight in figures
+nobody can be read out of: no name, no initials, no identifier, and a day
+fewer than three people answered is announced rather than averaged.
+
+The detail is in `docs/api-keys.md`; the thing to hold on to is that the
+screen names everyone and never aggregates one person over time, and that a
+model handed the names would do exactly that.
+
+**Before this reaches the team, the team is told.** The moods were given to an
+internal screen, and a frame changed quietly is what costs the answering rate.
+
+### `declare_time(project_id: int, day: str, value: float)`
+
+**Scope** `entries:write`, which no route opens. The corvée of the product,
+done from the terminal already open.
+
+**It writes on the month of the key's owner and no other.** There is no
+`user_id` parameter, and that is the guarantee rather than an omission.
+`PUT /entries` stays as it is, where a teammate may fix a colleague's month: a
+person doing that has a screen in front of them.
+
+Every refusal is **raised**, not returned — a write that did not happen must
+not read like one that did — and said in French: the day and the value before
+the domain is even asked, the validated month and the unknown project caught by
+name. The domain stays the authority; this is its reflection, as a locked cell
+on the grid is.
+
 ## How a tool speaks
 
 Three rules, carried over from what was already decided about a collector:
@@ -207,17 +251,9 @@ Three rules, carried over from what was already decided about a collector:
 
 ## Deliberately out of V1
 
-- **Every write.** `declare_time` is the tool with the most value and the most
-  to break: it needs an `entries:write` scope that does not exist, and four
-  refusals — validated month, non-working day, value other than 0.5/1.0, a day
-  totalling over 1 — each rendered as a sentence. It comes once the three reads
-  have proved someone calls them.
-- **The moods.** Worth doing, and not like this: an aggregate with no names, no
-  identifiers, and a participation floor, behind a `moods:read` scope of its
-  own that `all:read` does not cover. The team screen names everyone, but it
-  never aggregates *one person over time*, which is precisely what a model
-  would do if handed the names. Announced to the team before it ships, never
-  discovered afterwards.
+- **Every other write.** Changing a phase, posting on a thread, staffing a
+  mission: each is a gesture with a screen built for it, and none is asked for
+  from a terminal.
 - **Claude.ai on the web**, which wants OAuth with dynamic registration. Claude
   Code and Desktop take a static header, and that is the whole of Waat.
 - **Generating tools from the OpenAPI.** Sixty routes would become sixty tools,
@@ -257,14 +293,18 @@ Claude Code and Claude Desktop take a static header, which is all Waat needs:
 ```
 
 The trailing slash is the address; `/mcp` redirects to it. The key is minted in
-the « API / MCP » screen by a manager, carries `projects:read`, `entries:read`
-and `audit:read`, and is owned by the person whose terminal it sits in.
+the « API / MCP » screen by a manager and owned by the person whose terminal it
+sits in. `projects:read`, `entries:read`, `audit:read` and `roadmap:read` cover
+the reads; add `entries:write` to declare time, and `moods:read` — which no
+« Tous » ticks — to read the team's morale.
 
 The same screen's « MCP » tab says all of this to the team, one client at a
 time — Claude Code, Codex, Gemini CLI — and hands over the snippet to paste.
 The snippets live in `client/src/lib/mcp.ts` rather than inside the tab, and
 are read by a test: a configuration somebody pastes into their shell is
-exactly the kind of text that goes stale in silence.
+exactly the kind of text that goes stale in silence. **What the tab lists is
+read from there too**, so a tool added on the server and forgotten on the
+screen is a tool nobody knows to ask for.
 
 ## How we will know
 

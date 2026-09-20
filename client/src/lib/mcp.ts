@@ -21,16 +21,23 @@ export const MCP_URL = "https://api.ganesh.waat.tools/mcp/";
 export const MCP_SERVER_NAME = "ganesh";
 
 /**
- * The scopes the three tools open, and therefore what the key must carry.
+ * The scopes the tools open, and therefore what the key must carry.
  *
  * Typed as the API's own scopes rather than as strings: the two tabs name the
  * same things, and a scope renamed on one side must not leave the other
  * quietly asking for a member nobody honours any more.
+ *
+ * `moods:read` is the one a reader has to tick on purpose: no « Tous » covers
+ * it, on the server as on the form. Somebody granting « Tous (lecture) » and
+ * expecting `team_mood` would be handed a key that refuses it.
  */
 export const MCP_SCOPES: ApiKeyScope[] = [
   "projects:read",
   "entries:read",
+  "entries:write",
   "audit:read",
+  "roadmap:read",
+  "moods:read",
 ];
 
 export interface McpClientSetup {
@@ -104,10 +111,14 @@ export interface McpTool {
 }
 
 /**
- * The three questions the server knows how to answer.
+ * The questions the server knows how to answer.
  *
  * Read here as they are written in the server's own docstrings: a tool is a
  * question somebody asks, so what the screen shows is the question.
+ *
+ * A tool added on the server and forgotten here is a tool nobody knows to ask
+ * for, which is why `test_the_screen_lists_every_tool_the_server_offers` reads
+ * this list from the other side.
  */
 export const MCP_TOOLS: McpTool[] = [
   {
@@ -123,9 +134,27 @@ export const MCP_TOOLS: McpTool[] = [
     scope: "entries:read",
   },
   {
+    name: "declare_time",
+    answers:
+      "Déclare une demi-journée ou une journée sur un projet, dans votre mois et dans aucun autre. Un week-end, un jour férié ou un mois validé sont refusés en toutes lettres.",
+    scope: "entries:write",
+  },
+  {
     name: "what_changed",
     answers:
       "Dit ce qui a bougé sur un projet depuis une date : la phase, le temps déclaré, les mises à jour postées. Quinze jours en arrière par défaut.",
     scope: "audit:read",
+  },
+  {
+    name: "portfolio_status",
+    answers:
+      "Dit où en est le portefeuille : ce qui est en retard et de combien, ce qui a été mis en service, et les projets que la projection n'a pas pu placer.",
+    scope: "roadmap:read",
+  },
+  {
+    name: "team_mood",
+    answers:
+      "Dit le moral de l'équipe sur la quinzaine, en chiffres d'ensemble : aucun nom, et une journée à moins de trois réponses est annoncée plutôt que moyennée.",
+    scope: "moods:read",
   },
 ];

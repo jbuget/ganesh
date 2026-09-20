@@ -28,8 +28,9 @@ export function McpTab() {
           </code>
           . Une fois branché, votre terminal sait répondre à « où en est mon mois ? » ou
           « qu&apos;est-ce qui a bougé sur ce projet ? » sans quitter la ligne de
-          commande. Les outils sont en lecture seule : rien ne s&apos;écrit dans Ganesh
-          depuis un terminal.
+          commande — et sait y déclarer votre temps. La seule écriture possible est
+          celle-là, et elle ne touche que votre mois : aucun outil n&apos;écrit dans
+          celui d&apos;un collègue.
         </p>
       </section>
 
@@ -37,7 +38,7 @@ export function McpTab() {
         <h2 className="text-sm font-semibold text-slate-900">1. Obtenir une clé</h2>
         <p className="text-sm text-slate-600">
           Un manager vous crée une clé depuis l&apos;onglet « API », à votre nom,
-          portant ces trois habilitations :
+          portant ces habilitations :
         </p>
         {/* A plain disc, not a drawn dot: a round mark is what carries a
             phase everywhere else in the application, and a list of
@@ -53,6 +54,13 @@ export function McpTab() {
         <p className="text-sm text-slate-600">
           La clé ne s&apos;affiche qu&apos;une fois, à sa création. Elle vous est propre
           : les outils répondent pour son porteur, jamais pour un collègue.
+        </p>
+        <p className="text-sm text-slate-600">
+          « Moral de l&apos;équipe » se coche à part : aucune des deux cases « Tous » ne
+          l&apos;ouvre. C&apos;est la seule habilitation dans ce cas, et ce n&apos;est
+          pas un oubli — ce qu&apos;elle donne à lire a été confié à un écran interne,
+          et y accéder depuis un terminal est une décision que quelqu&apos;un prend, sur
+          une clé que toute l&apos;équipe peut relire.
         </p>
       </section>
 

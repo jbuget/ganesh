@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import pytest
 
 from src.modules.api_keys.domain.entities.api_key import (
+    NEVER_BROAD,
     USE_FRESHNESS,
     ApiKey,
     ApiKeyScope,
@@ -163,9 +164,14 @@ class TestBroadScopes:
         key = make_key(scopes=[ApiKeyScope.ALL_WRITE])
         assert key.grants(ApiKeyScope.CATALOG_READ) is False
 
-    def test_carrying_both_opens_everything(self) -> None:
+    def test_carrying_both_opens_everything_breadth_may_reach(self) -> None:
+        """Everything but what is carried explicitly or not at all.
+
+        `NEVER_BROAD` is that exception, and it is one member long: the moods,
+        given in confidence to a screen the team holds up to itself.
+        """
         key = make_key(scopes=[ApiKeyScope.ALL_READ, ApiKeyScope.ALL_WRITE])
-        for scope in ApiKeyScope:
+        for scope in set(ApiKeyScope) - NEVER_BROAD:
             assert key.grants(scope) is True
 
     def test_a_precise_scope_opens_nothing_else(self) -> None:
@@ -215,3 +221,30 @@ class TestEditing:
         key = make_key(expires_at=NOW + timedelta(days=1))
         key.rename("Ancienne CI")
         assert key.name == "Ancienne CI"
+
+
+class TestAScopeNoBreadthCovers:
+    """The moods are given in confidence, and breadth may not talk them open.
+
+    Every other scope is covered by the « Tous » of its own verb, deliberately:
+    that is what lets a key minted today reach a route added tomorrow. This one
+    is the exception, and it exists because what it opens was deliberately shut
+    — reaching it has to be a decision somebody took, on a key somebody can
+    read off the table.
+    """
+
+    def test_reading_everything_does_not_reach_the_moods(self) -> None:
+        key = make_key(scopes=[ApiKeyScope.ALL_READ])
+        assert key.grants(ApiKeyScope.MOODS_READ) is False
+
+    def test_the_scope_itself_does(self) -> None:
+        key = make_key(scopes=[ApiKeyScope.MOODS_READ])
+        assert key.grants(ApiKeyScope.MOODS_READ) is True
+
+    def test_it_grants_nothing_else(self) -> None:
+        key = make_key(scopes=[ApiKeyScope.MOODS_READ])
+        assert key.grants(ApiKeyScope.ENTRIES_READ) is False
+
+    def test_breadth_still_covers_everything_else(self) -> None:
+        key = make_key(scopes=[ApiKeyScope.ALL_READ])
+        assert key.grants(ApiKeyScope.ENTRIES_READ) is True

@@ -81,3 +81,20 @@ class TestAgreed:
         assert say.agreed("déclaré", 0) == "déclaré"
         assert say.agreed("déclaré", 1.5) == "déclaré"
         assert say.agreed("déclaré", 2) == "déclarés"
+
+
+class TestAsGiven:
+    """A refusal quotes what it was handed, never a rounding of it.
+
+    « une journée se déclare par 0,5 ou 1, jamais 0,8 » told a caller who had
+    written 0,75 that they had written something else.
+    """
+
+    def test_a_value_is_quoted_as_it_was_written(self) -> None:
+        assert say.as_given(0.75) == "0,75"
+
+    def test_a_whole_number_keeps_no_decimal(self) -> None:
+        assert say.as_given(2.0) == "2"
+
+    def test_a_half_reads_as_one(self) -> None:
+        assert say.as_given(0.5) == "0,5"

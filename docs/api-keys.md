@@ -199,9 +199,11 @@ scheme, nothing new for a client to learn — GitHub does exactly this with
 A closed enumeration, `resource:verb`. Each member names what a route needs,
 not what a screen shows.
 
-**Every scope listed opens at least one route.** That is not a remark, it is a
-test — `test_every_scope_the_form_offers_opens_a_route` walks what the doors
-registered at import time and fails on a member nothing asks for. The first
+**Every scope listed opens at least one door.** That is not a remark, it is a
+test — `test_every_scope_the_form_offers_opens_a_door` walks what the doors
+registered at import time and fails on a member nothing asks for. A door, not
+a route: a **tool** opens one too, through `@answers` (see `docs/mcp.md`), and
+two scopes are opened by a tool alone. The first
 round shipped four scopes of which one was wired; the table of keys said what a
 key opened and said it wrong, and a key minted on « Projets (écriture) » opened
 nothing at all. A promise the API does not keep is worse than a missing box.
@@ -214,9 +216,11 @@ nothing at all. A promise the API does not keep is worse than a missing box.
 | `projects:read` | `GET /projects`, `/projects/{id}/detail`, `/projects/board` | — |
 | `projects:write` | create, correct, change phase, archive, unarchive, import | delete, attach/detach, staff, move a card, and the whole service sheet |
 | `updates:write` | `POST /projects/{id}/updates` | correcting and removing a post |
-| `entries:read` | `GET /entries/export` | writing time, in any form |
+| `entries:read` | `GET /entries/export` | writing time through a route |
+| `entries:write` | the `declare_time` tool, and no route | writing anybody else's month |
 | `users:read` | `GET /users` | role, activation, identity |
 | `audit:read` | `GET /audit-logs` | — there is nothing to write |
+| `moods:read` | the `team_mood` tool, and no route | every name, and what anyone answered |
 
 ### Why those, and not the others
 
@@ -234,12 +238,25 @@ nothing at all. A promise the API does not keep is worse than a missing box.
   card's rank steers nothing and is not even in the log.
 - **The service sheet stays human.** It is filled in Ganesh and nowhere else,
   which is exactly why waat.tools *reads* the catalogue rather than writing it.
-- **Time is read, never written.** A validated month, a day that is not a
-  working one, a total that may not exceed one: rules a person is told about on
-  screen and argues with. A machine would only ever be told « 422 ».
-- **The moods are reachable by nothing**, and that is not an omission. They are
-  given in confidence; a log of who felt what is not a log, and a scope that
-  opened them would be a broken promise, not a feature.
+- **Time is written by a tool, and by no route.** The rules a write runs into
+  — a validated month, a day that is not a working one, a value the grid does
+  not hold — are rules a person is told about on screen and argues with, and a
+  machine would only ever be told « 422 ». A tool can say them, which a route
+  cannot: `declare_time` names each one in French, and writes on the month of
+  the key's owner and no other. `PUT /entries` stays human, where a teammate
+  may still fix a colleague's month.
+- **The moods are reached by one tool, in aggregate, and by nothing else.**
+  They are given in confidence, and what would break that is not reading them
+  — the team screen names everyone — but aggregating *one person over time*,
+  which a model handed the names would do at once. `team_mood` returns no
+  name, no initials and no identifier, and says so rather than averaging a day
+  too few people answered.
+
+  `moods:read` is also the one scope **no breadth covers**: `NEVER_BROAD` in
+  the domain keeps `all:read` from reaching it, and the form neither ticks nor
+  locks its box. Reaching the moods is a decision somebody took, on a key the
+  whole team can read off the table — never something a key inherited by being
+  broad.
 
 **A key must carry at least one scope**, and that is enforced rather than
 merely unoffered: `ApiKey.__post_init__` refuses an empty list, and
@@ -510,7 +527,8 @@ Named so nobody wonders whether they were forgotten:
 - **A true machine actor in the audit.** See *Traceability*. The payload names
   the key today, which is what makes that upgrade a refactor rather than a data
   migration.
-- **Writing time with a key.** See *Why those, and not the others*.
+- **Writing time through a route.** A tool writes it — see *Why those, and not
+  the others* — and `PUT /entries` stays human.
 - **A per-key allowance.** One bucket for all of them, still. A CI that
   legitimately needs more than a script is a reason to add a column.
 
