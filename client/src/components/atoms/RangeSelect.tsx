@@ -5,11 +5,17 @@ import { useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { PeriodRange } from "@/lib/api/generated/model";
-import { RANGES, rangeLabel } from "@/lib/statistics";
+import { RANGES } from "@/lib/statistics";
 
 interface RangeSelectProps {
   value: PeriodRange;
   onChange: (range: PeriodRange) => void;
+  /**
+   * The windows on offer. Given by the screen, because the windows worth
+   * reading are not the same everywhere: Statistiques counts back from
+   * today, the Synthèse d'activité opens on a Monday.
+   */
+  ranges?: { value: PeriodRange; label: string }[];
 }
 
 //: Wide enough for the longest window on offer. Fixed rather than fitted to
@@ -24,22 +30,23 @@ const WIDTH = "w-44";
  * control, and the window in force is read at a glance instead of being
  * hunted for among five look-alike buttons.
  */
-export function RangeSelect({ value, onChange }: RangeSelectProps) {
+export function RangeSelect({ value, onChange, ranges = RANGES }: RangeSelectProps) {
   const [isOpen, setOpen] = useState(false);
+  const chosenLabel = ranges.find((range) => range.value === value)?.label ?? value;
 
   return (
     <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger
-        aria-label={`Plage de temps, actuellement ${rangeLabel(value)}`}
+        aria-label={`Plage de temps, actuellement ${chosenLabel}`}
         className={`flex ${WIDTH} cursor-pointer items-center justify-between gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-700 transition-colors hover:border-slate-400`}
       >
-        <span className="truncate">{rangeLabel(value)}</span>
+        <span className="truncate">{chosenLabel}</span>
         <ChevronDown className="size-3.5 shrink-0 opacity-60" aria-hidden />
       </PopoverTrigger>
 
       <PopoverContent align="end" className={`${WIDTH} p-1`}>
         <ul role="listbox" aria-label="Plage de temps">
-          {RANGES.map((range) => {
+          {ranges.map((range) => {
             const isChosen = range.value === value;
             return (
               <li key={range.value} role="presentation">

@@ -6,11 +6,16 @@
  */
 
 /**
- * The windows the screen offers.
+ * The windows the screens offer.
  *
  * A closed catalogue rather than two free dates: a dashboard is read at a
  * glance, and the comparison against the previous period only means
- * something between windows of the same length.
+ * something between windows of the same nature.
+ *
+ * Two families live here. The **rolling** ones end today and count back a
+ * fixed number of days. The **anchored** ones open on a Monday or on a
+ * first of the month: read on a Monday morning, « last week » means Monday
+ * to Sunday, and the last seven days would cut the weekend in two.
  */
 export type PeriodRange = (typeof PeriodRange)[keyof typeof PeriodRange];
 
@@ -20,4 +25,9 @@ export const PeriodRange = {
   last_7_days: "last_7_days",
   last_30_days: "last_30_days",
   last_90_days: "last_90_days",
+  this_week: "this_week",
+  last_week: "last_week",
+  last_two_weeks: "last_two_weeks",
+  this_month: "this_month",
+  last_month: "last_month",
 } as const;

@@ -220,3 +220,40 @@ describe("breakdown rows", () => {
     expect(kindRows(empty).map((row) => row.share)).toEqual([null, null]);
   });
 });
+
+describe("summarise and the first of the month", () => {
+  it("says « 1er », never « 1 », when a window opens a month", () => {
+    // The anchored windows make this the common case rather than the
+    // exception: every month opens on a first, and `Intl` writes « 1 ».
+    const said = summarise({
+      range: "last_month",
+      start: "2026-08-01",
+      end: "2026-08-31",
+      working_days: 21,
+    });
+
+    expect(said).toBe("Du 1er au 31 août 2026 · 21 jours ouvrés");
+  });
+
+  it("says « 1er » on the closing date too", () => {
+    const said = summarise({
+      range: "last_week",
+      start: "2026-07-27",
+      end: "2026-08-01",
+      working_days: 5,
+    });
+
+    expect(said).toBe("Du 27 juillet au 1er août 2026 · 5 jours ouvrés");
+  });
+
+  it("leaves any other day alone", () => {
+    const said = summarise({
+      range: "last_week",
+      start: "2026-09-07",
+      end: "2026-09-13",
+      working_days: 5,
+    });
+
+    expect(said).toBe("Du 7 au 13 septembre 2026 · 5 jours ouvrés");
+  });
+});

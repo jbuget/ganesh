@@ -69,6 +69,16 @@ const FULL_DATE = new Intl.DateTimeFormat("fr-FR", {
   year: "numeric",
 });
 
+/**
+ * The first of the month is « 1er », never « 1 ».
+ *
+ * `Intl` does not do it, and the anchored windows make the case the common
+ * one rather than the exception: every month opens on a first.
+ */
+function ordinal(day: number): string {
+  return day === 1 ? "1er" : String(day);
+}
+
 /** Parsed as a local date: `new Date(iso)` would shift the day by a timezone. */
 function parse(iso: string): Date {
   const [year, month, day] = iso.split("-").map(Number);
@@ -94,18 +104,26 @@ export function summarise(period: PeriodResponse): string {
         }`;
 
   if (period.start === period.end) {
-    return `Le ${FULL_DATE.format(start)} · ${days}`;
+    return `Le ${fullDate(start)} · ${days}`;
   }
 
   const sameYear = start.getFullYear() === end.getFullYear();
   const sameMonth = sameYear && start.getMonth() === end.getMonth();
   const from = sameMonth
-    ? String(start.getDate())
+    ? ordinal(start.getDate())
     : sameYear
-      ? DAY_AND_MONTH.format(start)
-      : FULL_DATE.format(start);
+      ? dayAndMonth(start)
+      : fullDate(start);
 
-  return `Du ${from} au ${FULL_DATE.format(end)} · ${days}`;
+  return `Du ${from} au ${fullDate(end)} · ${days}`;
+}
+
+function dayAndMonth(date: Date): string {
+  return DAY_AND_MONTH.format(date).replace(/^1\b/, "1er");
+}
+
+function fullDate(date: Date): string {
+  return FULL_DATE.format(date).replace(/^1\b/, "1er");
 }
 
 /**

@@ -6,6 +6,11 @@ here passes in production, persistence aside.
 
 from datetime import date, datetime
 
+from src.modules.activity.domain.repositories.activity_repository import (
+    ActivityRepository,
+    DeclaredDays,
+    MissionRecord,
+)
 from src.modules.api_keys.domain.entities.api_key import ApiKey
 from src.modules.api_keys.domain.repositories.api_key_repository import ApiKeyRepository
 from src.modules.audit_logs.domain.entities.audit_log import AuditLog
@@ -479,6 +484,40 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
 
     async def update(self, update: ProjectUpdate) -> ProjectUpdate:
         return update
+
+
+class InMemoryActivityRepository(ActivityRepository):
+    """What the Synthèse d'activité reads, held in memory.
+
+    Rows are handed in already grouped, as the database would return them:
+    the use case is what is under test, not the SQL.
+    """
+
+    def __init__(
+        self,
+        declared: dict[str, list[DeclaredDays]] | None = None,
+        missions: list[MissionRecord] | None = None,
+    ) -> None:
+        #: Rows per window, keyed by « start:end » so that the window before
+        #: can be given a different answer from the one on screen.
+        self._declared = declared or {}
+        self._missions = missions or []
+
+    @staticmethod
+    def key(period: Period) -> str:
+        return f"{period.start}:{period.end}"
+
+    async def declared_days(self, period: Period) -> list[DeclaredDays]:
+        return self._declared.get(self.key(period), [])
+
+    async def missions_touched(self, period: Period) -> list[MissionRecord]:
+        return self._missions
+
+    async def days_by_mission(self, period: Period) -> dict[int, float]:
+        days: dict[int, float] = {}
+        for row in await self.declared_days(period):
+            days[row.project_id] = days.get(row.project_id, 0.0) + row.days
+        return days
 
 
 class InMemoryStatisticsRepository(StatisticsRepository):
