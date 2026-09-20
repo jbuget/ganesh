@@ -10,6 +10,7 @@ from src.modules.entries.application.use_cases.add_mission_to_month import (
     AddMissionToMonthUseCase,
 )
 from src.modules.months.domain.entities.month import Month
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectKind,
@@ -23,6 +24,7 @@ from src.shared.exceptions.domain_exceptions import (
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryMonthRepository,
+    InMemoryNotificationRepository,
     InMemoryProjectRepository,
     InMemoryUserMissionRepository,
     InMemoryUserRepository,
@@ -58,6 +60,7 @@ def build_with_audit(months: list[Month] | None = None):
         months=InMemoryMonthRepository(months or []),
         user_missions=rows,
         audit_logs=audit,
+        notifications=NotificationDelivery(InMemoryNotificationRepository()),
     )
     return use_case, rows, audit
 
@@ -139,6 +142,7 @@ async def test_a_deactivated_actor_is_refused() -> None:
         months=InMemoryMonthRepository(),
         user_missions=rows,
         audit_logs=InMemoryAuditLogRepository(),
+        notifications=NotificationDelivery(InMemoryNotificationRepository()),
     )
 
     with pytest.raises(ForbiddenActionError):

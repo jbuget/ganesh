@@ -11,6 +11,7 @@ from src.modules.entries.application.use_cases.remove_mission_from_month import 
 )
 from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.months.domain.entities.month import Month
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.projects.domain.entities.project import ProjectStatus
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import (
@@ -21,6 +22,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryEntryRepository,
     InMemoryMonthRepository,
+    InMemoryNotificationRepository,
     InMemoryUserMissionRepository,
     InMemoryUserRepository,
 )
@@ -50,6 +52,7 @@ def build(
         months=InMemoryMonthRepository(months or []),
         audit_logs=audit,
         user_missions=rows,
+        notifications=NotificationDelivery(InMemoryNotificationRepository()),
     )
     return use_case, entry_repo, audit, rows
 

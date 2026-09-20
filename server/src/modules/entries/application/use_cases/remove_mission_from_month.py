@@ -5,6 +5,7 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
 from src.modules.entries.application.dtos.set_entry_dto import RemoveMissionCommand
+from src.modules.entries.application.use_cases.timesheet_notice import tell_the_owner
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.entries.domain.repositories.user_mission_repository import (
     UserMissionRepository,
@@ -12,6 +13,7 @@ from src.modules.entries.domain.repositories.user_mission_repository import (
 from src.modules.months.domain.repositories.month_repository import MonthRepository
 from src.modules.months.domain.services.month_period import first_day_of
 from src.modules.months.domain.services.month_rules import ensure_month_is_open
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
@@ -35,12 +37,14 @@ class RemoveMissionFromMonthUseCase:
         months: MonthRepository,
         audit_logs: AuditLogRepository,
         user_missions: UserMissionRepository,
+        notifications: NotificationDelivery,
     ) -> None:
         self._users = users
         self._entries = entries
         self._months = months
         self._audit_logs = audit_logs
         self._user_missions = user_missions
+        self._notifications = notifications
 
     async def execute(self, command: RemoveMissionCommand) -> float:
         """Returns how many days were removed."""
@@ -68,6 +72,12 @@ class RemoveMissionFromMonthUseCase:
                 project_id=command.project_id,
                 month=first_day_of(command.month),
             )
+        )
+        await tell_the_owner(
+            self._notifications,
+            actor_id=command.actor_id,
+            owner_id=command.target_user_id,
+            day=command.month,
         )
 
         entries = [

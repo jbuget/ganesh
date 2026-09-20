@@ -25,9 +25,10 @@ class NotificationKind(StrEnum):
     PROJECT_ASSIGNED = "project.assigned"
     PROJECT_UNASSIGNED = "project.unassigned"
 
-    # What is done to my month.
+    # What is done to my month. There is no « month.validated »: nobody may
+    # validate somebody else's month — the domain refuses it — so a line
+    # saying so could never be written.
     TIMESHEET_EDITED = "timesheet.edited"
-    MONTH_VALIDATED = "month.validated"
     MONTH_REOPENED = "month.reopened"
 
     # The life of a mission I am on.

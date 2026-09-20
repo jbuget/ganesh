@@ -1,5 +1,7 @@
 """Reopens a validated month. Managers only, and traced."""
 
+from datetime import datetime
+
 from src.modules.audit_logs.domain.entities.audit_log import AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
@@ -7,6 +9,9 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 from src.modules.months.application.dtos.month_dto import ReopenMonthCommand
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.domain.repositories.month_repository import MonthRepository
+from src.modules.notifications.domain.entities.notification import NotificationKind
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
+from src.modules.notifications.domain.services.fan_out import notify
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
@@ -22,10 +27,12 @@ class ReopenMonthUseCase:
         users: UserRepository,
         months: MonthRepository,
         audit_logs: AuditLogRepository,
+        notifications: NotificationDelivery,
     ) -> None:
         self._users = users
         self._months = months
         self._audit_logs = audit_logs
+        self._notifications = notifications
 
     async def execute(self, command: ReopenMonthCommand) -> Month:
         actor = await self._users.get_by_id(command.actor_id)
@@ -44,6 +51,17 @@ class ReopenMonthUseCase:
                 actor_id=command.actor_id,
                 target_user_id=command.target_user_id,
                 month=month.month,
+            )
+        )
+        # The owner of the month hears that somebody else settled it —
+        # never that they settled it themselves.
+        await self._notifications.deliver(
+            notify(
+                NotificationKind.MONTH_REOPENED,
+                actor_id=command.actor_id,
+                recipients=[command.target_user_id],
+                at=datetime.now(),
+                day=month.month,
             )
         )
         return month

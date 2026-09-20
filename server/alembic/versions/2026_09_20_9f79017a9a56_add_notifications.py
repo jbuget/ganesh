@@ -30,7 +30,6 @@ def upgrade() -> None:
                 "PROJECT_ASSIGNED",
                 "PROJECT_UNASSIGNED",
                 "TIMESHEET_EDITED",
-                "MONTH_VALIDATED",
                 "MONTH_REOPENED",
                 "PROJECT_UPDATE_POSTED",
                 "PROJECT_STATUS_CHANGED",

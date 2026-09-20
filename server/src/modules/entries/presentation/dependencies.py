@@ -33,6 +33,10 @@ from src.modules.months.domain.repositories.month_repository import MonthReposit
 from src.modules.months.infrastructure.database.repositories.month_repository_impl import (
     SqlMonthRepository,
 )
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
+from src.modules.notifications.presentation.dependencies import (
+    get_notification_delivery,
+)
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
@@ -81,6 +85,7 @@ def get_set_entry_use_case(
     entries: EntryRepository = Depends(get_entry_repository),
     months: MonthRepository = Depends(get_month_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
 ) -> SetEntryUseCase:
     return SetEntryUseCase(
         users=users,
@@ -88,6 +93,7 @@ def get_set_entry_use_case(
         entries=entries,
         months=months,
         audit_logs=audit_logs,
+        notifications=notifications,
     )
 
 
@@ -113,6 +119,7 @@ def get_add_mission_use_case(
     months: MonthRepository = Depends(get_month_repository),
     user_missions: UserMissionRepository = Depends(get_user_mission_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
 ) -> AddMissionToMonthUseCase:
     return AddMissionToMonthUseCase(
         users=users,
@@ -120,6 +127,7 @@ def get_add_mission_use_case(
         months=months,
         user_missions=user_missions,
         audit_logs=audit_logs,
+        notifications=notifications,
     )
 
 
@@ -128,9 +136,14 @@ def get_clear_entry_use_case(
     entries: EntryRepository = Depends(get_entry_repository),
     months: MonthRepository = Depends(get_month_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
 ) -> ClearEntryUseCase:
     return ClearEntryUseCase(
-        users=users, entries=entries, months=months, audit_logs=audit_logs
+        users=users,
+        entries=entries,
+        months=months,
+        audit_logs=audit_logs,
+        notifications=notifications,
     )
 
 
@@ -140,6 +153,7 @@ def get_remove_mission_use_case(
     months: MonthRepository = Depends(get_month_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
     user_missions: UserMissionRepository = Depends(get_user_mission_repository),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
 ) -> RemoveMissionFromMonthUseCase:
     return RemoveMissionFromMonthUseCase(
         users=users,
@@ -147,4 +161,5 @@ def get_remove_mission_use_case(
         months=months,
         audit_logs=audit_logs,
         user_missions=user_missions,
+        notifications=notifications,
     )

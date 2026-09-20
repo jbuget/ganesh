@@ -86,10 +86,6 @@ const WORDINGS: Record<
     what: "a modifié votre feuille de temps de",
     about: month(line),
   }),
-  "month.validated": (line) => ({
-    what: "a validé votre feuille de temps de",
-    about: month(line),
-  }),
   "month.reopened": (line) => ({
     what: "a rouvert votre feuille de temps de",
     about: month(line),

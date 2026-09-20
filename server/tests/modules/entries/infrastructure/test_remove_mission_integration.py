@@ -26,6 +26,10 @@ from src.modules.entries.infrastructure.database.repositories.user_mission_repos
 from src.modules.months.infrastructure.database.repositories.month_repository_impl import (
     SqlMonthRepository,
 )
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
+from src.modules.notifications.infrastructure.database.repositories.notification_repository_impl import (
+    SqlNotificationRepository,
+)
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectKind,
@@ -97,6 +101,7 @@ def build(session: AsyncSession) -> RemoveMissionFromMonthUseCase:
         months=SqlMonthRepository(session),
         audit_logs=SqlAuditLogRepository(session),
         user_missions=SqlUserMissionRepository(session),
+        notifications=NotificationDelivery(SqlNotificationRepository(session)),
     )
 
 

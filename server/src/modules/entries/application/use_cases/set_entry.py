@@ -7,12 +7,14 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
 from src.modules.entries.application.dtos.set_entry_dto import SetEntryCommand
+from src.modules.entries.application.use_cases.timesheet_notice import tell_the_owner
 from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.entries.domain.services.entry_rules import ensure_day_is_workable
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.domain.repositories.month_repository import MonthRepository
 from src.modules.months.domain.services.month_rules import ensure_month_is_open
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
@@ -33,12 +35,14 @@ class SetEntryUseCase:
         entries: EntryRepository,
         months: MonthRepository,
         audit_logs: AuditLogRepository,
+        notifications: NotificationDelivery,
     ) -> None:
         self._users = users
         self._projects = projects
         self._entries = entries
         self._months = months
         self._audit_logs = audit_logs
+        self._notifications = notifications
 
     async def execute(self, command: SetEntryCommand) -> Entry:
         actor = await self._users.get_by_id(command.actor_id)
@@ -83,6 +87,12 @@ class SetEntryUseCase:
                 old_value=float(previous.value) if previous else None,
                 new_value=float(value),
             )
+        )
+        await tell_the_owner(
+            self._notifications,
+            actor_id=command.actor_id,
+            owner_id=command.target_user_id,
+            day=command.day,
         )
         await self._months.save(month)
         return entry

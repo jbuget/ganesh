@@ -11,11 +11,14 @@ from src.modules.months.application.dtos.month_dto import (
 from src.modules.months.application.use_cases.reopen_month import ReopenMonthUseCase
 from src.modules.months.application.use_cases.validate_month import ValidateMonthUseCase
 from src.modules.months.domain.entities.month import Month, MonthState
+from src.modules.notifications.domain.entities.notification import NotificationKind
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import ForbiddenActionError
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryMonthRepository,
+    InMemoryNotificationRepository,
     InMemoryUserRepository,
 )
 
@@ -40,16 +43,24 @@ def build(months: list[Month] | None = None):
     users = InMemoryUserRepository([TEAMMATE, MANAGER])
     month_repo = InMemoryMonthRepository(months or [])
     audit = InMemoryAuditLogRepository()
+    inbox = InMemoryNotificationRepository()
+    delivery = NotificationDelivery(inbox)
     return (
         ValidateMonthUseCase(users=users, months=month_repo, audit_logs=audit),
-        ReopenMonthUseCase(users=users, months=month_repo, audit_logs=audit),
+        ReopenMonthUseCase(
+            users=users,
+            months=month_repo,
+            audit_logs=audit,
+            notifications=delivery,
+        ),
         month_repo,
         audit,
+        inbox,
     )
 
 
 async def test_a_user_validates_their_own_month() -> None:
-    validate, _, months, _ = build()
+    validate, _, months, _, _ = build()
 
     await validate.execute(
         ValidateMonthCommand(actor_id=1, target_user_id=1, month=MONTH)
@@ -61,7 +72,7 @@ async def test_a_user_validates_their_own_month() -> None:
 
 
 async def test_validation_is_traced() -> None:
-    validate, _, _, audit = build()
+    validate, _, _, audit, _ = build()
 
     await validate.execute(
         ValidateMonthCommand(actor_id=1, target_user_id=1, month=MONTH)
@@ -72,7 +83,7 @@ async def test_validation_is_traced() -> None:
 
 async def test_a_user_cannot_validate_someone_else_month() -> None:
     """One validates one's own month: validating for someone else makes no sense."""
-    validate, _, _, _ = build()
+    validate, _, _, _, _ = build()
 
     with pytest.raises(ForbiddenActionError):
         await validate.execute(
@@ -81,7 +92,7 @@ async def test_a_user_cannot_validate_someone_else_month() -> None:
 
 
 async def test_a_teammate_cannot_reopen_a_validated_month() -> None:
-    validate, reopen, _, _ = build()
+    validate, reopen, _, _, _ = build()
     await validate.execute(
         ValidateMonthCommand(actor_id=1, target_user_id=1, month=MONTH)
     )
@@ -93,7 +104,7 @@ async def test_a_teammate_cannot_reopen_a_validated_month() -> None:
 
 
 async def test_a_manager_reopens_a_validated_month() -> None:
-    validate, reopen, months, _ = build()
+    validate, reopen, months, _, _ = build()
     await validate.execute(
         ValidateMonthCommand(actor_id=1, target_user_id=1, month=MONTH)
     )
@@ -107,7 +118,7 @@ async def test_a_manager_reopens_a_validated_month() -> None:
 
 
 async def test_reopening_is_traced_with_its_author() -> None:
-    validate, reopen, _, audit = build()
+    validate, reopen, _, audit, _ = build()
     await validate.execute(
         ValidateMonthCommand(actor_id=1, target_user_id=1, month=MONTH)
     )
@@ -118,3 +129,27 @@ async def test_reopening_is_traced_with_its_author() -> None:
     assert log.action.value == "month.reopen"
     assert log.actor_id == 2
     assert log.target_user_id == 1
+
+
+async def test_validating_ones_own_month_rings_nowhere() -> None:
+    """And nobody validates anybody else's: there is no other case."""
+    validate, _, _, _, inbox = build()
+
+    await validate.execute(
+        ValidateMonthCommand(actor_id=1, target_user_id=1, month=MONTH)
+    )
+
+    assert inbox.notifications == []
+
+
+async def test_reopening_a_month_tells_whoever_it_belongs_to() -> None:
+    validate, reopen, _, _, inbox = build()
+    await validate.execute(
+        ValidateMonthCommand(actor_id=1, target_user_id=1, month=MONTH)
+    )
+
+    await reopen.execute(ReopenMonthCommand(actor_id=2, target_user_id=1, month=MONTH))
+
+    assert [told.kind for told in inbox.notifications] == [
+        NotificationKind.MONTH_REOPENED
+    ]

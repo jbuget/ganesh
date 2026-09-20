@@ -106,7 +106,6 @@ describe("notificationSentence", () => {
       "project.assigned",
       "project.unassigned",
       "timesheet.edited",
-      "month.validated",
       "month.reopened",
       "project.update_posted",
       "project.status_changed",
