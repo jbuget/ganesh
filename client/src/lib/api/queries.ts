@@ -7,9 +7,12 @@
  * is the only place that knowledge is applied, rather than scattering type
  * casts across the components.
  */
+import { keepPreviousData } from "@tanstack/react-query";
+
 import { useGetMonthGrid } from "@/lib/api/generated/entries/entries";
 import type {
   MonthGridResponse,
+  NotificationFeedResponse,
   MyMoodsResponse,
   PeriodRange,
   ProjectListItemResponse,
@@ -20,6 +23,8 @@ import type {
   UserResponse,
 } from "@/lib/api/generated/model";
 import { useGetMyMoods, useGetTeamMoods } from "@/lib/api/generated/moods/moods";
+import { useListNotifications } from "@/lib/api/generated/notifications/notifications";
+import type { NotificationFilter } from "@/lib/api/generated/model";
 import { useGetActivity } from "@/lib/api/generated/activity/activity";
 import { useGetStatistics } from "@/lib/api/generated/stats/stats";
 import { useListProjects } from "@/lib/api/generated/projects/projects";
@@ -121,4 +126,42 @@ export function useMyMoods() {
 export function useTeamMoods() {
   const query = useGetTeamMoods();
   return { ...query, window: successOf<TeamMoodsResponse>(query.data) };
+}
+
+/** How often the bell asks again. A minute is soon enough for an inbox. */
+export const INBOX_REFRESH_MS = 60_000;
+
+/**
+ * One page of one's own inbox.
+ *
+ * The bell and the panel both come here rather than to a count of their own:
+ * `unread_count` travels with the page, so the figure and the list can never
+ * disagree.
+ */
+export function useNotifications(
+  {
+    status,
+    limit,
+    offset,
+  }: { status: NotificationFilter; limit: number; offset: number },
+  options: { poll?: boolean } = {},
+) {
+  const query = useListNotifications(
+    { status, limit, offset },
+    {
+      query: {
+        refetchInterval: options.poll === false ? false : INBOX_REFRESH_MS,
+        // What is already on screen stays while the next page loads: paging
+        // through an inbox must not blink back to empty between two pages.
+        placeholderData: keepPreviousData,
+      },
+    },
+  );
+  const feed = successOf<NotificationFeedResponse>(query.data);
+  return {
+    ...query,
+    entries: feed?.entries ?? [],
+    total: feed?.total ?? 0,
+    unreadCount: feed?.unread_count ?? 0,
+  };
 }

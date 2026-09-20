@@ -14,6 +14,10 @@ from src.modules.entries.presentation.dependencies import (
     get_project_repository,
     get_user_repository,
 )
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
+from src.modules.notifications.presentation.dependencies import (
+    get_notification_delivery,
+)
 from src.modules.projects.application.use_cases.archive_project import (
     ArchiveProjectUseCase,
     UnarchiveProjectUseCase,
@@ -239,9 +243,14 @@ def get_assign_member_use_case(
     projects: ProjectRepository = Depends(get_project_repository),
     assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
 ) -> AssignMemberUseCase:
     return AssignMemberUseCase(
-        users=users, projects=projects, assignees=assignees, audit_logs=audit_logs
+        users=users,
+        projects=projects,
+        assignees=assignees,
+        audit_logs=audit_logs,
+        notifications=notifications,
     )
 
 
@@ -250,9 +259,14 @@ def get_unassign_member_use_case(
     projects: ProjectRepository = Depends(get_project_repository),
     assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
 ) -> UnassignMemberUseCase:
     return UnassignMemberUseCase(
-        users=users, projects=projects, assignees=assignees, audit_logs=audit_logs
+        users=users,
+        projects=projects,
+        assignees=assignees,
+        audit_logs=audit_logs,
+        notifications=notifications,
     )
 
 

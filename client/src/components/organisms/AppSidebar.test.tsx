@@ -36,6 +36,17 @@ vi.mock("@/lib/api/queries", () => ({
 // Ending the session is checked in `lib/use-deconnexion.test.ts`: here, only
 // the bar that offers it matters.
 vi.mock("@/lib/use-sign-out", () => ({ useSignOut: () => vi.fn() }));
+// Same for the inbox: what the bell shows is checked where the bell is, and
+// the bar is only answering for having one.
+vi.mock("@/lib/use-inbox", () => ({
+  useInbox: () => ({
+    entries: [],
+    unreadCount: 0,
+    isSettling: false,
+    toggleRead: vi.fn(),
+    markAllRead: vi.fn(),
+  }),
+}));
 
 describe("AppSidebar", () => {
   it("offers to fold the bar", () => {
