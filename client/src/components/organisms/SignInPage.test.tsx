@@ -49,7 +49,7 @@ describe("SignInPage", () => {
   });
 
   it("says why the sign-in did not go through", () => {
-    signInPage({ entra: false, at: "erreur=identifiants" });
+    signInPage({ entra: false, at: "reason=credentials" });
 
     expect(
       screen.getByText("Identifiant ou mot de passe incorrect."),
@@ -58,7 +58,7 @@ describe("SignInPage", () => {
 
   /** A replayed identity token lands here: it must read as something to redo. */
   it("says so when the token does not answer the sign-in asked for", () => {
-    signInPage({ entra: true, at: "erreur=nonce" });
+    signInPage({ entra: true, at: "reason=nonce" });
 
     expect(
       screen.getByText(
@@ -69,7 +69,7 @@ describe("SignInPage", () => {
 
   /** A reason we never wrote down still has to say something. */
   it("falls back on a plain sentence for a reason it does not know", () => {
-    signInPage({ entra: true, at: "erreur=quelque-chose" });
+    signInPage({ entra: true, at: "reason=something-else" });
 
     expect(
       screen.getByText("La connexion n'a pas abouti. Réessayez."),

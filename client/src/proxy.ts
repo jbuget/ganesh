@@ -40,7 +40,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
 function signInAt(request: NextRequest): NextResponse {
   const { pathname, search } = request.nextUrl;
-  const signIn = new URL("/connexion", request.nextUrl.origin);
+  const signIn = new URL("/sign-in", request.nextUrl.origin);
   // Where they were headed, so signing in takes them there rather than home.
   signIn.searchParams.set("from", `${pathname}${search}`);
   return NextResponse.redirect(signIn);

@@ -45,11 +45,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   });
 
   if (!answer.ok) {
-    const url = new URL("/connexion", appOrigin(request.nextUrl.origin));
-    url.searchParams.set(
-      "erreur",
-      answer.status === 404 ? "hors-service" : "identifiants",
-    );
+    const url = new URL("/sign-in", appOrigin(request.nextUrl.origin));
+    url.searchParams.set("reason", answer.status === 404 ? "disabled" : "credentials");
     if (landing !== "/") url.searchParams.set("from", landing);
     return NextResponse.redirect(url, { status: 303 });
   }
