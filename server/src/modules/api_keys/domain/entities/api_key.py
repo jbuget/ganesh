@@ -1,7 +1,9 @@
 """A service account and the key that lets it in.
 
-A key belongs to a machine, never to a person. It opens nothing on its own:
-a route has to ask for one of its scopes, one route at a time.
+A key is used by a machine and answered for by a person: `owner_id` is
+required, and it is that owner the audit records. What a key never carries is
+its owner's role. It opens nothing on its own either: a route has to ask for
+one of its scopes, one route at a time.
 """
 
 from dataclasses import dataclass, field

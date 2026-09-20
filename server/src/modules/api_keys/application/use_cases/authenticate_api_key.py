@@ -46,6 +46,33 @@ class AuthenticateApiKeyUseCase:
         self._users = users
 
     async def execute(self, token: str, scope: ApiKeyScope) -> MachineCaller | None:
+        caller = await self._known(token)
+        if caller is None:
+            return None
+
+        if not caller.key.grants(scope):
+            raise ForbiddenActionError(
+                f"This key does not carry the scope « {scope.value} »."
+            )
+
+        await self._stamp(caller.key)
+        return caller
+
+    async def identify(self, token: str) -> MachineCaller | None:
+        """Who is calling, without asking what for.
+
+        The door of the MCP server reads the envelope: which scope is needed
+        depends on the tool being asked for, and that is in the letter. The
+        five refusals above are unchanged — a key that does not hold up never
+        gets this far either.
+        """
+        caller = await self._known(token)
+        if caller is not None:
+            await self._stamp(caller.key)
+        return caller
+
+    async def _known(self, token: str) -> MachineCaller | None:
+        """The key and its owner, or nothing at all. Says nothing of scopes."""
         parsed = key_material.parse(token)
         if parsed is None:
             return None
@@ -57,23 +84,22 @@ class AuthenticateApiKeyUseCase:
         if not key_material.matches(secret, key.secret_hash):
             return None
 
-        now = clock.now()
-        if not key.is_usable(now):
+        if not key.is_usable(clock.now()):
             return None
 
         owner = await self._users.get_by_id(key.owner_id)
         if owner is None or not owner.is_active:
             return None
 
-        if not key.grants(scope):
-            raise ForbiddenActionError(
-                f"This key does not carry the scope « {scope.value} »."
-            )
+        return MachineCaller(key=key, owner=owner)
 
-        # Stamped through a window: without it the column would measure HTTP
-        # traffic rather than use. One column, not the whole aggregate — this
-        # is the hot path, and the scopes have no business being rewritten.
+    async def _stamp(self, key: ApiKey) -> None:
+        """Records the call through a window.
+
+        Without one the column would measure HTTP traffic rather than use. One
+        column, not the whole aggregate — this is the hot path, and the scopes
+        have no business being rewritten.
+        """
+        now = clock.now()
         if key.record_use(now) and key.id is not None:
             await self._keys.record_use(key.id, now)
-
-        return MachineCaller(key=key, owner=owner)

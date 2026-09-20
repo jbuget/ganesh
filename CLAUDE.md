@@ -627,9 +627,10 @@ whole design leans on, and the one to respect when adding a route:
 - **A scope that opens no route is a bug**, and a test says so. The table of
   keys is read by the whole team to know what a key opens; a member the form
   offers and no route honours makes it say that wrong.
-- A key belongs to a **service account**, never to a person, and that account
-  carries a **human owner** who answers for it. An API call records the owner
-  as the actor and names the key in the payload.
+- A key is used by a machine and carries a **named human owner** who answers
+  for it — a key per teammate is no anomaly. What a key never does is act *as*
+  that person. An API call records the owner as the actor and names the key in
+  the payload.
 - A key never inherits its owner's role: its power comes from its scopes alone.
 - Scopes read `resource:verb`. The two broad ones, `all:read` and `all:write`,
   are independent — one per verb, neither covering the other, and writing never
@@ -642,6 +643,33 @@ whole design leans on, and the one to respect when adding a route:
 
 The whole team reads the table of keys; only a manager mints or revokes one.
 See `docs/api-keys.md`.
+
+---
+
+## Tools, for a terminal client
+
+Ganesh answers an MCP client at `/mcp/`, mounted inside the API: the same use
+cases the routers reach, said to a terminal rather than drawn on a screen. The
+server is `server/src/mcp/`, the brief is `docs/mcp.md`, and four rules hold it
+together:
+
+- **A tool is a question somebody asks, never a route.** Sixty routes turned
+  into sixty tools is a model chaining six calls to answer one question and
+  getting three of them wrong. `find_project`, `my_month`, `what_changed` — and
+  the next one earns its place by being asked for.
+- **A tool answers in sentences.** « 1,5 jour déclaré », never a field called
+  `total`; and what it does not know, it **says** — an absent field is a field
+  a model fills in on its own. `src/mcp/tools/say.py` is where a figure or a
+  day becomes something a reader reads.
+- **A tool opens a scope the way a route does**, through `@answers(scope)`,
+  which registers it in `OPENED_SCOPES` and turns a domain refusal into a
+  sentence the client can read. A scope opening nothing is still a bug, and
+  the same test still says so.
+- **A tool reads for the owner of the key.** `my_month` carries no `user_id`
+  and that is the guarantee rather than an omission: there is no colleague to
+  hit by mistake. V1 is read-only for the same reason — a validated month and a
+  day that is not a working one are rules a person argues with on screen, and a
+  machine would only ever be told « 422 ».
 
 ---
 

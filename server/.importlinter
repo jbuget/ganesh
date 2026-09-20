@@ -68,3 +68,33 @@ source_modules =
     src.common
 forbidden_modules =
     src.modules.*
+
+# --- The MCP server ----------------------------------------------------------
+# A second presentation: it reaches the use cases the routers reach, and
+# nothing reaches back. A module that came looking for a tool would have
+# inverted the direction the architecture runs in.
+[importlinter:contract:mcp-is-a-leaf]
+name = Nothing imports the MCP server but the entry point
+type = forbidden
+source_modules =
+    src.modules
+    src.common
+    src.shared
+forbidden_modules =
+    src.mcp
+
+# The tools call use cases, never a repository — the rule the routes follow.
+# Indirect is allowed on purpose: a tool reaches the module's `dependencies`,
+# whose whole job is to build the repositories, exactly as a router does.
+[importlinter:contract:mcp-calls-use-cases]
+name = The MCP server names no repository of its own
+type = forbidden
+allow_indirect_imports = True
+source_modules =
+    src.mcp
+forbidden_modules =
+    src.modules.projects.infrastructure
+    src.modules.entries.infrastructure
+    src.modules.months.infrastructure
+    src.modules.audit_logs.infrastructure
+    src.modules.users.infrastructure

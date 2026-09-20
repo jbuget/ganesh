@@ -8,8 +8,8 @@ import { parisDay } from "@/lib/instants";
 /**
  * What the team reads about a service account.
  *
- * A key belongs to a machine, never to a person, and it opens nothing until a
- * route asks for one of its scopes. Every scope listed here opens at least one
+ * A key is used by a machine and answered for by a named human, whose role it
+ * never inherits. It opens nothing until a route asks for one of its scopes. Every scope listed here opens at least one
  * route — a box that promised what the API does not keep would make this table
  * say what a key opens, and say it wrong.
  *

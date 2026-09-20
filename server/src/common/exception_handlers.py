@@ -17,7 +17,7 @@ from src.shared.exceptions.domain_exceptions import (
 
 STATUS_BY_ERROR: dict[type[Exception], int] = {
     EntityNotFoundError: status.HTTP_404_NOT_FOUND,
-    ValidationError: status.HTTP_422_UNPROCESSABLE_ENTITY,
+    ValidationError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     ForbiddenActionError: status.HTTP_403_FORBIDDEN,
     ConflictError: status.HTTP_409_CONFLICT,
 }
