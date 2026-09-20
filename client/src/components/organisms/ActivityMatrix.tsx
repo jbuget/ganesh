@@ -58,17 +58,23 @@ export function ActivityMatrix({
       {lines.length === 0 ? (
         <p className="text-sm text-slate-500">{empty}</p>
       ) : (
-        // No scrolling container of its own. PageLayout already scrolls, and
-        // on both axes: a second one nested inside swallows the wheel, and the
-        // page reads as frozen the moment the pointer is over the table.
-        // Leaving it to the page also gives the pinned header back.
-        <div className="[&_[data-slot=table-container]]:overflow-visible">
+        // The matrix scrolls on its own, on both axes, so that the coverage
+        // note and the titles above it stay put while the columns move.
+        //
+        // Bounded in height on purpose: a container that scrolls sideways is
+        // a scroll container on both axes whatever CSS one writes — `clip`
+        // computes to `hidden` as soon as the other axis is `auto` — and one
+        // with nothing to scroll vertically swallows the wheel and leaves the
+        // page looking frozen. Given a height it can overflow, the wheel does
+        // the obvious thing: it scrolls the table, then the page beneath it.
+        //
+        // The block that fits under the cap — off-project work, a handful of
+        // lines — is untouched by it.
+        <div className="max-h-[70vh] overflow-auto [&_[data-slot=table-container]]:overflow-visible">
           <Table className={`border-separate border-spacing-0 ${TABLE_FRAME}`}>
             <TableHeader className={TABLE_HEADER}>
               <TableRow>
-                <TableHead className="sticky left-0 z-20 bg-white shadow-[-24px_0_0_0_#fff]">
-                  Projet
-                </TableHead>
+                <TableHead className="sticky left-0 z-20 bg-white">Projet</TableHead>
                 <TableHead
                   className="text-right"
                   title="Jours déclarés sur la période, lots compris"
@@ -106,9 +112,7 @@ export function ActivityMatrix({
               ))}
 
               <TableRow className="bg-slate-50 font-medium">
-                <TableCell className="sticky left-0 z-10 bg-white shadow-[-24px_0_0_0_#fff]">
-                  Total
-                </TableCell>
+                <TableCell className="sticky left-0 z-10 bg-white">Total</TableCell>
                 <TableCell className="text-right tabular-nums">
                   {formatDays(totalDays)}
                 </TableCell>
