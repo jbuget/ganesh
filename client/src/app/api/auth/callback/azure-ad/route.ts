@@ -12,12 +12,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { claimsFromIdToken, exchangeCode, isAllowedEmail } from "@/lib/auth/entra";
-import { PENDING_COOKIE, landingUrl, openPending } from "@/lib/auth/pending";
+import { PENDING_COOKIE, appOrigin, landingUrl, openPending } from "@/lib/auth/pending";
 import { sealSession, sessionCookie } from "@/lib/auth/session";
 
 /** Back to the sign-in screen, saying what went wrong in a word. */
 function refused(request: NextRequest, reason: string): NextResponse {
-  const url = new URL("/connexion", request.nextUrl.origin);
+  const url = new URL("/connexion", appOrigin(request.nextUrl.origin));
   url.searchParams.set("erreur", reason);
   const response = NextResponse.redirect(url);
   response.cookies.delete(PENDING_COOKIE);
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (!isAllowedEmail(email)) return refused(request, "domaine");
 
   const response = NextResponse.redirect(
-    landingUrl(pending.landing, request.nextUrl.origin),
+    landingUrl(pending.landing, appOrigin(request.nextUrl.origin)),
   );
   response.cookies.set(sessionCookie(await sealSession({ ...tokens, email })));
   response.cookies.delete(PENDING_COOKIE);

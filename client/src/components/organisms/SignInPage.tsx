@@ -56,9 +56,11 @@ function SignIn({ entra }: { entra: boolean }) {
             Se connecter avec Microsoft
           </a>
         ) : (
-          /* A plain form, posted to the BFF: no script needs to run for
-             someone to sign in, and the password never touches the page's
-             JavaScript. */
+          /* A plain form, posted to the BFF: the password is never held in
+             the page's JavaScript, and submitting is a browser navigation
+             rather than a fetch. The markup still arrives through React —
+             the Suspense boundary above resolves in the browser — so this is
+             not a page that works with scripting off. */
           <form action="/api/auth/local" method="post" className="mt-6 space-y-3">
             {from && <input type="hidden" name="from" value={from} />}
             <label className="block">

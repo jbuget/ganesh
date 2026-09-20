@@ -84,3 +84,27 @@ export function landingUrl(landing: string, origin: string): URL {
     return home;
   }
 }
+
+/**
+ * The origin the application answers from, as opposed to the one the process
+ * believes it is serving.
+ *
+ * Behind CloudFront the compute server knows itself as `localhost:3000`, so a
+ * redirect built from the request lands nowhere. The proxy runs at the edge
+ * and sees the real address; a route handler does not. `APP_URL` is what the
+ * environment declares, and it survives every hop.
+ *
+ * Read from the environment and never from a header: `Host` and
+ * `X-Forwarded-Host` come from the caller, and trusting one would let a
+ * stranger choose where a sign-in lands.
+ */
+export function appOrigin(fallback: string): string {
+  const declared = process.env.APP_URL;
+  if (!declared) return fallback;
+  try {
+    return new URL(declared).origin;
+  } catch {
+    // An unusable APP_URL must not take sign-in down with it.
+    return fallback;
+  }
+}
