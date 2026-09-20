@@ -84,6 +84,76 @@ export function highlightSentence(highlight: HighlightResponse): string {
   }
 }
 
+/** One piece of the chapeau: a project's name, or plain prose around it. */
+export interface ProseSegment {
+  text: string;
+  isProject: boolean;
+}
+
+/**
+ * The projects a digest names, as the register spells them.
+ *
+ * Read from the facts rather than from the reference list: a digest is an
+ * archive, and it must go on naming what it named the day it was generated,
+ * whatever has been renamed since.
+ */
+export function projectLabels(digest: DigestResponse): string[] {
+  return [
+    ...new Set([
+      ...digest.movements
+        .filter((movement) => movement.project_id !== null)
+        .map((movement) => movement.subject),
+      ...digest.highlights.map((highlight) => highlight.label),
+    ]),
+  ];
+}
+
+/**
+ * The chapeau, cut so that the projects it names can be set apart.
+ *
+ * The emphasis is put on at the last moment, here, and never asked of the
+ * model: a model told to write markup writes markup wherever it feels like
+ * it, and the one rule the chapeau must obey — no figures — is hard enough to
+ * hold without also policing asterisks.
+ *
+ * Only a name the digest actually carries is set apart, and only where it
+ * appears word for word. A model that rearranges a label — « le SFTP de WAAT
+ * / Suez » for « WAAT / Suez - SFTP » — leaves that sentence plain, which is
+ * the right way round: emphasis is a claim that this is the project, and a
+ * claim is not something to guess at.
+ */
+export function emphasiseProjects(prose: string, labels: string[]): ProseSegment[] {
+  const names = recognisable(labels);
+  if (names.length === 0) return [{ text: prose, isProject: false }];
+
+  // Split on a capturing group: the pieces then alternate prose, name, prose.
+  const pattern = new RegExp(`(${names.map(escaped).join("|")})`, "gi");
+  return prose
+    .split(pattern)
+    .map((text, rank) => ({ text, isProject: rank % 2 === 1 }))
+    .filter((segment) => segment.text !== "");
+}
+
+/**
+ * The forms of a label worth looking for, longest first.
+ *
+ * Longest first so that a project whose name opens another's — « RAGGAE » and
+ * « RAGGAE- AssistantStudio » — does not steal the longer one's emphasis. A
+ * label ending in a full stop is also looked for without it: several do, and
+ * the model drops it when the sentence carries on.
+ */
+function recognisable(labels: string[]): string[] {
+  return [
+    ...new Set(
+      labels.flatMap((label) => [label, label.replace(/[.\s]+$/, "")]).filter(Boolean),
+    ),
+  ].sort((a, b) => b.length - a.length);
+}
+
+function escaped(label: string): string {
+  return label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /** What each side of the highlights is called on screen. */
 export const TONE_TITLES = {
   notable: "Faits marquants",

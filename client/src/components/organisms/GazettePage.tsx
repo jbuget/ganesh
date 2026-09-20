@@ -13,7 +13,7 @@ import { DigestMovements } from "@/components/molecules/DigestMovements";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { Button } from "@/components/ui/button";
 import { formatMonth } from "@/lib/dates";
-import { formatGeneratedAt, isQuietMonth } from "@/lib/gazette";
+import { formatGeneratedAt, isQuietMonth, projectLabels } from "@/lib/gazette";
 import { useGazette } from "@/lib/use-gazette";
 
 /**
@@ -126,7 +126,11 @@ export function GazettePage() {
         )}
 
         {digest.prose && digest.prose_model && (
-          <DigestChapeau prose={digest.prose} model={digest.prose_model} />
+          <DigestChapeau
+            prose={digest.prose}
+            model={digest.prose_model}
+            labels={projectLabels(digest)}
+          />
         )}
 
         <DigestTally tally={digest.tally} />

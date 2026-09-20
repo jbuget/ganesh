@@ -7,9 +7,11 @@ import type {
   TallyResponse,
 } from "@/lib/api/generated/model";
 import {
+  emphasiseProjects,
   highlightSentence,
   isQuietMonth,
   movementSentence,
+  projectLabels,
   tallyLines,
   versionLabel,
 } from "@/lib/gazette";
@@ -226,5 +228,115 @@ describe("versionLabel", () => {
     expect(versionLabel(2, "2026-10-05T11:30:00")).toMatch(
       /^Version 2 — 5 octobre 2026/,
     );
+  });
+});
+
+describe("projectLabels", () => {
+  const digest = {
+    month: "2026-09-01",
+    is_generated: true,
+    version: 1,
+    generated_at: "2026-10-02T09:00:00",
+    requested_by: "Léa Chen",
+    prose: null,
+    prose_model: null,
+    tally: NOTHING,
+    movements: [
+      movement({ subject: "Ganesh", project_id: 7 }),
+      movement({ subject: "Ganesh", project_id: 7 }),
+      movement({ kind: "teammate_joined", subject: "Sam Okafor", project_id: null }),
+    ],
+    highlights: [highlight({ label: "WAATcher", project_id: 2 })],
+    versions: [],
+  } satisfies DigestResponse;
+
+  it("gathers the projects the digest names, once each", () => {
+    expect(projectLabels(digest)).toEqual(["Ganesh", "WAATcher"]);
+  });
+
+  it("leaves out the people: only projects are set apart", () => {
+    expect(projectLabels(digest)).not.toContain("Sam Okafor");
+  });
+});
+
+describe("emphasiseProjects", () => {
+  it("sets apart a project the prose names", () => {
+    expect(emphasiseProjects("Ganesh est passé en exploitation.", ["Ganesh"])).toEqual([
+      { text: "Ganesh", isProject: true },
+      { text: " est passé en exploitation.", isProject: false },
+    ]);
+  });
+
+  it("leaves prose naming nothing in one piece", () => {
+    expect(emphasiseProjects("Un mois de cadrage.", ["Ganesh"])).toEqual([
+      { text: "Un mois de cadrage.", isProject: false },
+    ]);
+  });
+
+  it("leaves prose alone when the digest names no project", () => {
+    expect(emphasiseProjects("Un mois calme.", [])).toEqual([
+      { text: "Un mois calme.", isProject: false },
+    ]);
+  });
+
+  it("sets apart every mention, not only the first", () => {
+    const segments = emphasiseProjects("Ganesh avance, et Ganesh livre.", ["Ganesh"]);
+
+    expect(segments.filter((piece) => piece.isProject)).toHaveLength(2);
+  });
+
+  it("reads a name whatever case the model gave it", () => {
+    const segments = emphasiseProjects(
+      "l'Amélioration des algorithmes a été archivée.",
+      ["Amélioration des algorithmes"],
+    );
+
+    expect(segments[1]).toEqual({
+      text: "Amélioration des algorithmes",
+      isProject: true,
+    });
+  });
+
+  it("takes a name carrying regex punctuation literally", () => {
+    /* « RAGGAE- AssistantStudio (Usine à "ChatBot") » is a real label. */
+    const label = 'RAGGAE- AssistantStudio (Usine à "ChatBot")';
+
+    expect(emphasiseProjects(`Puis ${label}.`, [label])[1]).toEqual({
+      text: label,
+      isProject: true,
+    });
+  });
+
+  it("does not let a shorter name steal a longer one", () => {
+    const segments = emphasiseProjects("RAGGAE- AssistantStudio avance.", [
+      "RAGGAE",
+      "RAGGAE- AssistantStudio",
+    ]);
+
+    expect(segments[0]).toEqual({
+      text: "RAGGAE- AssistantStudio",
+      isProject: true,
+    });
+  });
+
+  it("recognises a name whose label ends in a full stop", () => {
+    /* Several labels do, and the model drops it mid-sentence. */
+    const segments = emphasiseProjects("Lecture des fichiers tableurs a été archivé.", [
+      "Lecture des fichiers tableurs.",
+    ]);
+
+    expect(segments[0]).toEqual({
+      text: "Lecture des fichiers tableurs",
+      isProject: true,
+    });
+  });
+
+  it("leaves a rearranged name plain rather than guessing", () => {
+    /* Emphasis is a claim that this is the project. A claim is not guessed. */
+    const segments = emphasiseProjects("le SFTP de WAAT / Suez a été livré.", [
+      "WAAT / Suez - SFTP",
+    ]);
+
+    expect(segments.some((piece) => piece.isProject)).toBe(false);
   });
 });

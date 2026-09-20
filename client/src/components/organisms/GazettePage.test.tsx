@@ -87,6 +87,21 @@ describe("GazettePage", () => {
     expect(screen.getByText(/rédigé par gemini-2.5-flash/)).toBeVisible();
   });
 
+  it("sets the projects it names apart in the chapeau", () => {
+    /* A paragraph of prose is skimmed for what it is about. */
+    gazette.digest = aDigest({
+      prose: "WAATcher est passé en exploitation, et SALSA est en retard.",
+    });
+
+    render(<GazettePage />);
+
+    const emphasised = document.querySelectorAll("strong");
+    expect([...emphasised].map((node) => node.textContent)).toEqual([
+      "WAATcher",
+      "SALSA",
+    ]);
+  });
+
   it("says where the figures come from, beside the paragraph", () => {
     /* The whole screen rests on the reader telling the two apart. */
     render(<GazettePage />);
