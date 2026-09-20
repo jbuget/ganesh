@@ -37,13 +37,19 @@ const SHOWN_UNFOLDED = 5;
  * A long list folds, as the roadmap's does and for the same reason: what is
  * folded away is counted in plain sight beside the title, never dropped. The
  * count is itself a fact about the month.
+ *
+ * The two stack rather than sitting side by side: there are structurally more
+ * worries than achievements — a date once missed is missed again every month
+ * until it is met — and two columns would leave the left one half empty while
+ * cramping the right, saying the two weigh the same. Stacked, what went well
+ * is read first and the long list runs the full width.
  */
 export function DigestHighlights({ highlights }: DigestHighlightsProps) {
   const [unfolded, setUnfolded] = useState<Tone[]>([]);
   const tones: Tone[] = ["notable", "attention"];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="flex flex-col gap-4">
       {tones.map((tone) => {
         const ofThisTone = highlights.filter((highlight) => highlight.tone === tone);
         if (ofThisTone.length === 0) return null;
