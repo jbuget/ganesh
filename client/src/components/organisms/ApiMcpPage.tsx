@@ -61,8 +61,12 @@ export function ApiMcpPage() {
         className="flex flex-col gap-4"
       >
         <TabsList className="w-fit">
-          <TabsTrigger value="api">API</TabsTrigger>
-          <TabsTrigger value="mcp">MCP</TabsTrigger>
+          <TabsTrigger value="api" className="cursor-pointer">
+            API
+          </TabsTrigger>
+          <TabsTrigger value="mcp" className="cursor-pointer">
+            MCP
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="api">

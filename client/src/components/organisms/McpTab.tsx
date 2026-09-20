@@ -39,17 +39,14 @@ export function McpTab() {
           Un manager vous crée une clé depuis l&apos;onglet « API », à votre nom,
           portant ces trois habilitations :
         </p>
-        <ul className="flex flex-col gap-1.5 text-sm text-slate-600">
+        {/* A plain disc, not a drawn dot: a round mark is what carries a
+            phase everywhere else in the application, and a list of
+            permissions must not borrow its grammar. */}
+        <ul className="list-inside list-disc text-sm text-slate-600">
           {MCP_SCOPES.map((scope) => (
-            <li key={scope} className="flex items-baseline gap-2">
-              <span
-                className="size-1.5 shrink-0 translate-y-[-1px] rounded-full bg-slate-400"
-                aria-hidden
-              />
-              <span>
-                {scopeLabel(scope)}{" "}
-                <code className="font-mono text-xs text-slate-500">{scope}</code>
-              </span>
+            <li key={scope}>
+              {scopeLabel(scope)}{" "}
+              <code className="font-mono text-xs text-slate-500">{scope}</code>
             </li>
           ))}
         </ul>

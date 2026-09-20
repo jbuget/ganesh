@@ -1,9 +1,9 @@
 "use client";
 
 import { Check, Copy } from "lucide-react";
-import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useCopy } from "@/lib/use-copy";
 
 interface CopyableSnippetProps {
   /** The lines to show, verbatim. Never truncated: they are meant to be read. */
@@ -21,15 +21,7 @@ interface CopyableSnippetProps {
  * and debugged for an hour.
  */
 export function CopyableSnippet({ value, label }: CopyableSnippetProps) {
-  const [copied, setCopied] = useState(false);
-
-  async function copy() {
-    await navigator.clipboard.writeText(value);
-    setCopied(true);
-    // Long enough to be seen, short enough that the button goes back to
-    // offering the gesture rather than reporting the past.
-    setTimeout(() => setCopied(false), 2000);
-  }
+  const { copied, copy } = useCopy(value);
 
   return (
     <div className="relative">
@@ -42,7 +34,7 @@ export function CopyableSnippet({ value, label }: CopyableSnippetProps) {
         variant="outline"
         aria-label={label}
         className="absolute top-2 right-2 cursor-pointer"
-        onClick={() => void copy()}
+        onClick={copy}
       >
         {copied ? (
           <>
