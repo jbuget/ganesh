@@ -41,6 +41,7 @@ from src.modules.auth.presentation.dependencies import (
     get_current_manager,
     get_current_user,
 )
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.projects.application.use_cases.export_catalog import (
     ExportCatalogUseCase,
 )
@@ -49,6 +50,7 @@ from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
     InMemoryApiKeyRepository,
     InMemoryAuditLogRepository,
+    InMemoryNotificationRepository,
     InMemoryProjectAssigneeRepository,
     InMemoryProjectDetailRepository,
     InMemoryProjectRepository,
@@ -106,10 +108,15 @@ def wire(keys: InMemoryApiKeyRepository, limit: RateLimit = TEST_LIMIT) -> None:
         keys=keys, users=users
     )
     app.dependency_overrides[get_create_api_key_use_case] = lambda: CreateApiKeyUseCase(
-        keys=keys, users=users, audit_logs=audit
+        keys=keys,
+        users=users,
+        audit_logs=audit,
+        notifications=NotificationDelivery(InMemoryNotificationRepository()),
     )
     app.dependency_overrides[get_revoke_api_key_use_case] = lambda: RevokeApiKeyUseCase(
-        keys=keys, audit_logs=audit
+        keys=keys,
+        audit_logs=audit,
+        notifications=NotificationDelivery(InMemoryNotificationRepository()),
     )
 
 

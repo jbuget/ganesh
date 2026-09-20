@@ -17,7 +17,6 @@ export const NotificationKind = {
   projectassigned: "project.assigned",
   projectunassigned: "project.unassigned",
   timesheetedited: "timesheet.edited",
-  monthvalidated: "month.validated",
   monthreopened: "month.reopened",
   projectupdate_posted: "project.update_posted",
   projectstatus_changed: "project.status_changed",

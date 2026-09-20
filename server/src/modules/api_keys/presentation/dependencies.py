@@ -49,6 +49,10 @@ from src.modules.entries.presentation.dependencies import (
     get_audit_log_repository,
     get_user_repository,
 )
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
+from src.modules.notifications.presentation.dependencies import (
+    get_notification_delivery,
+)
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
 
@@ -70,8 +74,11 @@ def get_create_api_key_use_case(
     keys: ApiKeyRepository = Depends(get_api_key_repository),
     users: UserRepository = Depends(get_user_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
 ) -> CreateApiKeyUseCase:
-    return CreateApiKeyUseCase(keys=keys, users=users, audit_logs=audit_logs)
+    return CreateApiKeyUseCase(
+        keys=keys, users=users, audit_logs=audit_logs, notifications=notifications
+    )
 
 
 def get_list_api_keys_use_case(
@@ -92,8 +99,11 @@ def get_update_api_key_use_case(
 def get_revoke_api_key_use_case(
     keys: ApiKeyRepository = Depends(get_api_key_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
 ) -> RevokeApiKeyUseCase:
-    return RevokeApiKeyUseCase(keys=keys, audit_logs=audit_logs)
+    return RevokeApiKeyUseCase(
+        keys=keys, audit_logs=audit_logs, notifications=notifications
+    )
 
 
 @lru_cache
