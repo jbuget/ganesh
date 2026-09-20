@@ -238,3 +238,31 @@ async def test_holding_both_roles_is_one_person_and_one_line() -> None:
     await post(publish, author=1)
 
     assert len(inbox.notifications) == 1
+
+
+async def test_being_named_is_heard_even_off_the_mission() -> None:
+    publish, _, _, _, _, inbox = build()
+
+    await post(publish, body="Un avis @[Nino](mention://user/2) ?", author=1)
+
+    [told] = inbox.notifications
+    assert told.recipient_id == 2
+    assert told.kind is NotificationKind.UPDATE_MENTION
+
+
+async def test_being_named_is_louder_than_being_on_the_mission() -> None:
+    """Both at once is one line, and it is the one that says « on vous parle »."""
+    publish, _, _, _, _, inbox = build(assigned={(10, ProjectRole.LEAD): [2]})
+
+    await post(publish, body="@[Nino](mention://user/2) peux-tu regarder ?", author=1)
+
+    [told] = inbox.notifications
+    assert told.kind is NotificationKind.UPDATE_MENTION
+
+
+async def test_naming_oneself_rings_nowhere() -> None:
+    publish, _, _, _, _, inbox = build()
+
+    await post(publish, body="note pour @[moi](mention://user/1)", author=1)
+
+    assert inbox.notifications == []

@@ -26,6 +26,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
+from src.modules.projects.domain.services.mentions import mentioned_ids
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
@@ -101,25 +102,49 @@ class PostProjectUpdateUseCase(_UpdateUseCase):
         await self._trace(
             AuditAction.UPDATE_POST, command.actor_id, command.project_id, update.id
         )
+        await self._tell_the_thread(command, update)
+        return update
+
+    async def _tell_the_thread(
+        self, command: PostUpdateCommand, update: ProjectUpdate
+    ) -> None:
+        """Who hears of an update, and under what heading.
+
+        Being named is louder than being on the mission: someone who is both
+        gets the one line that says they were spoken to, and not two. The
+        mentions go out first, and the rest is told what is left.
+        """
+        assert update.id is not None
+        named = mentioned_ids(update.body)
+        payload = {"update_id": update.id}
+
+        await self._notifications.deliver(
+            notify(
+                NotificationKind.UPDATE_MENTION,
+                actor_id=command.actor_id,
+                recipients=named,
+                at=update.published_at,
+                project_id=command.project_id,
+                payload=payload,
+            )
+        )
         # Whoever is on the mission, and whoever has already spoken in the
         # thread: a question asked on a neighbouring mission deserves to hear
         # its answer.
+        audience = [
+            *await people_on(self._assignees, command.project_id),
+            *sorted(await self._updates.authors_for_project(command.project_id)),
+        ]
         await self._notifications.deliver(
             notify(
                 NotificationKind.PROJECT_UPDATE_POSTED,
                 actor_id=command.actor_id,
-                recipients=[
-                    *await people_on(self._assignees, command.project_id),
-                    *sorted(
-                        await self._updates.authors_for_project(command.project_id)
-                    ),
-                ],
+                recipients=[who for who in audience if who not in named],
                 at=update.published_at,
                 project_id=command.project_id,
-                payload={"update_id": update.id},
+                payload=payload,
             )
         )
-        return update
 
 
 class EditProjectUpdateUseCase(_UpdateUseCase):
