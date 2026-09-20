@@ -11,6 +11,7 @@ import {
   Milestone,
   PanelLeft,
   Smile,
+  TableProperties,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -30,6 +31,7 @@ const TABS = [
   { href: "/timesheet", label: "Saisie des temps", Icon: CalendarDays },
   { href: "/kanban", label: "Kanban", Icon: KanbanSquare },
   { href: "/projects", label: "Projets", Icon: FolderKanban },
+  { href: "/activity-summary", label: "Synthèse d'activité", Icon: TableProperties },
   { href: "/planning", label: "Planification", Icon: GanttChartSquare },
   { href: "/roadmap", label: "Feuille de route", Icon: Milestone },
   { href: "/users", label: "Utilisateurs", Icon: Users },

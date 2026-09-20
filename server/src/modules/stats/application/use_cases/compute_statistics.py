@@ -1,6 +1,7 @@
 """Reads the figures of one window and assembles the dashboard."""
 
 from src.modules.calendar.domain.entities.period import Period
+from src.modules.calendar.domain.services.expectations import expected_days
 from src.modules.projects.domain.entities.project import ProjectKind
 from src.modules.stats.application.dtos.statistics_dto import StatisticsQuery
 from src.modules.stats.domain.entities.statistics import (
@@ -17,10 +18,7 @@ from src.modules.stats.domain.entities.statistics import (
 from src.modules.stats.domain.repositories.statistics_repository import (
     StatisticsRepository,
 )
-from src.modules.stats.domain.services.expectations import (
-    closed_months_covered_by,
-    expected_days,
-)
+from src.modules.stats.domain.services.month_closing import closed_months_covered_by
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 

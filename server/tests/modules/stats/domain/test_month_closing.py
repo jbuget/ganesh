@@ -1,34 +1,12 @@
-"""What a period expects of the team, before anything is declared."""
+"""Which months a window closes, and can therefore be late in validating."""
 
 from datetime import date
 
 from src.modules.calendar.domain.entities.period import Period, PeriodRange
-from src.modules.stats.domain.services.expectations import (
-    closed_months_covered_by,
-    expected_days,
-)
+from src.modules.stats.domain.services.month_closing import closed_months_covered_by
 
+# A Thursday, so that the week-long ranges straddle a weekend.
 TODAY = date(2026, 9, 17)
-
-
-def test_the_team_is_expected_every_working_day_of_the_period() -> None:
-    # Five working days between 11 and 17 September 2026, twelve teammates.
-    period = Period.of(PeriodRange.LAST_7_DAYS, TODAY)
-
-    assert expected_days(period, teammates=12) == 60
-
-
-def test_a_period_without_a_working_day_expects_nothing() -> None:
-    # Sunday: nobody owes a half day.
-    period = Period.of(PeriodRange.TODAY, date(2026, 9, 20))
-
-    assert expected_days(period, teammates=12) == 0
-
-
-def test_a_team_with_nobody_in_it_is_expected_nothing() -> None:
-    period = Period.of(PeriodRange.LAST_30_DAYS, TODAY)
-
-    assert expected_days(period, teammates=0) == 0
 
 
 def test_a_window_inside_a_running_month_closes_no_month() -> None:

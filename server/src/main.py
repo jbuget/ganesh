@@ -5,6 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.common.exception_handlers import register_domain_exception_handlers
 from src.core.config import get_settings
+from src.modules.activity.presentation.api.routes.activity_router import (
+    router as activity_router,
+)
 from src.modules.api_keys.presentation.api.routes.api_key_router import (
     router as api_key_router,
 )
@@ -61,6 +64,7 @@ for module_router in (
     mood_router,
     calendar_router,
     planning_router,
+    activity_router,
     statistics_router,
 ):
     app.include_router(module_router, prefix=settings.api_prefix)
