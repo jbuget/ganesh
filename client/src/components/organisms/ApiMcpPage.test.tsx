@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { ApiKeysPage } from "@/components/organisms/ApiKeysPage";
+import { ApiMcpPage } from "@/components/organisms/ApiMcpPage";
 import type { ApiKeyResponse } from "@/lib/api/generated/model";
 
 const person = { id: 1, display_name: "Toni DA RODDA", initials: "TD" };
@@ -57,10 +57,10 @@ function view(state: Partial<typeof screenState> = {}) {
     opened: null,
     ...state,
   });
-  render(<ApiKeysPage />);
+  render(<ApiMcpPage />);
 }
 
-describe("ApiKeysPage", () => {
+describe("ApiMcpPage", () => {
   it("shows a key by its name and its public half", () => {
     view();
     expect(screen.getByText("CI waat-tools")).toBeInTheDocument();
@@ -158,5 +158,44 @@ describe("ApiKeysPage", () => {
     // There is no « reveal »: the row carries the public half and nothing else.
     view();
     expect(screen.queryByText(/theSecretPart/)).not.toBeInTheDocument();
+  });
+
+  describe("the two facets of the screen", () => {
+    it("names both in its title", () => {
+      view();
+      expect(screen.getByRole("heading", { name: "API / MCP" })).toBeInTheDocument();
+    });
+
+    it("opens on the keys: one is branched with before it is branched", () => {
+      view();
+      expect(screen.getByText("CI waat-tools")).toBeInTheDocument();
+    });
+
+    it("says how a terminal client branches on", async () => {
+      view();
+
+      await userEvent.click(screen.getByRole("tab", { name: "MCP" }));
+
+      expect(screen.getByRole("heading", { name: "Claude Code" })).toBeInTheDocument();
+    });
+
+    it("takes the creation away once off the table it acts on", async () => {
+      view();
+
+      await userEvent.click(screen.getByRole("tab", { name: "MCP" }));
+
+      expect(
+        screen.queryByRole("button", { name: "Créer une clé" }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("gives it back on the way to the table", async () => {
+      view();
+
+      await userEvent.click(screen.getByRole("tab", { name: "MCP" }));
+      await userEvent.click(screen.getByRole("tab", { name: "API" }));
+
+      expect(screen.getByRole("button", { name: "Créer une clé" })).toBeInTheDocument();
+    });
   });
 });

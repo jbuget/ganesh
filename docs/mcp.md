@@ -257,8 +257,14 @@ Claude Code and Claude Desktop take a static header, which is all Waat needs:
 ```
 
 The trailing slash is the address; `/mcp` redirects to it. The key is minted in
-the « API » screen by a manager, carries `projects:read`, `entries:read` and
-`audit:read`, and is owned by the person whose terminal it sits in.
+the « API / MCP » screen by a manager, carries `projects:read`, `entries:read`
+and `audit:read`, and is owned by the person whose terminal it sits in.
+
+The same screen's « MCP » tab says all of this to the team, one client at a
+time — Claude Code, Codex, Gemini CLI — and hands over the snippet to paste.
+The snippets live in `client/src/lib/mcp.ts` rather than inside the tab, and
+are read by a test: a configuration somebody pastes into their shell is
+exactly the kind of text that goes stale in silence.
 
 ## How we will know
 
