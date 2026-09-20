@@ -39,7 +39,7 @@ const NAMELESS = "un projet";
 
 /** How an assignment role reads. */
 const ROLES: Record<string, string> = {
-  referent: "référent",
+  lead: "référent",
   contributor: "intervenant",
 };
 

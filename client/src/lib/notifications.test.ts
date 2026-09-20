@@ -35,7 +35,7 @@ describe("notificationSentence", () => {
 
   it("tells a referent from a contributor", () => {
     const said = notificationSentence(
-      line("project.assigned", { payload: { role: "referent" } }),
+      line("project.assigned", { payload: { role: "lead" } }),
     );
 
     expect(said.what).toBe("vous a ajouté comme référent sur");
@@ -43,7 +43,7 @@ describe("notificationSentence", () => {
 
   it("says a removal in the same terms", () => {
     const said = notificationSentence(
-      line("project.unassigned", { payload: { role: "referent" } }),
+      line("project.unassigned", { payload: { role: "lead" } }),
     );
 
     expect(said.what).toBe("vous a retiré comme référent de");

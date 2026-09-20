@@ -35,6 +35,17 @@ class ProjectUpdateRepository(ABC):
         ...
 
     @abstractmethod
+    async def authors_for_project(self, project_id: int) -> set[int]:
+        """Who has already posted in a mission's thread.
+
+        Having spoken in a thread is reason enough to hear the answer:
+        one asks a question on a neighbouring mission without being
+        declared on it, and would otherwise never know it was answered.
+        A withdrawn message still counts — its author was there.
+        """
+        ...
+
+    @abstractmethod
     async def add(self, update: ProjectUpdate) -> ProjectUpdate: ...
 
     @abstractmethod

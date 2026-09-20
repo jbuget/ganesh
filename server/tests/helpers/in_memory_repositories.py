@@ -493,6 +493,13 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
         thread = [u for u in self._updates if u.project_id == project_id]
         return sorted(thread, key=lambda u: (u.published_at, u.id or 0), reverse=True)
 
+    async def authors_for_project(self, project_id: int) -> set[int]:
+        return {
+            update.author_id
+            for update in self._updates
+            if update.project_id == project_id
+        }
+
     async def add(self, update: ProjectUpdate) -> ProjectUpdate:
         update.id = self._next_id
         self._next_id += 1

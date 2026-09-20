@@ -16,7 +16,7 @@ function line(over: Partial<NotificationResponse> = {}): NotificationResponse {
     day: null,
     count: 1,
     read_at: null,
-    payload: { role: "referent" },
+    payload: { role: "lead" },
     ...over,
   };
 }

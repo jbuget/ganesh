@@ -124,9 +124,16 @@ def get_change_status_use_case(
     projects: ProjectRepository = Depends(get_project_repository),
     details: ProjectDetailRepository = Depends(get_project_detail_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
 ) -> ChangeProjectStatusUseCase:
     return ChangeProjectStatusUseCase(
-        users=users, projects=projects, details=details, audit_logs=audit_logs
+        users=users,
+        projects=projects,
+        details=details,
+        audit_logs=audit_logs,
+        assignees=assignees,
+        notifications=notifications,
     )
 
 
@@ -153,9 +160,16 @@ def get_delete_project_use_case(
     projects: ProjectRepository = Depends(get_project_repository),
     entries: EntryRepository = Depends(get_entry_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
 ) -> DeleteProjectUseCase:
     return DeleteProjectUseCase(
-        users=users, projects=projects, entries=entries, audit_logs=audit_logs
+        users=users,
+        projects=projects,
+        entries=entries,
+        audit_logs=audit_logs,
+        assignees=assignees,
+        notifications=notifications,
     )
 
 
@@ -179,8 +193,16 @@ def get_archive_project_use_case(
     users: UserRepository = Depends(get_user_repository),
     projects: ProjectRepository = Depends(get_project_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
 ) -> ArchiveProjectUseCase:
-    return ArchiveProjectUseCase(users=users, projects=projects, audit_logs=audit_logs)
+    return ArchiveProjectUseCase(
+        users=users,
+        projects=projects,
+        audit_logs=audit_logs,
+        assignees=assignees,
+        notifications=notifications,
+    )
 
 
 def get_unarchive_project_use_case(
@@ -346,13 +368,17 @@ def _thread_write(
     projects: ProjectRepository = Depends(get_project_repository),
     updates: ProjectUpdateRepository = Depends(get_project_update_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
 ) -> dict[str, object]:
-    """The four repositories the thread writes share."""
+    """What the thread writes share."""
     return {
         "users": users,
         "projects": projects,
         "updates": updates,
         "audit_logs": audit_logs,
+        "assignees": assignees,
+        "notifications": notifications,
     }
 
 
