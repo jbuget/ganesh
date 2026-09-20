@@ -96,7 +96,7 @@ export function MonthBriefing({
               icon={gone.isEmpty ? CalendarX2 : CalendarClock}
               action={
                 <Link
-                  href={`/activite?month=${monthParam(gone)}`}
+                  href={`/timesheet?month=${monthParam(gone)}`}
                   className="cursor-pointer text-sm font-medium text-sky-700 hover:underline"
                 >
                   {gone.isEmpty ? "Saisir" : "Valider"}
@@ -113,7 +113,7 @@ export function MonthBriefing({
               icon={CalendarX2}
               action={
                 <Link
-                  href="/activite"
+                  href="/timesheet"
                   className="cursor-pointer text-sm font-medium text-sky-700 hover:underline"
                 >
                   Compléter
@@ -131,7 +131,7 @@ export function MonthBriefing({
               icon={UserRoundCheck}
               action={
                 <Link
-                  href="/activite"
+                  href="/timesheet"
                   className="cursor-pointer text-sm font-medium text-sky-700 hover:underline"
                 >
                   Déclarer
