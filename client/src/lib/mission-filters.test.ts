@@ -244,6 +244,31 @@ describe("filters held by the URL", () => {
   });
 });
 
+describe("the questions a screen asks", () => {
+  /**
+   * A criterion the screen does not offer could neither be read nor undone:
+   * an address carrying it would show a filter nobody can see.
+   */
+  it("reads only the criteria the screen offers", () => {
+    const params = new URLSearchParams("phase=scoping&publication=published");
+
+    expect(readFilters(params, ["phases"])).toEqual(filters({ phases: ["scoping"] }));
+  });
+
+  it("counts as active only the criteria the screen offers", () => {
+    const set = filters({ publications: ["published"] });
+
+    expect(hasActiveFilter(set, ["phases"])).toBe(false);
+    expect(hasActiveFilter(set)).toBe(true);
+  });
+
+  it("asks every question when the screen says nothing", () => {
+    const params = new URLSearchParams("publication=published");
+
+    expect(readFilters(params)).toEqual(filters({ publications: ["published"] }));
+  });
+});
+
 describe("filtering by department", () => {
   it("keeps a mission serving any of the departments asked for", () => {
     const missions = [
