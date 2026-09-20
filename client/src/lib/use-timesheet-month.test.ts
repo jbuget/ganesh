@@ -14,17 +14,26 @@ const projects = vi.hoisted(() => ({
   createProject: vi.fn(),
 }));
 const queries = vi.hoisted(() => ({
-  grid: { rows: [] as unknown[], is_writable: true },
+  grid: { rows: [] as unknown[], is_writable: true } as
+    { rows: unknown[]; is_writable: boolean } | undefined,
+  me: { id: 1, role: "TEAMMATE" },
   useMonthGrid: () => ({ grid: queries.grid, isLoading: false }),
-  useCurrentUser: () => ({ user: { id: 1 } }),
-  useTeammates: () => ({ teammates: [] }),
+  useCurrentUser: () => ({ user: queries.me }),
+  teammates: [] as { id: number; display_name: string }[],
+  useTeammates: () => ({ teammates: queries.teammates }),
   useProjects: () => ({ missions: [], projects: [] }),
   mutationResult: (result: unknown) => result,
 }));
 
 vi.mock("@/lib/api/generated/entries/entries", () => entries);
+const months = vi.hoisted(() => ({
+  validateMonth: vi.fn(),
+  reopenMonth: vi.fn(),
+}));
+
 vi.mock("@/lib/api/generated/months/months", () => ({
-  useValidateMonth: () => ({ mutateAsync: vi.fn() }),
+  useValidateMonth: () => ({ mutateAsync: months.validateMonth }),
+  useReopenMonth: () => ({ mutateAsync: months.reopenMonth }),
 }));
 vi.mock("@/lib/api/generated/projects/projects", () => projects);
 vi.mock("@/lib/api/queries", () => queries);
@@ -35,6 +44,9 @@ vi.mock("@tanstack/react-query", () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   projects.createProject.mockResolvedValue({ id: 42 });
+  queries.grid = { rows: [], is_writable: true };
+  queries.me = { id: 1, role: "TEAMMATE" };
+  queries.teammates = [];
   window.history.replaceState(null, "", "/");
 });
 
@@ -154,5 +166,121 @@ describe("the month in the address", () => {
     act(() => screen.current.viewTeammate(7));
 
     expect(window.location.search).toBe("?month=2026-08&user=7");
+  });
+});
+
+/**
+ * The matrix of the entry screen, on three dimensions: whose month is shown,
+ * what the viewer's role is, and whether the month is validated. The two
+ * gestures never cross — validating is about the month being one's own,
+ * reopening is about being a manager — and the state is what tells them apart.
+ */
+describe("who may validate, and who may reopen", () => {
+  function screenFor({
+    role = "TEAMMATE",
+    writable = true,
+    viewing,
+  }: {
+    role?: string;
+    writable?: boolean;
+    viewing?: number;
+  }) {
+    queries.me = { id: 1, role };
+    queries.grid = { rows: [], is_writable: writable };
+    const { result } = renderHook(() => useTimesheetMonth());
+    if (viewing !== undefined) act(() => result.current.viewTeammate(viewing));
+    return result;
+  }
+
+  it("lets anyone validate their own open month, manager or not", () => {
+    expect(screenFor({}).current.canValidate).toBe(true);
+    expect(screenFor({ role: "MANAGER" }).current.canValidate).toBe(true);
+  });
+
+  it("never offers to validate a colleague's month: validation is not delegated", () => {
+    expect(screenFor({ viewing: 7 }).current.canValidate).toBe(false);
+    expect(screenFor({ role: "MANAGER", viewing: 7 }).current.canValidate).toBe(false);
+  });
+
+  it("never offers to validate a month already validated", () => {
+    expect(screenFor({ writable: false }).current.canValidate).toBe(false);
+  });
+
+  it("lets a manager reopen a validated month, their own as well as a colleague's", () => {
+    expect(screenFor({ role: "MANAGER", writable: false }).current.canReopen).toBe(
+      true,
+    );
+    expect(
+      screenFor({ role: "MANAGER", writable: false, viewing: 7 }).current.canReopen,
+    ).toBe(true);
+  });
+
+  it("never lets a teammate reopen a month, not even their own", () => {
+    expect(screenFor({ writable: false }).current.canReopen).toBe(false);
+    expect(screenFor({ writable: false, viewing: 7 }).current.canReopen).toBe(false);
+  });
+
+  it("offers nothing to reopen while the month is still open", () => {
+    expect(screenFor({ role: "MANAGER" }).current.canReopen).toBe(false);
+  });
+
+  it("offers neither gesture while the grid has not arrived", () => {
+    queries.grid = undefined;
+    queries.me = { id: 1, role: "MANAGER" };
+    const { result } = renderHook(() => useTimesheetMonth());
+
+    expect(result.current.canValidate).toBe(false);
+    expect(result.current.canReopen).toBe(false);
+  });
+});
+
+describe("reopening a month", () => {
+  it("reopens the month of the teammate the selector names", async () => {
+    queries.me = { id: 1, role: "MANAGER" };
+    queries.grid = { rows: [], is_writable: false };
+    const { result } = renderHook(() => useTimesheetMonth());
+    act(() => result.current.viewTeammate(7));
+
+    await result.current.reopen();
+
+    expect(months.reopenMonth).toHaveBeenCalledWith({
+      month: result.current.month,
+      params: { user_id: 7 },
+    });
+  });
+
+  /** No teammate selected means one's own month, which the route still names. */
+  it("reopens one's own month under one's own id", async () => {
+    queries.me = { id: 1, role: "MANAGER" };
+    queries.grid = { rows: [], is_writable: false };
+    const { result } = renderHook(() => useTimesheetMonth());
+
+    await result.current.reopen();
+
+    expect(months.reopenMonth).toHaveBeenCalledWith({
+      month: result.current.month,
+      params: { user_id: 1 },
+    });
+  });
+});
+
+describe("whose month is shown", () => {
+  it("names the teammate being looked at, so a dialog can say whose month it is", () => {
+    queries.teammates = [
+      { id: 1, display_name: "Moi" },
+      { id: 7, display_name: "Camille Roy" },
+    ];
+    const { result } = renderHook(() => useTimesheetMonth());
+    act(() => result.current.viewTeammate(7));
+
+    expect(result.current.viewedTeammateName).toBe("Camille Roy");
+  });
+
+  it("names nobody on one's own month", () => {
+    queries.teammates = [{ id: 1, display_name: "Moi" }];
+
+    expect(
+      renderHook(() => useTimesheetMonth()).result.current.viewedTeammateName,
+    ).toBe(null);
   });
 });
