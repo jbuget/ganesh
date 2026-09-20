@@ -601,7 +601,7 @@ the briefing reads both. Reading only the first would quietly miss every move
 made from the form.
 
 **The model is configured in the environment, and nowhere else.**
-`GEMINI_MODEL` names it (default `gemini-2.5-flash`) and `GEMINI_API_KEY`
+`GEMINI_MODEL` names it (default `gemini-3.8-flash`) and `GEMINI_API_KEY`
 carries the key — in `server/.env` locally, in Parameter Store in production.
 Changing either therefore takes a restart, and a deploy in production. That is
 deliberate: a key the application could hand back through a screen is a key

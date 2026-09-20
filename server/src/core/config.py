@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     # La Gazette's chapeau. Without a key nothing breaks: numéros go out on
     # their facts alone, which is what they are made of.
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.8-flash"
 
     # How often one API key may call, as a token bucket. Counted per process:
     # behind several workers the effective allowance is multiplied by their
