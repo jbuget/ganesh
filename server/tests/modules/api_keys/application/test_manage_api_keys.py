@@ -17,6 +17,8 @@ from src.modules.api_keys.application.use_cases.manage_api_keys import (
 )
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.api_keys.domain.services import key_material
+from src.modules.notifications.domain.entities.notification import NotificationKind
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
@@ -27,6 +29,7 @@ from src.shared.utils import clock
 from tests.helpers.in_memory_repositories import (
     InMemoryApiKeyRepository,
     InMemoryAuditLogRepository,
+    InMemoryNotificationRepository,
     InMemoryUserRepository,
 )
 
@@ -51,12 +54,17 @@ def build():
     keys = InMemoryApiKeyRepository()
     audit = InMemoryAuditLogRepository()
     users = InMemoryUserRepository([OWNER, MANAGER, GONE])
+    inbox = InMemoryNotificationRepository()
+    delivery = NotificationDelivery(inbox)
     return (
-        CreateApiKeyUseCase(keys=keys, users=users, audit_logs=audit),
+        CreateApiKeyUseCase(
+            keys=keys, users=users, audit_logs=audit, notifications=delivery
+        ),
         ListApiKeysUseCase(keys=keys, users=users),
-        RevokeApiKeyUseCase(keys=keys, audit_logs=audit),
+        RevokeApiKeyUseCase(keys=keys, audit_logs=audit, notifications=delivery),
         keys,
         audit,
+        inbox,
     )
 
 
@@ -82,7 +90,7 @@ class TestMinting:
 
     @pytest.mark.asyncio
     async def test_the_secret_is_never_stored(self) -> None:
-        create, _, _, keys, _ = build()
+        create, _, _, keys, _, _ = build()
         minted = await create.execute(command())
 
         stored = await keys.get_by_id(minted.key.id or 0)
@@ -117,7 +125,7 @@ class TestMinting:
 
     @pytest.mark.asyncio
     async def test_minting_is_traced_without_the_secret(self) -> None:
-        create, _, _, _, audit = build()
+        create, _, _, _, audit, _ = build()
         minted = await create.execute(command())
 
         trace = audit.logs[0]
@@ -180,13 +188,13 @@ class TestRevoking:
 
     @pytest.mark.asyncio
     async def test_an_unknown_key_is_refused(self) -> None:
-        _, _, revoke, _, _ = build()
+        _, _, revoke, _, _, _ = build()
         with pytest.raises(EntityNotFoundError):
             await revoke.execute(RevokeApiKeyCommand(actor_id=20, key_id=999))
 
     @pytest.mark.asyncio
     async def test_cutting_is_traced(self) -> None:
-        create, _, revoke, _, audit = build()
+        create, _, revoke, _, audit, _ = build()
         minted = await create.execute(command())
         await revoke.execute(
             RevokeApiKeyCommand(actor_id=20, key_id=minted.key.id or 0)
@@ -214,9 +222,18 @@ class TestEditing:
         audit = InMemoryAuditLogRepository()
         users = InMemoryUserRepository([OWNER, MANAGER, GONE])
         return (
-            CreateApiKeyUseCase(keys=keys, users=users, audit_logs=audit),
+            CreateApiKeyUseCase(
+                keys=keys,
+                users=users,
+                audit_logs=audit,
+                notifications=NotificationDelivery(InMemoryNotificationRepository()),
+            ),
             UpdateApiKeyUseCase(keys=keys, users=users, audit_logs=audit),
-            RevokeApiKeyUseCase(keys=keys, audit_logs=audit),
+            RevokeApiKeyUseCase(
+                keys=keys,
+                audit_logs=audit,
+                notifications=NotificationDelivery(InMemoryNotificationRepository()),
+            ),
             audit,
         )
 
@@ -322,3 +339,35 @@ class TestEditing:
             await update.execute(
                 UpdateApiKeyCommand(actor_id=20, key_id=999, name="Autre")
             )
+
+
+async def test_the_owner_hears_a_key_minted_in_their_name() -> None:
+    """A key answers to its owner, whoever minted it."""
+    create, _, _, _, _, inbox = build()
+
+    await create.execute(command())
+
+    [told] = inbox.notifications
+    assert told.recipient_id == 10
+    assert told.kind is NotificationKind.API_KEY_CREATED
+    assert told.payload == {"key_label": "CI waat-tools"}
+
+
+async def test_the_owner_hears_their_key_revoked() -> None:
+    create, _, revoke, _, _, inbox = build()
+    minted = await create.execute(command())
+
+    await revoke.execute(RevokeApiKeyCommand(actor_id=20, key_id=minted.key.id or 0))
+
+    assert [told.kind for told in inbox.notifications] == [
+        NotificationKind.API_KEY_CREATED,
+        NotificationKind.API_KEY_REVOKED,
+    ]
+
+
+async def test_minting_a_key_for_oneself_rings_nowhere() -> None:
+    create, _, _, _, _, inbox = build()
+
+    await create.execute(command(actor_id=10))
+
+    assert inbox.notifications == []

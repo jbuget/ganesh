@@ -4,6 +4,9 @@ from src.modules.audit_logs.domain.entities.audit_log import AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
+from src.modules.notifications.domain.entities.notification import NotificationKind
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
+from src.modules.notifications.domain.services.fan_out import notify
 from src.modules.projects.application.dtos.assignment_dto import AssignmentCommand
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
@@ -13,6 +16,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 )
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
+from src.shared.utils import clock
 
 
 class _AssignmentUseCase:
@@ -29,17 +33,34 @@ class _AssignmentUseCase:
         projects: ProjectRepository,
         assignees: ProjectAssigneeRepository,
         audit_logs: AuditLogRepository,
+        notifications: NotificationDelivery,
     ) -> None:
         self._users = users
         self._projects = projects
         self._assignees = assignees
         self._audit_logs = audit_logs
+        self._notifications = notifications
 
     async def _ensure_both_exist(self, command: AssignmentCommand) -> None:
         if await self._projects.get_by_id(command.project_id) is None:
             raise EntityNotFoundError("The mission cannot be found.")
         if await self._users.get_by_id(command.member_id) is None:
             raise EntityNotFoundError("The user cannot be found.")
+
+    async def _tell_the_member(
+        self, command: AssignmentCommand, kind: NotificationKind
+    ) -> None:
+        """The person concerned hears of it, unless they did it themselves."""
+        await self._notifications.deliver(
+            notify(
+                kind,
+                actor_id=command.actor_id,
+                recipients=[command.member_id],
+                at=clock.now(),
+                project_id=command.project_id,
+                payload={"role": command.role.value},
+            )
+        )
 
 
 class AssignMemberUseCase(_AssignmentUseCase):
@@ -58,6 +79,7 @@ class AssignMemberUseCase(_AssignmentUseCase):
                 role=command.role.value,
             )
         )
+        await self._tell_the_member(command, NotificationKind.PROJECT_ASSIGNED)
 
 
 class UnassignMemberUseCase(_AssignmentUseCase):
@@ -76,3 +98,4 @@ class UnassignMemberUseCase(_AssignmentUseCase):
                 role=command.role.value,
             )
         )
+        await self._tell_the_member(command, NotificationKind.PROJECT_UNASSIGNED)

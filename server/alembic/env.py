@@ -32,6 +32,9 @@ from src.modules.months.infrastructure.database.models import (  # noqa: F401, E
 from src.modules.moods.infrastructure.database.models import (  # noqa: F401, E402
     mood_model,
 )
+from src.modules.notifications.infrastructure.database.models import (  # noqa: F401, E402
+    notification_model,
+)
 from src.modules.planning.infrastructure.database.models import (  # noqa: F401, E402
     simulation_model,
 )

@@ -71,6 +71,14 @@ class SqlProjectUpdateRepository(ProjectUpdateRepository):
         result = await self._session.execute(live)
         return {model.project_id: _to_entity(model) for model in result.scalars().all()}
 
+    async def authors_for_project(self, project_id: int) -> set[int]:
+        result = await self._session.execute(
+            select(ProjectUpdateModel.author_id).where(
+                ProjectUpdateModel.project_id == project_id
+            )
+        )
+        return set(result.scalars().all())
+
     async def add(self, update: ProjectUpdate) -> ProjectUpdate:
         model = ProjectUpdateModel(
             project_id=update.project_id,

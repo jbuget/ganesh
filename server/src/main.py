@@ -31,6 +31,9 @@ from src.modules.months.presentation.api.routes.month_router import (
     router as month_router,
 )
 from src.modules.moods.presentation.api.routes.mood_router import router as mood_router
+from src.modules.notifications.presentation.api.routes.notification_router import (
+    router as notification_router,
+)
 from src.modules.planning.presentation.api.routes.planning_router import (
     router as planning_router,
 )
@@ -75,6 +78,7 @@ for module_router in (
     audit_log_router,
     month_router,
     mood_router,
+    notification_router,
     calendar_router,
     planning_router,
     activity_router,

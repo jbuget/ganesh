@@ -5,6 +5,7 @@ import { useState } from "react";
 import { RichTextEditor } from "@/components/atoms/RichTextEditor";
 import { ProjectUpdateCard } from "@/components/molecules/ProjectUpdateCard";
 import { Button } from "@/components/ui/button";
+import { useTeammates } from "@/lib/api/queries";
 import { useProjectUpdates } from "@/lib/use-project-updates";
 
 interface ProjectUpdatesTabProps {
@@ -30,6 +31,9 @@ export function ProjectUpdatesTab({
   focusComposer = false,
 }: ProjectUpdatesTabProps) {
   const thread = useProjectUpdates(projectId, onChange);
+  // Active teammates only: « @ » offers people one can still expect an
+  // answer from.
+  const { teammates } = useTeammates();
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   // Bumping the key empties the editor: its content lives in ProseMirror, not
@@ -54,6 +58,7 @@ export function ProjectUpdatesTab({
           key={composerKey}
           value=""
           placeholder="Rédigez une mise à jour…"
+          mentionable={teammates}
           autoFocus={focusComposer}
           onChange={setBody}
           onSubmit={() => {
@@ -94,6 +99,7 @@ export function ProjectUpdatesTab({
             key={update.id}
             update={update}
             now={now}
+            people={teammates}
             onEdit={(body) => thread.edit(update.id, body)}
             onRemove={() => thread.remove(update.id)}
           />

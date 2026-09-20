@@ -32,6 +32,13 @@ from src.modules.months.domain.repositories.month_repository import MonthReposit
 from src.modules.months.domain.services.month_period import first_day_of
 from src.modules.moods.domain.entities.mood import Mood
 from src.modules.moods.domain.repositories.mood_repository import MoodRepository
+from src.modules.notifications.domain.entities.notification import (
+    Notification,
+    NotificationKind,
+)
+from src.modules.notifications.domain.repositories.notification_repository import (
+    NotificationRepository,
+)
 from src.modules.planning.domain.entities.simulation import Simulation
 from src.modules.planning.domain.repositories.simulation_repository import (
     SimulationRepository,
@@ -526,6 +533,13 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
         thread = [u for u in self._updates if u.project_id == project_id]
         return sorted(thread, key=lambda u: (u.published_at, u.id or 0), reverse=True)
 
+    async def authors_for_project(self, project_id: int) -> set[int]:
+        return {
+            update.author_id
+            for update in self._updates
+            if update.project_id == project_id
+        }
+
     async def add(self, update: ProjectUpdate) -> ProjectUpdate:
         update.id = self._next_id
         self._next_id += 1
@@ -758,6 +772,82 @@ class InMemoryMoodRepository(MoodRepository):
         existing = await self.get(user_id, day)
         if existing is not None:
             self._moods.remove(existing)
+
+
+class InMemoryNotificationRepository(NotificationRepository):
+    def __init__(self) -> None:
+        self.notifications: list[Notification] = []
+        self._next_id = 1
+
+    async def add(self, notification: Notification) -> Notification:
+        notification.id = self._next_id
+        self._next_id += 1
+        self.notifications.append(notification)
+        return notification
+
+    async def save(self, notification: Notification) -> None:
+        # Held by reference: the entity handed back is the one stored.
+        return None
+
+    async def find_open_twin(
+        self,
+        recipient_id: int,
+        kind: NotificationKind,
+        actor_id: int,
+        day: date | None,
+    ) -> Notification | None:
+        for notification in self.notifications:
+            if (
+                notification.recipient_id == recipient_id
+                and notification.kind == kind
+                and notification.actor_id == actor_id
+                and notification.day == day
+                and not notification.is_read
+            ):
+                return notification
+        return None
+
+    def _mine(self, recipient_id: int, unread_only: bool) -> list[Notification]:
+        return sorted(
+            (
+                notification
+                for notification in self.notifications
+                if notification.recipient_id == recipient_id
+                and (not unread_only or not notification.is_read)
+            ),
+            key=lambda notification: (notification.at, notification.id or 0),
+            reverse=True,
+        )
+
+    async def list_for(
+        self, recipient_id: int, unread_only: bool, limit: int, offset: int
+    ) -> list[Notification]:
+        return self._mine(recipient_id, unread_only)[offset : offset + limit]
+
+    async def count_for(self, recipient_id: int, unread_only: bool) -> int:
+        return len(self._mine(recipient_id, unread_only))
+
+    async def set_read_state(
+        self,
+        recipient_id: int,
+        ids: list[int] | None,
+        read: bool,
+        at: datetime,
+    ) -> int:
+        touched = 0
+        for notification in self.notifications:
+            if notification.recipient_id != recipient_id:
+                continue
+            if ids is not None and notification.id not in ids:
+                continue
+            if notification.is_read == read:
+                continue
+            if read:
+                notification.mark_read(at)
+            else:
+                notification.mark_unread()
+            touched += 1
+        return touched
 
 
 class InMemoryDigestRepository(DigestRepository):

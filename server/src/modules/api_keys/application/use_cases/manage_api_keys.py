@@ -15,6 +15,9 @@ from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditL
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
+from src.modules.notifications.domain.entities.notification import NotificationKind
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
+from src.modules.notifications.domain.services.fan_out import notify
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError, ValidationError
@@ -45,10 +48,12 @@ class CreateApiKeyUseCase:
         keys: ApiKeyRepository,
         users: UserRepository,
         audit_logs: AuditLogRepository,
+        notifications: NotificationDelivery,
     ) -> None:
         self._keys = keys
         self._users = users
         self._audit_logs = audit_logs
+        self._notifications = notifications
 
     async def execute(self, command: CreateApiKeyCommand) -> MintedApiKey:
         owner = await self._users.get_by_id(command.owner_id)
@@ -83,6 +88,16 @@ class CreateApiKeyUseCase:
                     "name": key.name,
                     "scopes": sorted(scope.value for scope in key.scopes),
                 },
+            )
+        )
+        # The owner answers for the key, whoever minted it.
+        await self._notifications.deliver(
+            notify(
+                NotificationKind.API_KEY_CREATED,
+                actor_id=command.actor_id,
+                recipients=[command.owner_id],
+                at=clock.now(),
+                payload={"key_label": key.name},
             )
         )
         return MintedApiKey(
@@ -183,9 +198,11 @@ class RevokeApiKeyUseCase:
         self,
         keys: ApiKeyRepository,
         audit_logs: AuditLogRepository,
+        notifications: NotificationDelivery,
     ) -> None:
         self._keys = keys
         self._audit_logs = audit_logs
+        self._notifications = notifications
 
     async def execute(self, command: RevokeApiKeyCommand) -> ApiKey:
         key = await self._keys.get_by_id(command.key_id)
@@ -202,6 +219,15 @@ class RevokeApiKeyUseCase:
                 target_user_id=key.owner_id,
                 old_value=key_material.masked(key.public_id),
                 payload={"name": key.name},
+            )
+        )
+        await self._notifications.deliver(
+            notify(
+                NotificationKind.API_KEY_REVOKED,
+                actor_id=command.actor_id,
+                recipients=[key.owner_id],
+                at=clock.now(),
+                payload={"key_label": key.name},
             )
         )
         return key

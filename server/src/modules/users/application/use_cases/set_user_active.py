@@ -4,6 +4,9 @@ from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditL
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
+from src.modules.notifications.domain.entities.notification import NotificationKind
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
+from src.modules.notifications.domain.services.fan_out import notify
 from src.modules.users.application.dtos.user_dto import SetUserActiveCommand
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
@@ -11,6 +14,7 @@ from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
     ForbiddenActionError,
 )
+from src.shared.utils import clock
 
 
 class SetUserActiveUseCase:
@@ -20,9 +24,15 @@ class SetUserActiveUseCase:
     feeding the per-project totals. Only access is cut off.
     """
 
-    def __init__(self, users: UserRepository, audit_logs: AuditLogRepository) -> None:
+    def __init__(
+        self,
+        users: UserRepository,
+        audit_logs: AuditLogRepository,
+        notifications: NotificationDelivery,
+    ) -> None:
         self._users = users
         self._audit_logs = audit_logs
+        self._notifications = notifications
 
     async def execute(self, command: SetUserActiveCommand) -> User:
         actor = await self._users.get_by_id(command.actor_id)
@@ -58,6 +68,21 @@ class SetUserActiveUseCase:
                 target_user_id=command.target_user_id,
                 old_value=str(previous),
                 new_value=str(command.is_active),
+            )
+        )
+        # A deactivated account cannot sign in, so the line waits: it is read
+        # on the way back, which is exactly when one wants to know what
+        # happened while one was away.
+        await self._notifications.deliver(
+            notify(
+                (
+                    NotificationKind.USER_ACTIVATED
+                    if command.is_active
+                    else NotificationKind.USER_DEACTIVATED
+                ),
+                actor_id=command.actor_id,
+                recipients=[command.target_user_id],
+                at=clock.now(),
             )
         )
         return target

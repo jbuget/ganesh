@@ -7,11 +7,18 @@ import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { RichTextEditor } from "@/components/atoms/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import type { ProjectUpdateResponse } from "@/lib/api/generated/model";
+import { renderMentions, type MentionablePerson } from "@/lib/mentions";
 import { since } from "@/lib/relative-dates";
 
 interface ProjectUpdateCardProps {
   update: ProjectUpdateResponse;
   now: Date;
+  /**
+   * The register, which is what a mention is read against: the name in the
+   * text is the one typed that day, and only the register knows who that id
+   * is now.
+   */
+  people?: MentionablePerson[];
   onEdit: (body: string) => Promise<void>;
   onRemove: () => Promise<void>;
 }
@@ -26,6 +33,7 @@ interface ProjectUpdateCardProps {
 export function ProjectUpdateCard({
   update,
   now,
+  people = [],
   onEdit,
   onRemove,
 }: ProjectUpdateCardProps) {
@@ -72,6 +80,7 @@ export function ProjectUpdateCard({
       ) : enEdition ? (
         <Correction
           value={update.body}
+          people={people}
           onCancel={() => setEnEdition(false)}
           onSave={async (body) => {
             await onEdit(body);
@@ -79,7 +88,7 @@ export function ProjectUpdateCard({
           }}
         />
       ) : (
-        <MarkdownView body={update.body} />
+        <MarkdownView body={renderMentions(update.body, people)} />
       )}
     </article>
   );
@@ -88,10 +97,12 @@ export function ProjectUpdateCard({
 /** Correcting an update, in place in the thread. */
 function Correction({
   value,
+  people,
   onSave,
   onCancel,
 }: {
   value: string;
+  people: MentionablePerson[];
   onSave: (body: string) => Promise<void>;
   onCancel: () => void;
 }) {
@@ -101,6 +112,7 @@ function Correction({
     <div className="space-y-2">
       <RichTextEditor
         value={value}
+        mentionable={people}
         onChange={setBody}
         onSubmit={() => void onSave(body)}
       />

@@ -20,6 +20,7 @@ import { usePathname } from "next/navigation";
 
 import { Logo } from "@/components/atoms/Logo";
 import { UserMenu } from "@/components/atoms/UserMenu";
+import { NotificationPanel } from "@/components/organisms/NotificationPanel";
 import { Button } from "@/components/ui/button";
 import { useSignOut } from "@/lib/use-sign-out";
 import { useCurrentUser } from "@/lib/api/queries";
@@ -127,6 +128,16 @@ export function AppSidebar() {
           })}
         </ul>
       </nav>
+
+      {/* The bell sits just above the name, where one already looks to know
+          which identity one is acting under. It is deliberately not a tab: the
+          navigation lists what the team shares, and an inbox belongs to one
+          person. « Tout voir » is what leads to the page. */}
+      {user && (
+        <div className="border-t border-slate-200 px-2 py-1.5">
+          <NotificationPanel collapsed={collapsed} />
+        </div>
+      )}
 
       {user && <UserMenu user={user} collapsed={collapsed} onSignOut={signOut} />}
     </aside>

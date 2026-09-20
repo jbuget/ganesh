@@ -12,6 +12,7 @@ from src.modules.entries.application.use_cases.clear_entry import ClearEntryUseC
 from src.modules.entries.application.use_cases.set_entry import SetEntryUseCase
 from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.months.domain.entities.month import Month
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectKind,
@@ -26,6 +27,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryEntryRepository,
     InMemoryMonthRepository,
+    InMemoryNotificationRepository,
     InMemoryProjectRepository,
     InMemoryUserRepository,
 )
@@ -49,7 +51,11 @@ def build(entries: list[Entry] | None = None, months: list[Month] | None = None)
     month_repo = InMemoryMonthRepository(months or [])
     audit = InMemoryAuditLogRepository()
     clear = ClearEntryUseCase(
-        users=users, entries=entry_repo, months=month_repo, audit_logs=audit
+        users=users,
+        entries=entry_repo,
+        months=month_repo,
+        audit_logs=audit,
+        notifications=NotificationDelivery(InMemoryNotificationRepository()),
     )
     set_entry = SetEntryUseCase(
         users=users,
@@ -57,6 +63,7 @@ def build(entries: list[Entry] | None = None, months: list[Month] | None = None)
         entries=entry_repo,
         months=month_repo,
         audit_logs=audit,
+        notifications=NotificationDelivery(InMemoryNotificationRepository()),
     )
     return clear, set_entry, entry_repo, audit
 

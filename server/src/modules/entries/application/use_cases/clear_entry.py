@@ -5,9 +5,11 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
 from src.modules.entries.application.dtos.set_entry_dto import ClearEntryCommand
+from src.modules.entries.application.use_cases.timesheet_notice import tell_the_owner
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.months.domain.repositories.month_repository import MonthRepository
 from src.modules.months.domain.services.month_rules import ensure_month_is_open
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
@@ -28,11 +30,13 @@ class ClearEntryUseCase:
         entries: EntryRepository,
         months: MonthRepository,
         audit_logs: AuditLogRepository,
+        notifications: NotificationDelivery,
     ) -> None:
         self._users = users
         self._entries = entries
         self._months = months
         self._audit_logs = audit_logs
+        self._notifications = notifications
 
     async def execute(self, command: ClearEntryCommand) -> None:
         actor = await self._users.get_by_id(command.actor_id)
@@ -65,4 +69,10 @@ class ClearEntryUseCase:
                 day=command.day,
                 old_value=float(existing.value),
             )
+        )
+        await tell_the_owner(
+            self._notifications,
+            actor_id=command.actor_id,
+            owner_id=command.target_user_id,
+            day=command.day,
         )

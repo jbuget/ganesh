@@ -3,15 +3,22 @@
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
+from src.modules.notifications.domain.entities.notification import NotificationKind
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
+from src.modules.notifications.domain.services.fan_out import notify
 from src.modules.projects.application.audit import ProjectChange, trace_project_changes
 from src.modules.projects.application.dtos.project_dto import (
     ArchiveProjectCommand,
     UnarchiveProjectCommand,
 )
+from src.modules.projects.application.use_cases.project_audience import people_on
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectCategory,
     ProjectKind,
+)
+from src.modules.projects.domain.repositories.project_assignee_repository import (
+    ProjectAssigneeRepository,
 )
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
@@ -22,6 +29,7 @@ from src.modules.projects.domain.services.hierarchy import (
 )
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
+from src.shared.utils import clock
 
 
 class ArchiveProjectUseCase:
@@ -40,10 +48,14 @@ class ArchiveProjectUseCase:
         users: UserRepository,
         projects: ProjectRepository,
         audit_logs: AuditLogRepository,
+        assignees: ProjectAssigneeRepository,
+        notifications: NotificationDelivery,
     ) -> None:
         self._users = users
         self._projects = projects
         self._audit_logs = audit_logs
+        self._assignees = assignees
+        self._notifications = notifications
 
     async def execute(self, command: ArchiveProjectCommand) -> Project:
         if await self._users.get_by_id(command.actor_id) is None:
@@ -68,6 +80,10 @@ class ArchiveProjectUseCase:
             await self._settle(package, command, inherited=project.category)
 
         if project.is_active:
+            # Read before the mission leaves: an archived mission keeps its
+            # contributors, but the line is owed to whoever was on it at the
+            # moment it went.
+            audience = await people_on(self._assignees, command.project_id)
             project.archive()
             await self._projects.update(project)
             await trace_project_changes(
@@ -75,6 +91,16 @@ class ArchiveProjectUseCase:
                 command.actor_id,
                 project,
                 [("is_active", True, False)],
+            )
+            await self._notifications.deliver(
+                notify(
+                    NotificationKind.PROJECT_ARCHIVED,
+                    actor_id=command.actor_id,
+                    recipients=audience,
+                    at=clock.now(),
+                    project_id=command.project_id,
+                    payload={"project_label": project.label},
+                )
             )
 
         return project

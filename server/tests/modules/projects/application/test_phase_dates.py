@@ -2,6 +2,7 @@
 
 from datetime import date
 
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.projects.application.dtos.project_dto import ChangeProjectStatusCommand
 from src.modules.projects.application.use_cases.change_project_status import (
     ChangeProjectStatusUseCase,
@@ -14,6 +15,8 @@ from src.modules.projects.domain.entities.project import (
 from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
+    InMemoryNotificationRepository,
+    InMemoryProjectAssigneeRepository,
     InMemoryProjectDetailRepository,
     InMemoryProjectRepository,
     InMemoryUserRepository,
@@ -38,6 +41,8 @@ def build(status: ProjectStatus = ProjectStatus.VALIDATION):
         ),
         details=details,
         audit_logs=InMemoryAuditLogRepository(),
+        assignees=InMemoryProjectAssigneeRepository(),
+        notifications=NotificationDelivery(InMemoryNotificationRepository()),
     )
     return use_case, details
 

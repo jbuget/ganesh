@@ -18,6 +18,9 @@ import {
 } from "lucide-react";
 import { Markdown, type MarkdownStorage } from "tiptap-markdown";
 
+import { mentionExtension } from "@/lib/mention-extension";
+import { mentionsToHtml, type MentionablePerson } from "@/lib/mentions";
+
 /**
  * `tiptap-markdown` grafts its output onto the editor storage without exposing
  * it to the types: we go through the type it publishes rather than writing an
@@ -45,6 +48,11 @@ interface RichTextEditorProps {
    * own. Requires an unbroken flex chain above.
    */
   fullHeight?: boolean;
+  /**
+   * Who « @ » may name. Absent, typing « @ » writes an « @ » and nothing else:
+   * a sheet names no one, a thread does.
+   */
+  mentionable?: MentionablePerson[];
 }
 
 /** One button of the toolbar. */
@@ -100,6 +108,7 @@ export function RichTextEditor({
   autoFocus = false,
   minHeight = "min-h-24",
   fullHeight = false,
+  mentionable,
 }: RichTextEditorProps) {
   const editor = useEditor({
     // Next renders this component on the server: letting ProseMirror settle in
@@ -114,8 +123,12 @@ export function RichTextEditor({
       Link.configure({ openOnClick: false }),
       Placeholder.configure({ placeholder: placeholder ?? "" }),
       Markdown.configure({ transformPastedText: true }),
+      ...(mentionable ? [mentionExtension(mentionable)] : []),
     ],
-    content: value,
+    // Mentions come in as HTML: tiptap parses that, where markdown would give
+    // back an ordinary link pointing at `mention://`. They go back out as
+    // markdown, through the node's own serializer.
+    content: mentionable ? mentionsToHtml(value) : value,
     editorProps: {
       attributes: {
         class: `prose prose-sm prose-slate max-w-none ${fullHeight ? "h-full" : minHeight} px-3 py-2 focus:outline-none`,

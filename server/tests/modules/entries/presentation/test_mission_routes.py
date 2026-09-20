@@ -15,6 +15,7 @@ from src.modules.entries.application.use_cases.add_mission_to_month import (
 )
 from src.modules.entries.presentation.dependencies import get_add_mission_use_case
 from src.modules.months.domain.entities.month import Month
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectKind,
@@ -24,6 +25,7 @@ from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryMonthRepository,
+    InMemoryNotificationRepository,
     InMemoryProjectRepository,
     InMemoryUserMissionRepository,
     InMemoryUserRepository,
@@ -78,6 +80,7 @@ def sign_in(months: list[Month]) -> Screen:
             months=InMemoryMonthRepository(months),
             user_missions=rows,
             audit_logs=InMemoryAuditLogRepository(),
+            notifications=NotificationDelivery(InMemoryNotificationRepository()),
         )
     )
     return Screen(

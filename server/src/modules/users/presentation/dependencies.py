@@ -14,6 +14,10 @@ from src.modules.entries.presentation.dependencies import (
     get_user_repository,
 )
 from src.modules.months.domain.repositories.month_repository import MonthRepository
+from src.modules.notifications.domain.services.delivery import NotificationDelivery
+from src.modules.notifications.presentation.dependencies import (
+    get_notification_delivery,
+)
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -44,15 +48,21 @@ def get_list_users_use_case(
 def get_change_role_use_case(
     users: UserRepository = Depends(get_user_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
 ) -> ChangeUserRoleUseCase:
-    return ChangeUserRoleUseCase(users=users, audit_logs=audit_logs)
+    return ChangeUserRoleUseCase(
+        users=users, audit_logs=audit_logs, notifications=notifications
+    )
 
 
 def get_set_user_active_use_case(
     users: UserRepository = Depends(get_user_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
 ) -> SetUserActiveUseCase:
-    return SetUserActiveUseCase(users=users, audit_logs=audit_logs)
+    return SetUserActiveUseCase(
+        users=users, audit_logs=audit_logs, notifications=notifications
+    )
 
 
 def get_update_user_identity_use_case(
