@@ -57,6 +57,8 @@ export * from "./linkIcon";
 export * from "./listProjectAuditLogParams";
 export * from "./listProjectsParams";
 export * from "./listUsersParams";
+export * from "./localSignInRequest";
+export * from "./localSignInResponse";
 export * from "./mintedApiKeyResponse";
 export * from "./missionRefResponse";
 export * from "./missionShareResponse";
