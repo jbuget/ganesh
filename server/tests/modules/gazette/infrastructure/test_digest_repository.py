@@ -1,6 +1,6 @@
 """The digest repository, against a real PostgreSQL database."""
 
-from datetime import date, datetime
+from datetime import date
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +14,7 @@ from src.modules.gazette.infrastructure.database.repositories.digest_repository_
     SqlDigestRepository,
 )
 from src.modules.projects.domain.entities.project import ProjectStatus
+from tests.helpers.instants import paris
 
 pytestmark = pytest.mark.db
 
@@ -30,7 +31,7 @@ def a_digest(version: int = 1, prose: Prose | None = None) -> Digest:
             movements=[
                 Movement(
                     kind=MovementKind.PHASE_ADVANCED,
-                    at=datetime(2026, 9, 4, 10, 30),
+                    at=paris(2026, 9, 4, 10, 30),
                     subject="Ganesh",
                     project_id=7,
                     from_status=ProjectStatus.SCOPING,
@@ -41,7 +42,7 @@ def a_digest(version: int = 1, prose: Prose | None = None) -> Digest:
                 Highlight(kind=HighlightKind.WENT_LIVE, project_id=7, label="Ganesh")
             ],
         ),
-        generated_at=datetime(2026, 10, 2, 9, 30),
+        generated_at=paris(2026, 10, 2, 9, 30),
         requested_by="L. Chen",
         prose=prose,
     )

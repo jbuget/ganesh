@@ -20,6 +20,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 )
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
+from src.shared.utils import clock
 
 
 class GenerateDigestUseCase:
@@ -56,7 +57,7 @@ class GenerateDigestUseCase:
 
         month = first_day(command.month)
         brief = await gather_brief(month, self._audit_logs, self._projects, self._users)
-        generated_at = at or datetime.now()
+        generated_at = at or clock.now()
 
         digest = await self._digests.add(
             Digest(

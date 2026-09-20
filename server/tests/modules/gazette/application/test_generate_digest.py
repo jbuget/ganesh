@@ -1,6 +1,6 @@
 """Asking for a digest: the gesture that freezes one month of the register."""
 
-from datetime import date, datetime
+from datetime import date
 
 import pytest
 
@@ -26,9 +26,10 @@ from tests.helpers.in_memory_repositories import (
     InMemoryProjectRepository,
     InMemoryUserRepository,
 )
+from tests.helpers.instants import paris
 
 MONTH = date(2026, 9, 1)
-GENERATED_AT = datetime(2026, 10, 2, 9, 30)
+GENERATED_AT = paris(2026, 10, 2, 9, 30)
 
 
 class StubProseWriter(ProseWriter):
@@ -92,7 +93,7 @@ async def a_creation(audit_logs: InMemoryAuditLogRepository, day: int = 12) -> N
             action=AuditAction.PROJECT_CREATE,
             actor_id=1,
             project_id=7,
-            at=datetime(2026, 9, day, 14),
+            at=paris(2026, 9, day, 14),
         )
     )
 
@@ -136,7 +137,7 @@ class TestGenerateDigest:
 
         second = await use_case.execute(
             GenerateDigestCommand(month=MONTH, actor_id=2),
-            at=datetime(2026, 10, 5, 11),
+            at=paris(2026, 10, 5, 11),
         )
 
         assert second.version == 2
@@ -154,7 +155,7 @@ class TestGenerateDigest:
         )
         await use_case.execute(
             GenerateDigestCommand(month=MONTH, actor_id=2),
-            at=datetime(2026, 10, 5, 11),
+            at=paris(2026, 10, 5, 11),
         )
 
         latest = await digests.get_latest(MONTH)
@@ -173,7 +174,7 @@ class TestGenerateDigest:
 
         second = await use_case.execute(
             GenerateDigestCommand(month=MONTH, actor_id=2),
-            at=datetime(2026, 10, 5, 11),
+            at=paris(2026, 10, 5, 11),
         )
 
         assert [version.version for version in second.versions] == [2, 1]
@@ -194,7 +195,7 @@ class TestGenerateDigest:
     @pytest.mark.asyncio
     async def test_it_reads_the_month_it_covers_and_no_other(self) -> None:
         use_case, _, audit_logs = a_use_case()
-        for at in (datetime(2026, 8, 31, 23), datetime(2026, 10, 1, 0)):
+        for at in (paris(2026, 8, 31, 23), paris(2026, 10, 1, 0)):
             await audit_logs.add(
                 AuditLog(
                     action=AuditAction.PROJECT_CREATE,
@@ -299,7 +300,7 @@ class TestGenerateDigest:
                 action=AuditAction.PROJECT_CREATE,
                 actor_id=1,
                 project_id=8,
-                at=datetime(2026, 9, 12, 14),
+                at=paris(2026, 9, 12, 14),
             )
         )
 

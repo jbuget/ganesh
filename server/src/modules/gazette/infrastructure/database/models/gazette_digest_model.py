@@ -26,7 +26,7 @@ class GazetteDigestModel(Base):
     #: The first day of the month covered.
     month: Mapped[date] = mapped_column(Date, index=True)
     version: Mapped[int] = mapped_column(Integer)
-    generated_at: Mapped[datetime] = mapped_column(DateTime)
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     #: Who asked for it, as it was written that day. A name rather than a
     #: foreign key: a digest is an archive, and it must not change wording
     #: because somebody's display name did, nor lose its byline if they leave.

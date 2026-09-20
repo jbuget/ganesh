@@ -1,6 +1,6 @@
 """Reading a month: the latest generation, an older one, or none at all."""
 
-from datetime import date, datetime
+from datetime import date
 
 import pytest
 
@@ -23,6 +23,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryProjectRepository,
     InMemoryUserRepository,
 )
+from tests.helpers.instants import paris
 
 MONTH = date(2026, 9, 1)
 
@@ -43,13 +44,13 @@ def a_digest(version: int = 1, subject: str = "Ce que la version a figé") -> Di
             movements=[
                 Movement(
                     kind=MovementKind.PROJECT_CREATED,
-                    at=datetime(2026, 9, 4, 10),
+                    at=paris(2026, 9, 4, 10),
                     subject=subject,
                     project_id=7,
                 )
             ],
         ),
-        generated_at=datetime(2026, 10, 2, 9),
+        generated_at=paris(2026, 10, 2, 9),
         requested_by="Léa Chen",
         prose=Prose(text="Un mois de cadrage.", model="stub"),
     )
@@ -75,7 +76,7 @@ async def a_creation(audit_logs: InMemoryAuditLogRepository) -> None:
             action=AuditAction.PROJECT_CREATE,
             actor_id=1,
             project_id=7,
-            at=datetime(2026, 9, 20, 10),
+            at=paris(2026, 9, 20, 10),
         )
     )
 

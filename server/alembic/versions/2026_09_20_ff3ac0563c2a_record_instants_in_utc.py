@@ -24,7 +24,7 @@ from collections.abc import Sequence
 from alembic import op
 
 revision: str = "ff3ac0563c2a"
-down_revision: str | None = "e7454ee5cf8f"
+down_revision: str | None = "2b22ee3a630b"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -35,6 +35,7 @@ INSTANTS: tuple[tuple[str, str], ...] = (
     ("api_keys", "revoked_at"),
     ("audit_log", "at"),
     ("entries", "updated_at"),
+    ("gazette_digests", "generated_at"),
     ("month_status", "validated_at"),
     ("month_status", "reopened_at"),
     ("moods", "created_at"),

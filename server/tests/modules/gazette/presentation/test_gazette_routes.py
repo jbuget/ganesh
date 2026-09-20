@@ -2,7 +2,7 @@
 
 from collections.abc import Iterator
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -34,6 +34,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryProjectRepository,
     InMemoryUserRepository,
 )
+from tests.helpers.instants import paris
 
 LEA = User(
     id=1,
@@ -213,7 +214,7 @@ async def test_the_month_comes_back_gathered_by_mission(screen: Screen) -> None:
             action=AuditAction.PROJECT_CREATE,
             actor_id=1,
             project_id=7,
-            at=datetime(2026, 9, 3, 9),
+            at=paris(2026, 9, 3, 9),
         )
     )
 
@@ -232,7 +233,7 @@ async def test_what_was_about_nobody_s_mission_comes_back_unnamed(
             action=AuditAction.USER_CREATE,
             actor_id=1,
             target_user_id=1,
-            at=datetime(2026, 9, 3, 9),
+            at=paris(2026, 9, 3, 9),
         )
     )
 
