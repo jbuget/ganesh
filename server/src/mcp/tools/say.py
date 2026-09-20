@@ -1,11 +1,62 @@
-"""Saying a figure or a day the way somebody would read it out.
+"""How Ganesh says a thing in French: a figure, a day, a phase.
 
-A model handed `12.0` and a date writes the sentence itself, and writes it
-wrong about as often as not: « 12.0 jours », « 2026-09-08 ». What a tool hands
-over is already the sentence.
+A model handed `12.0`, a date and `SCOPING` writes the sentence itself, and
+writes it wrong about as often as not: « 12.0 jours », « 2026-09-08 », « en
+scoping ». What a tool hands over is already the sentence.
+
+The vocabulary lives here rather than in the tool that first needed it: two
+tools name a phase, and one importing the other for a dictionary is how a tool
+ends up depending on an unrelated one.
+
+The agreement is the part no type checker reads and no assertion on a figure
+catches — « aucun jour déclarés » and « passé de exploration » both came back
+from a running API, past a green suite. `agreeing` and `of` carry the two
+rules that bit.
 """
 
 from datetime import date
+
+from src.modules.projects.domain.entities.project import ProjectKind, ProjectStatus
+
+KINDS = {
+    ProjectKind.PROJECT: "projet",
+    ProjectKind.WORK_PACKAGE: "lot",
+    ProjectKind.OFF_PROJECT: "hors-projet",
+}
+
+#: The phases, said in French. A second copy of what the screens read in
+#: `client/src/lib/`, and the price of a second interface: each says the
+#: domain's vocabulary in the language its reader speaks.
+STATUSES = {
+    ProjectStatus.EXPLORATION: "exploration",
+    ProjectStatus.SCOPING: "cadrage",
+    ProjectStatus.DEVELOPMENT: "construction",
+    ProjectStatus.VALIDATION: "validation",
+    ProjectStatus.DEPLOYMENT: "déploiement",
+    ProjectStatus.OPERATIONS: "en service",
+}
+
+
+def phase(status: ProjectStatus | str | None) -> str | None:
+    """A phase in French, from the enum or from what the log wrote of it.
+
+    The log stores the value — « scoping » — so a line read back comes here as
+    a string. One that no longer maps to a phase is handed back as it stands
+    rather than dropped: a reader seeing an unknown word looks it up, and sees
+    nothing where something happened otherwise.
+    """
+    if status is None:
+        return None
+    try:
+        return STATUSES[ProjectStatus(status)]
+    except ValueError:
+        return str(status)
+
+
+def kind(of: ProjectKind) -> str:
+    """« projet », « lot », « hors-projet »."""
+    return KINDS[of]
+
 
 MONTHS = {
     1: "janvier",
@@ -48,6 +99,16 @@ def agreeing(count: float, word: str) -> str:
 def number(count: float) -> str:
     """A count on its own, halves included: « 9 », « 1,5 »."""
     return f"{count:.1f}".replace(".0", "").replace(".", ",")
+
+
+def agreed(word: str, with_: float) -> str:
+    """The word alone, agreeing with a count said elsewhere.
+
+    « 12 jours déclarés » puts the count in `days` and the participle here:
+    both have to follow it, and writing the rule twice is how one of them ends
+    up not following at all.
+    """
+    return f"{word}s" if with_ >= 2 else word
 
 
 def day(moment: date) -> str:

@@ -10,7 +10,11 @@ not one.
 import pytest
 from fastapi import Depends, FastAPI, Header
 
-from src.mcp.wiring import resolve, use_overrides_of
+from src.mcp.wiring import Wiring
+
+
+def wiring(session: object, overrides: dict | None = None) -> Wiring:
+    return Wiring(session=session, overrides=overrides or {})  # type: ignore[arg-type]
 
 
 class Repository:
@@ -35,7 +39,7 @@ async def test_a_provider_is_handed_the_session_at_hand() -> None:
         return Repository(session)
 
     session = a_session()
-    built = await resolve(provider, session)  # type: ignore[arg-type]
+    built = await wiring(session).resolve(provider)
     assert built.session is session
 
 
@@ -52,21 +56,22 @@ async def test_a_header_keeps_the_value_behind_the_marker() -> None:
         assert authorization is None or isinstance(authorization, str)
         return Repository(None, stamped_by=authorization)
 
-    built = await resolve(provider, a_session())  # type: ignore[arg-type]
+    built = await wiring(a_session()).resolve(provider)
     assert built.stamped_by is None
 
 
 @pytest.mark.asyncio
 async def test_an_override_wins_exactly_as_it_does_for_a_route() -> None:
+    """Carried by the call, so two applications keep their own overrides."""
+
     def provider() -> str:
         return "the real one"
 
     app = FastAPI()
-    use_overrides_of(app)
     app.dependency_overrides[provider] = lambda: "the stand-in"
 
-    assert await resolve(provider, a_session()) == "the stand-in"  # type: ignore[arg-type]
-    app.dependency_overrides.clear()
+    resolved = await wiring(a_session(), app.dependency_overrides).resolve(provider)
+    assert resolved == "the stand-in"
 
 
 @pytest.mark.asyncio
@@ -74,4 +79,4 @@ async def test_an_async_provider_is_awaited() -> None:
     async def provider() -> str:
         return "built"
 
-    assert await resolve(provider, a_session()) == "built"  # type: ignore[arg-type]
+    assert await wiring(a_session()).resolve(provider) == "built"

@@ -12,7 +12,6 @@ from datetime import date
 
 from src.mcp.door import answers, current_machine
 from src.mcp.tools import say
-from src.mcp.wiring import resolve
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.entries.application.use_cases.get_month_grid import (
     GetMonthGridQuery,
@@ -41,7 +40,7 @@ async def my_month(month: str | None = None) -> str:
         )
 
     machine = current_machine()
-    use_case = await resolve(get_month_grid_use_case, machine.session)
+    use_case = await machine.resolve(get_month_grid_use_case)
     grid = await use_case.execute(
         GetMonthGridQuery(user_id=machine.caller.actor_id, month=asked)
     )
@@ -67,7 +66,7 @@ def _read(grid: MonthGrid, asked: date) -> str:
         lines = [f"Aucun jour déclaré {where}."]
     else:
         lines = [
-            f"{say.days(declared)} déclaré{'s' if declared >= 2 else ''} {where} : "
+            f"{say.days(declared)} {say.agreed('déclaré', declared)} {where} : "
             f"{say.agreeing(grid.actual_total, 'réalisé')}, "
             f"{say.agreeing(grid.forecast_total, 'prévisionnel')}."
         ]

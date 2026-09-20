@@ -9,6 +9,7 @@ sentence. Three properties they hold to, from the brief:
   over for the other tools to consume.
 """
 
+from dataclasses import dataclass
 from datetime import date, datetime
 
 import pytest
@@ -19,6 +20,7 @@ from src.mcp.server import ToolServer
 from src.mcp.tools.entries import my_month
 from src.mcp.tools.projects import find_project
 from src.mcp.tools.updates import what_changed
+from src.mcp.wiring import Wiring
 from src.modules.api_keys.application.use_cases.authenticate_api_key import (
     MachineCaller,
 )
@@ -44,15 +46,19 @@ from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectStatus,
 )
-from src.modules.projects.presentation.dependencies import get_list_projects_use_case
+from src.modules.projects.presentation.dependencies import (
+    get_list_projects_use_case,
+    get_project_detail_use_case,
+)
 from src.modules.users.domain.entities.user import User
+from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 OWNER = User(id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba")
 MARIE = User(id=2, entra_oid="oid-2", email="m@waat.fr", display_name="M. Ce")
 
 
-def a_machine(*scopes: ApiKeyScope) -> Machine:
-    key = ApiKey(
+def a_key(*scopes: ApiKeyScope) -> ApiKey:
+    return ApiKey(
         id=1,
         name="Claude Code de A. Ba",
         public_id="abcdefghijkl",
@@ -61,42 +67,69 @@ def a_machine(*scopes: ApiKeyScope) -> Machine:
         created_by=1,
         scopes=list(scopes or [ApiKeyScope.ALL_READ]),
     )
-    return Machine(caller=MachineCaller(key=key, owner=OWNER), session=None)  # type: ignore[arg-type]
 
 
 class Stub:
-    """Stands in for a use case: answers whatever it was handed."""
+    """Stands in for a use case: answers whatever it was handed.
+
+    An exception handed over is raised rather than returned, which is how a
+    mission nobody can find is reproduced — `GetProjectDetailUseCase` raises
+    where `list_projects` would simply not have listed it.
+    """
 
     def __init__(self, answer: object) -> None:
         self._answer = answer
 
     async def execute(self, *args: object, **kwargs: object) -> object:
+        if isinstance(self._answer, Exception):
+            raise self._answer
         return self._answer
 
 
-class Wired:
-    """An API whose use cases are stubs, for a tool to reach through."""
+@dataclass
+class ADetail:
+    """What `what_changed` reads of a mission: its name."""
 
-    def __init__(self, **stubs: object) -> None:
-        self.app = FastAPI()
-        ToolServer().attach(self.app)
-        for provider, answer in stubs.items():
-            self.app.dependency_overrides[PROVIDERS[provider]] = (
-                lambda answer=answer: Stub(answer)  # type: ignore[misc]
-            )
-
-    def __enter__(self) -> "Wired":
-        return self
-
-    def __exit__(self, *_: object) -> None:
-        self.app.dependency_overrides.clear()
+    project: Project
 
 
 PROVIDERS = {
     "projects": get_list_projects_use_case,
     "grid": get_month_grid_use_case,
     "project_log": get_project_audit_log_use_case,
+    "detail": get_project_detail_use_case,
 }
+
+
+class Wired:
+    """An API whose use cases are stubs, with a machine at the door.
+
+    A tool reaches a use case through the machine that called it, so standing
+    one there is what running a tool on its own takes.
+    """
+
+    def __init__(
+        self, scopes: list[ApiKeyScope] | None = None, **stubs: object
+    ) -> None:
+        self.app = FastAPI()
+        ToolServer().attach(self.app)
+        for provider, answer in stubs.items():
+            self.app.dependency_overrides[PROVIDERS[provider]] = (
+                lambda answer=answer: Stub(answer)  # type: ignore[misc]
+            )
+        self._machine = Machine(
+            caller=MachineCaller(key=a_key(*(scopes or [])), owner=OWNER),
+            wiring=Wiring(session=None, overrides=self.app.dependency_overrides),  # type: ignore[arg-type]
+        )
+        self._standing = standing(self._machine)
+
+    def __enter__(self) -> "Wired":
+        self._standing.__enter__()
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self._standing.__exit__(None, None, None)
+        self.app.dependency_overrides.clear()
 
 
 def listed(project: Project) -> ListedProject:
@@ -126,7 +159,7 @@ RETIRED = Project(
 class TestFindProject:
     @pytest.mark.asyncio
     async def test_it_names_the_kind_and_the_phase(self) -> None:
-        with Wired(projects=[listed(WAATCHER)]), standing(a_machine()):
+        with Wired(projects=[listed(WAATCHER)]):
             said = await find_project("waatcher")
         assert said == "WAATcher (#7) — projet, construction"
 
@@ -134,7 +167,6 @@ class TestFindProject:
     async def test_several_matches_come_back_as_several(self) -> None:
         with (
             Wired(projects=[listed(WAATCHER), listed(SUPERVISION), listed(RETIRED)]),
-            standing(a_machine()),
         ):
             said = await find_project("waatcher")
         assert said.count("\n") == 2
@@ -142,13 +174,13 @@ class TestFindProject:
 
     @pytest.mark.asyncio
     async def test_an_archived_project_says_when_it_left(self) -> None:
-        with Wired(projects=[listed(RETIRED)]), standing(a_machine()):
+        with Wired(projects=[listed(RETIRED)]):
             said = await find_project("V1")
         assert "archivé le 12/03/2026" in said
 
     @pytest.mark.asyncio
     async def test_nothing_matching_is_said_rather_than_left_empty(self) -> None:
-        with Wired(projects=[listed(WAATCHER)]), standing(a_machine()):
+        with Wired(projects=[listed(WAATCHER)]):
             said = await find_project("nomad")
         assert "Aucun projet" in said
         assert "nomad" in said
@@ -192,7 +224,7 @@ class TestMyMonth:
             [DayTotal(day=date(2026, 9, 1), total=1.0, exceeds_capacity=False)],
             working_days=19,
         )
-        with Wired(grid=grid), standing(a_machine()):
+        with Wired(grid=grid):
             said = await my_month("2026-09")
 
         assert "12 jours déclarés sur 19 ouvrés" in said
@@ -201,20 +233,20 @@ class TestMyMonth:
     @pytest.mark.asyncio
     async def test_it_names_the_working_days_still_empty(self) -> None:
         grid = a_grid([], working(1, 2, 3), [], working_days=3)
-        with Wired(grid=grid), standing(a_machine()):
+        with Wired(grid=grid):
             said = await my_month("2026-09")
         assert "01/09" in said and "03/09" in said
 
     @pytest.mark.asyncio
     async def test_a_validated_month_says_so(self) -> None:
         grid = a_grid([], working(1), [], is_writable=False)
-        with Wired(grid=grid), standing(a_machine()):
+        with Wired(grid=grid):
             said = await my_month("2026-09")
         assert "validé" in said
 
     @pytest.mark.asyncio
     async def test_a_month_that_does_not_read_is_refused_in_words(self) -> None:
-        with Wired(grid=a_grid([], [], [])), standing(a_machine()):
+        with Wired(grid=a_grid([], [], [])):
             said = await my_month("septembre")
         assert "AAAA-MM" in said
 
@@ -243,10 +275,7 @@ class TestWhatChanged:
             ],
             total=1,
         )
-        with (
-            Wired(projects=[listed(WAATCHER)], project_log=page),
-            standing(a_machine()),
-        ):
+        with (Wired(detail=ADetail(WAATCHER), project_log=page),):
             said = await what_changed(7, "2026-09-01")
 
         assert "passé de cadrage à construction" in said
@@ -272,23 +301,18 @@ class TestWhatChanged:
             ],
             total=2,
         )
-        with (
-            Wired(projects=[listed(WAATCHER)], project_log=page),
-            standing(a_machine()),
-        ):
+        with (Wired(detail=ADetail(WAATCHER), project_log=page),):
             said = await what_changed(7, "2026-09-01")
 
-        assert "1,5 jour" in said
-        assert "2 personnes" in said
+        assert "1,5 jour déclaré par 2 personnes" in said
 
     @pytest.mark.asyncio
     async def test_a_quiet_project_says_nothing_moved(self) -> None:
         with (
             Wired(
-                projects=[listed(WAATCHER)],
+                detail=ADetail(WAATCHER),
                 project_log=AuditLogPage(entries=[], total=0),
             ),
-            standing(a_machine()),
         ):
             said = await what_changed(7, "2026-09-01")
         assert "Rien n'a bougé" in said
@@ -296,9 +320,9 @@ class TestWhatChanged:
 
     @pytest.mark.asyncio
     async def test_an_unknown_project_is_said_rather_than_invented(self) -> None:
-        with (
-            Wired(projects=[], project_log=AuditLogPage(entries=[], total=0)),
-            standing(a_machine()),
+        with Wired(
+            detail=EntityNotFoundError("The mission cannot be found."),
+            project_log=AuditLogPage(entries=[], total=0),
         ):
             said = await what_changed(404, "2026-09-01")
         assert "404" in said
@@ -311,7 +335,7 @@ class TestMyMonthReadsAsFrench:
     @pytest.mark.asyncio
     async def test_an_empty_month_does_not_say_aucun_jour_declares(self) -> None:
         grid = a_grid([], working(1, 2), [], working_days=22)
-        with Wired(grid=grid), standing(a_machine()):
+        with Wired(grid=grid):
             said = await my_month("2026-09")
 
         assert "Aucun jour déclaré sur 22 ouvrés en septembre 2026." in said
@@ -332,7 +356,7 @@ class TestMyMonthReadsAsFrench:
             [DayTotal(day=date(2026, 9, 1), total=1.0, exceeds_capacity=False)],
             working_days=22,
         )
-        with Wired(grid=grid), standing(a_machine()):
+        with Wired(grid=grid):
             said = await my_month("2026-09")
 
         assert "1 jour déclaré" in said
@@ -350,7 +374,58 @@ class TestMyMonthReadsAsFrench:
             estimated_days=None,
         )
         grid = a_grid([empty], working(1), [], working_days=22)
-        with Wired(grid=grid), standing(a_machine()):
+        with Wired(grid=grid):
             said = await my_month("2026-09")
 
         assert "Répartition" not in said
+
+    @pytest.mark.asyncio
+    async def test_the_thread_is_announced_with_its_latest_post(self) -> None:
+        page = AuditLogPage(
+            entries=[
+                a_line(AuditAction.UPDATE_POST, datetime(2026, 9, 12, 9, 0)),
+                a_line(AuditAction.UPDATE_POST, datetime(2026, 9, 16, 17, 0)),
+            ],
+            total=2,
+        )
+        with Wired(detail=ADetail(WAATCHER), project_log=page):
+            said = await what_changed(7, "2026-09-01")
+
+        assert "2 mises à jour postées, la dernière le 16/09" in said
+
+    @pytest.mark.asyncio
+    async def test_a_single_post_agrees_in_the_singular(self) -> None:
+        page = AuditLogPage(
+            entries=[a_line(AuditAction.UPDATE_POST, datetime(2026, 9, 16, 17, 0))],
+            total=1,
+        )
+        with Wired(detail=ADetail(WAATCHER), project_log=page):
+            said = await what_changed(7, "2026-09-01")
+
+        assert "une mise à jour postée, la dernière le 16/09" in said
+
+    @pytest.mark.asyncio
+    async def test_time_taken_back_nets_out_against_time_declared(self) -> None:
+        """A window that gave and took reads as what it left behind."""
+        page = AuditLogPage(
+            entries=[
+                a_line(
+                    AuditAction.ENTRY_SET,
+                    datetime(2026, 9, 9, 9, 0),
+                    new_value="1.0",
+                    day=date(2026, 9, 9),
+                ),
+                a_line(
+                    AuditAction.ENTRY_SET,
+                    datetime(2026, 9, 10, 9, 0),
+                    old_value="1.0",
+                    new_value="0.5",
+                    day=date(2026, 9, 9),
+                ),
+            ],
+            total=2,
+        )
+        with Wired(detail=ADetail(WAATCHER), project_log=page):
+            said = await what_changed(7, "2026-09-01")
+
+        assert "0,5 jour déclaré par une personne" in said

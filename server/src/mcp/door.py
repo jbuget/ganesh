@@ -16,7 +16,7 @@ the door admits the key and `answers` checks the scope, one tool at a time,
 exactly as one route at a time.
 """
 
-from collections.abc import Awaitable, Callable, Iterable, Iterator
+from collections.abc import Awaitable, Callable, Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -29,7 +29,7 @@ from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from mcp.server.mcpserver.exceptions import ToolError
-from src.mcp.wiring import resolve, session_scope
+from src.mcp.wiring import Provider, Wiring, session_scope
 from src.modules.api_keys.application.use_cases.authenticate_api_key import (
     AuthenticateApiKeyUseCase,
     MachineCaller,
@@ -49,14 +49,23 @@ from src.shared.exceptions.domain_exceptions import DomainError
 
 P = ParamSpec("P")
 R = TypeVar("R")
+T = TypeVar("T")
 
 
 @dataclass(frozen=True)
 class Machine:
-    """Who is calling, and the session their tools read through."""
+    """Who is calling, and where their tools reach a use case.
+
+    `resolve` sits here rather than being imported by every tool: what a tool
+    needs to know is that it asks the machine at the door for a use case, and
+    that the session it reads through is the one the door opened.
+    """
 
     caller: MachineCaller
-    session: AsyncSession
+    wiring: Wiring
+
+    async def resolve(self, provider: Callable[..., T]) -> T:
+        return await self.wiring.resolve(provider)
 
 
 _MACHINE: ContextVar[Machine | None] = ContextVar("machine", default=None)
@@ -94,10 +103,14 @@ def answers(
 
     - **the scope is registered**, so a tool opens a scope exactly as a route
       does and `test_every_scope_the_form_offers_opens_a_route` keeps holding;
-    - **a refusal comes out as a sentence.** The SDK hands the client the text
-      of a `ToolError` and nothing else, so a business refusal — « le mois est
-      validé » — is translated rather than swallowed as « Error executing
-      tool ». A model told only that retries blind, or reports success.
+    - **a refusal reaches the client at all.** The SDK hands over the text of
+      a `ToolError` and nothing else, so a business refusal swallowed as
+      « Error executing tool » leaves a model retrying blind, or reporting
+      success. This is a net, not the translation: what the domain raises is
+      the API's vocabulary, in English, and a tool says in French the refusals
+      it knows to expect — `what_changed` does that for a mission nobody can
+      find. What falls through here is a refusal nobody anticipated, and its
+      own words beat none at all.
 
     The refusal names the scope it is short of: whoever holds a real key needs
     to know what to ask for, which is why a route answers `403` there rather
@@ -124,10 +137,16 @@ def answers(
 
 
 class MachineDoor:
-    """Wraps the MCP app: nothing reaches a tool without a key that holds up."""
+    """Wraps the MCP app: nothing reaches a tool without a key that holds up.
 
-    def __init__(self, app: ASGIApp) -> None:
+    The overrides come from the API it is mounted on, so a tool honours
+    `dependency_overrides` exactly as a route does — and two applications in
+    one process keep their own.
+    """
+
+    def __init__(self, app: ASGIApp, overrides: Mapping[Provider, Provider]) -> None:
         self._app = app
+        self._overrides = overrides
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":  # pragma: no cover — no websocket here
@@ -135,29 +154,30 @@ class MachineDoor:
             return
 
         async with session_scope() as session:
-            authenticate = await resolve(get_authenticate_api_key_use_case, session)
-            rate_limit = await resolve(get_check_rate_limit_use_case, session)
-            admitted = await self._admit(scope, session, authenticate, rate_limit)
+            wiring = Wiring(session=session, overrides=self._overrides)
+            authenticate = await wiring.resolve(get_authenticate_api_key_use_case)
+            rate_limit = await wiring.resolve(get_check_rate_limit_use_case)
+            token = bearer_token(_header(scope, b"authorization"))
+            admitted = await self._admit(token, session, authenticate, rate_limit)
             if isinstance(admitted, JSONResponse):
                 await admitted(scope, receive, send)
                 return
-            with standing(Machine(caller=admitted, session=session)):
+            with standing(Machine(caller=admitted, wiring=wiring)):
                 await self._app(scope, receive, send)
 
     async def _admit(
         self,
-        scope: Scope,
+        token: str | None,
         session: AsyncSession,
         authenticate: AuthenticateApiKeyUseCase,
         rate_limit: CheckRateLimitUseCase,
     ) -> MachineCaller | JSONResponse:
         """Lets the machine in, or hands back the answer that turns it away."""
-        token = bearer_token(_header(scope, b"authorization"))
         if token is None:
             return _refused("Missing API key.")
 
         # `identify` rather than `execute`: the door reads the envelope, and
-        # which scope is needed depends on the tool asked for. `asked_for`
+        # which scope is needed depends on the tool asked for. `answers`
         # checks that, one tool at a time.
         caller = await authenticate.identify(token)
         if caller is None:

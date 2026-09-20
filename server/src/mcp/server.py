@@ -28,7 +28,6 @@ from fastapi import FastAPI
 
 from mcp.server.mcpserver import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
-from src.mcp import wiring
 from src.mcp.door import MachineDoor
 from src.mcp.tools.entries import my_month
 from src.mcp.tools.projects import find_project
@@ -73,8 +72,6 @@ class ToolServer:
                 enable_dns_rebinding_protection=False
             ),
         )
-        #: Nothing reaches a tool without a key that holds up.
-        self._guarded = MachineDoor(self._app)
 
     @asynccontextmanager
     async def lifespan(self, app: FastAPI) -> AsyncIterator[None]:
@@ -88,6 +85,5 @@ class ToolServer:
             yield
 
     def attach(self, app: FastAPI) -> None:
-        """Puts the tools on the API, and binds them to its overrides."""
-        wiring.use_overrides_of(app)
-        app.mount(PATH, self._guarded)
+        """Puts the tools on the API, behind a door that reads its overrides."""
+        app.mount(PATH, MachineDoor(self._app, app.dependency_overrides))

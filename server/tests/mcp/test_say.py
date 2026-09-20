@@ -72,3 +72,12 @@ class TestDated:
     def test_a_far_off_day_carries_its_year(self) -> None:
         """« depuis le 01/01 » read in September says which January?"""
         assert say.dated(date(2026, 1, 1)) == "01/01/2026"
+
+
+class TestAgreed:
+    """The count is said by `days`, the participle here. Both follow it."""
+
+    def test_a_participle_follows_the_count_said_elsewhere(self) -> None:
+        assert say.agreed("déclaré", 0) == "déclaré"
+        assert say.agreed("déclaré", 1.5) == "déclaré"
+        assert say.agreed("déclaré", 2) == "déclarés"

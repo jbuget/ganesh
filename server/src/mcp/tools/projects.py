@@ -5,28 +5,12 @@ and an invented identifier reads exactly like a real one.
 """
 
 from src.mcp.door import answers, current_machine
-from src.mcp.wiring import resolve
+from src.mcp.tools import say
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.projects.application.use_cases.list_projects import ListedProject
-from src.modules.projects.domain.entities.project import ProjectKind
 from src.modules.projects.presentation.dependencies import get_list_projects_use_case
 
 SCOPE = ApiKeyScope.PROJECTS_READ
-
-KINDS = {
-    ProjectKind.PROJECT: "projet",
-    ProjectKind.WORK_PACKAGE: "lot",
-    ProjectKind.OFF_PROJECT: "hors-projet",
-}
-
-STATUSES = {
-    "exploration": "exploration",
-    "scoping": "cadrage",
-    "development": "construction",
-    "validation": "validation",
-    "deployment": "déploiement",
-    "operations": "en service",
-}
 
 #: Beyond this, the answer stops being a list and starts being a dump. What is
 #: left out is counted rather than dropped in silence.
@@ -41,8 +25,10 @@ async def find_project(query: str) -> str:
     leur phase. Plusieurs correspondances sont rendues telles quelles : le
     choix revient à qui a posé la question.
     """
-    machine = current_machine()
-    use_case = await resolve(get_list_projects_use_case, machine.session)
+    # The whole reference list, as the « Projets » screen reads it: there is
+    # no search in the repository, and seventy missions is what a search would
+    # have to walk anyway.
+    use_case = await current_machine().resolve(get_list_projects_use_case)
     missions = await use_case.execute(include_inactive=True)
 
     matching = [m for m in missions if _matches(query, m)]
@@ -65,9 +51,10 @@ def _matches(query: str, mission: ListedProject) -> bool:
 def _describe(mission: ListedProject) -> str:
     """One mission, as a sentence rather than as a row."""
     project = mission.project
-    parts = [KINDS[project.kind]]
-    if project.status is not None:
-        parts.append(STATUSES.get(project.status.value, project.status.value))
+    parts = [say.kind(project.kind)]
+    said_phase = say.phase(project.status)
+    if said_phase is not None:
+        parts.append(said_phase)
     if not project.is_active:
         parts.append(
             "archivé le " + project.archived_at.strftime("%d/%m/%Y")
