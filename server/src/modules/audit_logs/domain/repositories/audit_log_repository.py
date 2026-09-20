@@ -1,7 +1,7 @@
 """Port for the audit log."""
 
 from abc import ABC, abstractmethod
-from datetime import date
+from datetime import date, datetime
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditLog
 
@@ -24,3 +24,11 @@ class AuditLogRepository(ABC):
 
     @abstractmethod
     async def count_for_project(self, project_id: int) -> int: ...
+
+    @abstractmethod
+    async def list_all(
+        self, limit: int, offset: int, since: datetime | None = None
+    ) -> list[AuditLog]: ...
+
+    @abstractmethod
+    async def count_all(self, since: datetime | None = None) -> int: ...

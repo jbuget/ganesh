@@ -532,8 +532,13 @@ whole design leans on, and the one to respect when adding a route:
 
 - **A key opens nothing by default.** `get_current_user` refuses keys outright,
   so every route that depends on it is human-only. A route becomes
-  machine-reachable by asking, with `require_scope(ApiKeyScope.…)` — one route
-  at a time, on purpose.
+  machine-reachable by asking — one route at a time, on purpose — through one
+  of two doors: `require_scope(…)` opens it to a machine and to nobody else,
+  which suits the catalogue export alone; `open_to_machines(…)` **adds** a door
+  to a route the team already uses, and takes none away.
+- **A scope that opens no route is a bug**, and a test says so. The table of
+  keys is read by the whole team to know what a key opens; a member the form
+  offers and no route honours makes it say that wrong.
 - A key belongs to a **service account**, never to a person, and that account
   carries a **human owner** who answers for it. An API call records the owner
   as the actor and names the key in the payload.

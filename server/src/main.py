@@ -11,6 +11,9 @@ from src.modules.activity.presentation.api.routes.activity_router import (
 from src.modules.api_keys.presentation.api.routes.api_key_router import (
     router as api_key_router,
 )
+from src.modules.audit_logs.presentation.api.routes.audit_log_router import (
+    router as audit_log_router,
+)
 from src.modules.auth.presentation.routes.local_auth_router import (
     router as local_auth_router,
 )
@@ -60,6 +63,7 @@ for module_router in (
     api_key_router,
     project_router,
     entry_router,
+    audit_log_router,
     month_router,
     mood_router,
     calendar_router,

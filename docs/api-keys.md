@@ -56,17 +56,36 @@ This is the rule the whole design leans on.
 
 - `get_current_user` **refuses API keys outright**. Every route that depends on
   it stays human-only, unchanged, with no audit to rework.
-- A new dependency, `require_scope(ApiKeyScope.CATALOG_READ)`, accepts a key and nothing
-  else it was not given.
 - A route becomes machine-reachable only by asking for it, explicitly, one
   route at a time.
 
-In V1 exactly one route opts in: `export_catalog`. Write scopes exist in the
-vocabulary and in the form, but no route accepts them yet — the first one to do
-so will be a deliberate act, not a side effect.
-
 A key never inherits its owner's role. `get_current_manager` is unreachable by
 a key, because `get_current_user` is.
+
+### Two doors, and when each is right
+
+`require_scope(scope)` opens a route to a machine **and to nobody else**. That
+is right for the catalogue export: no screen calls it, and the team has no
+business there.
+
+`open_to_machines(scope)` **adds** a door to a route the team already comes
+through. Whoever signed in keeps coming in exactly as before; a key gains a way
+in beside them. Every scope but `catalog:read` is wired this way, because every
+other route a machine wants is one a screen already reads.
+
+The header decides which door, once, on the `jns_` prefix — the same reading
+`get_current_user` does to turn a key away. A key that is refused is **not**
+tried again as though a person had called.
+
+`get_current_user` is called rather than declared inside that door. FastAPI
+resolves every declared dependency, so a key would be refused by the human door
+before the machine one was ever consulted. `teammate_or_machine` is the wrapper
+that makes the difference, and it is a dependency in its own right so that a
+test can stand a teammate at the door without standing the door down.
+
+What a route gets back is a `Caller`: an `actor_id` either way, and the key
+when a machine called. A write records an actor whoever knocked; a read ignores
+it, as it already ignored the user.
 
 ## Service accounts
 
@@ -99,7 +118,16 @@ payload = {"field": "…", "api_key": "jns_ab12cd34ef56"}
 ```
 
 The trace says both *what* did it and *who answers for it*, and not one of the
-twenty-odd use cases changes shape.
+twenty-odd use cases changes shape. That promise is now kept by a decorator,
+`MachineStampedAuditLog`: `get_audit_log_repository` wraps the plain repository
+when the request carries one of our tokens, and every line written through it
+names the key. What writes the log never learns what a machine is.
+
+**The key is read from the public half of the token alone** — no lookup, no
+hash, no authentication — and that is not a shortcut. A line is only ever
+written on a route that opened its own machine door and checked the key there;
+a forged token never reaches a use case. What is stamped is a lookup handle,
+which is not a secret and is exactly what the table of keys already shows.
 
 > **The V2 that reads better.** A true machine actor — `actor_id` nullable, a
 > new `api_key_id` column on `audit_log`, an `Actor` value object replacing
@@ -161,15 +189,47 @@ scheme, nothing new for a client to learn — GitHub does exactly this with
 A closed enumeration, `resource:verb`. Each member names what a route needs,
 not what a screen shows.
 
-```
-all:read          every read, including ones not invented yet
-all:write         every write, same
+**Every scope listed opens at least one route.** That is not a remark, it is a
+test — `test_every_scope_the_form_offers_opens_a_route` walks what the doors
+registered at import time and fails on a member nothing asks for. The first
+round shipped four scopes of which one was wired; the table of keys said what a
+key opened and said it wrong, and a key minted on « Projets (écriture) » opened
+nothing at all. A promise the API does not keep is worse than a missing box.
 
-catalog:read      the service catalogue    ← the only one V1 wires to a route
-projects:read
-projects:write
-entries:read
-```
+| Scope | What it opens | What it deliberately does not |
+|---|---|---|
+| `catalog:read` | `GET /projects/catalog` — machine-only | — |
+| `roadmap:read` | `GET /planning/roadmap` | the projection and the simulations: an arbitration, not a reading |
+| `stats:read` | `GET /stats` | — |
+| `projects:read` | `GET /projects`, `/projects/{id}`, `/projects/board` | — |
+| `projects:write` | create, correct, change phase, archive, unarchive, import | delete, attach/detach, staff, move a card, and the whole service sheet |
+| `updates:write` | `POST /projects/{id}/updates` | correcting and removing a post |
+| `entries:read` | `GET /entries/export` | writing time, in any form |
+| `users:read` | `GET /users` | role, activation, identity |
+| `audit:read` | `GET /audit-logs` | — there is nothing to write |
+
+### Why those, and not the others
+
+- **The roadmap, not the plan.** The roadmap is the screen that is *shown* —
+  to a committee, to a department — so a build that publishes it outside
+  Ganesh is doing what it is for. Planification is arbitrated: one reorders a
+  backlog and puts people on missions to see what it would cost. A machine has
+  no question to put.
+- **Reading the directory, never writing it.** A role and an activation are a
+  manager's gestures, and a key carries no role. `users:write` would hand a
+  machine the very power the design refuses it.
+- **Writing the reference list, not restructuring it.** Creating, correcting
+  and importing are a reprise of data — the CSV import is already that
+  gesture, done by hand. Deleting, attaching and staffing restructure; a
+  card's rank steers nothing and is not even in the log.
+- **The service sheet stays human.** It is filled in Ganesh and nowhere else,
+  which is exactly why waat.tools *reads* the catalogue rather than writing it.
+- **Time is read, never written.** A validated month, a day that is not a
+  working one, a total that may not exceed one: rules a person is told about on
+  screen and argues with. A machine would only ever be told « 422 ».
+- **The moods are reachable by nothing**, and that is not an omission. They are
+  given in confidence; a log of who felt what is not a log, and a scope that
+  opened them would be a broken promise, not a feature.
 
 A key with no scope can do nothing — that is a valid, useless key, and the form
 does not produce one.
@@ -185,6 +245,13 @@ every read, and — the fault that actually showed up in the browser — ticking
 « Tous » after the other trapped the first one checked and unremovable. Two
 switches, no implication.
 
+**A broad scope covers what a route opens to machines, never what the API
+knows.** The distinction was not worth writing down while everything the
+product held was fair game; it is now, because the moods are deliberately shut.
+A resource stays shut by no route opting in, and `all:read` cannot talk it
+open. What the two do carry is every scope **added later** — that is the price
+of breadth, and the reason the form says so where the box is ticked.
+
 > **This reverses what an earlier draft of this document said**, which was
 > « grow it by adding a member, never by inventing a wildcard ». The reversal is
 > deliberate and it has a price: a broad scope covers routes that **do not exist
@@ -197,6 +264,35 @@ The form ticks and **locks** what a broad scope carries, naming where each
 locked box gets its right from. Only what is not covered is sent: the server
 derives the rest from `ApiKey.grants`, and a stored list of redundant scopes
 would only make the table harder to read.
+
+The picker sets the two apart, above a rule. They are a different kind of
+decision from the nine beneath them — a reach granted once and for all,
+including over what does not exist yet — and reading them as the first two
+items of one long list is what gets them ticked by accident.
+
+## Two routes that had to exist first
+
+Two scopes named a resource the API held and had no way to hand over. Wiring
+them to what existed would have produced a scope that was technically true and
+practically useless, which is the same fault in a different coat.
+
+**`GET /entries/export?from_day=&to_day=`** — every entry of a window, whoever
+declared it, on whatever mission, each row carrying the names that make it
+readable beside the ids that make two pulls reconcilable. The grid answers one
+person's question — my month — and looping over it would have made a caller
+redo the join N people by M months. Capped at a year and a day: a guard on a
+route a machine calls, not a business rule.
+
+Declared **on** the window, not declared *during* it. A day entered late comes
+out under the day it is about, which is what a register is for — and why the
+same window pulled twice can differ.
+
+**`GET /audit-logs?limit=&offset=&since=`** — the whole log, most recent first.
+A mission's « Journal » tab answers « what happened to this project »; this
+answers « what happened », which is the question an archive puts and one no
+screen puts. `since` is what makes an incremental pull possible: a reader
+holding everything up to a moment asks for what came after, rather than paging
+back through a log that only grows.
 
 ## Who sees what
 
@@ -393,18 +489,24 @@ Named so nobody wonders whether they were forgotten:
   the consumer over, revoke the old one. Two live keys for one account is V2,
   and it is what would make a mandatory expiry bearable.
 - **IP allowlists.**
-- **A true machine actor in the audit.** See *Traceability*.
+- **A true machine actor in the audit.** See *Traceability*. The payload names
+  the key today, which is what makes that upgrade a refactor rather than a data
+  migration.
+- **Writing time with a key.** See *Why those, and not the others*.
+- **A per-key allowance.** One bucket for all of them, still. A CI that
+  legitimately needs more than a script is a reason to add a column.
 
 ## Files that matter
 
 | Path | Why |
 |---|---|
-| `server/src/modules/auth/presentation/dependencies.py` | where `require_scope` goes, beside the Entra path that must keep refusing keys |
-| `server/src/modules/auth/presentation/identity.py` | why a machine token is refused today |
+| `server/src/modules/api_keys/presentation/dependencies.py` | both doors, the `Caller` they hand over, and `OPENED_SCOPES` |
+| `server/src/modules/auth/presentation/dependencies.py` | the Entra path that must keep refusing keys |
+| `server/src/modules/auth/presentation/identity.py` | why a machine token is refused there |
 | `server/src/modules/users/domain/entities/user.py` | `LOGIN_FRESHNESS`, the pattern `last_used_at` copies |
-| `server/src/modules/audit_logs/domain/entities/audit_log.py` | where the two new actions go |
-| `server/src/modules/projects/infrastructure/database/models/project_detail_models.py` | `ProjectDepartmentModel`, the shape `api_key_scopes` copies |
-| `server/src/modules/projects/presentation/api/routes/project_router.py` | `export_catalog`, the one route that opts in |
-| `server/src/modules/entries/presentation/api/routes/entry_router.py` | why there is no per-user data scope to lean on |
-| `client/src/components/organisms/AppSidebar.tsx` | the navigation |
-| `client/src/components/organisms/UsersPage.tsx` | the closest screen to copy: a table with manager-only actions |
+| `server/src/modules/audit_logs/infrastructure/machine_stamped_repository.py` | how a line comes to name the key that wrote it |
+| `server/src/modules/entries/presentation/dependencies.py` | where that decorator is put on, and why it needs no lookup |
+| `server/src/modules/projects/presentation/api/routes/project_router.py` | the four doors of the reference list, and what each leaves alone |
+| `server/tests/modules/api_keys/presentation/test_open_to_machines.py` | the door under test, and the scope that must open a route |
+| `client/src/lib/api-keys.ts` | what the form offers, and the test that keeps it level with the API |
+| `client/src/components/molecules/ScopePicker.tsx` | the broad two set apart, above a rule |

@@ -1,6 +1,6 @@
 """SQLAlchemy implementation of the AuditLogRepository port."""
 
-from datetime import date
+from datetime import date, datetime
 
 from sqlalchemy import and_, extract, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -89,4 +89,27 @@ class SqlAuditLogRepository(AuditLogRepository):
             .select_from(AuditLogModel)
             .where(AuditLogModel.project_id == project_id)
         )
+        return result.scalar_one()
+
+    async def list_all(
+        self, limit: int, offset: int, since: datetime | None = None
+    ) -> list[AuditLog]:
+        query = select(AuditLogModel)
+        if since is not None:
+            query = query.where(AuditLogModel.at >= since)
+        # The same tie-break as a mission's page, for the same reason: one
+        # gesture that changed several fields wrote several lines at one
+        # timestamp, and a page reordering them would show one twice.
+        result = await self._session.execute(
+            query.order_by(AuditLogModel.at.desc(), AuditLogModel.id.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return [to_entity(model) for model in result.scalars().all()]
+
+    async def count_all(self, since: datetime | None = None) -> int:
+        query = select(func.count()).select_from(AuditLogModel)
+        if since is not None:
+            query = query.where(AuditLogModel.at >= since)
+        result = await self._session.execute(query)
         return result.scalar_one()
