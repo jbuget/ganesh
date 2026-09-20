@@ -19,6 +19,11 @@ interface ScopePickerProps {
  * one per verb — neither locks the other, so ticking both stays possible and
  * each stays untickable back.
  *
+ * The two broad ones stand apart, above a rule: they are a different kind of
+ * decision from the nine beneath them — a reach granted once and for all,
+ * including over what does not exist yet — and reading them as the first two
+ * items of one long list is what makes them get ticked by accident.
+ *
  * Shared by the creation dialog and the panel: what a key opens must read the
  * same whether one is minting it or correcting it.
  */
@@ -33,14 +38,20 @@ export function ScopePicker({ value, onChange, disabled = false }: ScopePickerPr
 
   return (
     <div className="space-y-1.5">
-      {SCOPES.map((scope) => {
+      {SCOPES.map((scope, index) => {
         const covering = coveredBy(scope.value, value);
+        // The first scope that is not a « Tous » opens the precise ones.
+        const opensThePreciseOnes =
+          index > 0 &&
+          !scope.value.startsWith("all:") &&
+          SCOPES[index - 1].value.startsWith("all:");
         const locked = disabled || covering !== null;
         return (
           <label
             key={scope.value}
             className={[
               "flex items-start gap-2 text-sm",
+              opensThePreciseOnes ? "mt-2.5 border-t border-slate-200 pt-2.5" : "",
               locked ? "cursor-default" : "cursor-pointer",
             ].join(" ")}
           >

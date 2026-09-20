@@ -19,6 +19,12 @@
  *
  * What they cover includes scopes that **do not exist yet**: that is the
  * price of breadth, and the reason the form says so.
+ *
+ * **A broad scope covers what a route opens to machines, never what the API
+ * knows.** The distinction only became worth writing down once the product
+ * held something deliberately closed: the moods are given in confidence, and
+ * no scope reaches them because no route asks for one. A resource stays shut
+ * by a route not opting in, and `all:read` cannot talk it open.
  */
 export type ApiKeyScope = (typeof ApiKeyScope)[keyof typeof ApiKeyScope];
 
@@ -26,7 +32,12 @@ export const ApiKeyScope = {
   "all:read": "all:read",
   "all:write": "all:write",
   "catalog:read": "catalog:read",
+  "roadmap:read": "roadmap:read",
+  "stats:read": "stats:read",
   "projects:read": "projects:read",
   "projects:write": "projects:write",
+  "updates:write": "updates:write",
   "entries:read": "entries:read",
+  "users:read": "users:read",
+  "audit:read": "audit:read",
 } as const;

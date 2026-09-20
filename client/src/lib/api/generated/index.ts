@@ -1,5 +1,6 @@
 export * from "./activity/activity";
 export * from "./api-keys/api-keys";
+export * from "./audit-logs/audit-logs";
 export * from "./auth/auth";
 export * from "./calendar/calendar";
 export * from "./entries/entries";

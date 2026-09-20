@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import { ApiKeyScope } from "@/lib/api/generated/model";
 import type { ApiKeyResponse } from "@/lib/api/generated/model";
 import {
+  SCOPES,
   coveredBy,
   isUsable,
   oneYearFromNow,
@@ -143,5 +145,21 @@ describe("pruneCovered", () => {
       "all:read",
       "all:write",
     ]);
+  });
+});
+
+describe("the catalogue the form offers", () => {
+  it("lists every scope the API knows, in its order", () => {
+    // A scope the API carries and the form leaves out cannot be granted; one
+    // the form carries and the API does not cannot be honoured. Neither is
+    // something a reader of the table would ever find out.
+    expect(SCOPES.map((scope) => scope.value)).toEqual(Object.values(ApiKeyScope));
+  });
+
+  it("says in French what each one opens", () => {
+    for (const scope of SCOPES) {
+      expect(scope.label).not.toBe("");
+      expect(scope.hint).not.toBe("");
+    }
   });
 });
