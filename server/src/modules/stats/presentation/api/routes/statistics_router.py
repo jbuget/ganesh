@@ -5,11 +5,11 @@ from datetime import date
 from fastapi import APIRouter, Depends, Query
 
 from src.modules.auth.presentation.dependencies import get_current_user
+from src.modules.calendar.domain.entities.period import PeriodRange
 from src.modules.stats.application.dtos.statistics_dto import StatisticsQuery
 from src.modules.stats.application.use_cases.compute_statistics import (
     ComputeStatisticsUseCase,
 )
-from src.modules.stats.domain.entities.period import PeriodRange
 from src.modules.stats.presentation.api.mappers.statistics_mapper import (
     to_statistics_response,
 )

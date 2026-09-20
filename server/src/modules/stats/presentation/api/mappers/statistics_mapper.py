@@ -1,6 +1,6 @@
 """Turns the dashboard of a window into what the screen reads."""
 
-from src.modules.stats.domain.entities.period import PeriodRange
+from src.modules.calendar.domain.entities.period import PeriodRange
 from src.modules.stats.domain.entities.statistics import Statistics
 from src.modules.stats.presentation.api.schemas.statistics_schemas import (
     AdoptionResponse,

@@ -10,6 +10,7 @@ from src.modules.audit_logs.domain.entities.audit_log import AuditAction
 from src.modules.audit_logs.infrastructure.database.models.audit_log_model import (
     AuditLogModel,
 )
+from src.modules.calendar.domain.entities.period import Period
 from src.modules.entries.infrastructure.database.models.entry_model import EntryModel
 from src.modules.months.domain.entities.month import MonthState
 from src.modules.months.infrastructure.database.models.month_model import MonthModel
@@ -21,7 +22,6 @@ from src.modules.projects.domain.entities.project import (
 from src.modules.projects.infrastructure.database.models.project_model import (
     ProjectModel,
 )
-from src.modules.stats.domain.entities.period import Period
 from src.modules.stats.domain.repositories.statistics_repository import (
     StatisticsRepository,
 )

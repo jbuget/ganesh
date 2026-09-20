@@ -12,6 +12,7 @@ from src.modules.audit_logs.domain.entities.audit_log import AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
+from src.modules.calendar.domain.entities.period import Period
 from src.modules.entries.domain.entities.entry import Entry
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.entries.domain.repositories.user_mission_repository import (
@@ -47,7 +48,6 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
-from src.modules.stats.domain.entities.period import Period
 from src.modules.stats.domain.repositories.statistics_repository import (
     StatisticsRepository,
 )

@@ -1,8 +1,8 @@
 """Reads the figures of one window and assembles the dashboard."""
 
+from src.modules.calendar.domain.entities.period import Period
 from src.modules.projects.domain.entities.project import ProjectKind
 from src.modules.stats.application.dtos.statistics_dto import StatisticsQuery
-from src.modules.stats.domain.entities.period import Period
 from src.modules.stats.domain.entities.statistics import (
     Adoption,
     Coverage,

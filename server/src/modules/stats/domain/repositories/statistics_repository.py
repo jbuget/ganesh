@@ -3,12 +3,12 @@
 from abc import ABC, abstractmethod
 from datetime import date
 
+from src.modules.calendar.domain.entities.period import Period
 from src.modules.projects.domain.entities.project import (
     ProjectCategory,
     ProjectKind,
     ProjectStatus,
 )
-from src.modules.stats.domain.entities.period import Period
 
 
 class StatisticsRepository(ABC):

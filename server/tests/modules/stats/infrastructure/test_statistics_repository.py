@@ -9,6 +9,7 @@ from src.modules.audit_logs.domain.entities.audit_log import AuditLog
 from src.modules.audit_logs.infrastructure.database.repositories.audit_log_repository_impl import (
     SqlAuditLogRepository,
 )
+from src.modules.calendar.domain.entities.period import Period
 from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.entries.infrastructure.database.repositories.entry_repository_impl import (
     SqlEntryRepository,
@@ -26,7 +27,6 @@ from src.modules.projects.domain.entities.project import (
 from src.modules.projects.infrastructure.database.repositories.project_repository_impl import (
     SqlProjectRepository,
 )
-from src.modules.stats.domain.entities.period import Period
 from src.modules.stats.infrastructure.database.repositories.statistics_repository_impl import (
     SqlStatisticsRepository,
 )

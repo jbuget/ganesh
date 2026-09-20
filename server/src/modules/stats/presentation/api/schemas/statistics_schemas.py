@@ -8,8 +8,8 @@ from datetime import date
 
 from pydantic import BaseModel
 
+from src.modules.calendar.domain.entities.period import PeriodRange
 from src.modules.projects.domain.entities.project import ProjectCategory, ProjectStatus
-from src.modules.stats.domain.entities.period import PeriodRange
 
 
 class PeriodResponse(BaseModel):
