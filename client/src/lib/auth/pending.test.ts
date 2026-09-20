@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { appOrigin, landingUrl, openPending, safeLanding, sealPending } from "./pending";
+import {
+  appOrigin,
+  landingUrl,
+  openPending,
+  safeLanding,
+  sealPending,
+} from "./pending";
 
 describe("the secrets of a sign-in under way", () => {
   beforeEach(() => {
