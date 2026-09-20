@@ -170,17 +170,21 @@ export function formatMonthOf(iso: string): string {
 }
 
 /**
- * Today, in ISO format, read from the local clock.
+ * A date in ISO format, read from the local clock.
  *
  * Built by hand rather than through `toISOString`, which works in UTC: past
  * 22:00 in Paris it would already return tomorrow's date, and the grid would
  * dim a day that has not started.
  */
+export function isoDay(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/** Today, in ISO format. */
 export function todayIso(): string {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${now.getFullYear()}-${month}-${day}`;
+  return isoDay(new Date());
 }
 
 /** A month as an address carries it: « 2026-08 ». */

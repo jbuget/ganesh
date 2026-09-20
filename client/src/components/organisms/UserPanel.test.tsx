@@ -6,6 +6,23 @@ import type { UserResponse } from "@/lib/api/generated/model";
 
 import { UserPanel } from "./UserPanel";
 
+/**
+ * The record is read by the panel itself. Its three sections have their own
+ * tests: what is asked here is that the panel puts them where it says.
+ */
+const record = vi.hoisted(() => ({ current: null as unknown }));
+
+vi.mock("@/lib/api/queries", () => ({
+  useUserRecord: () => ({ record: record.current, isLoading: false }),
+}));
+
+const emptyRecord = {
+  user_id: 1,
+  missions: [],
+  declared: { since: "2026-08-19", until: "2026-09-17", days: 0, missions: [] },
+  months: [],
+};
+
 const jeremy: UserResponse = {
   id: 1,
   email: "j.buget@waat.fr",
@@ -44,6 +61,7 @@ function openPanel(
 
 describe("UserPanel", () => {
   beforeEach(() => {
+    record.current = emptyRecord;
     onChangeRole.mockClear();
     onUpdateIdentity.mockClear();
     onSetActive.mockClear();
@@ -215,5 +233,60 @@ describe("UserPanel", () => {
     await userEvent.click(screen.getByRole("button", { name: "Fermer" }));
 
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("leads to that teammate's own month", () => {
+    openPanel();
+
+    expect(
+      screen.getByRole("link", { name: "Ouvrir sa feuille de temps" }),
+    ).toHaveAttribute("href", "/timesheet?user=1");
+  });
+
+  it("gives what the teammate carries, beside what the account is", () => {
+    record.current = {
+      ...emptyRecord,
+      missions: [
+        {
+          project_id: 4,
+          label: "WAATcher",
+          status: "development",
+          is_lead: true,
+        },
+      ],
+      declared: {
+        since: "2026-08-19",
+        until: "2026-09-17",
+        days: 2,
+        missions: [
+          { project_id: 4, label: "WAATcher", days: 2, is_off_project: false },
+        ],
+      },
+      months: [
+        {
+          month: "2026-09-01",
+          delivered: 11,
+          forecast: 0,
+          working_days: 22,
+          elapsed_working_days: 13,
+          state: "open",
+          validated_at: null,
+        },
+      ],
+    };
+    openPanel();
+
+    expect(screen.getByRole("heading", { name: "Projets" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Temps déclaré" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Feuilles de temps" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("septembre 2026")).toBeInTheDocument();
+  });
+
+  it("says a teammate carries no project rather than leaving a blank", () => {
+    openPanel();
+
+    expect(screen.getByText("Aucun projet")).toBeInTheDocument();
   });
 });

@@ -16,13 +16,18 @@ import type {
   ActivitySummaryResponse,
   StatisticsResponse,
   TeamMoodsResponse,
+  UserRecordResponse,
   UserResponse,
 } from "@/lib/api/generated/model";
 import { useGetMyMoods, useGetTeamMoods } from "@/lib/api/generated/moods/moods";
 import { useGetActivity } from "@/lib/api/generated/activity/activity";
 import { useGetStatistics } from "@/lib/api/generated/stats/stats";
 import { useListProjects } from "@/lib/api/generated/projects/projects";
-import { useGetMe, useListUsers } from "@/lib/api/generated/users/users";
+import {
+  useGetMe,
+  useGetUserRecord,
+  useListUsers,
+} from "@/lib/api/generated/users/users";
 
 function successOf<T>(response: { data: unknown } | undefined): T | undefined {
   return response?.data as T | undefined;
@@ -80,6 +85,18 @@ export function useMonthGrid(month: string, userId: number | null, enabled: bool
     { query: { enabled } },
   );
   return { ...query, grid: successOf<MonthGridResponse>(query.data) };
+}
+
+/**
+ * What the register holds on one teammate: missions, declared time, months.
+ *
+ * Read apart from the list: the panel is opened on one person at a time, and
+ * asking the same of everyone would cost a read per row for something nobody
+ * looks at until they open it.
+ */
+export function useUserRecord(userId: number) {
+  const query = useGetUserRecord(userId);
+  return { ...query, record: successOf<UserRecordResponse>(query.data) };
 }
 
 /** The dashboard of one window. */
