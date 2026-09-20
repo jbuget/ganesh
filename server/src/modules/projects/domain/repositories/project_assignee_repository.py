@@ -24,6 +24,16 @@ class ProjectAssigneeRepository(ABC):
         ...
 
     @abstractmethod
+    async def list_for_user(self, user_id: int) -> dict[int, list[ProjectRole]]:
+        """The missions one person is attached to, and on what grounds.
+
+        The mirror of `list_for_project`: a mission says who works on it, and
+        a teammate says what they work on. Both roles come back together —
+        the same person often holds both on the same mission.
+        """
+        ...
+
+    @abstractmethod
     async def assign(self, project_id: int, user_id: int, role: ProjectRole) -> None:
         """Gives someone a role. No effect if they already hold it."""
         ...

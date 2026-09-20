@@ -1,20 +1,28 @@
 "use client";
 
-import { X } from "lucide-react";
+import { CalendarDays, X } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { DeactivateUserDialog } from "@/components/atoms/DeactivateUserDialog";
 import { InlineTextField } from "@/components/atoms/InlineTextField";
 import { OptionPicker } from "@/components/atoms/OptionPicker";
 import { RolePicker } from "@/components/atoms/RolePicker";
+import { SheetRow } from "@/components/atoms/SheetRow";
+import { SheetSectionTitle } from "@/components/atoms/SheetSectionTitle";
 import { SidePanel } from "@/components/atoms/SidePanel";
 import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { UserAvatar } from "@/components/atoms/UserAvatar";
+import { UserDeclaredDays } from "@/components/molecules/UserDeclaredDays";
+import { UserMissions } from "@/components/molecules/UserMissions";
+import { UserMonths } from "@/components/molecules/UserMonths";
 import type {
   Role,
   UpdateUserIdentityRequest,
   UserResponse,
 } from "@/lib/api/generated/model";
+import { useUserRecord } from "@/lib/api/queries";
+import { isoDay } from "@/lib/dates";
 import { DEPARTMENTS } from "@/lib/departments";
 import { since } from "@/lib/relative-dates";
 
@@ -38,28 +46,18 @@ interface UserPanelProps {
 }
 
 /**
- * One row of the sheet: its heading on the left, its value on the right.
- *
- * The same grammar as the mission sheet — a constant heading width gives the
- * top-to-bottom scan something to lean on.
- */
-function Row({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-3 py-1.5">
-      <span className="w-36 shrink-0 pt-0.5 text-sm text-slate-500">{title}</span>
-      <div className="min-w-0 flex-1 text-sm">{children}</div>
-    </div>
-  );
-}
-
-/**
  * A teammate, opened beside the list.
  *
- * What one reads about an account comes from Entra and cannot be edited here:
- * only what Ganesh decides — who is behind it, where they work, the role and
- * the access — is given away. The list
- * behind stays visible, so one compares two colleagues without walking back
- * through a page each time.
+ * Two halves, in that order: what the account is, then what the person
+ * carries. The first comes from Entra and cannot be edited here — only what
+ * Ganesh decides of it, who is behind it, where they work, the role and the
+ * access. The second is read and never written: the projects they were put
+ * on, where their time went lately, and where their monthly sheets stand.
+ * Each of those leads somewhere — a project sheet, a month — because reading
+ * the panel is what tells one where to go next.
+ *
+ * The list behind stays visible, so one compares two colleagues without
+ * walking back through a page each time.
  */
 export function UserPanel({
   user,
@@ -73,6 +71,9 @@ export function UserPanel({
   onClose,
 }: UserPanelProps) {
   const [askingDeactivation, setAskingDeactivation] = useState(false);
+  // Asked for here rather than by the list: a record is read for the one
+  // teammate somebody opened, never for the thirty rows behind.
+  const { record, isLoading } = useUserRecord(user.id);
 
   return (
     <SidePanel label={user.display_name} onClose={onClose}>
@@ -86,6 +87,16 @@ export function UserPanel({
           {user.display_name}
         </h2>
 
+        {/* The month is what one goes to next, whether to read it or to fill
+            it in for somebody away: everything below says something about it. */}
+        <Link
+          href={`/timesheet?user=${user.id}`}
+          aria-label="Ouvrir sa feuille de temps"
+          className="cursor-pointer rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+        >
+          <CalendarDays className="size-4" aria-hidden />
+        </Link>
+
         <button
           type="button"
           aria-label="Fermer"
@@ -97,32 +108,34 @@ export function UserPanel({
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4">
-        <Row title="Email">
+        <SheetSectionTitle>Compte</SheetSectionTitle>
+
+        <SheetRow title="Email">
           {/* First, because it is the only thing that never moves: Entra's
               address identifies the account, everything below describes who
               holds it. */}
-          <span className="text-slate-700">{user.email}</span>
-        </Row>
+          <span className="text-sm text-slate-700">{user.email}</span>
+        </SheetRow>
 
-        <Row title="Prénom">
+        <SheetRow title="Prénom">
           <InlineTextField
             value={user.first_name}
             label="Prénom"
             editable={editable}
             onChange={(first_name) => onUpdateIdentity(user, { first_name })}
           />
-        </Row>
+        </SheetRow>
 
-        <Row title="Nom">
+        <SheetRow title="Nom">
           <InlineTextField
             value={user.last_name}
             label="Nom"
             editable={editable}
             onChange={(last_name) => onUpdateIdentity(user, { last_name })}
           />
-        </Row>
+        </SheetRow>
 
-        <Row title="GitHub">
+        <SheetRow title="GitHub">
           {/* The handle alone: the prefix says the address is already known,
               and what is asked for is the part that completes it. */}
           <InlineTextField
@@ -133,9 +146,9 @@ export function UserPanel({
             editable={editable}
             onChange={(github_username) => onUpdateIdentity(user, { github_username })}
           />
-        </Row>
+        </SheetRow>
 
-        <Row title="Département">
+        <SheetRow title="Département">
           {/* One department, where a mission may serve several: one works in a
               department, one does not belong to two. The list is the missions'
               own — steering compares the two sides, and could not if the names
@@ -147,17 +160,17 @@ export function UserPanel({
             editable={editable}
             onChange={(department) => onUpdateIdentity(user, { department })}
           />
-        </Row>
+        </SheetRow>
 
-        <Row title="Rôle">
+        <SheetRow title="Rôle">
           <RolePicker
             role={user.role}
             modifiable={roleModifiable}
             onChange={(role) => onChangeRole(user.id, role)}
           />
-        </Row>
+        </SheetRow>
 
-        <Row title="Statut">
+        <SheetRow title="Statut">
           <StatusBadge
             is_active={user.is_active}
             modifiable={canChangeStatus}
@@ -167,21 +180,50 @@ export function UserPanel({
               is_active ? onSetActive(user.id, true) : setAskingDeactivation(true)
             }
           />
-        </Row>
+        </SheetRow>
 
-        <Row title="Dernière connexion">
+        <SheetRow title="Dernière connexion">
           {/* An account that never came is not « long ago »: it never came. */}
           {user.last_login_at ? (
-            <span className="text-slate-700">
+            <span className="text-sm text-slate-700">
               {since(user.last_login_at, now)}
               <span className="ml-2 text-xs text-slate-400">
                 {new Date(user.last_login_at).toLocaleString("fr-FR")}
               </span>
             </span>
           ) : (
-            <span className="text-slate-400">Jamais</span>
+            <span className="text-sm text-slate-400">Jamais</span>
           )}
-        </Row>
+        </SheetRow>
+
+        {/* What the account is comes first and is edited here; what the person
+            carries follows, and is only read. */}
+        <div className="mt-6 space-y-6">
+          {isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
+
+          {record && (
+            <>
+              <section className="space-y-2">
+                <SheetSectionTitle>Projets</SheetSectionTitle>
+                <UserMissions missions={record.missions} />
+              </section>
+
+              <section className="space-y-2">
+                <SheetSectionTitle>Temps déclaré</SheetSectionTitle>
+                <UserDeclaredDays declared={record.declared} />
+              </section>
+
+              <section className="space-y-2">
+                <SheetSectionTitle>Feuilles de temps</SheetSectionTitle>
+                <UserMonths
+                  months={record.months}
+                  userId={user.id}
+                  today={isoDay(now)}
+                />
+              </section>
+            </>
+          )}
+        </div>
       </div>
 
       <DeactivateUserDialog

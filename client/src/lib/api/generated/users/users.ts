@@ -26,6 +26,7 @@ import type {
   ListUsersParams,
   SetActiveRequest,
   UpdateUserIdentityRequest,
+  UserRecordResponse,
   UserResponse,
 } from "../model";
 
@@ -343,6 +344,171 @@ export function useListUsers<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListUsersQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getUserRecordResponse200 = {
+  data: UserRecordResponse;
+  status: 200;
+};
+
+export type getUserRecordResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type getUserRecordResponseSuccess = getUserRecordResponse200 & {
+  headers: Headers;
+};
+export type getUserRecordResponseError = getUserRecordResponse422 & {
+  headers: Headers;
+};
+
+export type getUserRecordResponse =
+  getUserRecordResponseSuccess | getUserRecordResponseError;
+
+export const getGetUserRecordUrl = (userId: number) => {
+  return `/api/v1/users/${userId}/record`;
+};
+
+/**
+ * What the register holds on a teammate. Open to the whole team.
+ *
+ * Anyone may look at anyone's month, so anyone may read what leads to it:
+ * the missions somebody is attached to, the time they declared lately, and
+ * where their months stand. Nothing here is a manager's secret — changing a
+ * role or an access still is.
+ * @summary Get User Record
+ */
+export const getUserRecord = async (
+  userId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<getUserRecordResponse> => {
+  return bffFetcher<getUserRecordResponse>(getGetUserRecordUrl(userId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetUserRecordQueryKey = (userId: number) => {
+  return [`/api/v1/users/${userId}/record`] as const;
+};
+
+export const getGetUserRecordQueryOptions = <
+  TData = Awaited<ReturnType<typeof getUserRecord>>,
+  TError = HTTPValidationError,
+>(
+  userId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getUserRecord>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetUserRecordQueryKey(userId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserRecord>>> = ({
+    signal,
+  }) => getUserRecord(userId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: userId !== null && userId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getUserRecord>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetUserRecordQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getUserRecord>>
+>;
+export type GetUserRecordQueryError = HTTPValidationError;
+
+export function useGetUserRecord<
+  TData = Awaited<ReturnType<typeof getUserRecord>>,
+  TError = HTTPValidationError,
+>(
+  userId: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getUserRecord>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserRecord>>,
+          TError,
+          Awaited<ReturnType<typeof getUserRecord>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetUserRecord<
+  TData = Awaited<ReturnType<typeof getUserRecord>>,
+  TError = HTTPValidationError,
+>(
+  userId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getUserRecord>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserRecord>>,
+          TError,
+          Awaited<ReturnType<typeof getUserRecord>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetUserRecord<
+  TData = Awaited<ReturnType<typeof getUserRecord>>,
+  TError = HTTPValidationError,
+>(
+  userId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getUserRecord>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get User Record
+ */
+
+export function useGetUserRecord<
+  TData = Awaited<ReturnType<typeof getUserRecord>>,
+  TError = HTTPValidationError,
+>(
+  userId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getUserRecord>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetUserRecordQueryOptions(userId, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

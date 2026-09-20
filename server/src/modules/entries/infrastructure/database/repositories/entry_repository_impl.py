@@ -60,6 +60,22 @@ class SqlEntryRepository(EntryRepository):
         )
         return [to_entity(model) for model in result.scalars().all()]
 
+    async def list_for_user_between(
+        self, user_id: int, start: date, end: date
+    ) -> list[Entry]:
+        result = await self._session.execute(
+            select(EntryModel)
+            .where(
+                and_(
+                    EntryModel.user_id == user_id,
+                    EntryModel.day >= start,
+                    EntryModel.day <= end,
+                )
+            )
+            .order_by(EntryModel.day)
+        )
+        return [to_entity(model) for model in result.scalars().all()]
+
     async def list_for_day(self, user_id: int, day: date) -> list[Entry]:
         result = await self._session.execute(
             select(EntryModel).where(

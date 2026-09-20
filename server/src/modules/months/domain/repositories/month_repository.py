@@ -16,4 +16,13 @@ class MonthRepository(ABC):
     async def list_for_month(self, month: date) -> list[Month]: ...
 
     @abstractmethod
+    async def list_for_user(self, user_id: int, since: date) -> list[Month]:
+        """The months one person already has a state for, `since` included.
+
+        A month nobody validated has no row: what comes back describes the
+        months that moved, and the caller reads the silence as « open ».
+        """
+        ...
+
+    @abstractmethod
     async def save(self, month: Month) -> Month: ...

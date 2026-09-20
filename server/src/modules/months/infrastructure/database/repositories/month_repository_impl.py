@@ -48,6 +48,19 @@ class SqlMonthRepository(MonthRepository):
         )
         return [to_entity(model) for model in result.scalars().all()]
 
+    async def list_for_user(self, user_id: int, since: date) -> list[Month]:
+        result = await self._session.execute(
+            select(MonthModel)
+            .where(
+                and_(
+                    MonthModel.user_id == user_id,
+                    MonthModel.month >= first_day_of(since),
+                )
+            )
+            .order_by(MonthModel.month)
+        )
+        return [to_entity(model) for model in result.scalars().all()]
+
     async def save(self, month: Month) -> Month:
         result = await self._session.execute(
             select(MonthModel).where(

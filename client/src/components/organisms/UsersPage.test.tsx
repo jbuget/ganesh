@@ -58,6 +58,18 @@ const order = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/use-users", () => ({ useUsersScreen: () => state }));
+/** The panel reads a record of its own; what it draws from it is tested there. */
+vi.mock("@/lib/api/queries", () => ({
+  useUserRecord: () => ({
+    record: {
+      user_id: 1,
+      missions: [],
+      declared: { since: "2026-08-19", until: "2026-09-17", days: 0, missions: [] },
+      months: [],
+    },
+    isLoading: false,
+  }),
+}));
 vi.mock("@/lib/opened-user", () => ({ useOpenedUser: () => panel }));
 vi.mock("@/lib/use-user-filters", () => ({ useUserFilters: () => criteria }));
 vi.mock("@/lib/use-user-sort", () => ({ useUserSort: () => order }));

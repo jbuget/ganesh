@@ -1,7 +1,6 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 
 import {
   addMissionToMonth,
@@ -43,11 +42,15 @@ export function useTimesheetMonth() {
   // screen links straight to the month it speaks of, and a month is shared by a
   // link. Absent, it is the month running — which is what one comes for.
   const query = useQueryString();
-  const cursor = parseMonthParam(new URLSearchParams(query).get("month")) ?? {
+  const params = new URLSearchParams(query);
+  const cursor = parseMonthParam(params.get("month")) ?? {
     year: Number(today.slice(0, 4)),
     month: Number(today.slice(5, 7)),
   };
-  const [viewedUserId, setViewedUserId] = useState<number | null>(null);
+  // The teammate being looked at lives in the address too, and under the same
+  // name as on the teammate list: a colleague's month is reached by a link —
+  // from their panel, from a reminder — and must survive a reload.
+  const viewedUserId = Number(params.get("user")) || null;
 
   const queryClient = useQueryClient();
   const month = firstDayOfMonth(cursor.year, cursor.month);
@@ -120,8 +123,12 @@ export function useTimesheetMonth() {
       goToMonth(nextMonth(cursor.year, cursor.month));
     },
 
+    /** Looking at someone else's month is a navigation: going back returns. */
     viewTeammate(userId: number) {
-      setViewedUserId(userId === me?.id ? null : userId);
+      writeUrl((params) => {
+        if (userId === me?.id) params.delete("user");
+        else params.set("user", String(userId));
+      });
     },
 
     /** A null value removes the entry; any other value writes it. */

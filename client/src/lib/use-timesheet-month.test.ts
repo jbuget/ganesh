@@ -120,4 +120,39 @@ describe("the month in the address", () => {
       screen.current.month.slice(0, 7),
     );
   });
+
+  it("reads the teammate being looked at from the address", () => {
+    // A colleague's month is reached by a link, from their panel: the screen
+    // must open on them rather than on oneself.
+    window.history.replaceState(null, "", "/timesheet?user=7");
+
+    expect(month().current.targetUserId).toBe(7);
+    expect(month().current.isOwnMonth).toBe(false);
+  });
+
+  it("puts the teammate one switches to in the address", () => {
+    const screen = month();
+
+    act(() => screen.current.viewTeammate(7));
+
+    expect(window.location.search).toBe("?user=7");
+  });
+
+  it("comes back to one's own month by leaving the address bare", () => {
+    window.history.replaceState(null, "", "/timesheet?user=7");
+    const screen = month();
+
+    act(() => screen.current.viewTeammate(1));
+
+    expect(window.location.search).toBe("");
+  });
+
+  it("keeps the month one is on when switching teammate", () => {
+    window.history.replaceState(null, "", "/timesheet?month=2026-08");
+    const screen = month();
+
+    act(() => screen.current.viewTeammate(7));
+
+    expect(window.location.search).toBe("?month=2026-08&user=7");
+  });
 });
