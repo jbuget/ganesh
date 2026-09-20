@@ -15,7 +15,7 @@ from drifting apart is that this one names four gestures and counts the rest,
 rather than translating all twenty-six.
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 
 from src.mcp.door import answers, current_machine
 from src.mcp.tools import say
@@ -27,6 +27,7 @@ from src.modules.audit_logs.presentation.dependencies import (
 )
 from src.modules.projects.presentation.dependencies import get_project_detail_use_case
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
+from src.shared.utils import clock
 
 SCOPE = ApiKeyScope.AUDIT_READ
 
@@ -83,12 +84,19 @@ async def what_changed(project_id: int, since: str | None = None) -> str:
 
 
 def _moment(since: str | None) -> datetime | None:
+    """The instant the window opens, on the clock the register is kept by.
+
+    Aware of its zone, always: what the log holds is aware too, and comparing
+    the two otherwise raises rather than answering. A day given as « 2026-09-01 »
+    opens at midnight in Paris, which is the midnight whoever typed it meant.
+    """
     if since is None:
-        return datetime.now() - DEFAULT_SPAN
+        return clock.now() - DEFAULT_SPAN
     try:
-        return datetime.combine(date.fromisoformat(since.strip()), datetime.min.time())
+        opened = datetime.combine(date.fromisoformat(since.strip()), time.min)
     except (ValueError, TypeError):
         return None
+    return clock.as_instant(opened)
 
 
 def _read(lines: list[SignedAuditLog]) -> list[str]:

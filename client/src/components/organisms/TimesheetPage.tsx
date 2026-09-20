@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/atoms/PageHeader";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { RemoveMissionDialog } from "@/components/atoms/RemoveMissionDialog";
+import { ReopenMonthDialog } from "@/components/atoms/ReopenMonthDialog";
 import { TeammateSelector } from "@/components/atoms/TeammateSelector";
 import { ValidateMonthDialog } from "@/components/atoms/ValidateMonthDialog";
 import { TimesheetGrid } from "@/components/organisms/TimesheetGrid";
@@ -29,6 +30,7 @@ export function TimesheetPage() {
 
   const [declareOpen, setDeclareOpen] = useState(false);
   const [validateOpen, setValidateOpen] = useState(false);
+  const [reopenOpen, setReopenOpen] = useState(false);
   const [toRemove, setToRemove] = useState<{
     id: number;
     label: string;
@@ -62,8 +64,17 @@ export function TimesheetPage() {
                 onSelect={month.viewTeammate}
               />
 
-              {grid?.is_writable && month.isOwnMonth && (
+              {month.canValidate && (
                 <Button onClick={() => setValidateOpen(true)}>Valider le mois</Button>
+              )}
+
+              {/* Giving a month back to entry is a step backwards, not the
+                  outcome of the month: it does not carry the primary weight
+                  the validation does. */}
+              {month.canReopen && (
+                <Button variant="outline" onClick={() => setReopenOpen(true)}>
+                  Rouvrir le mois
+                </Button>
               )}
             </>
           }
@@ -118,10 +129,13 @@ export function TimesheetPage() {
         </p>
       )}
 
+      {/* Whoever can undo the lock is not told that someone else must: the
+          sentence follows what the reader can actually do about it. */}
       {grid && !grid.is_writable && (
         <p className="mb-4 rounded-md border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-700">
-          Ce mois est validé et ne peut plus être modifié. Seul un manager peut le
-          rouvrir.
+          {month.canReopen
+            ? "Ce mois est validé et n'accepte plus de saisie. Rouvrez-le pour le modifier."
+            : "Ce mois est validé et ne peut plus être modifié. Seul un manager peut le rouvrir."}
         </p>
       )}
 
@@ -181,6 +195,14 @@ export function TimesheetPage() {
           onOpenMission={(projectId) => panel.open(projectId)}
         />
       )}
+
+      <ReopenMonthDialog
+        open={reopenOpen}
+        onOpenChange={setReopenOpen}
+        month={formatMonth(cursor.year, cursor.month)}
+        teammate={month.viewedTeammateName}
+        onConfirm={month.reopen}
+      />
 
       {grid && (
         <ValidateMonthDialog

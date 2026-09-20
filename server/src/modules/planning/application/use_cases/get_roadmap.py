@@ -58,6 +58,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 )
 from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.shared.utils import clock
 
 #: Sorts last the missions whose bar starts nowhere. They have nothing to place
 #: on the axis, and pushing them to the bottom keeps the diagonal readable.
@@ -99,7 +100,7 @@ class GetRoadmapUseCase:
         which is the whole point of narrowing here rather than in the browser:
         « 8 projets, 2 en retard » above eight bars, and never above forty.
         """
-        now = today or date.today()
+        now = today or clock.today()
         default_from, default_to = rolling_window(now, months)
         window = ensure_ordered(from_day or default_from, to_day or default_to)
         opens_on, closes_on = window

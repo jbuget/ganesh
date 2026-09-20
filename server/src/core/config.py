@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     # clef partagee laisserait forger une session ailleurs.
     secret_key: str = ""
 
+    # La Gazette's chapeau. Without a key nothing breaks: numéros go out on
+    # their facts alone, which is what they are made of.
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-3.8-flash"
+
     # How often one API key may call, as a token bucket. Counted per process:
     # behind several workers the effective allowance is multiplied by their
     # number. Generous on purpose — this is a guard rail against a runaway

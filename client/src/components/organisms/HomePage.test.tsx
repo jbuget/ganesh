@@ -114,7 +114,7 @@ describe("HomePage", () => {
           update: {
             author: { id: 9, display_name: "Marie Martin", initials: "MM" },
             body: "Recette terminée",
-            published_at: "2026-09-18T10:00:00",
+            published_at: "2026-09-18T08:00:00Z",
           },
         },
       ],

@@ -20,7 +20,6 @@ from collections.abc import Awaitable, Callable, Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
-from datetime import datetime
 from functools import wraps
 from typing import Any, ParamSpec, TypeVar
 
@@ -46,6 +45,7 @@ from src.modules.api_keys.presentation.dependencies import (
     rate_headers,
 )
 from src.shared.exceptions.domain_exceptions import DomainError
+from src.shared.utils import clock
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -184,7 +184,7 @@ class MachineDoor:
             return _refused("Invalid API key.")
 
         assert caller.key.id is not None
-        decision = await rate_limit.execute(caller.key.id, datetime.now())
+        decision = await rate_limit.execute(caller.key.id, clock.now())
         if not decision.allowed:
             return JSONResponse(
                 status_code=429,

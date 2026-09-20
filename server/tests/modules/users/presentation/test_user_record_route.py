@@ -1,7 +1,6 @@
 """The route that publishes what the register holds on a teammate."""
 
 from collections.abc import AsyncIterator
-from datetime import date
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -19,6 +18,7 @@ from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.users.application.use_cases.get_user_record import GetUserRecordUseCase
 from src.modules.users.domain.entities.user import Role, User
 from src.modules.users.presentation.dependencies import get_user_record_use_case
+from src.shared.utils import clock
 from tests.helpers.in_memory_repositories import (
     InMemoryEntryRepository,
     InMemoryMonthRepository,
@@ -56,7 +56,7 @@ async def client() -> AsyncIterator[AsyncClient]:
                     id=None,
                     user_id=2,
                     project_id=1,
-                    day=date.today(),
+                    day=clock.today(),
                     value=DayValue(0.5),
                 )
             ]
@@ -93,7 +93,7 @@ async def test_the_record_publishes_the_window_it_was_read_over(
 ) -> None:
     body = (await client.get(URL)).json()
 
-    assert body["declared"]["until"] == date.today().isoformat()
+    assert body["declared"]["until"] == clock.today().isoformat()
     assert body["declared"]["days"] == 0.5
     assert body["declared"]["missions"][0]["label"] == "WAATcher"
 
@@ -106,7 +106,7 @@ async def test_the_record_publishes_six_months_newest_first(
     months = [filling["month"] for filling in body["months"]]
     assert len(months) == 6
     assert months == sorted(months, reverse=True)
-    assert months[0] == date.today().replace(day=1).isoformat()
+    assert months[0] == clock.today().replace(day=1).isoformat()
 
 
 async def test_an_unknown_teammate_is_a_404(client: AsyncClient) -> None:

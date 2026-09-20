@@ -3,6 +3,7 @@ import type {
   ApiKeyScope,
   ApiKeyState,
 } from "@/lib/api/generated/model";
+import { parisDay } from "@/lib/instants";
 
 /**
  * What the team reads about a service account.
@@ -142,9 +143,14 @@ export function sortKeys(keys: ApiKeyResponse[]): ApiKeyResponse[] {
   });
 }
 
-/** The expiry the form offers: a year, which is a deliberate default. */
+/**
+ * The expiry the form offers: a year, which is a deliberate default.
+ *
+ * Counted from the day it is in Paris, not from the UTC day: opened at eleven
+ * in the evening, `toISOString` would still name the day before and the key
+ * would be offered one day short.
+ */
 export function oneYearFromNow(today: Date = new Date()): string {
-  const expiry = new Date(today);
-  expiry.setFullYear(expiry.getFullYear() + 1);
-  return expiry.toISOString().slice(0, 10);
+  const [year, month, day] = parisDay(today.toISOString()).split("-");
+  return `${Number(year) + 1}-${month}-${day}`;
 }

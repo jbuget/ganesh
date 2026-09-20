@@ -7,6 +7,7 @@ from src.modules.moods.domain.repositories.mood_repository import MoodRepository
 from src.modules.moods.domain.services.mood_report import build_report
 from src.modules.moods.domain.services.mood_window import DEFAULT_SPAN, window_days
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.shared.utils import clock
 
 
 class GetTeamMoodsUseCase:
@@ -19,7 +20,7 @@ class GetTeamMoodsUseCase:
     async def execute(
         self, today: date | None = None, span: int = DEFAULT_SPAN
     ) -> TeamMoods:
-        days = window_days(today or date.today(), span=span)
+        days = window_days(today or clock.today(), span=span)
 
         # Deactivated teammates come along: they posted while they were here,
         # and dropping them would leave moods no name could be put on.

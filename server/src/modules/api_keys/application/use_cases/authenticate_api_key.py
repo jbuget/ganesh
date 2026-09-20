@@ -1,7 +1,6 @@
 """Letting a machine in, for one scope at a time."""
 
 from dataclasses import dataclass
-from datetime import datetime
 
 from src.modules.api_keys.domain.entities.api_key import ApiKey, ApiKeyScope
 from src.modules.api_keys.domain.repositories.api_key_repository import ApiKeyRepository
@@ -9,6 +8,7 @@ from src.modules.api_keys.domain.services import key_material
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import ForbiddenActionError
+from src.shared.utils import clock
 
 
 @dataclass(frozen=True)
@@ -84,7 +84,7 @@ class AuthenticateApiKeyUseCase:
         if not key_material.matches(secret, key.secret_hash):
             return None
 
-        if not key.is_usable(datetime.now()):
+        if not key.is_usable(clock.now()):
             return None
 
         owner = await self._users.get_by_id(key.owner_id)
@@ -100,6 +100,6 @@ class AuthenticateApiKeyUseCase:
         column, not the whole aggregate — this is the hot path, and the scopes
         have no business being rewritten.
         """
-        now = datetime.now()
+        now = clock.now()
         if key.record_use(now) and key.id is not None:
             await self._keys.record_use(key.id, now)

@@ -18,6 +18,7 @@ from src.modules.entries.application.use_cases.get_month_grid import (
     MonthGrid,
 )
 from src.modules.entries.presentation.dependencies import get_month_grid_use_case
+from src.shared.utils import clock
 
 SCOPE = ApiKeyScope.ENTRIES_READ
 
@@ -49,7 +50,9 @@ async def my_month(month: str | None = None) -> str:
 
 def _first_day_of(month: str | None) -> date | None:
     if month is None:
-        today = date.today()
+        # The month it is in Paris: a call made at half past midnight asks
+        # about the month the caller is living, not the one UTC is still on.
+        today = clock.today()
         return date(today.year, today.month, 1)
     try:
         year, number = month.strip().split("-")

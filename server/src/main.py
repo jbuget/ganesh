@@ -24,6 +24,9 @@ from src.modules.calendar.presentation.api.routes.calendar_router import (
 from src.modules.entries.presentation.api.routes.entry_router import (
     router as entry_router,
 )
+from src.modules.gazette.presentation.api.routes.gazette_router import (
+    router as gazette_router,
+)
 from src.modules.months.presentation.api.routes.month_router import (
     router as month_router,
 )
@@ -76,6 +79,7 @@ for module_router in (
     planning_router,
     activity_router,
     statistics_router,
+    gazette_router,
 ):
     app.include_router(module_router, prefix=settings.api_prefix)
 

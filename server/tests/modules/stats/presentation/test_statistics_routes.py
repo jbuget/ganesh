@@ -1,7 +1,6 @@
 """The statistics route and the contract it publishes."""
 
 from collections.abc import AsyncIterator
-from datetime import date
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -19,6 +18,7 @@ from src.modules.stats.application.use_cases.compute_statistics import (
 )
 from src.modules.stats.presentation.dependencies import get_compute_statistics_use_case
 from src.modules.users.domain.entities.user import Role, User
+from src.shared.utils import clock
 from tests.helpers.in_memory_repositories import (
     InMemoryStatisticsRepository,
     InMemoryUserRepository,
@@ -41,7 +41,7 @@ def use_case() -> ComputeStatisticsUseCase:
     return ComputeStatisticsUseCase(
         users=InMemoryUserRepository(TEAM),
         statistics=InMemoryStatisticsRepository(
-            declared_by_day={date.today(): 6.0},
+            declared_by_day={clock.today(): 6.0},
             contributors={1},
             delays=[0, 1, 30],
             by_kind={ProjectKind.PROJECT: 4.0, ProjectKind.OFF_PROJECT: 2.0},
@@ -82,7 +82,7 @@ async def test_the_window_asked_for_comes_back_with_the_figures(
 
     period = response.json()["period"]
     assert period["range"] == "last_7_days"
-    assert period["end"] == date.today().isoformat()
+    assert period["end"] == clock.today().isoformat()
 
 
 async def test_the_window_defaults_to_the_last_thirty_days(

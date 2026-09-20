@@ -1,7 +1,6 @@
 """The activity route and the contract it publishes."""
 
 from collections.abc import AsyncIterator
-from datetime import date
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -20,6 +19,7 @@ from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.calendar.domain.entities.period import Period, PeriodRange
 from src.modules.projects.domain.entities.project import ProjectKind, ProjectStatus
 from src.modules.users.domain.entities.user import Role, User
+from src.shared.utils import clock
 from tests.helpers.in_memory_repositories import (
     InMemoryActivityRepository,
     InMemoryUserRepository,
@@ -66,7 +66,7 @@ MISSIONS = [
 
 
 def use_case() -> GetActivitySummaryUseCase:
-    window = Period.of(PeriodRange.LAST_WEEK, date.today())
+    window = Period.of(PeriodRange.LAST_WEEK, clock.today())
     return GetActivitySummaryUseCase(
         users=InMemoryUserRepository(TEAM),
         activity=InMemoryActivityRepository(

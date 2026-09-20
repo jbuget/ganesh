@@ -3,6 +3,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import type { ApiKeyResponse } from "@/lib/api/generated/model";
 import { isUsable, scopeLabel } from "@/lib/api-keys";
 import { formatSpelledDate } from "@/lib/dates";
+import { parisDay } from "@/lib/instants";
 import { STRONG_SEPARATOR } from "@/lib/table-frame";
 
 interface ApiKeyRowProps {
@@ -13,7 +14,7 @@ interface ApiKeyRowProps {
 /** A date, or a dash where there is nothing to say. */
 function Day({ iso }: { iso: string | null }) {
   if (iso === null) return <span className="text-slate-400">—</span>;
-  return <span className="text-slate-700">{formatSpelledDate(iso)}</span>;
+  return <span className="text-slate-700">{formatSpelledDate(parisDay(iso))}</span>;
 }
 
 /**

@@ -24,6 +24,7 @@ import type {
 import { useUserRecord } from "@/lib/api/queries";
 import { isoDay } from "@/lib/dates";
 import { DEPARTMENTS } from "@/lib/departments";
+import { formatParisDateTime } from "@/lib/instants";
 import { since } from "@/lib/relative-dates";
 
 interface UserPanelProps {
@@ -188,7 +189,7 @@ export function UserPanel({
             <span className="text-sm text-slate-700">
               {since(user.last_login_at, now)}
               <span className="ml-2 text-xs text-slate-400">
-                {new Date(user.last_login_at).toLocaleString("fr-FR")}
+                {formatParisDateTime(user.last_login_at)}
               </span>
             </span>
           ) : (

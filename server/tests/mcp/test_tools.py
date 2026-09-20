@@ -10,7 +10,7 @@ sentence. Three properties they hold to, from the brief:
 """
 
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 from fastapi import FastAPI
@@ -54,6 +54,13 @@ from src.modules.users.domain.entities.user import User
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 OWNER = User(id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba")
+
+
+def instant(year: int, month: int, day: int, hour: int) -> datetime:
+    """An instant as the register holds one: UTC, and saying so."""
+    return datetime(year, month, day, hour, tzinfo=UTC)
+
+
 MARIE = User(id=2, entra_oid="oid-2", email="m@waat.fr", display_name="M. Ce")
 
 
@@ -254,6 +261,11 @@ class TestMyMonth:
 def a_line(
     action: AuditAction, at: datetime, actor: User = OWNER, **fields: object
 ) -> SignedAuditLog:
+    """A line of the log, dated as the register dates one: in UTC, aware of it.
+
+    A naive instant here would pass the test and raise against a real log,
+    whose column carries its zone.
+    """
     return SignedAuditLog(
         log=AuditLog(action=action, actor_id=actor.id or 1, at=at, project_id=7, **fields),  # type: ignore[arg-type]
         actor=actor,
@@ -268,7 +280,7 @@ class TestWhatChanged:
             entries=[
                 a_line(
                     AuditAction.PROJECT_STATUS_CHANGE,
-                    datetime(2026, 9, 8, 10, 0),
+                    instant(2026, 9, 8, 10),
                     old_value="scoping",
                     new_value="development",
                 )
@@ -287,13 +299,13 @@ class TestWhatChanged:
             entries=[
                 a_line(
                     AuditAction.ENTRY_SET,
-                    datetime(2026, 9, 9, 9, 0),
+                    instant(2026, 9, 9, 9),
                     new_value="1.0",
                     day=date(2026, 9, 9),
                 ),
                 a_line(
                     AuditAction.ENTRY_SET,
-                    datetime(2026, 9, 10, 9, 0),
+                    instant(2026, 9, 10, 9),
                     actor=MARIE,
                     new_value="0.5",
                     day=date(2026, 9, 10),
@@ -379,12 +391,16 @@ class TestMyMonthReadsAsFrench:
 
         assert "Répartition" not in said
 
+
+class TestWhatChangedReadsAsFrench:
+    """Three gestures named, and each agreeing with what it counts."""
+
     @pytest.mark.asyncio
     async def test_the_thread_is_announced_with_its_latest_post(self) -> None:
         page = AuditLogPage(
             entries=[
-                a_line(AuditAction.UPDATE_POST, datetime(2026, 9, 12, 9, 0)),
-                a_line(AuditAction.UPDATE_POST, datetime(2026, 9, 16, 17, 0)),
+                a_line(AuditAction.UPDATE_POST, instant(2026, 9, 12, 9)),
+                a_line(AuditAction.UPDATE_POST, instant(2026, 9, 16, 17)),
             ],
             total=2,
         )
@@ -396,7 +412,7 @@ class TestMyMonthReadsAsFrench:
     @pytest.mark.asyncio
     async def test_a_single_post_agrees_in_the_singular(self) -> None:
         page = AuditLogPage(
-            entries=[a_line(AuditAction.UPDATE_POST, datetime(2026, 9, 16, 17, 0))],
+            entries=[a_line(AuditAction.UPDATE_POST, instant(2026, 9, 16, 17))],
             total=1,
         )
         with Wired(detail=ADetail(WAATCHER), project_log=page):
@@ -411,13 +427,13 @@ class TestMyMonthReadsAsFrench:
             entries=[
                 a_line(
                     AuditAction.ENTRY_SET,
-                    datetime(2026, 9, 9, 9, 0),
+                    instant(2026, 9, 9, 9),
                     new_value="1.0",
                     day=date(2026, 9, 9),
                 ),
                 a_line(
                     AuditAction.ENTRY_SET,
-                    datetime(2026, 9, 10, 9, 0),
+                    instant(2026, 9, 10, 9),
                     old_value="1.0",
                     new_value="0.5",
                     day=date(2026, 9, 9),

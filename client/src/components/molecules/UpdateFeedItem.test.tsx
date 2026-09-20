@@ -6,7 +6,7 @@ import { UpdateFeedItem } from "./UpdateFeedItem";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 import type { HomeUpdate } from "@/lib/home";
 
-const NOW = new Date("2026-09-19T12:00:00");
+const NOW = new Date("2026-09-19T10:00:00Z");
 
 const entry = (body = "Recette terminée"): HomeUpdate => ({
   item: {
@@ -15,7 +15,7 @@ const entry = (body = "Recette terminée"): HomeUpdate => ({
   update: {
     author: { id: 9, display_name: "Marie Martin", initials: "MM" },
     body,
-    published_at: "2026-09-18T10:00:00",
+    published_at: "2026-09-18T08:00:00Z",
   },
 });
 
