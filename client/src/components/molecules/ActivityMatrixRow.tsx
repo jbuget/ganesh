@@ -41,7 +41,7 @@ export function ActivityMatrixRow({
     <>
       <TableRow className="bg-slate-50 hover:bg-slate-100">
         <TableCell
-          className={`bg-white group-hover:bg-slate-50 ${STRONG_SEPARATOR} ${
+          className={`sticky left-0 z-10 bg-white group-hover:bg-slate-50 ${
             isPackage ? "pl-8" : ""
           }`}
         >
@@ -84,6 +84,18 @@ export function ActivityMatrixRow({
           </span>
         </TableCell>
 
+        {/* The reading comes before the detail: with twenty people across,
+            the total would otherwise sit off the edge of the screen. */}
+        <TableCell className="text-right font-medium tabular-nums">
+          {formatDays(line.days)}
+        </TableCell>
+        <TableCell className="text-right tabular-nums text-slate-500">
+          {formatShare(line.share)}
+        </TableCell>
+        <TableCell className={`text-right ${STRONG_SEPARATOR}`}>
+          <MovementBadge days={line.movement} isNew={line.is_new} />
+        </TableCell>
+
         {contributors.map((someone) => (
           <TableCell
             key={someone.id}
@@ -92,16 +104,6 @@ export function ActivityMatrixRow({
             {formatDays(line.days_by_contributor[someone.id] ?? 0)}
           </TableCell>
         ))}
-
-        <TableCell className="text-right font-medium tabular-nums">
-          {formatDays(line.days)}
-        </TableCell>
-        <TableCell className="text-right tabular-nums text-slate-500">
-          {formatShare(line.share)}
-        </TableCell>
-        <TableCell className="text-right">
-          <MovementBadge days={line.movement} isNew={line.is_new} />
-        </TableCell>
       </TableRow>
 
       {isOpen && (

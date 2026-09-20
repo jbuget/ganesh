@@ -47,19 +47,21 @@ export function ActivityMatrix({
       {lines.length === 0 ? (
         <p className="text-sm text-slate-500">{empty}</p>
       ) : (
-        <div className="[&_[data-slot=table-container]]:overflow-visible">
+        <div className="overflow-x-auto">
           <Table className={`border-separate border-spacing-0 ${TABLE_FRAME}`}>
             <TableHeader className={TABLE_HEADER}>
               <TableRow>
-                <TableHead className={STRONG_SEPARATOR}>Projet</TableHead>
+                <TableHead className="sticky left-0 z-20 bg-white">Projet</TableHead>
+                <TableHead className="text-right">Total</TableHead>
+                <TableHead className="text-right">Part</TableHead>
+                <TableHead className={`text-right ${STRONG_SEPARATOR}`}>
+                  Évolution
+                </TableHead>
                 {contributors.map((someone) => (
-                  <TableHead key={someone.id} className="text-center">
+                  <TableHead key={someone.id} className="text-center whitespace-nowrap">
                     {someone.display_name}
                   </TableHead>
                 ))}
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead className="text-right">Part</TableHead>
-                <TableHead className="text-right">Évolution</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -73,7 +75,12 @@ export function ActivityMatrix({
               ))}
 
               <TableRow className="bg-slate-50 font-medium">
-                <TableCell className={`bg-white ${STRONG_SEPARATOR}`}>Total</TableCell>
+                <TableCell className="sticky left-0 z-10 bg-white">Total</TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {formatDays(totalDays)}
+                </TableCell>
+                <TableCell />
+                <TableCell className={STRONG_SEPARATOR} />
                 {contributors.map((someone) => (
                   <TableCell
                     key={someone.id}
@@ -88,11 +95,6 @@ export function ActivityMatrix({
                     )}
                   </TableCell>
                 ))}
-                <TableCell className="text-right tabular-nums">
-                  {formatDays(totalDays)}
-                </TableCell>
-                <TableCell />
-                <TableCell />
               </TableRow>
             </TableBody>
           </Table>
