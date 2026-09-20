@@ -23,7 +23,7 @@ import { useOpenedMission } from "@/lib/opened-mission";
  *
  * It hands over rather than acting: the grid for time, the mission panel for
  * the rest. Keeping it that way is what stops it from slowly becoming a second
- * Activité.
+ * Saisie des temps.
  *
  * The mood is the one exception, and it is a deliberate one. Answering is a
  * one-second gesture on a window that closes the next working day; behind a

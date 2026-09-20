@@ -52,7 +52,7 @@ export function TimesheetPage() {
     <PageLayout
       header={
         <PageHeader
-          title="Activité"
+          title="Saisie des temps"
           subtitle="Déclarez votre temps en journées ou demi-journées. Tant que le mois n'est pas validé, tout reste modifiable."
           actions={
             <>

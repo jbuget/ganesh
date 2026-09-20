@@ -1,5 +1,5 @@
 import { TimesheetPage } from "@/components/organisms/TimesheetPage";
 
-export default function Activite() {
+export default function Timesheet() {
   return <TimesheetPage />;
 }
