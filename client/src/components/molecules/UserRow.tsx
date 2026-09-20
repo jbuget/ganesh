@@ -4,6 +4,7 @@ import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { UserAvatar } from "@/components/atoms/UserAvatar";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { UserResponse } from "@/lib/api/generated/model";
+import { formatParisDateTime } from "@/lib/instants";
 import { since } from "@/lib/relative-dates";
 import { roleLabel } from "@/lib/roles";
 import { STRONG_SEPARATOR } from "@/lib/table-frame";
@@ -71,7 +72,7 @@ export function UserRow({ user, now, onOpen }: UserRowProps) {
       <TableCell className="py-2 text-slate-500">
         {/* An account that never came is not « long ago »: it never came. */}
         {user.last_login_at ? (
-          <span title={new Date(user.last_login_at).toLocaleString("fr-FR")}>
+          <span title={formatParisDateTime(user.last_login_at)}>
             {since(user.last_login_at, now)}
           </span>
         ) : (

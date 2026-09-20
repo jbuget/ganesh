@@ -9,6 +9,7 @@ import {
   KanbanSquare,
   KeyRound,
   Milestone,
+  Newspaper,
   PanelLeft,
   Smile,
   TableProperties,
@@ -35,6 +36,7 @@ const TABS = [
   { href: "/activity-summary", label: "Synthèse d'activité", Icon: TableProperties },
   { href: "/planning", label: "Planification", Icon: GanttChartSquare },
   { href: "/roadmap", label: "Feuille de route", Icon: Milestone },
+  { href: "/gazette", label: "La Gazette", Icon: Newspaper },
   { href: "/users", label: "Utilisateurs", Icon: Users },
   { href: "/mood", label: "Moral", Icon: Smile },
   // Shown to everyone, as « Utilisateurs » is: the navigation says what

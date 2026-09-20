@@ -11,6 +11,8 @@ from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
+from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
+from src.modules.api_keys.presentation.dependencies import Caller, open_to_machines
 from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.planning.application.dtos.workload_dto import (
     PersonLoadRow,
@@ -70,6 +72,15 @@ from src.shared.enums.department import Department
 from src.shared.utils.initials import initials
 
 router = APIRouter(prefix="/planning", tags=["planning"])
+
+#: The roadmap is the one thing here a machine reads. It is the screen that is
+#: *shown* rather than arbitrated — to a committee, to a department — so a
+#: build that publishes it outside Ganesh is doing what it is for.
+#:
+#: The projection and the simulations stay human on purpose. They are an
+#: arbitration: one reorders a backlog and puts people on missions to see what
+#: it would cost, and saves the question. A machine has no question to put.
+roadmap_reader = open_to_machines(ApiKeyScope.ROADMAP_READ)
 
 
 @router.post(
@@ -191,7 +202,7 @@ async def read_roadmap(
     # the builtin inside this function.
     kinds: list[ProjectKind] = Query(default=[], alias="type"),
     department: list[Department] = Query(default=[]),
-    _: User = Depends(get_current_user),
+    _: Caller = Depends(roadmap_reader),
     use_case: GetRoadmapUseCase = Depends(get_roadmap_use_case),
 ) -> RoadmapResponse:
     """The portfolio over a window of time: what was delivered, what is promised.

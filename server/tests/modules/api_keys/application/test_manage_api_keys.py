@@ -1,6 +1,6 @@
 """Minting, listing and cutting service accounts."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import pytest
 
@@ -25,6 +25,7 @@ from src.shared.exceptions.domain_exceptions import (
     ForbiddenActionError,
     ValidationError,
 )
+from src.shared.utils import clock
 from tests.helpers.in_memory_repositories import (
     InMemoryApiKeyRepository,
     InMemoryAuditLogRepository,
@@ -208,7 +209,7 @@ class TestRevoking:
 @pytest.mark.asyncio
 async def test_an_expiry_travels_to_the_key() -> None:
     create, *_ = build()
-    expiry = datetime.now() + timedelta(days=365)
+    expiry = clock.now() + timedelta(days=365)
     minted = await create.execute(command(expires_at=expiry))
     assert minted.key.expires_at == expiry
 

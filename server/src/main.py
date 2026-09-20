@@ -11,6 +11,9 @@ from src.modules.activity.presentation.api.routes.activity_router import (
 from src.modules.api_keys.presentation.api.routes.api_key_router import (
     router as api_key_router,
 )
+from src.modules.audit_logs.presentation.api.routes.audit_log_router import (
+    router as audit_log_router,
+)
 from src.modules.auth.presentation.routes.local_auth_router import (
     router as local_auth_router,
 )
@@ -19,6 +22,9 @@ from src.modules.calendar.presentation.api.routes.calendar_router import (
 )
 from src.modules.entries.presentation.api.routes.entry_router import (
     router as entry_router,
+)
+from src.modules.gazette.presentation.api.routes.gazette_router import (
+    router as gazette_router,
 )
 from src.modules.months.presentation.api.routes.month_router import (
     router as month_router,
@@ -63,6 +69,7 @@ for module_router in (
     api_key_router,
     project_router,
     entry_router,
+    audit_log_router,
     month_router,
     mood_router,
     notification_router,
@@ -70,6 +77,7 @@ for module_router in (
     planning_router,
     activity_router,
     statistics_router,
+    gazette_router,
 ):
     app.include_router(module_router, prefix=settings.api_prefix)
 

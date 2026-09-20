@@ -1,7 +1,5 @@
 """Declares or removes a contributor on a mission."""
 
-from datetime import datetime
-
 from src.modules.audit_logs.domain.entities.audit_log import AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
@@ -18,6 +16,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 )
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
+from src.shared.utils import clock
 
 
 class _AssignmentUseCase:
@@ -57,7 +56,7 @@ class _AssignmentUseCase:
                 kind,
                 actor_id=command.actor_id,
                 recipients=[command.member_id],
-                at=datetime.now(),
+                at=clock.now(),
                 project_id=command.project_id,
                 payload={"role": command.role.value},
             )

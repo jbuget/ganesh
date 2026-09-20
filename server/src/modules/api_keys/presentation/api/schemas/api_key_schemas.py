@@ -2,13 +2,14 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from src.modules.api_keys.domain.entities.api_key import (
     NAME_MAX_LENGTH,
     ApiKeyScope,
     ApiKeyState,
 )
+from src.shared.utils import clock
 
 
 class ApiKeyOwnerResponse(BaseModel):
@@ -50,6 +51,18 @@ class CreateApiKeyRequest(BaseModel):
     owner_id: int
     scopes: list[ApiKeyScope] = Field(min_length=1)
     expires_at: datetime | None = None
+
+    @field_validator("expires_at")
+    @classmethod
+    def _read_in_paris(cls, value: datetime | None) -> datetime | None:
+        """An expiry given without a zone is read on the Paris clock.
+
+        The screen offers a day, and a day only becomes an instant once one
+        says whose midnight it is. It is the one the person picking the date
+        is living, so the key lasts exactly as long as they were told — not
+        two hours less because the host counts in UTC.
+        """
+        return None if value is None else clock.as_instant(value)
 
 
 class UpdateApiKeyRequest(BaseModel):

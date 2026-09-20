@@ -8,7 +8,7 @@ from httpx import ASGITransport, AsyncClient
 from src.core.config import get_settings
 from src.core.database import get_db
 from src.main import app
-from src.modules.auth.presentation.dependencies import get_current_user
+from src.modules.api_keys.presentation.dependencies import teammate_or_machine
 from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.projects.application.use_cases.archive_project import (
     ArchiveProjectUseCase,
@@ -74,7 +74,7 @@ def sign_in(projects: list[Project]) -> tuple[AsyncClient, InMemoryProjectReposi
     users = InMemoryUserRepository([ALICE])
     audit = InMemoryAuditLogRepository()
 
-    app.dependency_overrides[get_current_user] = lambda: ALICE
+    app.dependency_overrides[teammate_or_machine] = lambda: ALICE
     app.dependency_overrides[get_db] = FakeSession
     app.dependency_overrides[get_archive_project_use_case] = (
         lambda: ArchiveProjectUseCase(

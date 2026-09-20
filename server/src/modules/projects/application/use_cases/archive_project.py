@@ -1,7 +1,5 @@
 """Taking a mission out of the reference list, and putting it back."""
 
-from datetime import datetime
-
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
@@ -31,6 +29,7 @@ from src.modules.projects.domain.services.hierarchy import (
 )
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
+from src.shared.utils import clock
 
 
 class ArchiveProjectUseCase:
@@ -98,7 +97,7 @@ class ArchiveProjectUseCase:
                     NotificationKind.PROJECT_ARCHIVED,
                     actor_id=command.actor_id,
                     recipients=audience,
-                    at=datetime.now(),
+                    at=clock.now(),
                     project_id=command.project_id,
                     payload={"project_label": project.label},
                 )

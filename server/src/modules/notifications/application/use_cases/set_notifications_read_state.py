@@ -9,6 +9,7 @@ from src.modules.notifications.application.dtos.notification_dtos import (
 from src.modules.notifications.domain.repositories.notification_repository import (
     NotificationRepository,
 )
+from src.shared.utils import clock
 
 
 class SetNotificationsReadStateUseCase:
@@ -30,7 +31,7 @@ class SetNotificationsReadStateUseCase:
             recipient_id=command.recipient_id,
             ids=command.ids,
             read=command.read,
-            at=now or datetime.now(),
+            at=now or clock.now(),
         )
         return ReadStateOutcome(
             updated=updated,

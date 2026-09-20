@@ -49,7 +49,9 @@ class ProjectModel(Base):
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     #: When the mission left the reference list. Null while it is active.
-    archived_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    archived_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     estimated_days: Mapped[float | None] = mapped_column(Float, nullable=True)
     category: Mapped[ProjectCategory | None] = mapped_column(
         Enum(ProjectCategory, name="project_category", native_enum=False, length=32),

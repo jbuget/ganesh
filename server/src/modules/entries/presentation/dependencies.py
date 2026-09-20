@@ -1,19 +1,30 @@
 """Wiring of the entry use cases."""
 
-from fastapi import Depends
+from fastapi import Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
+
+# The one thing this module needs of the keys: reading the public half of a
+# token off the header. Importing the api_keys *presentation* would close a
+# circle — that module already comes here for its repositories.
+from src.modules.api_keys.domain.services import key_material
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
 from src.modules.audit_logs.infrastructure.database.repositories.audit_log_repository_impl import (
     SqlAuditLogRepository,
 )
+from src.modules.audit_logs.infrastructure.machine_stamped_repository import (
+    MachineStampedAuditLog,
+)
 from src.modules.entries.application.use_cases.add_mission_to_month import (
     AddMissionToMonthUseCase,
 )
 from src.modules.entries.application.use_cases.clear_entry import ClearEntryUseCase
+from src.modules.entries.application.use_cases.export_entries import (
+    ExportEntriesUseCase,
+)
 from src.modules.entries.application.use_cases.get_month_grid import GetMonthGridUseCase
 from src.modules.entries.application.use_cases.remove_mission_from_month import (
     RemoveMissionFromMonthUseCase,
@@ -75,8 +86,26 @@ def get_user_mission_repository(
 
 def get_audit_log_repository(
     session: AsyncSession = Depends(get_db),
+    authorization: str | None = Header(default=None),
 ) -> AuditLogRepository:
-    return SqlAuditLogRepository(session)
+    """The log — and, when a machine is calling, the key its lines must name.
+
+    The key is read from the public half of the token alone: no lookup, no
+    hash, no authentication. None is needed, and that is the point. A line is
+    only ever written on a route that opened its own machine door and checked
+    the key there; a forged token would not have reached this far. What gets
+    stamped is a lookup handle, which is not a secret and is exactly what the
+    table of keys already shows.
+    """
+    logs: AuditLogRepository = SqlAuditLogRepository(session)
+    token = (authorization or "").removeprefix("Bearer ").removeprefix("bearer ")
+    if not key_material.looks_like_ours(token):
+        return logs
+    parsed = key_material.parse(token)
+    if parsed is None:
+        return logs
+    public_id, _ = parsed
+    return MachineStampedAuditLog(logs, key_material.masked(public_id))
 
 
 def get_set_entry_use_case(
@@ -163,3 +192,11 @@ def get_remove_mission_use_case(
         user_missions=user_missions,
         notifications=notifications,
     )
+
+
+def get_export_entries_use_case(
+    entries: EntryRepository = Depends(get_entry_repository),
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+) -> ExportEntriesUseCase:
+    return ExportEntriesUseCase(entries=entries, users=users, projects=projects)

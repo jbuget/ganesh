@@ -525,6 +525,94 @@ criticality publish. A field belongs to one side or the other, never to both.
 
 ---
 
+## La Gazette
+
+The register is written into all day long and, until now, only ever read one
+project at a time by whoever already knew what they were looking for. La
+Gazette reads it across, a month at a time: what was created, archived, moved
+on, given up on, and who joined or left.
+
+**The register counts, the model only turns the phrase.** That division is the
+whole design, and it is enforced rather than asked for politely:
+
+- Every fact and every figure is computed by the domain from `audit_log` and
+  from the reference list. The model is handed them and writes two or three
+  sentences over the top.
+- **`Prose` refuses any text carrying a figure**, in digits or written out.
+  Not a rule in the prompt — a rule in the entity, so no adapter can widen it.
+  A chapeau that counted is dropped and the digest goes out on its facts.
+- **Saliency is a set of business rules**, tested like any other. A model asked
+  to underline what stands out underlines something even the month nothing
+  happened.
+- **Nothing is invented.** A log line whose mission was deleted cannot be named
+  and is not printed. A phase the register never recorded is not supplied.
+
+**A digest is never rewritten.** Asking for a month again writes the next
+version beside the last; the screen reads the highest and the picker opens the
+others. What somebody quoted has to still be in the digest they quoted it from,
+which is also why the facts are stored rather than the way to recompute them —
+missions get renamed, archived and delivered, and rebuilding March in September
+would give another March.
+
+Anyone may ask for one: the facts come from a register the whole team already
+has open, and reserving the gesture would only mean waiting for somebody.
+Generation is manual — there is no scheduler, and mail is deliberately out of
+scope for now.
+
+Two things it will not do, and adding either would be a decision:
+
+- **Name anybody in a bad light.** Every figure is an aggregate, and **a
+  point d'attention is about a mission, never about a person** — `Highlight`
+  refuses the combination rather than trusting whoever adds the next rule. An
+  arrival, a return or a departure does name the person, plainly: that is a
+  fact of the month, not a reproach. A gazette that said who was late would be
+  read as a list of names, whatever else it said.
+- **Tell its own story.** Generating a digest is traced like any other gesture
+  and left out of the next one, or the gazette would fill up with itself.
+
+**The month is told project by project, not as one list.** A flat chronology
+reads as the log it came from, the same project picked up and dropped ten
+times over; gathered under its own heading, a project's month reads as a
+story. The heading names the project, so the lines under it do not — except a
+line about one of its work packages, which names the lot, since the heading
+cannot.
+
+**A work package has no chronicle of its own**: its month is part of its
+project's. The grouping is computed in the domain, as the Synthèse d'activité
+already folds packages into their project, and each movement carries the
+parent it had **the day the digest was read** — a package detached since must
+still be told where its month happened. A parent the reference list can no
+longer name is no parent at all: the gazette does not open a chapter it would
+have to leave untitled.
+
+**Every chronicle is closed until it is asked for.** A month of tidying-up
+touches a dozen projects, and a dozen chronicles unfolded bury the two that
+had something to say. Folded, the section reads first as what it is: the list
+of projects the month touched, and how much happened to each.
+
+A label typed with a full stop at the end — several were written as sentences
+— loses it wherever the gazette builds the sentence itself: « … dans les PDF a
+été archivé ». The stop belongs to the label, not to our sentence. Applied to
+missions alone; a person's name is left exactly as it was given.
+
+A phase move reaches the register by two routes — dragging a card traces
+`project.status_change`, editing the mission traces a plain field change — and
+the briefing reads both. Reading only the first would quietly miss every move
+made from the form.
+
+**The model is configured in the environment, and nowhere else.**
+`GEMINI_MODEL` names it (default `gemini-3.8-flash`) and `GEMINI_API_KEY`
+carries the key — in `server/.env` locally, in Parameter Store in production.
+Changing either therefore takes a restart, and a deploy in production. That is
+deliberate: a key the application could hand back through a screen is a key
+worth stealing, and a provider picker offering one provider is furniture. The
+day a second provider is actually implemented, both become worth a screen.
+
+`GEMINI_API_KEY` is optional everywhere. Without it nothing breaks: digests are
+generated with their facts and no chapeau.
+
+---
+
 ## API keys
 
 A machine reaches Ganesh with a key, never with a user account. The rule the
@@ -532,8 +620,13 @@ whole design leans on, and the one to respect when adding a route:
 
 - **A key opens nothing by default.** `get_current_user` refuses keys outright,
   so every route that depends on it is human-only. A route becomes
-  machine-reachable by asking, with `require_scope(ApiKeyScope.…)` — one route
-  at a time, on purpose.
+  machine-reachable by asking — one route at a time, on purpose — through one
+  of two doors: `require_scope(…)` opens it to a machine and to nobody else,
+  which suits the catalogue export alone; `open_to_machines(…)` **adds** a door
+  to a route the team already uses, and takes none away.
+- **A scope that opens no route is a bug**, and a test says so. The table of
+  keys is read by the whole team to know what a key opens; a member the form
+  offers and no route honours makes it say that wrong.
 - A key belongs to a **service account**, never to a person, and that account
   carries a **human owner** who answers for it. An API call records the owner
   as the actor and names the key in the payload.

@@ -157,6 +157,14 @@ class SqlEntryRepository(EntryRepository):
             diaries.setdefault(user_id, {})[day] = float(total)
         return diaries
 
+    async def list_over(self, start: date, end: date) -> list[Entry]:
+        result = await self._session.execute(
+            select(EntryModel)
+            .where(and_(EntryModel.day >= start, EntryModel.day <= end))
+            .order_by(EntryModel.day, EntryModel.user_id, EntryModel.project_id)
+        )
+        return [to_entity(model) for model in result.scalars().all()]
+
     async def upsert(self, entry: Entry) -> Entry:
         model = await self._get_model(entry.user_id, entry.project_id, entry.day)
         if model is None:

@@ -7,6 +7,7 @@ from enum import StrEnum
 from src.modules.months.domain.services.month_period import first_day_of
 from src.modules.users.domain.entities.user import User
 from src.shared.exceptions.domain_exceptions import ForbiddenActionError
+from src.shared.utils import clock
 
 
 class MonthState(StrEnum):
@@ -48,7 +49,7 @@ class Month:
             raise ForbiddenActionError("This month is already validated.")
         self.state = MonthState.VALIDATED
         self.validated_by = by.id
-        self.validated_at = at or datetime.now()
+        self.validated_at = at or clock.now()
 
     def reopen(self, by: User, at: datetime | None = None) -> None:
         """Reopens a validated month. Managers only, and traced."""
@@ -62,4 +63,4 @@ class Month:
             )
         self.state = MonthState.OPEN
         self.reopened_by = by.id
-        self.reopened_at = at or datetime.now()
+        self.reopened_at = at or clock.now()

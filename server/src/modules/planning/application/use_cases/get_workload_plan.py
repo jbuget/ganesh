@@ -38,6 +38,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 )
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.shared.utils import clock
 
 
 class GetWorkloadPlanUseCase:
@@ -68,7 +69,7 @@ class GetWorkloadPlanUseCase:
         place the work on. Both are read and neither is written — asking « et
         si Valentin passait dessus ? » must cost nothing but the answer.
         """
-        start = today or date.today()
+        start = today or clock.today()
         end = horizon_end(start, horizon_months)
 
         backlog = apply_explicit_order(

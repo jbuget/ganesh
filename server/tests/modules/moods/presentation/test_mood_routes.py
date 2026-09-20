@@ -23,6 +23,7 @@ from src.modules.moods.presentation.dependencies import (
     get_team_moods_use_case,
 )
 from src.modules.users.domain.entities.user import Role, User
+from src.shared.utils import clock
 from tests.helpers.in_memory_repositories import (
     InMemoryMoodRepository,
     InMemoryUserRepository,
@@ -48,7 +49,7 @@ BOB = User(
 #: suite runs — over a weekend it is the Friday — so the window is asked for
 #: rather than written down: what is under test here is the wiring, and the
 #: rule itself is covered in the domain.
-LATEST = open_days(date.today())[0]
+LATEST = open_days(clock.today())[0]
 MOODS = f"{get_settings().api_prefix}/moods"
 
 

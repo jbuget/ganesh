@@ -2,6 +2,9 @@
 
 from fastapi import Depends
 
+from src.modules.audit_logs.application.use_cases.list_audit_log import (
+    ListAuditLogUseCase,
+)
 from src.modules.audit_logs.application.use_cases.list_project_audit_log import (
     ListProjectAuditLogUseCase,
 )
@@ -20,3 +23,10 @@ def get_project_audit_log_use_case(
     users: UserRepository = Depends(get_user_repository),
 ) -> ListProjectAuditLogUseCase:
     return ListProjectAuditLogUseCase(audit_logs=audit_logs, users=users)
+
+
+def get_audit_log_use_case(
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    users: UserRepository = Depends(get_user_repository),
+) -> ListAuditLogUseCase:
+    return ListAuditLogUseCase(audit_logs=audit_logs, users=users)

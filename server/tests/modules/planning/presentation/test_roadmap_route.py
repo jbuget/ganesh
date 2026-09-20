@@ -8,7 +8,7 @@ from httpx import ASGITransport, AsyncClient
 
 from src.core.config import get_settings
 from src.main import app
-from src.modules.auth.presentation.dependencies import get_current_user
+from src.modules.api_keys.presentation.dependencies import teammate_or_machine
 from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.planning.application.use_cases.get_roadmap import GetRoadmapUseCase
 from src.modules.planning.presentation.dependencies import get_roadmap_use_case
@@ -69,7 +69,7 @@ async def client() -> AsyncIterator[AsyncClient]:
         ]
     )
 
-    app.dependency_overrides[get_current_user] = lambda: ALICE
+    app.dependency_overrides[teammate_or_machine] = lambda: ALICE
     app.dependency_overrides[get_roadmap_use_case] = lambda: GetRoadmapUseCase(
         projects=InMemoryProjectRepository([PORTAL]),
         entries=entries,

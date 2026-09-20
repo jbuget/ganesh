@@ -16,7 +16,7 @@ class AuditLogModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), index=True
+        DateTime(timezone=True), server_default=func.now(), index=True
     )
     action: Mapped[AuditAction] = mapped_column(
         Enum(AuditAction, name="audit_action", native_enum=False, length=32),

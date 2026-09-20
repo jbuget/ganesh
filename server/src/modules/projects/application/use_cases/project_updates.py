@@ -30,6 +30,7 @@ from src.modules.projects.domain.services.mentions import mentioned_ids
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
+from src.shared.utils import clock
 
 
 @dataclass
@@ -95,7 +96,7 @@ class PostProjectUpdateUseCase(_UpdateUseCase):
                 project_id=command.project_id,
                 author_id=command.actor_id,
                 body=command.body,
-                published_at=now or datetime.now(),
+                published_at=now or clock.now(),
             )
         )
         assert update.id is not None
@@ -154,7 +155,7 @@ class EditProjectUpdateUseCase(_UpdateUseCase):
         self, command: EditUpdateCommand, now: datetime | None = None
     ) -> ProjectUpdate:
         update = await self._load(command.update_id)
-        update.rewrite(command.body, by=command.actor_id, at=now or datetime.now())
+        update.rewrite(command.body, by=command.actor_id, at=now or clock.now())
         await self._updates.update(update)
         await self._trace(
             AuditAction.UPDATE_EDIT,
@@ -172,7 +173,7 @@ class RemoveProjectUpdateUseCase(_UpdateUseCase):
         self, command: RemoveUpdateCommand, now: datetime | None = None
     ) -> None:
         update = await self._load(command.update_id)
-        update.remove(by=command.actor_id, at=now or datetime.now())
+        update.remove(by=command.actor_id, at=now or clock.now())
         await self._updates.update(update)
         await self._trace(
             AuditAction.UPDATE_REMOVE,

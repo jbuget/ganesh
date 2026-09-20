@@ -1,10 +1,11 @@
 """What every write on a month owes to whoever's month it is."""
 
-from datetime import date, datetime
+from datetime import date
 
 from src.modules.notifications.domain.entities.notification import NotificationKind
 from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.notifications.domain.services.fan_out import notify
+from src.shared.utils import clock
 
 
 async def tell_the_owner(
@@ -28,7 +29,7 @@ async def tell_the_owner(
             NotificationKind.TIMESHEET_EDITED,
             actor_id=actor_id,
             recipients=[owner_id],
-            at=datetime.now(),
+            at=clock.now(),
             day=day.replace(day=1),
         )
     )

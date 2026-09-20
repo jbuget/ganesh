@@ -158,7 +158,12 @@ export function TimesheetGrid({
                 // and on the right.
                 className="border-r border-b border-r-slate-500 border-b-slate-500 bg-white px-3 py-6 text-center text-sm text-slate-500"
               >
-                Aucun projet pour ce mois. Ajoutez-en un pour commencer à saisir.
+                {/* A validated month refuses what the invitation offers: it
+                    states emptiness instead of asking for a gesture the grid
+                    would turn down. */}
+                {readOnly
+                  ? "Aucun projet n'a été déclaré sur ce mois."
+                  : "Aucun projet pour ce mois. Ajoutez-en un pour commencer à saisir."}
               </td>
             </tr>
           )}

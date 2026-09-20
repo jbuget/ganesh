@@ -1,6 +1,10 @@
-"""The notification repository, against a real PostgreSQL database."""
+"""The notification repository, against a real PostgreSQL database.
 
-from datetime import date, datetime
+The fixtures are dated on the clock the application writes with — UTC and
+aware of it — so that what goes in is what comes back out.
+"""
+
+from datetime import UTC, date, datetime
 
 import pytest
 from sqlalchemy import text
@@ -20,8 +24,8 @@ from src.modules.users.infrastructure.database.repositories.user_repository_impl
 
 pytestmark = pytest.mark.db
 
-MONDAY = datetime(2026, 1, 12, 9, 0)
-TUESDAY = datetime(2026, 1, 13, 9, 0)
+MONDAY = datetime(2026, 1, 12, 9, 0, tzinfo=UTC)
+TUESDAY = datetime(2026, 1, 13, 9, 0, tzinfo=UTC)
 JANUARY = date(2026, 1, 1)
 
 

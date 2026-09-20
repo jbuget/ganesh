@@ -42,7 +42,7 @@ class NotificationModel(Base):
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
     at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), index=True
+        DateTime(timezone=True), server_default=func.now(), index=True
     )
     project_id: Mapped[int | None] = mapped_column(
         ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True
@@ -53,4 +53,6 @@ class NotificationModel(Base):
     payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     #: How many times the same gesture folded into this line. One, usually.
     count: Mapped[int] = mapped_column(Integer, server_default="1")
-    read_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    read_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

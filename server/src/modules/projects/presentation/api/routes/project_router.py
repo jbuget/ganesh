@@ -12,7 +12,11 @@ from src.modules.api_keys.application.use_cases.authenticate_api_key import (
     MachineCaller,
 )
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
-from src.modules.api_keys.presentation.dependencies import require_scope
+from src.modules.api_keys.presentation.dependencies import (
+    Caller,
+    open_to_machines,
+    require_scope,
+)
 from src.modules.audit_logs.application.use_cases.list_project_audit_log import (
     ListProjectAuditLogUseCase,
 )
@@ -164,7 +168,33 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 
 #: Built once: a dependency is a value, and calling it in an argument default
 #: would rebuild it on every import of this module.
+#:
+#: The catalogue is the one door the team does not come through: it exists for
+#: waat.tools to read, and no screen calls it. The others are added to routes
+#: the team already uses, so a key gains a way in without anybody losing one.
 catalog_reader = require_scope(ApiKeyScope.CATALOG_READ)
+
+#: The reference list as it is read: the list, the board, one mission's detail.
+#: The detail carries what a mission cost, which is what this scope hands over
+#: and the catalogue deliberately does not.
+projects_reader = open_to_machines(ApiKeyScope.PROJECTS_READ)
+
+#: Declaring a mission and correcting one, archiving it and bringing it back,
+#: importing a list of them. A reprise of data, a reference list kept in step
+#: with another tool — the CSV import is already that gesture, done by hand.
+#:
+#: What it deliberately leaves alone: deleting a mission, attaching one to
+#: another, staffing it, moving its card, and the whole service sheet. The
+#: first three restructure rather than record; a card's rank steers nothing and
+#: is not even in the log; and the sheet is filled in Ganesh and nowhere else,
+#: which is the reason waat.tools reads the catalogue instead of writing it.
+projects_writer = open_to_machines(ApiKeyScope.PROJECTS_WRITE)
+
+#: Posting on a mission's thread — « déployé en production », from the build
+#: that did it. The lightest write the product has: it adds a line, it changes
+#: no reference. Correcting and removing a post stay human: a machine that
+#: edits its own words is a question for another day.
+updates_writer = open_to_machines(ApiKeyScope.UPDATES_WRITE)
 
 
 @router.get(
@@ -172,7 +202,7 @@ catalog_reader = require_scope(ApiKeyScope.CATALOG_READ)
 )
 async def list_projects(
     include_inactive: bool = Query(default=False),
-    _: User = Depends(get_current_user),
+    _: Caller = Depends(projects_reader),
     use_case: ListProjectsUseCase = Depends(get_list_projects_use_case),
 ) -> list[ProjectListItemResponse]:
     """Lists the missions in the reference list."""
@@ -185,15 +215,14 @@ async def list_projects(
 )
 async def create_project(
     payload: CreateProjectRequest,
-    current_user: User = Depends(get_current_user),
+    caller: Caller = Depends(projects_writer),
     use_case: CreateProjectUseCase = Depends(get_create_project_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectResponse:
     """Declares a new mission."""
-    assert current_user.id is not None
     project = await use_case.execute(
         CreateProjectCommand(
-            actor_id=current_user.id,
+            actor_id=caller.actor_id,
             label=payload.label,
             kind=payload.kind,
             status=payload.status,
@@ -213,15 +242,14 @@ async def create_project(
 async def change_status(
     project_id: int,
     payload: ChangeStatusRequest,
-    current_user: User = Depends(get_current_user),
+    caller: Caller = Depends(projects_writer),
     use_case: ChangeProjectStatusUseCase = Depends(get_change_status_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectResponse:
     """Moves a mission to another phase."""
-    assert current_user.id is not None
     project = await use_case.execute(
         ChangeProjectStatusCommand(
-            actor_id=current_user.id, project_id=project_id, status=payload.status
+            actor_id=caller.actor_id, project_id=project_id, status=payload.status
         )
     )
     await session.commit()
@@ -234,16 +262,15 @@ async def change_status(
 async def update_project(
     project_id: int,
     payload: UpdateProjectRequest,
-    current_user: User = Depends(get_current_user),
+    caller: Caller = Depends(projects_writer),
     use_case: UpdateProjectUseCase = Depends(get_update_project_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectResponse:
     """Changes a mission. Only the fields provided are applied."""
-    assert current_user.id is not None
     provided = payload.model_dump(exclude_unset=True)
     project = await use_case.execute(
         UpdateProjectCommand(
-            actor_id=current_user.id, project_id=project_id, **provided
+            actor_id=caller.actor_id, project_id=project_id, **provided
         )
     )
     await session.commit()
@@ -303,7 +330,7 @@ async def detach_project(
 async def archive_project(
     project_id: int,
     payload: ArchiveProjectRequest,
-    current_user: User = Depends(get_current_user),
+    caller: Caller = Depends(projects_writer),
     use_case: ArchiveProjectUseCase = Depends(get_archive_project_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectResponse:
@@ -313,10 +340,9 @@ async def archive_project(
     archiving is not an edit of one field, it is a gesture that reaches what
     hangs from the mission.
     """
-    assert current_user.id is not None
     mission = await use_case.execute(
         ArchiveProjectCommand(
-            actor_id=current_user.id,
+            actor_id=caller.actor_id,
             project_id=project_id,
             sub_projects=payload.sub_projects,
         )
@@ -332,14 +358,13 @@ async def archive_project(
 )
 async def unarchive_project(
     project_id: int,
-    current_user: User = Depends(get_current_user),
+    caller: Caller = Depends(projects_writer),
     use_case: UnarchiveProjectUseCase = Depends(get_unarchive_project_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectResponse:
     """Puts a mission back into the reference list. It comes back on its own."""
-    assert current_user.id is not None
     mission = await use_case.execute(
-        UnarchiveProjectCommand(actor_id=current_user.id, project_id=project_id)
+        UnarchiveProjectCommand(actor_id=caller.actor_id, project_id=project_id)
     )
     await session.commit()
     return to_project_response(mission)
@@ -352,15 +377,14 @@ async def unarchive_project(
 )
 async def import_projects(
     payload: ImportProjectsRequest,
-    current_user: User = Depends(get_current_user),
+    caller: Caller = Depends(projects_writer),
     use_case: ImportProjectsUseCase = Depends(get_import_projects_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ImportReportResponse:
     """Imports a mission reference list. Managers only."""
-    assert current_user.id is not None
     report = await use_case.execute(
         ImportProjectsCommand(
-            actor_id=current_user.id,
+            actor_id=caller.actor_id,
             rows=[ProjectImportLine(**line.model_dump()) for line in payload.rows],
         )
     )
@@ -411,7 +435,7 @@ async def export_catalog(
 @router.get("/board", response_model=BoardResponse, operation_id="getBoard")
 async def get_board(
     include_inactive: bool = Query(default=False),
-    _: User = Depends(get_current_user),
+    _: Caller = Depends(projects_reader),
     use_case: GetBoardUseCase = Depends(get_board_use_case),
 ) -> BoardResponse:
     """Project board, one column per phase."""
@@ -509,7 +533,7 @@ async def unassign_member(
 )
 async def get_project_detail(
     project_id: int,
-    _: User = Depends(get_current_user),
+    _: Caller = Depends(projects_reader),
     use_case: GetProjectDetailUseCase = Depends(get_project_detail_use_case),
 ) -> ProjectDetailResponse:
     """The full sheet of a mission."""
@@ -691,23 +715,22 @@ async def list_project_audit_log(
 async def post_project_update(
     project_id: int,
     payload: PostUpdateRequest,
-    current_user: User = Depends(get_current_user),
+    caller: Caller = Depends(updates_writer),
     use_case: PostProjectUpdateUseCase = Depends(get_post_update_use_case),
     list_updates: ListProjectUpdatesUseCase = Depends(get_list_updates_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectUpdateResponse:
     """Posts an update on the mission."""
-    assert current_user.id is not None
     update = await use_case.execute(
         PostUpdateCommand(
-            actor_id=current_user.id, project_id=project_id, body=payload.body
+            actor_id=caller.actor_id, project_id=project_id, body=payload.body
         )
     )
     await session.commit()
     signed = next(
         s for s in await list_updates.execute(project_id) if s.update.id == update.id
     )
-    return to_project_update_response(signed, current_user.id)
+    return to_project_update_response(signed, caller.actor_id)
 
 
 @router.put(

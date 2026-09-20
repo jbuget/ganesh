@@ -134,7 +134,13 @@ export function CreateApiKeyDialog({
 
           <fieldset className="space-y-1.5">
             <legend className="text-sm font-medium">Périmètres</legend>
-            <ScopePicker value={scopes} onChange={setScopes} />
+            {/* Capped and scrolled: the catalogue grows with the API, and a
+                dialog taller than the screen hides its own « Créer ». The box
+                is drawn so the cut reads as an edge one scrolls past, rather
+                than as the end of the list. */}
+            <div className="max-h-56 overflow-y-auto rounded-md border border-slate-200 p-2.5">
+              <ScopePicker value={scopes} onChange={setScopes} />
+            </div>
           </fieldset>
 
           <div className="space-y-1.5">

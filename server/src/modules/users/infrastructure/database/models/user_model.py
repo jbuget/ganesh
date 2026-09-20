@@ -25,7 +25,9 @@ class UserModel(Base):
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     # Nullable: accounts pre-assigned by the seed have never logged in.
-    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     # Nullable all three: an account exists from its first login, long before
     # anyone has said who is behind it.
     first_name: Mapped[str | None] = mapped_column(String(255), nullable=True)

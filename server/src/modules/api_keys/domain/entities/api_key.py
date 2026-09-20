@@ -12,6 +12,7 @@ from src.shared.exceptions.domain_exceptions import (
     ForbiddenActionError,
     ValidationError,
 )
+from src.shared.utils import clock
 
 #: Below this, a fresh call is not worth a write to the database. Same
 #: reasoning as `LOGIN_FRESHNESS`: without a window, the column would measure
@@ -35,14 +36,25 @@ class ApiKeyScope(StrEnum):
 
     What they cover includes scopes that **do not exist yet**: that is the
     price of breadth, and the reason the form says so.
+
+    **A broad scope covers what a route opens to machines, never what the API
+    knows.** The distinction only became worth writing down once the product
+    held something deliberately closed: the moods are given in confidence, and
+    no scope reaches them because no route asks for one. A resource stays shut
+    by a route not opting in, and `all:read` cannot talk it open.
     """
 
     ALL_READ = "all:read"
     ALL_WRITE = "all:write"
     CATALOG_READ = "catalog:read"
+    ROADMAP_READ = "roadmap:read"
+    STATS_READ = "stats:read"
     PROJECTS_READ = "projects:read"
     PROJECTS_WRITE = "projects:write"
+    UPDATES_WRITE = "updates:write"
     ENTRIES_READ = "entries:read"
+    USERS_READ = "users:read"
+    AUDIT_READ = "audit:read"
 
     @property
     def is_read(self) -> bool:
@@ -78,7 +90,7 @@ class ApiKey:
     #: The manager who minted it. Not always the owner.
     created_by: int
     scopes: list[ApiKeyScope] = field(default_factory=list)
-    created_at: datetime = field(default_factory=datetime.now)
+    created_at: datetime = field(default_factory=clock.now)
     expires_at: datetime | None = None
     last_used_at: datetime | None = None
     revoked_at: datetime | None = None

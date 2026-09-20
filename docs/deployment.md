@@ -99,6 +99,10 @@ aws ssm put-parameter --profile waat-prod --region eu-west-3 \
   --value file://server/.env.production
 ```
 
+The Gemini key is part of that same file, and optional: without it La Gazette
+generates digests with their facts and no chapeau. Nothing else in the
+application touches it.
+
 **The deploy token:**
 
 ```bash
@@ -255,7 +259,10 @@ A migration does not roll back with it. Read `alembic downgrade` before
 reaching for it, and on a schema change prefer rolling forward.
 
 **Rotating the environment** is `put-parameter --overwrite` followed by a
-deploy: the host only reads the parameter when it deploys.
+deploy: the host only reads the parameter when it deploys. That is also how
+the Gemini key or the model of La Gazette is changed — there is no screen for
+either, on purpose: a key the application could hand back is a key worth
+stealing.
 
 ## What is not done yet
 

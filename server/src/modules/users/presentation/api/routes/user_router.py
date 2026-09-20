@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
+from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
+from src.modules.api_keys.presentation.dependencies import Caller, open_to_machines
 from src.modules.auth.presentation.dependencies import (
     get_current_manager,
     get_current_user,
@@ -47,6 +49,11 @@ from src.modules.users.presentation.dependencies import (
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+#: The directory a machine may read. Reading only: a role and an activation are
+#: a manager's gestures, and a key carries no role — opening them to one would
+#: hand a machine the very power the design refuses it.
+directory_reader = open_to_machines(ApiKeyScope.USERS_READ)
+
 
 @router.get("/me", response_model=UserResponse, operation_id="getMe")
 async def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
@@ -57,7 +64,7 @@ async def get_me(current_user: User = Depends(get_current_user)) -> UserResponse
 @router.get("", response_model=list[UserResponse], operation_id="listUsers")
 async def list_users(
     include_inactive: bool = Query(default=False),
-    _: User = Depends(get_current_user),
+    _: Caller = Depends(directory_reader),
     use_case: ListUsersUseCase = Depends(get_list_users_use_case),
 ) -> list[UserResponse]:
     """Lists the teammates. Anyone may look at anyone's month."""

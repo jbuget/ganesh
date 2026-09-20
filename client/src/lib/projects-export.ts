@@ -1,6 +1,7 @@
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 import { category, phaseLabel, priority } from "@/lib/board";
 import { formatShortDate } from "@/lib/dates";
+import { parisDay } from "@/lib/instants";
 import { buildProjectTree } from "@/lib/project-tree";
 
 /**
@@ -110,7 +111,7 @@ function row(mission: ProjectListItemResponse, parentLabel: string | null): Shee
     names(mission.contributors),
     links(mission.links),
     count(mission.comments),
-    text(latest ? formatShortDate(latest.published_at) : null),
+    text(latest ? formatShortDate(parisDay(latest.published_at)) : null),
     text(latest?.author.display_name ?? null),
   ];
 }

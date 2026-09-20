@@ -1,7 +1,5 @@
 """Deletes a mission that was never used."""
 
-from datetime import datetime
-
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
@@ -21,6 +19,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.services.deletion import ensure_can_be_deleted
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
+from src.shared.utils import clock
 
 
 class DeleteProjectUseCase:
@@ -77,7 +76,7 @@ class DeleteProjectUseCase:
                 NotificationKind.PROJECT_DELETED,
                 actor_id=command.actor_id,
                 recipients=audience,
-                at=datetime.now(),
+                at=clock.now(),
                 payload={"project_label": project.label},
             )
         )

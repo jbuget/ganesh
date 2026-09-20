@@ -1,6 +1,6 @@
 """Changes the phase of a project or a work package."""
 
-from datetime import date, datetime
+from datetime import date
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
@@ -24,6 +24,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
+from src.shared.utils import clock
 
 
 class ChangeProjectStatusUseCase:
@@ -66,7 +67,7 @@ class ChangeProjectStatusUseCase:
         # The date a phase is entered is recorded on the way through: it
         # cannot be reconstructed afterwards, and the audit log may be purged.
         await self._details.mark_phase_reached(
-            command.project_id, command.status, today or date.today()
+            command.project_id, command.status, today or clock.today()
         )
 
         await self._audit_logs.add(
@@ -85,7 +86,7 @@ class ChangeProjectStatusUseCase:
                 NotificationKind.PROJECT_STATUS_CHANGED,
                 actor_id=command.actor_id,
                 recipients=await people_on(self._assignees, command.project_id),
-                at=datetime.now(),
+                at=clock.now(),
                 project_id=command.project_id,
                 payload={
                     "from": previous.value if previous else None,

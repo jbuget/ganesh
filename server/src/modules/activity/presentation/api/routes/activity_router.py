@@ -1,7 +1,5 @@
 """Activity routes: who did what over a window, and on what."""
 
-from datetime import date
-
 from fastapi import APIRouter, Depends, Query
 
 from src.modules.activity.application.dtos.activity_dto import ActivityQuery
@@ -18,6 +16,7 @@ from src.modules.activity.presentation.dependencies import get_activity_summary_
 from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.calendar.domain.entities.period import PeriodRange
 from src.modules.users.domain.entities.user import User
+from src.shared.utils import clock
 
 router = APIRouter(prefix="/activity", tags=["activity"])
 
@@ -34,5 +33,5 @@ async def get_activity_summary(
     reading is retrospective: a window still running stops today, and what
     comes after it is read on Planification.
     """
-    summary = await use_case.execute(ActivityQuery(range_=range_, today=date.today()))
+    summary = await use_case.execute(ActivityQuery(range_=range_, today=clock.today()))
     return to_activity_summary_response(summary, range_=range_)

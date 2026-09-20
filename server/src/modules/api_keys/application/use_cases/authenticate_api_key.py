@@ -1,7 +1,6 @@
 """Letting a machine in, for one scope at a time."""
 
 from dataclasses import dataclass
-from datetime import datetime
 
 from src.modules.api_keys.domain.entities.api_key import ApiKey, ApiKeyScope
 from src.modules.api_keys.domain.repositories.api_key_repository import ApiKeyRepository
@@ -9,6 +8,7 @@ from src.modules.api_keys.domain.services import key_material
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import ForbiddenActionError
+from src.shared.utils import clock
 
 
 @dataclass(frozen=True)
@@ -57,7 +57,7 @@ class AuthenticateApiKeyUseCase:
         if not key_material.matches(secret, key.secret_hash):
             return None
 
-        now = datetime.now()
+        now = clock.now()
         if not key.is_usable(now):
             return None
 

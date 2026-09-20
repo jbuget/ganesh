@@ -3,24 +3,31 @@ import type {
   ApiKeyScope,
   ApiKeyState,
 } from "@/lib/api/generated/model";
+import { parisDay } from "@/lib/instants";
 
 /**
  * What the team reads about a service account.
  *
  * A key belongs to a machine, never to a person, and it opens nothing until a
- * route asks for one of its scopes.
+ * route asks for one of its scopes. Every scope listed here opens at least one
+ * route — a box that promised what the API does not keep would make this table
+ * say what a key opens, and say it wrong.
+ *
+ * The two « Tous » cover what a route opens to machines, never everything the
+ * API knows: a resource deliberately kept shut — the moods, given in
+ * confidence — stays shut, because no route asks for a scope on it.
  */
 
 export const SCOPES: { value: ApiKeyScope; label: string; hint: string }[] = [
   {
     value: "all:read",
     label: "Tous (lecture)",
-    hint: "Tout ce que l'API expose en lecture, y compris ce qui s'y ajoutera",
+    hint: "Toutes les lectures ouvertes aux machines, y compris celles qui s'y ajouteront",
   },
   {
     value: "all:write",
     label: "Tous (écriture)",
-    hint: "Toutes les écritures, y compris celles qui s'y ajouteront",
+    hint: "Toutes les écritures ouvertes aux machines, y compris celles qui s'y ajouteront",
   },
   {
     value: "catalog:read",
@@ -28,19 +35,44 @@ export const SCOPES: { value: ApiKeyScope; label: string; hint: string }[] = [
     hint: "Lire les services publiés, ce que fait waat.tools",
   },
   {
+    value: "roadmap:read",
+    label: "Feuille de route (lecture)",
+    hint: "Lire ce qui a été livré et ce qui est annoncé",
+  },
+  {
+    value: "stats:read",
+    label: "Statistiques (lecture)",
+    hint: "Lire les chiffres du tableau de bord",
+  },
+  {
     value: "projects:read",
     label: "Projets (lecture)",
-    hint: "Lire le référentiel des projets",
+    hint: "Lire le référentiel des projets, leur détail et ce qu'ils ont coûté",
   },
   {
     value: "projects:write",
     label: "Projets (écriture)",
-    hint: "Créer et modifier des projets",
+    hint: "Créer, modifier, archiver et importer des projets",
+  },
+  {
+    value: "updates:write",
+    label: "Mises à jour (écriture)",
+    hint: "Publier sur le fil d'un projet",
   },
   {
     value: "entries:read",
     label: "Temps (lecture)",
-    hint: "Lire les temps déclarés",
+    hint: "Exporter les temps déclarés sur une période",
+  },
+  {
+    value: "users:read",
+    label: "Équipe (lecture)",
+    hint: "Lire l'annuaire des coéquipiers",
+  },
+  {
+    value: "audit:read",
+    label: "Journal (lecture)",
+    hint: "Lire le journal des actions",
   },
 ];
 
@@ -111,9 +143,14 @@ export function sortKeys(keys: ApiKeyResponse[]): ApiKeyResponse[] {
   });
 }
 
-/** The expiry the form offers: a year, which is a deliberate default. */
+/**
+ * The expiry the form offers: a year, which is a deliberate default.
+ *
+ * Counted from the day it is in Paris, not from the UTC day: opened at eleven
+ * in the evening, `toISOString` would still name the day before and the key
+ * would be offered one day short.
+ */
 export function oneYearFromNow(today: Date = new Date()): string {
-  const expiry = new Date(today);
-  expiry.setFullYear(expiry.getFullYear() + 1);
-  return expiry.toISOString().slice(0, 10);
+  const [year, month, day] = parisDay(today.toISOString()).split("-");
+  return `${Number(year) + 1}-${month}-${day}`;
 }

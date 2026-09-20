@@ -11,6 +11,7 @@ from src.modules.projects.domain.entities.service_registry import (
 )
 from src.modules.projects.domain.entities.web_address import clean_address
 from src.shared.exceptions.domain_exceptions import ValidationError
+from src.shared.utils import clock
 
 
 class ProjectKind(StrEnum):
@@ -225,7 +226,7 @@ class Project:
         if not self.is_active:
             return
         self.is_active = False
-        self.archived_at = datetime.now()
+        self.archived_at = clock.now()
 
     def unarchive(self) -> None:
         """Put the mission back into the reference list, forgetting its exit."""

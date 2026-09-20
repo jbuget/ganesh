@@ -1,7 +1,5 @@
 """Minting, listing and revoking service accounts."""
 
-from datetime import datetime
-
 from src.modules.api_keys.application.dtos.api_key_dto import (
     ApiKeyListing,
     CreateApiKeyCommand,
@@ -23,6 +21,7 @@ from src.modules.notifications.domain.services.fan_out import notify
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError, ValidationError
+from src.shared.utils import clock
 
 
 async def people_named_by(users: UserRepository, key: ApiKey) -> dict[int, User]:
@@ -97,7 +96,7 @@ class CreateApiKeyUseCase:
                 NotificationKind.API_KEY_CREATED,
                 actor_id=command.actor_id,
                 recipients=[command.owner_id],
-                at=datetime.now(),
+                at=clock.now(),
                 payload={"key_label": key.name},
             )
         )
@@ -210,7 +209,7 @@ class RevokeApiKeyUseCase:
         if key is None:
             raise EntityNotFoundError("The key cannot be found.")
 
-        key.revoke(by=command.actor_id, at=datetime.now())
+        key.revoke(by=command.actor_id, at=clock.now())
         await self._keys.update(key)
 
         await self._audit_logs.add(
@@ -227,7 +226,7 @@ class RevokeApiKeyUseCase:
                 NotificationKind.API_KEY_REVOKED,
                 actor_id=command.actor_id,
                 recipients=[key.owner_id],
-                at=datetime.now(),
+                at=clock.now(),
                 payload={"key_label": key.name},
             )
         )

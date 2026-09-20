@@ -24,7 +24,9 @@ import type {
   AddMissionRequest,
   AddMissionToMonthParams,
   ClearEntryParams,
+  EntriesExportResponse,
   EntryResponse,
+  ExportEntriesParams,
   GetMonthGridParams,
   HTTPValidationError,
   MonthGridResponse,
@@ -216,6 +218,183 @@ export function useGetMonthGrid<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetMonthGridQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type exportEntriesResponse200 = {
+  data: EntriesExportResponse;
+  status: 200;
+};
+
+export type exportEntriesResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type exportEntriesResponseSuccess = exportEntriesResponse200 & {
+  headers: Headers;
+};
+export type exportEntriesResponseError = exportEntriesResponse422 & {
+  headers: Headers;
+};
+
+export type exportEntriesResponse =
+  exportEntriesResponseSuccess | exportEntriesResponseError;
+
+export const getExportEntriesUrl = (params: ExportEntriesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/entries/export?${stringifiedParams}`
+    : `/api/v1/entries/export`;
+};
+
+/**
+ * Everything declared between two days, whoever declared it.
+ *
+ * Declared and forecast alike, as the grid holds them: what is posted ahead
+ * is part of the register, and an export that told them apart would be
+ * reading the days rather than handing them over.
+ *
+ * Declared **on** the window, not declared *during* it: a day entered late
+ * comes out under the day it is about. Which is what a register is for, and
+ * why a pull done twice over the same window can differ.
+ * @summary Export Entries
+ */
+export const exportEntries = async (
+  params: ExportEntriesParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<exportEntriesResponse> => {
+  return bffFetcher<exportEntriesResponse>(getExportEntriesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportEntriesQueryKey = (params?: ExportEntriesParams) => {
+  return [`/api/v1/entries/export`, ...(params ? [params] : [])] as const;
+};
+
+export const getExportEntriesQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportEntries>>,
+  TError = HTTPValidationError,
+>(
+  params: ExportEntriesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportEntries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportEntriesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportEntries>>> = ({
+    signal,
+  }) => exportEntries(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportEntries>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ExportEntriesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportEntries>>
+>;
+export type ExportEntriesQueryError = HTTPValidationError;
+
+export function useExportEntries<
+  TData = Awaited<ReturnType<typeof exportEntries>>,
+  TError = HTTPValidationError,
+>(
+  params: ExportEntriesParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportEntries>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportEntries>>,
+          TError,
+          Awaited<ReturnType<typeof exportEntries>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useExportEntries<
+  TData = Awaited<ReturnType<typeof exportEntries>>,
+  TError = HTTPValidationError,
+>(
+  params: ExportEntriesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportEntries>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportEntries>>,
+          TError,
+          Awaited<ReturnType<typeof exportEntries>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportEntries<
+  TData = Awaited<ReturnType<typeof exportEntries>>,
+  TError = HTTPValidationError,
+>(
+  params: ExportEntriesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportEntries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export Entries
+ */
+
+export function useExportEntries<
+  TData = Awaited<ReturnType<typeof exportEntries>>,
+  TError = HTTPValidationError,
+>(
+  params: ExportEntriesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportEntries>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportEntriesQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

@@ -11,6 +11,7 @@ from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
     ForbiddenActionError,
 )
+from src.shared.utils import clock
 
 
 class SetMoodUseCase:
@@ -27,7 +28,7 @@ class SetMoodUseCase:
         if not author.is_active:
             raise ForbiddenActionError("A deactivated user no longer posts a mood.")
 
-        ensure_day_is_open(command.day, today or date.today())
+        ensure_day_is_open(command.day, today or clock.today())
 
         previous = await self._moods.get(command.user_id, command.day)
         return await self._moods.upsert(

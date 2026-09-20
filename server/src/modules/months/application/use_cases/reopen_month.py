@@ -1,7 +1,5 @@
 """Reopens a validated month. Managers only, and traced."""
 
-from datetime import datetime
-
 from src.modules.audit_logs.domain.entities.audit_log import AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
@@ -17,6 +15,7 @@ from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
     ForbiddenActionError,
 )
+from src.shared.utils import clock
 
 
 class ReopenMonthUseCase:
@@ -60,7 +59,7 @@ class ReopenMonthUseCase:
                 NotificationKind.MONTH_REOPENED,
                 actor_id=command.actor_id,
                 recipients=[command.target_user_id],
-                at=datetime.now(),
+                at=clock.now(),
                 day=month.month,
             )
         )

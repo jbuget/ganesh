@@ -10,7 +10,9 @@
 import { keepPreviousData } from "@tanstack/react-query";
 
 import { useGetMonthGrid } from "@/lib/api/generated/entries/entries";
+import { useGetDigest } from "@/lib/api/generated/gazette/gazette";
 import type {
+  DigestResponse,
   MonthGridResponse,
   NotificationFeedResponse,
   MyMoodsResponse,
@@ -164,4 +166,16 @@ export function useNotifications(
     total: feed?.total ?? 0,
     unreadCount: feed?.unread_count ?? 0,
   };
+}
+
+/**
+ * One month of La Gazette, in the generation asked for.
+ *
+ * No version names the latest, which is what the screen opens on. A month
+ * nobody has asked for yet comes back all the same, read live from the
+ * register and carrying no chapeau.
+ */
+export function useDigest(month: string, version: number | null) {
+  const query = useGetDigest({ month, ...(version === null ? {} : { version }) });
+  return { ...query, digest: successOf<DigestResponse>(query.data) };
 }

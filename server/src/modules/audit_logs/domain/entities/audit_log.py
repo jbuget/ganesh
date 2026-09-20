@@ -9,6 +9,8 @@ from datetime import date, datetime
 from enum import StrEnum
 from typing import Any
 
+from src.shared.utils import clock
+
 
 class AuditAction(StrEnum):
     """Nature de l'action tracee."""
@@ -39,6 +41,7 @@ class AuditAction(StrEnum):
     API_KEY_CREATE = "api_key.create"
     API_KEY_UPDATE = "api_key.update"
     API_KEY_REVOKE = "api_key.revoke"
+    GAZETTE_GENERATE = "gazette.generate"
 
 
 def _as_text(value: Any | None) -> str | None:
@@ -51,7 +54,7 @@ class AuditLog:
 
     action: AuditAction
     actor_id: int
-    at: datetime = field(default_factory=datetime.now)
+    at: datetime = field(default_factory=clock.now)
     target_user_id: int | None = None
     project_id: int | None = None
     day: date | None = None
@@ -84,7 +87,7 @@ class AuditLog:
             day=day,
             old_value=_as_text(old_value),
             new_value=_as_text(new_value),
-            at=at or datetime.now(),
+            at=at or clock.now(),
         )
 
     @classmethod
@@ -104,7 +107,7 @@ class AuditLog:
             project_id=project_id,
             day=day,
             old_value=_as_text(old_value),
-            at=at or datetime.now(),
+            at=at or clock.now(),
         )
 
     @classmethod
@@ -120,7 +123,7 @@ class AuditLog:
             actor_id=actor_id,
             target_user_id=target_user_id,
             day=month,
-            at=at or datetime.now(),
+            at=at or clock.now(),
         )
 
     @classmethod
@@ -136,7 +139,7 @@ class AuditLog:
             actor_id=actor_id,
             target_user_id=target_user_id,
             day=month,
-            at=at or datetime.now(),
+            at=at or clock.now(),
         )
 
     @classmethod
@@ -155,7 +158,7 @@ class AuditLog:
             target_user_id=target_user_id,
             project_id=project_id,
             day=month,
-            at=at or datetime.now(),
+            at=at or clock.now(),
         )
 
     @classmethod
@@ -174,7 +177,7 @@ class AuditLog:
             target_user_id=target_user_id,
             project_id=project_id,
             day=month,
-            at=at or datetime.now(),
+            at=at or clock.now(),
         )
 
     @classmethod
@@ -193,7 +196,7 @@ class AuditLog:
             target_user_id=member_id,
             project_id=project_id,
             new_value=role,
-            at=at or datetime.now(),
+            at=at or clock.now(),
         )
 
     @classmethod
@@ -212,7 +215,7 @@ class AuditLog:
             target_user_id=member_id,
             project_id=project_id,
             old_value=role,
-            at=at or datetime.now(),
+            at=at or clock.now(),
         )
 
     @classmethod
@@ -230,5 +233,5 @@ class AuditLog:
             project_id=project_id,
             old_value=old_status,
             new_value=new_status,
-            at=at or datetime.now(),
+            at=at or clock.now(),
         )

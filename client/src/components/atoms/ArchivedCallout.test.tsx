@@ -5,7 +5,7 @@ import { ArchivedCallout } from "./ArchivedCallout";
 
 describe("ArchivedCallout", () => {
   it("says when the mission left the reference list", () => {
-    render(<ArchivedCallout archivedAt="2026-09-18T00:36:07.943722" />);
+    render(<ArchivedCallout archivedAt="2026-09-17T22:36:07.943722Z" />);
 
     expect(screen.getByRole("status")).toHaveTextContent(
       "Ce projet a été archivé le 18/09/2026.",

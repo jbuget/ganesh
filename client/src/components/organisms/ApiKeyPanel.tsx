@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import type { ApiKeyResponse, ApiKeyScope } from "@/lib/api/generated/model";
 import { isUsable, pruneCovered, scopeLabel } from "@/lib/api-keys";
 import { formatSpelledDate } from "@/lib/dates";
+import { parisDay } from "@/lib/instants";
 
 interface ApiKeyPanelProps {
   apiKey: ApiKeyResponse;
@@ -41,7 +42,7 @@ function Row({ title, children }: { title: string; children: React.ReactNode }) 
 /** A date, or a dash where there is nothing to say. */
 function Day({ iso }: { iso: string | null }) {
   if (iso === null) return <span className="text-slate-400">—</span>;
-  return <span className="text-slate-700">{formatSpelledDate(iso)}</span>;
+  return <span className="text-slate-700">{formatSpelledDate(parisDay(iso))}</span>;
 }
 
 /**
@@ -120,7 +121,7 @@ export function ApiKeyPanel({
             {apiKey.revoked_at && (
               <Row title="Révoquée le">
                 <span className="flex flex-wrap items-center gap-x-2 text-slate-700">
-                  {formatSpelledDate(apiKey.revoked_at)}
+                  {formatSpelledDate(parisDay(apiKey.revoked_at))}
                   {apiKey.revoked_by && (
                     <span className="text-xs text-slate-500">
                       par {apiKey.revoked_by.display_name}

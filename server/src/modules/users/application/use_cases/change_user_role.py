@@ -1,7 +1,5 @@
 """Changes a teammate's role."""
 
-from datetime import datetime
-
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
@@ -16,6 +14,7 @@ from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
     ForbiddenActionError,
 )
+from src.shared.utils import clock
 
 
 class ChangeUserRoleUseCase:
@@ -60,7 +59,7 @@ class ChangeUserRoleUseCase:
                 NotificationKind.USER_ROLE_CHANGED,
                 actor_id=command.actor_id,
                 recipients=[command.target_user_id],
-                at=datetime.now(),
+                at=clock.now(),
                 payload={"from": previous.value, "to": command.role.value},
             )
         )
