@@ -1,7 +1,9 @@
 # FastAPI and dependencies
-fastapi==0.115.6
+# Held at what the MCP SDK needs: `mcp` pulls starlette 1.x, which FastAPI
+# refused until 0.141. The three move together or not at all.
+fastapi==0.141.1
 uvicorn[standard]==0.34.0
-pydantic==2.10.4
+pydantic==2.13.5
 pydantic-settings==2.7.0
 email-validator==2.2.0
 
@@ -16,6 +18,10 @@ python-jose[cryptography]==3.3.0
 
 # HTTP client
 httpx==0.28.1
+
+# Tools the team reaches from a terminal client. Served at /mcp, behind the
+# same keys and the same scopes as the rest.
+mcp==2.2.0
 
 # Utilities
 python-dotenv==1.0.1

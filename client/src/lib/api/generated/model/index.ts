@@ -150,5 +150,6 @@ export * from "./updateUserIdentityRequest";
 export * from "./userRecordResponse";
 export * from "./userResponse";
 export * from "./validationError";
+export * from "./validationErrorCtx";
 export * from "./weeklyLoadResponse";
 export * from "./workloadPlanResponse";
