@@ -8,6 +8,8 @@ date counts as missed.
 from calendar import monthrange
 from datetime import date, datetime, time
 
+from src.shared.utils import clock
+
 
 def first_day(month: date) -> date:
     """The day the month opens on, whichever day of it was handed over."""
@@ -25,8 +27,12 @@ def bounds(month: date) -> tuple[datetime, datetime]:
 
     A numéro covers what happened during the month, and nothing of the day it
     was published: reading a month again a year later must give what it gave.
+
+    Whose month it is has to be said, the register holding instants in UTC:
+    it is the team's, so both ends are Paris midnights. Left naive, the last
+    two hours of September would be read into October.
     """
     return (
-        datetime.combine(first_day(month), time.min),
-        datetime.combine(last_day(month), time.max),
+        clock.as_instant(datetime.combine(first_day(month), time.min)),
+        clock.as_instant(datetime.combine(last_day(month), time.max)),
     )

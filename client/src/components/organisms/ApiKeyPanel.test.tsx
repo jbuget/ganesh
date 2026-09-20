@@ -15,8 +15,8 @@ const key = (overrides: Partial<ApiKeyResponse> = {}) =>
     scopes: ["catalog:read"],
     owner: person,
     created_by: { id: 2, display_name: "Jérémy BUGET", initials: "JB" },
-    created_at: "2026-01-15T10:00:00",
-    expires_at: "2027-01-15T10:00:00",
+    created_at: "2026-01-15T09:00:00Z",
+    expires_at: "2027-01-15T09:00:00Z",
     last_used_at: null,
     revoked_at: null,
     revoked_by: null,
@@ -108,13 +108,19 @@ describe("ApiKeyPanel", () => {
   describe("a key that is already cut", () => {
     const revoked: Partial<ApiKeyResponse> = {
       state: "revoked",
-      revoked_at: "2026-06-01T10:00:00",
+      revoked_at: "2026-05-31T22:00:00Z",
       revoked_by: { id: 2, display_name: "Jérémy BUGET", initials: "JB" },
     };
 
     it("says when it was cut and by whom", () => {
       panel(revoked);
       expect(screen.getByText(/par Jérémy BUGET/)).toBeInTheDocument();
+    });
+
+    it("dates the cut by the Paris clock, not the one the API counted in", () => {
+      // Ten in the evening in UTC is already the day after in Paris.
+      panel(revoked);
+      expect(screen.getByText(/1 juin 2026/)).toBeInTheDocument();
     });
 
     it("cannot be renamed: it is a piece of the audit", () => {

@@ -11,7 +11,7 @@ table of keys say what a key opens, and say it wrong.
 """
 
 from collections.abc import AsyncIterator
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -40,6 +40,7 @@ from src.modules.api_keys.presentation.dependencies import (
 from src.modules.users.application.use_cases.list_users import ListUsersUseCase
 from src.modules.users.domain.entities.user import Role, User
 from src.modules.users.presentation.dependencies import get_list_users_use_case
+from src.shared.utils import clock
 from tests.helpers.in_memory_repositories import (
     InMemoryApiKeyRepository,
     InMemoryUserRepository,
@@ -182,7 +183,7 @@ class TestAMachineComesThroughToo:
         stored = await http.keys.get_by_public_id(  # type: ignore[attr-defined]
             public_id
         )
-        stored.revoke(by=2, at=datetime.now())
+        stored.revoke(by=2, at=clock.now())
 
         assert (await http.get(URL, headers=bearer(token))).status_code == 401
 

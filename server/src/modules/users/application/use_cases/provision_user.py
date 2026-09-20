@@ -9,6 +9,7 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 from src.modules.users.application.dtos.user_dto import EntraIdentity
 from src.modules.users.domain.entities.user import Role, User
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.shared.utils import clock
 
 
 class ProvisionUserUseCase:
@@ -29,7 +30,7 @@ class ProvisionUserUseCase:
     async def execute(
         self, identity: EntraIdentity, now: datetime | None = None
     ) -> User:
-        now = now or datetime.now()
+        now = now or clock.now()
 
         existing = await self._users.get_by_entra_oid(identity.oid)
         if existing is not None:

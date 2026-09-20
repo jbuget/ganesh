@@ -30,10 +30,10 @@ const jeremy: UserResponse = {
   initials: "JB",
   role: "MANAGER",
   is_active: true,
-  last_login_at: "2026-09-17T09:00:00",
+  last_login_at: "2026-09-17T07:00:00Z",
 };
 
-const NOW = new Date("2026-09-17T12:00:00");
+const NOW = new Date("2026-09-17T10:00:00Z");
 
 const onChangeRole = vi.fn();
 const onUpdateIdentity = vi.fn();

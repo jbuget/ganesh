@@ -32,6 +32,7 @@ from src.modules.projects.domain.services.project_cost import (
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.enums.department import Department
+from src.shared.utils import clock
 
 
 @dataclass
@@ -88,7 +89,7 @@ class ListProjectsUseCase:
     async def execute(
         self, include_inactive: bool = False, today: date | None = None
     ) -> list[ListedProject]:
-        day = today or date.today()
+        day = today or clock.today()
         missions = await self._projects.list_all(include_inactive=include_inactive)
         entries = await self._entries.count_by_project()
         delivered = await self._entries.sum_realised_by_project(day)

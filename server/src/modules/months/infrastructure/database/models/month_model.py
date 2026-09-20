@@ -24,11 +24,15 @@ class MonthModel(Base):
         Enum(MonthState, name="month_state", native_enum=False, length=16),
         default=MonthState.OPEN,
     )
-    validated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    validated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     validated_by: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    reopened_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    reopened_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     reopened_by: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )

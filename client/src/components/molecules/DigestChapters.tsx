@@ -6,6 +6,7 @@ import { useState } from "react";
 import { DigestFactLine } from "@/components/atoms/DigestFactLine";
 import type { ChapterResponse, MovementKind } from "@/lib/api/generated/model";
 import { formatShortDate } from "@/lib/dates";
+import { parisDay } from "@/lib/instants";
 import { chapterLine, chapterTitle } from "@/lib/gazette";
 import { STRONG_RULE } from "@/lib/table-frame";
 
@@ -95,7 +96,7 @@ export function DigestChapters({ chapters }: DigestChaptersProps) {
                     key={`${movement.at}-${movement.kind}-${rank}`}
                     sentence={chapterLine(movement, chapter)}
                     dot={DOTS[movement.kind] ?? "bg-slate-300"}
-                    when={formatShortDate(movement.at)}
+                    when={formatShortDate(parisDay(movement.at))}
                   />
                 ))}
               </ul>

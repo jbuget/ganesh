@@ -15,7 +15,7 @@ const TEAM: UserResponse[] = [
     initials: "JB",
     role: "MANAGER",
     is_active: true,
-    last_login_at: "2026-09-17T09:00:00",
+    last_login_at: "2026-09-17T07:00:00Z",
     github_username: "jbuget",
   },
   {

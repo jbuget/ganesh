@@ -4,15 +4,10 @@ import { ArrowRight } from "lucide-react";
 
 import type { AuditLogEntryResponse } from "@/lib/api/generated/model";
 import { auditSentence } from "@/lib/audit-log";
+import { formatParisTime } from "@/lib/instants";
 
 interface AuditLogRowProps {
   entry: AuditLogEntryResponse;
-}
-
-/** The time of day, on the clock the server recorded it by. */
-function atTime(iso: string): string {
-  const [hours, minutes] = iso.slice(11, 16).split(":");
-  return `${hours}:${minutes}`;
 }
 
 /**
@@ -35,7 +30,7 @@ export function AuditLogRow({ entry }: AuditLogRowProps) {
   return (
     <li className="flex items-baseline gap-3 border-b border-slate-200 px-3 py-2 last:border-b-0">
       <span className="w-10 shrink-0 text-xs tabular-nums text-slate-400">
-        {atTime(entry.at)}
+        {formatParisTime(entry.at)}
       </span>
 
       <span className="min-w-0 flex-1">

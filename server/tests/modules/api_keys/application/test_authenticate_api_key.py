@@ -21,6 +21,7 @@ from src.modules.api_keys.domain.entities.api_key import (
 from src.modules.api_keys.domain.services import key_material
 from src.modules.users.domain.entities.user import User
 from src.shared.exceptions.domain_exceptions import ForbiddenActionError
+from src.shared.utils import clock
 from tests.helpers.in_memory_repositories import (
     InMemoryApiKeyRepository,
     InMemoryUserRepository,
@@ -106,15 +107,15 @@ class TestTurnedAwayWithoutASayingWhy:
     @pytest.mark.asyncio
     async def test_an_expired_key(self) -> None:
         use_case, token, _ = build(
-            created_at=datetime.now() - timedelta(days=400),
-            expires_at=datetime.now() - timedelta(days=1),
+            created_at=clock.now() - timedelta(days=400),
+            expires_at=clock.now() - timedelta(days=1),
         )
         assert await use_case.execute(token, CATALOG) is None
 
     @pytest.mark.asyncio
     async def test_a_revoked_key(self) -> None:
         use_case, token, key = build()
-        key.revoke(by=20, at=datetime.now())
+        key.revoke(by=20, at=clock.now())
         assert await use_case.execute(token, CATALOG) is None
 
     @pytest.mark.asyncio
@@ -163,7 +164,7 @@ class TestRecordingUse:
     @pytest.mark.asyncio
     async def test_a_call_past_the_window_stamps_again(self) -> None:
         use_case, token, key = build(
-            last_used_at=datetime.now() - USE_FRESHNESS - timedelta(minutes=1)
+            last_used_at=clock.now() - USE_FRESHNESS - timedelta(minutes=1)
         )
         stale = key.last_used_at
         await use_case.execute(token, CATALOG)

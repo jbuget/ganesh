@@ -1,4 +1,6 @@
 /** How long ago, spelled out and no more precise than it needs to be. */
+import { parisDay } from "@/lib/instants";
+
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
@@ -34,6 +36,9 @@ export function since(iso: string, now: Date): string {
     "nov.",
     "déc.",
   ];
-  const date = new Date(iso);
-  return `le ${date.getDate()} ${MONTH[date.getMonth()]}`;
+  // The day it was in Paris, not the one the reader's own zone is on: a
+  // message posted at half past midnight is dated by the office, not by
+  // wherever it is being read.
+  const [, month, day] = parisDay(iso).split("-").map(Number);
+  return `le ${day} ${MONTH[month - 1]}`;
 }

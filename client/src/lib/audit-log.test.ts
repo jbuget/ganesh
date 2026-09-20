@@ -12,7 +12,7 @@ function entry(
 ): AuditLogEntryResponse {
   return {
     id: 1,
-    at: "2026-09-17T10:00:00",
+    at: "2026-09-17T08:00:00Z",
     action,
     actor: LIN,
     target_user: null,
@@ -351,19 +351,27 @@ describe("groupAuditByDay", () => {
 
   it("says the day once, over the gestures made that day", () => {
     const days = groupAuditByDay([
-      on("2026-09-17T14:05:00"),
-      on("2026-09-17T09:12:00"),
-      on("2026-09-16T18:00:00"),
+      on("2026-09-17T12:05:00Z"),
+      on("2026-09-17T07:12:00Z"),
+      on("2026-09-16T16:00:00Z"),
     ]);
 
     expect(days.map((one) => one.day)).toEqual(["2026-09-17", "2026-09-16"]);
     expect(days[0].entries).toHaveLength(2);
   });
 
+  it("files a gesture under the day Paris was on, not the one UTC was still on", () => {
+    // Half past midnight in Paris is the evening before in UTC: filed by the
+    // raw string, the line would land under a heading nobody worked on it.
+    const days = groupAuditByDay([on("2026-07-20T23:30:00Z")]);
+
+    expect(days.map((one) => one.day)).toEqual(["2026-07-21"]);
+  });
+
   it("keeps the order it was served in, so pages stack", () => {
     const days = groupAuditByDay([
-      on("2026-09-16T18:00:00"),
-      on("2026-09-17T09:12:00"),
+      on("2026-09-16T16:00:00Z"),
+      on("2026-09-17T07:12:00Z"),
     ]);
 
     expect(days.map((one) => one.day)).toEqual(["2026-09-16", "2026-09-17"]);

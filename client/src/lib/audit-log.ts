@@ -7,6 +7,7 @@ import type {
 import { category, phaseLabel, priority } from "@/lib/board";
 import { formatDecimalDays, formatMonthOf, formatSpelledDate } from "@/lib/dates";
 import { departmentLabel } from "@/lib/departments";
+import { parisDay } from "@/lib/instants";
 import { CRITICALITIES, SERVICE_LINKS, SERVICE_TYPES } from "@/lib/service-sheet";
 
 /**
@@ -301,7 +302,7 @@ export interface AuditDay {
 export function groupAuditByDay(entries: AuditLogEntryResponse[]): AuditDay[] {
   const days: AuditDay[] = [];
   for (const entry of entries) {
-    const day = entry.at.slice(0, 10);
+    const day = parisDay(entry.at);
     const current = days.at(-1);
     if (current?.day === day) current.entries.push(entry);
     else days.push({ day, entries: [entry] });

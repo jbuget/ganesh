@@ -8,7 +8,7 @@ knows one thing of the keys, the prefix that tells one at the door.
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from functools import lru_cache
 from typing import Any
 
@@ -54,6 +54,7 @@ from src.modules.entries.presentation.dependencies import (
 )
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.shared.utils import clock
 
 
 def get_api_key_repository(
@@ -196,7 +197,7 @@ async def admit_machine(
     # Consulted once the key has proved itself: the limit guards against a
     # caller that holds a real key, not against noise at the door.
     assert caller.key.id is not None
-    decision = await rate_limit.execute(caller.key.id, datetime.now())
+    decision = await rate_limit.execute(caller.key.id, clock.now())
     announce(response, rate_limit.allowance, decision)
     if not decision.allowed:
         raise HTTPException(

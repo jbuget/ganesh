@@ -10,6 +10,7 @@ from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
     ForbiddenActionError,
 )
+from src.shared.utils import clock
 
 
 class ClearMoodUseCase:
@@ -33,7 +34,7 @@ class ClearMoodUseCase:
         if not author.is_active:
             raise ForbiddenActionError("A deactivated user no longer posts a mood.")
 
-        ensure_day_is_open(command.day, today or date.today())
+        ensure_day_is_open(command.day, today or clock.today())
 
         # A day carrying no mood is left alone rather than reported: taking
         # back what was never posted is what a second click on the same face
