@@ -54,7 +54,7 @@ describe("AppSidebar", () => {
     );
 
     // The labels disappear to the eye, never from the accessibility tree.
-    expect(screen.getByRole("link", { name: /Activité/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Saisie des temps/ })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Déplier la barre latérale" }),
     ).toHaveAttribute("aria-pressed", "true");
@@ -64,7 +64,7 @@ describe("AppSidebar", () => {
     render(<AppSidebar />);
 
     expect(screen.getByRole("link", { name: /Accueil/ })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Activité/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Saisie des temps/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Projets/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Planification/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Statistiques/ })).toBeInTheDocument();
@@ -86,9 +86,9 @@ describe("AppSidebar", () => {
 
     expect(labels[0]).toMatch(/Accueil/);
     expect(screen.getByRole("link", { name: /Accueil/ })).toHaveAttribute("href", "/");
-    expect(screen.getByRole("link", { name: /Activité/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Saisie des temps/ })).toHaveAttribute(
       "href",
-      "/activite",
+      "/timesheet",
     );
   });
 

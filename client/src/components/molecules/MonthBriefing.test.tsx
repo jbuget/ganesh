@@ -45,7 +45,7 @@ describe("MonthBriefing", () => {
     expect(screen.getByText(/août 2026/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Valider" })).toHaveAttribute(
       "href",
-      "/activite?month=2026-08",
+      "/timesheet?month=2026-08",
     );
   });
 
@@ -112,7 +112,7 @@ describe("MonthBriefing", () => {
     expect(screen.getByText("Refonte extranet")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Déclarer" })).toHaveAttribute(
       "href",
-      "/activite",
+      "/timesheet",
     );
   });
 
