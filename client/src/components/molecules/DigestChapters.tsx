@@ -7,6 +7,7 @@ import { DigestFactLine } from "@/components/atoms/DigestFactLine";
 import type { ChapterResponse, MovementKind } from "@/lib/api/generated/model";
 import { formatShortDate } from "@/lib/dates";
 import { chapterLine, chapterTitle } from "@/lib/gazette";
+import { STRONG_RULE } from "@/lib/table-frame";
 
 interface DigestChaptersProps {
   chapters: ChapterResponse[];
@@ -51,7 +52,7 @@ export function DigestChapters({ chapters }: DigestChaptersProps) {
   const [opened, setOpened] = useState<(number | null)[]>([]);
 
   return (
-    <ul className="overflow-hidden rounded-lg border border-slate-200">
+    <ul className={`overflow-hidden border ${STRONG_RULE}`}>
       {chapters.map((chapter) => {
         const isOpen = opened.includes(chapter.project_id);
         const title = chapterTitle(chapter);
@@ -59,7 +60,7 @@ export function DigestChapters({ chapters }: DigestChaptersProps) {
         return (
           <li
             key={chapter.project_id ?? "team"}
-            className="border-b border-slate-100 last:border-b-0"
+            className="border-b border-slate-200 last:border-b-0"
           >
             <button
               type="button"

@@ -71,7 +71,9 @@ export function movementPredicate(movement: MovementResponse): string {
     case "teammate_joined":
       return "a rejoint l'équipe";
     case "teammate_returned":
-      return "est revenu dans l'équipe";
+      // « est revenue » for half the team, and the application holds no
+      // gender — rightly. « de retour » agrees with nobody.
+      return "est de retour dans l'équipe";
     case "teammate_left":
       return "a quitté l'équipe";
     default:
@@ -126,7 +128,7 @@ export function highlightSentence(highlight: HighlightResponse): string {
     case "teammate_joined":
       return `${subject} a rejoint l'équipe`;
     case "teammate_returned":
-      return `${subject} est revenu dans l'équipe`;
+      return `${subject} est de retour dans l'équipe`;
     case "teammate_left":
       return `${subject} a quitté l'équipe`;
     default:

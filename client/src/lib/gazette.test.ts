@@ -140,6 +140,16 @@ describe("movementSentence", () => {
     );
   });
 
+  it("says a return without agreeing with anybody's gender", () => {
+    /* « est revenue » for half the team, and the application holds no
+       gender — rightly. */
+    expect(
+      movementSentence(
+        movement({ kind: "teammate_returned", subject: "Léa", project_id: null }),
+      ),
+    ).toBe("Léa est de retour dans l'équipe");
+  });
+
   it("names who joined and who left", () => {
     expect(
       movementSentence(movement({ kind: "teammate_joined", subject: "Sam" })),

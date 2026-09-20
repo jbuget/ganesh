@@ -4,12 +4,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 import { DigestChapeau } from "@/components/atoms/DigestChapeau";
-import { DigestTally } from "@/components/atoms/DigestTally";
+
 import { DigestVersionPicker } from "@/components/atoms/DigestVersionPicker";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { RegenerateDigestDialog } from "@/components/atoms/RegenerateDigestDialog";
 import { DigestHighlights } from "@/components/molecules/DigestHighlights";
 import { DigestChapters } from "@/components/molecules/DigestChapters";
+import { DigestTally } from "@/components/molecules/DigestTally";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { Button } from "@/components/ui/button";
 import { formatMonth } from "@/lib/dates";
