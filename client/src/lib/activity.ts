@@ -4,7 +4,11 @@
  * Retrospective and factual, where Planification is prospective: nothing on
  * this screen is placed or supposed, everything was declared.
  */
-import type { ActivityLineResponse, PeriodRange } from "@/lib/api/generated/model";
+import type {
+  ActivityLineResponse,
+  ActivitySummaryResponse,
+  PeriodRange,
+} from "@/lib/api/generated/model";
 import { NOTHING, formatPersonDays } from "@/lib/statistics";
 
 /**
@@ -64,6 +68,52 @@ export function formatMovement(days: number): string | null {
   if (days === 0) return null;
   // A true minus sign, not a hyphen: at this size the hyphen reads as a dash.
   return `${days < 0 ? "−" : "+"}${formatPersonDays(Math.abs(days))} j`;
+}
+
+/** One mission somebody put time on, and how much. */
+export interface MissionShare {
+  projectId: number;
+  label: string;
+  days: number;
+  isOffProject: boolean;
+}
+
+/**
+ * What one person put time on over the window, heaviest first.
+ *
+ * Read on the rolled-up lines, as the « Projets » count beside it is: four
+ * packages of one product are one mission everywhere else on the screen, and
+ * a breakdown that split them would contradict the figure it sits next to.
+ *
+ * Off-project work is in, and flagged rather than dropped: someone at 5 days
+ * of which 3 on leave has not spent their week the way the bare total
+ * suggests.
+ */
+export function missionsOf(
+  summary: ActivitySummaryResponse,
+  contributorId: number,
+): MissionShare[] {
+  const shares = [
+    ...summary.projects.map((line) => share(line, contributorId, false)),
+    ...summary.off_project.map((line) => share(line, contributorId, true)),
+  ];
+
+  return shares
+    .filter((mission) => mission.days > 0)
+    .sort((a, b) => b.days - a.days || a.label.localeCompare(b.label, "fr"));
+}
+
+function share(
+  line: ActivityLineResponse,
+  contributorId: number,
+  isOffProject: boolean,
+): MissionShare {
+  return {
+    projectId: line.project_id,
+    label: line.label,
+    days: line.days_by_contributor[contributorId] ?? 0,
+    isOffProject,
+  };
 }
 
 /** Every mission of a branch, the project first then its packages. */

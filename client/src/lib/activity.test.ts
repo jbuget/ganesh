@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { ACTIVITY_RANGES, formatDays, formatMovement, comparedWith } from "./activity";
+import type {
+  ActivityLineResponse,
+  ActivitySummaryResponse,
+} from "@/lib/api/generated/model";
+
+import {
+  ACTIVITY_RANGES,
+  comparedWith,
+  formatDays,
+  formatMovement,
+  missionsOf,
+} from "./activity";
 
 describe("activity windows", () => {
   it("offers anchored windows only", () => {
@@ -64,5 +75,96 @@ describe("comparedWith", () => {
 
   it("falls back on a plain wording for a window it does not know", () => {
     expect(comparedWith("last_90_days")).toBe("à la période précédente");
+  });
+});
+
+describe("missionsOf", () => {
+  function aLine(over: Partial<ActivityLineResponse> = {}): ActivityLineResponse {
+    return {
+      project_id: 1,
+      label: "WAATcher",
+      kind: "project",
+      status: null,
+      category: null,
+      days_by_contributor: {},
+      own_days_by_contributor: {},
+      days: 0,
+      own_days: 0,
+      share: null,
+      movement: 0,
+      is_new: false,
+      packages: [],
+      ...over,
+    };
+  }
+
+  function aSummary(
+    projects: ActivityLineResponse[],
+    offProject: ActivityLineResponse[] = [],
+  ): ActivitySummaryResponse {
+    return {
+      period: {
+        range: "last_week",
+        start: "2026-09-07",
+        end: "2026-09-13",
+        working_days: 5,
+      },
+      contributors: [],
+      projects,
+      off_project: offProject,
+      project_days: 0,
+      off_project_days: 0,
+      declared_days: 0,
+      expected_days: 0,
+      coverage: null,
+    };
+  }
+
+  it("keeps only what this person put time on", () => {
+    const summary = aSummary([
+      aLine({ project_id: 1, label: "WAATcher", days_by_contributor: { 7: 3 } }),
+      aLine({ project_id: 2, label: "NOMAD", days_by_contributor: { 8: 4 } }),
+    ]);
+
+    expect(missionsOf(summary, 7).map((m) => m.label)).toEqual(["WAATcher"]);
+  });
+
+  it("reads the heaviest mission first", () => {
+    const summary = aSummary([
+      aLine({ project_id: 1, label: "Petit", days_by_contributor: { 7: 1 } }),
+      aLine({ project_id: 2, label: "Gros", days_by_contributor: { 7: 4 } }),
+    ]);
+
+    expect(missionsOf(summary, 7).map((m) => m.label)).toEqual(["Gros", "Petit"]);
+  });
+
+  it("counts a project with its packages, as the mission count beside it does", () => {
+    // days_by_contributor is already rolled up: four packages of one product
+    // are one mission everywhere else on the screen.
+    const summary = aSummary([
+      aLine({ project_id: 1, label: "WAATcher", days_by_contributor: { 7: 5 } }),
+    ]);
+
+    expect(missionsOf(summary, 7)[0].days).toBe(5);
+  });
+
+  it("keeps off-project work, and says that is what it is", () => {
+    // 5 days of which 3 on leave is not a week spent the way the bare total
+    // suggests.
+    const summary = aSummary(
+      [aLine({ project_id: 1, label: "WAATcher", days_by_contributor: { 7: 2 } })],
+      [aLine({ project_id: 9, label: "Congés", days_by_contributor: { 7: 3 } })],
+    );
+
+    expect(missionsOf(summary, 7)).toEqual([
+      { projectId: 9, label: "Congés", days: 3, isOffProject: true },
+      { projectId: 1, label: "WAATcher", days: 2, isOffProject: false },
+    ]);
+  });
+
+  it("says nothing for someone who declared nothing", () => {
+    const summary = aSummary([aLine({ project_id: 1, days_by_contributor: { 7: 3 } })]);
+
+    expect(missionsOf(summary, 99)).toEqual([]);
   });
 });

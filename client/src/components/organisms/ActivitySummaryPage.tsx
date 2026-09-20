@@ -95,7 +95,10 @@ export function ActivitySummaryPage() {
           </TabsContent>
 
           <TabsContent value="person" className="mt-4">
-            <ActivityContributors contributors={summary.contributors} />
+            <ActivityContributors
+              contributors={summary.contributors}
+              summary={summary}
+            />
           </TabsContent>
         </Tabs>
       </div>
