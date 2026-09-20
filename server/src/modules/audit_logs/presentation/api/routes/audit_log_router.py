@@ -26,6 +26,7 @@ from src.modules.audit_logs.presentation.api.schemas.audit_log_schemas import (
     AuditLogPageResponse,
 )
 from src.modules.audit_logs.presentation.dependencies import get_audit_log_use_case
+from src.shared.utils import clock
 
 router = APIRouter(prefix="/audit-logs", tags=["audit-logs"])
 
@@ -51,5 +52,11 @@ async def list_audit_log(
     `total` counts what the window holds, not what the page shows: a reader
     knows from the first call how much is left to fetch.
     """
-    page = await use_case.execute(limit=limit, offset=offset, since=since)
+    # A caller that states no zone is read on the Paris clock: `since` is a
+    # moment someone looked at, and the host's own clock is nobody's.
+    page = await use_case.execute(
+        limit=limit,
+        offset=offset,
+        since=None if since is None else clock.as_instant(since),
+    )
     return to_audit_log_page_response(page)

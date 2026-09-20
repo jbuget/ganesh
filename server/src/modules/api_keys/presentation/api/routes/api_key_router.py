@@ -4,8 +4,6 @@ These three are human routes: they depend on `get_current_user`, which refuses
 API keys outright. A key can never manage keys.
 """
 
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,6 +39,7 @@ from src.modules.auth.presentation.dependencies import (
     get_current_user,
 )
 from src.modules.users.domain.entities.user import User
+from src.shared.utils import clock
 
 router = APIRouter(prefix="/api-keys", tags=["api-keys"])
 
@@ -58,7 +57,7 @@ async def list_api_keys(
     listing = await use_case.execute()
     # One reference instant for the whole table: two rows must not be dated
     # against two different « now ».
-    now = datetime.now()
+    now = clock.now()
     return [to_api_key_response(key, listing.people, now) for key in listing.keys]
 
 
@@ -87,7 +86,7 @@ async def create_api_key(
     )
     await session.commit()
     return MintedApiKeyResponse(
-        key=to_api_key_response(minted.key, minted.people, datetime.now()),
+        key=to_api_key_response(minted.key, minted.people, clock.now()),
         token=minted.token,
     )
 
@@ -111,7 +110,7 @@ async def update_api_key(
         )
     )
     await session.commit()
-    return to_api_key_response(named.key, named.people, datetime.now())
+    return to_api_key_response(named.key, named.people, clock.now())
 
 
 @router.delete(

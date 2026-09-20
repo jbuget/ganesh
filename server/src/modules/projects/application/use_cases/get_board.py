@@ -24,6 +24,7 @@ from src.modules.projects.domain.services.project_cost import split_delivered
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.enums.department import Department
+from src.shared.utils import clock
 
 
 @dataclass
@@ -96,7 +97,7 @@ class GetBoardUseCase:
     async def execute(
         self, today: date | None = None, include_inactive: bool = False
     ) -> Board:
-        today = today or date.today()
+        today = today or clock.today()
 
         # Archived missions are read even when they are not shown: a work
         # package outlives the archiving of its project, and its card must go

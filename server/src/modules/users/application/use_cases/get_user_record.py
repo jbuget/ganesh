@@ -32,6 +32,7 @@ from src.modules.users.domain.services.user_record import (
     months_looked_back,
 )
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
+from src.shared.utils import clock
 
 
 def _last_day_of(month: date) -> date:
@@ -84,7 +85,7 @@ class GetUserRecordUseCase:
         if await self._users.get_by_id(query.user_id) is None:
             raise EntityNotFoundError("The user cannot be found.")
 
-        today = query.today or date.today()
+        today = query.today or clock.today()
         span = months_looked_back(today)
         # One read covering everything: the months looked back, and the month
         # running right to its end, so that days posted ahead are counted as

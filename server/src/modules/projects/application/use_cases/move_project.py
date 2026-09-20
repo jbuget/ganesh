@@ -18,6 +18,7 @@ from src.modules.projects.domain.services.board_ordering import reorder_column
 from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError, ValidationError
+from src.shared.utils import clock
 
 
 class MoveProjectUseCase:
@@ -59,7 +60,7 @@ class MoveProjectUseCase:
         # Dragging a card crosses a phase just as a change from the reference
         # list does: the date is recorded on both sides.
         await self._details.mark_phase_reached(
-            command.project_id, command.status, today or date.today()
+            command.project_id, command.status, today or clock.today()
         )
 
         # The drop is reasoned about by id, never by object identity:

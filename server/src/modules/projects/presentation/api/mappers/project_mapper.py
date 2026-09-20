@@ -33,6 +33,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     ProjectUpdateResponse,
 )
 from src.modules.users.domain.entities.user import User
+from src.shared.utils import clock
 from src.shared.utils.initials import initials
 
 
@@ -121,7 +122,7 @@ def to_cost_response(cost: ProjectCost, today: date) -> ProjectCostResponse:
 def to_listed_project_response(
     listed: ListedProject, today: date | None = None
 ) -> ProjectListItemResponse:
-    day = today or date.today()
+    day = today or clock.today()
     return ProjectListItemResponse(
         project=to_project_response(listed.project, is_deletable=listed.is_deletable),
         leads=[to_member(u) for u in listed.leads],

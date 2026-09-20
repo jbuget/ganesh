@@ -24,6 +24,10 @@ class ProjectUpdateModel(Base):
     )
     author_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
     body: Mapped[str] = mapped_column(Text)
-    published_at: Mapped[datetime] = mapped_column(DateTime)
-    edited_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    edited_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

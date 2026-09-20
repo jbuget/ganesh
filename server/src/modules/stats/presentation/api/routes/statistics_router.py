@@ -1,7 +1,5 @@
 """Statistics routes: the dashboard of a window."""
 
-from datetime import date
-
 from fastapi import APIRouter, Depends, Query
 
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
@@ -18,6 +16,7 @@ from src.modules.stats.presentation.api.schemas.statistics_schemas import (
     StatisticsResponse,
 )
 from src.modules.stats.presentation.dependencies import get_compute_statistics_use_case
+from src.shared.utils import clock
 
 router = APIRouter(prefix="/stats", tags=["stats"])
 
@@ -40,6 +39,6 @@ async def get_statistics(
     their own part in it.
     """
     statistics = await use_case.execute(
-        StatisticsQuery(range_=range_, today=date.today())
+        StatisticsQuery(range_=range_, today=clock.today())
     )
     return to_statistics_response(statistics, range_=range_)

@@ -21,6 +21,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 )
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
+from src.shared.utils import clock
 
 
 @dataclass(frozen=True)
@@ -179,7 +180,7 @@ class GetMonthGridUseCase:
             raise EntityNotFoundError("The user cannot be found.")
 
         month = first_day_of(query.month)
-        today = query.today or date.today()
+        today = query.today or clock.today()
         calendar_days = days_of_month(month.year, month.month)
 
         rows = await self._rows_of_entered_time(query.user_id, month, today)

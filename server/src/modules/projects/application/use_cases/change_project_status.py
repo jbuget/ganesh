@@ -17,6 +17,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
+from src.shared.utils import clock
 
 
 class ChangeProjectStatusUseCase:
@@ -55,7 +56,7 @@ class ChangeProjectStatusUseCase:
         # The date a phase is entered is recorded on the way through: it
         # cannot be reconstructed afterwards, and the audit log may be purged.
         await self._details.mark_phase_reached(
-            command.project_id, command.status, today or date.today()
+            command.project_id, command.status, today or clock.today()
         )
 
         await self._audit_logs.add(
