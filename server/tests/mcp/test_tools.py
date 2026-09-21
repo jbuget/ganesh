@@ -437,6 +437,32 @@ class TestWhatChangedReadsAsFrench:
         assert "une mise à jour postée, la dernière le 16/09" in said
 
     @pytest.mark.asyncio
+    async def test_a_single_unnamed_gesture_agrees_in_the_singular(self) -> None:
+        """« et 1 autres gestes » passes a suite asserting on the count."""
+        page = AuditLogPage(
+            entries=[a_line(AuditAction.PROJECT_ASSIGN, instant(2026, 9, 8, 10))],
+            total=1,
+        )
+        with Wired(detail=ADetail(WAATCHER), project_log=page):
+            said = await what_changed(7, "2026-09-01")
+
+        assert "et 1 autre geste," in said
+
+    @pytest.mark.asyncio
+    async def test_several_unnamed_gestures_agree_in_the_plural(self) -> None:
+        page = AuditLogPage(
+            entries=[
+                a_line(AuditAction.PROJECT_ASSIGN, instant(2026, 9, 8, 10)),
+                a_line(AuditAction.PROJECT_UNASSIGN, instant(2026, 9, 9, 10)),
+            ],
+            total=2,
+        )
+        with Wired(detail=ADetail(WAATCHER), project_log=page):
+            said = await what_changed(7, "2026-09-01")
+
+        assert "et 2 autres gestes," in said
+
+    @pytest.mark.asyncio
     async def test_time_taken_back_nets_out_against_time_declared(self) -> None:
         """A window that gave and took reads as what it left behind."""
         page = AuditLogPage(

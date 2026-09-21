@@ -128,7 +128,12 @@ def _read(lines: list[SignedAuditLog]) -> list[str]:
     ]
     rest = len(lines) - len(phases) - len(time) - len(posts)
     if rest:
-        said.append(f"- et {rest} autres gestes, que le Journal du projet détaille")
+        # Both words follow the count, and only a reader ever sees that one of
+        # them did not: « et 1 autres gestes » came back from a running API.
+        said.append(
+            f"- et {rest} {say.agreed('autre', rest)} "
+            f"{say.agreed('geste', rest)}, que le Journal du projet détaille"
+        )
     return said
 
 
