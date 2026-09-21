@@ -14,7 +14,10 @@ alembic==1.14.0
 greenlet==3.1.1
 
 # Authentication & Security (Microsoft Entra ID)
-python-jose[cryptography]==3.3.0
+# PyJWT rather than python-jose, which had not been released since 2021 and
+# carried CVE-2024-33663 — an algorithm confusion — on the one code path every
+# request goes through. `[crypto]` brings the RSA the Entra signatures need.
+PyJWT[crypto]==2.14.0
 
 # HTTP client
 httpx==0.28.1

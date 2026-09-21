@@ -16,8 +16,8 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from jose import jwt
-from jose.exceptions import JWTError
+import jwt
+from jwt import PyJWTError
 
 from src.shared.exceptions.domain_exceptions import ForbiddenActionError
 
@@ -92,6 +92,6 @@ class LocalTokenService:
                 # Nothing here is meant for an audience: this token is for us.
                 options={"verify_aud": False},
             )
-        except JWTError as error:
+        except PyJWTError as error:
             raise ForbiddenActionError("Invalid authentication token.") from error
         return claims
