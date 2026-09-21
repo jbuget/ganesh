@@ -21,7 +21,13 @@ class UploadAttachmentCommand:
 
 @dataclass(frozen=True)
 class RemoveAttachmentCommand:
-    """Taking a file away for good."""
+    """Taking a file away for good.
+
+    The mission is named as well as the file: an address that says one mission
+    and acts on another is an address that lies, and the day a mission is
+    restricted to its own people it would be the hole they walk through.
+    """
 
     actor_id: int
+    project_id: int
     attachment_id: int

@@ -10,8 +10,14 @@ interface AttachmentMenuProps {
   filename: string;
   /** Shows the file at full size, in front of everything else. */
   onOpen: () => void;
-  /** Saves it, under the name it was dropped with. */
-  onDownload: () => void;
+  /**
+   * Where the file is saved from.
+   *
+   * A plain address rather than a callback: saving a file is what a browser
+   * does with a link, and going through `window.location` would leave the
+   * page if the server ever answered `inline`.
+   */
+  downloadHref: string;
   /** Asks for it to go. What answers is a dialog. */
   onRemove: () => void;
 }
@@ -26,7 +32,7 @@ interface AttachmentMenuProps {
 export function AttachmentMenu({
   filename,
   onOpen,
-  onDownload,
+  downloadHref,
   onRemove,
 }: AttachmentMenuProps) {
   const [isOpen, setOpen] = useState(false);
@@ -57,17 +63,15 @@ export function AttachmentMenu({
           </li>
 
           <li>
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                onDownload();
-              }}
+            <a
+              href={downloadHref}
+              download={filename}
+              onClick={() => setOpen(false)}
               className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
             >
               <Download className="size-4 shrink-0 text-slate-400" aria-hidden />
               Télécharger
-            </button>
+            </a>
           </li>
 
           <li>

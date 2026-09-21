@@ -115,7 +115,12 @@ from src.modules.projects.application.use_cases.update_project_registry import (
     UpdateProjectRegistryCommand,
     UpdateProjectRegistryUseCase,
 )
+from src.modules.projects.domain.entities.project_attachment import MAX_ATTACHMENT_BYTES
 from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.projects.presentation.api.attachment_serving import (
+    disposition,
+    may_be_shown,
+)
 from src.modules.projects.presentation.api.mappers.project_mapper import (
     to_board_response,
     to_catalog_entry_response,
@@ -795,27 +800,6 @@ async def remove_project_update(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-#: What a browser may be told to show in place rather than save. Everything
-#: else is served as a download: a page dropped as a file and shown inline
-#: would run on our own domain, in the reader's session.
-SHOWABLE = ("image/", "application/pdf", "text/plain")
-
-
-def _disposition(filename: str, *, as_download: bool) -> str:
-    """How the browser is told to treat the file.
-
-    The name travels twice: once folded down to ASCII, for whoever still
-    reads only that, and once as `filename*`, which is the one that carries
-    « cahier de recette é.pdf » intact. A header is latin-1, and a raw accent
-    in it is a 500 rather than a download.
-    """
-    from urllib.parse import quote
-
-    plain = filename.encode("ascii", "replace").decode("ascii").replace('"', "")
-    kind = "attachment" if as_download else "inline"
-    return f"{kind}; filename=\"{plain}\"; filename*=utf-8''{quote(filename)}"
-
-
 @router.get(
     "/{project_id}/attachments",
     response_model=list[ProjectAttachmentResponse],
@@ -861,7 +845,11 @@ async def upload_project_attachment(
             project_id=project_id,
             filename=file.filename or "",
             content_type=file.content_type or "",
-            content=await file.read(),
+            # One byte past the limit, never the whole stream: what the
+            # entity is about to refuse has no business being held in memory
+            # first. Reading exactly `MAX + 1` is what lets it refuse — the
+            # rule stays in the domain, and this only bounds the appetite.
+            content=await file.read(MAX_ATTACHMENT_BYTES + 1),
         )
     )
     await session.commit()
@@ -888,13 +876,13 @@ async def download_project_attachment(
     ),
 ) -> RawResponse:
     """The bytes of a file, to show in place or to save."""
-    attachment, content = await use_case.execute(attachment_id)
-    shown = not download and attachment.content_type.startswith(SHOWABLE)
+    attachment, content = await use_case.execute(project_id, attachment_id)
+    shown = not download and may_be_shown(attachment.content_type)
     return RawResponse(
         content=content,
         media_type=attachment.content_type,
         headers={
-            "Content-Disposition": _disposition(
+            "Content-Disposition": disposition(
                 attachment.filename, as_download=not shown
             ),
             # The type we announce is the type we mean: without this, a
@@ -919,7 +907,11 @@ async def remove_project_attachment(
     """Takes a file away. Anyone on the team may: a file is the mission's."""
     assert current_user.id is not None
     await use_case.execute(
-        RemoveAttachmentCommand(actor_id=current_user.id, attachment_id=attachment_id)
+        RemoveAttachmentCommand(
+            actor_id=current_user.id,
+            project_id=project_id,
+            attachment_id=attachment_id,
+        )
     )
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

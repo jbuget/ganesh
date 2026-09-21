@@ -54,31 +54,29 @@ def build():
     store = InMemoryAttachmentStore()
     audit = InMemoryAuditLogRepository()
     updates = InMemoryProjectUpdateRepository()
-    deps = {
-        "users": InMemoryUserRepository([ALICE, NINO]),
-        "projects": InMemoryProjectRepository(
-            [
-                Project(
-                    id=10,
-                    label="Portail",
-                    kind=ProjectKind.PROJECT,
-                    status=ProjectStatus.DEVELOPMENT,
-                )
-            ]
-        ),
-        "attachments": attachments,
-        "store": store,
-        "audit_logs": audit,
-    }
+    kept = {"attachments": attachments, "store": store, "audit_logs": audit}
     return (
-        UploadProjectAttachmentUseCase(**deps),
+        UploadProjectAttachmentUseCase(
+            users=InMemoryUserRepository([ALICE, NINO]),
+            projects=InMemoryProjectRepository(
+                [
+                    Project(
+                        id=10,
+                        label="Portail",
+                        kind=ProjectKind.PROJECT,
+                        status=ProjectStatus.DEVELOPMENT,
+                    )
+                ]
+            ),
+            **kept,
+        ),
         ListProjectAttachmentsUseCase(
             attachments=attachments,
             updates=updates,
             users=InMemoryUserRepository([ALICE, NINO]),
         ),
         DownloadProjectAttachmentUseCase(attachments=attachments, store=store),
-        RemoveProjectAttachmentUseCase(**deps),
+        RemoveProjectAttachmentUseCase(**kept),
         {
             "attachments": attachments,
             "store": store,
@@ -196,7 +194,7 @@ async def test_downloading_hands_back_the_bytes_that_were_dropped() -> None:
     attachment = await upload.execute(a_drop(), now=WHEN)
     assert attachment.id is not None
 
-    found, content = await download.execute(attachment.id)
+    found, content = await download.execute(10, attachment.id)
 
     assert found.filename == "capture.png"
     assert content == b"\x89PNG-and-the-rest"
@@ -206,7 +204,7 @@ async def test_downloading_a_file_nobody_ever_dropped_is_refused() -> None:
     _, _, download, _, _ = build()
 
     with pytest.raises(EntityNotFoundError):
-        await download.execute(404)
+        await download.execute(10, 404)
 
 
 async def test_withdrawing_a_file_takes_the_line_and_the_bytes() -> None:
@@ -215,7 +213,7 @@ async def test_withdrawing_a_file_takes_the_line_and_the_bytes() -> None:
     assert attachment.id is not None
 
     await remove.execute(
-        RemoveAttachmentCommand(actor_id=2, attachment_id=attachment.id)
+        RemoveAttachmentCommand(actor_id=2, project_id=10, attachment_id=attachment.id)
     )
 
     assert kept["attachments"].attachments == []
@@ -229,7 +227,7 @@ async def test_anybody_on_the_team_may_withdraw_a_file() -> None:
     assert attachment.id is not None
 
     await remove.execute(
-        RemoveAttachmentCommand(actor_id=2, attachment_id=attachment.id)
+        RemoveAttachmentCommand(actor_id=2, project_id=10, attachment_id=attachment.id)
     )
 
     assert await listing.execute(10) == []
@@ -241,7 +239,7 @@ async def test_withdrawing_a_file_is_traced_with_the_name_it_carried() -> None:
     assert attachment.id is not None
 
     await remove.execute(
-        RemoveAttachmentCommand(actor_id=2, attachment_id=attachment.id)
+        RemoveAttachmentCommand(actor_id=2, project_id=10, attachment_id=attachment.id)
     )
 
     line = kept["audit"].logs[-1]
@@ -255,4 +253,31 @@ async def test_withdrawing_a_file_that_is_already_gone_is_refused() -> None:
     _, _, _, remove, _ = build()
 
     with pytest.raises(EntityNotFoundError):
-        await remove.execute(RemoveAttachmentCommand(actor_id=1, attachment_id=404))
+        await remove.execute(
+            RemoveAttachmentCommand(actor_id=1, project_id=10, attachment_id=404)
+        )
+
+
+async def test_a_file_is_only_served_under_the_mission_that_carries_it() -> None:
+    """The address names a mission: asking under another one is asking wrong."""
+    upload, _, download, _, _ = build()
+    attachment = await upload.execute(a_drop(), now=WHEN)
+    assert attachment.id is not None
+
+    with pytest.raises(EntityNotFoundError):
+        await download.execute(11, attachment.id)
+
+
+async def test_a_file_is_only_withdrawn_under_the_mission_that_carries_it() -> None:
+    upload, listing, _, remove, _ = build()
+    attachment = await upload.execute(a_drop(), now=WHEN)
+    assert attachment.id is not None
+
+    with pytest.raises(EntityNotFoundError):
+        await remove.execute(
+            RemoveAttachmentCommand(
+                actor_id=1, project_id=11, attachment_id=attachment.id
+            )
+        )
+
+    assert len(await listing.execute(10)) == 1

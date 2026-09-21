@@ -127,4 +127,37 @@ describe("ProjectAttachmentsTab", () => {
       "/api/v1/projects/7/attachments/12/content?download=true",
     );
   });
+
+  it("offers a file to save as a link, never as a jump", () => {
+    served([file()]);
+    render(<ProjectAttachmentsTab projectId={7} />);
+
+    return screen
+      .findByRole("button", { name: "Actions sur « capture.png »" })
+      .then(async (menu) => {
+        await userEvent.click(menu);
+        const link = await screen.findByRole("link", { name: /Télécharger/ });
+        expect(link).toHaveAttribute(
+          "href",
+          "/api/v1/projects/7/attachments/12/content?download=true",
+        );
+        expect(link).toHaveAttribute("download", "capture.png");
+      });
+  });
+
+  it("lands the files a single drop carried, one refusal aside", async () => {
+    api.uploadProjectAttachment
+      .mockRejectedValueOnce(new Error("refusé"))
+      .mockResolvedValue({ data: file() });
+    render(<ProjectAttachmentsTab projectId={7} />);
+    const picker = document.querySelector("input[type=file]") as HTMLInputElement;
+
+    await userEvent.upload(picker, [
+      new File(["a"], "un.png", { type: "image/png" }),
+      new File(["b"], "deux.png", { type: "image/png" }),
+    ]);
+
+    // The second one still went up: a refusal does not take the drop with it.
+    await waitFor(() => expect(api.uploadProjectAttachment).toHaveBeenCalledTimes(2));
+  });
 });

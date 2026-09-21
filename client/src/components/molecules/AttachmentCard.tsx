@@ -84,9 +84,7 @@ export function AttachmentCard({
         <AttachmentMenu
           filename={file.filename}
           onOpen={onOpen}
-          onDownload={() => {
-            window.location.assign(downloadUrl(projectId, file.id));
-          }}
+          downloadHref={downloadUrl(projectId, file.id)}
           onRemove={onRemove}
         />
       </div>

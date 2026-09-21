@@ -10,16 +10,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { contentUrl, downloadUrl } from "@/lib/attachments";
 
 interface AttachmentPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** The mission the file belongs to: the address is drawn from the pair. */
+  projectId: number;
+  attachmentId: number;
   filename: string;
   contentType: string;
-  /** Where the file is served from — the same address the thread cites. */
-  url: string;
-  /** Where it is served from when one comes to save it. */
-  downloadUrl: string;
 }
 
 /**
@@ -32,13 +32,14 @@ interface AttachmentPreviewDialogProps {
 export function AttachmentPreviewDialog({
   open,
   onOpenChange,
+  projectId,
+  attachmentId,
   filename,
   contentType,
-  url,
-  downloadUrl,
 }: AttachmentPreviewDialogProps) {
   const isImage = contentType.startsWith("image/");
   const isPdf = contentType === "application/pdf";
+  const url = contentUrl(projectId, attachmentId);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -77,7 +78,7 @@ export function AttachmentPreviewDialog({
               browser does with an address, and it is what keeps the name the
               server put in the header. */}
           <a
-            href={downloadUrl}
+            href={downloadUrl(projectId, attachmentId)}
             download={filename}
             className={buttonVariants({
               size: "sm",

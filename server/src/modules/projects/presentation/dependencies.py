@@ -468,8 +468,6 @@ def get_upload_attachment_use_case(
 
 
 def get_remove_attachment_use_case(
-    users: UserRepository = Depends(get_user_repository),
-    projects: ProjectRepository = Depends(get_project_repository),
     attachments: ProjectAttachmentRepository = Depends(
         get_project_attachment_repository
     ),
@@ -477,11 +475,7 @@ def get_remove_attachment_use_case(
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> RemoveProjectAttachmentUseCase:
     return RemoveProjectAttachmentUseCase(
-        users=users,
-        projects=projects,
-        attachments=attachments,
-        store=store,
-        audit_logs=audit_logs,
+        attachments=attachments, store=store, audit_logs=audit_logs
     )
 
 

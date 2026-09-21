@@ -7,7 +7,6 @@ import { DeleteAttachmentDialog } from "@/components/atoms/DeleteAttachmentDialo
 import { FileDropZone } from "@/components/atoms/FileDropZone";
 import { AttachmentCard } from "@/components/molecules/AttachmentCard";
 import type { ProjectAttachmentResponse } from "@/lib/api/generated/model";
-import { contentUrl, downloadUrl } from "@/lib/attachments";
 import { useProjectAttachments } from "@/lib/use-project-attachments";
 
 interface ProjectAttachmentsTabProps {
@@ -28,30 +27,14 @@ export function ProjectAttachmentsTab({
   onChange,
 }: ProjectAttachmentsTabProps) {
   const store = useProjectAttachments(projectId, onChange);
-  const [busy, setBusy] = useState(false);
+  // Only what the screen itself is: which file is open, which one is being
+  // asked about. Everything a drop involves lives in the hook.
   const [shown, setShown] = useState<ProjectAttachmentResponse | null>(null);
   const [doomed, setDoomed] = useState<ProjectAttachmentResponse | null>(null);
 
-  async function drop(files: File[]) {
-    setBusy(true);
-    try {
-      // One after another rather than all at once: the refusal of one file
-      // must not take the others down with it.
-      for (const file of files) {
-        try {
-          await store.upload(file);
-        } catch {
-          // The hook holds what it was refused for; the zone says it below.
-        }
-      }
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
     <div className="space-y-4">
-      <FileDropZone onFiles={drop} busy={busy} />
+      <FileDropZone onFiles={store.uploadAll} busy={store.busy} />
 
       {store.error && <p className="text-xs text-red-700">{store.error}</p>}
 
@@ -81,10 +64,10 @@ export function ProjectAttachmentsTab({
         <AttachmentPreviewDialog
           open
           onOpenChange={(open) => !open && setShown(null)}
+          projectId={projectId}
+          attachmentId={shown.id}
           filename={shown.filename}
           contentType={shown.content_type}
-          url={contentUrl(projectId, shown.id)}
-          downloadUrl={downloadUrl(projectId, shown.id)}
         />
       )}
 

@@ -30,6 +30,7 @@ export function useProjectAttachments(
 ) {
   const [files, setFiles] = useState<ProjectAttachmentResponse[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const reload = useCallback(async () => {
     const response = await listProjectAttachments(projectId);
@@ -68,11 +69,36 @@ export function useProjectAttachments(
     return contentUrl(projectId, stored.id);
   }
 
+  /**
+   * Drops what a person handed over in one gesture, one file after another.
+   *
+   * Sequential on purpose, and each refusal caught: a drop of five files
+   * where the third is too heavy must still land the other four. `busy` says
+   * a drop is under way, so the screen has nothing of its own to hold.
+   */
+  async function uploadAll(dropped: File[]): Promise<void> {
+    setBusy(true);
+    try {
+      for (const file of dropped) {
+        try {
+          await upload(file);
+        } catch {
+          // The refusal is already held in `error`, and said on screen.
+        }
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return {
     files,
     /** What the last drop was refused for, or nothing. */
     error,
+    /** Whether a drop is under way. */
+    busy,
     upload,
+    uploadAll,
 
     async remove(attachmentId: number) {
       await removeProjectAttachment(projectId, attachmentId);

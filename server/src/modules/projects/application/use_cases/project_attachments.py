@@ -39,19 +39,25 @@ class SignedAttachment:
     used_in_updates: int
 
 
+def _carried_by(attachment: ProjectAttachment | None, project_id: int) -> bool:
+    """Whether the file the address names is really the mission's."""
+    return attachment is not None and attachment.project_id == project_id
+
+
 class _AttachmentUseCase:
-    """What the two writes share."""
+    """What the two writes share, and nothing more.
+
+    `users` and `projects` are the upload's business alone: a use case handed
+    a repository it never reads is a use case whose dependencies say the wrong
+    thing about what it does.
+    """
 
     def __init__(
         self,
-        users: UserRepository,
-        projects: ProjectRepository,
         attachments: ProjectAttachmentRepository,
         store: AttachmentStore,
         audit_logs: AuditLogRepository,
     ) -> None:
-        self._users = users
-        self._projects = projects
         self._attachments = attachments
         self._store = store
         self._audit_logs = audit_logs
@@ -82,6 +88,18 @@ class _AttachmentUseCase:
 
 class UploadProjectAttachmentUseCase(_AttachmentUseCase):
     """Drops a file on a mission."""
+
+    def __init__(
+        self,
+        users: UserRepository,
+        projects: ProjectRepository,
+        attachments: ProjectAttachmentRepository,
+        store: AttachmentStore,
+        audit_logs: AuditLogRepository,
+    ) -> None:
+        super().__init__(attachments, store, audit_logs)
+        self._users = users
+        self._projects = projects
 
     async def execute(
         self, command: UploadAttachmentCommand, now: datetime | None = None
@@ -117,8 +135,9 @@ class RemoveProjectAttachmentUseCase(_AttachmentUseCase):
 
     async def execute(self, command: RemoveAttachmentCommand) -> ProjectAttachment:
         attachment = await self._attachments.get(command.attachment_id)
-        if attachment is None:
+        if not _carried_by(attachment, command.project_id):
             raise EntityNotFoundError("The file cannot be found.")
+        assert attachment is not None
 
         # The line goes first, the bytes after. An object nobody points at is
         # invisible; a line pointing at no object is a broken screen.
@@ -176,8 +195,11 @@ class DownloadProjectAttachmentUseCase:
         self._attachments = attachments
         self._store = store
 
-    async def execute(self, attachment_id: int) -> tuple[ProjectAttachment, bytes]:
+    async def execute(
+        self, project_id: int, attachment_id: int
+    ) -> tuple[ProjectAttachment, bytes]:
         attachment = await self._attachments.get(attachment_id)
-        if attachment is None:
+        if not _carried_by(attachment, project_id):
             raise EntityNotFoundError("The file cannot be found.")
+        assert attachment is not None
         return attachment, await self._store.get(attachment.storage_key)

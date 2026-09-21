@@ -76,9 +76,7 @@ def sign_in() -> tuple[
             )
         ]
     )
-    deps = {
-        "users": users,
-        "projects": projects,
+    kept = {
         "attachments": files,
         "store": store,
         "audit_logs": InMemoryAuditLogRepository(),
@@ -87,10 +85,10 @@ def sign_in() -> tuple[
     app.dependency_overrides[get_current_user] = lambda: ALICE
     app.dependency_overrides[get_db] = FakeSession
     app.dependency_overrides[get_upload_attachment_use_case] = (
-        lambda: UploadProjectAttachmentUseCase(**deps)
+        lambda: UploadProjectAttachmentUseCase(users=users, projects=projects, **kept)
     )
     app.dependency_overrides[get_remove_attachment_use_case] = (
-        lambda: RemoveProjectAttachmentUseCase(**deps)
+        lambda: RemoveProjectAttachmentUseCase(**kept)
     )
     app.dependency_overrides[get_list_attachments_use_case] = (
         lambda: ListProjectAttachmentsUseCase(
@@ -246,3 +244,23 @@ async def test_withdrawing_a_file_already_gone_is_not_found() -> None:
     client, _, _, _ = sign_in()
 
     assert (await client.delete(f"{URL}/10/attachments/404")).status_code == 404
+
+
+async def test_a_file_is_not_served_under_another_mission() -> None:
+    """The address names a mission, and the server holds it to that."""
+    client, _, _, _ = sign_in()
+    dropped = await _drop(client)
+
+    answer = await client.get(f"{URL}/11/attachments/{dropped['id']}/content")
+
+    assert answer.status_code == 404
+
+
+async def test_a_file_is_not_withdrawn_under_another_mission() -> None:
+    client, files, _, _ = sign_in()
+    dropped = await _drop(client)
+
+    answer = await client.delete(f"{URL}/11/attachments/{dropped['id']}")
+
+    assert answer.status_code == 404
+    assert len(files.attachments) == 1
