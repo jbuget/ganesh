@@ -9,6 +9,7 @@ import type {
 } from "@/lib/api/generated/model";
 import { CATEGORIES, PHASES, PRIORITIES } from "@/lib/board";
 import { DEPARTMENTS } from "@/lib/departments";
+import { normalise } from "@/lib/search-text";
 
 /**
  * A mission is active until it has been archived.
@@ -137,14 +138,6 @@ export const PUBLICATION_STATES: { value: PublicationState; label: string }[] = 
   { value: "published", label: "Publiées" },
   { value: "unpublished", label: "Non publiées" },
 ];
-
-/** Lowercase and unaccented: searching « copropriete » finds « copropriété ». */
-function normalise(body: string): string {
-  return body
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
-}
 
 /**
  * Whether anything is being asked, among the criteria the screen offers.

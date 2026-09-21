@@ -1,5 +1,6 @@
 import type { Role, UserResponse } from "@/lib/api/generated/model";
 import { ROLES } from "@/lib/roles";
+import { normalise } from "@/lib/search-text";
 
 /**
  * A teammate's access is open until it has been cut off.
@@ -36,14 +37,6 @@ export const USER_STATES: { value: UserState; label: string }[] = [
   { value: "active", label: "Actifs" },
   { value: "inactive", label: "Désactivés" },
 ];
-
-/** Lowercase and unaccented: searching « jeremy » finds « Jérémy ». */
-function normalise(body: string): string {
-  return body
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
-}
 
 export function hasActiveUserFilter(filters: UserFilters): boolean {
   return (
