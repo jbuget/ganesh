@@ -1,4 +1,4 @@
-.PHONY: install check lint test db-up db-down migrate catalog dev-server dev-client
+.PHONY: install check lint test db-up storage-up db-down migrate catalog dev-server dev-client
 
 # Ports and the Docker project name come from the root .env, and are passed on
 # to the sub-commands: one instance moves in full by changing that one file.
@@ -11,6 +11,11 @@ install:
 
 db-up:
 	docker compose up -d db
+
+# The bucket the files a project carries are put down in. Same adapter as
+# production, pointed at MinIO; `minio-init` creates the bucket and leaves.
+storage-up:
+	docker compose up -d minio minio-init
 
 db-down:
 	docker compose down

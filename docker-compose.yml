@@ -22,5 +22,46 @@ services:
       timeout: 5s
       retries: 5
 
+  # Where the files a project carries are put down, locally. The API talks
+  # to it with the same adapter it uses on S3 in production: one code path,
+  # two addresses — which is where the surprises otherwise hide.
+  minio:
+    # quay.io rather than Docker Hub: that is where MinIO publishes, and the
+    # Hub mirror answers « repository does not exist » without a login.
+    image: quay.io/minio/minio:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-timesheet}-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ganesh
+      MINIO_ROOT_PASSWORD: ganesh-secret
+    # WAATcher holds 9001-9003 and 9011-9013 for its own MinIOs; 9000 and
+    # 9010 are therefore ours, the way 3000 / 8000 / 5432 already are.
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9010}:9001"
+    volumes:
+      - timesheet-minio-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "mc ready local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Creates the bucket once MinIO answers, then leaves. Without it the first
+  # upload of a fresh clone would fail on a bucket nobody made.
+  minio-init:
+    image: quay.io/minio/mc:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-timesheet}-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ganesh ganesh-secret &&
+      mc mb --ignore-existing local/ganesh-attachments &&
+      echo 'bucket ready'
+      "
+
 volumes:
   timesheet-db-data:
+  timesheet-minio-data:

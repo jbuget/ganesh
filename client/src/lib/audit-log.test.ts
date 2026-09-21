@@ -338,6 +338,33 @@ describe("auditSentence", () => {
     });
   });
 
+  describe("the files a project carries", () => {
+    it("names the file that was dropped", () => {
+      expect(
+        auditSentence(entry("attachment.add", { new_value: "capture.png" })).action,
+      ).toBe("a ajouté le fichier « capture.png »");
+    });
+
+    it("shows both names when a file is renamed", () => {
+      const said = auditSentence(
+        entry("attachment.rename", {
+          old_value: "capture.png",
+          new_value: "bug de mars.png",
+        }),
+      );
+
+      expect(said.action).toBe("a renommé un fichier");
+      expect(said.from).toBe("capture.png");
+      expect(said.to).toBe("bug de mars.png");
+    });
+
+    it("names the file that was withdrawn", () => {
+      expect(
+        auditSentence(entry("attachment.remove", { old_value: "note.pdf" })).action,
+      ).toBe("a supprimé le fichier « note.pdf »");
+    });
+  });
+
   it("says something rather than nothing for an action it does not know", () => {
     expect(auditSentence(entry("user.role_change")).action).toBe(
       "a effectué une action",

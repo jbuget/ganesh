@@ -19,6 +19,13 @@ python-jose[cryptography]==3.3.0
 # HTTP client
 httpx==0.28.1
 
+# Files a mission carries. `python-multipart` is what lets a route declare an
+# `UploadFile` at all; `aioboto3` talks to the object store — S3 in
+# production, MinIO on a laptop — without blocking the loop, which plain
+# boto3 would.
+python-multipart==0.0.20
+aioboto3==13.2.0
+
 # Tools the team reaches from a terminal client. Served at /mcp, behind the
 # same keys and the same scopes as the rest.
 mcp==2.2.0

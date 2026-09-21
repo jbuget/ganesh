@@ -49,11 +49,16 @@ from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.project_attachment import ProjectAttachment
 from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
+from src.modules.projects.domain.repositories.attachment_store import AttachmentStore
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
+)
+from src.modules.projects.domain.repositories.project_attachment_repository import (
+    ProjectAttachmentRepository,
 )
 from src.modules.projects.domain.repositories.project_detail_repository import (
     ProjectDetailRepository,
@@ -71,6 +76,7 @@ from src.modules.stats.domain.repositories.statistics_repository import (
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.enums.department import Department, in_declared_order
+from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 
 class InMemoryUserRepository(UserRepository):
@@ -575,6 +581,60 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
 
     async def update(self, update: ProjectUpdate) -> ProjectUpdate:
         return update
+
+
+class InMemoryProjectAttachmentRepository(ProjectAttachmentRepository):
+    def __init__(self) -> None:
+        self.attachments: list[ProjectAttachment] = []
+        self._next_id = 1
+
+    async def get(self, attachment_id: int) -> ProjectAttachment | None:
+        return next((a for a in self.attachments if a.id == attachment_id), None)
+
+    async def list_for_project(self, project_id: int) -> list[ProjectAttachment]:
+        held = [a for a in self.attachments if a.project_id == project_id]
+        return sorted(held, key=lambda a: (a.uploaded_at, a.id or 0), reverse=True)
+
+    async def keys_for_project(self, project_id: int) -> list[str]:
+        return [a.storage_key for a in self.attachments if a.project_id == project_id]
+
+    async def add(self, attachment: ProjectAttachment) -> ProjectAttachment:
+        attachment.id = self._next_id
+        self._next_id += 1
+        self.attachments.append(attachment)
+        return attachment
+
+    async def update(self, attachment: ProjectAttachment) -> ProjectAttachment:
+        return attachment
+
+    async def remove(self, attachment_id: int) -> None:
+        self.attachments = [a for a in self.attachments if a.id != attachment_id]
+
+
+class InMemoryAttachmentStore(AttachmentStore):
+    """The object store, held in a dict.
+
+    What it is asked to do is as much under test as what it holds: a use case
+    that writes the register without ever putting the bytes down would pass on
+    content alone.
+    """
+
+    def __init__(self) -> None:
+        self.content: dict[str, bytes] = {}
+        self.types: dict[str, str] = {}
+
+    async def put(self, key: str, content: bytes, content_type: str) -> None:
+        self.content[key] = content
+        self.types[key] = content_type
+
+    async def get(self, key: str) -> bytes:
+        if key not in self.content:
+            raise EntityNotFoundError("The file cannot be found.")
+        return self.content[key]
+
+    async def delete(self, key: str) -> None:
+        self.content.pop(key, None)
+        self.types.pop(key, None)
 
 
 class InMemoryActivityRepository(ActivityRepository):

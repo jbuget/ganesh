@@ -7,6 +7,10 @@
  *
  * The paths are identical on both sides: one URL vocabulary.
  *
+ * It carries bytes, not only text: a file goes up as the browser wrote it and
+ * comes back as the API served it, with the headers a download needs. Reading
+ * the body as a string, as this used to, mangled both directions.
+ *
  * It is also where a session is renewed. An identity token lives an hour and
  * Entra will not make it live longer; rather than sign the person out on the
  * hour, the relay buys a fresh one just before the old one dies, on the way
@@ -31,6 +35,21 @@ const API_URL = process.env.API_URL ?? "http://localhost:8000";
 const API_PREFIX = process.env.API_PREFIX || "/api/v1";
 
 const HOP_BY_HOP = new Set(["connection", "keep-alive", "transfer-encoding", "host"]);
+
+/**
+ * What the API says about the body, relayed as it said it.
+ *
+ * `Content-Type` decides how the browser reads the answer; the other two are
+ * what turns a response into a file it offers to save, under the name the
+ * register holds. Forcing `application/json` here, as this used to, made
+ * every download a broken string.
+ */
+const ABOUT_THE_BODY = [
+  "content-type",
+  "content-disposition",
+  "content-length",
+  "x-content-type-options",
+];
 
 /**
  * The session to relay with, renewed if it was about to expire.
@@ -73,17 +92,28 @@ async function proxy(request: NextRequest): Promise<NextResponse> {
   const response = await fetch(target, {
     method: request.method,
     headers,
-    body: hasBody ? await request.text() : undefined,
+    // `arrayBuffer` rather than `text`: a multipart body carries raw bytes,
+    // and reading it as a string re-encodes them. Held whole in memory on
+    // purpose — the domain caps a file at ten megabytes.
+    body: hasBody ? await request.arrayBuffer() : undefined,
     cache: "no-store",
   });
 
-  const payload = await response.text();
+  const relayedHeaders = new Headers();
+  for (const name of ABOUT_THE_BODY) {
+    const value = response.headers.get(name);
+    if (value) relayedHeaders.set(name, value);
+  }
+  if (!relayedHeaders.has("content-type")) {
+    relayedHeaders.set("content-type", "application/json");
+  }
 
-  const relayed = new NextResponse(payload || null, {
+  // A 204 carries no body at all, and handing one a stream is a runtime
+  // error rather than an empty answer.
+  const empty = response.status === 204 || response.status === 304;
+  const relayed = new NextResponse(empty ? null : await response.arrayBuffer(), {
     status: response.status,
-    headers: {
-      "Content-Type": response.headers.get("Content-Type") ?? "application/json",
-    },
+    headers: relayedHeaders,
   });
   if (renewed && session) {
     relayed.cookies.set(sessionCookie(await sealSession(session)));

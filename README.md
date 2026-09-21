@@ -10,6 +10,7 @@ each project or sub-project, as a `days of the month × missions` grid.
 ```bash
 make install     # Python venv + pnpm dependencies
 make db-up       # PostgreSQL on the port from .env
+make storage-up  # MinIO, where the files a project carries are put down
 make migrate     # applies the Alembic migrations
 
 make dev-server  # FastAPI API
@@ -19,7 +20,7 @@ make dev-client  # Next.js
 ## The service catalogue
 
 A mission carries a service sheet — public address, summary, links, stack,
-criticality — filled in under the « Fiche service » tab. Publishing it puts the
+criticality — filled in under the « Catalogue » tab. Publishing it puts the
 service in **waat.tools**, the internal catalogue.
 
 ```bash
@@ -35,8 +36,8 @@ criticality and a type — what the catalogue cannot draw a card without.
 
 ### Ports
 
-`WEB_PORT`, `API_PORT` and `POSTGRES_PORT` are read from the root `.env`
-(`3000` / `8000` / `5432` by default) and passed on by the `make` targets: two
+`WEB_PORT`, `API_PORT`, `POSTGRES_PORT` and `MINIO_PORT` are read from the
+root `.env` (`3000` / `8000` / `5432` / `9000` by default) and passed on by the `make` targets: two
 copies of the repository run side by side by changing that one file, provided it
 also carries a distinct `COMPOSE_PROJECT_NAME`. The matching URLs go into
 `server/.env` (`API_URL`, `ALLOWED_ORIGINS`, `DATABASE_URL`) and

@@ -373,6 +373,28 @@ class PostUpdateRequest(BaseModel):
     body: str = Field(min_length=1)
 
 
+class RenameAttachmentRequest(BaseModel):
+    """Calling a file something else."""
+
+    filename: str = Field(min_length=1, max_length=255)
+
+
+class ProjectAttachmentResponse(BaseModel):
+    """One file a mission carries."""
+
+    id: int
+    filename: str
+    content_type: str
+    size_bytes: int
+    #: Whether a screen may show it rather than only offer it.
+    is_image: bool
+    uploaded_at: datetime
+    uploader_name: str
+    #: How many updates of the thread display it. A screen warns with this
+    #: before a withdrawal leaves a hole where a picture was.
+    used_in_updates: int
+
+
 class CatalogLinkResponse(BaseModel):
     """A secondary link, as the catalogue lists it."""
 

@@ -10,8 +10,12 @@ from src.modules.notifications.domain.services.delivery import NotificationDeliv
 from src.modules.notifications.domain.services.fan_out import notify
 from src.modules.projects.application.dtos.project_dto import DeleteProjectCommand
 from src.modules.projects.application.use_cases.project_audience import people_on
+from src.modules.projects.domain.repositories.attachment_store import AttachmentStore
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
+)
+from src.modules.projects.domain.repositories.project_attachment_repository import (
+    ProjectAttachmentRepository,
 )
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
@@ -37,6 +41,8 @@ class DeleteProjectUseCase:
         audit_logs: AuditLogRepository,
         assignees: ProjectAssigneeRepository,
         notifications: NotificationDelivery,
+        attachments: ProjectAttachmentRepository,
+        store: AttachmentStore,
     ) -> None:
         self._users = users
         self._projects = projects
@@ -44,6 +50,8 @@ class DeleteProjectUseCase:
         self._audit_logs = audit_logs
         self._assignees = assignees
         self._notifications = notifications
+        self._attachments = attachments
+        self._store = store
 
     async def execute(self, command: DeleteProjectCommand) -> None:
         if await self._users.get_by_id(command.actor_id) is None:
@@ -59,6 +67,12 @@ class DeleteProjectUseCase:
 
         # Read before the row goes: once deleted, nothing says who was on it.
         audience = await people_on(self._assignees, command.project_id)
+
+        # The rows go with the mission, by cascade. The bytes go with nothing:
+        # left behind, they would sit in the bucket for good, under the key of
+        # a mission no register can name any more.
+        for key in await self._attachments.keys_for_project(command.project_id):
+            await self._store.delete(key)
 
         await self._projects.delete(command.project_id)
         await self._audit_logs.add(

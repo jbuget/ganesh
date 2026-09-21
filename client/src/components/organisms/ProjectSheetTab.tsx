@@ -285,7 +285,7 @@ export function ProjectSheetTab({
       </section>
 
       <section className="space-y-2">
-        <SheetSectionTitle>Catalogue</SheetSectionTitle>
+        <SheetSectionTitle>Rattachement</SheetSectionTitle>
 
         <div className="divide-y divide-slate-100">
           <SheetRow title="Équipe">

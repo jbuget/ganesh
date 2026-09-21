@@ -62,7 +62,15 @@ describe("ProjectSheetTab", () => {
   it("lays the sheet out in the sections the catalogue reads", () => {
     sheet();
 
-    for (const section of ["Publication", "Fiche", "Liens", "Technique", "Catalogue"]) {
+    // No section repeats the tab's own name: the tab is « Catalogue », and
+    // what the service hangs from is « Rattachement ».
+    for (const section of [
+      "Publication",
+      "Fiche",
+      "Liens",
+      "Technique",
+      "Rattachement",
+    ]) {
       expect(screen.getByText(section)).toBeInTheDocument();
     }
   });

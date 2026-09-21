@@ -57,3 +57,12 @@ output "cloudwatch_logs_console_url" {
   description = "Direct console link to the log group."
   value       = "https://${var.aws_region}.console.aws.amazon.com/cloudwatch/home?region=${var.aws_region}#logsV2:log-groups/log-group/${replace(aws_cloudwatch_log_group.app.name, "/", "$252F")}"
 }
+
+output "attachments_bucket" {
+  description = <<-EOT
+    The bucket holding the files projects carry. Goes into the production
+    `server/.env` as S3_BUCKET; the host reaches it through its own role, so
+    no key is needed beside it.
+  EOT
+  value       = aws_s3_bucket.attachments.bucket
+}

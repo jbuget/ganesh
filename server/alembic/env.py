@@ -40,6 +40,7 @@ from src.modules.planning.infrastructure.database.models import (  # noqa: F401,
 )
 from src.modules.projects.infrastructure.database.models import (  # noqa: F401, E402
     project_assignee_model,
+    project_attachment_model,
     project_detail_models,
     project_update_model,
     project_model,

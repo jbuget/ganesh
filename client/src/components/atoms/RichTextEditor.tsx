@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
@@ -20,6 +21,7 @@ import { Markdown, type MarkdownStorage } from "tiptap-markdown";
 
 import { mentionExtension } from "@/lib/mention-extension";
 import { mentionsToHtml, type MentionablePerson } from "@/lib/mentions";
+import { imagesIn } from "@/lib/pasted-images";
 
 /**
  * `tiptap-markdown` grafts its output onto the editor storage without exposing
@@ -53,6 +55,14 @@ interface RichTextEditorProps {
    * a sheet names no one, a thread does.
    */
   mentionable?: MentionablePerson[];
+  /**
+   * What to do with an image pasted or dropped into the text.
+   *
+   * The editor knows nothing of the API: it hands over the file and writes in
+   * whatever address comes back. Absent, an image is not taken at all — a
+   * sheet has nowhere to put one, a thread does.
+   */
+  onImageDrop?: (file: File) => Promise<string>;
 }
 
 /** One button of the toolbar. */
@@ -109,6 +119,7 @@ export function RichTextEditor({
   minHeight = "min-h-24",
   fullHeight = false,
   mentionable,
+  onImageDrop,
 }: RichTextEditorProps) {
   const editor = useEditor({
     // Next renders this component on the server: letting ProseMirror settle in
@@ -123,6 +134,10 @@ export function RichTextEditor({
       Link.configure({ openOnClick: false }),
       Placeholder.configure({ placeholder: placeholder ?? "" }),
       Markdown.configure({ transformPastedText: true }),
+      // Only where something can be done with an image: without a place to
+      // put the bytes, an `<img>` in the text would point at a blob URL that
+      // dies with the tab.
+      ...(onImageDrop ? [Image] : []),
       ...(mentionable ? [mentionExtension(mentionable)] : []),
     ],
     // Mentions come in as HTML: tiptap parses that, where markdown would give
@@ -141,9 +156,42 @@ export function RichTextEditor({
         }
         return false;
       },
+      handlePaste: (_, event) => take(event.clipboardData),
+      handleDrop: (_, event) => {
+        const dropped = (event as DragEvent).dataTransfer;
+        return take(dropped);
+      },
     },
     onUpdate: ({ editor }) => onChange(markdownDe(editor)),
   });
+
+  /**
+   * Takes the images out of what was pasted or dropped, and nothing else.
+   *
+   * Returning `true` stops ProseMirror from handling the event itself, which
+   * is right only when there was an image to take: everything else is still
+   * its business.
+   */
+  function take(data: DataTransfer | null): boolean {
+    if (!onImageDrop) return false;
+    const images = imagesIn(data);
+    if (images.length === 0) return false;
+
+    void (async () => {
+      for (const image of images) {
+        try {
+          const url = await onImageDrop(image);
+          // Read back from the editor rather than captured: several images
+          // may be landing at once, and the cursor has moved since.
+          editor?.chain().focus().setImage({ src: url, alt: image.name }).run();
+        } catch {
+          // What the drop was refused for is said where files are managed:
+          // the composer is not the place to explain a size limit.
+        }
+      }
+    })();
+    return true;
+  }
 
   if (!editor) {
     return <div className="min-h-32 rounded-md border border-slate-300 bg-white" />;

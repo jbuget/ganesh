@@ -36,6 +36,10 @@ const WORDINGS: Record<Surface, SurfaceWording> = {
   },
   assignment: { label: "Affectation des contributeurs" },
   project_updates: { label: "Actualités de projet" },
+  project_files: {
+    label: "Fichiers de projet",
+    counted: "dépôts, renommages, suppressions",
+  },
   planning: { label: "Planification", counted: "simulations enregistrées" },
   gazette: { label: "La Gazette", counted: "numéros générés" },
   mood: {
