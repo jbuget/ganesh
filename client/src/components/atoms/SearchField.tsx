@@ -25,6 +25,10 @@ interface SearchFieldProps {
  *
  * The magnifier is decorative — the field already says what it is — and lets
  * the click through to the field behind it.
+ *
+ * Its border is the one the filter criteria beside it carry, and not the
+ * primitive's lighter default: a search field and a criterion sit on the same
+ * bar and do the same job — a shade between them reads as two kinds of control.
  */
 export function SearchField({ value, onChange, label }: SearchFieldProps) {
   return (
@@ -39,7 +43,7 @@ export function SearchField({ value, onChange, label }: SearchFieldProps) {
         onChange={(event) => onChange(event.target.value)}
         placeholder={label}
         aria-label={label}
-        className="h-9 w-64 pl-8"
+        className="h-9 w-64 border-slate-300 bg-white pl-8 hover:border-slate-400"
       />
     </div>
   );
