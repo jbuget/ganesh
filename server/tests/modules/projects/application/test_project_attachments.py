@@ -130,7 +130,8 @@ async def test_dropping_a_file_is_traced_against_the_mission() -> None:
     assert line.actor_id == 1
     assert line.project_id == 10
     # The Journal reads the name from the line: the file may be gone by then.
-    assert line.payload["filename"] == "capture.png"
+    assert line.new_value == "capture.png"
+    assert line.payload["attachment_id"] == 1
 
 
 async def test_a_file_too_heavy_never_reaches_the_store() -> None:
@@ -247,7 +248,7 @@ async def test_withdrawing_a_file_is_traced_with_the_name_it_carried() -> None:
     assert line.action == AuditAction.ATTACHMENT_REMOVE
     assert line.actor_id == 2
     assert line.project_id == 10
-    assert line.payload["filename"] == "capture.png"
+    assert line.old_value == "capture.png"
 
 
 async def test_withdrawing_a_file_that_is_already_gone_is_refused() -> None:

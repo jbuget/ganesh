@@ -6,6 +6,7 @@ import { RichTextEditor } from "@/components/atoms/RichTextEditor";
 import { ProjectUpdateCard } from "@/components/molecules/ProjectUpdateCard";
 import { Button } from "@/components/ui/button";
 import { useTeammates } from "@/lib/api/queries";
+import { useProjectAttachments } from "@/lib/use-project-attachments";
 import { useProjectUpdates } from "@/lib/use-project-updates";
 
 interface ProjectUpdatesTabProps {
@@ -31,6 +32,9 @@ export function ProjectUpdatesTab({
   focusComposer = false,
 }: ProjectUpdatesTabProps) {
   const thread = useProjectUpdates(projectId, onChange);
+  // An image pasted here is a file of the project like any other: the
+  // Fichiers tab holds it, and the update only shows it by its address.
+  const files = useProjectAttachments(projectId, onChange);
   // Active teammates only: « @ » offers people one can still expect an
   // answer from.
   const { teammates } = useTeammates();
@@ -60,11 +64,14 @@ export function ProjectUpdatesTab({
           placeholder="Rédigez une mise à jour…"
           mentionable={teammates}
           autoFocus={focusComposer}
+          onImageDrop={files.upload}
           onChange={setBody}
           onSubmit={() => {
             if (body.trim()) void publish();
           }}
         />
+        {files.error && <p className="text-xs text-red-700">{files.error}</p>}
+
         {body.trim() && (
           <div className="flex items-center gap-2">
             <Button size="sm" disabled={busy} onClick={() => void publish()}>

@@ -63,16 +63,19 @@ class _AttachmentUseCase:
         attachment: ProjectAttachment,
     ) -> None:
         # The name travels on the line rather than being read back from the
-        # file: by the time the Journal is opened, the file may be gone.
+        # file: by the time the Journal is opened, the file may be gone. It
+        # goes where the log already carries a name — `new_value` for what
+        # arrives, `old_value` for what leaves — which is what the screen
+        # reads, `project.delete` included.
+        arriving = action is AuditAction.ATTACHMENT_ADD
         await self._audit_logs.add(
             AuditLog(
                 action=action,
                 actor_id=actor_id,
                 project_id=attachment.project_id,
-                payload={
-                    "attachment_id": attachment.id,
-                    "filename": attachment.filename,
-                },
+                old_value=None if arriving else attachment.filename,
+                new_value=attachment.filename if arriving else None,
+                payload={"attachment_id": attachment.id},
             )
         )
 

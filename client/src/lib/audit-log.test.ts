@@ -338,6 +338,20 @@ describe("auditSentence", () => {
     });
   });
 
+  describe("the files a project carries", () => {
+    it("names the file that was dropped", () => {
+      expect(
+        auditSentence(entry("attachment.add", { new_value: "capture.png" })).action,
+      ).toBe("a ajouté le fichier « capture.png »");
+    });
+
+    it("names the file that was withdrawn", () => {
+      expect(
+        auditSentence(entry("attachment.remove", { old_value: "note.pdf" })).action,
+      ).toBe("a supprimé le fichier « note.pdf »");
+    });
+  });
+
   it("says something rather than nothing for an action it does not know", () => {
     expect(auditSentence(entry("user.role_change")).action).toBe(
       "a effectué une action",
