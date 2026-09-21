@@ -105,6 +105,21 @@ echo "\${DEPLOY_TOKEN}" | docker login ghcr.io -u waat-fr --password-stdin
 docker compose -f docker-compose.prod.yml --env-file server/.env pull >/dev/null
 docker compose -f docker-compose.prod.yml --env-file server/.env up -d >/dev/null
 docker compose -f docker-compose.prod.yml --env-file server/.env exec -T api alembic upgrade head
+
+# Caddy reads its configuration from a bind mount, and `up -d` never notices
+# that a mounted *file* changed: nothing in the service definition moved, so
+# compose leaves the container alone and Caddy keeps serving the configuration
+# it has held in memory since the last restart. A Caddyfile that reached the
+# host and never reached Caddy is worse than one that was not deployed — the
+# repository says one thing and the proxy does another.
+#
+# `reload` rather than `restart`: it is graceful, it drops no connection, and
+# it leaves the certificate store alone. An invalid configuration comes back
+# non-zero and fails the deploy, which is the answer we want — better a deploy
+# that goes red than a proxy quietly running yesterday's rules.
+docker compose -f docker-compose.prod.yml --env-file server/.env \
+  exec -T caddy caddy reload --config /etc/caddy/Caddyfile
+
 docker image prune -f >/dev/null 2>&1 || true
 
 # Health check. A deploy that leaves the API down is a failed deploy.
