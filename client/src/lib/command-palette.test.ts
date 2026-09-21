@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { destinations, grouped, matching } from "./command-palette";
-import type { ProjectListItemResponse, UserResponse } from "@/lib/api/generated/model";
+import { destinations, gestureLabel, grouped, matching } from "./command-palette";
+import type {
+  AuditAction,
+  ProjectListItemResponse,
+  TouchedProjectResponse,
+  UserResponse,
+} from "@/lib/api/generated/model";
 
 const mission = (
   over: Record<string, unknown> = {},
@@ -221,7 +226,7 @@ describe("what has just moved", () => {
     );
 
     expect(sections.map((section) => section.label)).toEqual([
-      "Mis à jour récemment",
+      "Activité récente",
       "Écrans",
     ]);
   });
@@ -272,5 +277,83 @@ describe("what has just moved", () => {
 
     expect(labelsOf(found)).toEqual(["Extranet syndic"]);
     expect(found[0].group).toBe("project");
+  });
+});
+
+describe("a project that moved without anybody writing about it", () => {
+  const silent = mission({ id: 4, label: "Refonte du portail" });
+  const moved = (action: string, at: string) =>
+    ({ project_id: 4, action, at }) as TouchedProjectResponse;
+
+  it("is offered on the strength of the register alone", () => {
+    const found = matching(
+      destinations({
+        missions: [silent],
+        teammates: [],
+        touched: [moved("project.status_change", "2026-09-20T09:00:00Z")],
+      }),
+      "",
+    );
+
+    expect(found[0]).toMatchObject({
+      label: "Refonte du portail",
+      group: "recent",
+      gesture: "Phase changée",
+      at: "2026-09-20T09:00:00Z",
+    });
+  });
+
+  it("is announced by whichever of the two happened last", () => {
+    const written = mission(
+      { id: 4, label: "Refonte du portail" },
+      "2026-09-22T09:00:00Z",
+    );
+    const found = matching(
+      destinations({
+        missions: [written],
+        teammates: [],
+        touched: [moved("project.status_change", "2026-09-20T09:00:00Z")],
+      }),
+      "",
+    );
+
+    expect(found[0]).toMatchObject({
+      gesture: "Mise à jour",
+      at: "2026-09-22T09:00:00Z",
+    });
+  });
+
+  it("names the older gesture when the update is the older of the two", () => {
+    const written = mission(
+      { id: 4, label: "Refonte du portail" },
+      "2026-09-18T09:00:00Z",
+    );
+    const found = matching(
+      destinations({
+        missions: [written],
+        teammates: [],
+        touched: [moved("attachment.add", "2026-09-20T09:00:00Z")],
+      }),
+      "",
+    );
+
+    expect(found[0]).toMatchObject({ gesture: "Fichier ajouté" });
+  });
+
+  it("says nothing of a project the reference list can no longer name", () => {
+    const found = matching(
+      destinations({
+        missions: [],
+        teammates: [],
+        touched: [moved("project.update", "2026-09-20T09:00:00Z")],
+      }),
+      "",
+    );
+
+    expect(found.every((one) => one.group === "screen")).toBe(true);
+  });
+
+  it("says that something happened, for a gesture it has no word for", () => {
+    expect(gestureLabel("gazette.generate" as AuditAction)).toBe("Modifié");
   });
 });

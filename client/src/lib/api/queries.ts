@@ -10,6 +10,7 @@
 import { keepPreviousData } from "@tanstack/react-query";
 
 import { useGetMonthGrid } from "@/lib/api/generated/entries/entries";
+import { useListTouchedProjects } from "@/lib/api/generated/audit-logs/audit-logs";
 import { useGetDigest } from "@/lib/api/generated/gazette/gazette";
 import type {
   DigestResponse,
@@ -18,6 +19,7 @@ import type {
   MyMoodsResponse,
   PeriodRange,
   ProjectListItemResponse,
+  TouchedProjectResponse,
   ActivitySummaryResponse,
   StatisticsResponse,
   TeamMoodsResponse,
@@ -92,6 +94,18 @@ export function useProjects(includeInactive = false, enabled = true) {
     /** The missions alone, for screens that ignore assignments. */
     projects: missions.map((mission) => mission.project),
   };
+}
+
+/**
+ * The projects the register saw move, freshest first.
+ *
+ * Read from the log because nothing else knows: a project carries no date of
+ * its last change, and the register is where every gesture lands. Asked for
+ * only where it is wanted — the palette, once opened.
+ */
+export function useTouchedProjects(limit: number, enabled = true) {
+  const query = useListTouchedProjects({ limit }, { query: { enabled } });
+  return { ...query, touched: successOf<TouchedProjectResponse[]>(query.data) ?? [] };
 }
 
 /** A month's grid, for a given teammate. */

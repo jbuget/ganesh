@@ -36,6 +36,33 @@ vi.mock("@/lib/api/queries", () => ({
           is_active: false,
         },
       },
+      {
+        project: {
+          id: 55,
+          label: "Refonte du portail",
+          kind: "project",
+          status: "scoping",
+          parent_id: null,
+          is_active: true,
+        },
+      },
+    ],
+  }),
+  // Asked for with a margin over what is shown: the register knows nothing of
+  // archiving, and « Extranet syndic » below is exactly the case.
+  useTouchedProjects: (limit: number) => ({
+    limit,
+    touched: [
+      {
+        project_id: 40,
+        action: "project.status_change",
+        at: new Date(Date.now() - 7_200_000).toISOString(),
+      },
+      {
+        project_id: 55,
+        action: "attachment.add",
+        at: new Date(Date.now() - 1_800_000).toISOString(),
+      },
     ],
   }),
   useTeammates: () => ({
@@ -85,19 +112,42 @@ describe("CommandPalette", () => {
     expect(screen.queryByRole("option", { name: /Extranet syndic/ })).toBeNull();
   });
 
-  it("opens on what was last written about, dated and above the screens", async () => {
+  it("opens on what has just moved, dated and above the screens", async () => {
     const who = userEvent.setup();
     render(<CommandPalette />);
 
     await open(who);
 
-    const recent = screen.getByRole("group", { name: "Mis à jour récemment" });
+    const recent = screen.getByRole("group", { name: "Activité récente" });
     expect(recent).toHaveTextContent("Portail bailleurs");
     expect(recent).toHaveTextContent("il y a 1 h");
 
     expect(
       screen.getAllByRole("group").map((one) => one.getAttribute("aria-label")),
-    ).toEqual(["Mis à jour récemment", "Écrans"]);
+    ).toEqual(["Activité récente", "Écrans"]);
+  });
+
+  it("offers a project nobody wrote about, saying what moved it", async () => {
+    const who = userEvent.setup();
+    render(<CommandPalette />);
+
+    await open(who);
+
+    // Half an hour ago, against the hour of « Portail bailleurs »: it leads.
+    const first = screen.getAllByRole("option")[0];
+    expect(first).toHaveTextContent("Refonte du portail");
+    expect(first).toHaveTextContent("Fichier ajouté · il y a 30 min");
+  });
+
+  it("leaves out an archived project, however lately it moved", async () => {
+    const who = userEvent.setup();
+    render(<CommandPalette />);
+
+    await open(who);
+
+    expect(
+      screen.getByRole("group", { name: "Activité récente" }),
+    ).not.toHaveTextContent("Extranet syndic");
   });
 
   it("goes to the freshest of them on the first press of the key", async () => {
@@ -107,7 +157,7 @@ describe("CommandPalette", () => {
     await open(who);
     await who.keyboard("{Enter}");
 
-    expect(push).toHaveBeenCalledWith("/projects/12");
+    expect(push).toHaveBeenCalledWith("/projects/55");
   });
 
   it("closes on the same shortcut", async () => {
@@ -162,8 +212,8 @@ describe("CommandPalette", () => {
     await open(who);
     await who.keyboard("{ArrowDown}{Enter}");
 
-    // The line under the one project that has just moved: « Accueil ».
-    expect(push).toHaveBeenCalledWith("/");
+    // The second of the two projects that have just moved.
+    expect(push).toHaveBeenCalledWith("/projects/12");
   });
 
   it("opens a teammate's panel", async () => {

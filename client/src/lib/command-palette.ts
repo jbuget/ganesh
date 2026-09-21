@@ -1,8 +1,10 @@
 import { CircleUser, type LucideIcon } from "lucide-react";
 
 import type {
+  AuditAction,
   ProjectListItemResponse,
   ProjectStatus,
+  TouchedProjectResponse,
   UserResponse,
 } from "@/lib/api/generated/model";
 import { SCREENS } from "@/lib/navigation";
@@ -12,7 +14,7 @@ export type DestinationGroup = "recent" | "screen" | "project" | "person";
 
 /** What each group is called, above the results it holds. */
 export const GROUP_LABEL: Record<DestinationGroup, string> = {
-  recent: "Mis à jour récemment",
+  recent: "Activité récente",
   screen: "Écrans",
   project: "Projets",
   person: "Personnes",
@@ -38,9 +40,11 @@ export interface Destination {
   /**
    * When it last moved, for a destination the palette offers on that ground.
    * Held as it was recorded and spelled out when drawn, so that a palette open
-   * for an hour does not go on saying « à l\'instant ».
+   * for an hour does not go on saying « à l'instant ».
    */
   at?: string;
+  /** What moved it, already in the words the reader reads. */
+  gesture?: string;
 }
 
 /**
@@ -69,27 +73,108 @@ function projectHint(
 const RECENT = 5;
 
 /**
- * The projects something was last said about.
+ * How many the register is asked for, which is more than are shown.
  *
- * An update is somebody writing for the others to read, which is what makes
- * the list worth opening on: a phase dragged across a board moves a project
- * without being news. Archived projects are left out — the question the
- * section answers is what is moving, and they are not.
+ * The log knows nothing of archiving, so it may well name projects the palette
+ * then drops. Asking for exactly what is shown would leave the section short
+ * of a line each time one of them had been put away.
  */
-function recentlyUpdated(missions: ProjectListItemResponse[]): Destination[] {
+export const TOUCHED_ASKED_FOR = RECENT * 4;
+
+/** A gesture of the register, in the words the screen says it in. */
+const GESTURE: Partial<Record<AuditAction, string>> = {
+  "project.create": "Créé",
+  "project.update": "Modifié",
+  "project.status_change": "Phase changée",
+  "project.assign": "Intervenant ajouté",
+  "project.unassign": "Intervenant retiré",
+  "attachment.add": "Fichier ajouté",
+  "attachment.rename": "Fichier renommé",
+  "attachment.remove": "Fichier supprimé",
+};
+
+/**
+ * What a gesture is called on the line that announces it.
+ *
+ * « Modifié » covers whatever the register grows next: a gesture the screen
+ * has no word for still says that something happened, which is what the line
+ * is there for. Masculine throughout — what it agrees with is « le projet ».
+ */
+export function gestureLabel(action: AuditAction): string {
+  return GESTURE[action] ?? "Modifié";
+}
+
+/** The last thing that happened to a project, and when. */
+interface Movement {
+  at: string;
+  gesture: string;
+}
+
+/**
+ * When each project last moved, from the two registers that know.
+ *
+ * An update carries its own date with the reference list; every other gesture
+ * is read back from the log, no project carrying the date it last changed.
+ * The freshest of the two wins: they answer the same question, and the older
+ * one would announce a project as quiet while it was being worked on.
+ */
+function lastMovements(
+  missions: ProjectListItemResponse[],
+  touched: TouchedProjectResponse[],
+): Map<number, Movement> {
+  const moved = new Map<number, Movement>();
+
+  function remember(projectId: number, at: string, gesture: string) {
+    const known = moved.get(projectId);
+    if (!known || new Date(at) > new Date(known.at))
+      moved.set(projectId, { at, gesture });
+  }
+
+  for (const mission of missions) {
+    if (mission.latest_update) {
+      remember(mission.project.id, mission.latest_update.published_at, "Mise à jour");
+    }
+  }
+  for (const one of touched) {
+    remember(one.project_id, one.at, gestureLabel(one.action));
+  }
+
+  return moved;
+}
+
+/**
+ * The projects that have just moved.
+ *
+ * Read through the reference list rather than beside it: a project the list
+ * can no longer name is one the palette has nowhere to lead, and announcing a
+ * line that goes nowhere would be worse than leaving it out. Archived ones are
+ * left out too — the question the section answers is what is moving, and they
+ * are not.
+ */
+function recentlyMoved(
+  missions: ProjectListItemResponse[],
+  touched: TouchedProjectResponse[],
+): Destination[] {
+  const moved = lastMovements(missions, touched);
+
   return missions
-    .filter((mission) => mission.latest_update && mission.project.is_active)
-    .sort((one, other) =>
-      other.latest_update!.published_at.localeCompare(one.latest_update!.published_at),
+    .flatMap((mission) => {
+      const movement = moved.get(mission.project.id);
+      return movement && mission.project.is_active ? [{ mission, movement }] : [];
+    })
+    .sort(
+      (one, other) =>
+        new Date(other.movement.at).getTime() - new Date(one.movement.at).getTime(),
     )
     .slice(0, RECENT)
-    .map((mission) => ({
+    .map(({ mission, movement }) => ({
       key: `recent:${mission.project.id}`,
       label: mission.project.label,
       href: `/projects/${mission.project.id}`,
       group: "recent" as const,
       status: mission.project.status,
-      at: mission.latest_update!.published_at,
+      at: movement.at,
+      gesture: movement.gesture,
     }));
 }
 
@@ -103,14 +188,16 @@ function recentlyUpdated(missions: ProjectListItemResponse[]): Destination[] {
 export function destinations({
   missions,
   teammates,
+  touched = [],
 }: {
   missions: ProjectListItemResponse[];
   teammates: UserResponse[];
+  touched?: TouchedProjectResponse[];
 }): Destination[] {
   const parents = new Map(missions.map(({ project }) => [project.id, project.label]));
 
   return [
-    ...recentlyUpdated(missions),
+    ...recentlyMoved(missions, touched),
     ...SCREENS.map(({ href, label, Icon }) => ({
       key: `screen:${href}`,
       label,
