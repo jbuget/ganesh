@@ -4,6 +4,7 @@ from datetime import date
 
 import pytest
 
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction
 from src.modules.calendar.domain.entities.period import PeriodRange
 from src.modules.projects.domain.entities.project import (
     ProjectCategory,
@@ -14,6 +15,13 @@ from src.modules.stats.application.dtos.statistics_dto import StatisticsQuery
 from src.modules.stats.application.use_cases.compute_statistics import (
     ComputeStatisticsUseCase,
 )
+from src.modules.stats.domain.entities.statistics import Statistics
+from src.modules.stats.domain.entities.surface_usage import (
+    Surface,
+    SurfaceActivity,
+    Tally,
+    Trace,
+)
 from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
     InMemoryStatisticsRepository,
@@ -22,6 +30,9 @@ from tests.helpers.in_memory_repositories import (
 
 # A Thursday. The last seven days then hold five working days.
 TODAY = date(2026, 9, 17)
+
+#: Long before the window: what dates a function nobody used lately.
+JUNE = date(2026, 6, 4)
 
 TEAM = [
     User(id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba"),
@@ -43,6 +54,10 @@ def build(
         users=InMemoryUserRepository(team if team is not None else TEAM),
         statistics=InMemoryStatisticsRepository(**repository),
     )
+
+
+def surface(stats: Statistics, surface: Surface) -> SurfaceActivity:
+    return next(one for one in stats.surfaces.activities if one.surface is surface)
 
 
 async def run(**kwargs: object):
@@ -182,3 +197,61 @@ class TestRegistry:
 
         assert stats.registry.missions_without_time == 12
         assert stats.registry.created == 2
+
+
+class TestSurfaces:
+    # The window read here is the last seven days, TODAY being a Thursday:
+    # the one before it closes the Thursday a week earlier.
+    LAST_WEEK = date(2026, 9, 10)
+
+    async def test_every_function_of_the_product_gets_a_line(self) -> None:
+        stats = await run()
+
+        assert [one.surface for one in stats.surfaces.activities] == list(Surface)
+
+    async def test_a_function_reads_the_gestures_of_the_window(self) -> None:
+        stats = await run(
+            traces={
+                TODAY: [Trace(AuditAction.UPDATE_POST, actor_id=1, gestures=3)],
+                self.LAST_WEEK: [
+                    Trace(AuditAction.UPDATE_POST, actor_id=2, gestures=9)
+                ],
+            }
+        )
+
+        updates = surface(stats, Surface.PROJECT_UPDATES)
+        assert (updates.people, updates.gestures) == (1, 3)
+
+    async def test_it_moves_against_the_window_before_it(self) -> None:
+        stats = await run(
+            traces={
+                TODAY: [Trace(AuditAction.SIMULATION_CREATE, actor_id=1, gestures=1)],
+                self.LAST_WEEK: [
+                    Trace(AuditAction.SIMULATION_CREATE, actor_id=id_, gestures=1)
+                    for id_ in (1, 2, 3)
+                ],
+            }
+        )
+
+        assert surface(stats, Surface.PLANNING).delta_in_people == -2
+
+    async def test_what_the_log_does_not_carry_is_counted_too(self) -> None:
+        stats = await run(tallies={TODAY: {Surface.MOOD: Tally(people=5, gestures=18)}})
+
+        mood = surface(stats, Surface.MOOD)
+        assert (mood.people, mood.gestures) == (5, 18)
+
+    async def test_a_function_used_before_the_window_is_dated_all_the_same(
+        self,
+    ) -> None:
+        # « Nothing this week » is not « nothing since June »: only the
+        # second one is worth a decision.
+        stats = await run(last_gestures={AuditAction.GAZETTE_GENERATE: JUNE})
+
+        gazette = surface(stats, Surface.GAZETTE)
+        assert (gazette.is_idle, gazette.last_used_on) == (True, JUNE)
+
+    async def test_a_function_nobody_has_ever_used_carries_no_date(self) -> None:
+        stats = await run()
+
+        assert surface(stats, Surface.GAZETTE).never_used is True

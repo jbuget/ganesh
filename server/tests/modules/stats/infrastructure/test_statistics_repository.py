@@ -5,7 +5,11 @@ from datetime import date, datetime
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.audit_logs.domain.entities.audit_log import AuditLog
+from src.modules.api_keys.domain.entities.api_key import ApiKey, ApiKeyScope
+from src.modules.api_keys.infrastructure.database.repositories.api_key_repository_impl import (
+    SqlApiKeyRepository,
+)
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.infrastructure.database.repositories.audit_log_repository_impl import (
     SqlAuditLogRepository,
 )
@@ -18,6 +22,15 @@ from src.modules.months.domain.entities.month import Month
 from src.modules.months.infrastructure.database.repositories.month_repository_impl import (
     SqlMonthRepository,
 )
+from src.modules.moods.domain.entities.mood import MoodLevel
+from src.modules.moods.infrastructure.database.models.mood_model import MoodModel
+from src.modules.notifications.domain.entities.notification import (
+    Notification,
+    NotificationKind,
+)
+from src.modules.notifications.infrastructure.database.repositories.notification_repository_impl import (
+    SqlNotificationRepository,
+)
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectCategory,
@@ -27,6 +40,7 @@ from src.modules.projects.domain.entities.project import (
 from src.modules.projects.infrastructure.database.repositories.project_repository_impl import (
     SqlProjectRepository,
 )
+from src.modules.stats.domain.entities.surface_usage import Surface, Tally
 from src.modules.stats.infrastructure.database.repositories.statistics_repository_impl import (
     SqlStatisticsRepository,
 )
@@ -354,3 +368,194 @@ async def test_missions_created_are_read_from_their_trace(
 
     assert await SqlStatisticsRepository(db_session).missions_created(WINDOW) == 1
     assert BEFORE.start < WINDOW.start
+
+
+async def a_gesture(
+    session: AsyncSession,
+    action: AuditAction,
+    actor_id: int,
+    at: datetime,
+) -> None:
+    await SqlAuditLogRepository(session).add(
+        AuditLog(action=action, actor_id=actor_id, at=at)
+    )
+
+
+async def test_the_gestures_of_the_window_come_grouped_by_person(
+    db_session: AsyncSession,
+) -> None:
+    ada = await a_user(db_session, "ada")
+    grace = await a_user(db_session, "grace")
+    await a_gesture(db_session, AuditAction.UPDATE_POST, ada, datetime(2026, 9, 15, 9))
+    await a_gesture(db_session, AuditAction.UPDATE_POST, ada, datetime(2026, 9, 16, 9))
+    await a_gesture(
+        db_session, AuditAction.UPDATE_POST, grace, datetime(2026, 9, 16, 10)
+    )
+
+    traces = await SqlStatisticsRepository(db_session).surface_traces(WINDOW)
+
+    assert sorted((t.actor_id, t.gestures) for t in traces) == [(ada, 2), (grace, 1)]
+
+
+async def test_a_gesture_outside_the_window_is_left_out(
+    db_session: AsyncSession,
+) -> None:
+    ada = await a_user(db_session, "ada")
+    await a_gesture(db_session, AuditAction.UPDATE_POST, ada, datetime(2026, 8, 3, 9))
+
+    assert await SqlStatisticsRepository(db_session).surface_traces(WINDOW) == []
+
+
+async def test_the_last_day_of_a_gesture_is_read_beyond_any_window(
+    db_session: AsyncSession,
+) -> None:
+    ada = await a_user(db_session, "ada")
+    await a_gesture(
+        db_session, AuditAction.GAZETTE_GENERATE, ada, datetime(2026, 6, 4, 9)
+    )
+    await a_gesture(
+        db_session, AuditAction.GAZETTE_GENERATE, ada, datetime(2026, 7, 2, 9)
+    )
+
+    last = await SqlStatisticsRepository(db_session).last_gestures()
+
+    assert last[AuditAction.GAZETTE_GENERATE] == date(2026, 7, 2)
+
+
+async def a_mood(
+    session: AsyncSession, user_id: int, day: date, posted_on: datetime
+) -> None:
+    """A mood, posted at a chosen moment: the entity carries no such date."""
+    session.add(
+        MoodModel(
+            user_id=user_id,
+            day=day,
+            level=MoodLevel.GOOD,
+            created_at=posted_on,
+            updated_at=posted_on,
+        )
+    )
+    await session.flush()
+
+
+async def test_the_moods_posted_are_counted_and_never_read(
+    db_session: AsyncSession,
+) -> None:
+    ada = await a_user(db_session, "ada")
+    grace = await a_user(db_session, "grace")
+    await a_mood(db_session, ada, MONDAY, datetime(2026, 9, 14, 9))
+    await a_mood(db_session, ada, date(2026, 9, 15), datetime(2026, 9, 15, 9))
+    await a_mood(db_session, grace, MONDAY, datetime(2026, 9, 16, 9))
+    await a_mood(db_session, grace, date(2026, 9, 1), datetime(2026, 9, 1, 9))
+
+    tallies = await SqlStatisticsRepository(db_session).unlogged_tallies(WINDOW)
+
+    assert tallies[Surface.MOOD] == Tally(people=2, gestures=3)
+
+
+async def test_a_mood_counts_on_the_day_it_was_posted(
+    db_session: AsyncSession,
+) -> None:
+    # Posted inside the window, about a day well before it: somebody used
+    # the screen this week, and that is what the table reads.
+    ada = await a_user(db_session, "ada")
+    await a_mood(db_session, ada, date(2026, 8, 3), datetime(2026, 9, 16, 9))
+
+    stats = SqlStatisticsRepository(db_session)
+
+    assert (await stats.unlogged_tallies(WINDOW))[Surface.MOOD] == Tally(
+        people=1, gestures=1
+    )
+    assert (await stats.last_unlogged_use())[Surface.MOOD] == date(2026, 9, 16)
+
+
+async def test_a_notification_counts_when_it_was_read(
+    db_session: AsyncSession,
+) -> None:
+    ada = await a_user(db_session, "ada")
+    grace = await a_user(db_session, "grace")
+    notifications = SqlNotificationRepository(db_session)
+    read = await notifications.add(
+        Notification(
+            recipient_id=ada,
+            kind=NotificationKind.PROJECT_ASSIGNED,
+            actor_id=grace,
+            at=datetime(2026, 9, 14, 8),
+        )
+    )
+    read.read_at = datetime(2026, 9, 16, 9)
+    await notifications.save(read)
+    # Received inside the window and left unopened: it says nothing about
+    # whether anybody reads their inbox.
+    await notifications.add(
+        Notification(
+            recipient_id=grace,
+            kind=NotificationKind.PROJECT_ASSIGNED,
+            actor_id=ada,
+            at=datetime(2026, 9, 15, 8),
+        )
+    )
+
+    tallies = await SqlStatisticsRepository(db_session).unlogged_tallies(WINDOW)
+
+    assert tallies[Surface.NOTIFICATIONS] == Tally(people=1, gestures=1)
+
+
+async def test_a_key_that_served_is_counted_through_its_owner(
+    db_session: AsyncSession,
+) -> None:
+    # Only the last call of a key is stored: this counts the keys that
+    # served at least once, never how often they did.
+    ada = await a_user(db_session, "ada")
+    keys = SqlApiKeyRepository(db_session)
+    served = await keys.add(
+        ApiKey(
+            id=None,
+            name="CI waat-tools",
+            public_id="jns_ci",
+            secret_hash="hash",
+            owner_id=ada,
+            created_by=ada,
+            scopes=[ApiKeyScope.CATALOG_READ],
+        )
+    )
+    assert served.id is not None
+    await keys.record_use(served.id, datetime(2026, 9, 16, 11))
+    await keys.add(
+        ApiKey(
+            id=None,
+            name="Jamais appelée",
+            public_id="jns_idle",
+            secret_hash="hash",
+            owner_id=ada,
+            created_by=ada,
+            scopes=[ApiKeyScope.CATALOG_READ],
+        )
+    )
+
+    stats = SqlStatisticsRepository(db_session)
+
+    assert (await stats.unlogged_tallies(WINDOW))[Surface.MACHINE_ACCESS] == Tally(
+        people=1, gestures=1
+    )
+    assert (await stats.last_unlogged_use())[Surface.MACHINE_ACCESS] == date(
+        2026, 9, 16
+    )
+
+
+async def test_a_function_nothing_touched_is_absent_from_the_last_days(
+    db_session: AsyncSession,
+) -> None:
+    # Absent rather than dated: the table draws « never » from the gap.
+    assert await SqlStatisticsRepository(db_session).last_unlogged_use() == {}
+
+
+async def test_every_function_outside_the_log_is_actually_counted(
+    db_session: AsyncSession,
+) -> None:
+    # The domain names the three the register does not carry; here is where
+    # they are read. One added on one side and forgotten on the other would
+    # simply read zero for ever, and no other test would notice.
+    tallies = await SqlStatisticsRepository(db_session).unlogged_tallies(WINDOW)
+
+    assert set(tallies) == set(Surface.unlogged())

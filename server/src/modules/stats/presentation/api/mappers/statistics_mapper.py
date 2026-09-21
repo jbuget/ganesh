@@ -14,6 +14,8 @@ from src.modules.stats.presentation.api.schemas.statistics_schemas import (
     StatisticsResponse,
     StatusShareResponse,
     SteeringResponse,
+    SurfaceActivityResponse,
+    SurfaceUsageResponse,
     TeammateResponse,
 )
 
@@ -57,6 +59,22 @@ def to_statistics_response(
                 TeammateResponse(id=teammate.id, display_name=teammate.display_name)
                 for teammate in statistics.adoption.idle
             ],
+        ),
+        surfaces=SurfaceUsageResponse(
+            activities=[
+                SurfaceActivityResponse(
+                    surface=activity.surface,
+                    people=activity.people,
+                    gestures=activity.gestures,
+                    delta_in_people=activity.delta_in_people,
+                    is_idle=activity.is_idle,
+                    last_used_on=activity.last_used_on,
+                )
+                # The order they come in is the order they are read in: it is
+                # the domain's, and sorting here would lose it.
+                for activity in statistics.surfaces.activities
+            ],
+            idle_count=statistics.surfaces.idle_count,
         ),
         steering=SteeringResponse(
             project_days=steering.project_days,

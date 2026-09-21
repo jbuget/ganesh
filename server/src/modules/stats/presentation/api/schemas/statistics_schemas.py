@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from src.modules.calendar.domain.entities.period import PeriodRange
 from src.modules.projects.domain.entities.project import ProjectCategory, ProjectStatus
+from src.modules.stats.domain.entities.surface_usage import Surface
 
 
 class PeriodResponse(BaseModel):
@@ -60,6 +61,30 @@ class AdoptionResponse(BaseModel):
     expected_contributors: int
     rate: float | None
     idle: list[TeammateResponse]
+
+
+class SurfaceActivityResponse(BaseModel):
+    """What one function of the product saw over the window."""
+
+    surface: Surface
+    people: int
+    gestures: int
+    #: Movement in people, never in gestures: one tidy-up afternoon doubles
+    #: the second, while somebody who came or stopped coming is adoption.
+    delta_in_people: int
+    #: Nobody used it over the window. Carried rather than left to the screen
+    #: to work out: the count above it reads the same rule, and the two must
+    #: not be able to drift apart.
+    is_idle: bool
+    #: Read beyond the window, and null when nobody has ever used it.
+    last_used_on: date | None
+
+
+class SurfaceUsageResponse(BaseModel):
+    """What the product saw, function by function, in a fixed order."""
+
+    activities: list[SurfaceActivityResponse]
+    idle_count: int
 
 
 class StatusShareResponse(BaseModel):
@@ -116,5 +141,6 @@ class StatisticsResponse(BaseModel):
     freshness: FreshnessResponse
     month_validation: MonthValidationResponse
     adoption: AdoptionResponse
+    surfaces: SurfaceUsageResponse
     steering: SteeringResponse
     registry: RegistryResponse

@@ -3,12 +3,14 @@
 from abc import ABC, abstractmethod
 from datetime import date
 
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction
 from src.modules.calendar.domain.entities.period import Period
 from src.modules.projects.domain.entities.project import (
     ProjectCategory,
     ProjectKind,
     ProjectStatus,
 )
+from src.modules.stats.domain.entities.surface_usage import Surface, Tally, Trace
 
 
 class StatisticsRepository(ABC):
@@ -81,4 +83,33 @@ class StatisticsRepository(ABC):
     @abstractmethod
     async def missions_created(self, period: Period) -> int:
         """Missions added to the reference list during the window."""
+        ...
+
+    @abstractmethod
+    async def surface_traces(self, period: Period) -> list[Trace]:
+        """Gestures of the window, one line per action and per person.
+
+        Grouped rather than listed, and left unfolded: which function a
+        gesture belongs to is business knowledge, and it stays in the domain
+        rather than turning into a `CASE` in the SQL.
+        """
+        ...
+
+    @abstractmethod
+    async def unlogged_tallies(self, period: Period) -> dict[Surface, Tally]:
+        """What the functions the audit log does not carry saw."""
+        ...
+
+    @abstractmethod
+    async def last_gestures(self) -> dict[AuditAction, date]:
+        """The day each gesture was last made, however far back that is.
+
+        Read beyond any window on purpose: it is what tells a function nobody
+        used this month from one nobody has used since March.
+        """
+        ...
+
+    @abstractmethod
+    async def last_unlogged_use(self) -> dict[Surface, date]:
+        """The same, for the functions counted outside the log."""
         ...

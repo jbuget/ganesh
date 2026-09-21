@@ -4,8 +4,12 @@ from datetime import date
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.sql.elements import ColumnElement
 
+from src.modules.api_keys.infrastructure.database.models.api_key_models import (
+    ApiKeyModel,
+)
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction
 from src.modules.audit_logs.infrastructure.database.models.audit_log_model import (
     AuditLogModel,
@@ -14,6 +18,10 @@ from src.modules.calendar.domain.entities.period import Period
 from src.modules.entries.infrastructure.database.models.entry_model import EntryModel
 from src.modules.months.domain.entities.month import MonthState
 from src.modules.months.infrastructure.database.models.month_model import MonthModel
+from src.modules.moods.infrastructure.database.models.mood_model import MoodModel
+from src.modules.notifications.infrastructure.database.models.notification_model import (
+    NotificationModel,
+)
 from src.modules.projects.domain.entities.project import (
     ProjectCategory,
     ProjectKind,
@@ -22,6 +30,7 @@ from src.modules.projects.domain.entities.project import (
 from src.modules.projects.infrastructure.database.models.project_model import (
     ProjectModel,
 )
+from src.modules.stats.domain.entities.surface_usage import Surface, Tally, Trace
 from src.modules.stats.domain.repositories.statistics_repository import (
     StatisticsRepository,
 )
@@ -173,3 +182,82 @@ class SqlStatisticsRepository(StatisticsRepository):
             )
         )
         return int(count or 0)
+
+    async def surface_traces(self, period: Period) -> list[Trace]:
+        rows = await self._session.execute(
+            select(AuditLogModel.action, AuditLogModel.actor_id, func.count())
+            .where(func.date(AuditLogModel.at).between(period.start, period.end))
+            .group_by(AuditLogModel.action, AuditLogModel.actor_id)
+        )
+        return [
+            Trace(action=action, actor_id=actor_id, gestures=int(gestures))
+            for action, actor_id, gestures in rows.all()
+        ]
+
+    async def last_gestures(self) -> dict[AuditAction, date]:
+        rows = await self._session.execute(
+            select(
+                AuditLogModel.action, func.max(func.date(AuditLogModel.at))
+            ).group_by(AuditLogModel.action)
+        )
+        return dict(rows.all())
+
+    async def unlogged_tallies(self, period: Period) -> dict[Surface, Tally]:
+        return {
+            Surface.MOOD: await self._moods_posted(period),
+            Surface.NOTIFICATIONS: await self._notifications_read(period),
+            Surface.MACHINE_ACCESS: await self._keys_used(period),
+        }
+
+    async def last_unlogged_use(self) -> dict[Surface, date]:
+        latest = {
+            Surface.MOOD: func.max(func.date(MoodModel.created_at)),
+            Surface.NOTIFICATIONS: func.max(func.date(NotificationModel.read_at)),
+            Surface.MACHINE_ACCESS: func.max(func.date(ApiKeyModel.last_used_at)),
+        }
+        days = {
+            surface: await self._session.scalar(select(column))
+            for surface, column in latest.items()
+        }
+        return {surface: day for surface, day in days.items() if day is not None}
+
+    async def _moods_posted(self, period: Period) -> Tally:
+        """Who said how their days felt. How they felt is read nowhere here.
+
+        Counted on the day it was posted rather than on the day it is about,
+        as freshness already counts the entries *written* over the window: a
+        mood posted on Monday for last Friday is somebody using the screen on
+        Monday, and dating it to Friday would drop the use out of the window
+        that saw it.
+        """
+        return await self._tally(
+            MoodModel.user_id,
+            func.date(MoodModel.created_at).between(period.start, period.end),
+        )
+
+    async def _notifications_read(self, period: Period) -> Tally:
+        """Notifications opened. A read is a trace, and this one is recorded."""
+        return await self._tally(
+            NotificationModel.recipient_id,
+            func.date(NotificationModel.read_at).between(period.start, period.end),
+        )
+
+    async def _keys_used(self, period: Period) -> Tally:
+        """Keys that served, counted through the people who answer for them.
+
+        Only the last call of each key is stored, so this counts keys that
+        were used at least once and never how often. The screen says so.
+        """
+        return await self._tally(
+            ApiKeyModel.owner_id,
+            func.date(ApiKeyModel.last_used_at).between(period.start, period.end),
+        )
+
+    async def _tally(
+        self, person: InstrumentedAttribute[int], within: ColumnElement[bool]
+    ) -> Tally:
+        row = await self._session.execute(
+            select(func.count(func.distinct(person)), func.count()).where(within)
+        )
+        people, gestures = row.one()
+        return Tally(people=int(people or 0), gestures=int(gestures or 0))
