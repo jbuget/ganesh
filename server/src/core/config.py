@@ -59,6 +59,13 @@ class Settings(BaseSettings):
     s3_access_key_id: str = ""
     s3_secret_access_key: str = ""
 
+    # What a whole request may weigh, envelope included. A guard rail, not a
+    # business rule: what a *file* may weigh is the domain's business and
+    # lives in the entity, at ten megabytes. This is the margin around it —
+    # the multipart wrapper, and the JSON of a bulk import. Caddy is told the
+    # same number, and it is Caddy that actually keeps the bytes off the host.
+    max_request_bytes: int = 12 * 1024 * 1024
+
     # How often one API key may call, as a token bucket. Counted per process:
     # behind several workers the effective allowance is multiplied by their
     # number. Generous on purpose — this is a guard rail against a runaway

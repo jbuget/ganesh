@@ -13,6 +13,16 @@
 api.ganesh.waat.tools {
 	encode gzip zstd
 
+	# What a request may weigh, envelope included — the same number the API
+	# carries in `MAX_REQUEST_BYTES`, said here because this is where it
+	# actually bites. A file is capped at ten megabytes by the domain, but
+	# that rule is only read once the whole body has been taken in and
+	# spooled to disk: without this line, a single POST of several gigabytes
+	# fills the host before anything of ours is consulted.
+	request_body {
+		max_size 12MB
+	}
+
 	# The API on the internal compose network; `api` resolves through Docker's
 	# own DNS. Nothing else on this host answers on 8000.
 	reverse_proxy api:8000 {

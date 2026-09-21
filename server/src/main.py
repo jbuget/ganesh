@@ -3,6 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.common.body_limit import BodySizeLimit
 from src.common.exception_handlers import register_domain_exception_handlers
 from src.core.config import get_settings
 from src.mcp.server import ToolServer
@@ -58,6 +59,11 @@ app = FastAPI(
     # The MCP server's session manager has to run for as long as the API does.
     lifespan=tools.lifespan,
 )
+
+# Declared before CORS, which in Starlette puts it *inside* it: a body too
+# heavy is turned away before any router, any dependency and any multipart
+# parser has seen it, and the 413 still goes out with the CORS headers on it.
+app.add_middleware(BodySizeLimit, max_bytes=settings.max_request_bytes)
 
 app.add_middleware(
     CORSMiddleware,
