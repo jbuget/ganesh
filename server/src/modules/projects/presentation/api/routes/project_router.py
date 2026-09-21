@@ -120,8 +120,10 @@ from src.modules.projects.application.use_cases.update_project_registry import (
 from src.modules.projects.domain.entities.project_attachment import MAX_ATTACHMENT_BYTES
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.presentation.api.attachment_serving import (
+    CONTENT_POLICY,
+    DOWNLOAD_TYPE,
     disposition,
-    may_be_shown,
+    served_as,
 )
 from src.modules.projects.presentation.api.mappers.project_mapper import (
     to_board_response,
@@ -881,10 +883,14 @@ async def download_project_attachment(
 ) -> RawResponse:
     """The bytes of a file, to show in place or to save."""
     attachment, content = await use_case.execute(project_id, attachment_id)
-    shown = not download and may_be_shown(attachment.content_type)
+    showable = served_as(attachment.content_type)
+    shown = not download and showable is not None
     return RawResponse(
         content=content,
-        media_type=attachment.content_type,
+        # What we announce comes from the closed list, never from whoever
+        # dropped the file: a type nobody checked is a type the browser must
+        # not be asked to render. Everything else goes out as bytes to save.
+        media_type=showable if shown else DOWNLOAD_TYPE,
         headers={
             "Content-Disposition": disposition(
                 attachment.filename, as_download=not shown
@@ -892,6 +898,8 @@ async def download_project_attachment(
             # The type we announce is the type we mean: without this, a
             # browser sniffing the bytes could decide otherwise.
             "X-Content-Type-Options": "nosniff",
+            # And the net under the list: what we do serve runs nothing.
+            "Content-Security-Policy": CONTENT_POLICY,
         },
     )
 
