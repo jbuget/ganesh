@@ -19,7 +19,7 @@ interface ApiKeysTableProps {
 
 /**
  * The service accounts as a table: what each one opens, who answers for it,
- * and when it was last used.
+ * when it was minted and by whom, and when it was last used.
  *
  * It draws what it is given and asks for the rest: no criteria of its own, no
  * fetching, no opinion on what to say when there is nothing — the screen
@@ -41,6 +41,7 @@ export function ApiKeysTable({ keys, onOpen }: ApiKeysTableProps) {
             <TableHead className={STRONG_SEPARATOR}>Clé</TableHead>
             <TableHead>Périmètres</TableHead>
             <TableHead>Compte associé</TableHead>
+            <TableHead>Création</TableHead>
             <TableHead>Dernière utilisation</TableHead>
             <TableHead>Expiration</TableHead>
             <TableHead>État</TableHead>
