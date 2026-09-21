@@ -3,20 +3,26 @@
 from dataclasses import dataclass
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditLog
+from src.modules.projects.domain.entities.project import Project
 from src.modules.users.domain.entities.user import User
 
 
 @dataclass(frozen=True)
 class SignedAuditLog:
-    """One line of the log, and the people it names.
+    """One line of the log, and what it names.
 
-    Both are optional: a line survives the account it names being removed, and
-    a log that dropped what it can no longer sign would be rewriting history.
+    All of it is optional: a line survives the account and the mission it names
+    being removed, and a log that dropped what it can no longer sign would be
+    rewriting history.
     """
 
     log: AuditLog
     actor: User | None
     target_user: User | None
+    #: The mission the line is about, named only where the reader is not
+    #: already inside it. A mission's own log leaves it out: the page is the
+    #: mission, and repeating its name on every line would say nothing.
+    project: Project | None = None
 
 
 @dataclass(frozen=True)

@@ -4,19 +4,51 @@
  * Ganesh API
  * OpenAPI spec version: 0.1.0
  */
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HTTPValidationError, MonthResponse, ReopenMonthParams } from "../model";
+import type {
+  AuditLogPageResponse,
+  HTTPValidationError,
+  ListMonthAuditLogParams,
+  MonthResponse,
+  ReopenMonthParams,
+} from "../model";
 
 import { bffFetcher } from "../../fetcher";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+const withQueryKey = <T extends object, K>(
+  query: T,
+  queryKey: K,
+): T & { queryKey: K } => {
+  const result = { queryKey } as T & { queryKey: K };
+  for (const key of Object.keys(query)) {
+    // The explicit queryKey always wins, matching the previous
+    // `{ ...query, queryKey }` spread where it was set last.
+    if (key === "queryKey") continue;
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      configurable: true,
+      get: () => (query as Record<string, unknown>)[key],
+    });
+  }
+  return result;
+};
 
 export type validateMonthResponse200 = {
   data: MonthResponse;
@@ -244,3 +276,191 @@ export const useReopenMonth = <TError = HTTPValidationError, TContext = unknown>
 > => {
   return useMutation(getReopenMonthMutationOptions(options), queryClient);
 };
+export type listMonthAuditLogResponse200 = {
+  data: AuditLogPageResponse;
+  status: 200;
+};
+
+export type listMonthAuditLogResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listMonthAuditLogResponseSuccess = listMonthAuditLogResponse200 & {
+  headers: Headers;
+};
+export type listMonthAuditLogResponseError = listMonthAuditLogResponse422 & {
+  headers: Headers;
+};
+
+export type listMonthAuditLogResponse =
+  listMonthAuditLogResponseSuccess | listMonthAuditLogResponseError;
+
+export const getListMonthAuditLogUrl = (
+  month: string,
+  params: ListMonthAuditLogParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/months/${month}/audit?${stringifiedParams}`
+    : `/api/v1/months/${month}/audit`;
+};
+
+/**
+ * Everything that happened to that month, most recent first.
+ *
+ * Read by the whole team rather than by its owner alone: anyone may edit a
+ * colleague's open month, and that freedom only holds up if the trace it
+ * leaves can be read back by anyone too.
+ * @summary List Month Audit Log
+ */
+export const listMonthAuditLog = async (
+  month: string,
+  params: ListMonthAuditLogParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listMonthAuditLogResponse> => {
+  return bffFetcher<listMonthAuditLogResponse>(getListMonthAuditLogUrl(month, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMonthAuditLogQueryKey = (
+  month: string,
+  params?: ListMonthAuditLogParams,
+) => {
+  return [`/api/v1/months/${month}/audit`, ...(params ? [params] : [])] as const;
+};
+
+export const getListMonthAuditLogQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMonthAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  month: string,
+  params: ListMonthAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMonthAuditLog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListMonthAuditLogQueryKey(month, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMonthAuditLog>>> = ({
+    signal,
+  }) => listMonthAuditLog(month, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: month !== null && month !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listMonthAuditLog>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListMonthAuditLogQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMonthAuditLog>>
+>;
+export type ListMonthAuditLogQueryError = HTTPValidationError;
+
+export function useListMonthAuditLog<
+  TData = Awaited<ReturnType<typeof listMonthAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  month: string,
+  params: ListMonthAuditLogParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMonthAuditLog>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMonthAuditLog>>,
+          TError,
+          Awaited<ReturnType<typeof listMonthAuditLog>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListMonthAuditLog<
+  TData = Awaited<ReturnType<typeof listMonthAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  month: string,
+  params: ListMonthAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMonthAuditLog>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMonthAuditLog>>,
+          TError,
+          Awaited<ReturnType<typeof listMonthAuditLog>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMonthAuditLog<
+  TData = Awaited<ReturnType<typeof listMonthAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  month: string,
+  params: ListMonthAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMonthAuditLog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Month Audit Log
+ */
+
+export function useListMonthAuditLog<
+  TData = Awaited<ReturnType<typeof listMonthAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  month: string,
+  params: ListMonthAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMonthAuditLog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListMonthAuditLogQueryOptions(month, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}

@@ -16,6 +16,7 @@ function entry(
     action,
     actor: LIN,
     target_user: null,
+    project: null,
     day: null,
     field: null,
     old_value: null,
@@ -379,5 +380,75 @@ describe("groupAuditByDay", () => {
 
   it("has no day to show for an empty log", () => {
     expect(groupAuditByDay([])).toEqual([]);
+  });
+});
+
+describe("auditSentence, read within a month", () => {
+  it("says a month validated", () => {
+    expect(
+      auditSentence(entry("month.validate", { target_user: LIN, day: "2026-09-01" }), {
+        read: "month",
+      }),
+    ).toEqual({ action: "a validé le mois" });
+  });
+
+  it("says a month reopened", () => {
+    expect(
+      auditSentence(entry("month.reopen", { target_user: NINO, day: "2026-09-01" }), {
+        read: "month",
+      }),
+    ).toEqual({ action: "a rouvert le mois" });
+  });
+
+  it("names the month elsewhere, where no screen says which it is", () => {
+    expect(
+      auditSentence(entry("month.validate", { target_user: LIN, day: "2026-09-01" }))
+        .action,
+    ).toBe("a validé son mois de septembre 2026");
+  });
+
+  it("leaves out whose month it is, which the screen above already says", () => {
+    expect(
+      auditSentence(
+        entry("entry.set", {
+          actor: LIN,
+          target_user: NINO,
+          day: "2026-09-14",
+          new_value: "1.0",
+        }),
+        { read: "month" },
+      ).action,
+    ).toBe("a déclaré 1 j le 14 sept. 2026");
+  });
+
+  it("still says for whom on a mission's own log", () => {
+    expect(
+      auditSentence(
+        entry("entry.set", {
+          actor: LIN,
+          target_user: NINO,
+          day: "2026-09-14",
+          new_value: "1.0",
+        }),
+      ).action,
+    ).toBe("a déclaré 1 j le 14 sept. 2026 pour Nino Garo");
+  });
+
+  it("puts a mission on the month without repeating which month", () => {
+    expect(
+      auditSentence(
+        entry("month.project_add", { target_user: LIN, day: "2026-09-01" }),
+        { read: "month" },
+      ).action,
+    ).toBe("a ajouté le projet");
+  });
+
+  it("takes a mission off the month without repeating which month", () => {
+    expect(
+      auditSentence(
+        entry("month.project_remove", { target_user: LIN, day: "2026-09-01" }),
+        { read: "month" },
+      ).action,
+    ).toBe("a retiré le projet");
   });
 });

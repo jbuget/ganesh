@@ -5,6 +5,7 @@ from datetime import date, datetime
 
 from sqlalchemy import and_, extract, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
@@ -53,21 +54,35 @@ class SqlAuditLogRepository(AuditLogRepository):
         log.id = model.id
         return log
 
+    @staticmethod
+    def _within_the_month(target_user_id: int, month: date) -> ColumnElement[bool]:
+        return and_(
+            AuditLogModel.target_user_id == target_user_id,
+            extract("year", AuditLogModel.day) == month.year,
+            extract("month", AuditLogModel.day) == month.month,
+        )
+
     async def list_for_user_month(
-        self, target_user_id: int, month: date
+        self, target_user_id: int, month: date, limit: int, offset: int
     ) -> list[AuditLog]:
         result = await self._session.execute(
             select(AuditLogModel)
-            .where(
-                and_(
-                    AuditLogModel.target_user_id == target_user_id,
-                    extract("year", AuditLogModel.day) == month.year,
-                    extract("month", AuditLogModel.day) == month.month,
-                )
-            )
-            .order_by(AuditLogModel.at.desc())
+            .where(self._within_the_month(target_user_id, month))
+            # The id breaks the tie, as it does on a mission's log: a page that
+            # reordered lines sharing a timestamp would show one of them twice.
+            .order_by(AuditLogModel.at.desc(), AuditLogModel.id.desc())
+            .limit(limit)
+            .offset(offset)
         )
         return [to_entity(model) for model in result.scalars().all()]
+
+    async def count_for_user_month(self, target_user_id: int, month: date) -> int:
+        result = await self._session.execute(
+            select(func.count())
+            .select_from(AuditLogModel)
+            .where(self._within_the_month(target_user_id, month))
+        )
+        return int(result.scalar_one())
 
     async def list_for_project(
         self, project_id: int, limit: int, offset: int

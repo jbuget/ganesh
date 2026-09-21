@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 
-import { PAGE_SIZE, useProjectAudit } from "./use-project-audit";
+import { PAGE_SIZE } from "@/lib/use-paged-audit";
+import { useProjectAudit } from "./use-project-audit";
 import type { AuditLogEntryResponse } from "@/lib/api/generated/model";
 
 const api = vi.hoisted(() => ({ listProjectAuditLog: vi.fn() }));
@@ -15,6 +16,7 @@ function line(id: number): AuditLogEntryResponse {
     action: "project.update",
     actor: null,
     target_user: null,
+    project: null,
     day: null,
     field: "label",
     old_value: null,

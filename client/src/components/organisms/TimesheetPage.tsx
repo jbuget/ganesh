@@ -1,11 +1,12 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, History } from "lucide-react";
 import { useState } from "react";
 
 import { AssignedMissionsCallout } from "@/components/atoms/AssignedMissionsCallout";
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { MissionSelector } from "@/components/atoms/MissionSelector";
+import { MonthAuditDialog } from "@/components/organisms/MonthAuditDialog";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
@@ -31,6 +32,7 @@ export function TimesheetPage() {
   const [declareOpen, setDeclareOpen] = useState(false);
   const [validateOpen, setValidateOpen] = useState(false);
   const [reopenOpen, setReopenOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [toRemove, setToRemove] = useState<{
     id: number;
     label: string;
@@ -96,6 +98,7 @@ export function TimesheetPage() {
           <Button
             variant="outline"
             size="icon"
+            className="cursor-pointer"
             aria-label="Mois précédent"
             onClick={month.goToPreviousMonth}
           >
@@ -107,6 +110,7 @@ export function TimesheetPage() {
           <Button
             variant="outline"
             size="icon"
+            className="cursor-pointer"
             aria-label="Mois suivant"
             onClick={month.goToNextMonth}
           >
@@ -114,16 +118,35 @@ export function TimesheetPage() {
           </Button>
         </div>
 
-        <div className="col-start-3 justify-self-end">
+        <div className="col-start-3 flex items-center justify-end gap-2">
+          {/* Reading the month's life next to the gesture that commits it, and
+              a shade lighter: one opens a window, the other locks the month.
+              Always offered — how a month got here is worth reading whether or
+              not it is still open. */}
+          <Button
+            variant="ghost"
+            className="cursor-pointer"
+            onClick={() => setHistoryOpen(true)}
+          >
+            <History />
+            Historique
+          </Button>
+
           {month.canValidate && (
-            <Button onClick={() => setValidateOpen(true)}>Valider le mois</Button>
+            <Button className="cursor-pointer" onClick={() => setValidateOpen(true)}>
+              Valider le mois
+            </Button>
           )}
 
           {/* Giving a month back to entry is a step backwards, not the outcome
               of the month: it does not carry the primary weight the validation
               does. */}
           {month.canReopen && (
-            <Button variant="outline" onClick={() => setReopenOpen(true)}>
+            <Button
+              variant="outline"
+              className="cursor-pointer"
+              onClick={() => setReopenOpen(true)}
+            >
               Rouvrir le mois
             </Button>
           )}
@@ -201,6 +224,20 @@ export function TimesheetPage() {
           // in the grid behind it.
           onMissionChanged={month.refresh}
           onOpenMission={(projectId) => panel.open(projectId)}
+        />
+      )}
+
+      {/* Mounted with the window rather than with the page: the log is read
+          when somebody asks for it, and read afresh every time — reopening it
+          after an entry must show that entry. */}
+      {historyOpen && (
+        <MonthAuditDialog
+          open
+          onOpenChange={setHistoryOpen}
+          month={month.month}
+          label={formatMonth(cursor.year, cursor.month)}
+          userId={month.targetUserId}
+          teammate={month.viewedTeammateName}
         />
       )}
 

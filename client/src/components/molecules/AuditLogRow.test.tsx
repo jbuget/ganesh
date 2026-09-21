@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { AuditLogRow } from "./AuditLogRow";
 import type { AuditLogEntryResponse } from "@/lib/api/generated/model";
+import type { AuditReading } from "@/lib/audit-log";
 
 const LIN = { id: 1, display_name: "Lin Chen", initials: "LC" };
 
@@ -13,6 +14,7 @@ function entry(over: Partial<AuditLogEntryResponse> = {}): AuditLogEntryResponse
     action: "project.create",
     actor: LIN,
     target_user: null,
+    project: null,
     day: null,
     field: null,
     old_value: null,
@@ -21,10 +23,10 @@ function entry(over: Partial<AuditLogEntryResponse> = {}): AuditLogEntryResponse
   };
 }
 
-function row(over: Partial<AuditLogEntryResponse> = {}) {
+function row(over: Partial<AuditLogEntryResponse> = {}, reading?: AuditReading) {
   render(
     <ul>
-      <AuditLogRow entry={entry(over)} />
+      <AuditLogRow entry={entry(over)} reading={reading} />
     </ul>,
   );
 }
@@ -63,5 +65,27 @@ describe("AuditLogRow", () => {
 
     expect(screen.getByText("Compte supprimé")).toBeInTheDocument();
     expect(screen.getByText("a créé le projet")).toBeInTheDocument();
+  });
+
+  it("names the mission a line is about, where the line carries one", () => {
+    // Read out of its grid, a declaration no longer says what it was booked
+    // on: the month's log is where that has to be said.
+    row(
+      {
+        action: "entry.set",
+        project: { id: 10, label: "WAATcher" },
+        day: "2026-09-14",
+        new_value: "1.0",
+      },
+      { read: "month" },
+    );
+
+    expect(screen.getByText("WAATcher")).toBeInTheDocument();
+  });
+
+  it("says nothing of a mission where the line carries none", () => {
+    row({ action: "month.validate", day: "2026-09-01" }, { read: "month" });
+
+    expect(screen.getByText("a validé le mois")).toBeInTheDocument();
   });
 });

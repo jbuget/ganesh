@@ -18,6 +18,7 @@ function line(id: number, at: string): AuditLogEntryResponse {
     action: "project.create",
     actor: LIN,
     target_user: null,
+    project: null,
     day: null,
     field: null,
     old_value: null,

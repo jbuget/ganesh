@@ -19,6 +19,20 @@ import { CRITICALITIES, SERVICE_LINKS, SERVICE_TYPES } from "@/lib/service-sheet
  * than in the component so that every wording is under test: a log that says
  * « a modifié status » says nothing to whoever opens it.
  */
+/**
+ * Which log the sentence is being read in.
+ *
+ * The same gesture is not said the same way on a mission's log and on a
+ * month's: each screen already says one thing, and a sentence repeating it
+ * pushes out what the reader actually came for. A mission's page says which
+ * mission; a month's says whose month and which one.
+ */
+export interface AuditReading {
+  read: "project" | "month";
+}
+
+const ON_A_MISSION: AuditReading = { read: "project" };
+
 export interface AuditSentence {
   /** What was done, read straight after the name of who did it. */
   action: string;
@@ -115,9 +129,15 @@ function movement(
   return { from: wording(field, before), to: wording(field, after) };
 }
 
-/** « pour Nino Garo » — said only when it was not one's own month. */
-function onBehalfOf(entry: AuditLogEntryResponse): string {
+/**
+ * « pour Nino Garo » — said only when it was not one's own month.
+ *
+ * Read inside that very month, it is said by the screen and dropped here: the
+ * line would otherwise name, on every row, the one person the page is about.
+ */
+function onBehalfOf(entry: AuditLogEntryResponse, reading: AuditReading): string {
   const target = entry.target_user;
+  if (reading.read === "month") return "";
   if (!target || target.id === entry.actor?.id) return "";
   return ` pour ${target.display_name}`;
 }
@@ -127,10 +147,15 @@ function isOwnMonth(entry: AuditLogEntryResponse): boolean {
   return entry.target_user === null || entry.target_user.id === entry.actor?.id;
 }
 
+/** « son mois de septembre 2026 », « le mois de septembre 2026 ». */
+function theMonth(entry: AuditLogEntryResponse): string {
+  const month = entry.day ? formatMonthOf(entry.day) : "un mois";
+  return isOwnMonth(entry) ? `son mois de ${month}` : `le mois de ${month}`;
+}
+
 /** « sur son mois de septembre 2026 », « sur le mois de septembre 2026 ». */
 function ontoTheMonth(entry: AuditLogEntryResponse): string {
-  const month = entry.day ? formatMonthOf(entry.day) : "un mois";
-  return isOwnMonth(entry) ? `sur son mois de ${month}` : `sur le mois de ${month}`;
+  return `sur ${theMonth(entry)}`;
 }
 
 /**
@@ -205,9 +230,13 @@ function role(raw: string | null, side: "joined" | "left"): string {
 }
 
 /** One line of the log, said in French. */
-export function auditSentence(entry: AuditLogEntryResponse): AuditSentence {
+export function auditSentence(
+  entry: AuditLogEntryResponse,
+  reading: AuditReading = ON_A_MISSION,
+): AuditSentence {
   const { old_value: before, new_value: after } = entry;
   const who = entry.target_user?.display_name ?? "quelqu'un";
+  const withinTheMonth = reading.read === "month";
 
   switch (entry.action) {
     case "entry.set":
@@ -215,27 +244,46 @@ export function auditSentence(entry: AuditLogEntryResponse): AuditSentence {
       // how much was booked, the other says the figure moved.
       return before === null
         ? {
-            action: `a déclaré ${days(after ?? "")}${onTheDay(entry)}${onBehalfOf(entry)}`,
+            action: `a déclaré ${days(after ?? "")}${onTheDay(entry)}${onBehalfOf(entry, reading)}`,
           }
         : {
-            action: `a modifié la déclaration du ${formatSpelledDate(entry.day ?? "")}${onBehalfOf(entry)}`,
+            action: `a modifié la déclaration du ${formatSpelledDate(entry.day ?? "")}${onBehalfOf(entry, reading)}`,
             from: days(before),
             to: days(after ?? ""),
           };
 
     case "entry.clear":
       return {
-        action: `a effacé ${days(before ?? "")}${onTheDay(entry)}${onBehalfOf(entry)}`,
+        action: `a effacé ${days(before ?? "")}${onTheDay(entry)}${onBehalfOf(entry, reading)}`,
       };
 
+    // Read inside the month it is about, the month is not named again — and
+    // the mission is not named either: it is the one thing the month's log
+    // carries beside the sentence, where a mission's log carries the month.
     case "month.project_add":
-      return {
-        action: `a mis le projet ${ontoTheMonth(entry)}${onBehalfOf(entry)}`,
-      };
+      return withinTheMonth
+        ? { action: "a ajouté le projet" }
+        : {
+            action: `a mis le projet ${ontoTheMonth(entry)}${onBehalfOf(entry, reading)}`,
+          };
 
     case "month.project_remove":
+      return withinTheMonth
+        ? { action: "a retiré le projet" }
+        : {
+            action: `a retiré le projet ${fromTheMonth(entry)}${onBehalfOf(entry, reading)}`,
+          };
+
+    // What locks a month and what gives it back: the two gestures a month's
+    // log exists to show, and which no mission ever carries.
+    case "month.validate":
       return {
-        action: `a retiré le projet ${fromTheMonth(entry)}${onBehalfOf(entry)}`,
+        action: withinTheMonth ? "a validé le mois" : `a validé ${theMonth(entry)}`,
+      };
+
+    case "month.reopen":
+      return {
+        action: withinTheMonth ? "a rouvert le mois" : `a rouvert ${theMonth(entry)}`,
       };
 
     case "simulation.create":
