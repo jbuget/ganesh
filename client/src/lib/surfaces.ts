@@ -11,7 +11,7 @@
  * from a terminal: a line called « Kanban » would read zero on a month where
  * every card moved from a form.
  */
-import type { Surface, SurfaceActivityResponse } from "@/lib/api/generated/model";
+import type { Surface } from "@/lib/api/generated/model";
 import { formatSpelledDate } from "@/lib/dates";
 
 interface SurfaceWording {
@@ -97,9 +97,4 @@ export function summariseIdle(count: number): string {
   return count > 1
     ? `${count} fonctions n'ont servi à personne sur la période.`
     : "1 fonction n'a servi à personne sur la période.";
-}
-
-/** Whether a line deserves the eye: nobody used it over the window. */
-export function isIdle(activity: SurfaceActivityResponse): boolean {
-  return activity.gestures === 0;
 }

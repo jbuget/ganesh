@@ -22,10 +22,8 @@ from src.modules.months.domain.entities.month import Month
 from src.modules.months.infrastructure.database.repositories.month_repository_impl import (
     SqlMonthRepository,
 )
-from src.modules.moods.domain.entities.mood import Mood, MoodLevel
-from src.modules.moods.infrastructure.database.repositories.mood_repository_impl import (
-    SqlMoodRepository,
-)
+from src.modules.moods.domain.entities.mood import MoodLevel
+from src.modules.moods.infrastructure.database.models.mood_model import MoodModel
 from src.modules.notifications.domain.entities.notification import (
     Notification,
     NotificationKind,
@@ -424,24 +422,51 @@ async def test_the_last_day_of_a_gesture_is_read_beyond_any_window(
     assert last[AuditAction.GAZETTE_GENERATE] == date(2026, 7, 2)
 
 
+async def a_mood(
+    session: AsyncSession, user_id: int, day: date, posted_on: datetime
+) -> None:
+    """A mood, posted at a chosen moment: the entity carries no such date."""
+    session.add(
+        MoodModel(
+            user_id=user_id,
+            day=day,
+            level=MoodLevel.GOOD,
+            created_at=posted_on,
+            updated_at=posted_on,
+        )
+    )
+    await session.flush()
+
+
 async def test_the_moods_posted_are_counted_and_never_read(
     db_session: AsyncSession,
 ) -> None:
     ada = await a_user(db_session, "ada")
     grace = await a_user(db_session, "grace")
-    moods = SqlMoodRepository(db_session)
-    await moods.upsert(Mood(id=None, user_id=ada, day=MONDAY, level=MoodLevel.GOOD))
-    await moods.upsert(
-        Mood(id=None, user_id=ada, day=date(2026, 9, 15), level=MoodLevel.BAD)
-    )
-    await moods.upsert(Mood(id=None, user_id=grace, day=MONDAY, level=MoodLevel.HARD))
-    await moods.upsert(
-        Mood(id=None, user_id=grace, day=date(2026, 9, 1), level=MoodLevel.GOOD)
-    )
+    await a_mood(db_session, ada, MONDAY, datetime(2026, 9, 14, 9))
+    await a_mood(db_session, ada, date(2026, 9, 15), datetime(2026, 9, 15, 9))
+    await a_mood(db_session, grace, MONDAY, datetime(2026, 9, 16, 9))
+    await a_mood(db_session, grace, date(2026, 9, 1), datetime(2026, 9, 1, 9))
 
     tallies = await SqlStatisticsRepository(db_session).unlogged_tallies(WINDOW)
 
     assert tallies[Surface.MOOD] == Tally(people=2, gestures=3)
+
+
+async def test_a_mood_counts_on_the_day_it_was_posted(
+    db_session: AsyncSession,
+) -> None:
+    # Posted inside the window, about a day well before it: somebody used
+    # the screen this week, and that is what the table reads.
+    ada = await a_user(db_session, "ada")
+    await a_mood(db_session, ada, date(2026, 8, 3), datetime(2026, 9, 16, 9))
+
+    stats = SqlStatisticsRepository(db_session)
+
+    assert (await stats.unlogged_tallies(WINDOW))[Surface.MOOD] == Tally(
+        people=1, gestures=1
+    )
+    assert (await stats.last_unlogged_use())[Surface.MOOD] == date(2026, 9, 16)
 
 
 async def test_a_notification_counts_when_it_was_read(
@@ -523,3 +548,14 @@ async def test_a_function_nothing_touched_is_absent_from_the_last_days(
 ) -> None:
     # Absent rather than dated: the table draws « never » from the gap.
     assert await SqlStatisticsRepository(db_session).last_unlogged_use() == {}
+
+
+async def test_every_function_outside_the_log_is_actually_counted(
+    db_session: AsyncSession,
+) -> None:
+    # The domain names the three the register does not carry; here is where
+    # they are read. One added on one side and forgotten on the other would
+    # simply read zero for ever, and no other test would notice.
+    tallies = await SqlStatisticsRepository(db_session).unlogged_tallies(WINDOW)
+
+    assert set(tallies) == set(Surface.unlogged())

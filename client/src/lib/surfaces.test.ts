@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Surface } from "@/lib/api/generated/model";
+import { Surface } from "@/lib/api/generated/model";
 import {
   formatLastUse,
   formatPeopleDelta,
@@ -8,22 +8,12 @@ import {
   surfaceLabel,
 } from "@/lib/surfaces";
 
-/** Every function the API can name. Adding one here without a wording fails. */
-const SURFACES: Surface[] = [
-  "time_entry",
-  "month_closing",
-  "project_registry",
-  "phase_progress",
-  "assignment",
-  "project_updates",
-  "planning",
-  "gazette",
-  "mood",
-  "notifications",
-  "team_admin",
-  "api_keys",
-  "machine_access",
-];
+/**
+ * Every function the API can name, read from the generated contract rather
+ * than copied out: a surface added on the server reaches this test on its
+ * own, and fails it until somebody names it in French.
+ */
+const SURFACES = Object.values(Surface);
 
 describe("surfaceLabel", () => {
   it("names every function in French", () => {

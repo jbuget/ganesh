@@ -5,7 +5,6 @@ import type { SurfaceActivityResponse } from "@/lib/api/generated/model";
 import {
   formatLastUse,
   formatPeopleDelta,
-  isIdle,
   surfaceCounted,
   surfaceLabel,
 } from "@/lib/surfaces";
@@ -23,7 +22,6 @@ interface SurfaceRowProps {
  * amber block would read as a broken screen rather than as a reading.
  */
 export function SurfaceRow({ activity }: SurfaceRowProps) {
-  const idle = isIdle(activity);
   const counted = surfaceCounted(activity.surface);
 
   return (
@@ -41,7 +39,7 @@ export function SurfaceRow({ activity }: SurfaceRowProps) {
       </TableCell>
       <TableCell
         className={`py-2 text-right align-top tabular-nums ${
-          idle ? "font-medium text-amber-600" : ""
+          activity.is_idle ? "font-medium text-amber-600" : ""
         }`}
       >
         {activity.gestures}

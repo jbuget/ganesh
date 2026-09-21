@@ -19,6 +19,8 @@ const activity = (
   people,
   gestures,
   delta_in_people,
+  // The server carries it; the screen never works it out again.
+  is_idle: gestures === 0,
   last_used_on,
 });
 

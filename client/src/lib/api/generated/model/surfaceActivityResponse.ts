@@ -14,5 +14,6 @@ export interface SurfaceActivityResponse {
   people: number;
   gestures: number;
   delta_in_people: number;
+  is_idle: boolean;
   last_used_on: string | null;
 }

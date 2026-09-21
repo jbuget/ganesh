@@ -211,7 +211,7 @@ class SqlStatisticsRepository(StatisticsRepository):
 
     async def last_unlogged_use(self) -> dict[Surface, date]:
         latest = {
-            Surface.MOOD: func.max(MoodModel.day),
+            Surface.MOOD: func.max(func.date(MoodModel.created_at)),
             Surface.NOTIFICATIONS: func.max(func.date(NotificationModel.read_at)),
             Surface.MACHINE_ACCESS: func.max(func.date(ApiKeyModel.last_used_at)),
         }
@@ -222,9 +222,17 @@ class SqlStatisticsRepository(StatisticsRepository):
         return {surface: day for surface, day in days.items() if day is not None}
 
     async def _moods_posted(self, period: Period) -> Tally:
-        """Who said how their days felt. How they felt is read nowhere here."""
+        """Who said how their days felt. How they felt is read nowhere here.
+
+        Counted on the day it was posted rather than on the day it is about,
+        as freshness already counts the entries *written* over the window: a
+        mood posted on Monday for last Friday is somebody using the screen on
+        Monday, and dating it to Friday would drop the use out of the window
+        that saw it.
+        """
         return await self._tally(
-            MoodModel.user_id, MoodModel.day.between(period.start, period.end)
+            MoodModel.user_id,
+            func.date(MoodModel.created_at).between(period.start, period.end),
         )
 
     async def _notifications_read(self, period: Period) -> Tally:

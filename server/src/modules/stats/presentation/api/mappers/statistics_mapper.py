@@ -67,6 +67,7 @@ def to_statistics_response(
                     people=activity.people,
                     gestures=activity.gestures,
                     delta_in_people=activity.delta_in_people,
+                    is_idle=activity.is_idle,
                     last_used_on=activity.last_used_on,
                 )
                 # The order they come in is the order they are read in: it is

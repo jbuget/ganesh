@@ -54,6 +54,7 @@ const STATISTICS: StatisticsResponse = {
         people: 11,
         gestures: 240,
         delta_in_people: 1,
+        is_idle: false,
         last_used_on: "2026-09-17",
       },
       {
@@ -61,6 +62,7 @@ const STATISTICS: StatisticsResponse = {
         people: 0,
         gestures: 0,
         delta_in_people: 0,
+        is_idle: true,
         last_used_on: null,
       },
     ],

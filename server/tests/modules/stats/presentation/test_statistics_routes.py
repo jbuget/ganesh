@@ -197,3 +197,15 @@ async def test_the_table_counts_what_served_nobody(client: AsyncClient) -> None:
 
     # Three of them saw something today: the grid, the gazette and the moods.
     assert response.json()["surfaces"]["idle_count"] == len(Surface) - 3
+
+
+async def test_a_function_says_itself_whether_it_served_anybody(
+    client: AsyncClient,
+) -> None:
+    # The screen must not work the rule out a second time: the count of idle
+    # functions and the mark on a line read the same one.
+    response = await client.get(URL, params={"range": "today"})
+
+    rows = {row["surface"]: row for row in response.json()["surfaces"]["activities"]}
+    assert rows["time_entry"]["is_idle"] is False
+    assert rows["planning"]["is_idle"] is True

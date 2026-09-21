@@ -72,6 +72,10 @@ class SurfaceActivityResponse(BaseModel):
     #: Movement in people, never in gestures: one tidy-up afternoon doubles
     #: the second, while somebody who came or stopped coming is adoption.
     delta_in_people: int
+    #: Nobody used it over the window. Carried rather than left to the screen
+    #: to work out: the count above it reads the same rule, and the two must
+    #: not be able to drift apart.
+    is_idle: bool
     #: Read beyond the window, and null when nobody has ever used it.
     last_used_on: date | None
 
