@@ -60,6 +60,15 @@ export function ApiKeyRow({ apiKey, onOpen }: ApiKeyRowProps) {
         <span className="text-slate-700">{apiKey.owner.display_name}</span>
       </TableCell>
 
+      {/* One event, one column: the day the key was minted, and under it
+          whoever answers for having minted it. */}
+      <TableCell className="py-2">
+        <Day iso={apiKey.created_at} />
+        <span className="mt-0.5 block text-xs text-slate-500">
+          par {apiKey.created_by.display_name}
+        </span>
+      </TableCell>
+
       <TableCell className="py-2">
         <Day iso={apiKey.last_used_at} />
       </TableCell>
