@@ -140,6 +140,12 @@ export const MCP_TOOLS: McpTool[] = [
     scope: "projects:read",
   },
   {
+    name: "project_brief",
+    answers:
+      "Dit où en est un projet : sa phase et depuis quand, ce qui a été consommé face à l'estimation, la date annoncée, qui le porte et les lots rattachés.",
+    scope: "projects:read",
+  },
+  {
     name: "my_month",
     answers:
       "Dit où en est votre mois : ce qui est déclaré, ce qui manque encore, et si le mois est validé. Toujours le vôtre, jamais celui d'un collègue.",

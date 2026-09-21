@@ -33,6 +33,7 @@ much smaller problem.
 | What a tool returns | Sentences carrying facts, not a JSON row |
 | Client | Claude Code and Claude Desktop, by static header |
 | V1 verbs | Five reads, and one write — on the caller's own month |
+| V1.1 verbs | A read more: a project's sheet, which `find_project` left one call short of |
 
 ## Where it lives
 
@@ -132,7 +133,7 @@ became once a tool could say those refusals in words.
 
 ## The tools
 
-Seven, each `src/mcp/tools/<name>.py`, each answering in sentences built through
+Eight, each `src/mcp/tools/<name>.py`, each answering in sentences built through
 `src/mcp/tools/say.py` — « 1,5 jour », « 08/09 », « septembre 2026 ». A number
 handed over raw is a number a model words itself, and words wrong.
 
@@ -149,6 +150,34 @@ guessing.
 
 > Trois projets portent ce nom. WAATcher (projet, en construction), WAATcher —
 > Supervision (lot de WAATcher, en service), WAATcher V1 (archivé le 12 mars).
+
+### `project_brief(project_id: int)`
+
+**Scope** `projects:read`. `GetProjectDetailUseCase` — the mission's sheet, as
+the screen reads it.
+
+It closes the gap `find_project` left open: a model that had resolved a name
+knew the identifier, the kind and the phase, and could say nothing about what
+the mission had cost against what was planned. Two calls to answer « où en est
+WAATcher », and the answer still short.
+
+Three decisions carried in it:
+
+- **the estimate is read as what is left.** « il en reste 22 » is the question
+  being put; « 128 et 150 » is a subtraction a model gets wrong often enough to
+  matter.
+- **who carried it is named, never ranked.** `contributions` comes ordered by
+  days, which is right on a screen showing the whole column at once. Handed to
+  a model, that order becomes a sentence about who did the least. The people
+  assigned are named; the ones who declared time are counted.
+- **only `go_live_date` answers for a date.** A bar on the roadmap opens where
+  the drawing needed it to, and reading that back would make a portfolio that
+  announced nothing announce something.
+
+> WAATcher (#7) — projet, construction depuis le 08/03/2026. 128 jours déclarés
+> pour 150 estimés : il en reste 22. Mise en service annoncée le 30/11/2026.
+> Porté par A. Ba. 2 personnes y ont déclaré du temps. 1 lot rattaché :
+> WAATcher — Supervision (#8).
 
 ### `my_month(month?: str)`
 

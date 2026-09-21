@@ -213,7 +213,7 @@ nothing at all. A promise the API does not keep is worse than a missing box.
 | `catalog:read` | `GET /projects/catalog` — machine-only | — |
 | `roadmap:read` | `GET /planning/roadmap` | the projection and the simulations: an arbitration, not a reading |
 | `stats:read` | `GET /stats` | — |
-| `projects:read` | `GET /projects`, `/projects/{id}/detail`, `/projects/board` | — |
+| `projects:read` | `GET /projects`, `/projects/{id}/detail`, `/projects/board`, the `find_project` and `project_brief` tools | — |
 | `projects:write` | create, correct, change phase, archive, unarchive, import | delete, attach/detach, staff, move a card, and the whole service sheet |
 | `updates:write` | `POST /projects/{id}/updates` | correcting and removing a post |
 | `entries:read` | `GET /entries/export` | writing time through a route |

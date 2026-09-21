@@ -696,9 +696,9 @@ it together:
 
 - **A tool is a question somebody asks, never a route.** Sixty routes turned
   into sixty tools is a model chaining six calls to answer one question and
-  getting three of them wrong. `find_project`, `my_month`, `what_changed`,
-  `portfolio_status`, `team_mood`, `declare_time` — and the next one earns its
-  place by being asked for.
+  getting three of them wrong. `find_project`, `project_brief`, `my_month`,
+  `what_changed`, `portfolio_status`, `team_mood`, `declare_time`,
+  `record_review` — and the next one earns its place by being asked for.
 - **A tool answers in sentences.** « 1,5 jour déclaré », never a field called
   `total`; and what it does not know, it **says** — an absent field is a field
   a model fills in on its own. `src/mcp/tools/say.py` is where a figure or a
