@@ -78,5 +78,6 @@ async def test_reading_the_log_back_is_untouched() -> None:
     assert len(await stamped.list_for_project(3, limit=10, offset=0)) == 1
     assert await stamped.count_for_project(3) == 1
     assert await stamped.count_all() == 1
-    assert await stamped.list_for_user_month(7, clock.today()) == []
+    assert await stamped.list_for_user_month(7, clock.today(), 10, 0) == []
+    assert await stamped.count_for_user_month(7, clock.today()) == 0
     assert await stamped.count_all(since=datetime(2099, 1, 1, tzinfo=UTC)) == 0

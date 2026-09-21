@@ -6,6 +6,7 @@
  */
 import type { AuditAction } from "./auditAction";
 import type { AuditPersonResponse } from "./auditPersonResponse";
+import type { AuditProjectResponse } from "./auditProjectResponse";
 
 /**
  * One line of the log, as a screen reads it.
@@ -20,6 +21,7 @@ export interface AuditLogEntryResponse {
   action: AuditAction;
   actor: AuditPersonResponse | null;
   target_user: AuditPersonResponse | null;
+  project: AuditProjectResponse | null;
   day: string | null;
   field: string | null;
   old_value: string | null;

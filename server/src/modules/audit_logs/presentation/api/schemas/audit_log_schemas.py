@@ -15,6 +15,13 @@ class AuditPersonResponse(BaseModel):
     initials: str
 
 
+class AuditProjectResponse(BaseModel):
+    """The mission a line of the log is about."""
+
+    id: int
+    label: str
+
+
 class AuditLogEntryResponse(BaseModel):
     """One line of the log, as a screen reads it.
 
@@ -30,6 +37,10 @@ class AuditLogEntryResponse(BaseModel):
     actor: AuditPersonResponse | None
     #: Whose month, or which contributor, the gesture was about.
     target_user: AuditPersonResponse | None
+    #: The mission the gesture was about, named only where the reader is not
+    #: already inside it. A mission's own log leaves it out on purpose: the
+    #: page is the mission, and its name on every line would say nothing.
+    project: AuditProjectResponse | None
     day: date | None
     #: Which field moved, for the gestures that change a mission field by field.
     field: str | None

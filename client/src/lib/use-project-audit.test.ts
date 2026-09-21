@@ -15,6 +15,7 @@ function line(id: number): AuditLogEntryResponse {
     action: "project.update",
     actor: null,
     target_user: null,
+    project: null,
     day: null,
     field: "label",
     old_value: null,

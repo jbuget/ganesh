@@ -339,17 +339,27 @@ class InMemoryAuditLogRepository(AuditLogRepository):
         self.logs.append(log)
         return log
 
-    async def list_for_user_month(
-        self, target_user_id: int, month: date
-    ) -> list[AuditLog]:
+    def _for_user_month(self, target_user_id: int, month: date) -> list[AuditLog]:
         first = month.replace(day=1)
-        return [
-            log
-            for log in self.logs
-            if log.target_user_id == target_user_id
-            and log.day is not None
-            and log.day.replace(day=1) == first
-        ]
+        return sorted(
+            (
+                log
+                for log in self.logs
+                if log.target_user_id == target_user_id
+                and log.day is not None
+                and log.day.replace(day=1) == first
+            ),
+            key=lambda log: (log.at, log.id or 0),
+            reverse=True,
+        )
+
+    async def list_for_user_month(
+        self, target_user_id: int, month: date, limit: int, offset: int
+    ) -> list[AuditLog]:
+        return self._for_user_month(target_user_id, month)[offset : offset + limit]
+
+    async def count_for_user_month(self, target_user_id: int, month: date) -> int:
+        return len(self._for_user_month(target_user_id, month))
 
     def _for_project(self, project_id: int) -> list[AuditLog]:
         return sorted(

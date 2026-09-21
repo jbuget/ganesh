@@ -15,8 +15,17 @@ class AuditLogRepository(ABC):
 
     @abstractmethod
     async def list_for_user_month(
-        self, target_user_id: int, month: date
-    ) -> list[AuditLog]: ...
+        self, target_user_id: int, month: date, limit: int, offset: int
+    ) -> list[AuditLog]:
+        """One person's month, most recent first.
+
+        The month is read off `day`, which every gesture of a month carries —
+        a declaration by the day it books, a validation by the month it locks.
+        """
+        ...
+
+    @abstractmethod
+    async def count_for_user_month(self, target_user_id: int, month: date) -> int: ...
 
     @abstractmethod
     async def list_for_project(

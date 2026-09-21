@@ -8,7 +8,9 @@ from src.modules.audit_logs.presentation.api.schemas.audit_log_schemas import (
     AuditLogEntryResponse,
     AuditLogPageResponse,
     AuditPersonResponse,
+    AuditProjectResponse,
 )
+from src.modules.projects.domain.entities.project import Project
 from src.modules.users.domain.entities.user import User
 from src.shared.utils.initials import initials
 
@@ -21,6 +23,12 @@ def to_audit_person_response(person: User | None) -> AuditPersonResponse | None:
         display_name=person.label,
         initials=initials(person.label),
     )
+
+
+def to_audit_project_response(mission: Project | None) -> AuditProjectResponse | None:
+    if mission is None or mission.id is None:
+        return None
+    return AuditProjectResponse(id=mission.id, label=mission.label)
 
 
 def to_audit_log_entry_response(signed: SignedAuditLog) -> AuditLogEntryResponse:
@@ -36,6 +44,7 @@ def to_audit_log_entry_response(signed: SignedAuditLog) -> AuditLogEntryResponse
         action=log.action,
         actor=to_audit_person_response(signed.actor),
         target_user=to_audit_person_response(signed.target_user),
+        project=to_audit_project_response(signed.project),
         day=log.day,
         field=None if field is None else str(field),
         old_value=log.old_value,

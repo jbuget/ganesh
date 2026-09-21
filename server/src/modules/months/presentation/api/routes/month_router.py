@@ -2,10 +2,22 @@
 
 from datetime import date
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
+from src.modules.audit_logs.application.use_cases.list_month_audit_log import (
+    ListMonthAuditLogUseCase,
+)
+from src.modules.audit_logs.presentation.api.mappers.audit_log_mapper import (
+    to_audit_log_page_response,
+)
+from src.modules.audit_logs.presentation.api.schemas.audit_log_schemas import (
+    AuditLogPageResponse,
+)
+from src.modules.audit_logs.presentation.dependencies import (
+    get_month_audit_log_use_case,
+)
 from src.modules.auth.presentation.dependencies import (
     get_current_manager,
     get_current_user,
@@ -64,3 +76,29 @@ async def reopen_month(
     )
     await session.commit()
     return to_month_response(reopened)
+
+
+@router.get(
+    "/{month}/audit",
+    response_model=AuditLogPageResponse,
+    operation_id="listMonthAuditLog",
+)
+async def list_month_audit_log(
+    month: date,
+    user_id: int,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    _: User = Depends(get_current_user),
+    use_case: ListMonthAuditLogUseCase = Depends(get_month_audit_log_use_case),
+) -> AuditLogPageResponse:
+    """Everything that happened to that month, most recent first.
+
+    Read by the whole team rather than by its owner alone: anyone may edit a
+    colleague's open month, and that freedom only holds up if the trace it
+    leaves can be read back by anyone too.
+    """
+    return to_audit_log_page_response(
+        await use_case.execute(
+            target_user_id=user_id, month=month, limit=limit, offset=offset
+        )
+    )
