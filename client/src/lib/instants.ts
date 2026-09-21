@@ -75,3 +75,16 @@ export function formatParisDateTime(iso: string): string {
   const { year, month, day, hour, minute } = parisParts(iso);
   return `${day}/${month}/${year} à ${hour}:${minute}`;
 }
+
+/**
+ * A full instant, said the way one says it: « 20/05/2026 à 13h35 ».
+ *
+ * The same moment as `formatParisDateTime`, spoken rather than read off a
+ * clock face. It signs a gesture inside a sentence — « Téléversé par Alice
+ * Chen le 20/05/2026 à 13h35 » — where a colon would read as a timestamp
+ * dropped into prose.
+ */
+export function formatParisMoment(iso: string): string {
+  const { year, month, day, hour, minute } = parisParts(iso);
+  return `${day}/${month}/${year} à ${hour}h${minute}`;
+}

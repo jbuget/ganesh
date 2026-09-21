@@ -27,9 +27,11 @@ import type {
   AttachProjectRequest,
   AuditLogPageResponse,
   BoardResponse,
+  BodyUploadProjectAttachment,
   CatalogEntryResponse,
   ChangeStatusRequest,
   CreateProjectRequest,
+  DownloadProjectAttachmentParams,
   GetBoardParams,
   HTTPValidationError,
   ImportProjectsRequest,
@@ -38,6 +40,7 @@ import type {
   ListProjectsParams,
   MoveProjectRequest,
   PostUpdateRequest,
+  ProjectAttachmentResponse,
   ProjectDetailResponse,
   ProjectLinkResponse,
   ProjectListItemResponse,
@@ -3647,4 +3650,658 @@ export const useRemoveProjectUpdate = <
   TContext
 > => {
   return useMutation(getRemoveProjectUpdateMutationOptions(options), queryClient);
+};
+export type listProjectAttachmentsResponse200 = {
+  data: ProjectAttachmentResponse[];
+  status: 200;
+};
+
+export type listProjectAttachmentsResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listProjectAttachmentsResponseSuccess =
+  listProjectAttachmentsResponse200 & {
+    headers: Headers;
+  };
+export type listProjectAttachmentsResponseError = listProjectAttachmentsResponse422 & {
+  headers: Headers;
+};
+
+export type listProjectAttachmentsResponse =
+  listProjectAttachmentsResponseSuccess | listProjectAttachmentsResponseError;
+
+export const getListProjectAttachmentsUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/attachments`;
+};
+
+/**
+ * The files a mission carries, most recent first.
+ * @summary List Project Attachments
+ */
+export const listProjectAttachments = async (
+  projectId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listProjectAttachmentsResponse> => {
+  return bffFetcher<listProjectAttachmentsResponse>(
+    getListProjectAttachmentsUrl(projectId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListProjectAttachmentsQueryKey = (projectId: number) => {
+  return [`/api/v1/projects/${projectId}/attachments`] as const;
+};
+
+export const getListProjectAttachmentsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listProjectAttachments>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectAttachments>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListProjectAttachmentsQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectAttachments>>> = ({
+    signal,
+  }) => listProjectAttachments(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listProjectAttachments>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListProjectAttachmentsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listProjectAttachments>>
+>;
+export type ListProjectAttachmentsQueryError = HTTPValidationError;
+
+export function useListProjectAttachments<
+  TData = Awaited<ReturnType<typeof listProjectAttachments>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectAttachments>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectAttachments>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectAttachments>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListProjectAttachments<
+  TData = Awaited<ReturnType<typeof listProjectAttachments>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectAttachments>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectAttachments>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectAttachments>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjectAttachments<
+  TData = Awaited<ReturnType<typeof listProjectAttachments>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectAttachments>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Project Attachments
+ */
+
+export function useListProjectAttachments<
+  TData = Awaited<ReturnType<typeof listProjectAttachments>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectAttachments>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListProjectAttachmentsQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type uploadProjectAttachmentResponse201 = {
+  data: ProjectAttachmentResponse;
+  status: 201;
+};
+
+export type uploadProjectAttachmentResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type uploadProjectAttachmentResponseSuccess =
+  uploadProjectAttachmentResponse201 & {
+    headers: Headers;
+  };
+export type uploadProjectAttachmentResponseError =
+  uploadProjectAttachmentResponse422 & {
+    headers: Headers;
+  };
+
+export type uploadProjectAttachmentResponse =
+  uploadProjectAttachmentResponseSuccess | uploadProjectAttachmentResponseError;
+
+export const getUploadProjectAttachmentUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/attachments`;
+};
+
+/**
+ * Drops a file on the mission.
+ *
+ * The route reads the bytes and hands them over: `UploadFile` belongs to the
+ * framework, and the application layer knows nothing of it.
+ * @summary Upload Project Attachment
+ */
+export const uploadProjectAttachment = async (
+  projectId: number,
+  bodyUploadProjectAttachment: BodyUploadProjectAttachment,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<uploadProjectAttachmentResponse> => {
+  const formData = new FormData();
+  formData.append(`file`, bodyUploadProjectAttachment.file);
+
+  return bffFetcher<uploadProjectAttachmentResponse>(
+    getUploadProjectAttachmentUrl(projectId),
+    {
+      ...options,
+      method: "POST",
+      body: formData,
+    },
+  );
+};
+
+export const getUploadProjectAttachmentMutationKey = () =>
+  ["uploadProjectAttachment"] as const;
+
+export const getUploadProjectAttachmentMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof uploadProjectAttachment>>,
+    TError,
+    UploadProjectAttachmentMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof uploadProjectAttachment>>,
+  TError,
+  UploadProjectAttachmentMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUploadProjectAttachmentMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof uploadProjectAttachment>>,
+    UploadProjectAttachmentMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return uploadProjectAttachment(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UploadProjectAttachmentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof uploadProjectAttachment>>
+>;
+export type UploadProjectAttachmentMutationBody = BodyUploadProjectAttachment;
+export type UploadProjectAttachmentMutationError = HTTPValidationError;
+export type UploadProjectAttachmentMutationVariables = {
+  projectId: number;
+  data: BodyUploadProjectAttachment;
+};
+
+/**
+ * @summary Upload Project Attachment
+ */
+export const useUploadProjectAttachment = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof uploadProjectAttachment>>,
+      TError,
+      UploadProjectAttachmentMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof uploadProjectAttachment>>,
+  TError,
+  UploadProjectAttachmentMutationVariables,
+  TContext
+> => {
+  return useMutation(getUploadProjectAttachmentMutationOptions(options), queryClient);
+};
+export type downloadProjectAttachmentResponse200 = {
+  data: void;
+  status: 200;
+};
+
+export type downloadProjectAttachmentResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type downloadProjectAttachmentResponseSuccess =
+  downloadProjectAttachmentResponse200 & {
+    headers: Headers;
+  };
+export type downloadProjectAttachmentResponseError =
+  downloadProjectAttachmentResponse422 & {
+    headers: Headers;
+  };
+
+export type downloadProjectAttachmentResponse =
+  downloadProjectAttachmentResponseSuccess | downloadProjectAttachmentResponseError;
+
+export const getDownloadProjectAttachmentUrl = (
+  projectId: number,
+  attachmentId: number,
+  params?: DownloadProjectAttachmentParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/projects/${projectId}/attachments/${attachmentId}/content?${stringifiedParams}`
+    : `/api/v1/projects/${projectId}/attachments/${attachmentId}/content`;
+};
+
+/**
+ * The bytes of a file, to show in place or to save.
+ * @summary Download Project Attachment
+ */
+export const downloadProjectAttachment = async (
+  projectId: number,
+  attachmentId: number,
+  params?: DownloadProjectAttachmentParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<downloadProjectAttachmentResponse> => {
+  return bffFetcher<downloadProjectAttachmentResponse>(
+    getDownloadProjectAttachmentUrl(projectId, attachmentId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getDownloadProjectAttachmentQueryKey = (
+  projectId: number,
+  attachmentId: number,
+  params?: DownloadProjectAttachmentParams,
+) => {
+  return [
+    `/api/v1/projects/${projectId}/attachments/${attachmentId}/content`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getDownloadProjectAttachmentQueryOptions = <
+  TData = Awaited<ReturnType<typeof downloadProjectAttachment>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  attachmentId: number,
+  params?: DownloadProjectAttachmentParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof downloadProjectAttachment>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getDownloadProjectAttachmentQueryKey(projectId, attachmentId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof downloadProjectAttachment>>
+  > = ({ signal }) =>
+    downloadProjectAttachment(projectId, attachmentId, params, {
+      signal,
+      ...requestOptions,
+    });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null &&
+      projectId !== undefined &&
+      attachmentId !== null &&
+      attachmentId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof downloadProjectAttachment>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type DownloadProjectAttachmentQueryResult = NonNullable<
+  Awaited<ReturnType<typeof downloadProjectAttachment>>
+>;
+export type DownloadProjectAttachmentQueryError = HTTPValidationError;
+
+export function useDownloadProjectAttachment<
+  TData = Awaited<ReturnType<typeof downloadProjectAttachment>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  attachmentId: number,
+  params: undefined | DownloadProjectAttachmentParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof downloadProjectAttachment>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadProjectAttachment>>,
+          TError,
+          Awaited<ReturnType<typeof downloadProjectAttachment>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDownloadProjectAttachment<
+  TData = Awaited<ReturnType<typeof downloadProjectAttachment>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  attachmentId: number,
+  params?: DownloadProjectAttachmentParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof downloadProjectAttachment>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadProjectAttachment>>,
+          TError,
+          Awaited<ReturnType<typeof downloadProjectAttachment>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDownloadProjectAttachment<
+  TData = Awaited<ReturnType<typeof downloadProjectAttachment>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  attachmentId: number,
+  params?: DownloadProjectAttachmentParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof downloadProjectAttachment>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Download Project Attachment
+ */
+
+export function useDownloadProjectAttachment<
+  TData = Awaited<ReturnType<typeof downloadProjectAttachment>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  attachmentId: number,
+  params?: DownloadProjectAttachmentParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof downloadProjectAttachment>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getDownloadProjectAttachmentQueryOptions(
+    projectId,
+    attachmentId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type removeProjectAttachmentResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type removeProjectAttachmentResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type removeProjectAttachmentResponseSuccess =
+  removeProjectAttachmentResponse204 & {
+    headers: Headers;
+  };
+export type removeProjectAttachmentResponseError =
+  removeProjectAttachmentResponse422 & {
+    headers: Headers;
+  };
+
+export type removeProjectAttachmentResponse =
+  removeProjectAttachmentResponseSuccess | removeProjectAttachmentResponseError;
+
+export const getRemoveProjectAttachmentUrl = (
+  projectId: number,
+  attachmentId: number,
+) => {
+  return `/api/v1/projects/${projectId}/attachments/${attachmentId}`;
+};
+
+/**
+ * Takes a file away. Anyone on the team may: a file is the mission's.
+ * @summary Remove Project Attachment
+ */
+export const removeProjectAttachment = async (
+  projectId: number,
+  attachmentId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<removeProjectAttachmentResponse> => {
+  return bffFetcher<removeProjectAttachmentResponse>(
+    getRemoveProjectAttachmentUrl(projectId, attachmentId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getRemoveProjectAttachmentMutationKey = () =>
+  ["removeProjectAttachment"] as const;
+
+export const getRemoveProjectAttachmentMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeProjectAttachment>>,
+    TError,
+    RemoveProjectAttachmentMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof removeProjectAttachment>>,
+  TError,
+  RemoveProjectAttachmentMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRemoveProjectAttachmentMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof removeProjectAttachment>>,
+    RemoveProjectAttachmentMutationVariables
+  > = (props) => {
+    const { projectId, attachmentId } = props ?? {};
+
+    return removeProjectAttachment(projectId, attachmentId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemoveProjectAttachmentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof removeProjectAttachment>>
+>;
+
+export type RemoveProjectAttachmentMutationError = HTTPValidationError;
+export type RemoveProjectAttachmentMutationVariables = {
+  projectId: number;
+  attachmentId: number;
+};
+
+/**
+ * @summary Remove Project Attachment
+ */
+export const useRemoveProjectAttachment = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof removeProjectAttachment>>,
+      TError,
+      RemoveProjectAttachmentMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof removeProjectAttachment>>,
+  TError,
+  RemoveProjectAttachmentMutationVariables,
+  TContext
+> => {
+  return useMutation(getRemoveProjectAttachmentMutationOptions(options), queryClient);
 };
