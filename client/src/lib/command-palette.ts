@@ -8,10 +8,11 @@ import type {
 import { SCREENS } from "@/lib/navigation";
 import { normalise } from "@/lib/search-text";
 
-export type DestinationGroup = "screen" | "project" | "person";
+export type DestinationGroup = "recent" | "screen" | "project" | "person";
 
 /** What each group is called, above the results it holds. */
 export const GROUP_LABEL: Record<DestinationGroup, string> = {
+  recent: "Mis à jour récemment",
   screen: "Écrans",
   project: "Projets",
   person: "Personnes",
@@ -34,6 +35,12 @@ export interface Destination {
    * and lets one find a colleague by whichever of the two one has to hand.
    */
   hint?: string;
+  /**
+   * When it last moved, for a destination the palette offers on that ground.
+   * Held as it was recorded and spelled out when drawn, so that a palette open
+   * for an hour does not go on saying « à l\'instant ».
+   */
+  at?: string;
 }
 
 /**
@@ -58,6 +65,34 @@ function projectHint(
   return said.length > 0 ? said.join(" · ") : undefined;
 }
 
+/** How many of the projects that have just moved the empty palette shows. */
+const RECENT = 5;
+
+/**
+ * The projects something was last said about.
+ *
+ * An update is somebody writing for the others to read, which is what makes
+ * the list worth opening on: a phase dragged across a board moves a project
+ * without being news. Archived projects are left out — the question the
+ * section answers is what is moving, and they are not.
+ */
+function recentlyUpdated(missions: ProjectListItemResponse[]): Destination[] {
+  return missions
+    .filter((mission) => mission.latest_update && mission.project.is_active)
+    .sort((one, other) =>
+      other.latest_update!.published_at.localeCompare(one.latest_update!.published_at),
+    )
+    .slice(0, RECENT)
+    .map((mission) => ({
+      key: `recent:${mission.project.id}`,
+      label: mission.project.label,
+      href: `/projects/${mission.project.id}`,
+      group: "recent" as const,
+      status: mission.project.status,
+      at: mission.latest_update!.published_at,
+    }));
+}
+
 /**
  * Everywhere the palette can lead.
  *
@@ -75,6 +110,7 @@ export function destinations({
   const parents = new Map(missions.map(({ project }) => [project.id, project.label]));
 
   return [
+    ...recentlyUpdated(missions),
     ...SCREENS.map(({ href, label, Icon }) => ({
       key: `screen:${href}`,
       label,
@@ -126,14 +162,20 @@ function rank(destination: Destination, wanted: string): number {
 /**
  * What the palette shows for what has been typed.
  *
- * Nothing typed shows the screens alone: the palette opens on where one can
- * go, rather than on a hundred lines nobody has asked anything of yet.
+ * Nothing typed shows what has just moved and then the screens, rather than a
+ * hundred lines nobody has asked anything of yet: one opens the palette either
+ * to go somewhere known, or to pick up what one left. Once something is typed
+ * the whole reference list answers, and the projects just shown answer under
+ * their own name — twice in one list would be reading double.
  */
 export function matching(all: Destination[], query: string): Destination[] {
   const wanted = normalise(query.trim());
-  if (!wanted) return all.filter((one) => one.group === "screen");
+  if (!wanted) {
+    return all.filter((one) => one.group === "recent" || one.group === "screen");
+  }
 
   return all
+    .filter((one) => one.group !== "recent")
     .map((destination) => ({ destination, rank: rank(destination, wanted) }))
     .filter((found) => found.rank !== NO_MATCH)
     .sort((one, other) => one.rank - other.rank)

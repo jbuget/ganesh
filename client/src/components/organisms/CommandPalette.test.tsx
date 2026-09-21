@@ -12,6 +12,11 @@ vi.mock("@/lib/api/queries", () => ({
   useProjects: () => ({
     missions: [
       {
+        latest_update: {
+          author: { id: 7, display_name: "Léa Chen", initials: "LC" },
+          body: "La recette commence lundi.",
+          published_at: new Date(Date.now() - 3_600_000).toISOString(),
+        },
         project: {
           id: 12,
           label: "Portail bailleurs",
@@ -75,8 +80,34 @@ describe("CommandPalette", () => {
     expect(
       screen.getByRole("option", { name: /Saisie des temps/ }),
     ).toBeInTheDocument();
-    // Nothing typed: the projects wait to be asked for.
-    expect(screen.queryByRole("option", { name: /Portail bailleurs/ })).toBeNull();
+    // Nothing typed: the reference list waits to be asked for, bar what has
+    // just moved.
+    expect(screen.queryByRole("option", { name: /Extranet syndic/ })).toBeNull();
+  });
+
+  it("opens on what was last written about, dated and above the screens", async () => {
+    const who = userEvent.setup();
+    render(<CommandPalette />);
+
+    await open(who);
+
+    const recent = screen.getByRole("group", { name: "Mis à jour récemment" });
+    expect(recent).toHaveTextContent("Portail bailleurs");
+    expect(recent).toHaveTextContent("il y a 1 h");
+
+    expect(
+      screen.getAllByRole("group").map((one) => one.getAttribute("aria-label")),
+    ).toEqual(["Mis à jour récemment", "Écrans"]);
+  });
+
+  it("goes to the freshest of them on the first press of the key", async () => {
+    const who = userEvent.setup();
+    render(<CommandPalette />);
+
+    await open(who);
+    await who.keyboard("{Enter}");
+
+    expect(push).toHaveBeenCalledWith("/projects/12");
   });
 
   it("closes on the same shortcut", async () => {
@@ -131,8 +162,8 @@ describe("CommandPalette", () => {
     await open(who);
     await who.keyboard("{ArrowDown}{Enter}");
 
-    // The second screen of the list, « Accueil » being the first.
-    expect(push).toHaveBeenCalledWith("/timesheet");
+    // The line under the one project that has just moved: « Accueil ».
+    expect(push).toHaveBeenCalledWith("/");
   });
 
   it("opens a teammate's panel", async () => {

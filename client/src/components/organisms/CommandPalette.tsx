@@ -19,6 +19,7 @@ import {
   usePaletteOpen,
   usePaletteShortcut,
 } from "@/lib/command-palette-store";
+import { since } from "@/lib/relative-dates";
 import { goToAddress } from "@/lib/url-state";
 
 /**
@@ -37,6 +38,9 @@ export function CommandPalette() {
   usePaletteShortcut();
   const open = usePaletteOpen();
   const router = useRouter();
+  // Read at each draw rather than frozen at mount: the palette lives in the
+  // frame, which outlasts a working day, and « hier » would go on being said.
+  const now = new Date();
 
   // Archived projects included: the palette is the only place one is reached
   // without first going to a screen and undoing a filter.
@@ -163,6 +167,15 @@ export function CommandPalette() {
                 <ul>
                   {section.items.map((destination) => {
                     const selected = destination === found[current];
+                    // When it moved comes before what it belongs to: this
+                    // section is read for the first, and the second only tells
+                    // two close names apart.
+                    const said = [
+                      destination.at && since(destination.at, now),
+                      destination.hint,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ");
                     return (
                       <li
                         key={destination.key}
@@ -208,9 +221,9 @@ export function CommandPalette() {
                         {/* Capped, and cut before the name is: a package's
                             parent takes a whole line of its own, and what one
                             typed was the name. */}
-                        {destination.hint && (
+                        {said && (
                           <span className="min-w-0 max-w-[40%] truncate text-xs text-slate-400">
-                            {destination.hint}
+                            {said}
                           </span>
                         )}
                       </li>

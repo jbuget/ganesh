@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import { destinations, grouped, matching } from "./command-palette";
 import type { ProjectListItemResponse, UserResponse } from "@/lib/api/generated/model";
 
-const mission = (over: Record<string, unknown> = {}): ProjectListItemResponse =>
+const mission = (
+  over: Record<string, unknown> = {},
+  updatedAt: string | null = null,
+): ProjectListItemResponse =>
   ({
     leads: [],
     contributors: [],
@@ -11,7 +14,13 @@ const mission = (over: Record<string, unknown> = {}): ProjectListItemResponse =>
     links: [],
     departments: [],
     comments: 0,
-    latest_update: null,
+    latest_update: updatedAt
+      ? {
+          author: { id: 1, display_name: "Léa Chen", initials: "LC" },
+          body: "…",
+          published_at: updatedAt,
+        }
+      : null,
     project: {
       id: 1,
       label: "Portail bailleurs",
@@ -184,5 +193,84 @@ describe("grouped", () => {
 
     expect(sections).toHaveLength(1);
     expect(sections[0].items[0].label).toBe("Accueil");
+  });
+});
+
+describe("what has just moved", () => {
+  const updated = [
+    mission({ id: 1, label: "Portail bailleurs" }, "2026-09-18T09:00:00Z"),
+    mission({ id: 2, label: "Extranet syndic" }, "2026-09-20T09:00:00Z"),
+    mission({ id: 3, label: "Copropriété connectée" }, "2026-09-19T09:00:00Z"),
+  ];
+
+  it("opens on the projects last written about, the freshest first", () => {
+    const found = matching(destinations({ missions: updated, teammates: [] }), "");
+    const recent = found.filter((one) => one.group === "recent");
+
+    expect(labelsOf(recent)).toEqual([
+      "Extranet syndic",
+      "Copropriété connectée",
+      "Portail bailleurs",
+    ]);
+    expect(recent[0].at).toBe("2026-09-20T09:00:00Z");
+  });
+
+  it("shows them above the screens: one comes to pick up what one left", () => {
+    const sections = grouped(
+      matching(destinations({ missions: updated, teammates: [] }), ""),
+    );
+
+    expect(sections.map((section) => section.label)).toEqual([
+      "Mis à jour récemment",
+      "Écrans",
+    ]);
+  });
+
+  it("shows five of them at most", () => {
+    const many = Array.from({ length: 9 }, (_, rank) =>
+      mission(
+        { id: rank + 1, label: `Projet ${rank}` },
+        `2026-09-0${rank + 1}T09:00:00Z`,
+      ),
+    );
+    const found = matching(destinations({ missions: many, teammates: [] }), "");
+
+    expect(found.filter((one) => one.group === "recent")).toHaveLength(5);
+  });
+
+  it("leaves out a project nobody has written about", () => {
+    const found = matching(
+      destinations({ missions: [mission({ id: 1, label: "Muet" })], teammates: [] }),
+      "",
+    );
+
+    expect(labelsOf(found)).not.toContain("Muet");
+  });
+
+  it("leaves out an archived project: the question is what is moving", () => {
+    const found = matching(
+      destinations({
+        missions: [
+          mission(
+            { id: 1, label: "Extranet syndic", is_active: false },
+            "2026-09-20T09:00:00Z",
+          ),
+        ],
+        teammates: [],
+      }),
+      "",
+    );
+
+    expect(found.every((one) => one.group === "screen")).toBe(true);
+  });
+
+  it("names a project once when something is typed, not twice", () => {
+    const found = matching(
+      destinations({ missions: updated, teammates: [] }),
+      "extranet",
+    );
+
+    expect(labelsOf(found)).toEqual(["Extranet syndic"]);
+    expect(found[0].group).toBe("project");
   });
 });
