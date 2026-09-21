@@ -140,6 +140,12 @@ export const MCP_TOOLS: McpTool[] = [
     scope: "projects:read",
   },
   {
+    name: "project_brief",
+    answers:
+      "Dit où en est un projet : sa phase et depuis quand, ce qui a été consommé face à l'estimation, la date annoncée, qui le porte et les lots rattachés.",
+    scope: "projects:read",
+  },
+  {
     name: "my_month",
     answers:
       "Dit où en est votre mois : ce qui est déclaré, ce qui manque encore, et si le mois est validé. Toujours le vôtre, jamais celui d'un collègue.",
@@ -154,14 +160,14 @@ export const MCP_TOOLS: McpTool[] = [
   {
     name: "record_review",
     answers:
-      "Consigne ce qui s'est dit sur un projet en revue, et sa phase si elle a bougé. La note et la phase partent ensemble, ou ne partent pas : une revue est un seul geste.",
+      "Consigne ce qui s'est dit sur un projet en revue, et sa phase si elle a bougé. La note et la phase partent ensemble, ou ne partent pas : une revue est un seul geste. Une mention « @… » est refusée : une note écrite depuis un terminal ne convoque personne.",
     scope: "updates:write",
     also: "projects:write",
   },
   {
     name: "what_changed",
     answers:
-      "Dit ce qui a bougé sur un projet depuis une date : la phase, le temps déclaré, les mises à jour postées. Quinze jours en arrière par défaut.",
+      "Dit ce qui a bougé depuis une date : la phase, le temps déclaré, les mises à jour postées. Sans projet, lit tout le référentiel et répond projet par projet. Quinze jours en arrière par défaut.",
     scope: "audit:read",
   },
   {

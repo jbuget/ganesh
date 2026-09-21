@@ -18,6 +18,7 @@ import pytest
 
 from src.mcp.server import TOOLS
 from src.mcp.tools import (
+    brief,
     declaring,
     entries,
     mood,
@@ -30,7 +31,16 @@ from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 
 #: Each tool declares the scope it opens beside it, as `SCOPE` — and, where
 #: part of what it does needs a second one, as `ALSO`.
-TOOL_MODULES = (declaring, entries, mood, portfolio, projects, reviewing, updates)
+TOOL_MODULES = (
+    brief,
+    declaring,
+    entries,
+    mood,
+    portfolio,
+    projects,
+    reviewing,
+    updates,
+)
 
 SCREEN = Path(__file__).resolve().parents[3] / "client" / "src" / "lib" / "mcp.ts"
 

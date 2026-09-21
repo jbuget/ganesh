@@ -27,6 +27,16 @@ enum » guesses again, one handed the list picks.
 **It writes as the owner of the key, and names no author.** Same guarantee as
 `declare_time`: there is no colleague to sign for by mistake. The line the
 audit keeps names the key as well, through `MachineStampedAuditLog`.
+
+**And it convokes nobody.** A mention travels as `@[Nom](mention://user/12)`
+and sends the person it names a notification of their own. A model writing up
+a review it has just been told about would recopy a name out of the thread and
+summon them for nothing — and a tool that quietly removed the mention would
+consign something other than what was said, which is worse: whoever called it
+would believe the person had been named. So the note is **refused**, out loud,
+and the refusal says the thread is told anyway. A plain « @Marie » is not a
+mention and is consigned untouched: it notifies nobody, and it is what
+somebody said in the room.
 """
 
 from mcp.server.mcpserver.exceptions import ToolError
@@ -36,6 +46,7 @@ from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.projects.application.dtos.project_dto import ChangeProjectStatusCommand
 from src.modules.projects.application.dtos.update_dto import PostUpdateCommand
 from src.modules.projects.domain.entities.project import ProjectStatus
+from src.modules.projects.domain.services.mentions import mentioned_ids
 from src.modules.projects.presentation.dependencies import (
     get_change_status_use_case,
     get_post_update_use_case,
@@ -52,6 +63,12 @@ SCOPE = ApiKeyScope.UPDATES_WRITE
 #: given. The routes register it already.
 ALSO = ApiKeyScope.PROJECTS_WRITE
 
+#: Who hears of a review, said back to whoever consigns one without a screen.
+AUDIENCE = (
+    "Les personnes affectées au projet et celles qui ont déjà parlé "
+    "sur le fil en sont averties."
+)
+
 #: Every way a phase may be named: the word the screens show, and the word the
 #: domain stores. Built from `say.STATUSES` so the two never drift.
 PHASES = {said: status for status, said in say.STATUSES.items()} | {
@@ -67,13 +84,21 @@ async def record_review(project_id: int, note: str, phase: str | None = None) ->
     l'équipe. La phase est facultative — ne la donner que si le projet a
     changé de colonne — et se dit comme les écrans l'affichent :
     exploration, cadrage, construction, validation, déploiement, en service.
-    L'identifiant du projet se trouve avec `find_project`.
+    L'identifiant du projet se trouve avec `find_project`. Une mention « @… »
+    est refusée : une note écrite depuis un terminal ne convoque personne.
     """
     body = note.strip()
     if not body:
         raise ToolError(
             "Une revue ne se consigne pas vide : dites ce qui s'est dit sur "
             "le projet, même en une phrase."
+        )
+    if mentioned_ids(body):
+        # Before the phase is even read: nothing of a refused review is
+        # written, the card no more than the note.
+        raise ToolError(
+            "Une revue consignée depuis un terminal ne convoque personne : "
+            f"retirez la mention « @… » de la note. {AUDIENCE}"
         )
 
     moving = _phase(phase) if phase is not None else None
