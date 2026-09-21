@@ -76,6 +76,31 @@ def test_a_type_is_read_whatever_it_was_dressed_in() -> None:
     assert build(content_type="IMAGE/PNG; charset=binary").is_image
 
 
+def test_a_name_cannot_write_a_header_of_its_own() -> None:
+    """The name travels in `Content-Disposition`, and a header is one line.
+
+    A « \r\n » in it is not something anybody typed: it is a paste gone wrong
+    or an attempt to write a second header, and both end the same way — the
+    HTTP layer refuses to send the answer, and every download of that file is
+    a 500.
+    """
+    dressed = build(filename="note\r\nX-Injected: 1.pdf")
+
+    assert dressed.filename == "noteX-Injected: 1.pdf"
+
+
+def test_a_name_keeps_its_accents_and_its_spaces() -> None:
+    """Only what cannot be written down is dropped, never what was typed."""
+    assert build(filename="cahier de recette é.pdf").filename == (
+        "cahier de recette é.pdf"
+    )
+
+
+def test_a_name_made_only_of_what_cannot_be_written_is_no_name() -> None:
+    with pytest.raises(ValidationError):
+        build(filename="\r\n\t")
+
+
 def test_a_file_arriving_with_no_type_is_taken_for_a_stream_of_bytes() -> None:
     """A browser that says nothing must not make the entity guess."""
     assert build(content_type="").content_type == "application/octet-stream"

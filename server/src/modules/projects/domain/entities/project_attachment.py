@@ -44,8 +44,16 @@ def _basename(filename: str) -> str:
     Some send `C:\\Users\\lea\\note.pdf`, a folder drop sends
     `captures/ecran.png`. Only the last part names the file, and the rest has
     no business being shown — nor stored.
+
+    What cannot be written down is dropped with it. The name travels in
+    `Content-Disposition`, and a header is one line: a « \\r\\n » in it is
+    either a paste gone wrong or an attempt to write a second header, and both
+    end the same way — the HTTP layer refuses to send the answer, and every
+    download of that file is a 500 rather than a file. Accents and spaces are
+    untouched: only what has no printed form goes.
     """
-    return filename.replace("\\", "/").rsplit("/", 1)[-1].strip()
+    named = filename.replace("\\", "/").rsplit("/", 1)[-1]
+    return "".join(letter for letter in named if letter.isprintable()).strip()
 
 
 @dataclass
