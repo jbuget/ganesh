@@ -57,3 +57,19 @@ class AuditLogRepository(ABC):
         declared time into memory to drop it.
         """
         ...
+
+    @abstractmethod
+    async def last_touch_per_project(
+        self, actions: Collection[AuditAction], limit: int
+    ) -> list[AuditLog]:
+        """The projects most recently touched, one line each, freshest first.
+
+        One line per project, and the last one: the question is which projects
+        moved, not how often — ten phase changes on one of them would otherwise
+        fill the answer on their own.
+
+        The actions narrow the read the way `list_between` does, and for the
+        same reason: what counts as a project moving is the domain's to say,
+        and declared time would drown it.
+        """
+        ...

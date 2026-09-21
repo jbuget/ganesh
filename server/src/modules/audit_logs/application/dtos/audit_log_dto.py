@@ -1,8 +1,9 @@
 """What a read of the audit log hands back."""
 
 from dataclasses import dataclass
+from datetime import datetime
 
-from src.modules.audit_logs.domain.entities.audit_log import AuditLog
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.projects.domain.entities.project import Project
 from src.modules.users.domain.entities.user import User
 
@@ -35,3 +36,17 @@ class AuditLogPage:
 
     entries: list[SignedAuditLog]
     total: int
+
+
+@dataclass(frozen=True)
+class TouchedProject:
+    """A project the register saw move, and the gesture that moved it.
+
+    The project is named by its identifier alone: whoever asks holds the
+    reference list already, and repeating a label here would be handing back a
+    name that a rename has since made wrong.
+    """
+
+    project_id: int
+    action: AuditAction
+    at: datetime

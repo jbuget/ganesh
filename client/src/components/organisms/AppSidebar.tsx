@@ -1,20 +1,6 @@
 "use client";
 
-import {
-  CalendarDays,
-  ChartNoAxesColumn,
-  FolderKanban,
-  GanttChartSquare,
-  Home,
-  KanbanSquare,
-  KeyRound,
-  Milestone,
-  Newspaper,
-  PanelLeft,
-  Smile,
-  TableProperties,
-  Users,
-} from "lucide-react";
+import { PanelLeft, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -22,30 +8,11 @@ import { Logo } from "@/components/atoms/Logo";
 import { UserMenu } from "@/components/atoms/UserMenu";
 import { NotificationPanel } from "@/components/organisms/NotificationPanel";
 import { Button } from "@/components/ui/button";
+import { openPalette, useShortcutHint } from "@/lib/command-palette-store";
+import { SCREENS } from "@/lib/navigation";
 import { useSignOut } from "@/lib/use-sign-out";
 import { useCurrentUser } from "@/lib/api/queries";
 import { toggleSidebar, useSidebarCollapsed } from "@/lib/sidebar-store";
-
-const TABS = [
-  // « Accueil » opens the list and holds the root: it is what one lands on
-  // after signing in, and it names what to do before the screens that do it.
-  { href: "/", label: "Accueil", Icon: Home },
-  { href: "/timesheet", label: "Saisie des temps", Icon: CalendarDays },
-  { href: "/kanban", label: "Kanban", Icon: KanbanSquare },
-  { href: "/projects", label: "Projets", Icon: FolderKanban },
-  { href: "/activity-summary", label: "Synthèse d'activité", Icon: TableProperties },
-  { href: "/planning", label: "Planification", Icon: GanttChartSquare },
-  { href: "/roadmap", label: "Feuille de route", Icon: Milestone },
-  { href: "/gazette", label: "La Gazette", Icon: Newspaper },
-  { href: "/users", label: "Utilisateurs", Icon: Users },
-  { href: "/mood", label: "Moral", Icon: Smile },
-  // Shown to everyone, as « Utilisateurs » is: the navigation says what
-  // exists, and the permission lives on the actions.
-  { href: "/api-mcp", label: "API / MCP", Icon: KeyRound },
-  // « Statistiques » closes the list, and stays there: it reads the others
-  // rather than standing beside them. A new screen goes above it, never after.
-  { href: "/stats", label: "Statistiques", Icon: ChartNoAxesColumn },
-] as const;
 
 /**
  * Sidebar: navigation at the top, current user at the bottom.
@@ -60,6 +27,7 @@ export function AppSidebar() {
   const { user } = useCurrentUser();
   const collapsed = useSidebarCollapsed();
   const signOut = useSignOut();
+  const shortcut = useShortcutHint();
 
   return (
     <aside
@@ -101,9 +69,35 @@ export function AppSidebar() {
         </Button>
       </div>
 
+      {/* Above the tabs, where one reads before choosing: the palette leads
+          to the same screens and to what is inside them, and a shortcut
+          nobody is shown is a shortcut nobody uses. */}
+      <div className="px-2 pb-2">
+        <button
+          type="button"
+          onClick={openPalette}
+          title={collapsed ? `Rechercher (${shortcut})` : undefined}
+          aria-label={`Rechercher (${shortcut})`}
+          className={[
+            "flex w-full cursor-pointer items-center gap-2.5 rounded-md border border-slate-300 py-1.5 text-sm text-slate-500 transition-colors hover:border-slate-400 hover:text-slate-800",
+            collapsed ? "justify-center px-0" : "px-3",
+          ].join(" ")}
+        >
+          <Search className="size-4 shrink-0" aria-hidden />
+          {!collapsed && (
+            <>
+              <span className="flex-1 text-left">Rechercher</span>
+              <kbd className="shrink-0 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-sans text-[11px] text-slate-400">
+                {shortcut}
+              </kbd>
+            </>
+          )}
+        </button>
+      </div>
+
       <nav aria-label="Navigation principale" className="flex-1 px-2">
         <ul className="flex flex-col gap-1">
-          {TABS.map(({ href, label, Icon }) => {
+          {SCREENS.map(({ href, label, Icon }) => {
             const isActive = pathname === href;
             return (
               <li key={href}>
