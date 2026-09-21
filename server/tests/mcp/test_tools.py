@@ -331,6 +331,22 @@ class TestWhatChanged:
         assert "WAATcher" in said
 
     @pytest.mark.asyncio
+    async def test_the_window_is_named_by_the_day_that_was_asked_for(self) -> None:
+        """Midnight in Paris is the day before in UTC, which is how it is held.
+
+        Read straight off the instant, « depuis le 2026-09-01 » came back as
+        « depuis le 31/08/2026 »: the window was right and the sentence named
+        a day nobody had asked about.
+        """
+        with Wired(
+            detail=ADetail(WAATCHER),
+            project_log=AuditLogPage(entries=[], total=0),
+        ):
+            said = await what_changed(7, "2026-09-01")
+
+        assert "depuis le 01/09/2026" in said
+
+    @pytest.mark.asyncio
     async def test_an_unknown_project_is_said_rather_than_invented(self) -> None:
         with Wired(
             detail=EntityNotFoundError("The mission cannot be found."),

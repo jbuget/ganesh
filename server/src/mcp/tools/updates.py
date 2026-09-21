@@ -77,10 +77,11 @@ async def what_changed(project_id: int, since: str | None = None) -> str:
     lines = [entry for entry in page.entries if entry.log.at >= opened]
 
     label = mission.project.label
+    since = say.dated(_opening_day(opened))
     moved = _read(lines)
     if not moved:
-        return f"Rien n'a bougé sur {label} depuis le {say.dated(opened.date())}."
-    return f"Sur {label}, depuis le {say.dated(opened.date())} :\n" + "\n".join(moved)
+        return f"Rien n'a bougé sur {label} depuis le {since}."
+    return f"Sur {label}, depuis le {since} :\n" + "\n".join(moved)
 
 
 def _moment(since: str | None) -> datetime | None:
@@ -97,6 +98,17 @@ def _moment(since: str | None) -> datetime | None:
     except (ValueError, TypeError):
         return None
     return clock.as_instant(opened)
+
+
+def _opening_day(opened: datetime) -> date:
+    """The day the window opens on, as whoever asked about it lives it.
+
+    The instant is held in UTC, and midnight in Paris is still the day before
+    there. Read straight off with `.date()`, « depuis le 2026-09-01 » came
+    back to the caller as « depuis le 31/08/2026 » — the window was right and
+    the sentence named a day nobody had asked for.
+    """
+    return opened.astimezone(clock.PARIS).date()
 
 
 def _read(lines: list[SignedAuditLog]) -> list[str]:
