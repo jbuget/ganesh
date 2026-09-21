@@ -167,7 +167,7 @@ export const MCP_TOOLS: McpTool[] = [
   {
     name: "what_changed",
     answers:
-      "Dit ce qui a bougé sur un projet depuis une date : la phase, le temps déclaré, les mises à jour postées. Quinze jours en arrière par défaut.",
+      "Dit ce qui a bougé depuis une date : la phase, le temps déclaré, les mises à jour postées. Sans projet, lit tout le référentiel et répond projet par projet. Quinze jours en arrière par défaut.",
     scope: "audit:read",
   },
   {

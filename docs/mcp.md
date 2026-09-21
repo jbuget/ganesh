@@ -33,7 +33,7 @@ much smaller problem.
 | What a tool returns | Sentences carrying facts, not a JSON row |
 | Client | Claude Code and Claude Desktop, by static header |
 | V1 verbs | Five reads, and one write — on the caller's own month |
-| V1.1 verbs | A read more: a project's sheet, which `find_project` left one call short of |
+| V1.1 verbs | Two reads more — a project's sheet, and the whole register read across |
 
 ## Where it lives
 
@@ -196,11 +196,30 @@ month is validated.
 > 12 jours déclarés sur 19 ouvrés en septembre : 9 réalisés, 3 prévisionnels.
 > Rien sur les 3, 4 et 5. Le mois est ouvert.
 
-### `what_changed(project: str, since?: str)`
+### `what_changed(project_id?: int, since?: str)`
 
-**Scope** `audit:read`. `ListProjectAuditLogUseCase`, over a window that opens
-a fortnight back when nobody says otherwise — which is the span somebody coming
-back from leave is asking about.
+**Scope** `audit:read`. Over a window that opens a fortnight back when nobody
+says otherwise — the span somebody coming back from leave is asking about.
+
+**Named a project, it reads that project's log** through
+`ListProjectAuditLogUseCase`. **Named none, it reads the register** through
+`ListAuditLogUseCase`, whose own docstring already says what it is for: *the
+question an archive puts, and one no screen puts*. That second reading is what
+the first was missing — a mission's « Journal » answers « what happened to this
+project », and one has to already know which project to open.
+
+The window is then told **project by project**, never as one chronology: a flat
+list reads as the log it came from, the same mission picked up and dropped ten
+times over. Missions come most-moved first and the tail is counted; gestures
+carrying no mission are counted too rather than dropped, and a window wider
+than one page says so.
+
+> Depuis le 01/09/2026, 2 projets ont bougé :
+> - WAATcher (#7) : passé de cadrage à construction le 08/09, 23 jours déclarés
+>   par 4 personnes, et 6 autres gestes
+> - NOMAD (#11) : une mise à jour postée, la dernière le 16/09
+>
+> 1 geste ne porte sur aucun projet.
 
 This is the one angle that survived two framings: **nobody knows the projects
 they are not on.** Asked after a fortnight away, or on a Monday about a
@@ -212,7 +231,7 @@ phase, what was posted on the thread, how much time went in and by how many
 people. A month of raw log lines would be the summary that was dropped the
 first time round.
 
-It names four gestures and **counts** the rest (« et 12 autres gestes, que le
+It names three gestures and **counts** the rest (« et 12 autres gestes, que le
 Journal du projet détaille »). That is what keeps the French wording here from
 becoming a second copy of `client/src/lib/audit-log.ts`: two interfaces each
 say the domain's vocabulary in French, and this one only ever learns the four
