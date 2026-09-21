@@ -34,7 +34,8 @@ export function formatBytes(bytes: number): string {
     value /= 1024;
     unit += 1;
   }
-  const rounded = unit === 0 || value >= 10 ? Math.round(value) : Math.round(value * 10) / 10;
+  const rounded =
+    unit === 0 || value >= 10 ? Math.round(value) : Math.round(value * 10) / 10;
   return `${String(rounded).replace(".", ",")} ${UNITS[unit]}`;
 }
 

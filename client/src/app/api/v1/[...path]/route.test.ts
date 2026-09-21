@@ -27,7 +27,9 @@ vi.mock("@/lib/auth/entra", () => ({
 
 const { GET, POST } = await import("./route");
 
-const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0xff, 0x00]);
+const PNG = new Uint8Array([
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0xff, 0x00,
+]);
 
 function upstream(response: Response): void {
   vi.stubGlobal(
@@ -113,7 +115,9 @@ describe("the BFF relay", () => {
   it("still relays JSON, and says nothing on a 204", async () => {
     upstream(new Response(null, { status: 204 }));
 
-    const response = await GET(new NextRequest("http://localhost:3000/api/v1/projects"));
+    const response = await GET(
+      new NextRequest("http://localhost:3000/api/v1/projects"),
+    );
 
     expect(response.status).toBe(204);
     expect(await response.text()).toBe("");

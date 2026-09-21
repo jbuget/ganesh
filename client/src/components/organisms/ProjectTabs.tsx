@@ -5,6 +5,7 @@ import { ArchivedCallout } from "@/components/atoms/ArchivedCallout";
 import { AttachMissionDialog } from "@/components/atoms/AttachMissionDialog";
 import { DeleteMissionDialog } from "@/components/atoms/DeleteMissionDialog";
 import { MissionMenu } from "@/components/atoms/MissionMenu";
+import { ProjectAttachmentsTab } from "@/components/organisms/ProjectAttachmentsTab";
 import { ProjectAuditTab } from "@/components/organisms/ProjectAuditTab";
 import { ProjectSteeringTab } from "@/components/organisms/ProjectSteeringTab";
 import { ProjectSheetTab } from "@/components/organisms/ProjectSheetTab";
@@ -69,7 +70,7 @@ interface ProjectTabsProps {
 }
 
 /**
- * The four facets of a mission.
+ * The five facets of a mission.
  *
  * Shared by the side panel and the full-page sheet: two arrangements of the
  * same content, so they do not drift apart.
@@ -129,6 +130,7 @@ export function ProjectTabs({
         <TabsList className="min-w-0 flex-1">
           <TabsTrigger value="pilotage">Pilotage</TabsTrigger>
           <TabsTrigger value="updates">Mises à jour</TabsTrigger>
+          <TabsTrigger value="fichiers">Fichiers</TabsTrigger>
           <TabsTrigger value="fiche">Fiche service</TabsTrigger>
           <TabsTrigger value="audit">Journal</TabsTrigger>
         </TabsList>
@@ -209,6 +211,10 @@ export function ProjectTabs({
           // first.
           focusComposer={initialTab === "updates"}
         />
+      </TabsContent>
+
+      <TabsContent value="fichiers">
+        <ProjectAttachmentsTab projectId={detail.project.id} onChange={onChange} />
       </TabsContent>
 
       <TabsContent value="fiche" className="min-h-0 flex-1">
