@@ -494,13 +494,17 @@ end up contradicting each other.
 ## The service catalogue
 
 waat.tools publishes the services the team produces. Ganesh is the source for
-everything it publishes: a mission carries a service sheet, and the « Fiche
-service » tab is where that sheet is filled in — nowhere else.
+everything it publishes: a mission carries a service sheet, and the
+« Catalogue » tab is where that sheet is filled in — nowhere else. The tab is
+named after what it feeds rather than after the form it shows: one goes there
+to publish a service, not to admire a sheet.
 
 The line between the two tabs of a mission is what one is doing there:
-**Pilotage steers the mission, Fiche publishes the service.** Phase, priority,
-departments, contributors and cost steer; address, summary, links, stack and
-criticality publish. A field belongs to one side or the other, never to both.
+**Pilotage steers the mission, Catalogue publishes the service.** Phase,
+priority, departments, contributors and cost steer; address, summary, links,
+stack and criticality publish. A field belongs to one side or the other, never
+to both. Inside the tab, « Rattachement » gathers what the service hangs from
+— its team, its channel, its tags — and no section repeats the tab's own name.
 
 - Publishing asks for a slug, a summary, a criticality and a type: what the
   catalogue cannot draw a card without. Off-project work is never published.

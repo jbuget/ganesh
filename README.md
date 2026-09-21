@@ -20,7 +20,7 @@ make dev-client  # Next.js
 ## The service catalogue
 
 A mission carries a service sheet — public address, summary, links, stack,
-criticality — filled in under the « Fiche service » tab. Publishing it puts the
+criticality — filled in under the « Catalogue » tab. Publishing it puts the
 service in **waat.tools**, the internal catalogue.
 
 ```bash

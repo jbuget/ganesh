@@ -47,7 +47,7 @@ function refusal(label: string, subProjects: number, published: boolean): string
   }
   if (published) {
     said.push(
-      `« ${label} » est publiée au catalogue : le catalogue ne dessine qu'une fiche par service, et un sous-projet se publie à travers son projet. Dépubliez-la d'abord, depuis l'onglet Fiche service.`,
+      `« ${label} » est publiée au catalogue : le catalogue ne dessine qu'une fiche par service, et un sous-projet se publie à travers son projet. Dépubliez-la d'abord, depuis l'onglet Catalogue.`,
     );
   }
   return said.join(" ");

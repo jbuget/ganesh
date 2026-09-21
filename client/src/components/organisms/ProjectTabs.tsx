@@ -131,7 +131,7 @@ export function ProjectTabs({
           <TabsTrigger value="pilotage">Pilotage</TabsTrigger>
           <TabsTrigger value="updates">Mises à jour</TabsTrigger>
           <TabsTrigger value="fichiers">Fichiers</TabsTrigger>
-          <TabsTrigger value="fiche">Fiche service</TabsTrigger>
+          <TabsTrigger value="fiche">Catalogue</TabsTrigger>
           <TabsTrigger value="audit">Journal</TabsTrigger>
         </TabsList>
 
