@@ -57,26 +57,11 @@ export function TimesheetPage() {
           title="Saisie des temps"
           subtitle="Où est passé votre temps ce mois-ci, et ce qu'il reste à déclarer."
           actions={
-            <>
-              <TeammateSelector
-                teammates={month.teammates}
-                selectedId={month.targetUserId}
-                onSelect={month.viewTeammate}
-              />
-
-              {month.canValidate && (
-                <Button onClick={() => setValidateOpen(true)}>Valider le mois</Button>
-              )}
-
-              {/* Giving a month back to entry is a step backwards, not the
-                  outcome of the month: it does not carry the primary weight
-                  the validation does. */}
-              {month.canReopen && (
-                <Button variant="outline" onClick={() => setReopenOpen(true)}>
-                  Rouvrir le mois
-                </Button>
-              )}
-            </>
+            <TeammateSelector
+              teammates={month.teammates}
+              selectedId={month.targetUserId}
+              onSelect={month.viewTeammate}
+            />
           }
         />
       }
@@ -94,32 +79,55 @@ export function TimesheetPage() {
       )}
 
       {/*
-        Right above the grid, nothing but the month it shows, centred on it.
-        Whose month it is and the action that commits it sit in the page header,
-        where the other screens carry their general actions — which leaves this
-        line to one thing alone, and keeps the month at the centre whatever
-        stands above.
+        Right above the grid: the month it shows, centred on it, and the gesture
+        that commits that month, on its right. Validation does not act on the
+        screen but on the month one is looking at — it is what the chevrons
+        change, and it reads beside them rather than in the page header, which
+        carries what holds from one month to the next. Whose month it is stays
+        up there: that is a context, not a gesture on the month.
+
+        A grid rather than a row: the action is a validation, a reopening, or
+        nothing at all, and the month must not shift as one walks from one
+        month to the next. The three columns hold it in place whatever the
+        right-hand one carries.
       */}
-      <div className="mb-3 flex items-center justify-center gap-3">
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="Mois précédent"
-          onClick={month.goToPreviousMonth}
-        >
-          <ChevronLeft />
-        </Button>
-        <h2 className="min-w-48 text-center text-lg font-semibold capitalize">
-          {formatMonth(cursor.year, cursor.month)}
-        </h2>
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="Mois suivant"
-          onClick={month.goToNextMonth}
-        >
-          <ChevronRight />
-        </Button>
+      <div className="mb-3 grid grid-cols-[1fr_auto_1fr] items-center">
+        <div className="col-start-2 flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Mois précédent"
+            onClick={month.goToPreviousMonth}
+          >
+            <ChevronLeft />
+          </Button>
+          <h2 className="min-w-48 text-center text-lg font-semibold capitalize">
+            {formatMonth(cursor.year, cursor.month)}
+          </h2>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Mois suivant"
+            onClick={month.goToNextMonth}
+          >
+            <ChevronRight />
+          </Button>
+        </div>
+
+        <div className="col-start-3 justify-self-end">
+          {month.canValidate && (
+            <Button onClick={() => setValidateOpen(true)}>Valider le mois</Button>
+          )}
+
+          {/* Giving a month back to entry is a step backwards, not the outcome
+              of the month: it does not carry the primary weight the validation
+              does. */}
+          {month.canReopen && (
+            <Button variant="outline" onClick={() => setReopenOpen(true)}>
+              Rouvrir le mois
+            </Button>
+          )}
+        </div>
       </div>
 
       {!month.isOwnMonth && (
