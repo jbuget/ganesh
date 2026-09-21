@@ -53,3 +53,15 @@ class AuditLogPageResponse(BaseModel):
 
     total: int
     entries: list[AuditLogEntryResponse]
+
+
+class TouchedProjectResponse(BaseModel):
+    """A project the register saw move, and when.
+
+    Its label is not here: the caller holds the reference list, and a name
+    copied out of the log would be the one it had when it was written.
+    """
+
+    project_id: int
+    action: AuditAction
+    at: datetime

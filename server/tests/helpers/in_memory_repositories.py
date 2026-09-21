@@ -412,6 +412,17 @@ class InMemoryAuditLogRepository(AuditLogRepository):
             key=lambda log: (log.at, log.id or 0),
         )
 
+    async def last_touch_per_project(
+        self, actions: Collection[AuditAction], limit: int
+    ) -> list[AuditLog]:
+        latest: dict[int, AuditLog] = {}
+        for log in sorted(self.logs, key=lambda log: (log.at, log.id or 0)):
+            if log.project_id is not None and log.action in actions:
+                latest[log.project_id] = log
+        return sorted(
+            latest.values(), key=lambda log: (log.at, log.id or 0), reverse=True
+        )[:limit]
+
 
 class InMemoryProjectAssigneeRepository(ProjectAssigneeRepository):
     def __init__(
