@@ -1,6 +1,7 @@
 """The statistics route and the contract it publishes."""
 
 from collections.abc import AsyncIterator
+from datetime import date
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -8,6 +9,7 @@ from httpx import ASGITransport, AsyncClient
 from src.core.config import get_settings
 from src.main import app
 from src.modules.api_keys.presentation.dependencies import teammate_or_machine
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction
 from src.modules.projects.domain.entities.project import (
     ProjectCategory,
     ProjectKind,
@@ -16,6 +18,7 @@ from src.modules.projects.domain.entities.project import (
 from src.modules.stats.application.use_cases.compute_statistics import (
     ComputeStatisticsUseCase,
 )
+from src.modules.stats.domain.entities.surface_usage import Surface, Tally, Trace
 from src.modules.stats.presentation.dependencies import get_compute_statistics_use_case
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.utils import clock
@@ -51,6 +54,14 @@ def use_case() -> ComputeStatisticsUseCase:
             active_missions=10,
             missions_with_time=2,
             created=1,
+            traces={
+                clock.today(): [
+                    Trace(AuditAction.ENTRY_SET, actor_id=1, gestures=4),
+                    Trace(AuditAction.GAZETTE_GENERATE, actor_id=2, gestures=1),
+                ]
+            },
+            tallies={clock.today(): {Surface.MOOD: Tally(people=2, gestures=5)}},
+            last_gestures={AuditAction.PROJECT_CREATE: date(2026, 6, 4)},
         ),
     )
 
@@ -151,3 +162,38 @@ async def test_the_registry_reports_what_nobody_booked_against(
     registry = response.json()["registry"]
     assert registry["missions_without_time"] == 8
     assert registry["created"] == 1
+
+
+async def test_every_function_of_the_product_is_read(client: AsyncClient) -> None:
+    # A function missing from the table would pass for one that is doing
+    # fine: they all get their line, used or not.
+    response = await client.get(URL, params={"range": "today"})
+
+    surfaces = response.json()["surfaces"]["activities"]
+    assert [row["surface"] for row in surfaces] == list(Surface)
+
+
+async def test_a_function_says_who_used_it_and_how_much(client: AsyncClient) -> None:
+    response = await client.get(URL, params={"range": "today"})
+
+    rows = {row["surface"]: row for row in response.json()["surfaces"]["activities"]}
+    assert (rows["time_entry"]["people"], rows["time_entry"]["gestures"]) == (1, 4)
+    assert (rows["mood"]["people"], rows["mood"]["gestures"]) == (2, 5)
+
+
+async def test_a_function_nobody_used_lately_still_carries_its_last_day(
+    client: AsyncClient,
+) -> None:
+    response = await client.get(URL, params={"range": "today"})
+
+    rows = {row["surface"]: row for row in response.json()["surfaces"]["activities"]}
+    assert rows["project_registry"]["gestures"] == 0
+    assert rows["project_registry"]["last_used_on"] == "2026-06-04"
+    assert rows["assignment"]["last_used_on"] is None
+
+
+async def test_the_table_counts_what_served_nobody(client: AsyncClient) -> None:
+    response = await client.get(URL, params={"range": "today"})
+
+    # Three of them saw something today: the grid, the gazette and the moods.
+    assert response.json()["surfaces"]["idle_count"] == len(Surface) - 3

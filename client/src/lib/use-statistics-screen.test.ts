@@ -47,6 +47,7 @@ function statisticsWith(
       rate: 0.91,
       idle: [{ id: 4, display_name: "L. Chen" }],
     },
+    surfaces: { activities: [], idle_count: 0 },
     steering: {
       project_days: 120,
       off_project_days: 22,

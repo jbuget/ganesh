@@ -47,6 +47,25 @@ const STATISTICS: StatisticsResponse = {
     rate: 11 / 12,
     idle: [{ id: 4, display_name: "L. Chen" }],
   },
+  surfaces: {
+    activities: [
+      {
+        surface: "time_entry",
+        people: 11,
+        gestures: 240,
+        delta_in_people: 1,
+        last_used_on: "2026-09-17",
+      },
+      {
+        surface: "gazette",
+        people: 0,
+        gestures: 0,
+        delta_in_people: 0,
+        last_used_on: null,
+      },
+    ],
+    idle_count: 1,
+  },
   steering: {
     project_days: 120,
     off_project_days: 22,
@@ -112,9 +131,22 @@ describe("StatsPage", () => {
       "Couverture de la saisie",
       "Fiabilité",
       "Adoption",
+      "Fonctions utilisées",
       "Valeur de pilotage",
       "Santé du référentiel",
     ]);
+  });
+
+  it("reads every function of the product, used or not", () => {
+    // The dashboard measured the entry grid alone while eleven other things
+    // were built beside it.
+    renderPage();
+
+    expect(screen.getByText("Saisie des temps")).toBeInTheDocument();
+    expect(screen.getByText("La Gazette")).toBeInTheDocument();
+    expect(
+      screen.getByText(/1 fonction n'a servi à personne sur la période\./),
+    ).toBeInTheDocument();
   });
 
   it("names the teammates who declared nothing", () => {

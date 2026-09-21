@@ -11,6 +11,7 @@ import type { MonthValidationResponse } from "./monthValidationResponse";
 import type { PeriodResponse } from "./periodResponse";
 import type { RegistryResponse } from "./registryResponse";
 import type { SteeringResponse } from "./steeringResponse";
+import type { SurfaceUsageResponse } from "./surfaceUsageResponse";
 
 /**
  * Everything the dashboard shows for one window.
@@ -21,6 +22,7 @@ export interface StatisticsResponse {
   freshness: FreshnessResponse;
   month_validation: MonthValidationResponse;
   adoption: AdoptionResponse;
+  surfaces: SurfaceUsageResponse;
   steering: SteeringResponse;
   registry: RegistryResponse;
 }

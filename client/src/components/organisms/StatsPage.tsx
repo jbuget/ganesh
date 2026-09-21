@@ -6,6 +6,7 @@ import { RangeSelect } from "@/components/atoms/RangeSelect";
 import { CoverageHeadline } from "@/components/molecules/CoverageHeadline";
 import { ShareBreakdown } from "@/components/molecules/ShareBreakdown";
 import { PageLayout } from "@/components/organisms/PageLayout";
+import { SurfaceUsageTable } from "@/components/organisms/SurfaceUsageTable";
 import {
   NOTHING,
   categoryRows,
@@ -23,9 +24,9 @@ import { useStatisticsScreen } from "@/lib/use-statistics-screen";
  *
  * The blocks are ordered as the question is answered. Coverage leads, because
  * nothing below it means anything if the data is full of holes. Reliability
- * comes next, then adoption, then what the data teaches — that last floor is
- * the only one that proves the point, and it is only readable once the three
- * above hold.
+ * comes next, then adoption — of the team, then of each function of the
+ * product — then what the data teaches: that last floor is the only one that
+ * proves the point, and it is only readable once the ones above hold.
  */
 export function StatsPage() {
   const { range, setRange, statistics, isLoading, alerts } = useStatisticsScreen();
@@ -52,8 +53,15 @@ export function StatsPage() {
     );
   }
 
-  const { coverage, freshness, month_validation, adoption, steering, registry } =
-    statistics;
+  const {
+    coverage,
+    freshness,
+    month_validation,
+    adoption,
+    surfaces,
+    steering,
+    registry,
+  } = statistics;
 
   return (
     <PageLayout header={header}>
@@ -121,6 +129,17 @@ export function StatsPage() {
               tone={alerts.idleTeammates ? "warning" : "plain"}
             />
           </dl>
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-slate-900">
+            Fonctions utilisées
+          </h2>
+          <p className="mb-3 text-sm text-slate-500">
+            Qu&apos;est-ce qui sert, et qu&apos;est-ce qui ne sert plus ? Le bloc
+            au-dessus compte les personnes, celui-ci compte les fonctions.
+          </p>
+          <SurfaceUsageTable usage={surfaces} />
         </section>
 
         <section>

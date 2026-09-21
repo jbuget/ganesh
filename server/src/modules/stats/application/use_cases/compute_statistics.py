@@ -15,10 +15,15 @@ from src.modules.stats.domain.entities.statistics import (
     Steering,
     Teammate,
 )
+from src.modules.stats.domain.entities.surface_usage import SurfaceUsage, WindowReading
 from src.modules.stats.domain.repositories.statistics_repository import (
     StatisticsRepository,
 )
 from src.modules.stats.domain.services.month_closing import closed_months_covered_by
+from src.modules.stats.domain.services.surface_reading import (
+    read_surfaces,
+    surfaces_last_used,
+)
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
@@ -49,6 +54,7 @@ class ComputeStatisticsUseCase:
             freshness=Freshness(delays=await self._statistics.entry_delays(period)),
             month_validation=await self._month_validation(period, query, team),
             adoption=await self._adoption(period, team),
+            surfaces=await self._surfaces(period, previous),
             steering=await self._steering(period),
             registry=await self._registry(period),
         )
@@ -77,6 +83,23 @@ class ComputeStatisticsUseCase:
             if user.id is not None and user.id not in contributors
         ]
         return Adoption(contributors=len(team) - len(idle), idle=idle)
+
+    async def _surfaces(self, period: Period, previous: Period) -> SurfaceUsage:
+        """What each function of the product saw, and whether that is moving."""
+        return read_surfaces(
+            current=await self._reading(period),
+            previous=await self._reading(previous),
+            last_used=surfaces_last_used(
+                gestures=await self._statistics.last_gestures(),
+                others=await self._statistics.last_unlogged_use(),
+            ),
+        )
+
+    async def _reading(self, period: Period) -> WindowReading:
+        return WindowReading(
+            traces=tuple(await self._statistics.surface_traces(period)),
+            tallies=await self._statistics.unlogged_tallies(period),
+        )
 
     async def _steering(self, period: Period) -> Steering:
         by_kind = await self._statistics.days_by_kind(period)

@@ -64,6 +64,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
+from src.modules.stats.domain.entities.surface_usage import Surface, Tally, Trace
 from src.modules.stats.domain.repositories.statistics_repository import (
     StatisticsRepository,
 )
@@ -621,6 +622,10 @@ class InMemoryStatisticsRepository(StatisticsRepository):
         active_missions: int = 0,
         missions_with_time: int = 0,
         created: int = 0,
+        traces: dict[date, list[Trace]] | None = None,
+        tallies: dict[date, dict[Surface, Tally]] | None = None,
+        last_gestures: dict[AuditAction, date] | None = None,
+        last_unlogged_use: dict[Surface, date] | None = None,
     ) -> None:
         self._declared_by_day = declared_by_day or {}
         self._contributors = contributors or set()
@@ -633,6 +638,10 @@ class InMemoryStatisticsRepository(StatisticsRepository):
         self._active_missions = active_missions
         self._missions_with_time = missions_with_time
         self._created = created
+        self._traces = traces or {}
+        self._tallies = tallies or {}
+        self._last_gestures = last_gestures or {}
+        self._last_unlogged_use = last_unlogged_use or {}
 
     async def declared_days(self, period: Period) -> float:
         return sum(
@@ -672,6 +681,29 @@ class InMemoryStatisticsRepository(StatisticsRepository):
 
     async def missions_created(self, period: Period) -> int:
         return self._created
+
+    async def surface_traces(self, period: Period) -> list[Trace]:
+        return [
+            trace
+            for day, traces in self._traces.items()
+            if period.covers(day)
+            for trace in traces
+        ]
+
+    async def unlogged_tallies(self, period: Period) -> dict[Surface, Tally]:
+        # One day per window in a test: a second one covered by the same
+        # window simply takes the place of the first.
+        covered: dict[Surface, Tally] = {}
+        for day, tallies in self._tallies.items():
+            if period.covers(day):
+                covered.update(tallies)
+        return covered
+
+    async def last_gestures(self) -> dict[AuditAction, date]:
+        return self._last_gestures
+
+    async def last_unlogged_use(self) -> dict[Surface, date]:
+        return self._last_unlogged_use
 
 
 class InMemorySimulationRepository(SimulationRepository):

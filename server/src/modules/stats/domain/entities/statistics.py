@@ -13,6 +13,7 @@ from statistics import median
 
 from src.modules.calendar.domain.entities.period import Period
 from src.modules.projects.domain.entities.project import ProjectCategory, ProjectStatus
+from src.modules.stats.domain.entities.surface_usage import SurfaceUsage
 
 #: Up to this delay, an entry was still written from memory of the day itself.
 DAY_TO_DAY_DELAY = 2
@@ -215,6 +216,7 @@ class Statistics:
     freshness: Freshness
     month_validation: MonthValidation
     adoption: Adoption
+    surfaces: SurfaceUsage
     steering: Steering
     registry: Registry
 
