@@ -103,6 +103,11 @@ The Gemini key is part of that same file, and optional: without it La Gazette
 generates digests with their facts and no chapeau. Nothing else in the
 application touches it.
 
+`S3_BUCKET` is in it too — the `attachments_bucket` output — and carries no
+key beside it: the instance reaches the bucket through the role it already
+has, and botocore finds that on its own. A key written there would be a key
+to rotate, for nothing.
+
 **The deploy token:**
 
 ```bash

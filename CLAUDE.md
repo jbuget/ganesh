@@ -613,6 +613,39 @@ generated with their facts and no chapeau.
 
 ---
 
+## The files a project carries
+
+A capture of a bug, a mock-up, a PDF of the scoping: what a project carries
+besides words lives under the « Fichiers » tab, and the register holds who
+dropped it and when. Five rules hold it together:
+
+- **One stock.** An image pasted into a « Mise à jour » is uploaded as a file
+  of the project and shown by its address; the tab lists it like any other.
+  Two stocks would mean two answers to « qu'est-ce que ce projet porte ? ».
+- **The address is stable, and it is ours.** The API serves the bytes at
+  `/api/v1/projects/{id}/attachments/{aid}/content`, behind the BFF like
+  everything else. A presigned URL would expire, and the markdown of an
+  update that cites one would rot. It also means the bucket is private, with
+  no browser ever reaching it.
+- **A name is not a path.** The key in the bucket is drawn
+  (`projects/{id}/{uuid}{suffix}`), never derived from what the file was
+  called: two `capture.png` dropped the same morning must not overwrite one
+  another, and a name carries whatever the person typed.
+- **Nothing is served to be shown unless it is safe to show.** Anything may be
+  dropped, ten megabytes at most — the limit lives in the entity, not in the
+  configuration. Only images, PDFs and plain text come back `inline`; the rest
+  is a download, and every answer carries `nosniff`. An HTML page served
+  inline from our own domain would run in the reader's session.
+- **A file belongs to the project, not to whoever dropped it.** Anyone on the
+  team may withdraw one — and the screen says first how many updates show it,
+  since withdrawing leaves a hole in a thread somebody else wrote.
+
+The bytes sit in S3, reached through a port (`AttachmentStore`) so the domain
+knows nothing of it; on a laptop the same adapter talks to the MinIO of
+`docker-compose.yml`, so what runs locally is what runs in production.
+Deleting a project takes its rows by cascade and its objects by hand, in the
+use case: no cascade reaches a bucket.
+
 ## API keys
 
 A machine reaches Ganesh with a key, never with a user account. The rule the
