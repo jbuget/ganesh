@@ -25,10 +25,15 @@ DOWNLOAD_TYPE = "application/octet-stream"
 #: a download, whatever it is.
 SHOWABLE = RENDERABLE_IMAGES | frozenset({"application/pdf", "text/plain"})
 
-#: The net under the list. A document served from our origin runs nothing,
-#: reaches nothing and is nobody's same-origin: should a type ever make the
-#: list that should not have, it still cannot touch the session it is read in.
-CONTENT_POLICY = "default-src 'none'; sandbox"
+#: The net under the list: a document served from our origin runs nothing and
+#: fetches nothing. Should a type ever make the list that should not have, its
+#: scripts are refused before the closed list is even the question.
+#:
+#: `sandbox` is deliberately not in it. It would be stronger, and it would put
+#: the document on an opaque origin — which is exactly what a browser's PDF
+#: viewer is least sure how to render. `default-src 'none'` covers scripts
+#: (which fall back to it) without touching how a PDF is drawn.
+CONTENT_POLICY = "default-src 'none'; base-uri 'none'; form-action 'none'"
 
 
 def served_as(content_type: str) -> str | None:

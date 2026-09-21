@@ -89,6 +89,26 @@ describe("the BFF relay", () => {
     expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
   });
 
+  it("carries what the API says about reading a file safely", async () => {
+    // The file is served to the browser on *this* origin, not the API's: a
+    // protection the API sets and this relay drops is one nobody receives.
+    upstream(
+      new Response(PNG, {
+        headers: {
+          "Content-Type": "application/octet-stream",
+          "Content-Disposition": 'attachment; filename="piege.svg"',
+          "Content-Security-Policy": "default-src 'none'",
+        },
+      }),
+    );
+
+    const response = await GET(
+      new NextRequest("http://localhost:3000/api/v1/projects/4/attachments/2/content"),
+    );
+
+    expect(response.headers.get("Content-Security-Policy")).toBe("default-src 'none'");
+  });
+
   it("sends the bytes of a file up as the browser wrote them", async () => {
     upstream(
       new Response('{"id":1}', { headers: { "Content-Type": "application/json" } }),

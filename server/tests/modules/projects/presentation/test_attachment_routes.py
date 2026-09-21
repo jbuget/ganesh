@@ -233,7 +233,7 @@ async def test_every_file_is_served_under_a_policy_that_runs_nothing() -> None:
 
     response = await client.get(f"{URL}/10/attachments/{dropped['id']}/content")
 
-    assert "sandbox" in response.headers["content-security-policy"]
+    assert response.headers["content-security-policy"].startswith("default-src 'none'")
 
 
 async def test_asking_for_the_download_forces_the_save_dialog() -> None:
