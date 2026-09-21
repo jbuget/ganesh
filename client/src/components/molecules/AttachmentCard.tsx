@@ -52,10 +52,11 @@ const OVERLAY =
 /**
  * One file of a project, as a card.
  *
- * Everything one does to the file sits on the preview itself: opening at the
- * top left, the rest of the gestures at the top right, and who dropped it in
- * the corner one reaches for last. The name below is then left to be read,
- * rather than sharing its line with a signature nobody scans.
+ * What one *does* to the file sits on the preview and only shows when the
+ * card is reached for: opening at the top left, the rest of the gestures at
+ * the top right. What one *reads* stays below and stays put — the name, the
+ * weight, and at the end of that line the mark that says who dropped it.
+ * Gestures come and go with the cursor; a fact does not.
  *
  * The image is the original, shown small: at ten megabytes a file, and a
  * screen capture for what most of them are, generating a thumbnail would cost
@@ -107,25 +108,6 @@ export function AttachmentCard({
           onRemove={onRemove}
           className={`absolute top-2 right-2 ${OVERLAY}`}
         />
-
-        {/* Who dropped it, and when — folded away until asked for. It is what
-            one checks now and then, never what one reads first. */}
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <span
-                tabIndex={0}
-                aria-label={signature}
-                className={`absolute right-2 bottom-2 cursor-help ${OVERLAY}`}
-              />
-            }
-          >
-            <Info className="size-4" aria-hidden />
-          </TooltipTrigger>
-          <TooltipContent side="top" align="end">
-            {signature}
-          </TooltipContent>
-        </Tooltip>
       </div>
 
       <div className="min-w-0 p-3">
@@ -135,7 +117,36 @@ export function AttachmentCard({
         >
           {file.filename}
         </p>
-        <p className="mt-0.5 text-xs text-slate-400">{formatBytes(file.size_bytes)}</p>
+        <div className="mt-0.5 flex items-center justify-between gap-2">
+          <p className="text-xs text-slate-400">{formatBytes(file.size_bytes)}</p>
+
+          {/* Who dropped it, and when — at the end of the line one reads, and
+              always there. It is checked now and then, never read first, so
+              it waits behind a mark rather than taking a line of its own. */}
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <span
+                  tabIndex={0}
+                  aria-label={signature}
+                  className="shrink-0 cursor-help text-slate-300 transition-colors hover:text-slate-600"
+                />
+              }
+            >
+              <Info className="size-4" aria-hidden />
+            </TooltipTrigger>
+            {/* Dark, unlike the one the Synthèse uses for a whole table:
+                a single line of text reads better lifted off the page than
+                sat on another white surface. */}
+            <TooltipContent
+              side="top"
+              align="end"
+              className="bg-slate-900 text-white ring-slate-900"
+            >
+              {signature}
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </div>
     </article>
   );
