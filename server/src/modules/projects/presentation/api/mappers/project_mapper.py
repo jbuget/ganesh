@@ -7,6 +7,9 @@ from src.modules.projects.application.use_cases.export_catalog import CatalogEnt
 from src.modules.projects.application.use_cases.get_board import Board
 from src.modules.projects.application.use_cases.get_project_detail import ProjectDetail
 from src.modules.projects.application.use_cases.list_projects import ListedProject
+from src.modules.projects.application.use_cases.project_attachments import (
+    SignedAttachment,
+)
 from src.modules.projects.application.use_cases.project_updates import SignedUpdate
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_link import ProjectLink
@@ -24,6 +27,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     MonthlyShareResponse,
     ParentResponse,
     PhaseReachedResponse,
+    ProjectAttachmentResponse,
     ProjectContributionResponse,
     ProjectCostResponse,
     ProjectDetailResponse,
@@ -240,6 +244,28 @@ def to_project_update_response(
         edited_at=signed.update.edited_at,
         is_deleted=signed.update.is_deleted,
         is_mine=signed.update.author_id == reader_id,
+    )
+
+
+def to_project_attachment_response(
+    signed: SignedAttachment,
+) -> ProjectAttachmentResponse:
+    """A file, as a screen reads it.
+
+    The storage key stays behind: where the bytes sit is the server's
+    business, and an address the browser could read is an address it could
+    try.
+    """
+    assert signed.attachment.id is not None
+    return ProjectAttachmentResponse(
+        id=signed.attachment.id,
+        filename=signed.attachment.filename,
+        content_type=signed.attachment.content_type,
+        size_bytes=signed.attachment.size_bytes,
+        is_image=signed.attachment.is_image,
+        uploaded_at=signed.attachment.uploaded_at,
+        uploader_name=signed.uploader.label,
+        used_in_updates=signed.used_in_updates,
     )
 
 

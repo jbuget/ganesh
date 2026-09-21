@@ -4,7 +4,8 @@ Creating and changing status are open to the whole team: trust is the stance,
 traceability the safeguard.
 """
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, File, Query, Response, UploadFile, status
+from fastapi.responses import Response as RawResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
@@ -31,6 +32,10 @@ from src.modules.audit_logs.presentation.dependencies import (
 )
 from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.projects.application.dtos.assignment_dto import AssignmentCommand
+from src.modules.projects.application.dtos.attachment_dto import (
+    RemoveAttachmentCommand,
+    UploadAttachmentCommand,
+)
 from src.modules.projects.application.dtos.project_dto import (
     ArchiveProjectCommand,
     AttachProjectCommand,
@@ -82,6 +87,12 @@ from src.modules.projects.application.use_cases.import_projects import (
 )
 from src.modules.projects.application.use_cases.list_projects import ListProjectsUseCase
 from src.modules.projects.application.use_cases.move_project import MoveProjectUseCase
+from src.modules.projects.application.use_cases.project_attachments import (
+    DownloadProjectAttachmentUseCase,
+    ListProjectAttachmentsUseCase,
+    RemoveProjectAttachmentUseCase,
+    UploadProjectAttachmentUseCase,
+)
 from src.modules.projects.application.use_cases.project_updates import (
     EditProjectUpdateUseCase,
     ListProjectUpdatesUseCase,
@@ -109,6 +120,7 @@ from src.modules.projects.presentation.api.mappers.project_mapper import (
     to_board_response,
     to_catalog_entry_response,
     to_listed_project_response,
+    to_project_attachment_response,
     to_project_detail_response,
     to_project_response,
     to_project_update_response,
@@ -125,6 +137,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     ImportReportResponse,
     MoveProjectRequest,
     PostUpdateRequest,
+    ProjectAttachmentResponse,
     ProjectDetailResponse,
     ProjectLinkResponse,
     ProjectListItemResponse,
@@ -145,14 +158,17 @@ from src.modules.projects.presentation.dependencies import (
     get_create_project_use_case,
     get_delete_project_use_case,
     get_detach_project_use_case,
+    get_download_attachment_use_case,
     get_edit_update_use_case,
     get_export_catalog_use_case,
     get_import_projects_use_case,
+    get_list_attachments_use_case,
     get_list_projects_use_case,
     get_list_updates_use_case,
     get_move_project_use_case,
     get_post_update_use_case,
     get_project_detail_use_case,
+    get_remove_attachment_use_case,
     get_remove_project_link_use_case,
     get_remove_update_use_case,
     get_unarchive_project_use_case,
@@ -161,6 +177,7 @@ from src.modules.projects.presentation.dependencies import (
     get_update_project_detail_use_case,
     get_update_project_registry_use_case,
     get_update_project_use_case,
+    get_upload_attachment_use_case,
 )
 from src.modules.users.domain.entities.user import User
 
@@ -773,6 +790,136 @@ async def remove_project_update(
     assert current_user.id is not None
     await use_case.execute(
         RemoveUpdateCommand(actor_id=current_user.id, update_id=update_id)
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+#: What a browser may be told to show in place rather than save. Everything
+#: else is served as a download: a page dropped as a file and shown inline
+#: would run on our own domain, in the reader's session.
+SHOWABLE = ("image/", "application/pdf", "text/plain")
+
+
+def _disposition(filename: str, *, as_download: bool) -> str:
+    """How the browser is told to treat the file.
+
+    The name travels twice: once folded down to ASCII, for whoever still
+    reads only that, and once as `filename*`, which is the one that carries
+    « cahier de recette é.pdf » intact. A header is latin-1, and a raw accent
+    in it is a 500 rather than a download.
+    """
+    from urllib.parse import quote
+
+    plain = filename.encode("ascii", "replace").decode("ascii").replace('"', "")
+    kind = "attachment" if as_download else "inline"
+    return f"{kind}; filename=\"{plain}\"; filename*=utf-8''{quote(filename)}"
+
+
+@router.get(
+    "/{project_id}/attachments",
+    response_model=list[ProjectAttachmentResponse],
+    operation_id="listProjectAttachments",
+)
+async def list_project_attachments(
+    project_id: int,
+    _: User = Depends(get_current_user),
+    use_case: ListProjectAttachmentsUseCase = Depends(get_list_attachments_use_case),
+) -> list[ProjectAttachmentResponse]:
+    """The files a mission carries, most recent first."""
+    return [
+        to_project_attachment_response(signed)
+        for signed in await use_case.execute(project_id)
+    ]
+
+
+@router.post(
+    "/{project_id}/attachments",
+    response_model=ProjectAttachmentResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="uploadProjectAttachment",
+)
+async def upload_project_attachment(
+    project_id: int,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    use_case: UploadProjectAttachmentUseCase = Depends(get_upload_attachment_use_case),
+    list_attachments: ListProjectAttachmentsUseCase = Depends(
+        get_list_attachments_use_case
+    ),
+    session: AsyncSession = Depends(get_db),
+) -> ProjectAttachmentResponse:
+    """Drops a file on the mission.
+
+    The route reads the bytes and hands them over: `UploadFile` belongs to the
+    framework, and the application layer knows nothing of it.
+    """
+    assert current_user.id is not None
+    attachment = await use_case.execute(
+        UploadAttachmentCommand(
+            actor_id=current_user.id,
+            project_id=project_id,
+            filename=file.filename or "",
+            content_type=file.content_type or "",
+            content=await file.read(),
+        )
+    )
+    await session.commit()
+    signed = next(
+        one
+        for one in await list_attachments.execute(project_id)
+        if one.attachment.id == attachment.id
+    )
+    return to_project_attachment_response(signed)
+
+
+@router.get(
+    "/{project_id}/attachments/{attachment_id}/content",
+    operation_id="downloadProjectAttachment",
+    response_class=RawResponse,
+)
+async def download_project_attachment(
+    project_id: int,
+    attachment_id: int,
+    download: bool = Query(default=False),
+    _: User = Depends(get_current_user),
+    use_case: DownloadProjectAttachmentUseCase = Depends(
+        get_download_attachment_use_case
+    ),
+) -> RawResponse:
+    """The bytes of a file, to show in place or to save."""
+    attachment, content = await use_case.execute(attachment_id)
+    shown = not download and attachment.content_type.startswith(SHOWABLE)
+    return RawResponse(
+        content=content,
+        media_type=attachment.content_type,
+        headers={
+            "Content-Disposition": _disposition(
+                attachment.filename, as_download=not shown
+            ),
+            # The type we announce is the type we mean: without this, a
+            # browser sniffing the bytes could decide otherwise.
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+@router.delete(
+    "/{project_id}/attachments/{attachment_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="removeProjectAttachment",
+)
+async def remove_project_attachment(
+    project_id: int,
+    attachment_id: int,
+    current_user: User = Depends(get_current_user),
+    use_case: RemoveProjectAttachmentUseCase = Depends(get_remove_attachment_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Takes a file away. Anyone on the team may: a file is the mission's."""
+    assert current_user.id is not None
+    await use_case.execute(
+        RemoveAttachmentCommand(actor_id=current_user.id, attachment_id=attachment_id)
     )
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
