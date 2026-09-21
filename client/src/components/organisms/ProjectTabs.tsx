@@ -131,7 +131,7 @@ export function ProjectTabs({
           <TabsTrigger value="pilotage">Pilotage</TabsTrigger>
           <TabsTrigger value="updates">Mises à jour</TabsTrigger>
           <TabsTrigger value="fichiers">Fichiers</TabsTrigger>
-          <TabsTrigger value="fiche">Catalogue</TabsTrigger>
+          <TabsTrigger value="catalogue">Catalogue</TabsTrigger>
           <TabsTrigger value="audit">Journal</TabsTrigger>
         </TabsList>
 
@@ -217,7 +217,7 @@ export function ProjectTabs({
         <ProjectAttachmentsTab projectId={detail.project.id} onChange={onChange} />
       </TabsContent>
 
-      <TabsContent value="fiche" className="min-h-0 flex-1">
+      <TabsContent value="catalogue" className="min-h-0 flex-1">
         <ProjectSheetTab
           detail={detail}
           updateFields={updateFields}
