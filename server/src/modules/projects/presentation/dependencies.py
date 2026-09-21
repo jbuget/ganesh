@@ -3,6 +3,7 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.config import Settings, get_settings
 from src.core.database import get_db
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
@@ -51,6 +52,12 @@ from src.modules.projects.application.use_cases.import_projects import (
 )
 from src.modules.projects.application.use_cases.list_projects import ListProjectsUseCase
 from src.modules.projects.application.use_cases.move_project import MoveProjectUseCase
+from src.modules.projects.application.use_cases.project_attachments import (
+    DownloadProjectAttachmentUseCase,
+    ListProjectAttachmentsUseCase,
+    RemoveProjectAttachmentUseCase,
+    UploadProjectAttachmentUseCase,
+)
 from src.modules.projects.application.use_cases.project_updates import (
     EditProjectUpdateUseCase,
     ListProjectUpdatesUseCase,
@@ -69,8 +76,12 @@ from src.modules.projects.application.use_cases.update_project_detail import (
 from src.modules.projects.application.use_cases.update_project_registry import (
     UpdateProjectRegistryUseCase,
 )
+from src.modules.projects.domain.repositories.attachment_store import AttachmentStore
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
+)
+from src.modules.projects.domain.repositories.project_attachment_repository import (
+    ProjectAttachmentRepository,
 )
 from src.modules.projects.domain.repositories.project_detail_repository import (
     ProjectDetailRepository,
@@ -84,11 +95,17 @@ from src.modules.projects.domain.repositories.project_update_repository import (
 from src.modules.projects.infrastructure.database.repositories.project_assignee_repository_impl import (
     SqlProjectAssigneeRepository,
 )
+from src.modules.projects.infrastructure.database.repositories.project_attachment_repository_impl import (
+    SqlProjectAttachmentRepository,
+)
 from src.modules.projects.infrastructure.database.repositories.project_detail_repository_impl import (
     SqlProjectDetailRepository,
 )
 from src.modules.projects.infrastructure.database.repositories.project_update_repository_impl import (
     SqlProjectUpdateRepository,
+)
+from src.modules.projects.infrastructure.storage.s3_attachment_store import (
+    S3AttachmentStore,
 )
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
@@ -109,6 +126,25 @@ def get_project_update_repository(
     session: AsyncSession = Depends(get_db),
 ) -> ProjectUpdateRepository:
     return SqlProjectUpdateRepository(session)
+
+
+def get_project_attachment_repository(
+    session: AsyncSession = Depends(get_db),
+) -> ProjectAttachmentRepository:
+    return SqlProjectAttachmentRepository(session)
+
+
+def get_attachment_store(
+    settings: Settings = Depends(get_settings),
+) -> AttachmentStore:
+    """The bucket the files sit in — S3 in production, MinIO on a laptop."""
+    return S3AttachmentStore(
+        bucket=settings.s3_bucket,
+        region=settings.s3_region,
+        endpoint_url=settings.s3_endpoint_url,
+        access_key_id=settings.s3_access_key_id,
+        secret_access_key=settings.s3_secret_access_key,
+    )
 
 
 def get_create_project_use_case(
@@ -162,6 +198,10 @@ def get_delete_project_use_case(
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
     assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
     notifications: NotificationDelivery = Depends(get_notification_delivery),
+    attachments: ProjectAttachmentRepository = Depends(
+        get_project_attachment_repository
+    ),
+    store: AttachmentStore = Depends(get_attachment_store),
 ) -> DeleteProjectUseCase:
     return DeleteProjectUseCase(
         users=users,
@@ -170,6 +210,8 @@ def get_delete_project_use_case(
         audit_logs=audit_logs,
         assignees=assignees,
         notifications=notifications,
+        attachments=attachments,
+        store=store,
     )
 
 
@@ -405,3 +447,60 @@ def get_list_updates_use_case(
     users: UserRepository = Depends(get_user_repository),
 ) -> ListProjectUpdatesUseCase:
     return ListProjectUpdatesUseCase(updates=updates, users=users)
+
+
+def get_upload_attachment_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    attachments: ProjectAttachmentRepository = Depends(
+        get_project_attachment_repository
+    ),
+    store: AttachmentStore = Depends(get_attachment_store),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> UploadProjectAttachmentUseCase:
+    return UploadProjectAttachmentUseCase(
+        users=users,
+        projects=projects,
+        attachments=attachments,
+        store=store,
+        audit_logs=audit_logs,
+    )
+
+
+def get_remove_attachment_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    attachments: ProjectAttachmentRepository = Depends(
+        get_project_attachment_repository
+    ),
+    store: AttachmentStore = Depends(get_attachment_store),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> RemoveProjectAttachmentUseCase:
+    return RemoveProjectAttachmentUseCase(
+        users=users,
+        projects=projects,
+        attachments=attachments,
+        store=store,
+        audit_logs=audit_logs,
+    )
+
+
+def get_list_attachments_use_case(
+    attachments: ProjectAttachmentRepository = Depends(
+        get_project_attachment_repository
+    ),
+    updates: ProjectUpdateRepository = Depends(get_project_update_repository),
+    users: UserRepository = Depends(get_user_repository),
+) -> ListProjectAttachmentsUseCase:
+    return ListProjectAttachmentsUseCase(
+        attachments=attachments, updates=updates, users=users
+    )
+
+
+def get_download_attachment_use_case(
+    attachments: ProjectAttachmentRepository = Depends(
+        get_project_attachment_repository
+    ),
+    store: AttachmentStore = Depends(get_attachment_store),
+) -> DownloadProjectAttachmentUseCase:
+    return DownloadProjectAttachmentUseCase(attachments=attachments, store=store)

@@ -49,6 +49,16 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.8-flash"
 
+    # Where the files a mission carries are put down. In production the
+    # instance carries an IAM role and the two keys stay empty; on a laptop
+    # `s3_endpoint_url` points at the MinIO of docker-compose, which answers
+    # the same API. One adapter, two addresses.
+    s3_bucket: str = "ganesh-attachments"
+    s3_region: str = "eu-west-3"
+    s3_endpoint_url: str = ""
+    s3_access_key_id: str = ""
+    s3_secret_access_key: str = ""
+
     # How often one API key may call, as a token bucket. Counted per process:
     # behind several workers the effective allowance is multiplied by their
     # number. Generous on purpose — this is a guard rail against a runaway
