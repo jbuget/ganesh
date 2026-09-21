@@ -132,7 +132,7 @@ became once a tool could say those refusals in words.
 
 ## The tools
 
-Six, each `src/mcp/tools/<name>.py`, each answering in sentences built through
+Seven, each `src/mcp/tools/<name>.py`, each answering in sentences built through
 `src/mcp/tools/say.py` — « 1,5 jour », « 08/09 », « septembre 2026 ». A number
 handed over raw is a number a model words itself, and words wrong.
 
@@ -236,6 +236,32 @@ the domain is even asked, the validated month and the unknown project caught by
 name. The domain stays the authority; this is its reflection, as a locked cell
 on the grid is.
 
+### `record_review(project_id: int, note: str, phase?: str)`
+
+**Scope** `updates:write`, and `projects:write` for the phase alone. The weekly
+kanban review, said once per project: what was told about it, and where it now
+stands.
+
+**One gesture, two use cases, one commit.** A route reaches one use case; this
+reaches `PostProjectUpdateUseCase` and `ChangeProjectStatusUseCase`, because
+the gesture is one. They share the session the door opened, so the note and the
+phase land together or not at all. A tool that posted the note and left the
+card would be read as a review that landed; a model asked to chain two calls
+lands half of them.
+
+**The second scope is asked for only when a phase is given**, and a key short
+of it is refused **before the note is written** — the alternative is a register
+saying a project stood still when the meeting said it moved. A key carrying
+`updates:write` alone still records reviews, which is the useful minimum.
+
+**A phase is given in the language of the screens.** « construction », not
+`development` — though both are accepted, since a client reading the API has
+the second in hand. A word that is neither comes back with the six listed: a
+model told « invalid enum » guesses again, one handed the list picks. Off-project
+work is refused a phase in words, as the domain refuses it.
+
+> Revue consignée sur le projet #13. Phase désormais : construction.
+
 ## How a tool speaks
 
 Three rules, carried over from what was already decided about a collector:
@@ -251,9 +277,11 @@ Three rules, carried over from what was already decided about a collector:
 
 ## Deliberately out of V1
 
-- **Every other write.** Changing a phase, posting on a thread, staffing a
-  mission: each is a gesture with a screen built for it, and none is asked for
-  from a terminal.
+- **Staffing a mission, and archiving one.** Both write about something the
+  terminal has no business deciding alone: an intervenant names a *person*, and
+  `declare_time` already draws the line at writing for somebody else; archiving
+  asks what becomes of the work packages, which is a question, not a parameter.
+  A screen is built for each.
 - **Claude.ai on the web**, which wants OAuth with dynamic registration. Claude
   Code and Desktop take a static header, and that is the whole of Waat.
 - **Generating tools from the OpenAPI.** Sixty routes would become sixty tools,

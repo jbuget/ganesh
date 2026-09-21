@@ -34,6 +34,7 @@ from src.mcp.tools.entries import my_month
 from src.mcp.tools.mood import team_mood
 from src.mcp.tools.portfolio import portfolio_status
 from src.mcp.tools.projects import find_project
+from src.mcp.tools.reviewing import record_review
 from src.mcp.tools.updates import what_changed
 
 #: Where the client points. Mounted at `/mcp`, so the address is `/mcp/` —
@@ -48,6 +49,7 @@ TOOLS = (
     portfolio_status,
     team_mood,
     declare_time,
+    record_review,
 )
 
 INSTRUCTIONS = """\

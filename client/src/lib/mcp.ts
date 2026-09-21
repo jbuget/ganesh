@@ -33,8 +33,10 @@ export const MCP_SERVER_NAME = "ganesh";
  */
 export const MCP_SCOPES: ApiKeyScope[] = [
   "projects:read",
+  "projects:write",
   "entries:read",
   "entries:write",
+  "updates:write",
   "audit:read",
   "roadmap:read",
   "moods:read",
@@ -108,6 +110,16 @@ export interface McpTool {
   answers: string;
   /** The scope it opens, as the table of keys names it. */
   scope: ApiKeyScope;
+  /**
+   * A second scope the tool reaches for, and only for part of what it does.
+   *
+   * `record_review` writes the thread with `scope` and moves a phase with
+   * this one: a key short of it still records a review, and is refused the
+   * phase in so many words. Listing it beside the first is what lets a reader
+   * decide whether they need it, rather than discovering the refusal from a
+   * terminal.
+   */
+  also?: ApiKeyScope;
 }
 
 /**
@@ -138,6 +150,13 @@ export const MCP_TOOLS: McpTool[] = [
     answers:
       "Déclare une demi-journée ou une journée sur un projet, dans votre mois et dans aucun autre. Un week-end, un jour férié ou un mois validé sont refusés en toutes lettres.",
     scope: "entries:write",
+  },
+  {
+    name: "record_review",
+    answers:
+      "Consigne ce qui s'est dit sur un projet en revue, et sa phase si elle a bougé. La note et la phase partent ensemble, ou ne partent pas : une revue est un seul geste.",
+    scope: "updates:write",
+    also: "projects:write",
   },
   {
     name: "what_changed",

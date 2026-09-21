@@ -17,11 +17,20 @@ from pathlib import Path
 import pytest
 
 from src.mcp.server import TOOLS
-from src.mcp.tools import declaring, entries, mood, portfolio, projects, updates
+from src.mcp.tools import (
+    declaring,
+    entries,
+    mood,
+    portfolio,
+    projects,
+    reviewing,
+    updates,
+)
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 
-#: Each tool declares the scope it opens beside it, as `SCOPE`.
-TOOL_MODULES = (declaring, entries, mood, portfolio, projects, updates)
+#: Each tool declares the scope it opens beside it, as `SCOPE` — and, where
+#: part of what it does needs a second one, as `ALSO`.
+TOOL_MODULES = (declaring, entries, mood, portfolio, projects, reviewing, updates)
 
 SCREEN = Path(__file__).resolve().parents[3] / "client" / "src" / "lib" / "mcp.ts"
 
@@ -49,6 +58,19 @@ def listed_scopes(source: str) -> set[str]:
     return set(re.findall(r'"([a-z_]+:[a-z]+)"', block))
 
 
+def opened_scopes() -> set[str]:
+    """Every scope the tools reach for, the partial ones included.
+
+    `record_review` writes the thread with `SCOPE` and moves a phase with
+    `ALSO`. Counting the first alone would let the tab hand out a key that
+    records a review and is refused the phase.
+    """
+    second = (getattr(module, "ALSO", None) for module in TOOL_MODULES)
+    return {module.SCOPE.value for module in TOOL_MODULES} | {
+        scope.value for scope in second if scope is not None
+    }
+
+
 @needs_the_client
 def test_the_screen_lists_every_tool_the_server_offers() -> None:
     assert listed_tools(screen()) == {tool.__name__ for tool in TOOLS}
@@ -56,14 +78,13 @@ def test_the_screen_lists_every_tool_the_server_offers() -> None:
 
 @needs_the_client
 def test_the_screen_asks_for_every_scope_the_tools_open() -> None:
-    """What a reader is told to ask a manager for has to open all six.
+    """What a reader is told to ask a manager for has to open every tool.
 
     A scope short here is somebody branching their terminal, calling the tool
     the tab told them about, and being refused by a key they were handed for
     exactly that.
     """
-    needed = {module.SCOPE.value for module in TOOL_MODULES}
-    assert listed_scopes(screen()) == needed
+    assert listed_scopes(screen()) == opened_scopes()
 
 
 @needs_the_client
