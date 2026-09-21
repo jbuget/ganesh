@@ -64,3 +64,38 @@ applications:
         paths:
           - node_modules/**/*
           - .next/cache/**/*
+
+# ---------------------------------------------------------------------------
+# What every answer of the client carries. The counterpart of the `header`
+# block of the `Caddyfile`, which says the same things in front of the API:
+# the two hosts are different, and a protection posted on one is not posted on
+# the other.
+#
+# No `Content-Security-Policy` here, and that is a decision rather than an
+# oversight. Next hydrates through inline scripts, so a policy worth having
+# means wiring a nonce through the middleware and into every one of them — a
+# piece of work of its own, and one that breaks the application in silence
+# when it is got wrong. What guards the one place user content is served from
+# this origin — the bytes of a file — is the policy the API sets on that
+# response and the relay carries through, which is narrow, tested, and does
+# not depend on this.
+# ---------------------------------------------------------------------------
+customHeaders:
+  - pattern: "**"
+    headers:
+      # The client answers over https and nothing else.
+      - key: "Strict-Transport-Security"
+        value: "max-age=31536000; includeSubDomains"
+      # The type announced is the type meant — for a page as for a file the
+      # BFF relays.
+      - key: "X-Content-Type-Options"
+        value: "nosniff"
+      # Framed by ourselves and by nobody else: the Fichiers dialog shows a
+      # PDF in an iframe of this same origin, and that is the only frame the
+      # application draws.
+      - key: "X-Frame-Options"
+        value: "SAMEORIGIN"
+      # An address of ours travels to a third party as an origin at most, and
+      # not at all once it leaves https.
+      - key: "Referrer-Policy"
+        value: "strict-origin-when-cross-origin"

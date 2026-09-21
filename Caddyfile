@@ -23,6 +23,25 @@ api.ganesh.waat.tools {
 		max_size 12MB
 	}
 
+	# What every answer carries, whatever route wrote it. None of it is a
+	# rule of the application — a route that has something of its own to say
+	# says it itself, and the attachment route does — but the plain ones
+	# belong here, said once for everything.
+	header {
+		# This API answers over https and nothing else. A year, so a browser
+		# remembers well past a certificate renewal.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		# The type we announce is the type we mean. The attachment route
+		# already says it for the bytes it serves; this says it for the JSON.
+		X-Content-Type-Options "nosniff"
+		# Nothing here is a page, so nothing here is ever framed.
+		X-Frame-Options "DENY"
+		# An address of ours has no business travelling to a third party.
+		Referrer-Policy "no-referrer"
+		# What serves this is nobody's business.
+		-Server
+	}
+
 	# The API on the internal compose network; `api` resolves through Docker's
 	# own DNS. Nothing else on this host answers on 8000.
 	reverse_proxy api:8000 {
