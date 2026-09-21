@@ -33,7 +33,7 @@ much smaller problem.
 | What a tool returns | Sentences carrying facts, not a JSON row |
 | Client | Claude Code and Claude Desktop, by static header |
 | V1 verbs | Five reads, and one write — on the caller's own month |
-| V1.1 verbs | Two reads more — a project's sheet, and the whole register read across |
+| V1.1 verbs | Two reads more — a project's sheet, the whole register — and a second write, the weekly review |
 
 ## Where it lives
 
@@ -308,6 +308,15 @@ the second in hand. A word that is neither comes back with the six listed: a
 model told « invalid enum » guesses again, one handed the list picks. Off-project
 work is refused a phase in words, as the domain refuses it.
 
+**And it convokes nobody.** A mention travels as `@[Nom](mention://user/12)`
+and notifies the person it names. A model writing up a review it has just been
+told about recopies a name out of the thread and summons them for nothing — and
+a tool that quietly removed the mention would consign something other than what
+was said, which is worse: the caller would believe the person had been named.
+The note is **refused**, out loud, before the phase is even read, and the
+refusal says the thread is told anyway. A plain « @Marie » is not a mention and
+goes through untouched.
+
 > Revue consignée sur le projet #13. Phase désormais : construction.
 
 ## How a tool speaks
@@ -330,6 +339,8 @@ Three rules, carried over from what was already decided about a collector:
   `declare_time` already draws the line at writing for somebody else; archiving
   asks what becomes of the work packages, which is a question, not a parameter.
   A screen is built for each.
+- **Validating a month.** Only a manager reopens one, and a gesture the caller
+  cannot take back is not one to hand to a model.
 - **Claude.ai on the web**, which wants OAuth with dynamic registration. Claude
   Code and Desktop take a static header, and that is the whole of Waat.
 - **Generating tools from the OpenAPI.** Sixty routes would become sixty tools,
@@ -371,7 +382,8 @@ Claude Code and Claude Desktop take a static header, which is all Waat needs:
 The trailing slash is the address; `/mcp` redirects to it. The key is minted in
 the « API / MCP » screen by a manager and owned by the person whose terminal it
 sits in. `projects:read`, `entries:read`, `audit:read` and `roadmap:read` cover
-the reads; add `entries:write` to declare time, and `moods:read` — which no
+the reads; add `entries:write` to declare time, `updates:write` to consign a
+review and `projects:write` to let it move a phase, and `moods:read` — which no
 « Tous » ticks — to read the team's morale.
 
 The same screen's « MCP » tab says all of this to the team, one client at a

@@ -12,7 +12,10 @@ than about a month. Four properties this file exists for:
   thereby move cards, and the refusal names what to ask for;
 - **every refusal comes back as a sentence**, phases included: « construction »
   is what the screens say, and a tool that only answered to « development »
-  would make a reader learn the database.
+  would make a reader learn the database;
+- **it convokes nobody.** A note carrying a mention notifies the person it
+  names, and a model recopying a name out of a thread it has just read would
+  summon them for nothing.
 """
 
 import pytest
@@ -297,6 +300,48 @@ class TestEveryRefusalIsASentence:
         """A write that did not happen must not read like one that did."""
         with Wired(), pytest.raises(ToolError):
             await record_review(project_id=13, note="")
+
+
+class TestItConvokesNobody:
+    """A mention notifies the person it names. A review is not a summons."""
+
+    @pytest.mark.asyncio
+    async def test_a_mention_is_refused_rather_than_stripped(self) -> None:
+        """Removing it quietly would consign something other than what was said."""
+        with Wired() as wired, pytest.raises(ToolError) as raised:
+            await record_review(
+                13, "À relire, @[M. Ce](mention://user/2) prend la suite."
+            )
+
+        assert "mention" in str(raised.value)
+        assert wired.thread.asked is None
+        assert wired.committed == 0
+
+    @pytest.mark.asyncio
+    async def test_the_refusal_says_the_thread_is_told_anyway(self) -> None:
+        """Somebody removing the mention has to know nobody is being cut out."""
+        with Wired(), pytest.raises(ToolError) as raised:
+            await record_review(13, "@[M. Ce](mention://user/2) peux-tu regarder ?")
+
+        assert "averti" in str(raised.value)
+
+    @pytest.mark.asyncio
+    async def test_the_phase_does_not_move_either(self) -> None:
+        """Half a review is what the whole tool exists to prevent."""
+        with Wired() as wired, pytest.raises(ToolError):
+            await record_review(
+                13, "@[M. Ce](mention://user/2) reprend.", phase="construction"
+            )
+
+        assert wired.board.asked is None
+
+    @pytest.mark.asyncio
+    async def test_an_at_sign_that_names_nobody_goes_through(self) -> None:
+        """A plain « @Marie » notifies no one: only the link form does."""
+        with Wired() as wired:
+            await record_review(13, "Vu avec @Marie ce matin, rien ne bouge.")
+
+        assert wired.thread.asked is not None
 
 
 class TestThePhaseIsASecondScope:

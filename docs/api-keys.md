@@ -215,11 +215,11 @@ nothing at all. A promise the API does not keep is worse than a missing box.
 | `stats:read` | `GET /stats` | — |
 | `projects:read` | `GET /projects`, `/projects/{id}/detail`, `/projects/board`, the `find_project` and `project_brief` tools | — |
 | `projects:write` | create, correct, change phase, archive, unarchive, import | delete, attach/detach, staff, move a card, and the whole service sheet |
-| `updates:write` | `POST /projects/{id}/updates` | correcting and removing a post |
+| `updates:write` | `POST /projects/{id}/updates`, and the `record_review` tool | correcting and removing a post, and naming anybody: a mention is refused |
 | `entries:read` | `GET /entries/export` | writing time through a route |
 | `entries:write` | the `declare_time` tool, and no route | writing anybody else's month |
 | `users:read` | `GET /users` | role, activation, identity |
-| `audit:read` | `GET /audit-logs` | — there is nothing to write |
+| `audit:read` | `GET /audit-logs`, and the `what_changed` tool | — there is nothing to write |
 | `moods:read` | the `team_mood` tool, and no route | every name, and what anyone answered |
 
 ### Why those, and not the others
