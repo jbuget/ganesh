@@ -66,6 +66,16 @@ def test_an_image_says_so_and_the_rest_does_not() -> None:
     assert not build(content_type="application/pdf").is_image
 
 
+def test_a_drawing_that_runs_scripts_is_not_an_image_a_screen_may_show() -> None:
+    """`is_image` is what a screen draws an `<img>` on, and an SVG is never
+    served inline: saying yes here would draw a square that cannot load."""
+    assert not build(content_type="image/svg+xml").is_image
+
+
+def test_a_type_is_read_whatever_it_was_dressed_in() -> None:
+    assert build(content_type="IMAGE/PNG; charset=binary").is_image
+
+
 def test_a_file_arriving_with_no_type_is_taken_for_a_stream_of_bytes() -> None:
     """A browser that says nothing must not make the entity guess."""
     assert build(content_type="").content_type == "application/octet-stream"

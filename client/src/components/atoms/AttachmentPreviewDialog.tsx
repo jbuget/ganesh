@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { contentUrl, downloadUrl } from "@/lib/attachments";
+import { contentUrl, downloadUrl, isRenderableImage } from "@/lib/attachments";
 
 interface AttachmentPreviewDialogProps {
   open: boolean;
@@ -37,7 +37,9 @@ export function AttachmentPreviewDialog({
   filename,
   contentType,
 }: AttachmentPreviewDialogProps) {
-  const isImage = contentType.startsWith("image/");
+  // The same reading the API does before serving anything inline: a
+  // preview must not promise a picture that comes back as a download.
+  const isImage = isRenderableImage(contentType);
   const isPdf = contentType === "application/pdf";
   const url = contentUrl(projectId, attachmentId);
 

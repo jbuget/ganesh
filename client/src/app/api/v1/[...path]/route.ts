@@ -39,16 +39,22 @@ const HOP_BY_HOP = new Set(["connection", "keep-alive", "transfer-encoding", "ho
 /**
  * What the API says about the body, relayed as it said it.
  *
- * `Content-Type` decides how the browser reads the answer; the other two are
+ * `Content-Type` decides how the browser reads the answer; the next two are
  * what turns a response into a file it offers to save, under the name the
  * register holds. Forcing `application/json` here, as this used to, made
  * every download a broken string.
+ *
+ * The last two are what the API says about *reading* the body safely, and
+ * they are the reason this list is worth reading twice: a file is served to
+ * the browser on this origin, not on the API's, so a protection the API sets
+ * and this relay drops is a protection nobody ever receives.
  */
 const ABOUT_THE_BODY = [
   "content-type",
   "content-disposition",
   "content-length",
   "x-content-type-options",
+  "content-security-policy",
 ];
 
 /**

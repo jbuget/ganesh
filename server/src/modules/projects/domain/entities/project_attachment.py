@@ -14,6 +14,29 @@ MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024
 #: the suffix would be inventing: what is announced is what is served back.
 UNKNOWN_TYPE = "application/octet-stream"
 
+#: The image types a screen may actually draw. Named one by one rather than by
+#: family: `image/svg+xml` announces itself as an image and is a document that
+#: runs scripts, so it is never served to be shown — and a screen that drew an
+#: `<img>` on it would draw a square that cannot load.
+RENDERABLE_IMAGES = frozenset(
+    {
+        "image/png",
+        "image/jpeg",
+        "image/gif",
+        "image/webp",
+        "image/avif",
+    }
+)
+
+
+def bare_type(content_type: str) -> str:
+    """The media type alone, without the parameters the sender dressed it in.
+
+    `IMAGE/PNG; charset=binary` is a PNG. What is compared to a list is this,
+    never the string as it arrived.
+    """
+    return content_type.split(";", 1)[0].strip().lower()
+
 
 def _basename(filename: str) -> str:
     """The name alone, whatever path the browser wrapped it in.
@@ -72,5 +95,10 @@ class ProjectAttachment:
 
     @property
     def is_image(self) -> bool:
-        """Whether a screen may show it rather than only offer it."""
-        return self.content_type.startswith("image/")
+        """Whether a screen may show it rather than only offer it.
+
+        The same reading the route does before serving anything inline: a
+        screen must not promise a picture the server will hand over as a
+        download.
+        """
+        return bare_type(self.content_type) in RENDERABLE_IMAGES
