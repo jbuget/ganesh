@@ -114,7 +114,7 @@ export function ProjectTabs({
 
   return (
     <Tabs
-      defaultValue={initialTab ?? "pilotage"}
+      defaultValue={initialTab ?? "steering"}
       className="flex min-h-0 flex-1 flex-col gap-4"
     >
       {/* Above the tabs, therefore read before them: the state of the mission
@@ -128,10 +128,10 @@ export function ProjectTabs({
           mission waits aside. */}
       <div className="flex shrink-0 items-center gap-2">
         <TabsList className="min-w-0 flex-1">
-          <TabsTrigger value="pilotage">Pilotage</TabsTrigger>
+          <TabsTrigger value="steering">Pilotage</TabsTrigger>
           <TabsTrigger value="updates">Mises à jour</TabsTrigger>
-          <TabsTrigger value="fichiers">Fichiers</TabsTrigger>
-          <TabsTrigger value="catalogue">Catalogue</TabsTrigger>
+          <TabsTrigger value="files">Fichiers</TabsTrigger>
+          <TabsTrigger value="catalog">Catalogue</TabsTrigger>
           <TabsTrigger value="audit">Journal</TabsTrigger>
         </TabsList>
 
@@ -190,7 +190,7 @@ export function ProjectTabs({
         onConfirm={deleteMission}
       />
 
-      <TabsContent value="pilotage">
+      <TabsContent value="steering">
         <ProjectSteeringTab
           detail={detail}
           onChange={onChange}
@@ -213,11 +213,11 @@ export function ProjectTabs({
         />
       </TabsContent>
 
-      <TabsContent value="fichiers">
+      <TabsContent value="files">
         <ProjectAttachmentsTab projectId={detail.project.id} onChange={onChange} />
       </TabsContent>
 
-      <TabsContent value="catalogue" className="min-h-0 flex-1">
+      <TabsContent value="catalog" className="min-h-0 flex-1">
         <ProjectSheetTab
           detail={detail}
           updateFields={updateFields}
