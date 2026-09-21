@@ -1,0 +1,71 @@
+"""A file dropped on a mission."""
+
+from datetime import UTC, datetime
+
+import pytest
+
+from src.modules.projects.domain.entities.project_attachment import (
+    MAX_ATTACHMENT_BYTES,
+    ProjectAttachment,
+)
+from src.shared.exceptions.domain_exceptions import ValidationError
+
+NOW = datetime(2026, 5, 20, 11, 35, tzinfo=UTC)
+
+
+def build(**changes: object) -> ProjectAttachment:
+    fields: dict[str, object] = {
+        "id": None,
+        "project_id": 1,
+        "uploaded_by": 7,
+        "filename": "capture.png",
+        "content_type": "image/png",
+        "size_bytes": 2048,
+        "storage_key": "projects/1/2f0c.png",
+        "uploaded_at": NOW,
+    }
+    fields.update(changes)
+    return ProjectAttachment(**fields)  # type: ignore[arg-type]
+
+
+def test_a_file_keeps_the_name_it_was_dropped_under() -> None:
+    assert build().filename == "capture.png"
+
+
+def test_a_name_is_trimmed_of_what_the_browser_left_around_it() -> None:
+    assert build(filename="  capture.png  ").filename == "capture.png"
+
+
+def test_a_file_without_a_name_is_refused() -> None:
+    with pytest.raises(ValidationError):
+        build(filename="   ")
+
+
+def test_a_name_is_read_without_the_path_it_was_sent_with() -> None:
+    """Some browsers send a whole path. Only the last part names the file."""
+    assert build(filename="C:\\Users\\lea\\Bureau\\note.pdf").filename == "note.pdf"
+    assert build(filename="captures/écran.png").filename == "écran.png"
+
+
+def test_an_empty_file_is_refused() -> None:
+    with pytest.raises(ValidationError):
+        build(size_bytes=0)
+
+
+def test_a_file_at_the_limit_goes_through() -> None:
+    assert build(size_bytes=MAX_ATTACHMENT_BYTES).size_bytes == MAX_ATTACHMENT_BYTES
+
+
+def test_a_file_over_the_limit_is_refused() -> None:
+    with pytest.raises(ValidationError):
+        build(size_bytes=MAX_ATTACHMENT_BYTES + 1)
+
+
+def test_an_image_says_so_and_the_rest_does_not() -> None:
+    assert build(content_type="image/jpeg").is_image
+    assert not build(content_type="application/pdf").is_image
+
+
+def test_a_file_arriving_with_no_type_is_taken_for_a_stream_of_bytes() -> None:
+    """A browser that says nothing must not make the entity guess."""
+    assert build(content_type="").content_type == "application/octet-stream"
