@@ -57,8 +57,10 @@ export function useCurrentUser() {
  * Active ones only by default: anywhere other than the management screen, a
  * deactivated teammate has no business being offered.
  */
-export function useTeammates(includeInactive = false) {
-  const query = useListUsers(includeInactive ? { include_inactive: true } : undefined);
+export function useTeammates(includeInactive = false, enabled = true) {
+  const query = useListUsers(includeInactive ? { include_inactive: true } : undefined, {
+    query: { enabled },
+  });
   return { ...query, teammates: successOf<UserResponse[]>(query.data) ?? [] };
 }
 
@@ -71,10 +73,17 @@ export function useTeammates(includeInactive = false) {
  *
  * Archived ones are only asked for when they are wanted: anywhere else, a
  * mission put away has no business being offered.
+ *
+ * `enabled` is for what is mounted everywhere and read rarely: the palette
+ * sits in the frame of every screen, and would otherwise ask for the whole
+ * reference list on each one of them before anybody opened it.
  */
-export function useProjects(includeInactive = false) {
+export function useProjects(includeInactive = false, enabled = true) {
   const query = useListProjects(
     includeInactive ? { include_inactive: true } : undefined,
+    {
+      query: { enabled },
+    },
   );
   const missions = successOf<ProjectListItemResponse[]>(query.data) ?? [];
   return {
