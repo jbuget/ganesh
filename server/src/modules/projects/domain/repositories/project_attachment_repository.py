@@ -25,6 +25,11 @@ class ProjectAttachmentRepository(ABC):
     async def add(self, attachment: ProjectAttachment) -> ProjectAttachment: ...
 
     @abstractmethod
+    async def update(self, attachment: ProjectAttachment) -> ProjectAttachment:
+        """Writes back what changed of a file. Only its name ever does."""
+        ...
+
+    @abstractmethod
     async def remove(self, attachment_id: int) -> None:
         """Withdraws a file for good. Nothing here is kept as a tombstone: the
         register says who dropped it and who took it away."""

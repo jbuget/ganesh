@@ -57,6 +57,19 @@ class ProjectAttachment:
                 f"A file may not exceed {MAX_ATTACHMENT_BYTES // (1024 * 1024)} Mo."
             )
 
+    def rename(self, filename: str) -> None:
+        """Calls the file something else.
+
+        The name is what a reader recognises; `storage_key` is where the bytes
+        sit, and it does not move — it was drawn, not derived. Nothing is
+        added back either: a name given without a suffix stays without one,
+        and putting the old one back would be inventing what nobody typed.
+        """
+        chosen = _basename(filename)
+        if not chosen:
+            raise ValidationError("A file must have a name.")
+        self.filename = chosen
+
     @property
     def is_image(self) -> bool:
         """Whether a screen may show it rather than only offer it."""

@@ -69,6 +69,14 @@ class SqlProjectAttachmentRepository(ProjectAttachmentRepository):
         attachment.id = model.id
         return attachment
 
+    async def update(self, attachment: ProjectAttachment) -> ProjectAttachment:
+        model = await self._session.get(ProjectAttachmentModel, attachment.id)
+        if model is not None:
+            # The name is the only thing a file ever changes: where its bytes
+            # sit was drawn once and stays.
+            model.filename = attachment.filename
+        return attachment
+
     async def remove(self, attachment_id: int) -> None:
         await self._session.execute(
             delete(ProjectAttachmentModel).where(

@@ -31,6 +31,7 @@ class AuditAction(StrEnum):
     UPDATE_EDIT = "update.edit"
     UPDATE_REMOVE = "update.remove"
     ATTACHMENT_ADD = "attachment.add"
+    ATTACHMENT_RENAME = "attachment.rename"
     ATTACHMENT_REMOVE = "attachment.remove"
     SIMULATION_CREATE = "simulation.create"
     SIMULATION_UPDATE = "simulation.update"

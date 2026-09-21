@@ -6,6 +6,7 @@ import type { ProjectAttachmentResponse } from "@/lib/api/generated/model";
 import {
   listProjectAttachments,
   removeProjectAttachment,
+  renameProjectAttachment,
   uploadProjectAttachment,
 } from "@/lib/api/generated/projects/projects";
 import { contentUrl } from "@/lib/attachments";
@@ -99,6 +100,12 @@ export function useProjectAttachments(
     busy,
     upload,
     uploadAll,
+
+    async rename(attachmentId: number, filename: string) {
+      await renameProjectAttachment(projectId, attachmentId, { filename });
+      await reload();
+      await onWrite?.();
+    },
 
     async remove(attachmentId: number) {
       await removeProjectAttachment(projectId, attachmentId);

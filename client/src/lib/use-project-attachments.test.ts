@@ -6,6 +6,7 @@ import { useProjectAttachments } from "./use-project-attachments";
 const api = vi.hoisted(() => ({
   listProjectAttachments: vi.fn(),
   uploadProjectAttachment: vi.fn(),
+  renameProjectAttachment: vi.fn(),
   removeProjectAttachment: vi.fn(),
 }));
 
@@ -21,6 +22,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   api.listProjectAttachments.mockResolvedValue({ data: [] });
   api.uploadProjectAttachment.mockResolvedValue({ data: { id: 12 } });
+  api.renameProjectAttachment.mockResolvedValue({ data: { id: 12 } });
   api.removeProjectAttachment.mockResolvedValue({ data: null });
 });
 
@@ -68,6 +70,21 @@ describe("useProjectAttachments", () => {
 
     expect(api.uploadProjectAttachment).not.toHaveBeenCalled();
     expect(result.current.error).toContain("gros.zip");
+  });
+
+  it("reads the list back after a rename, and tells the screen one came from", async () => {
+    const notify = vi.fn();
+    const result = await tab(notify);
+
+    await act(async () => {
+      await result.current.rename(12, "cahier de recette.pdf");
+    });
+
+    expect(api.renameProjectAttachment).toHaveBeenCalledWith(7, 12, {
+      filename: "cahier de recette.pdf",
+    });
+    expect(api.listProjectAttachments).toHaveBeenCalledTimes(2);
+    expect(notify).toHaveBeenCalledTimes(1);
   });
 
   it("reads the list back after a withdrawal too", async () => {

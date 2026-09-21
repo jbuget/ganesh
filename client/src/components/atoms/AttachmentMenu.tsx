@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Maximize2, MoreHorizontal, Trash2 } from "lucide-react";
+import { Download, Maximize2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -10,6 +10,8 @@ interface AttachmentMenuProps {
   filename: string;
   /** Shows the file at full size, in front of everything else. */
   onOpen: () => void;
+  /** Asks to call it something else. What answers is a dialog. */
+  onRename: () => void;
   /**
    * Where the file is saved from.
    *
@@ -20,6 +22,13 @@ interface AttachmentMenuProps {
   downloadHref: string;
   /** Asks for it to go. What answers is a dialog. */
   onRemove: () => void;
+  /**
+   * How the trigger is drawn, when the surface it sits on has its own look.
+   *
+   * Replaces the default pill rather than adding to it: two roundings on the
+   * same button show one inside the other on hover, which reads as a glitch.
+   */
+  className?: string;
 }
 
 /**
@@ -29,11 +38,16 @@ interface AttachmentMenuProps {
  * and what loses something sits last, where the hand does not land by
  * accident.
  */
+const TRIGGER =
+  "rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700";
+
 export function AttachmentMenu({
   filename,
   onOpen,
+  onRename,
   downloadHref,
   onRemove,
+  className = TRIGGER,
 }: AttachmentMenuProps) {
   const [isOpen, setOpen] = useState(false);
 
@@ -41,7 +55,7 @@ export function AttachmentMenu({
     <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label={`Actions sur « ${filename} »`}
-        className="cursor-pointer rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+        className={`cursor-pointer ${className}`}
       >
         <MoreHorizontal className="size-4" aria-hidden />
       </PopoverTrigger>
@@ -59,6 +73,20 @@ export function AttachmentMenu({
             >
               <Maximize2 className="size-4 shrink-0 text-slate-400" aria-hidden />
               Ouvrir
+            </button>
+          </li>
+
+          <li>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onRename();
+              }}
+              className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
+            >
+              <Pencil className="size-4 shrink-0 text-slate-400" aria-hidden />
+              Renommer
             </button>
           </li>
 

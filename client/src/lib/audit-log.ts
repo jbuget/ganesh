@@ -334,6 +334,15 @@ export function auditSentence(
     case "attachment.remove":
       return { action: `a supprimé le fichier « ${before} »` };
 
+    // Both names, and the log's own two columns carry them: what it was
+    // called is as much the fact as what it is called now.
+    case "attachment.rename":
+      return {
+        action: "a renommé un fichier",
+        from: before ?? NOTHING,
+        to: after ?? NOTHING,
+      };
+
     default:
       // Nothing else carries a mission, so nothing else reaches this log. Said
       // rather than left blank: a line with no wording would read as a bug.

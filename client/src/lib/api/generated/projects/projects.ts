@@ -46,6 +46,7 @@ import type {
   ProjectListItemResponse,
   ProjectResponse,
   ProjectUpdateResponse,
+  RenameAttachmentRequest,
   UnassignMemberParams,
   UpdateDescriptionRequest,
   UpdateProjectDetailRequest,
@@ -4304,4 +4305,152 @@ export const useRemoveProjectAttachment = <
   TContext
 > => {
   return useMutation(getRemoveProjectAttachmentMutationOptions(options), queryClient);
+};
+export type renameProjectAttachmentResponse200 = {
+  data: ProjectAttachmentResponse;
+  status: 200;
+};
+
+export type renameProjectAttachmentResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type renameProjectAttachmentResponseSuccess =
+  renameProjectAttachmentResponse200 & {
+    headers: Headers;
+  };
+export type renameProjectAttachmentResponseError =
+  renameProjectAttachmentResponse422 & {
+    headers: Headers;
+  };
+
+export type renameProjectAttachmentResponse =
+  renameProjectAttachmentResponseSuccess | renameProjectAttachmentResponseError;
+
+export const getRenameProjectAttachmentUrl = (
+  projectId: number,
+  attachmentId: number,
+) => {
+  return `/api/v1/projects/${projectId}/attachments/${attachmentId}`;
+};
+
+/**
+ * Calls a file something else. Its bytes do not move.
+ * @summary Rename Project Attachment
+ */
+export const renameProjectAttachment = async (
+  projectId: number,
+  attachmentId: number,
+  renameAttachmentRequest: RenameAttachmentRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<renameProjectAttachmentResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<renameProjectAttachmentResponse>(
+    getRenameProjectAttachmentUrl(projectId, attachmentId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(renameAttachmentRequest),
+    },
+  );
+};
+
+export const getRenameProjectAttachmentMutationKey = () =>
+  ["renameProjectAttachment"] as const;
+
+export const getRenameProjectAttachmentMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof renameProjectAttachment>>,
+    TError,
+    RenameProjectAttachmentMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof renameProjectAttachment>>,
+  TError,
+  RenameProjectAttachmentMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRenameProjectAttachmentMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof renameProjectAttachment>>,
+    RenameProjectAttachmentMutationVariables
+  > = (props) => {
+    const { projectId, attachmentId, data } = props ?? {};
+
+    return renameProjectAttachment(projectId, attachmentId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RenameProjectAttachmentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof renameProjectAttachment>>
+>;
+export type RenameProjectAttachmentMutationBody = RenameAttachmentRequest;
+export type RenameProjectAttachmentMutationError = HTTPValidationError;
+export type RenameProjectAttachmentMutationVariables = {
+  projectId: number;
+  attachmentId: number;
+  data: RenameAttachmentRequest;
+};
+
+/**
+ * @summary Rename Project Attachment
+ */
+export const useRenameProjectAttachment = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof renameProjectAttachment>>,
+      TError,
+      RenameProjectAttachmentMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof renameProjectAttachment>>,
+  TError,
+  RenameProjectAttachmentMutationVariables,
+  TContext
+> => {
+  return useMutation(getRenameProjectAttachmentMutationOptions(options), queryClient);
 };

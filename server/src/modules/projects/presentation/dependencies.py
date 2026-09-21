@@ -56,6 +56,7 @@ from src.modules.projects.application.use_cases.project_attachments import (
     DownloadProjectAttachmentUseCase,
     ListProjectAttachmentsUseCase,
     RemoveProjectAttachmentUseCase,
+    RenameProjectAttachmentUseCase,
     UploadProjectAttachmentUseCase,
 )
 from src.modules.projects.application.use_cases.project_updates import (
@@ -498,3 +499,15 @@ def get_download_attachment_use_case(
     store: AttachmentStore = Depends(get_attachment_store),
 ) -> DownloadProjectAttachmentUseCase:
     return DownloadProjectAttachmentUseCase(attachments=attachments, store=store)
+
+
+def get_rename_attachment_use_case(
+    attachments: ProjectAttachmentRepository = Depends(
+        get_project_attachment_repository
+    ),
+    store: AttachmentStore = Depends(get_attachment_store),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> RenameProjectAttachmentUseCase:
+    return RenameProjectAttachmentUseCase(
+        attachments=attachments, store=store, audit_logs=audit_logs
+    )

@@ -34,6 +34,7 @@ from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.projects.application.dtos.assignment_dto import AssignmentCommand
 from src.modules.projects.application.dtos.attachment_dto import (
     RemoveAttachmentCommand,
+    RenameAttachmentCommand,
     UploadAttachmentCommand,
 )
 from src.modules.projects.application.dtos.project_dto import (
@@ -91,6 +92,7 @@ from src.modules.projects.application.use_cases.project_attachments import (
     DownloadProjectAttachmentUseCase,
     ListProjectAttachmentsUseCase,
     RemoveProjectAttachmentUseCase,
+    RenameProjectAttachmentUseCase,
     UploadProjectAttachmentUseCase,
 )
 from src.modules.projects.application.use_cases.project_updates import (
@@ -148,6 +150,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     ProjectListItemResponse,
     ProjectResponse,
     ProjectUpdateResponse,
+    RenameAttachmentRequest,
     UpdateDescriptionRequest,
     UpdateProjectDetailRequest,
     UpdateProjectRegistryRequest,
@@ -176,6 +179,7 @@ from src.modules.projects.presentation.dependencies import (
     get_remove_attachment_use_case,
     get_remove_project_link_use_case,
     get_remove_update_use_case,
+    get_rename_attachment_use_case,
     get_unarchive_project_use_case,
     get_unassign_member_use_case,
     get_update_description_use_case,
@@ -915,3 +919,38 @@ async def remove_project_attachment(
     )
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.patch(
+    "/{project_id}/attachments/{attachment_id}",
+    response_model=ProjectAttachmentResponse,
+    operation_id="renameProjectAttachment",
+)
+async def rename_project_attachment(
+    project_id: int,
+    attachment_id: int,
+    payload: RenameAttachmentRequest,
+    current_user: User = Depends(get_current_user),
+    use_case: RenameProjectAttachmentUseCase = Depends(get_rename_attachment_use_case),
+    list_attachments: ListProjectAttachmentsUseCase = Depends(
+        get_list_attachments_use_case
+    ),
+    session: AsyncSession = Depends(get_db),
+) -> ProjectAttachmentResponse:
+    """Calls a file something else. Its bytes do not move."""
+    assert current_user.id is not None
+    await use_case.execute(
+        RenameAttachmentCommand(
+            actor_id=current_user.id,
+            project_id=project_id,
+            attachment_id=attachment_id,
+            filename=payload.filename,
+        )
+    )
+    await session.commit()
+    signed = next(
+        one
+        for one in await list_attachments.execute(project_id)
+        if one.attachment.id == attachment_id
+    )
+    return to_project_attachment_response(signed)

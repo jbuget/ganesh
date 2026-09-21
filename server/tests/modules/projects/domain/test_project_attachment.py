@@ -69,3 +69,38 @@ def test_an_image_says_so_and_the_rest_does_not() -> None:
 def test_a_file_arriving_with_no_type_is_taken_for_a_stream_of_bytes() -> None:
     """A browser that says nothing must not make the entity guess."""
     assert build(content_type="").content_type == "application/octet-stream"
+
+
+class TestRenaming:
+    """A file may be called something else. Where its bytes sit does not move."""
+
+    def test_a_file_takes_the_name_it_is_given(self) -> None:
+        file = build()
+
+        file.rename("cahier de recette.pdf")
+
+        assert file.filename == "cahier de recette.pdf"
+
+    def test_renaming_does_not_move_the_bytes(self) -> None:
+        """The key is drawn once and kept: it is not derived from the name."""
+        file = build()
+        key = file.storage_key
+
+        file.rename("autre chose.png")
+
+        assert file.storage_key == key
+
+    def test_a_new_name_is_read_the_way_the_first_one_was(self) -> None:
+        file = build()
+
+        file.rename("  dossiers/capture finale.png  ")
+
+        assert file.filename == "capture finale.png"
+
+    def test_a_file_cannot_be_renamed_to_nothing(self) -> None:
+        file = build()
+
+        with pytest.raises(ValidationError):
+            file.rename("   ")
+
+        assert file.filename == "capture.png"

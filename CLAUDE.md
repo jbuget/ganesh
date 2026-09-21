@@ -637,8 +637,12 @@ dropped it and when. Five rules hold it together:
   is a download, and every answer carries `nosniff`. An HTML page served
   inline from our own domain would run in the reader's session.
 - **A file belongs to the project, not to whoever dropped it.** Anyone on the
-  team may withdraw one — and the screen says first how many updates show it,
-  since withdrawing leaves a hole in a thread somebody else wrote.
+  team may rename or withdraw one — and before a withdrawal the screen says
+  how many updates show it, since it leaves a hole in a thread somebody else
+  wrote. Renaming changes what a reader sees and nothing else: the key was
+  drawn, not derived, so the bytes do not move and the address an update
+  cites still answers. Nothing is added back either — a name given without a
+  suffix keeps none.
 
 The bytes sit in S3, reached through a port (`AttachmentStore`) so the domain
 knows nothing of it; on a laptop the same adapter talks to the MinIO of

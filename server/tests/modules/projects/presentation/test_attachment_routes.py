@@ -14,6 +14,7 @@ from src.modules.projects.application.use_cases.project_attachments import (
     DownloadProjectAttachmentUseCase,
     ListProjectAttachmentsUseCase,
     RemoveProjectAttachmentUseCase,
+    RenameProjectAttachmentUseCase,
     UploadProjectAttachmentUseCase,
 )
 from src.modules.projects.domain.entities.project import (
@@ -25,6 +26,7 @@ from src.modules.projects.presentation.dependencies import (
     get_download_attachment_use_case,
     get_list_attachments_use_case,
     get_remove_attachment_use_case,
+    get_rename_attachment_use_case,
     get_upload_attachment_use_case,
 )
 from src.modules.users.domain.entities.user import Role, User
@@ -94,6 +96,9 @@ def sign_in() -> tuple[
         lambda: ListProjectAttachmentsUseCase(
             attachments=files, updates=updates, users=users
         )
+    )
+    app.dependency_overrides[get_rename_attachment_use_case] = (
+        lambda: RenameProjectAttachmentUseCase(**kept)
     )
     app.dependency_overrides[get_download_attachment_use_case] = (
         lambda: DownloadProjectAttachmentUseCase(attachments=files, store=store)
@@ -264,3 +269,43 @@ async def test_a_file_is_not_withdrawn_under_another_mission() -> None:
 
     assert answer.status_code == 404
     assert len(files.attachments) == 1
+
+
+async def test_a_file_comes_back_under_its_new_name() -> None:
+    client, _, store, _ = sign_in()
+    dropped = await _drop(client)
+    held = dict(store.content)
+
+    answer = await client.patch(
+        f"{URL}/10/attachments/{dropped['id']}",
+        json={"filename": "cahier de recette.pdf"},
+    )
+
+    assert answer.status_code == 200
+    assert answer.json()["filename"] == "cahier de recette.pdf"
+    # Renaming moves nothing: the bytes sit under the key they were given.
+    assert store.content == held
+
+
+async def test_a_file_is_not_renamed_under_another_mission() -> None:
+    client, files, _, _ = sign_in()
+    dropped = await _drop(client)
+
+    answer = await client.patch(
+        f"{URL}/11/attachments/{dropped['id']}", json={"filename": "ailleurs.png"}
+    )
+
+    assert answer.status_code == 404
+    assert files.attachments[0].filename == "capture.png"
+
+
+async def test_a_name_the_form_would_not_accept_is_refused() -> None:
+    client, files, _, _ = sign_in()
+    dropped = await _drop(client)
+
+    answer = await client.patch(
+        f"{URL}/10/attachments/{dropped['id']}", json={"filename": ""}
+    )
+
+    assert answer.status_code == 422
+    assert files.attachments[0].filename == "capture.png"

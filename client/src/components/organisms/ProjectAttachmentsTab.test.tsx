@@ -8,6 +8,7 @@ import type { ProjectAttachmentResponse } from "@/lib/api/generated/model";
 const api = vi.hoisted(() => ({
   listProjectAttachments: vi.fn(),
   uploadProjectAttachment: vi.fn(),
+  renameProjectAttachment: vi.fn(),
   removeProjectAttachment: vi.fn(),
 }));
 
@@ -37,6 +38,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   served([]);
   api.uploadProjectAttachment.mockResolvedValue({ data: file() });
+  api.renameProjectAttachment.mockResolvedValue({ data: file() });
   api.removeProjectAttachment.mockResolvedValue({ data: null });
 });
 
@@ -47,16 +49,62 @@ describe("ProjectAttachmentsTab", () => {
     expect(await screen.findByText(/Aucun fichier/)).toBeInTheDocument();
   });
 
-  it("signs each file with who dropped it and when", async () => {
+  it("reads a file by its name and its weight", async () => {
     served([file()]);
 
     render(<ProjectAttachmentsTab projectId={7} />);
 
-    expect(
-      await screen.findByText("Téléversé par Alice Chen le 20/05/2026 à 13h35"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("capture.png")).toBeInTheDocument();
+    expect(await screen.findByText("capture.png")).toBeInTheDocument();
     expect(screen.getByText("2 ko")).toBeInTheDocument();
+    // The signature is not read first: it waits under the corner mark.
+    expect(
+      screen.queryByText("Téléversé par Alice Chen le 20/05/2026 à 13h35"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("says who dropped the file, and when, to whoever asks the corner mark", async () => {
+    served([file()]);
+    render(<ProjectAttachmentsTab projectId={7} />);
+    const said = "Téléversé par Alice Chen le 20/05/2026 à 13h35";
+
+    await userEvent.hover(await screen.findByLabelText(said));
+
+    // The label is what a screen reader hears; this is what an eye reads.
+    expect(await screen.findByText(said)).toBeVisible();
+  });
+
+  it("offers the gestures on the file itself", async () => {
+    served([file()]);
+    render(<ProjectAttachmentsTab projectId={7} />);
+
+    // Opening has its own control; the rest waits behind the menu.
+    expect(
+      await screen.findByRole("button", { name: "Ouvrir « capture.png »" }),
+    ).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Actions sur « capture.png »" }),
+    );
+    expect(await screen.findByRole("button", { name: "Renommer" })).toBeInTheDocument();
+  });
+
+  it("renames a file, and keeps the link the thread already cites", async () => {
+    served([file()]);
+    render(<ProjectAttachmentsTab projectId={7} />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Actions sur « capture.png »" }),
+    );
+    await userEvent.click(await screen.findByRole("button", { name: "Renommer" }));
+    const field = await screen.findByLabelText("Nom du fichier");
+    await userEvent.clear(field);
+    await userEvent.type(field, "bug de mars.png");
+    await userEvent.click(screen.getByRole("button", { name: "Renommer" }));
+
+    await waitFor(() =>
+      expect(api.renameProjectAttachment).toHaveBeenCalledWith(7, 12, {
+        filename: "bug de mars.png",
+      }),
+    );
   });
 
   it("shows an image, and only names what is not one", async () => {

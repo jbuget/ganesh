@@ -345,6 +345,19 @@ describe("auditSentence", () => {
       ).toBe("a ajouté le fichier « capture.png »");
     });
 
+    it("shows both names when a file is renamed", () => {
+      const said = auditSentence(
+        entry("attachment.rename", {
+          old_value: "capture.png",
+          new_value: "bug de mars.png",
+        }),
+      );
+
+      expect(said.action).toBe("a renommé un fichier");
+      expect(said.from).toBe("capture.png");
+      expect(said.to).toBe("bug de mars.png");
+    });
+
     it("names the file that was withdrawn", () => {
       expect(
         auditSentence(entry("attachment.remove", { old_value: "note.pdf" })).action,

@@ -604,6 +604,9 @@ class InMemoryProjectAttachmentRepository(ProjectAttachmentRepository):
         self.attachments.append(attachment)
         return attachment
 
+    async def update(self, attachment: ProjectAttachment) -> ProjectAttachment:
+        return attachment
+
     async def remove(self, attachment_id: int) -> None:
         self.attachments = [a for a in self.attachments if a.id != attachment_id]
 

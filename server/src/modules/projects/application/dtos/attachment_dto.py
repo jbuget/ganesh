@@ -31,3 +31,13 @@ class RemoveAttachmentCommand:
     actor_id: int
     project_id: int
     attachment_id: int
+
+
+@dataclass(frozen=True)
+class RenameAttachmentCommand:
+    """Calling a file something else. The bytes do not move."""
+
+    actor_id: int
+    project_id: int
+    attachment_id: int
+    filename: str

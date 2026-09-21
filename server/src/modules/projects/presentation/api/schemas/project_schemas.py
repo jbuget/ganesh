@@ -373,6 +373,12 @@ class PostUpdateRequest(BaseModel):
     body: str = Field(min_length=1)
 
 
+class RenameAttachmentRequest(BaseModel):
+    """Calling a file something else."""
+
+    filename: str = Field(min_length=1, max_length=255)
+
+
 class ProjectAttachmentResponse(BaseModel):
     """One file a mission carries."""
 

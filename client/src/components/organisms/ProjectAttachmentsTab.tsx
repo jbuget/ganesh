@@ -5,6 +5,7 @@ import { useState } from "react";
 import { AttachmentPreviewDialog } from "@/components/atoms/AttachmentPreviewDialog";
 import { DeleteAttachmentDialog } from "@/components/atoms/DeleteAttachmentDialog";
 import { FileDropZone } from "@/components/atoms/FileDropZone";
+import { RenameAttachmentDialog } from "@/components/atoms/RenameAttachmentDialog";
 import { AttachmentCard } from "@/components/molecules/AttachmentCard";
 import type { ProjectAttachmentResponse } from "@/lib/api/generated/model";
 import { useProjectAttachments } from "@/lib/use-project-attachments";
@@ -30,6 +31,7 @@ export function ProjectAttachmentsTab({
   // Only what the screen itself is: which file is open, which one is being
   // asked about. Everything a drop involves lives in the hook.
   const [shown, setShown] = useState<ProjectAttachmentResponse | null>(null);
+  const [renamed, setRenamed] = useState<ProjectAttachmentResponse | null>(null);
   const [doomed, setDoomed] = useState<ProjectAttachmentResponse | null>(null);
 
   return (
@@ -54,6 +56,7 @@ export function ProjectAttachmentsTab({
               projectId={projectId}
               file={file}
               onOpen={() => setShown(file)}
+              onRename={() => setRenamed(file)}
               onRemove={() => setDoomed(file)}
             />
           ))}
@@ -68,6 +71,15 @@ export function ProjectAttachmentsTab({
           attachmentId={shown.id}
           filename={shown.filename}
           contentType={shown.content_type}
+        />
+      )}
+
+      {renamed && (
+        <RenameAttachmentDialog
+          open
+          onOpenChange={(open) => !open && setRenamed(null)}
+          filename={renamed.filename}
+          onConfirm={(filename) => store.rename(renamed.id, filename)}
         />
       )}
 

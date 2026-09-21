@@ -158,3 +158,21 @@ async def test_withdrawing_a_file_leaves_nothing_behind(
     await files.remove(stored.id)
 
     assert await files.get(stored.id) is None
+
+
+async def test_a_new_name_is_written_back(db_session: AsyncSession) -> None:
+    who = await _who(db_session)
+    mission = await _mission(db_session, "Portail")
+    files = SqlProjectAttachmentRepository(db_session)
+    stored = await files.add(_file(mission, who, "projects/1/a.png"))
+    assert stored.id is not None
+
+    stored.rename("cahier de recette.pdf")
+    await files.update(stored)
+    await db_session.flush()
+
+    found = await files.get(stored.id)
+    assert found is not None
+    assert found.filename == "cahier de recette.pdf"
+    # The key does not follow the name: the bytes stay where they were put.
+    assert found.storage_key == "projects/1/a.png"

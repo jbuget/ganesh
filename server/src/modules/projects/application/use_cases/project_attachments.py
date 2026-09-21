@@ -9,6 +9,7 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 )
 from src.modules.projects.application.dtos.attachment_dto import (
     RemoveAttachmentCommand,
+    RenameAttachmentCommand,
     UploadAttachmentCommand,
 )
 from src.modules.projects.domain.entities.project_attachment import ProjectAttachment
@@ -144,6 +145,38 @@ class RemoveProjectAttachmentUseCase(_AttachmentUseCase):
         await self._attachments.remove(command.attachment_id)
         await self._store.delete(attachment.storage_key)
         await self._trace(AuditAction.ATTACHMENT_REMOVE, command.actor_id, attachment)
+        return attachment
+
+
+class RenameProjectAttachmentUseCase(_AttachmentUseCase):
+    """Calls a file something else. Anyone on the team may, as for a removal."""
+
+    async def execute(self, command: RenameAttachmentCommand) -> ProjectAttachment:
+        attachment = await self._attachments.get(command.attachment_id)
+        if not _carried_by(attachment, command.project_id):
+            raise EntityNotFoundError("The file cannot be found.")
+        assert attachment is not None
+
+        # Read before the entity takes the new one: the Journal says what it
+        # was called as much as what it is called now.
+        was = attachment.filename
+        attachment.rename(command.filename)
+        if attachment.filename == was:
+            # Nothing moved. A line saying « a renommé capture.png en
+            # capture.png » is noise in a register read project by project.
+            return attachment
+
+        await self._attachments.update(attachment)
+        await self._audit_logs.add(
+            AuditLog(
+                action=AuditAction.ATTACHMENT_RENAME,
+                actor_id=command.actor_id,
+                project_id=attachment.project_id,
+                old_value=was,
+                new_value=attachment.filename,
+                payload={"attachment_id": attachment.id},
+            )
+        )
         return attachment
 
 

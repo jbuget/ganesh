@@ -140,6 +140,7 @@ export * from "./readStateResponse";
 export * from "./recordedMissionResponse";
 export * from "./registryResponse";
 export * from "./removeMissionFromMonthParams";
+export * from "./renameAttachmentRequest";
 export * from "./reopenMonthParams";
 export * from "./roadmapMissionResponse";
 export * from "./roadmapResponse";
