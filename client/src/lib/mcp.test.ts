@@ -17,10 +17,14 @@ describe("what the MCP tab hands over", () => {
     }
   });
 
-  it("asks for exactly what the three tools open", () => {
-    expect([...MCP_SCOPES].sort()).toEqual(
-      [...new Set(MCP_TOOLS.map((tool) => tool.scope))].sort(),
+  it("asks for exactly what the tools open, second scopes included", () => {
+    // `also` counts: a reader handed the list without it records a review
+    // from their terminal and is refused the phase by the key they were
+    // given for exactly that.
+    const opened = MCP_TOOLS.flatMap((tool) =>
+      tool.also ? [tool.scope, tool.also] : [tool.scope],
     );
+    expect([...MCP_SCOPES].sort()).toEqual([...new Set(opened)].sort());
   });
 
   describe("each client's snippet", () => {

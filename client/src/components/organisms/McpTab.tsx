@@ -28,9 +28,11 @@ export function McpTab() {
           </code>
           . Une fois branché, votre terminal sait répondre à « où en est mon mois ? » ou
           « qu&apos;est-ce qui a bougé sur ce projet ? » sans quitter la ligne de
-          commande — et sait y déclarer votre temps. La seule écriture possible est
-          celle-là, et elle ne touche que votre mois : aucun outil n&apos;écrit dans
-          celui d&apos;un collègue.
+          commande — et sait y déclarer votre temps comme y consigner une revue de
+          projet. Deux écritures, donc, et chacune reste à sa place : le temps ne touche
+          que votre mois, aucun outil n&apos;écrivant dans celui d&apos;un collègue, et
+          une revue s&apos;écrit sur un projet, que toute l&apos;équipe tient de toute
+          façon.
         </p>
       </section>
 
@@ -105,7 +107,11 @@ export function McpTab() {
                 <code className="font-mono text-xs font-semibold text-slate-800">
                   {tool.name}
                 </code>
-                <span className="text-xs text-slate-500">{scopeLabel(tool.scope)}</span>
+                <span className="text-xs text-slate-500">
+                  {tool.also
+                    ? `${scopeLabel(tool.scope)}, et ${scopeLabel(tool.also)} pour la phase`
+                    : scopeLabel(tool.scope)}
+                </span>
               </div>
               <p className="text-sm text-slate-600">{tool.answers}</p>
             </li>
