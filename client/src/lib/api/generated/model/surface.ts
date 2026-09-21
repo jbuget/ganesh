@@ -23,6 +23,7 @@ export const Surface = {
   phase_progress: "phase_progress",
   assignment: "assignment",
   project_updates: "project_updates",
+  project_files: "project_files",
   planning: "planning",
   gazette: "gazette",
   mood: "mood",

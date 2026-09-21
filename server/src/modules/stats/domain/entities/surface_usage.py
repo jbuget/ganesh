@@ -43,6 +43,7 @@ class Surface(StrEnum):
     PHASE_PROGRESS = "phase_progress"
     ASSIGNMENT = "assignment"
     PROJECT_UPDATES = "project_updates"
+    PROJECT_FILES = "project_files"
     PLANNING = "planning"
     GAZETTE = "gazette"
     MOOD = "mood"
@@ -89,6 +90,13 @@ SURFACE_OF: dict[AuditAction, Surface] = {
     AuditAction.UPDATE_POST: Surface.PROJECT_UPDATES,
     AuditAction.UPDATE_EDIT: Surface.PROJECT_UPDATES,
     AuditAction.UPDATE_REMOVE: Surface.PROJECT_UPDATES,
+    # What a project carries besides words. A line of its own rather than one
+    # shared with the thread: an image pasted into an update and a report
+    # dropped on the tab are the same gesture on the same store, and the
+    # question this table answers is whether that store serves at all.
+    AuditAction.ATTACHMENT_ADD: Surface.PROJECT_FILES,
+    AuditAction.ATTACHMENT_RENAME: Surface.PROJECT_FILES,
+    AuditAction.ATTACHMENT_REMOVE: Surface.PROJECT_FILES,
     # Arbitrating what fits.
     AuditAction.SIMULATION_CREATE: Surface.PLANNING,
     AuditAction.SIMULATION_UPDATE: Surface.PLANNING,
