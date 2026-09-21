@@ -98,6 +98,7 @@ export function TimesheetPage() {
           <Button
             variant="outline"
             size="icon"
+            className="cursor-pointer"
             aria-label="Mois précédent"
             onClick={month.goToPreviousMonth}
           >
@@ -109,6 +110,7 @@ export function TimesheetPage() {
           <Button
             variant="outline"
             size="icon"
+            className="cursor-pointer"
             aria-label="Mois suivant"
             onClick={month.goToNextMonth}
           >
@@ -131,14 +133,20 @@ export function TimesheetPage() {
           </Button>
 
           {month.canValidate && (
-            <Button onClick={() => setValidateOpen(true)}>Valider le mois</Button>
+            <Button className="cursor-pointer" onClick={() => setValidateOpen(true)}>
+              Valider le mois
+            </Button>
           )}
 
           {/* Giving a month back to entry is a step backwards, not the outcome
               of the month: it does not carry the primary weight the validation
               does. */}
           {month.canReopen && (
-            <Button variant="outline" onClick={() => setReopenOpen(true)}>
+            <Button
+              variant="outline"
+              className="cursor-pointer"
+              onClick={() => setReopenOpen(true)}
+            >
               Rouvrir le mois
             </Button>
           )}
@@ -219,14 +227,19 @@ export function TimesheetPage() {
         />
       )}
 
-      <MonthAuditDialog
-        open={historyOpen}
-        onOpenChange={setHistoryOpen}
-        month={month.month}
-        label={formatMonth(cursor.year, cursor.month)}
-        userId={month.targetUserId}
-        teammate={month.viewedTeammateName}
-      />
+      {/* Mounted with the window rather than with the page: the log is read
+          when somebody asks for it, and read afresh every time — reopening it
+          after an entry must show that entry. */}
+      {historyOpen && (
+        <MonthAuditDialog
+          open
+          onOpenChange={setHistoryOpen}
+          month={month.month}
+          label={formatMonth(cursor.year, cursor.month)}
+          userId={month.targetUserId}
+          teammate={month.viewedTeammateName}
+        />
+      )}
 
       <ReopenMonthDialog
         open={reopenOpen}

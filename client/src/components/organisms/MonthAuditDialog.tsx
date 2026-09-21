@@ -1,7 +1,6 @@
 "use client";
 
-import { AuditLogRow } from "@/components/molecules/AuditLogRow";
-import { Button } from "@/components/ui/button";
+import { AuditLogList } from "@/components/organisms/AuditLogList";
 import {
   Dialog,
   DialogContent,
@@ -9,9 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { groupAuditByDay } from "@/lib/audit-log";
-import { formatSpelledDate } from "@/lib/dates";
-import { STRONG_RULE } from "@/lib/table-frame";
 import { useMonthAudit } from "@/lib/use-month-audit";
 
 interface MonthAuditDialogProps {
@@ -47,7 +43,6 @@ export function MonthAuditDialog({
   teammate,
 }: MonthAuditDialogProps) {
   const log = useMonthAudit(month, userId);
-  const days = groupAuditByDay(log.entries ?? []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -64,62 +59,11 @@ export function MonthAuditDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {log.entries === null && <p className="text-sm text-slate-400">Chargement…</p>}
-
-        {log.entries?.length === 0 && (
-          <p className="py-6 text-center text-sm text-slate-400">
-            Rien n&apos;a encore été enregistré sur ce mois.
-          </p>
-        )}
-
-        {days.length > 0 && (
-          <div className="space-y-3">
-            {/* The tally before the lines: it says how far the log goes, which
-                a page of fifty on its own never could. */}
-            <p className="text-xs text-slate-500">
-              {log.total > 1 ? `${log.total} gestes enregistrés` : "1 geste enregistré"}
-            </p>
-
-            <div className={`overflow-hidden border ${STRONG_RULE}`}>
-              {days.map(({ day, entries }, rank) => (
-                <section key={day}>
-                  {/* The day carries the strong rule above and below: it breaks
-                      the reading in two, where a line between two gestures only
-                      separates them. The first one does without the rule above,
-                      the frame already closing the log there. */}
-                  <h3
-                    className={`border-b bg-white px-3 py-1.5 text-xs font-medium text-slate-600 ${STRONG_RULE} ${rank > 0 ? "border-t" : ""}`}
-                  >
-                    {formatSpelledDate(day)}
-                  </h3>
-                  <ul className="bg-slate-50">
-                    {entries.map((entry) => (
-                      <AuditLogRow
-                        key={entry.id}
-                        entry={entry}
-                        reading={{ read: "month" }}
-                      />
-                    ))}
-                  </ul>
-                </section>
-              ))}
-            </div>
-
-            {log.hasMore && (
-              <div className="flex justify-center">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="cursor-pointer"
-                  disabled={log.busy}
-                  onClick={() => void log.loadMore()}
-                >
-                  {log.busy ? "Chargement…" : "Voir plus"}
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+        <AuditLogList
+          log={log}
+          reading={{ read: "month" }}
+          emptiness="Rien n'a encore été enregistré sur ce mois."
+        />
       </DialogContent>
     </Dialog>
   );

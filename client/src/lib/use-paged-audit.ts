@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import type { AuditLogPageResponse } from "@/lib/api/generated/model";
+import type {
+  AuditLogEntryResponse,
+  AuditLogPageResponse,
+} from "@/lib/api/generated/model";
 
 /**
  * How many lines one page carries.
@@ -15,6 +18,17 @@ export const PAGE_SIZE = 50;
 /** What has been read, and of what it is the log. */
 interface ReadSoFar extends AuditLogPageResponse {
   subject: string;
+}
+
+/** A log being read, whatever it is the log of. */
+export interface PagedAuditLog {
+  /** Null while the first page is on its way. */
+  entries: AuditLogEntryResponse[] | null;
+  /** How long the whole log is, not how much of it is on screen. */
+  total: number;
+  busy: boolean;
+  hasMore: boolean;
+  loadMore: () => Promise<void>;
 }
 
 /**
@@ -36,7 +50,7 @@ export function usePagedAudit(
    * would be read again for ever.
    */
   read: (offset: number) => Promise<AuditLogPageResponse>,
-) {
+): PagedAuditLog {
   const [state, setState] = useState<ReadSoFar | null>(null);
   const [busy, setBusy] = useState(false);
 

@@ -2,14 +2,11 @@
 
 from datetime import datetime
 
-from src.modules.audit_logs.application.dtos.audit_log_dto import (
-    AuditLogPage,
-    SignedAuditLog,
-)
+from src.modules.audit_logs.application.dtos.audit_log_dto import AuditLogPage
+from src.modules.audit_logs.application.services.signing import sign
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
-from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
 
@@ -33,24 +30,7 @@ class ListAuditLogUseCase:
         self, limit: int, offset: int, since: datetime | None = None
     ) -> AuditLogPage:
         logs = await self._audit_logs.list_all(limit, offset, since)
-        # Deactivated people keep signing what they did while they were there.
-        people: dict[int, User] = {
-            person.id: person
-            for person in await self._users.list_all(include_inactive=True)
-            if person.id is not None
-        }
         return AuditLogPage(
-            entries=[
-                SignedAuditLog(
-                    log=log,
-                    actor=people.get(log.actor_id),
-                    target_user=(
-                        None
-                        if log.target_user_id is None
-                        else people.get(log.target_user_id)
-                    ),
-                )
-                for log in logs
-            ],
+            entries=await sign(logs, self._users),
             total=await self._audit_logs.count_all(since),
         )

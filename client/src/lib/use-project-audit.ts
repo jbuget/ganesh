@@ -6,8 +6,6 @@ import type { AuditLogPageResponse } from "@/lib/api/generated/model";
 import { listProjectAuditLog } from "@/lib/api/generated/projects/projects";
 import { PAGE_SIZE, usePagedAudit } from "@/lib/use-paged-audit";
 
-export { PAGE_SIZE };
-
 /** A mission's log, read page by page. */
 export function useProjectAudit(projectId: number) {
   const read = useCallback(

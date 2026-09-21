@@ -2,18 +2,14 @@
 
 from datetime import date
 
-from src.modules.audit_logs.application.dtos.audit_log_dto import (
-    AuditLogPage,
-    SignedAuditLog,
-)
+from src.modules.audit_logs.application.dtos.audit_log_dto import AuditLogPage
+from src.modules.audit_logs.application.services.signing import sign
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
-from src.modules.projects.domain.entities.project import Project
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
-from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
 
@@ -46,33 +42,7 @@ class ListMonthAuditLogUseCase:
         logs = await self._audit_logs.list_for_user_month(
             target_user_id, month, limit, offset
         )
-        # Deactivated people keep signing what they did while they were there,
-        # and an archived mission keeps naming the days booked against it.
-        people: dict[int, User] = {
-            person.id: person
-            for person in await self._users.list_all(include_inactive=True)
-            if person.id is not None
-        }
-        missions: dict[int, Project] = {
-            mission.id: mission
-            for mission in await self._projects.list_all(include_inactive=True)
-            if mission.id is not None
-        }
         return AuditLogPage(
-            entries=[
-                SignedAuditLog(
-                    log=log,
-                    actor=people.get(log.actor_id),
-                    target_user=(
-                        None
-                        if log.target_user_id is None
-                        else people.get(log.target_user_id)
-                    ),
-                    project=(
-                        None if log.project_id is None else missions.get(log.project_id)
-                    ),
-                )
-                for log in logs
-            ],
+            entries=await sign(logs, self._users, self._projects),
             total=await self._audit_logs.count_for_user_month(target_user_id, month),
         )
