@@ -138,7 +138,9 @@ export function PlanningPage() {
 
           {plan && (
             <>
-              <TabsContent value="missions" className="min-h-0 flex-1 overflow-auto">
+              {/* The panel gives the height; the scrolling belongs to the timeline,
+                  which carries the frame that closes it. */}
+              <TabsContent value="missions" className="min-h-0 flex-1">
                 <WorkloadTimeline
                   missions={missions}
                   weeks={weeks}
@@ -151,7 +153,7 @@ export function PlanningPage() {
                 />
               </TabsContent>
 
-              <TabsContent value="people" className="min-h-0 flex-1 overflow-auto">
+              <TabsContent value="people" className="min-h-0 flex-1">
                 <CapacityTimeline people={plan.people} weeks={weeks} />
               </TabsContent>
             </>

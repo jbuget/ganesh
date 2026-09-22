@@ -30,7 +30,13 @@ import type {
 } from "@/lib/api/generated/model";
 import { formatMonthOf } from "@/lib/dates";
 import { opensMonth } from "@/lib/planning";
-import { STRONG_SEPARATOR, TABLE_FRAME, TABLE_HEADER } from "@/lib/table-frame";
+import {
+  STRONG_SEPARATOR,
+  TABLE_HEADER,
+  TABLE_LINES,
+  TABLE_SPREAD,
+  TABLE_WINDOW,
+} from "@/lib/table-frame";
 
 interface WorkloadTimelineProps {
   missions: PlannedMissionResponse[];
@@ -92,56 +98,67 @@ export function WorkloadTimeline({
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      <div className="w-max pr-6 [&_[data-slot=table-container]]:overflow-visible">
-        {/* The same frame as every other table of the application: a strong
-            rule around, faint lines within, and the pinned columns closed off
-            from the weeks they carry. */}
-        <Table className={`border-separate border-spacing-0 ${TABLE_FRAME}`}>
-          {/* The band of titles sits above the pinned columns, which cross the
-              horizontal scrolling: it has to be raised over them too. */}
-          <TableHeader className={`${TABLE_HEADER} z-20`}>
-            <TableRow>
-              <TableHead className="sticky left-0 z-30 w-[7.5rem]">Rang</TableHead>
-              <TableHead className={`sticky left-[7.5rem] z-30 ${STRONG_SEPARATOR}`}>
-                Projet
-              </TableHead>
-              <TableHead className="w-40">Intervenants</TableHead>
-              <TableHead className="w-24 text-right">Reste (j)</TableHead>
-              <TableHead className="w-64">Atterrissage</TableHead>
-              {weeks.map((week, index) => (
-                <TableHead key={week} className="w-14 px-1">
-                  <WeekColumnHeader
-                    week={week}
-                    opensMonth={opensMonth(weeks, index)}
-                    monthLabel={formatMonthOf(week)}
-                  />
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
+      {/* The strong rule closes the window, not the table: wider and taller
+          than the room it has, the table would carry its right edge and its
+          bottom off screen and leave the reading cut raw.
 
-          <TableBody>
-            <SortableContext
-              items={missions.map((mission) => mission.project_id)}
-              strategy={verticalListSortingStrategy}
-            >
-              {missions.map((mission, rank) => (
-                <PlannedMissionRow
-                  key={mission.project_id}
-                  mission={mission}
-                  weeks={weeks}
-                  rank={rank}
-                  isLast={rank === missions.length - 1}
-                  team={team}
-                  onTop={onTop}
-                  onUp={onUp}
-                  onDown={onDown}
-                  onStaff={onStaff}
-                />
-              ))}
-            </SortableContext>
-          </TableBody>
-        </Table>
+          The window is named and focusable: the weeks hold no control to tab
+          through, so without it they could only ever be reached with a
+          mouse. */}
+      <div
+        role="region"
+        aria-label="Projets à planifier, semaine par semaine"
+        tabIndex={0}
+        className={`h-full ${TABLE_WINDOW}`}
+      >
+        <div className={TABLE_SPREAD}>
+          <Table className={`border-separate border-spacing-0 ${TABLE_LINES}`}>
+            {/* The band of titles sits above the pinned columns, which cross the
+                horizontal scrolling: it has to be raised over them too. */}
+            <TableHeader className={`${TABLE_HEADER} z-20`}>
+              <TableRow>
+                <TableHead className="sticky left-0 z-30 w-[7.5rem]">Rang</TableHead>
+                <TableHead className={`sticky left-[7.5rem] z-30 ${STRONG_SEPARATOR}`}>
+                  Projet
+                </TableHead>
+                <TableHead className="w-40">Intervenants</TableHead>
+                <TableHead className="w-24 text-right">Reste (j)</TableHead>
+                <TableHead className="w-64">Atterrissage</TableHead>
+                {weeks.map((week, index) => (
+                  <TableHead key={week} className="w-14 px-1">
+                    <WeekColumnHeader
+                      week={week}
+                      opensMonth={opensMonth(weeks, index)}
+                      monthLabel={formatMonthOf(week)}
+                    />
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              <SortableContext
+                items={missions.map((mission) => mission.project_id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {missions.map((mission, rank) => (
+                  <PlannedMissionRow
+                    key={mission.project_id}
+                    mission={mission}
+                    weeks={weeks}
+                    rank={rank}
+                    isLast={rank === missions.length - 1}
+                    team={team}
+                    onTop={onTop}
+                    onUp={onUp}
+                    onDown={onDown}
+                    onStaff={onStaff}
+                  />
+                ))}
+              </SortableContext>
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </DndContext>
   );

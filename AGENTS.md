@@ -125,6 +125,17 @@ Wrap the table in
 container otherwise opens a scrolling context that would hold the pinned header
 inside the table.
 
+**A table read through a window carries its frame on the window**, not on its
+cells: `TABLE_WINDOW` on the element that scrolls, `TABLE_SPREAD` on the table
+it holds, `TABLE_LINES` for what divides it. A table wider and taller than the
+room it has would otherwise send its right edge and its bottom off screen, and
+the reading would end cut raw at the viewport. « Planification » and « Feuille
+de route » both read this way; every table read whole keeps `TABLE_FRAME`.
+
+**A window is a scrolling region, so it takes `tabIndex={0}` and a name.** A
+grid of figures holds nothing focusable to tab through: without a stop of its
+own, the weeks on the right could only ever be reached with a mouse.
+
 **The strong rule is `STRONG_RULE`, and it binds outside `<table>` too.** A
 screen that draws its own frame in plain elements — the roadmap does, its rows
 being bars rather than cells — still closes it at that weight, and never at

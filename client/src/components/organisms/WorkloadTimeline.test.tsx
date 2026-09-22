@@ -174,6 +174,16 @@ describe("WorkloadTimeline", () => {
     ).toBeInTheDocument();
   });
 
+  it("offers the weeks to a keyboard, which has nothing else to reach them by", () => {
+    draw([aMission()]);
+
+    const window = screen.getByRole("region", {
+      name: "Projets à planifier, semaine par semaine",
+    });
+
+    expect(window).toHaveAttribute("tabindex", "0");
+  });
+
   it("announces an empty backlog in its own words", () => {
     draw([]);
 

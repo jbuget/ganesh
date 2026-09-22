@@ -60,3 +60,46 @@ export const TABLE_HEADER =
  * begins.
  */
 export const STRONG_SEPARATOR = "border-r border-r-slate-500";
+
+/**
+ * The window a table is read through, when it scrolls inside its own box.
+ *
+ * A frame carried by the cells closes a table that is read whole. A table
+ * wider and taller than the room it has is not: its right edge and its bottom
+ * sit somewhere off screen, and what one actually sees is content cut raw at
+ * the viewport — the rule on the left, nothing on the other three sides.
+ *
+ * So the frame moves to what is fixed: the window. It stays closed whatever
+ * the scroll position, and the table underneath draws only what divides it.
+ * The « Feuille de route » already reads this way, in plain elements; the
+ * planning reads it through a `<table>`, and both close at the same weight.
+ *
+ * Put it on the element that scrolls, with `TABLE_SPREAD` on the table it
+ * holds. A window is a scrolling region a keyboard has to be able to reach:
+ * it takes `tabIndex={0}` and a name of its own, since a grid of figures
+ * holds nothing focusable of its own to arrow through.
+ */
+export const TABLE_WINDOW = `overflow-auto border bg-white ${STRONG_RULE}`;
+
+/**
+ * The table inside that window: as wide as what it holds, never narrower than
+ * the window itself.
+ *
+ * `w-max` alone leaves a short horizon floating in a box it does not fill;
+ * `min-w-full` alone would squeeze the weeks. The shadcn container is held
+ * open besides, or it would scroll on its own account and keep the pinned
+ * header inside the table.
+ */
+export const TABLE_SPREAD =
+  "w-max min-w-full [&_[data-slot=table-container]]:overflow-visible";
+
+/**
+ * What divides a table whose frame is carried by its window.
+ *
+ * The faint lines alone, and none under the last row: the window closes the
+ * table, so a rule there would double it.
+ */
+export const TABLE_LINES = [
+  "[&_tbody_td]:border-b [&_tbody_td]:border-b-slate-200",
+  "[&_tbody_tr:last-child_td]:border-b-0",
+].join(" ");
