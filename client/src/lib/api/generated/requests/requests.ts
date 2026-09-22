@@ -21,11 +21,13 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AuditLogPageResponse,
   ConvertRequestRequest,
   DecideRequestRequest,
   FileRequestRequest,
   FillInRequestRequest,
   HTTPValidationError,
+  ListRequestAuditLogParams,
   RequestPersonResponse,
   RequestResponse,
 } from "../model";
@@ -1507,3 +1509,198 @@ export const useConvertRequest = <TError = HTTPValidationError, TContext = unkno
 > => {
   return useMutation(getConvertRequestMutationOptions(options), queryClient);
 };
+export type listRequestAuditLogResponse200 = {
+  data: AuditLogPageResponse;
+  status: 200;
+};
+
+export type listRequestAuditLogResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listRequestAuditLogResponseSuccess = listRequestAuditLogResponse200 & {
+  headers: Headers;
+};
+export type listRequestAuditLogResponseError = listRequestAuditLogResponse422 & {
+  headers: Headers;
+};
+
+export type listRequestAuditLogResponse =
+  listRequestAuditLogResponseSuccess | listRequestAuditLogResponseError;
+
+export const getListRequestAuditLogUrl = (
+  requestId: number,
+  params?: ListRequestAuditLogParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/requests/${requestId}/audit?${stringifiedParams}`
+    : `/api/v1/requests/${requestId}/audit`;
+};
+
+/**
+ * Everything that happened to the need, most recent first.
+ *
+ * The team's reading, and the one route of this module that says so by
+ * asking for the door of the application: what a requester has to know of
+ * their own need — where it stands, and why — their screen already tells
+ * them, and a list of gestures would say it a second time in a colder
+ * voice.
+ * @summary List Request Audit Log
+ */
+export const listRequestAuditLog = async (
+  requestId: number,
+  params?: ListRequestAuditLogParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listRequestAuditLogResponse> => {
+  return bffFetcher<listRequestAuditLogResponse>(
+    getListRequestAuditLogUrl(requestId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListRequestAuditLogQueryKey = (
+  requestId: number,
+  params?: ListRequestAuditLogParams,
+) => {
+  return [`/api/v1/requests/${requestId}/audit`, ...(params ? [params] : [])] as const;
+};
+
+export const getListRequestAuditLogQueryOptions = <
+  TData = Awaited<ReturnType<typeof listRequestAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  requestId: number,
+  params?: ListRequestAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listRequestAuditLog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListRequestAuditLogQueryKey(requestId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listRequestAuditLog>>> = ({
+    signal,
+  }) => listRequestAuditLog(requestId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: requestId !== null && requestId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listRequestAuditLog>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListRequestAuditLogQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listRequestAuditLog>>
+>;
+export type ListRequestAuditLogQueryError = HTTPValidationError;
+
+export function useListRequestAuditLog<
+  TData = Awaited<ReturnType<typeof listRequestAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  requestId: number,
+  params: undefined | ListRequestAuditLogParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listRequestAuditLog>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRequestAuditLog>>,
+          TError,
+          Awaited<ReturnType<typeof listRequestAuditLog>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListRequestAuditLog<
+  TData = Awaited<ReturnType<typeof listRequestAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  requestId: number,
+  params?: ListRequestAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listRequestAuditLog>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRequestAuditLog>>,
+          TError,
+          Awaited<ReturnType<typeof listRequestAuditLog>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListRequestAuditLog<
+  TData = Awaited<ReturnType<typeof listRequestAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  requestId: number,
+  params?: ListRequestAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listRequestAuditLog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Request Audit Log
+ */
+
+export function useListRequestAuditLog<
+  TData = Awaited<ReturnType<typeof listRequestAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  requestId: number,
+  params?: ListRequestAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listRequestAuditLog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListRequestAuditLogQueryOptions(requestId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}

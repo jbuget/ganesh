@@ -19,6 +19,7 @@ function entry(
     project: null,
     day: null,
     field: null,
+    note: null,
     old_value: null,
     new_value: null,
     ...over,
@@ -384,6 +385,59 @@ describe("auditSentence", () => {
       ).toEqual({
         action: "a converti la demande « Relances de paiement à la main » en projet",
       });
+    });
+  });
+
+  describe("what happens to a need", () => {
+    it("names each gesture of the recueil", () => {
+      const said = (action: AuditAction, over = {}) =>
+        auditSentence(entry(action, over), { read: "request" }).action;
+
+      expect(said("request.create")).toBe("a déposé la demande");
+      expect(said("request.update")).toBe("a modifié la demande");
+      expect(said("request.submit")).toBe("a soumis la demande");
+      expect(said("request.withdraw")).toBe("a repris la demande");
+      expect(said("request.delete", { old_value: "Relances" })).toBe(
+        "a supprimé la demande « Relances »",
+      );
+    });
+
+    it("says what arbitrating decided, and why", () => {
+      // An arbitration is played again as often as it has to be: the sheet
+      // carries the last reason, and the ones before it live here.
+      expect(
+        auditSentence(
+          entry("request.decide", {
+            new_value: "rejected",
+            note: "Déjà couvert par l'extranet.",
+          }),
+          { read: "request" },
+        ),
+      ).toEqual({
+        action: "a refusé la demande",
+        to: "Déjà couvert par l'extranet.",
+      });
+    });
+
+    it("says « reportée » for a « plus tard »", () => {
+      expect(
+        auditSentence(entry("request.decide", { new_value: "deferred" }), {
+          read: "request",
+        }).action,
+      ).toBe("a reporté la demande");
+    });
+
+    it("names the need on a mission's log, and not on its own", () => {
+      // The conversion is the one gesture read in two places: its line
+      // carries both identifiers.
+      const converted = entry("request.convert", { new_value: "Relances" });
+
+      expect(auditSentence(converted).action).toBe(
+        "a converti la demande « Relances » en projet",
+      );
+      expect(auditSentence(converted, { read: "request" }).action).toBe(
+        "a converti la demande en projet",
+      );
     });
   });
 });

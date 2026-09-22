@@ -4,6 +4,9 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
+from src.modules.audit_logs.application.use_cases.list_request_audit_log import (
+    ListRequestAuditLogUseCase,
+)
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
@@ -191,3 +194,10 @@ def get_convert_request_use_case(
         details=details,
         audit_logs=audit_logs,
     )
+
+
+def get_request_audit_log_use_case(
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    users: UserRepository = Depends(get_user_repository),
+) -> ListRequestAuditLogUseCase:
+    return ListRequestAuditLogUseCase(audit_logs=audit_logs, users=users)

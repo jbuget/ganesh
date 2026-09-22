@@ -19,6 +19,7 @@ function line(id: number): AuditLogEntryResponse {
     project: null,
     day: null,
     field: "label",
+    note: null,
     old_value: null,
     new_value: null,
   };

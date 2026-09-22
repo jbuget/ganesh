@@ -28,7 +28,7 @@ import { CRITICALITIES, SERVICE_LINKS, SERVICE_TYPES } from "@/lib/service-sheet
  * mission; a month's says whose month and which one.
  */
 export interface AuditReading {
-  read: "project" | "month";
+  read: "project" | "month" | "request";
 }
 
 const ON_A_MISSION: AuditReading = { read: "project" };
@@ -229,6 +229,34 @@ function role(raw: string | null, side: "joined" | "left"): string {
   return (ROLES[raw ?? ""] ?? ROLES.contributor)[side];
 }
 
+/**
+ * What arbitrating said, as one says it.
+ *
+ * Masculine and invariable: the sentence reads « a refusé la demande », and a
+ * participle placed before its object does not agree with it. The feminine
+ * would pass every type check and read wrong to the whole team.
+ */
+const DECISIONS: Record<string, string> = {
+  accepted: "accepté",
+  rejected: "refusé",
+  deferred: "reporté",
+};
+
+function decision(raw: string | null): string {
+  return DECISIONS[raw ?? ""] ?? "arbitré";
+}
+
+/**
+ * The motive of a decision, shown beside it.
+ *
+ * A refusal and a « plus tard » carry one — the domain demands it — and the
+ * log would be the poorer for hiding what the screen shows: a decision read
+ * six months later without its reason is a decision one plays again.
+ */
+function motive(entry: AuditLogEntryResponse): { to?: string } {
+  return entry.note ? { to: entry.note } : {};
+}
+
 /** One line of the log, said in French. */
 export function auditSentence(
   entry: AuditLogEntryResponse,
@@ -336,10 +364,32 @@ export function auditSentence(
 
     // Both names, and the log's own two columns carry them: what it was
     // called is as much the fact as what it is called now.
-    // The one gesture of a need that reaches a mission's journal: it carries
-    // both identifiers, and this is where a project says what it was born of.
+    // What happens to a need. Only the conversion reaches a mission's
+    // journal — its line carries both identifiers — and it is therefore the
+    // only one of the six said two ways: on the mission it names the need it
+    // came from, on the need it names what became of it.
+    case "request.create":
+      return { action: "a déposé la demande" };
+
+    case "request.update":
+      return { action: "a modifié la demande" };
+
+    case "request.submit":
+      return { action: "a soumis la demande" };
+
+    case "request.withdraw":
+      return { action: "a repris la demande" };
+
+    case "request.delete":
+      return { action: `a supprimé la demande « ${before ?? ""} »` };
+
+    case "request.decide":
+      return { action: `a ${decision(after)} la demande`, ...motive(entry) };
+
     case "request.convert":
-      return { action: `a converti la demande « ${after ?? ""} » en projet` };
+      return reading.read === "request"
+        ? { action: "a converti la demande en projet" }
+        : { action: `a converti la demande « ${after ?? ""} » en projet` };
 
     case "attachment.rename":
       return {

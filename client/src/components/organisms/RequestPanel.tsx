@@ -24,6 +24,13 @@ interface RequestPanelProps {
   onClose: () => void;
   /** What the team may do with it, when the reader is on the team. */
   footer?: React.ReactNode;
+  /**
+   * What closes the sheet, when the reader is allowed to see it.
+   *
+   * The journal is the team's reading: what a requester has to know of their
+   * own need — where it stands, and why — the sheet above already tells them.
+   */
+  journal?: React.ReactNode;
 }
 
 /**
@@ -45,6 +52,7 @@ export function RequestPanel({
   onDelete,
   onClose,
   footer,
+  journal,
 }: RequestPanelProps) {
   const [busy, setBusy] = useState(false);
   const editable = mine && request.state === "draft";
@@ -110,6 +118,8 @@ export function RequestPanel({
         )}
 
         <RequestSheet request={request} editable={editable} onChange={onChange} />
+
+        {journal}
       </div>
 
       {mine && (

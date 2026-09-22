@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/atoms/PageHeader";
 import { NewRequestDialog } from "@/components/molecules/NewRequestDialog";
 import { RequestFilters } from "@/components/molecules/RequestFilters";
 import { PageLayout } from "@/components/organisms/PageLayout";
+import { RequestAuditSection } from "@/components/organisms/RequestAuditSection";
 import { RequestPanel } from "@/components/organisms/RequestPanel";
 import { RequestsTable } from "@/components/organisms/RequestsTable";
 import { Button } from "@/components/ui/button";
@@ -105,6 +106,7 @@ export function RequestsPage() {
             panel.close();
           }}
           onClose={panel.close}
+          journal={<RequestAuditSection requestId={opened.id} />}
           footer={
             mayArbitrate(opened, screen.user) ? (
               <footer className="shrink-0 space-y-2 border-t border-slate-200 px-5 py-4">

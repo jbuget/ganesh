@@ -21,6 +21,7 @@ function declared(id: number, at: string): AuditLogEntryResponse {
     project: { id: 10, label: "WAATcher" },
     day: "2026-09-14",
     field: null,
+    note: null,
     old_value: null,
     new_value: "1.0",
   };

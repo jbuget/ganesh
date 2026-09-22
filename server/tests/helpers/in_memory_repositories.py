@@ -386,6 +386,21 @@ class InMemoryAuditLogRepository(AuditLogRepository):
     async def count_for_project(self, project_id: int) -> int:
         return len(self._for_project(project_id))
 
+    def _for_request(self, request_id: int) -> list[AuditLog]:
+        return sorted(
+            (log for log in self.logs if log.request_id == request_id),
+            key=lambda log: (log.at, log.id or 0),
+            reverse=True,
+        )
+
+    async def list_for_request(
+        self, request_id: int, limit: int, offset: int
+    ) -> list[AuditLog]:
+        return self._for_request(request_id)[offset : offset + limit]
+
+    async def count_for_request(self, request_id: int) -> int:
+        return len(self._for_request(request_id))
+
     def _all(self, since: datetime | None) -> list[AuditLog]:
         return sorted(
             (log for log in self.logs if since is None or log.at >= since),

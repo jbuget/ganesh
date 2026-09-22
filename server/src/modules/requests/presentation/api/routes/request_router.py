@@ -10,11 +10,23 @@ says who may write it, hand it over or take it back, and the route only
 passes on who is asking.
 """
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
-from src.modules.auth.presentation.dependencies import get_signed_in_user
+from src.modules.audit_logs.application.use_cases.list_request_audit_log import (
+    ListRequestAuditLogUseCase,
+)
+from src.modules.audit_logs.presentation.api.mappers.audit_log_mapper import (
+    to_audit_log_page_response,
+)
+from src.modules.audit_logs.presentation.api.schemas.audit_log_schemas import (
+    AuditLogPageResponse,
+)
+from src.modules.auth.presentation.dependencies import (
+    get_current_user,
+    get_signed_in_user,
+)
 from src.modules.requests.application.dtos.request_dto import (
     ConvertRequestCommand,
     DecideRequestCommand,
@@ -65,6 +77,7 @@ from src.modules.requests.presentation.dependencies import (
     get_file_request_use_case,
     get_fill_in_request_use_case,
     get_my_requests_use_case,
+    get_request_audit_log_use_case,
     get_request_use_case,
     get_requests_use_case,
     get_sponsors_use_case,
@@ -291,3 +304,28 @@ async def convert_request(
     )
     await session.commit()
     return to_request_response(detail)
+
+
+@router.get(
+    "/{request_id}/audit",
+    response_model=AuditLogPageResponse,
+    operation_id="listRequestAuditLog",
+)
+async def list_request_audit_log(
+    request_id: int,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    _: User = Depends(get_current_user),
+    use_case: ListRequestAuditLogUseCase = Depends(get_request_audit_log_use_case),
+) -> AuditLogPageResponse:
+    """Everything that happened to the need, most recent first.
+
+    The team's reading, and the one route of this module that says so by
+    asking for the door of the application: what a requester has to know of
+    their own need — where it stands, and why — their screen already tells
+    them, and a list of gestures would say it a second time in a colder
+    voice.
+    """
+    return to_audit_log_page_response(
+        await use_case.execute(request_id=request_id, limit=limit, offset=offset)
+    )

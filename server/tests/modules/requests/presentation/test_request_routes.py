@@ -8,7 +8,13 @@ from httpx import ASGITransport, AsyncClient
 
 from src.core.config import get_settings
 from src.main import app
-from src.modules.auth.presentation.dependencies import get_signed_in_user
+from src.modules.audit_logs.application.use_cases.list_request_audit_log import (
+    ListRequestAuditLogUseCase,
+)
+from src.modules.auth.presentation.dependencies import (
+    get_current_user,
+    get_signed_in_user,
+)
 from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.requests.application.use_cases.convert_request import (
     ConvertRequestUseCase,
@@ -42,6 +48,7 @@ from src.modules.requests.presentation.dependencies import (
     get_file_request_use_case,
     get_fill_in_request_use_case,
     get_my_requests_use_case,
+    get_request_audit_log_use_case,
     get_request_use_case,
     get_requests_use_case,
     get_sponsors_use_case,
@@ -163,6 +170,9 @@ def sign_in(as_user: User = METIER) -> Screen:
     )
     app.dependency_overrides[get_requests_use_case] = lambda: ListRequestsUseCase(
         users=users, requests=store
+    )
+    app.dependency_overrides[get_request_audit_log_use_case] = (
+        lambda: ListRequestAuditLogUseCase(audit_logs=audit, users=users)
     )
     app.dependency_overrides[get_decide_request_use_case] = (
         lambda: DecideRequestUseCase(users=users, requests=store, audit_logs=audit)
@@ -414,3 +424,32 @@ async def test_a_need_nobody_weighed_becomes_no_mission() -> None:
     )
 
     assert response.status_code == 409
+
+
+async def test_the_team_reads_the_journal_of_a_need() -> None:
+    """Every gesture was traced from the first day; this is what reads them."""
+    screen = sign_in()
+    request_id = await handed_over(screen)
+
+    app.dependency_overrides[get_current_user] = lambda: MANAGER
+    response = await screen.client.get(f"{REQUESTS}/{request_id}/audit")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 3
+    # Most recent first: handed over, written, opened.
+    assert [line["action"] for line in body["entries"]] == [
+        "request.submit",
+        "request.update",
+        "request.create",
+    ]
+
+
+async def test_the_journal_of_a_need_is_the_teams_reading() -> None:
+    """A requester is told where their need stands and why, not by a log."""
+    screen = sign_in()
+    request_id = await handed_over(screen)
+
+    response = await screen.client.get(f"{REQUESTS}/{request_id}/audit")
+
+    assert response.status_code == 403

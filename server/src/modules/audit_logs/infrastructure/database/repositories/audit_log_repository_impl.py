@@ -110,6 +110,28 @@ class SqlAuditLogRepository(AuditLogRepository):
         )
         return result.scalar_one()
 
+    async def list_for_request(
+        self, request_id: int, limit: int, offset: int
+    ) -> list[AuditLog]:
+        # Same tie-break as a mission's log: one gesture writing several lines
+        # must not shuffle them between two reads.
+        result = await self._session.execute(
+            select(AuditLogModel)
+            .where(AuditLogModel.request_id == request_id)
+            .order_by(AuditLogModel.at.desc(), AuditLogModel.id.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return [to_entity(model) for model in result.scalars().all()]
+
+    async def count_for_request(self, request_id: int) -> int:
+        result = await self._session.execute(
+            select(func.count())
+            .select_from(AuditLogModel)
+            .where(AuditLogModel.request_id == request_id)
+        )
+        return int(result.scalar_one())
+
     async def list_all(
         self, limit: int, offset: int, since: datetime | None = None
     ) -> list[AuditLog]:

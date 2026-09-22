@@ -85,6 +85,7 @@ export * from "./listMonthAuditLogParams";
 export * from "./listNotificationsParams";
 export * from "./listProjectAuditLogParams";
 export * from "./listProjectsParams";
+export * from "./listRequestAuditLogParams";
 export * from "./listTouchedProjectsParams";
 export * from "./listUsersParams";
 export * from "./localSignInRequest";
