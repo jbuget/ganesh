@@ -43,7 +43,9 @@ from src.modules.projects.presentation.dependencies import (
     get_project_assignee_repository,
     get_project_detail_repository,
 )
+from src.modules.users.domain.repositories.rhythm_repository import RhythmRepository
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.modules.users.presentation.dependencies import get_rhythm_repository
 
 
 def get_workload_plan_use_case(
@@ -51,9 +53,14 @@ def get_workload_plan_use_case(
     entries: EntryRepository = Depends(get_entry_repository),
     assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
     users: UserRepository = Depends(get_user_repository),
+    rhythms: RhythmRepository = Depends(get_rhythm_repository),
 ) -> GetWorkloadPlanUseCase:
     return GetWorkloadPlanUseCase(
-        projects=projects, entries=entries, assignees=assignees, users=users
+        projects=projects,
+        entries=entries,
+        assignees=assignees,
+        users=users,
+        rhythms=rhythms,
     )
 
 

@@ -15,6 +15,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date
 
+from src.modules.calendar.domain.services.expectations import DailyExpectation
 from src.modules.planning.domain.entities.capacity import (
     EPSILON,
     WEEKLY_RESERVE_DAYS,
@@ -37,6 +38,7 @@ def project_workload(
     days: Sequence[date],
     booked: Mapping[int, Mapping[date, float]],
     user_ids: Sequence[int],
+    rhythms: Mapping[int, DailyExpectation] | None = None,
 ) -> WorkloadPlan:
     """Lands the backlog, in the order given, on the days given.
 
@@ -46,7 +48,7 @@ def project_workload(
     """
     window = list(days)
     weeks = _weeks_of(window)
-    capacity = Capacity.over(user_ids, window, booked)
+    capacity = Capacity.over(user_ids, window, booked, rhythms)
 
     runs = [_Run(mission) for mission in backlog]
     plannable = [run for run in runs if run.blocker is None]

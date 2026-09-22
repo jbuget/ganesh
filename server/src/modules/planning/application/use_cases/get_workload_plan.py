@@ -37,6 +37,7 @@ from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
 from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.repositories.rhythm_repository import RhythmRepository
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.utils import clock
 
@@ -50,11 +51,13 @@ class GetWorkloadPlanUseCase:
         entries: EntryRepository,
         assignees: ProjectAssigneeRepository,
         users: UserRepository,
+        rhythms: RhythmRepository,
     ) -> None:
         self._projects = projects
         self._entries = entries
         self._assignees = assignees
         self._users = users
+        self._rhythms = rhythms
 
     async def execute(
         self,
@@ -103,6 +106,9 @@ class GetWorkloadPlanUseCase:
             days=working_days_between(start, end),
             booked=await self._entries.sum_by_user_and_day(start, end),
             user_ids=user_ids,
+            # What each diary actually holds a week. Nobody is planned on
+            # a fifth day they do not work.
+            rhythms=await self._rhythms.histories_of(user_ids),
         )
 
         by_user = {user.id: user for user in team}

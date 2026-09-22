@@ -13,10 +13,13 @@ from src.modules.activity.domain.repositories.activity_repository import (
     MissionRecord,
 )
 from src.modules.calendar.domain.entities.period import Period, PeriodRange
+from src.modules.calendar.domain.entities.week_pattern import WeekPattern
 from src.modules.projects.domain.entities.project import ProjectKind, ProjectStatus
+from src.modules.users.domain.entities.rhythm import Rhythm
 from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
     InMemoryActivityRepository,
+    InMemoryRhythmRepository,
     InMemoryUserRepository,
 )
 
@@ -51,10 +54,12 @@ def a_use_case(
     users: list[User],
     missions: list[MissionRecord],
     declared: dict[str, list[DeclaredDays]],
+    rhythms: list[Rhythm] | None = None,
 ) -> GetActivitySummaryUseCase:
     return GetActivitySummaryUseCase(
         users=InMemoryUserRepository(users),
         activity=InMemoryActivityRepository(declared=declared, missions=missions),
+        rhythms=InMemoryRhythmRepository(rhythms or []),
     )
 
 
@@ -136,3 +141,51 @@ async def test_a_week_of_five_working_days_expects_five_of_each_person() -> None
 
     assert summary.expected_days == 10.0
     assert summary.coverage == 0.0
+
+
+@pytest.mark.asyncio
+async def test_a_part_time_teammate_is_expected_what_their_rhythm_says() -> None:
+    # Five working days in the window. Whoever declared a Wednesday off is
+    # expected four of them, and a full week of theirs covers it entirely.
+    use_case = a_use_case(
+        users=[a_user(1, "Léa")],
+        missions=[a_mission(7, "WAATcher")],
+        declared={
+            InMemoryActivityRepository.key(LAST_WEEK): [
+                DeclaredDays(project_id=7, user_id=1, days=4.0)
+            ]
+        },
+        rhythms=[
+            Rhythm(
+                id=None,
+                user_id=1,
+                pattern=WeekPattern(wednesday=0.0),
+                effective_from=date(2026, 1, 1),
+            )
+        ],
+    )
+
+    summary = await use_case.execute(
+        ActivityQuery(range_=PeriodRange.LAST_WEEK, today=TODAY)
+    )
+
+    someone = summary.contributors[0]
+    assert someone.expected_days == 4.0
+    assert someone.coverage == 1.0
+
+
+@pytest.mark.asyncio
+async def test_declaring_nothing_leaves_everyone_expected_full_time() -> None:
+    # The default has to move no figure: it is what the application assumed
+    # of everybody before rhythms existed.
+    use_case = a_use_case(
+        users=[a_user(1, "Léa")],
+        missions=[a_mission(7, "WAATcher")],
+        declared={},
+    )
+
+    summary = await use_case.execute(
+        ActivityQuery(range_=PeriodRange.LAST_WEEK, today=TODAY)
+    )
+
+    assert summary.contributors[0].expected_days == 5.0

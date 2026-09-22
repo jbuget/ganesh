@@ -16,12 +16,14 @@ from src.modules.projects.domain.entities.project import (
     ProjectStatus,
 )
 from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.users.domain.entities.rhythm import Rhythm
 from src.modules.users.domain.entities.user import User
 from src.shared.exceptions.domain_exceptions import ValidationError
 from tests.helpers.in_memory_repositories import (
     InMemoryEntryRepository,
     InMemoryProjectAssigneeRepository,
     InMemoryProjectRepository,
+    InMemoryRhythmRepository,
     InMemoryUserRepository,
 )
 
@@ -78,6 +80,7 @@ def a_use_case(
     contributors: dict[int, list[int]] | None = None,
     leads: dict[int, list[int]] | None = None,
     users: list[User] | None = None,
+    rhythms: list[Rhythm] | None = None,
 ) -> GetWorkloadPlanUseCase:
     assignments: dict[tuple[int, ProjectRole], list[int]] = {}
     for project_id, user_ids in (contributors or {}).items():
@@ -90,6 +93,7 @@ def a_use_case(
         entries=InMemoryEntryRepository(entries or []),
         assignees=InMemoryProjectAssigneeRepository(assignments),
         users=InMemoryUserRepository(users if users is not None else [ALICE, BOB]),
+        rhythms=InMemoryRhythmRepository(rhythms or []),
     )
 
 

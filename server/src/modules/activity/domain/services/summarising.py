@@ -21,16 +21,28 @@ from src.modules.activity.domain.repositories.activity_repository import (
     MissionRecord,
 )
 from src.modules.calendar.domain.entities.period import Period
-from src.modules.calendar.domain.services.expectations import expected_days
+from src.modules.calendar.domain.entities.week_pattern import FULL_TIME
+from src.modules.calendar.domain.services.expectations import (
+    DailyExpectation,
+    expected_days,
+)
 from src.modules.projects.domain.entities.project import ProjectKind
 
 
 @dataclass(frozen=True)
 class Teammate:
-    """Someone the window expects something of, named."""
+    """Someone the window expects something of, named.
+
+    The rhythm travels with the person rather than in a table beside them:
+    a coverage is read per column, and a column that had to go and look up
+    its own denominator would eventually be drawn without one.
+    """
 
     id: int
     display_name: str
+    #: Full time unless a rhythm says otherwise, which is what was assumed of
+    #: everybody before rhythms existed.
+    rhythm: DailyExpectation = FULL_TIME
 
 
 def summarise(
@@ -139,7 +151,7 @@ def _contributors(
             id=someone.id,
             display_name=someone.display_name,
             declared_days=per_person.get(someone.id, 0.0),
-            expected_days=expected_days(period),
+            expected_days=expected_days(period, someone.rhythm),
         )
         for someone in sorted(team, key=lambda member: member.display_name)
     )

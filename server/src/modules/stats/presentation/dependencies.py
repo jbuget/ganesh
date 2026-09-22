@@ -14,7 +14,9 @@ from src.modules.stats.domain.repositories.statistics_repository import (
 from src.modules.stats.infrastructure.database.repositories.statistics_repository_impl import (
     SqlStatisticsRepository,
 )
+from src.modules.users.domain.repositories.rhythm_repository import RhythmRepository
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.modules.users.presentation.dependencies import get_rhythm_repository
 
 
 def get_statistics_repository(
@@ -26,5 +28,6 @@ def get_statistics_repository(
 def get_compute_statistics_use_case(
     users: UserRepository = Depends(get_user_repository),
     statistics: StatisticsRepository = Depends(get_statistics_repository),
+    rhythms: RhythmRepository = Depends(get_rhythm_repository),
 ) -> ComputeStatisticsUseCase:
-    return ComputeStatisticsUseCase(users=users, statistics=statistics)
+    return ComputeStatisticsUseCase(users=users, statistics=statistics, rhythms=rhythms)

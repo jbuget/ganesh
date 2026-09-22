@@ -6,6 +6,7 @@ import pytest
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction
 from src.modules.calendar.domain.entities.period import PeriodRange
+from src.modules.calendar.domain.entities.week_pattern import WeekPattern
 from src.modules.projects.domain.entities.project import (
     ProjectCategory,
     ProjectKind,
@@ -22,8 +23,10 @@ from src.modules.stats.domain.entities.surface_usage import (
     Tally,
     Trace,
 )
+from src.modules.users.domain.entities.rhythm import Rhythm
 from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
+    InMemoryRhythmRepository,
     InMemoryStatisticsRepository,
     InMemoryUserRepository,
 )
@@ -48,11 +51,14 @@ TEAM = [
 
 
 def build(
-    team: list[User] | None = None, **repository: object
+    team: list[User] | None = None,
+    rhythms: list[Rhythm] | None = None,
+    **repository: object,
 ) -> ComputeStatisticsUseCase:
     return ComputeStatisticsUseCase(
         users=InMemoryUserRepository(team if team is not None else TEAM),
         statistics=InMemoryStatisticsRepository(**repository),
+        rhythms=InMemoryRhythmRepository(rhythms or []),
     )
 
 
@@ -60,8 +66,8 @@ def surface(stats: Statistics, surface: Surface) -> SurfaceActivity:
     return next(one for one in stats.surfaces.activities if one.surface is surface)
 
 
-async def run(**kwargs: object):
-    use_case = build(**kwargs)
+async def run(rhythms: list[Rhythm] | None = None, **kwargs: object):
+    use_case = build(rhythms=rhythms, **kwargs)
     return await use_case.execute(
         StatisticsQuery(range_=PeriodRange.LAST_7_DAYS, today=TODAY)
     )
@@ -75,6 +81,43 @@ class TestCoverage:
         assert stats.coverage.expected_days == 15
         assert stats.coverage.declared_days == 12
         assert stats.coverage.rate == pytest.approx(0.8)
+
+    async def test_a_part_time_teammate_is_expected_what_they_declared(self) -> None:
+        # Three teammates over five working days. One of them is off on
+        # Wednesdays, so the window calls for fourteen person-days, not
+        # fifteen: a head count expects the same of everybody, and this team
+        # never owed that.
+        stats = await run(
+            declared_by_day={TODAY: 12.0},
+            rhythms=[
+                Rhythm(
+                    id=None,
+                    user_id=1,
+                    pattern=WeekPattern(wednesday=0.0),
+                    effective_from=date(2026, 1, 1),
+                )
+            ],
+        )
+
+        assert stats.coverage.expected_days == 14
+
+    async def test_a_rhythm_declared_later_leaves_an_earlier_window_alone(
+        self,
+    ) -> None:
+        # September must not rewrite what June expected.
+        stats = await run(
+            declared_by_day={TODAY: 12.0},
+            rhythms=[
+                Rhythm(
+                    id=None,
+                    user_id=1,
+                    pattern=WeekPattern(wednesday=0.0),
+                    effective_from=date(2026, 12, 1),
+                )
+            ],
+        )
+
+        assert stats.coverage.expected_days == 15
 
     async def test_deactivated_teammates_are_expected_nothing(self) -> None:
         # Someone cut off cannot declare: counting them would make the whole

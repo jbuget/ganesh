@@ -22,6 +22,7 @@ from src.modules.users.domain.entities.user import Role, User
 from src.shared.utils import clock
 from tests.helpers.in_memory_repositories import (
     InMemoryActivityRepository,
+    InMemoryRhythmRepository,
     InMemoryUserRepository,
 )
 
@@ -79,6 +80,7 @@ def use_case() -> GetActivitySummaryUseCase:
                 ]
             },
         ),
+        rhythms=InMemoryRhythmRepository(),
     )
 
 

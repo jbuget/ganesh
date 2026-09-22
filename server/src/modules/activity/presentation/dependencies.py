@@ -14,7 +14,9 @@ from src.modules.activity.infrastructure.database.repositories.activity_reposito
     SqlActivityRepository,
 )
 from src.modules.entries.presentation.dependencies import get_user_repository
+from src.modules.users.domain.repositories.rhythm_repository import RhythmRepository
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.modules.users.presentation.dependencies import get_rhythm_repository
 
 
 def get_activity_repository(
@@ -26,5 +28,6 @@ def get_activity_repository(
 def get_activity_summary_use_case(
     users: UserRepository = Depends(get_user_repository),
     activity: ActivityRepository = Depends(get_activity_repository),
+    rhythms: RhythmRepository = Depends(get_rhythm_repository),
 ) -> GetActivitySummaryUseCase:
-    return GetActivitySummaryUseCase(users=users, activity=activity)
+    return GetActivitySummaryUseCase(users=users, activity=activity, rhythms=rhythms)

@@ -24,7 +24,9 @@ from src.modules.stats.domain.services.surface_reading import (
     read_surfaces,
     surfaces_last_used,
 )
+from src.modules.users.domain.entities.rhythm import RhythmHistory
 from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.repositories.rhythm_repository import RhythmRepository
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
 #: How many missions the steering block lists. A top that scrolls is a table,
@@ -35,17 +37,30 @@ TOP_MISSIONS = 5
 class ComputeStatisticsUseCase:
     """Gathers what the screen shows for a window, and the one before it."""
 
-    def __init__(self, users: UserRepository, statistics: StatisticsRepository) -> None:
+    def __init__(
+        self,
+        users: UserRepository,
+        statistics: StatisticsRepository,
+        rhythms: RhythmRepository,
+    ) -> None:
         self._users = users
         self._statistics = statistics
+        self._rhythms = rhythms
 
     async def execute(self, query: StatisticsQuery) -> Statistics:
         period = Period.of(query.range_, query.today)
         previous = period.previous()
         team = await self._users.list_all()
+        histories = list(
+            (
+                await self._rhythms.histories_of(
+                    [user.id for user in team if user.id is not None]
+                )
+            ).values()
+        )
 
-        coverage = await self._coverage(period, len(team))
-        previous_coverage = await self._coverage(previous, len(team))
+        coverage = await self._coverage(period, histories)
+        previous_coverage = await self._coverage(previous, histories)
 
         return Statistics(
             period=period,
@@ -59,10 +74,20 @@ class ComputeStatisticsUseCase:
             registry=await self._registry(period),
         )
 
-    async def _coverage(self, period: Period, teammates: int) -> Coverage:
+    async def _coverage(
+        self, period: Period, histories: list[RhythmHistory]
+    ) -> Coverage:
+        """What the window called for, and what came in against it.
+
+        Summed person by person rather than taken as working days times a
+        head count: the head count expects the same of everybody, and a team
+        where two people work four days a week has never owed that.
+        """
         return Coverage(
             declared_days=await self._statistics.declared_days(period),
-            expected_days=expected_days(period, teammates),
+            expected_days=round(
+                sum(expected_days(period, history) for history in histories), 2
+            ),
         )
 
     async def _month_validation(

@@ -1,14 +1,23 @@
 """What each person still has free, day by day.
 
-Capacity is not declared anywhere: it is deduced. A working day is worth one,
-and what is already booked on it — time already delivered, forecasts entered by
-hand, leave declared ahead — is taken out. A projection therefore only ever
-fills the room the diary actually leaves.
+What a day holds is a fact of the clock: one day, never two, whatever anybody
+declared. What a *week* holds is the rhythm somebody works, less what is
+already booked on it — time delivered, forecasts entered by hand, leave taken
+ahead. A projection therefore only ever fills the room the diary leaves.
+
+The rhythm is read by the week and never by the day, and that is the whole
+point: somebody off on Wednesdays may swap one for a Thursday, and a plan that
+had struck their Wednesdays out would have to be wrong about that week to be
+right about the motif. Four days a week stay four days a week whichever four
+they are.
 """
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+
+from src.modules.calendar.domain.entities.week_pattern import FULL_TIME
+from src.modules.calendar.domain.services.expectations import DailyExpectation
 
 #: Below this, a remainder is nothing but a floating-point residue.
 EPSILON = 1e-9
@@ -16,7 +25,10 @@ EPSILON = 1e-9
 #: What one person owes on one working day.
 FULL_DAY = 1.0
 
-#: Half a day a week nobody may plan on.
+#: Working days an ordinary full week holds — what the reserve is a share of.
+FULL_WEEK_DAYS = 5.0
+
+#: Half a day a week nobody may plan on, for somebody working a full one.
 #:
 #: Meetings happen, and so do the absences nobody saw coming. A plan that
 #: booked every last half day would be wrong every week, and a plan that is
@@ -31,19 +43,29 @@ def week_of(day: date) -> date:
     return day - timedelta(days=day.weekday())
 
 
+def weekly_reserve(capacity: float) -> float:
+    """The share of the week nobody may plan on, for this much of a week.
+
+    Held in proportion rather than flat: half a day out of five is one thing,
+    half a day out of the two somebody at half time works is a quarter of
+    their week, and a plan that took it would be wrong about them every week.
+    A full week of a full-time diary still holds back exactly half a day.
+
+    A week the window only sees part of holds back its share of one, for the
+    same reason: the meetings nobody saw coming fall in the days one is
+    looking at, not in the ones outside the horizon.
+    """
+    return WEEKLY_RESERVE_DAYS * capacity / FULL_WEEK_DAYS
+
+
 def weekly_allowance(capacity: float, booked: float) -> float:
     """What a projection may place on one person during one week.
 
-    The week's working days, less the half day held back, less whatever is
+    What the week expects of them, less the share held back, less whatever is
     already declared on it. Never negative: a week someone has already filled
     past the reserve offers nothing, it does not borrow from the next one.
-
-    A week the window only sees part of — the one a horizon opens in the
-    middle of — still holds its half day back. Slightly cautious on that first
-    week, and never optimistic anywhere, which is the way round a plan should
-    be wrong.
     """
-    return max(0.0, capacity - WEEKLY_RESERVE_DAYS - booked)
+    return max(0.0, capacity - weekly_reserve(capacity) - booked)
 
 
 @dataclass
@@ -66,32 +88,39 @@ class Capacity:
         user_ids: Iterable[int],
         days: Iterable[date],
         booked: Mapping[int, Mapping[date, float]],
+        rhythms: Mapping[int, DailyExpectation] | None = None,
     ) -> "Capacity":
         """Room left for these people over these days, given what is booked.
+
+        Full time for anyone no rhythm was declared for, which is what the
+        plan assumed of everybody before rhythms existed.
 
         A day booked beyond a full day leaves no room rather than a negative
         one: over-booking is a warning the grid already carries, and it must
         not lend capacity to the projection.
         """
         window = list(days)
-
-        capacity_by_week: dict[date, float] = {}
-        for day in window:
-            week = week_of(day)
-            capacity_by_week[week] = capacity_by_week.get(week, 0.0) + FULL_DAY
+        declared = rhythms or {}
 
         free: dict[int, dict[date, float]] = {}
         weekly: dict[int, dict[date, float]] = {}
         for user_id in user_ids:
             diary = booked.get(user_id, {})
+            rhythm = declared.get(user_id, FULL_TIME)
 
+            # A day holds a day whoever works it: the rhythm says how much of
+            # a week somebody works, never which days they may be given.
             free[user_id] = {
                 day: max(0.0, FULL_DAY - diary.get(day, 0.0)) for day in window
             }
 
+            capacity_by_week: dict[date, float] = {}
             booked_by_week: dict[date, float] = {}
             for day in window:
                 week = week_of(day)
+                capacity_by_week[week] = capacity_by_week.get(week, 0.0) + rhythm.on(
+                    day
+                )
                 booked_by_week[week] = booked_by_week.get(week, 0.0) + diary.get(
                     day, 0.0
                 )

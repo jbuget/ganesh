@@ -23,6 +23,7 @@ from src.modules.stats.presentation.dependencies import get_compute_statistics_u
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.utils import clock
 from tests.helpers.in_memory_repositories import (
+    InMemoryRhythmRepository,
     InMemoryStatisticsRepository,
     InMemoryUserRepository,
 )
@@ -43,6 +44,7 @@ TEAM = [
 def use_case() -> ComputeStatisticsUseCase:
     return ComputeStatisticsUseCase(
         users=InMemoryUserRepository(TEAM),
+        rhythms=InMemoryRhythmRepository(),
         statistics=InMemoryStatisticsRepository(
             declared_by_day={clock.today(): 6.0},
             contributors={1},
