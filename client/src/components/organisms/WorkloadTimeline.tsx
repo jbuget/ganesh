@@ -30,6 +30,7 @@ import type {
 } from "@/lib/api/generated/model";
 import { formatMonthOf } from "@/lib/dates";
 import { opensMonth } from "@/lib/planning";
+import { STRONG_SEPARATOR, TABLE_FRAME, TABLE_HEADER } from "@/lib/table-frame";
 
 interface WorkloadTimelineProps {
   missions: PlannedMissionResponse[];
@@ -92,13 +93,16 @@ export function WorkloadTimeline({
       onDragEnd={handleDragEnd}
     >
       <div className="w-max pr-6 [&_[data-slot=table-container]]:overflow-visible">
-        <Table>
-          <TableHeader className="sticky top-0 z-20 [&_th]:border-b [&_th]:border-b-slate-500 [&_th]:bg-slate-50">
+        {/* The same frame as every other table of the application: a strong
+            rule around, faint lines within, and the pinned columns closed off
+            from the weeks they carry. */}
+        <Table className={`border-separate border-spacing-0 ${TABLE_FRAME}`}>
+          {/* The band of titles sits above the pinned columns, which cross the
+              horizontal scrolling: it has to be raised over them too. */}
+          <TableHeader className={`${TABLE_HEADER} z-20`}>
             <TableRow>
-              <TableHead className="sticky left-0 z-30 w-[7.5rem] bg-slate-50">
-                Rang
-              </TableHead>
-              <TableHead className="sticky left-[7.5rem] z-30 bg-slate-50">
+              <TableHead className="sticky left-0 z-30 w-[7.5rem]">Rang</TableHead>
+              <TableHead className={`sticky left-[7.5rem] z-30 ${STRONG_SEPARATOR}`}>
                 Projet
               </TableHead>
               <TableHead className="w-40">Intervenants</TableHead>
