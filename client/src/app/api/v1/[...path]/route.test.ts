@@ -143,6 +143,34 @@ describe("the BFF relay", () => {
     expect(await response.text()).toBe("");
   });
 
+  /*
+    Caddy sits in front of the API in production and compresses what it
+    serves. `fetch` hands back the body decompressed but the headers as they
+    came: `Content-Length` then counts the compressed bytes, a few hundred
+    where the JSON is a few thousand. Relayed as such, the answer reached the
+    browser cut off mid-object — « Réponse illisible », on every screen whose
+    answer was big enough to be compressed and small enough to be buffered.
+  */
+  it("does not relay a length that counts other bytes than the ones it sends", async () => {
+    const whole = JSON.stringify({ entries: Array.from({ length: 40 }, (_, i) => i) });
+    upstream(
+      new Response(whole, {
+        headers: {
+          "Content-Type": "application/json",
+          // What the upstream said of the bytes before they were decompressed.
+          "Content-Length": "42",
+        },
+      }),
+    );
+
+    const response = await GET(
+      new NextRequest("http://localhost:3000/api/v1/projects/20/audit"),
+    );
+
+    expect(response.headers.get("Content-Length")).not.toBe("42");
+    expect(await response.text()).toBe(whole);
+  });
+
   it("signs the call with the session it holds", async () => {
     upstream(new Response("[]", { headers: { "Content-Type": "application/json" } }));
 
