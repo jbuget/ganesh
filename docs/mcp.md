@@ -33,6 +33,7 @@ much smaller problem.
 | What a tool returns | Sentences carrying facts, not a JSON row |
 | Client | Claude Code and Claude Desktop, by static header |
 | V1 verbs | Five reads, and one write — on the caller's own month |
+| V1.1 verbs | Two reads more — a project's sheet, the whole register — and a second write, the weekly review |
 
 ## Where it lives
 
@@ -132,7 +133,7 @@ became once a tool could say those refusals in words.
 
 ## The tools
 
-Seven, each `src/mcp/tools/<name>.py`, each answering in sentences built through
+Eight, each `src/mcp/tools/<name>.py`, each answering in sentences built through
 `src/mcp/tools/say.py` — « 1,5 jour », « 08/09 », « septembre 2026 ». A number
 handed over raw is a number a model words itself, and words wrong.
 
@@ -149,6 +150,34 @@ guessing.
 
 > Trois projets portent ce nom. WAATcher (projet, en construction), WAATcher —
 > Supervision (lot de WAATcher, en service), WAATcher V1 (archivé le 12 mars).
+
+### `project_brief(project_id: int)`
+
+**Scope** `projects:read`. `GetProjectDetailUseCase` — the mission's sheet, as
+the screen reads it.
+
+It closes the gap `find_project` left open: a model that had resolved a name
+knew the identifier, the kind and the phase, and could say nothing about what
+the mission had cost against what was planned. Two calls to answer « où en est
+WAATcher », and the answer still short.
+
+Three decisions carried in it:
+
+- **the estimate is read as what is left.** « il en reste 22 » is the question
+  being put; « 128 et 150 » is a subtraction a model gets wrong often enough to
+  matter.
+- **who carried it is named, never ranked.** `contributions` comes ordered by
+  days, which is right on a screen showing the whole column at once. Handed to
+  a model, that order becomes a sentence about who did the least. The people
+  assigned are named; the ones who declared time are counted.
+- **only `go_live_date` answers for a date.** A bar on the roadmap opens where
+  the drawing needed it to, and reading that back would make a portfolio that
+  announced nothing announce something.
+
+> WAATcher (#7) — projet, construction depuis le 08/03/2026. 128 jours déclarés
+> pour 150 estimés : il en reste 22. Mise en service annoncée le 30/11/2026.
+> Porté par A. Ba. 2 personnes y ont déclaré du temps. 1 lot rattaché :
+> WAATcher — Supervision (#8).
 
 ### `my_month(month?: str)`
 
@@ -167,11 +196,30 @@ month is validated.
 > 12 jours déclarés sur 19 ouvrés en septembre : 9 réalisés, 3 prévisionnels.
 > Rien sur les 3, 4 et 5. Le mois est ouvert.
 
-### `what_changed(project: str, since?: str)`
+### `what_changed(project_id?: int, since?: str)`
 
-**Scope** `audit:read`. `ListProjectAuditLogUseCase`, over a window that opens
-a fortnight back when nobody says otherwise — which is the span somebody coming
-back from leave is asking about.
+**Scope** `audit:read`. Over a window that opens a fortnight back when nobody
+says otherwise — the span somebody coming back from leave is asking about.
+
+**Named a project, it reads that project's log** through
+`ListProjectAuditLogUseCase`. **Named none, it reads the register** through
+`ListAuditLogUseCase`, whose own docstring already says what it is for: *the
+question an archive puts, and one no screen puts*. That second reading is what
+the first was missing — a mission's « Journal » answers « what happened to this
+project », and one has to already know which project to open.
+
+The window is then told **project by project**, never as one chronology: a flat
+list reads as the log it came from, the same mission picked up and dropped ten
+times over. Missions come most-moved first and the tail is counted; gestures
+carrying no mission are counted too rather than dropped, and a window wider
+than one page says so.
+
+> Depuis le 01/09/2026, 2 projets ont bougé :
+> - WAATcher (#7) : passé de cadrage à construction le 08/09, 23 jours déclarés
+>   par 4 personnes, et 6 autres gestes
+> - NOMAD (#11) : une mise à jour postée, la dernière le 16/09
+>
+> 1 geste ne porte sur aucun projet.
 
 This is the one angle that survived two framings: **nobody knows the projects
 they are not on.** Asked after a fortnight away, or on a Monday about a
@@ -183,7 +231,7 @@ phase, what was posted on the thread, how much time went in and by how many
 people. A month of raw log lines would be the summary that was dropped the
 first time round.
 
-It names four gestures and **counts** the rest (« et 12 autres gestes, que le
+It names three gestures and **counts** the rest (« et 12 autres gestes, que le
 Journal du projet détaille »). That is what keeps the French wording here from
 becoming a second copy of `client/src/lib/audit-log.ts`: two interfaces each
 say the domain's vocabulary in French, and this one only ever learns the four
@@ -260,6 +308,15 @@ the second in hand. A word that is neither comes back with the six listed: a
 model told « invalid enum » guesses again, one handed the list picks. Off-project
 work is refused a phase in words, as the domain refuses it.
 
+**And it convokes nobody.** A mention travels as `@[Nom](mention://user/12)`
+and notifies the person it names. A model writing up a review it has just been
+told about recopies a name out of the thread and summons them for nothing — and
+a tool that quietly removed the mention would consign something other than what
+was said, which is worse: the caller would believe the person had been named.
+The note is **refused**, out loud, before the phase is even read, and the
+refusal says the thread is told anyway. A plain « @Marie » is not a mention and
+goes through untouched.
+
 > Revue consignée sur le projet #13. Phase désormais : construction.
 
 ## How a tool speaks
@@ -282,6 +339,8 @@ Three rules, carried over from what was already decided about a collector:
   `declare_time` already draws the line at writing for somebody else; archiving
   asks what becomes of the work packages, which is a question, not a parameter.
   A screen is built for each.
+- **Validating a month.** Only a manager reopens one, and a gesture the caller
+  cannot take back is not one to hand to a model.
 - **Claude.ai on the web**, which wants OAuth with dynamic registration. Claude
   Code and Desktop take a static header, and that is the whole of Waat.
 - **Generating tools from the OpenAPI.** Sixty routes would become sixty tools,
@@ -323,7 +382,8 @@ Claude Code and Claude Desktop take a static header, which is all Waat needs:
 The trailing slash is the address; `/mcp` redirects to it. The key is minted in
 the « API / MCP » screen by a manager and owned by the person whose terminal it
 sits in. `projects:read`, `entries:read`, `audit:read` and `roadmap:read` cover
-the reads; add `entries:write` to declare time, and `moods:read` — which no
+the reads; add `entries:write` to declare time, `updates:write` to consign a
+review and `projects:write` to let it move a phase, and `moods:read` — which no
 « Tous » ticks — to read the team's morale.
 
 The same screen's « MCP » tab says all of this to the team, one client at a

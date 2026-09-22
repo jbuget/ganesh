@@ -21,6 +21,8 @@ import type {
   AuditLogPageResponse,
   HTTPValidationError,
   ListAuditLogParams,
+  ListTouchedProjectsParams,
+  TouchedProjectResponse,
 } from "../model";
 
 import { bffFetcher } from "../../fetcher";
@@ -209,6 +211,183 @@ export function useListAuditLog<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListAuditLogQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listTouchedProjectsResponse200 = {
+  data: TouchedProjectResponse[];
+  status: 200;
+};
+
+export type listTouchedProjectsResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listTouchedProjectsResponseSuccess = listTouchedProjectsResponse200 & {
+  headers: Headers;
+};
+export type listTouchedProjectsResponseError = listTouchedProjectsResponse422 & {
+  headers: Headers;
+};
+
+export type listTouchedProjectsResponse =
+  listTouchedProjectsResponseSuccess | listTouchedProjectsResponseError;
+
+export const getListTouchedProjectsUrl = (params?: ListTouchedProjectsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/audit-logs/touched-projects?${stringifiedParams}`
+    : `/api/v1/audit-logs/touched-projects`;
+};
+
+/**
+ * The projects that have just moved, one line each, freshest first.
+ *
+ * No mission carries the date it last changed, so the question is put to the
+ * register, which is the only place that holds it. Declared time is left out
+ * there rather than here: what counts as a project moving is a rule of the
+ * domain, not of this route.
+ *
+ * Human-only, and not because the answer is sensitive: it is the shortcut of
+ * a screen, and a machine after what happened has the whole log.
+ * @summary List Touched Projects
+ */
+export const listTouchedProjects = async (
+  params?: ListTouchedProjectsParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listTouchedProjectsResponse> => {
+  return bffFetcher<listTouchedProjectsResponse>(getListTouchedProjectsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListTouchedProjectsQueryKey = (params?: ListTouchedProjectsParams) => {
+  return [`/api/v1/audit-logs/touched-projects`, ...(params ? [params] : [])] as const;
+};
+
+export const getListTouchedProjectsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listTouchedProjects>>,
+  TError = HTTPValidationError,
+>(
+  params?: ListTouchedProjectsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listTouchedProjects>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListTouchedProjectsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listTouchedProjects>>> = ({
+    signal,
+  }) => listTouchedProjects(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listTouchedProjects>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListTouchedProjectsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listTouchedProjects>>
+>;
+export type ListTouchedProjectsQueryError = HTTPValidationError;
+
+export function useListTouchedProjects<
+  TData = Awaited<ReturnType<typeof listTouchedProjects>>,
+  TError = HTTPValidationError,
+>(
+  params: undefined | ListTouchedProjectsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listTouchedProjects>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTouchedProjects>>,
+          TError,
+          Awaited<ReturnType<typeof listTouchedProjects>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListTouchedProjects<
+  TData = Awaited<ReturnType<typeof listTouchedProjects>>,
+  TError = HTTPValidationError,
+>(
+  params?: ListTouchedProjectsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listTouchedProjects>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTouchedProjects>>,
+          TError,
+          Awaited<ReturnType<typeof listTouchedProjects>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListTouchedProjects<
+  TData = Awaited<ReturnType<typeof listTouchedProjects>>,
+  TError = HTTPValidationError,
+>(
+  params?: ListTouchedProjectsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listTouchedProjects>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Touched Projects
+ */
+
+export function useListTouchedProjects<
+  TData = Awaited<ReturnType<typeof listTouchedProjects>>,
+  TError = HTTPValidationError,
+>(
+  params?: ListTouchedProjectsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listTouchedProjects>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListTouchedProjectsQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

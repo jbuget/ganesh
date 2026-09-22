@@ -203,6 +203,39 @@ async def test_a_page_dropped_as_a_file_is_never_served_to_be_shown() -> None:
     assert response.headers["content-disposition"].startswith("attachment")
 
 
+async def test_a_drawing_that_runs_scripts_is_never_served_to_be_shown() -> None:
+    """An SVG reads as an image and is a document that runs scripts. Served
+    inline, the BFF hands it to the browser on the application's own origin,
+    where it would run under the reader's session."""
+    client, _, _, _ = sign_in()
+    dropped = await _drop(client, "piege.svg", "image/svg+xml")
+
+    response = await client.get(f"{URL}/10/attachments/{dropped['id']}/content")
+
+    assert response.headers["content-disposition"].startswith("attachment")
+    assert response.headers["content-type"].startswith("application/octet-stream")
+
+
+async def test_a_type_nobody_checked_never_reaches_the_browser() -> None:
+    """What is announced comes from the closed list, never from the sender."""
+    client, _, _, _ = sign_in()
+    dropped = await _drop(client, "archive.zip", "application/zip")
+
+    response = await client.get(f"{URL}/10/attachments/{dropped['id']}/content")
+
+    assert response.headers["content-type"].startswith("application/octet-stream")
+
+
+async def test_every_file_is_served_under_a_policy_that_runs_nothing() -> None:
+    """The list is the rule; this is the net under it."""
+    client, _, _, _ = sign_in()
+    dropped = await _drop(client)
+
+    response = await client.get(f"{URL}/10/attachments/{dropped['id']}/content")
+
+    assert response.headers["content-security-policy"].startswith("default-src 'none'")
+
+
 async def test_asking_for_the_download_forces_the_save_dialog() -> None:
     client, _, _, _ = sign_in()
     dropped = await _drop(client)

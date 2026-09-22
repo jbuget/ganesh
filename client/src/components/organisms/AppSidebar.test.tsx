@@ -165,4 +165,14 @@ describe("AppSidebar", () => {
 
     expect(screen.queryByText(/Buget|Chen/)).toBeNull();
   });
+
+  it("offers the palette, and says which keys open it", () => {
+    render(<AppSidebar />);
+
+    // Which keys they are depends on the keyboard one is on, and the name
+    // says them either way: a shortcut nobody is shown is one nobody uses.
+    expect(
+      screen.getByRole("button", { name: /^Rechercher \(.+\)$/ }),
+    ).toBeInTheDocument();
+  });
 });

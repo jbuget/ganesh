@@ -74,3 +74,8 @@ class MachineStampedAuditLog(AuditLogRepository):
         actions: Collection[AuditAction] | None = None,
     ) -> list[AuditLog]:
         return await self._inner.list_between(start, end, actions)
+
+    async def last_touch_per_project(
+        self, actions: Collection[AuditAction], limit: int
+    ) -> list[AuditLog]:
+        return await self._inner.last_touch_per_project(actions, limit)

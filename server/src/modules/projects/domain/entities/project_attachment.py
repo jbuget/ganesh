@@ -14,6 +14,29 @@ MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024
 #: the suffix would be inventing: what is announced is what is served back.
 UNKNOWN_TYPE = "application/octet-stream"
 
+#: The image types a screen may actually draw. Named one by one rather than by
+#: family: `image/svg+xml` announces itself as an image and is a document that
+#: runs scripts, so it is never served to be shown — and a screen that drew an
+#: `<img>` on it would draw a square that cannot load.
+RENDERABLE_IMAGES = frozenset(
+    {
+        "image/png",
+        "image/jpeg",
+        "image/gif",
+        "image/webp",
+        "image/avif",
+    }
+)
+
+
+def bare_type(content_type: str) -> str:
+    """The media type alone, without the parameters the sender dressed it in.
+
+    `IMAGE/PNG; charset=binary` is a PNG. What is compared to a list is this,
+    never the string as it arrived.
+    """
+    return content_type.split(";", 1)[0].strip().lower()
+
 
 def _basename(filename: str) -> str:
     """The name alone, whatever path the browser wrapped it in.
@@ -21,8 +44,16 @@ def _basename(filename: str) -> str:
     Some send `C:\\Users\\lea\\note.pdf`, a folder drop sends
     `captures/ecran.png`. Only the last part names the file, and the rest has
     no business being shown — nor stored.
+
+    What cannot be written down is dropped with it. The name travels in
+    `Content-Disposition`, and a header is one line: a « \\r\\n » in it is
+    either a paste gone wrong or an attempt to write a second header, and both
+    end the same way — the HTTP layer refuses to send the answer, and every
+    download of that file is a 500 rather than a file. Accents and spaces are
+    untouched: only what has no printed form goes.
     """
-    return filename.replace("\\", "/").rsplit("/", 1)[-1].strip()
+    named = filename.replace("\\", "/").rsplit("/", 1)[-1]
+    return "".join(letter for letter in named if letter.isprintable()).strip()
 
 
 @dataclass
@@ -72,5 +103,10 @@ class ProjectAttachment:
 
     @property
     def is_image(self) -> bool:
-        """Whether a screen may show it rather than only offer it."""
-        return self.content_type.startswith("image/")
+        """Whether a screen may show it rather than only offer it.
+
+        The same reading the route does before serving anything inline: a
+        screen must not promise a picture the server will hand over as a
+        download.
+        """
+        return bare_type(self.content_type) in RENDERABLE_IMAGES

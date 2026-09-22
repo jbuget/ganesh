@@ -696,9 +696,12 @@ it together:
 
 - **A tool is a question somebody asks, never a route.** Sixty routes turned
   into sixty tools is a model chaining six calls to answer one question and
-  getting three of them wrong. `find_project`, `my_month`, `what_changed`,
-  `portfolio_status`, `team_mood`, `declare_time` — and the next one earns its
-  place by being asked for.
+  getting three of them wrong. `find_project`, `project_brief`, `my_month`,
+  `what_changed`, `portfolio_status`, `team_mood`, `declare_time`,
+  `record_review` — and the next one earns its place by being asked for. A
+  tool that is another one with a parameter left out is not a new question:
+  `record_review` without a phase already posts on a thread, and a
+  `post_update` beside it would only make a model choose between them.
 - **A tool answers in sentences.** « 1,5 jour déclaré », never a field called
   `total`; and what it does not know, it **says** — an absent field is a field
   a model fills in on its own. `src/mcp/tools/say.py` is where a figure or a
@@ -708,12 +711,17 @@ it together:
   sentence the client can read. A scope opening nothing is still a bug, and
   the same test still says so.
 - **A tool answers for the owner of the key, and writes for nobody else.**
-  `my_month` and `declare_time` carry no `user_id`, and that is the guarantee
-  rather than an omission: there is no colleague to hit by mistake. A write is
-  refused **out loud** — a validated month, a day that is not a working one, a
-  value the grid does not hold — because a tool can say what a route can only
-  answer « 422 » to. And a refusal is **raised**, never returned: a write that
-  did not happen must not read like one that did.
+  `my_month`, `declare_time` and `record_review` carry no `user_id`, and that
+  is the guarantee rather than an omission: there is no colleague to hit by
+  mistake. A write is refused **out loud** — a validated month, a day that is
+  not a working one, a value the grid does not hold — because a tool can say
+  what a route can only answer « 422 » to. And a refusal is **raised**, never
+  returned: a write that did not happen must not read like one that did.
+- **A tool convokes nobody.** `record_review` refuses a note carrying a
+  mention rather than stripping it: a mention notifies the person it names,
+  and a model recopying a name out of a thread it has just read would summon
+  them for nothing. Removing it quietly would be worse — the caller would
+  believe somebody had been named. The refusal says the thread is told anyway.
 - **What the moods say is read by one tool, in aggregate, and by nothing
   else.** `team_mood` returns no name, no initials and no identifier, and a day
   fewer than three people answered is announced rather than averaged. Its scope

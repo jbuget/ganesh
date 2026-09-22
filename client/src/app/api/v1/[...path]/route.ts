@@ -39,21 +39,29 @@ const HOP_BY_HOP = new Set(["connection", "keep-alive", "transfer-encoding", "ho
 /**
  * What the API says about the body, relayed as it said it.
  *
- * `Content-Type` decides how the browser reads the answer; the other two are
+ * `Content-Type` decides how the browser reads the answer; the next one is
  * what turns a response into a file it offers to save, under the name the
  * register holds. Forcing `application/json` here, as this used to, made
  * every download a broken string.
  *
- * `Content-Length` is deliberately not among them. Caddy compresses what the
- * API serves in production: `fetch` hands the body back decompressed but the
- * headers as they came, so that length counts bytes we no longer hold. Relayed
- * as such, it cut the answer off mid-object. The runtime counts the bytes it
- * actually sends, which is the only count that can be right here.
+ * The last two are what the API says about *reading* the body safely, and
+ * they are the reason this list is worth reading twice: a file is served to
+ * the browser on this origin, not on the API's, so a protection the API sets
+ * and this relay drops is a protection nobody ever receives.
+ *
+ * `Content-Length` is deliberately not among them, and that is the other half
+ * of the same lesson: a header may describe bytes we no longer hold. Caddy
+ * compresses what the API serves in production, `fetch` hands the body back
+ * decompressed but the headers as they came, and that length then counts the
+ * compressed bytes. Relayed as such, it cut the answer off mid-object. The
+ * runtime counts the bytes it actually sends, which is the only count that can
+ * be right here.
  */
 const ABOUT_THE_BODY = [
   "content-type",
   "content-disposition",
   "x-content-type-options",
+  "content-security-policy",
 ];
 
 /**

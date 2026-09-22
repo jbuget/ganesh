@@ -10,6 +10,7 @@
 import { keepPreviousData } from "@tanstack/react-query";
 
 import { useGetMonthGrid } from "@/lib/api/generated/entries/entries";
+import { useListTouchedProjects } from "@/lib/api/generated/audit-logs/audit-logs";
 import { useGetDigest } from "@/lib/api/generated/gazette/gazette";
 import type {
   DigestResponse,
@@ -18,6 +19,7 @@ import type {
   MyMoodsResponse,
   PeriodRange,
   ProjectListItemResponse,
+  TouchedProjectResponse,
   ActivitySummaryResponse,
   StatisticsResponse,
   TeamMoodsResponse,
@@ -57,8 +59,10 @@ export function useCurrentUser() {
  * Active ones only by default: anywhere other than the management screen, a
  * deactivated teammate has no business being offered.
  */
-export function useTeammates(includeInactive = false) {
-  const query = useListUsers(includeInactive ? { include_inactive: true } : undefined);
+export function useTeammates(includeInactive = false, enabled = true) {
+  const query = useListUsers(includeInactive ? { include_inactive: true } : undefined, {
+    query: { enabled },
+  });
   return { ...query, teammates: successOf<UserResponse[]>(query.data) ?? [] };
 }
 
@@ -71,10 +75,17 @@ export function useTeammates(includeInactive = false) {
  *
  * Archived ones are only asked for when they are wanted: anywhere else, a
  * mission put away has no business being offered.
+ *
+ * `enabled` is for what is mounted everywhere and read rarely: the palette
+ * sits in the frame of every screen, and would otherwise ask for the whole
+ * reference list on each one of them before anybody opened it.
  */
-export function useProjects(includeInactive = false) {
+export function useProjects(includeInactive = false, enabled = true) {
   const query = useListProjects(
     includeInactive ? { include_inactive: true } : undefined,
+    {
+      query: { enabled },
+    },
   );
   const missions = successOf<ProjectListItemResponse[]>(query.data) ?? [];
   return {
@@ -83,6 +94,18 @@ export function useProjects(includeInactive = false) {
     /** The missions alone, for screens that ignore assignments. */
     projects: missions.map((mission) => mission.project),
   };
+}
+
+/**
+ * The projects the register saw move, freshest first.
+ *
+ * Read from the log because nothing else knows: a project carries no date of
+ * its last change, and the register is where every gesture lands. Asked for
+ * only where it is wanted — the palette, once opened.
+ */
+export function useTouchedProjects(limit: number, enabled = true) {
+  const query = useListTouchedProjects({ limit }, { query: { enabled } });
+  return { ...query, touched: successOf<TouchedProjectResponse[]>(query.data) ?? [] };
 }
 
 /** A month's grid, for a given teammate. */

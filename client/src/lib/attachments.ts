@@ -56,3 +56,26 @@ export function shownInUpdates(count: number): string | null {
     ? "Ce fichier est affiché dans une mise à jour, qui montrera une image manquante."
     : `Ce fichier est affiché dans ${count} mises à jour, qui montreront une image manquante.`;
 }
+
+/**
+ * The image types a screen may actually draw.
+ *
+ * It mirrors, deliberately, the list the API serves inline: anything outside
+ * it comes back as bytes to save, so an `<img>` pointed at it would draw a
+ * square that never loads. `image/svg+xml` is the reason the list is named
+ * one by one rather than read as « image/ » — it announces itself as an image
+ * and is a document that runs scripts, which is why the API refuses to show
+ * it in place.
+ */
+const RENDERABLE_IMAGES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "image/avif",
+]);
+
+/** Whether a screen may draw this file rather than only offer it. */
+export function isRenderableImage(contentType: string): boolean {
+  return RENDERABLE_IMAGES.has(contentType.split(";")[0].trim().toLowerCase());
+}

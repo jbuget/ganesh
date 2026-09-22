@@ -5,6 +5,7 @@ from datetime import date, datetime
 
 from sqlalchemy import and_, extract, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 from sqlalchemy.sql.elements import ColumnElement
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
@@ -143,5 +144,30 @@ class SqlAuditLogRepository(AuditLogRepository):
             query = query.where(AuditLogModel.action.in_(list(actions)))
         result = await self._session.execute(
             query.order_by(AuditLogModel.at, AuditLogModel.id)
+        )
+        return [to_entity(model) for model in result.scalars().all()]
+
+    async def last_touch_per_project(
+        self, actions: Collection[AuditAction], limit: int
+    ) -> list[AuditLog]:
+        # `DISTINCT ON` keeps the first row of each project once ordered, which
+        # is Postgres saying « the latest line of each » in one pass. The
+        # ordering it demands is by project; the freshest-first order the
+        # caller reads is put back on the outside.
+        latest = (
+            select(AuditLogModel)
+            .where(AuditLogModel.project_id.is_not(None))
+            .where(AuditLogModel.action.in_(list(actions)))
+            .distinct(AuditLogModel.project_id)
+            .order_by(
+                AuditLogModel.project_id,
+                AuditLogModel.at.desc(),
+                AuditLogModel.id.desc(),
+            )
+            .subquery()
+        )
+        newest = aliased(AuditLogModel, latest)
+        result = await self._session.execute(
+            select(newest).order_by(newest.at.desc(), newest.id.desc()).limit(limit)
         )
         return [to_entity(model) for model in result.scalars().all()]

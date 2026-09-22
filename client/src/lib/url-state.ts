@@ -23,6 +23,10 @@ function onServer(): string {
   return "";
 }
 
+function notify() {
+  subscribers.forEach((callback) => callback());
+}
+
 function subscribe(callback: () => void) {
   subscribers.add(callback);
   window.addEventListener("popstate", callback);
@@ -58,8 +62,22 @@ export function writeUrl(
 
   const queryString = params.toString();
   const address = queryString ? `?${queryString}` : window.location.pathname;
-  if (mode === "push") window.history.pushState(null, "", address);
-  else window.history.replaceState(null, "", address);
+  if (mode === "push") goToAddress(address);
+  else {
+    window.history.replaceState(null, "", address);
+    notify();
+  }
+}
 
-  subscribers.forEach((callback) => callback());
+/**
+ * Goes to an address on the screen one is already standing on.
+ *
+ * Next's router moves without a word to the subscribers here. Crossing to
+ * another screen costs nothing: it mounts afresh and reads the address on
+ * subscribing. Staying on the same one does not, and a panel asked for from
+ * the palette would never open.
+ */
+export function goToAddress(address: string): void {
+  window.history.pushState(null, "", address);
+  notify();
 }

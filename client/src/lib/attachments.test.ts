@@ -4,6 +4,7 @@ import {
   contentUrl,
   downloadUrl,
   formatBytes,
+  isRenderableImage,
   shownInUpdates,
   uploadedBy,
 } from "@/lib/attachments";
@@ -65,5 +66,26 @@ describe("what a thread would lose", () => {
 
   it("agrees in the plural", () => {
     expect(shownInUpdates(3)).toContain("3 mises à jour, qui montreront");
+  });
+});
+
+describe("isRenderableImage", () => {
+  it("draws a photograph", () => {
+    expect(isRenderableImage("image/png")).toBe(true);
+    expect(isRenderableImage("image/jpeg")).toBe(true);
+  });
+
+  it("never draws a drawing that runs scripts", () => {
+    // The API refuses to serve it inline: an <img> would never load.
+    expect(isRenderableImage("image/svg+xml")).toBe(false);
+  });
+
+  it("reads the type whatever it was dressed in", () => {
+    expect(isRenderableImage("IMAGE/PNG; charset=binary")).toBe(true);
+  });
+
+  it("draws nothing of what is not an image", () => {
+    expect(isRenderableImage("application/pdf")).toBe(false);
+    expect(isRenderableImage("text/html")).toBe(false);
   });
 });

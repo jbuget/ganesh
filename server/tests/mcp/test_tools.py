@@ -31,6 +31,7 @@ from src.modules.audit_logs.application.dtos.audit_log_dto import (
 )
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.presentation.dependencies import (
+    get_audit_log_use_case,
     get_project_audit_log_use_case,
 )
 from src.modules.calendar.domain.services.working_days import CalendarDay, DayKind
@@ -104,6 +105,7 @@ PROVIDERS = {
     "projects": get_list_projects_use_case,
     "grid": get_month_grid_use_case,
     "project_log": get_project_audit_log_use_case,
+    "log": get_audit_log_use_case,
     "detail": get_project_detail_use_case,
 }
 
@@ -259,15 +261,23 @@ class TestMyMonth:
 
 
 def a_line(
-    action: AuditAction, at: datetime, actor: User = OWNER, **fields: object
+    action: AuditAction,
+    at: datetime,
+    actor: User = OWNER,
+    project: int | None = 7,
+    **fields: object,
 ) -> SignedAuditLog:
     """A line of the log, dated as the register dates one: in UTC, aware of it.
 
     A naive instant here would pass the test and raise against a real log,
     whose column carries its zone.
+
+    `project` is what the portfolio-wide reading gathers by, and `None` is a
+    real line: a gesture that touches no mission, and one whose mission has
+    since been deleted, both land there.
     """
     return SignedAuditLog(
-        log=AuditLog(action=action, actor_id=actor.id or 1, at=at, project_id=7, **fields),  # type: ignore[arg-type]
+        log=AuditLog(action=action, actor_id=actor.id or 1, at=at, project_id=project, **fields),  # type: ignore[arg-type]
         actor=actor,
         target_user=None,
     )
@@ -329,6 +339,22 @@ class TestWhatChanged:
             said = await what_changed(7, "2026-09-01")
         assert "Rien n'a bougé" in said
         assert "WAATcher" in said
+
+    @pytest.mark.asyncio
+    async def test_the_window_is_named_by_the_day_that_was_asked_for(self) -> None:
+        """Midnight in Paris is the day before in UTC, which is how it is held.
+
+        Read straight off the instant, « depuis le 2026-09-01 » came back as
+        « depuis le 31/08/2026 »: the window was right and the sentence named
+        a day nobody had asked about.
+        """
+        with Wired(
+            detail=ADetail(WAATCHER),
+            project_log=AuditLogPage(entries=[], total=0),
+        ):
+            said = await what_changed(7, "2026-09-01")
+
+        assert "depuis le 01/09/2026" in said
 
     @pytest.mark.asyncio
     async def test_an_unknown_project_is_said_rather_than_invented(self) -> None:
@@ -421,6 +447,32 @@ class TestWhatChangedReadsAsFrench:
         assert "une mise à jour postée, la dernière le 16/09" in said
 
     @pytest.mark.asyncio
+    async def test_a_single_unnamed_gesture_agrees_in_the_singular(self) -> None:
+        """« et 1 autres gestes » passes a suite asserting on the count."""
+        page = AuditLogPage(
+            entries=[a_line(AuditAction.PROJECT_ASSIGN, instant(2026, 9, 8, 10))],
+            total=1,
+        )
+        with Wired(detail=ADetail(WAATCHER), project_log=page):
+            said = await what_changed(7, "2026-09-01")
+
+        assert "et 1 autre geste," in said
+
+    @pytest.mark.asyncio
+    async def test_several_unnamed_gestures_agree_in_the_plural(self) -> None:
+        page = AuditLogPage(
+            entries=[
+                a_line(AuditAction.PROJECT_ASSIGN, instant(2026, 9, 8, 10)),
+                a_line(AuditAction.PROJECT_UNASSIGN, instant(2026, 9, 9, 10)),
+            ],
+            total=2,
+        )
+        with Wired(detail=ADetail(WAATCHER), project_log=page):
+            said = await what_changed(7, "2026-09-01")
+
+        assert "et 2 autres gestes," in said
+
+    @pytest.mark.asyncio
     async def test_time_taken_back_nets_out_against_time_declared(self) -> None:
         """A window that gave and took reads as what it left behind."""
         page = AuditLogPage(
@@ -445,3 +497,127 @@ class TestWhatChangedReadsAsFrench:
             said = await what_changed(7, "2026-09-01")
 
         assert "0,5 jour déclaré par une personne" in said
+
+
+NOMAD = Project(
+    id=11, label="NOMAD", kind=ProjectKind.PROJECT, status=ProjectStatus.OPERATIONS
+)
+
+
+class TestWhatChangedAcrossThePortfolio:
+    """« Qu'est-ce qui a bougé cette semaine ? » — the question no screen puts.
+
+    Asked with no project, `what_changed` reads the whole register. Two
+    properties hold it together: the window is told **project by project**,
+    because a flat chronology reads as the log it came from; and what is left
+    out is counted, never dropped.
+    """
+
+    @pytest.mark.asyncio
+    async def test_it_gathers_the_window_project_by_project(self) -> None:
+        page = AuditLogPage(
+            entries=[
+                a_line(
+                    AuditAction.PROJECT_STATUS_CHANGE,
+                    instant(2026, 9, 8, 10),
+                    old_value="scoping",
+                    new_value="development",
+                ),
+                a_line(AuditAction.UPDATE_POST, instant(2026, 9, 16, 17), project=11),
+            ],
+            total=2,
+        )
+        with Wired(log=page, projects=[listed(WAATCHER), listed(NOMAD)]):
+            said = await what_changed(since="2026-09-01")
+
+        assert "WAATcher (#7) : passé de cadrage à construction le 08/09" in said
+        assert "NOMAD (#11) : une mise à jour postée, la dernière le 16/09" in said
+
+    @pytest.mark.asyncio
+    async def test_it_counts_the_projects_the_window_touched(self) -> None:
+        page = AuditLogPage(
+            entries=[
+                a_line(AuditAction.UPDATE_POST, instant(2026, 9, 8, 10)),
+                a_line(AuditAction.UPDATE_POST, instant(2026, 9, 9, 10), project=11),
+            ],
+            total=2,
+        )
+        with Wired(log=page, projects=[listed(WAATCHER), listed(NOMAD)]):
+            said = await what_changed(since="2026-09-01")
+
+        assert said.startswith("Depuis le 01/09/2026, 2 projets ont bougé :")
+
+    @pytest.mark.asyncio
+    async def test_a_single_project_moving_agrees_in_the_singular(self) -> None:
+        page = AuditLogPage(
+            entries=[a_line(AuditAction.UPDATE_POST, instant(2026, 9, 8, 10))],
+            total=1,
+        )
+        with Wired(log=page, projects=[listed(WAATCHER)]):
+            said = await what_changed(since="2026-09-01")
+
+        assert "1 projet a bougé :" in said
+
+    @pytest.mark.asyncio
+    async def test_a_quiet_window_says_nothing_moved(self) -> None:
+        with Wired(log=AuditLogPage(entries=[], total=0), projects=[]):
+            said = await what_changed(since="2026-09-01")
+
+        assert said == "Rien n'a bougé dans le référentiel depuis le 01/09/2026."
+
+    @pytest.mark.asyncio
+    async def test_gestures_carrying_no_project_are_counted_rather_than_dropped(
+        self,
+    ) -> None:
+        """A teammate deactivated, a month validated, a project deleted since."""
+        page = AuditLogPage(
+            entries=[
+                a_line(AuditAction.UPDATE_POST, instant(2026, 9, 8, 10)),
+                a_line(
+                    AuditAction.USER_ROLE_CHANGE, instant(2026, 9, 9, 10), project=None
+                ),
+                a_line(
+                    AuditAction.USER_ROLE_CHANGE, instant(2026, 9, 9, 11), project=None
+                ),
+            ],
+            total=3,
+        )
+        with Wired(log=page, projects=[listed(WAATCHER)]):
+            said = await what_changed(since="2026-09-01")
+
+        assert "2 gestes ne portent sur aucun projet." in said
+
+    @pytest.mark.asyncio
+    async def test_a_project_the_reference_list_cannot_name_is_still_counted(
+        self,
+    ) -> None:
+        page = AuditLogPage(
+            entries=[a_line(AuditAction.UPDATE_POST, instant(2026, 9, 8, 10))],
+            total=1,
+        )
+        with Wired(log=page, projects=[]):
+            said = await what_changed(since="2026-09-01")
+
+        assert "#7" in said
+
+    @pytest.mark.asyncio
+    async def test_a_window_wider_than_one_page_says_so(self) -> None:
+        """What is read is 500 gestures. A reader told nothing reads it as all."""
+        page = AuditLogPage(
+            entries=[a_line(AuditAction.UPDATE_POST, instant(2026, 9, 8, 10))],
+            total=900,
+        )
+        with Wired(log=page, projects=[listed(WAATCHER)]):
+            said = await what_changed(since="2026-09-01")
+
+        assert "900" in said
+        assert "500" in said
+
+    @pytest.mark.asyncio
+    async def test_a_date_that_does_not_read_is_refused_before_anything_is_read(
+        self,
+    ) -> None:
+        with Wired(log=AuditLogPage(entries=[], total=0), projects=[]):
+            said = await what_changed(since="la semaine dernière")
+
+        assert "AAAA-MM-JJ" in said
