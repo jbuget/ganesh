@@ -10,6 +10,13 @@ export interface FilterOption {
   label: string;
   /** Dot or thumbnail shown before the label, if there is one. */
   thumbnail?: React.ReactNode;
+  /**
+   * The family the option belongs to, where the list is long enough to need
+   * them. Options carrying one must arrive grouped: the heading is drawn
+   * wherever the family changes, and a family coming back later would be
+   * announced twice.
+   */
+  group?: string;
 }
 
 interface FilterSelectProps {
@@ -25,6 +32,10 @@ interface FilterSelectProps {
  * Each value toggles on click, with no confirmation and no closing: three get
  * ticked in a row without reopening the menu. The trigger announces how many
  * are kept, so the bar says what it filters once folded.
+ *
+ * A long list scrolls inside the panel rather than growing past the top of
+ * the screen, and is read under the headings its options name — thirty
+ * choices in one flat column is a column abandoned at the third line.
  */
 export function FilterSelect({ label, options, values, onChange }: FilterSelectProps) {
   const [isOpen, setOpen] = useState(false);
@@ -57,12 +68,26 @@ export function FilterSelect({ label, options, values, onChange }: FilterSelectP
         <ChevronDown className="size-3.5 shrink-0 opacity-60" aria-hidden />
       </PopoverTrigger>
 
-      <PopoverContent align="start" className="w-60 p-1">
+      <PopoverContent
+        align="start"
+        className="max-h-[min(60vh,24rem)] w-72 overflow-y-auto p-1"
+      >
         <ul>
-          {options.map((option) => {
+          {options.map((option, rank) => {
             const kept = chosen.has(option.value);
+            // Drawn where the family changes, and never above the first one:
+            // a heading is what breaks a long list into readable stretches.
+            const opensFamily =
+              option.group !== undefined && option.group !== options[rank - 1]?.group;
             return (
               <li key={option.value}>
+                {opensFamily && (
+                  <p
+                    className={`px-2 pb-1 text-xs font-medium text-slate-500 ${rank > 0 ? "mt-2 border-t border-slate-200 pt-2" : "pt-1"}`}
+                  >
+                    {option.group}
+                  </p>
+                )}
                 <button
                   type="button"
                   aria-pressed={kept}

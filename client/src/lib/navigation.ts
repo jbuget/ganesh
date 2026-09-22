@@ -8,6 +8,7 @@ import {
   KeyRound,
   Milestone,
   Newspaper,
+  ScrollText,
   Smile,
   TableProperties,
   Users,
@@ -42,6 +43,11 @@ export const SCREENS: readonly Screen[] = [
   // Shown to everyone, as « Utilisateurs » is: the navigation says what
   // exists, and the permission lives on the actions.
   { href: "/api-mcp", label: "API / MCP", Icon: KeyRound },
+  // The register read across, where a mission's « Journal » tab reads one
+  // mission's. Same word for the same thing, and the only screen a deleted
+  // project can still be found from: its lines outlive it, with no mission
+  // left to open them in.
+  { href: "/logs", label: "Journal", Icon: ScrollText },
   // « Statistiques » closes the list, and stays there: it reads the others
   // rather than standing beside them. A new screen goes above it, never after.
   { href: "/stats", label: "Statistiques", Icon: ChartNoAxesColumn },
