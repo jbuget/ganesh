@@ -77,9 +77,20 @@ describe("the history one corrects", () => {
     expect(screen.getByText("en vigueur")).toBeInTheDocument();
   });
 
-  it("stays out of the way when there is only one", () => {
-    // The sentence above already says it; a list of one would only repeat.
-    show([FOUR_FIFTHS]);
+  it("still lists a lone rhythm, which is the only way to withdraw it", () => {
+    // Hidden below two, the list would vanish on the withdrawal that takes it
+    // from two to one — which reads as having deleted the lot — and the last
+    // rhythm left could never be removed at all.
+    show([FOUR_FIFTHS], { editable: true });
+
+    expect(screen.getByText("en vigueur")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Retirer le rythme du 1 mars 2026"),
+    ).toBeInTheDocument();
+  });
+
+  it("says nothing at all when nothing was ever declared", () => {
+    show([]);
 
     expect(screen.queryByText("en vigueur")).not.toBeInTheDocument();
   });

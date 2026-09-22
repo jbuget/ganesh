@@ -143,9 +143,11 @@ export function UserRhythm({
         </div>
       )}
 
-      {/* The history, from which one withdraws. A single rhythm is the one
-          already said in the sentence above, so the list starts at two. */}
-      {rhythms.length > 1 && (
+      {/* The history, from which one withdraws — shown from the first rhythm
+          on. Hidden below two, it would vanish on the withdrawal that takes it
+          from two to one, which reads as having deleted the lot; and the last
+          rhythm left would have no way out at all. */}
+      {rhythms.length > 0 && (
         <ul className="space-y-1 border-t border-slate-200 pt-2">
           {rhythms.map((one) => (
             <li
