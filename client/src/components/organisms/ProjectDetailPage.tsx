@@ -10,21 +10,39 @@ import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectTabs } from "@/components/organisms/ProjectTabs";
 import { phaseLabel, phaseDot } from "@/lib/board";
 import { formatDecimalDays } from "@/lib/dates";
+import { useWayBack, type WayBack } from "@/lib/navigation-trail";
 import { useProjectDetail } from "@/lib/use-project-detail";
 
 interface ProjectDetailPageProps {
   projectId: number;
 }
 
-/** The way back, in the same place in every state of the sheet. */
-function BackToBoard() {
+const WAY_BACK =
+  "mb-4 inline-flex cursor-pointer items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-800";
+
+/**
+ * The way back, in the same place in every state of the sheet.
+ *
+ * A link when it leads to an address — it is then worth opening beside the
+ * sheet. A button when it walks a step back, which is a gesture and not a
+ * destination: only the browser knows where it lands.
+ */
+function BackLink({ wayBack }: { wayBack: WayBack }) {
+  const arrow = <ArrowLeft className="size-4" aria-hidden />;
+
+  if (wayBack.href === undefined) {
+    return (
+      <button type="button" onClick={wayBack.back} className={WAY_BACK}>
+        {arrow}
+        {wayBack.label}
+      </button>
+    );
+  }
+
   return (
-    <Link
-      href="/kanban"
-      className="mb-4 inline-flex cursor-pointer items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-800"
-    >
-      <ArrowLeft className="size-4" aria-hidden />
-      Kanban
+    <Link href={wayBack.href} className={WAY_BACK}>
+      {arrow}
+      {wayBack.label}
     </Link>
   );
 }
@@ -37,12 +55,16 @@ function BackToBoard() {
  */
 export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
   const router = useRouter();
+  // With nothing behind — a link shared, a new tab — the reference list is
+  // where a sheet is found again, archived missions included, which the board
+  // does not show.
+  const wayBack = useWayBack({ href: "/projects", label: "Projets" });
   const sheet = useProjectDetail(projectId);
   const detail = sheet.detail;
 
   if (sheet.notFound) {
     return (
-      <PageLayout header={<BackToBoard />}>
+      <PageLayout header={<BackLink wayBack={wayBack} />}>
         <p className="text-sm text-slate-500">Ce projet n&apos;existe pas.</p>
       </PageLayout>
     );
@@ -50,7 +72,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
 
   if (!detail) {
     return (
-      <PageLayout header={<BackToBoard />}>
+      <PageLayout header={<BackLink wayBack={wayBack} />}>
         <p className="text-sm text-slate-500">Chargement…</p>
       </PageLayout>
     );
@@ -62,7 +84,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
     <PageLayout
       header={
         <>
-          <BackToBoard />
+          <BackLink wayBack={wayBack} />
 
           <header className="mb-6">
             {/* Above the title, therefore read before it: which whole this

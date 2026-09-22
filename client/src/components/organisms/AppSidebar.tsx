@@ -10,6 +10,7 @@ import { NotificationPanel } from "@/components/organisms/NotificationPanel";
 import { Button } from "@/components/ui/button";
 import { openPalette, useShortcutHint } from "@/lib/command-palette-store";
 import { SCREENS } from "@/lib/navigation";
+import { useNavigationTrail } from "@/lib/navigation-trail";
 import { useSignOut } from "@/lib/use-sign-out";
 import { useCurrentUser } from "@/lib/api/queries";
 import { toggleSidebar, useSidebarCollapsed } from "@/lib/sidebar-store";
@@ -24,6 +25,10 @@ import { toggleSidebar, useSidebarCollapsed } from "@/lib/sidebar-store";
  */
 export function AppSidebar() {
   const pathname = usePathname();
+  // Recorded from here rather than from each screen: the bar is mounted once,
+  // above them all, and therefore notes the arrival before the screen reached
+  // asks where it came from.
+  useNavigationTrail();
   const { user } = useCurrentUser();
   const collapsed = useSidebarCollapsed();
   const signOut = useSignOut();
