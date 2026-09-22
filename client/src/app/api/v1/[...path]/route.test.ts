@@ -180,4 +180,51 @@ describe("the BFF relay", () => {
     expect(headers.get("Authorization")).toBe("Bearer jeton");
     expect(called().url).toBe("http://localhost:8000/api/v1/projects?mission=4");
   });
+
+  /*
+    A seal that no longer opens is caught upstream, in `proxy.ts`. This is the
+    other case, and it went uncaught: a seal that opens perfectly onto a token
+    the API will not have. That is what every session opened by the fallback
+    door became the day production moved to Entra — the sealing secret did not
+    change, so the cookie kept opening, and the relay kept presenting a token
+    signed by nobody Entra knows. The person was sent to sign in, and the
+    cookie was still there when they came back, for the fortnight it was set
+    to live.
+  */
+  it("clears a session the API will not accept", async () => {
+    upstream(
+      new Response('{"detail":"Invalid authentication token."}', {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    const response = await GET(
+      new NextRequest("http://localhost:3000/api/v1/users/me"),
+    );
+
+    expect(response.status).toBe(401);
+    // The name is written out rather than imported: it is a contract with the
+    // browser, and renaming it would orphan every session already open.
+    const cleared = response.cookies.get("timesheet_token");
+    expect(cleared?.value).toBe("");
+    expect(cleared?.maxAge).toBe(0);
+  });
+
+  it("leaves the session alone when the API merely forbids the gesture", async () => {
+    // A deactivated account, or a manager's route reached by somebody else,
+    // answers 403. The session is perfectly good — signing out over it would
+    // turn « you may not do that » into « sign in again », which is a lie.
+    upstream(
+      new Response('{"detail":"This action is reserved for managers."}', {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    const response = await GET(new NextRequest("http://localhost:3000/api/v1/users"));
+
+    expect(response.status).toBe(403);
+    expect(response.cookies.get("timesheet_token")).toBeUndefined();
+  });
 });

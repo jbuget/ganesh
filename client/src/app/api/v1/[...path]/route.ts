@@ -22,6 +22,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { needsRefresh, refreshTokens } from "@/lib/auth/entra";
 import {
+  SESSION_COOKIE,
   currentSession,
   sealSession,
   sessionCookie,
@@ -128,7 +129,19 @@ async function proxy(request: NextRequest): Promise<NextResponse> {
     status: response.status,
     headers: relayedHeaders,
   });
-  if (renewed && session) {
+  // A session the API turns away is over, whatever the seal says. `proxy.ts`
+  // catches a seal that no longer opens; this catches the other case, the one
+  // it cannot see — a seal that opens perfectly onto a token the API will not
+  // have. Left in place, the browser sends it again at every request for the
+  // fortnight it was set to live, and the person walks from a screen to the
+  // sign-in page and back without anything changing.
+  //
+  // 401 and nothing else: a 403 is the API saying the gesture is not theirs
+  // to make, which says nothing about the session and must not sign anybody
+  // out.
+  if (response.status === 401) {
+    relayed.cookies.set(SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+  } else if (renewed && session) {
     relayed.cookies.set(sessionCookie(await sealSession(session)));
   }
   return relayed;
