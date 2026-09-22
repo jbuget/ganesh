@@ -175,4 +175,27 @@ describe("AppSidebar", () => {
       screen.getByRole("button", { name: /^Rechercher \(.+\)$/ }),
     ).toBeInTheDocument();
   });
+
+  // A short screen used to push the foot of the bar below the fold: the name
+  // and the way out simply were not there. The bar is held to the height of
+  // the window, as `PageLayout` holds the screen beside it, and the tabs
+  // scroll inside it.
+  it("holds itself to the height of the window", () => {
+    render(<AppSidebar />);
+
+    const bar = screen.getByRole("complementary");
+
+    expect(bar.className).toContain("h-screen");
+  });
+
+  it("scrolls its tabs rather than pushing the foot off the screen", () => {
+    render(<AppSidebar />);
+
+    const tabs = screen.getByRole("navigation", { name: "Navigation principale" });
+
+    expect(tabs.className).toContain("overflow-y-auto");
+    // Without it a flex child refuses to shrink under its content, and the
+    // overflow never happens.
+    expect(tabs.className).toContain("min-h-0");
+  });
 });
