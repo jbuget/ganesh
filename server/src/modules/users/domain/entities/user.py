@@ -33,8 +33,16 @@ def _handle(value: str | None) -> str | None:
 
 
 class Role(StrEnum):
-    """What a user is allowed to do."""
+    """What a user is allowed to do.
 
+    Declared from the least to the most: an account comes into being as a
+    requester, and a manager says afterwards who is behind it.
+    """
+
+    #: Someone who comes to express a need, and does nothing else here. The
+    #: whole company signs in through the same Entra tenant, so this is what
+    #: an unknown identity gets: a role that opens nothing on its own.
+    REQUESTER = "REQUESTER"
     TEAMMATE = "TEAMMATE"
     MANAGER = "MANAGER"
 
@@ -47,7 +55,7 @@ class User:
     entra_oid: str
     email: str
     display_name: str
-    role: Role = Role.TEAMMATE
+    role: Role = Role.REQUESTER
     is_active: bool = field(default=True)
     last_login_at: datetime | None = None
     #: Civil name, told apart from the display name Entra provides: « L. Chen »
@@ -99,6 +107,15 @@ class User:
     def is_manager(self) -> bool:
         return self.role is Role.MANAGER
 
+    @property
+    def is_requester(self) -> bool:
+        """Whether this account only ever comes to ask for something.
+
+        It is the one thing the door reads: every screen of the application is
+        closed to a requester, and the requests open themselves to them.
+        """
+        return self.role is Role.REQUESTER
+
     def can_reopen_month(self) -> bool:
         """Only a manager can reopen a validated month."""
         return self.is_active and self.is_manager
@@ -108,8 +125,12 @@ class User:
         return self.is_active and self.is_manager
 
     def can_edit_open_months(self) -> bool:
-        """Anyone may edit an open month, a colleague's included."""
-        return self.is_active
+        """Anyone on the team may edit an open month, a colleague's included.
+
+        A requester holds no month: they declare no time, and the grid is not
+        a screen they ever reach.
+        """
+        return self.is_active and not self.is_requester
 
     def can_deactivate(self, target: "User") -> bool:
         """Tells whether this manager may cut `target` off.

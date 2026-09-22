@@ -3,6 +3,11 @@ import type { Role } from "@/lib/api/generated/model";
 /** Functional roles, from the least to the most empowered. */
 export const ROLES: { value: Role; label: string; description: string }[] = [
   {
+    value: "REQUESTER",
+    label: "Demandeur",
+    description: "Dépose une demande, et ne voit rien d'autre de l'application.",
+  },
+  {
     value: "TEAMMATE",
     label: "Collaborateur",
     description: "Saisit son mois et celui de ses collègues.",

@@ -64,7 +64,12 @@ def build(users: list[User] | None = None):
     )
 
 
-async def test_an_unknown_identity_creates_a_teammate() -> None:
+async def test_an_unknown_identity_creates_a_requester() -> None:
+    """The whole company signs in through Entra; the team is named by hand.
+
+    An account therefore comes into being with the role that opens the least,
+    and a manager promotes it the day they say who is behind it.
+    """
     provision, _, repo, _, _, _ = build()
 
     user = await provision.execute(
@@ -72,7 +77,7 @@ async def test_an_unknown_identity_creates_a_teammate() -> None:
     )
 
     assert user.id is not None
-    assert user.role is Role.TEAMMATE
+    assert user.role is Role.REQUESTER
     assert len(await repo.list_all()) == 1
 
 

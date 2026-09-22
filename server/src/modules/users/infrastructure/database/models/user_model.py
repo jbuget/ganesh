@@ -21,7 +21,7 @@ class UserModel(Base):
     display_name: Mapped[str] = mapped_column(String(255))
     role: Mapped[Role] = mapped_column(
         Enum(Role, name="user_role", native_enum=False, length=16),
-        default=Role.TEAMMATE,
+        default=Role.REQUESTER,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     # Nullable: accounts pre-assigned by the seed have never logged in.

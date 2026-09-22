@@ -41,6 +41,36 @@ def test_any_active_user_can_edit_an_open_month_of_anyone(role: Role) -> None:
     assert make_user(role).can_edit_open_months() is True
 
 
+def test_a_requester_belongs_to_no_month() -> None:
+    """Someone who only expresses needs declares no time, their own included."""
+    assert make_user(Role.REQUESTER).can_edit_open_months() is False
+
+
+def test_a_requester_manages_nobody_and_reopens_nothing() -> None:
+    requester = make_user(Role.REQUESTER)
+
+    assert requester.can_manage_teammates() is False
+    assert requester.can_reopen_month() is False
+
+
+@pytest.mark.parametrize("role", [Role.TEAMMATE, Role.MANAGER])
+def test_the_team_is_told_apart_from_whoever_only_asks(role: Role) -> None:
+    assert make_user(role).is_requester is False
+    assert make_user(Role.REQUESTER).is_requester is True
+
+
+def test_an_account_opens_nothing_until_somebody_says_who_it_is() -> None:
+    """The default role is the one that may do the least."""
+    user = User(
+        id=None,
+        entra_oid="oid-fresh",
+        email="fresh@waat.fr",
+        display_name="Fresh",
+    )
+
+    assert user.role is Role.REQUESTER
+
+
 def test_a_deactivated_user_can_no_longer_edit_anything() -> None:
     assert make_user(is_active=False).can_edit_open_months() is False
 

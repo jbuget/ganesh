@@ -7,10 +7,14 @@
 
 /**
  * What a user is allowed to do.
+ *
+ * Declared from the least to the most: an account comes into being as a
+ * requester, and a manager says afterwards who is behind it.
  */
 export type Role = (typeof Role)[keyof typeof Role];
 
 export const Role = {
+  REQUESTER: "REQUESTER",
   TEAMMATE: "TEAMMATE",
   MANAGER: "MANAGER",
 } as const;

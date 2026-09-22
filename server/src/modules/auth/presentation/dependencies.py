@@ -47,12 +47,40 @@ def local_token_service(settings: Settings) -> LocalTokenService:
     )
 
 
-async def get_current_user(
+def admit(user: User) -> User:
+    """The door: who walks into the application, and who is turned away.
+
+    Written apart from the dependency that calls it so that it can be read —
+    and tested — for what it is: the one place the application says who it is
+    for.
+    """
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account is deactivated.",
+        )
+    # A requester is recognised at the door and goes no further: every screen
+    # of the application leans on this dependency, and therefore stays the
+    # team's. The requests open themselves to them, one route at a time, the
+    # way a route opens itself to a machine.
+    if user.is_requester:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account may only reach the requests.",
+        )
+    return user
+
+
+async def get_signed_in_user(
     authorization: str | None = Header(default=None),
     session: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> User:
-    """Resolves the current user, provisioning them if need be.
+    """Resolves whoever is signed in, provisioning them if need be.
+
+    Anybody with an Entra identity, requesters included — which is why almost
+    no route depends on it. What it is for is the handful of routes that a
+    requester must reach, and they say so by asking for it.
 
     With `REQUIRE_AUTH=false`, a development identity is used: it allows work
     without having declared the redirect URI on the Entra side. This mode must
@@ -107,13 +135,14 @@ async def get_current_user(
 
     user = await provision.execute(identity)
     await session.commit()
-
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="This account is deactivated.",
-        )
     return user
+
+
+async def get_current_user(
+    user: User = Depends(get_signed_in_user),
+) -> User:
+    """The user every screen of the application is read by: a team member."""
+    return admit(user)
 
 
 async def get_current_manager(

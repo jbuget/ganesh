@@ -18,6 +18,11 @@ class ProvisionUserUseCase:
     Matching goes by the Entra id first, then by email: that second case is
     what lets the seed pre-assign roles before the very first login.
 
+    An unknown identity becomes a requester: the whole company signs in
+    through the same tenant, and being recognised at the door says nothing
+    about belonging to the team. A manager promotes the account the day they
+    fill in whose it is.
+
     It is also the only place the API sees an identity go by: this is
     therefore where the last login is stamped, subject to the freshness window
     the domain holds.
@@ -51,7 +56,7 @@ class ProvisionUserUseCase:
                 entra_oid=identity.oid,
                 email=identity.email,
                 display_name=identity.display_name,
-                role=Role.TEAMMATE,
+                role=Role.REQUESTER,
                 last_login_at=now,
             )
         )
