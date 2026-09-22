@@ -33,6 +33,20 @@ describe("the sentence the reader gets", () => {
     );
   });
 
+  it("names an absence rather than counting it as nought", () => {
+    // « 0 jour par semaine » reads as a figure somebody forgot to fill in.
+    // What it says is that nothing is expected of them for now.
+    expect(
+      formatRhythm({
+        monday: 0,
+        tuesday: 0,
+        wednesday: 0,
+        thursday: 0,
+        friday: 0,
+      }),
+    ).toBe("aucun jour travaillé");
+  });
+
   it("says « jour » alone when there is only one", () => {
     expect(
       formatRhythm({

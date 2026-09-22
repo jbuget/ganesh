@@ -74,9 +74,17 @@ export function nextValue(value: number): DayValue {
   return 1;
 }
 
-/** « 4 jours par semaine », « 4,5 jours par semaine », « 1 jour par semaine ». */
+/**
+ * « 4 jours par semaine », « 4,5 jours par semaine », « 1 jour par semaine ».
+ *
+ * A week worth nothing is named rather than counted: « 0 jour par semaine »
+ * reads as a figure somebody forgot to fill in, where what it says is that
+ * nothing is expected of this teammate for now — a leave, a sabbatical, a
+ * week of school. Why is never asked, here or anywhere else.
+ */
 export function formatRhythm(pattern: WeekPattern): string {
   const total = daysPerWeek(pattern);
+  if (total === 0) return "aucun jour travaillé";
   const plural = total >= 2 ? "jours" : "jour";
   return `${formatDecimalDays(total)} ${plural} par semaine`;
 }

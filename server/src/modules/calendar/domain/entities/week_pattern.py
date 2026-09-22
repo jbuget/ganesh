@@ -29,6 +29,16 @@ class WeekPattern:
 
     Full time unless said otherwise: a motif is read as the exception to the
     ordinary week, so declaring a Wednesday off takes one field, not five.
+
+    A week worth nothing at all is one of them. A parental leave, a
+    sabbatical, a week of school: the teammate is still of the team — their
+    account stays open, their past months stay readable — and nothing is
+    expected of them meanwhile. Counting them at five days is the very lie
+    rhythms exist to stop telling, and deactivating their account would say
+    something else entirely: that they are gone.
+
+    Nothing here says « until ». A rhythm holds until the next one opens, so
+    the end of an absence is declared like any other change.
     """
 
     monday: float = 1.0
@@ -43,11 +53,6 @@ class WeekPattern:
                 raise ValidationError(
                     f"A day of a rhythm is 0, 0.5 or 1, not {value} ({name}).",
                 )
-        if not self.days_per_week:
-            # Expecting nothing of somebody is what deactivating their account
-            # says. Said as a rhythm, it would leave every coverage of theirs a
-            # nought over a nought, which reads as a figure and is not one.
-            raise ValidationError("A rhythm expects at least a half day a week.")
 
     @property
     def days(self) -> tuple[float, ...]:

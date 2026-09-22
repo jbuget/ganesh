@@ -50,8 +50,14 @@ def test_a_day_is_worth_a_half_or_a_whole_one_or_nothing_at_all() -> None:
         WeekPattern(monday=0.8)
 
 
-def test_a_rhythm_expecting_nothing_is_refused() -> None:
-    # Expecting nothing of somebody is what deactivating their account says.
-    # Said as a rhythm, it would leave a coverage of nought over nought.
-    with pytest.raises(ValidationError):
-        WeekPattern(monday=0.0, tuesday=0.0, wednesday=0.0, thursday=0.0, friday=0.0)
+def test_a_week_with_no_day_worked_is_a_rhythm_like_any_other() -> None:
+    # A parental leave, a sabbatical, a week of school: the teammate is still
+    # of the team — their account stays open, their past months stay readable
+    # — and nothing is expected of them meanwhile. Counting them at five days
+    # is the very lie this whole thing exists to stop telling.
+    absent = WeekPattern(
+        monday=0.0, tuesday=0.0, wednesday=0.0, thursday=0.0, friday=0.0
+    )
+
+    assert absent.days_per_week == 0.0
+    assert absent.on(MONDAY) == 0.0

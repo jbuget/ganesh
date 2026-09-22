@@ -119,6 +119,30 @@ class TestCoverage:
 
         assert stats.coverage.expected_days == 15
 
+    async def test_somebody_away_is_expected_nothing_of(self) -> None:
+        # Three teammates over five working days. One of them is away the
+        # whole window, so the window calls for ten person-days: counting
+        # them at five would make the team look late for somebody's leave.
+        stats = await run(
+            declared_by_day={TODAY: 9.0},
+            rhythms=[
+                Rhythm(
+                    id=None,
+                    user_id=1,
+                    pattern=WeekPattern(
+                        monday=0.0,
+                        tuesday=0.0,
+                        wednesday=0.0,
+                        thursday=0.0,
+                        friday=0.0,
+                    ),
+                    effective_from=date(2026, 1, 1),
+                )
+            ],
+        )
+
+        assert stats.coverage.expected_days == 10
+
     async def test_deactivated_teammates_are_expected_nothing(self) -> None:
         # Someone cut off cannot declare: counting them would make the whole
         # team look late for a seat nobody sits in.

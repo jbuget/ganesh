@@ -69,6 +69,37 @@ describe("what the panel says", () => {
   });
 });
 
+describe("a teammate away for a while", () => {
+  const AWAY: WorkRhythmResponse = {
+    effective_from: "2026-01-01",
+    monday: 0,
+    tuesday: 0,
+    wednesday: 0,
+    thursday: 0,
+    friday: 0,
+    days_per_week: 0,
+    is_in_force: true,
+  };
+
+  it("is named rather than counted as nought", () => {
+    show([AWAY]);
+
+    // Twice over: the sentence at the top, and the row in the history.
+    expect(screen.getAllByText(/aucun jour travaillé/)).toHaveLength(2);
+    expect(screen.getByText(/depuis le 1 janv. 2026/)).toBeInTheDocument();
+  });
+
+  it("can say they are back, like any other change", async () => {
+    // Nothing carries an « until »: a rhythm holds until the next one opens.
+    const { onDeclare } = show([AWAY], { editable: true });
+
+    await userEvent.click(screen.getByLabelText(/^Lundi/));
+
+    expect(screen.getByText(/1 jour par semaine/)).toBeInTheDocument();
+    expect(onDeclare).not.toHaveBeenCalled();
+  });
+});
+
 describe("the history one corrects", () => {
   it("lists every rhythm declared, and marks the one that holds", () => {
     show([THREE_DAYS, FOUR_FIFTHS]);

@@ -54,6 +54,27 @@ class TestWhatAWeekOffers:
         # before rhythms existed.
         assert taken_over_the_week(Capacity.over([LEA], WEEK, {})) == 4.5
 
+    def test_somebody_away_offers_nothing_at_all(self) -> None:
+        # And no reserve is held back out of nothing.
+        capacity = Capacity.over(
+            [LEA],
+            WEEK,
+            {},
+            {
+                LEA: history(
+                    WeekPattern(
+                        monday=0.0,
+                        tuesday=0.0,
+                        wednesday=0.0,
+                        thursday=0.0,
+                        friday=0.0,
+                    )
+                )
+            },
+        )
+
+        assert taken_over_the_week(capacity) == 0.0
+
 
 class TestWhichDayIsNeverDecidedByTheRhythm:
     def test_a_day_off_may_still_be_given_work(self) -> None:

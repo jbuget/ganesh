@@ -111,8 +111,9 @@ async def test_a_day_worth_anything_else_is_refused(client: AsyncClient) -> None
     assert response.status_code == 422
 
 
-async def test_a_rhythm_expecting_nothing_is_refused(client: AsyncClient) -> None:
-    # Expecting nothing of somebody is what deactivating their account says.
+async def test_a_week_with_no_day_worked_is_accepted(client: AsyncClient) -> None:
+    # A long absence is a fact the register must be able to hold: the teammate
+    # is still of the team, and nothing is expected of them meanwhile.
     response = await client.put(
         URL,
         json={
@@ -125,7 +126,8 @@ async def test_a_rhythm_expecting_nothing_is_refused(client: AsyncClient) -> Non
         },
     )
 
-    assert response.status_code == 422
+    assert response.status_code == 200
+    assert response.json()["days_per_week"] == 0.0
 
 
 async def test_there_is_no_route_to_declare_for_somebody_else(
