@@ -29,7 +29,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const state = request.nextUrl.searchParams.get("state");
 
   // Entra says so itself when the person declined, or when the tenant refused.
-  if (request.nextUrl.searchParams.get("error")) {
+  const refusal = request.nextUrl.searchParams.get("error");
+  if (refusal) {
+    // Written down, because this is the one refusal whose reason lives
+    // nowhere else: Entra names it in `error_description`, as an AADSTS code,
+    // and that code is the whole of the diagnosis — an application nobody
+    // consented to, a person not assigned to it. Without it, a colleague who
+    // cannot sign in leaves « denied » in an address bar and nothing else.
+    // For the logs and not for them: it names the tenant and the client.
+    console.error(
+      "[auth] Entra a refusé la connexion :",
+      refusal,
+      request.nextUrl.searchParams.get("error_description") ?? "",
+    );
     return refused(request, "denied");
   }
   if (!code || !state) return refused(request, "incomplete");
