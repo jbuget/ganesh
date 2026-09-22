@@ -51,6 +51,10 @@ class NotificationResponse(BaseModel):
     #: Absent once the mission has been deleted; what it takes to still read
     #: the line is then carried in the payload.
     project: NotificationProjectResponse | None
+    #: The need a line speaks of. The identifier alone: what it takes to read
+    #: the line — its title — travels in the payload, as it does for a
+    #: mission that has been deleted.
+    request_id: int | None = None
     #: The month, for everything that concerns a timesheet.
     day: date | None
     #: How many times the same gesture folded into this line.

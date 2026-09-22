@@ -132,6 +132,12 @@ const WORDINGS: Record<
     what: "vous a mentionné dans une mise à jour sur",
     about: projectLabel(line),
   }),
+  // The title travels on the line: what is waiting is read from the bell,
+  // without having to open it — and it still reads if the need is withdrawn.
+  "request.submitted": (line) => ({
+    what: "a déposé la demande",
+    about: text(line.payload, "title") ?? "une demande",
+  }),
 };
 
 /** « 22 modifications » — said only once a gesture folded more than once. */
@@ -153,6 +159,9 @@ function destination(line: NotificationResponse): string | undefined {
   }
   if (line.kind === "user.role_changed") return undefined;
   if (line.kind.startsWith("api_key.")) return "/api-mcp";
+  if (line.kind.startsWith("request.")) {
+    return line.request_id ? `/requests?request=${line.request_id}` : "/requests";
+  }
   return line.project ? `/projects/${line.project.id}` : undefined;
 }
 

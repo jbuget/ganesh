@@ -41,6 +41,9 @@ from src.modules.planning.presentation.api.routes.planning_router import (
 from src.modules.projects.presentation.api.routes.project_router import (
     router as project_router,
 )
+from src.modules.requests.presentation.api.routes.request_router import (
+    router as request_router,
+)
 from src.modules.stats.presentation.api.routes.statistics_router import (
     router as statistics_router,
 )
@@ -90,6 +93,7 @@ for module_router in (
     activity_router,
     statistics_router,
     gazette_router,
+    request_router,
 ):
     app.include_router(module_router, prefix=settings.api_prefix)
 

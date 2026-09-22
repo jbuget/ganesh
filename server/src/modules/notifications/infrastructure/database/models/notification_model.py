@@ -47,6 +47,9 @@ class NotificationModel(Base):
     project_id: Mapped[int | None] = mapped_column(
         ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True
     )
+    request_id: Mapped[int | None] = mapped_column(
+        ForeignKey("requests.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     #: The month, for everything that concerns a timesheet; a day for nothing
     #: else. It is what folds two edits on one month into a single line.
     day: Mapped[date | None] = mapped_column(Date, nullable=True)

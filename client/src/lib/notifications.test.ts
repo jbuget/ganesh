@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { notificationSentence } from "@/lib/notifications";
-import type { NotificationKind, NotificationResponse } from "@/lib/api/generated/model";
+import { NotificationKind } from "@/lib/api/generated/model";
+import type { NotificationResponse } from "@/lib/api/generated/model";
 
 const NINO = { id: 2, display_name: "Nino Garo", initials: "NG" };
 const SITE = { id: 42, label: "Refonte du site" };
@@ -102,28 +103,32 @@ describe("notificationSentence", () => {
   });
 
   it("gives every kind a sentence", () => {
-    const KINDS: NotificationKind[] = [
-      "project.assigned",
-      "project.unassigned",
-      "timesheet.edited",
-      "month.reopened",
-      "project.update_posted",
-      "project.status_changed",
-      "project.archived",
-      "project.deleted",
-      "user.role_changed",
-      "user.deactivated",
-      "user.activated",
-      "api_key.created",
-      "api_key.revoked",
-      "update.mention",
-    ];
+    // Read from the generated contract rather than copied out: a kind added
+    // server-side reaches this test on its own, and fails it until somebody
+    // says it in French.
+    const KINDS = Object.values(NotificationKind);
 
     for (const kind of KINDS) {
       const said = notificationSentence(line(kind, { day: "2026-01-01" }));
       expect(said.what, kind).not.toBe("");
       expect(said.what, kind).toBeTruthy();
     }
+  });
+});
+
+describe("a need somebody filed", () => {
+  it("says what is waiting without having to open it", () => {
+    const said = notificationSentence(
+      line("request.submitted", {
+        project: null,
+        request_id: 7,
+        payload: { title: "Relances de paiement à la main" },
+      }),
+    );
+
+    expect(said.what).toBe("a déposé la demande");
+    expect(said.about).toBe("Relances de paiement à la main");
+    expect(said.href).toBe("/requests?request=7");
   });
 });
 

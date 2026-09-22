@@ -11,6 +11,11 @@ from src.shared.enums.org_level import OrgLevel
 from src.shared.exceptions.domain_exceptions import ValidationError
 
 
+def may_sponsor(user: User) -> bool:
+    """Whether this person may carry a need: a member of the COMEX, still here."""
+    return user.org_level is OrgLevel.COMEX and user.is_active
+
+
 def ensure_they_may_sponsor(sponsors: list[User]) -> None:
     """Refuses anybody who does not sit in the COMEX, or no longer comes in."""
     for sponsor in sponsors:

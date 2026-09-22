@@ -31,6 +31,9 @@ class AuditLogModel(Base):
     project_id: Mapped[int | None] = mapped_column(
         ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True
     )
+    request_id: Mapped[int | None] = mapped_column(
+        ForeignKey("requests.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     day: Mapped[date | None] = mapped_column(Date, nullable=True)
     old_value: Mapped[str | None] = mapped_column(String(64), nullable=True)
     new_value: Mapped[str | None] = mapped_column(String(64), nullable=True)

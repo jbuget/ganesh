@@ -34,6 +34,7 @@ def to_entity(model: NotificationModel) -> Notification:
     )
     notification.at = model.at
     notification.project_id = model.project_id
+    notification.request_id = model.request_id
     notification.day = model.day
     notification.payload = model.payload
     notification.count = model.count
@@ -55,6 +56,7 @@ class SqlNotificationRepository(NotificationRepository):
             actor_id=notification.actor_id,
             at=notification.at,
             project_id=notification.project_id,
+            request_id=notification.request_id,
             day=notification.day,
             payload=notification.payload,
             count=notification.count,

@@ -69,6 +69,10 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
+from src.modules.requests.domain.entities.request import Request
+from src.modules.requests.domain.repositories.request_repository import (
+    RequestRepository,
+)
 from src.modules.stats.domain.entities.surface_usage import Surface, Tally, Trace
 from src.modules.stats.domain.repositories.statistics_repository import (
     StatisticsRepository,
@@ -998,3 +1002,43 @@ class InMemoryDigestRepository(DigestRepository):
         stored = replace(digest, id=len(self.digests) + 1)
         self.digests.append(stored)
         return stored
+
+
+class InMemoryRequestRepository(RequestRepository):
+    def __init__(self, requests: list[Request] | None = None) -> None:
+        self._requests: dict[int, Request] = {}
+        self._next_id = 1
+        for request in requests or []:
+            self._requests[request.id or self._next_id] = request
+            self._next_id = max(self._next_id, (request.id or 0) + 1)
+
+    async def get_by_id(self, request_id: int) -> Request | None:
+        return self._requests.get(request_id)
+
+    async def list_for_requester(self, requester_id: int) -> list[Request]:
+        return [
+            request
+            for request in self._requests.values()
+            if request.requester_id == requester_id
+        ]
+
+    async def list_all(self, include_drafts: bool = False) -> list[Request]:
+        return [
+            request
+            for request in self._requests.values()
+            if include_drafts or not request.is_draft
+        ]
+
+    async def add(self, request: Request) -> Request:
+        request.id = self._next_id
+        self._next_id += 1
+        self._requests[request.id] = request
+        return request
+
+    async def update(self, request: Request) -> Request:
+        if request.id is not None:
+            self._requests[request.id] = request
+        return request
+
+    async def delete(self, request_id: int) -> None:
+        self._requests.pop(request_id, None)
