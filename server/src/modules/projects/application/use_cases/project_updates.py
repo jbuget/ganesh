@@ -1,6 +1,6 @@
 """A mission's follow-up thread: post, correct, withdraw, read."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
@@ -13,10 +13,12 @@ from src.modules.notifications.domain.services.fan_out import notify
 from src.modules.projects.application.dtos.update_dto import (
     EditUpdateCommand,
     PostUpdateCommand,
+    ReactCommand,
     RemoveUpdateCommand,
 )
 from src.modules.projects.application.use_cases.project_audience import people_on
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
+from src.modules.projects.domain.entities.update_reaction import Reaction
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -26,19 +28,36 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
+from src.modules.projects.domain.repositories.update_reaction_repository import (
+    UpdateReactionRepository,
+)
 from src.modules.projects.domain.services.mentions import mentioned_ids
+from src.modules.projects.domain.services.reaction_tally import tally
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 from src.shared.utils import clock
 
 
+@dataclass(frozen=True)
+class SignedReaction:
+    """One sign, and the people who left it, in the order they came.
+
+    Names rather than ids: a reaction is read as « L. Chen et N. Garo », and
+    whoever has since left the register is simply not named.
+    """
+
+    reaction: Reaction
+    people: tuple[User, ...]
+
+
 @dataclass
 class SignedUpdate:
-    """An update and who wrote it."""
+    """An update, who wrote it, and what it was answered without words."""
 
     update: ProjectUpdate
     author: User
+    reactions: list[SignedReaction] = field(default_factory=list)
 
 
 class _UpdateUseCase:
@@ -183,17 +202,78 @@ class RemoveProjectUpdateUseCase(_UpdateUseCase):
         )
 
 
-class ListProjectUpdatesUseCase:
-    """A mission's thread, every update signed."""
+class ReactToUpdateUseCase:
+    """Answers an update without writing.
 
-    def __init__(self, updates: ProjectUpdateRepository, users: UserRepository) -> None:
+    Nothing is traced: a reaction decides nothing and is left by the dozen,
+    where the « Journal » tab exists to show what steered the mission. The
+    kanban rank is left out for the same reason. Nobody is told either — a
+    reaction that notified would stop being the cheap gesture it is.
+    """
+
+    def __init__(
+        self, updates: ProjectUpdateRepository, reactions: UpdateReactionRepository
+    ) -> None:
+        self._updates = updates
+        self._reactions = reactions
+
+    async def execute(self, command: ReactCommand, now: datetime | None = None) -> None:
+        update = await self._updates.get(command.update_id)
+        if update is None:
+            raise EntityNotFoundError("Unknown update.")
+        await self._reactions.add(
+            update.react(command.actor_id, command.reaction, at=now or clock.now())
+        )
+
+
+class WithdrawReactionUseCase:
+    """Takes a sign back.
+
+    It takes the caller's own back and no one else's: the command carries the
+    actor, and there is no id to pass for somebody else.
+    """
+
+    def __init__(self, reactions: UpdateReactionRepository) -> None:
+        self._reactions = reactions
+
+    async def execute(self, command: ReactCommand) -> None:
+        await self._reactions.remove(
+            update_id=command.update_id,
+            user_id=command.actor_id,
+            reaction=command.reaction,
+        )
+
+
+class ListProjectUpdatesUseCase:
+    """A mission's thread, every update signed and its answers counted."""
+
+    def __init__(
+        self,
+        updates: ProjectUpdateRepository,
+        users: UserRepository,
+        reactions: UpdateReactionRepository,
+    ) -> None:
         self._updates = updates
         self._users = users
+        self._reactions = reactions
 
     async def execute(self, project_id: int) -> list[SignedUpdate]:
         users = {u.id: u for u in await self._users.list_all(True)}
+        left = await self._reactions.list_for_project(project_id)
         return [
-            SignedUpdate(update=update, author=users[update.author_id])
+            SignedUpdate(
+                update=update,
+                author=users[update.author_id],
+                reactions=[
+                    SignedReaction(
+                        reaction=one.reaction,
+                        people=tuple(
+                            users[who] for who in one.user_ids if who in users
+                        ),
+                    )
+                    for one in tally(left.get(update.id or 0, []))
+                ],
+            )
             for update in await self._updates.list_for_project(project_id)
             if update.author_id in users
         ]

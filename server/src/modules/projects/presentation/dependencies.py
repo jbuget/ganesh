@@ -63,7 +63,9 @@ from src.modules.projects.application.use_cases.project_updates import (
     EditProjectUpdateUseCase,
     ListProjectUpdatesUseCase,
     PostProjectUpdateUseCase,
+    ReactToUpdateUseCase,
     RemoveProjectUpdateUseCase,
+    WithdrawReactionUseCase,
 )
 from src.modules.projects.application.use_cases.update_project import (
     UpdateProjectUseCase,
@@ -93,6 +95,9 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
+from src.modules.projects.domain.repositories.update_reaction_repository import (
+    UpdateReactionRepository,
+)
 from src.modules.projects.infrastructure.database.repositories.project_assignee_repository_impl import (
     SqlProjectAssigneeRepository,
 )
@@ -104,6 +109,9 @@ from src.modules.projects.infrastructure.database.repositories.project_detail_re
 )
 from src.modules.projects.infrastructure.database.repositories.project_update_repository_impl import (
     SqlProjectUpdateRepository,
+)
+from src.modules.projects.infrastructure.database.repositories.update_reaction_repository_impl import (
+    SqlUpdateReactionRepository,
 )
 from src.modules.projects.infrastructure.storage.s3_attachment_store import (
     S3AttachmentStore,
@@ -127,6 +135,12 @@ def get_project_update_repository(
     session: AsyncSession = Depends(get_db),
 ) -> ProjectUpdateRepository:
     return SqlProjectUpdateRepository(session)
+
+
+def get_update_reaction_repository(
+    session: AsyncSession = Depends(get_db),
+) -> UpdateReactionRepository:
+    return SqlUpdateReactionRepository(session)
 
 
 def get_project_attachment_repository(
@@ -446,8 +460,22 @@ def get_remove_update_use_case(
 def get_list_updates_use_case(
     updates: ProjectUpdateRepository = Depends(get_project_update_repository),
     users: UserRepository = Depends(get_user_repository),
+    reactions: UpdateReactionRepository = Depends(get_update_reaction_repository),
 ) -> ListProjectUpdatesUseCase:
-    return ListProjectUpdatesUseCase(updates=updates, users=users)
+    return ListProjectUpdatesUseCase(updates=updates, users=users, reactions=reactions)
+
+
+def get_react_to_update_use_case(
+    updates: ProjectUpdateRepository = Depends(get_project_update_repository),
+    reactions: UpdateReactionRepository = Depends(get_update_reaction_repository),
+) -> ReactToUpdateUseCase:
+    return ReactToUpdateUseCase(updates=updates, reactions=reactions)
+
+
+def get_withdraw_reaction_use_case(
+    reactions: UpdateReactionRepository = Depends(get_update_reaction_repository),
+) -> WithdrawReactionUseCase:
+    return WithdrawReactionUseCase(reactions=reactions)
 
 
 def get_upload_attachment_use_case(

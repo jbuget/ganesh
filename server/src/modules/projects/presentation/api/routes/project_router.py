@@ -53,6 +53,7 @@ from src.modules.projects.application.dtos.project_dto import (
 from src.modules.projects.application.dtos.update_dto import (
     EditUpdateCommand,
     PostUpdateCommand,
+    ReactCommand,
     RemoveUpdateCommand,
 )
 from src.modules.projects.application.use_cases.archive_project import (
@@ -99,7 +100,9 @@ from src.modules.projects.application.use_cases.project_updates import (
     EditProjectUpdateUseCase,
     ListProjectUpdatesUseCase,
     PostProjectUpdateUseCase,
+    ReactToUpdateUseCase,
     RemoveProjectUpdateUseCase,
+    WithdrawReactionUseCase,
 )
 from src.modules.projects.application.use_cases.update_project import (
     UpdateProjectUseCase,
@@ -119,6 +122,7 @@ from src.modules.projects.application.use_cases.update_project_registry import (
 )
 from src.modules.projects.domain.entities.project_attachment import MAX_ATTACHMENT_BYTES
 from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.projects.domain.entities.update_reaction import Reaction
 from src.modules.projects.presentation.api.attachment_serving import (
     CONTENT_POLICY,
     DOWNLOAD_TYPE,
@@ -178,6 +182,7 @@ from src.modules.projects.presentation.dependencies import (
     get_move_project_use_case,
     get_post_update_use_case,
     get_project_detail_use_case,
+    get_react_to_update_use_case,
     get_remove_attachment_use_case,
     get_remove_project_link_use_case,
     get_remove_update_use_case,
@@ -189,6 +194,7 @@ from src.modules.projects.presentation.dependencies import (
     get_update_project_registry_use_case,
     get_update_project_use_case,
     get_upload_attachment_use_case,
+    get_withdraw_reaction_use_case,
 )
 from src.modules.users.domain.entities.user import User
 
@@ -801,6 +807,50 @@ async def remove_project_update(
     assert current_user.id is not None
     await use_case.execute(
         RemoveUpdateCommand(actor_id=current_user.id, update_id=update_id)
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.put(
+    "/{project_id}/updates/{update_id}/reactions/{reaction}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="reactToProjectUpdate",
+)
+async def react_to_project_update(
+    project_id: int,
+    update_id: int,
+    reaction: Reaction,
+    current_user: User = Depends(get_current_user),
+    use_case: ReactToUpdateUseCase = Depends(get_react_to_update_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Leaves a sign under an update. Leaving it twice changes nothing."""
+    assert current_user.id is not None
+    await use_case.execute(
+        ReactCommand(actor_id=current_user.id, update_id=update_id, reaction=reaction)
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete(
+    "/{project_id}/updates/{update_id}/reactions/{reaction}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="withdrawProjectUpdateReaction",
+)
+async def withdraw_project_update_reaction(
+    project_id: int,
+    update_id: int,
+    reaction: Reaction,
+    current_user: User = Depends(get_current_user),
+    use_case: WithdrawReactionUseCase = Depends(get_withdraw_reaction_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Takes one's own sign back. Taking back one never left changes nothing."""
+    assert current_user.id is not None
+    await use_case.execute(
+        ReactCommand(actor_id=current_user.id, update_id=update_id, reaction=reaction)
     )
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

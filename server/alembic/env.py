@@ -44,6 +44,7 @@ from src.modules.projects.infrastructure.database.models import (  # noqa: F401,
     project_detail_models,
     project_update_model,
     project_model,
+    update_reaction_model,
 )
 from src.modules.users.infrastructure.database.models import (  # noqa: F401, E402
     user_model,

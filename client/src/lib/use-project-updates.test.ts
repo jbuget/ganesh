@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 
+import { Reaction } from "@/lib/api/generated/model";
+
 import { useProjectUpdates } from "./use-project-updates";
 
 const api = vi.hoisted(() => ({
@@ -8,6 +10,8 @@ const api = vi.hoisted(() => ({
   postProjectUpdate: vi.fn(),
   editProjectUpdate: vi.fn(),
   removeProjectUpdate: vi.fn(),
+  reactToProjectUpdate: vi.fn(),
+  withdrawProjectUpdateReaction: vi.fn(),
 }));
 
 vi.mock("@/lib/api/generated/projects/projects", () => api);
@@ -18,6 +22,8 @@ beforeEach(() => {
   api.postProjectUpdate.mockResolvedValue({ data: {} });
   api.editProjectUpdate.mockResolvedValue({ data: {} });
   api.removeProjectUpdate.mockResolvedValue({ data: {} });
+  api.reactToProjectUpdate.mockResolvedValue({ data: {} });
+  api.withdrawProjectUpdateReaction.mockResolvedValue({ data: {} });
 });
 
 async function thread(onWrite?: () => void | Promise<void>) {
@@ -75,6 +81,44 @@ describe("useProjectUpdates", () => {
     const notify = vi.fn();
     await thread(notify);
 
+    expect(notify).not.toHaveBeenCalled();
+  });
+});
+
+describe("the signs left under an update", () => {
+  it("leaves one", async () => {
+    const result = await thread();
+
+    await act(async () => {
+      await result.current.react(3, Reaction.hooray, true);
+    });
+
+    expect(api.reactToProjectUpdate).toHaveBeenCalledWith(7, 3, Reaction.hooray);
+  });
+
+  it("takes one back", async () => {
+    const result = await thread();
+
+    await act(async () => {
+      await result.current.react(3, Reaction.hooray, false);
+    });
+
+    expect(api.withdrawProjectUpdateReaction).toHaveBeenCalledWith(
+      7,
+      3,
+      Reaction.hooray,
+    );
+  });
+
+  it("tells nobody else: a reaction changes no count and no latest message", async () => {
+    const notify = vi.fn();
+    const result = await thread(notify);
+
+    await act(async () => {
+      await result.current.react(3, Reaction.eyes, true);
+    });
+
+    expect(api.listProjectUpdates).toHaveBeenCalledTimes(2);
     expect(notify).not.toHaveBeenCalled();
   });
 });

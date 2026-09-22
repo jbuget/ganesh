@@ -35,6 +35,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     ProjectListItemResponse,
     ProjectResponse,
     ProjectUpdateResponse,
+    UpdateReactionResponse,
 )
 from src.modules.users.domain.entities.user import User
 from src.shared.utils import clock
@@ -244,6 +245,14 @@ def to_project_update_response(
         edited_at=signed.update.edited_at,
         is_deleted=signed.update.is_deleted,
         is_mine=signed.update.author_id == reader_id,
+        reactions=[
+            UpdateReactionResponse(
+                reaction=one.reaction,
+                people=[who.label for who in one.people],
+                is_mine=any(who.id == reader_id for who in one.people),
+            )
+            for one in signed.reactions
+        ],
     )
 
 

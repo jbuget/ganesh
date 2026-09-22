@@ -53,6 +53,10 @@ from src.modules.projects.domain.entities.project_attachment import ProjectAttac
 from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
+from src.modules.projects.domain.entities.update_reaction import (
+    Reaction,
+    UpdateReaction,
+)
 from src.modules.projects.domain.repositories.attachment_store import AttachmentStore
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
@@ -68,6 +72,9 @@ from src.modules.projects.domain.repositories.project_repository import (
 )
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
+)
+from src.modules.projects.domain.repositories.update_reaction_repository import (
+    UpdateReactionRepository,
 )
 from src.modules.stats.domain.entities.surface_usage import Surface, Tally, Trace
 from src.modules.stats.domain.repositories.statistics_repository import (
@@ -592,6 +599,48 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
 
     async def update(self, update: ProjectUpdate) -> ProjectUpdate:
         return update
+
+
+class InMemoryUpdateReactionRepository(UpdateReactionRepository):
+    def __init__(self) -> None:
+        self.reactions: list[UpdateReaction] = []
+        self.updates: InMemoryProjectUpdateRepository | None = None
+
+    async def list_for_project(
+        self, project_id: int
+    ) -> dict[int, list[UpdateReaction]]:
+        thread = (
+            [u.id for u in await self.updates.list_for_project(project_id)]
+            if self.updates is not None
+            else None
+        )
+        by_update: dict[int, list[UpdateReaction]] = {}
+        for one in self.reactions:
+            if thread is not None and one.update_id not in thread:
+                continue
+            by_update.setdefault(one.update_id, []).append(one)
+        return by_update
+
+    async def add(self, reaction: UpdateReaction) -> None:
+        already = any(
+            one.update_id == reaction.update_id
+            and one.user_id == reaction.user_id
+            and one.reaction == reaction.reaction
+            for one in self.reactions
+        )
+        if not already:
+            self.reactions.append(reaction)
+
+    async def remove(self, update_id: int, user_id: int, reaction: Reaction) -> None:
+        self.reactions = [
+            one
+            for one in self.reactions
+            if not (
+                one.update_id == update_id
+                and one.user_id == user_id
+                and one.reaction == reaction
+            )
+        ]
 
 
 class InMemoryProjectAttachmentRepository(ProjectAttachmentRepository):

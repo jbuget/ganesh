@@ -109,6 +109,7 @@ export function ProjectUpdatesTab({
             people={teammates}
             onEdit={(body) => thread.edit(update.id, body)}
             onRemove={() => thread.remove(update.id)}
+            onReact={(reaction, leaving) => thread.react(update.id, reaction, leaving)}
           />
         ))}
       </div>
