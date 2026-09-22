@@ -1,5 +1,5 @@
-import { MyRequestsPage } from "@/components/organisms/MyRequestsPage";
+import { RequestsScreen } from "@/components/organisms/RequestsScreen";
 
 export default function Requests() {
-  return <MyRequestsPage />;
+  return <RequestsScreen />;
 }

@@ -47,6 +47,7 @@ export * from "./createProjectRequest";
 export * from "./criticality";
 export * from "./dayMoodsResponse";
 export * from "./dayTotalResponse";
+export * from "./decideRequestRequest";
 export * from "./declaredMissionResponse";
 export * from "./declaredWindowResponse";
 export * from "./department";

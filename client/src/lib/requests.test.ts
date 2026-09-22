@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { RequestState, type RequestResponse } from "@/lib/api/generated/model";
+import type { UserResponse } from "@/lib/api/generated/model";
 import {
   REQUEST_STATES,
+  mayArbitrate,
   missingBeforeSubmitting,
   requestStateLabel,
   sayMissing,
@@ -70,5 +72,47 @@ describe("what is missing before handing a need over", () => {
       "le problème et qui est concerné",
     );
     expect(sayMissing(["le problème"])).toBe("le problème");
+  });
+});
+
+describe("who may weigh a need", () => {
+  const manager: UserResponse = {
+    id: 1,
+    email: "j.buget@waat.fr",
+    display_name: "J. Buget",
+    initials: "JB",
+    role: "MANAGER",
+    is_active: true,
+  };
+  const handed = { ...REQUEST, state: "submitted" as const };
+
+  it("lets a manager weigh what was handed over", () => {
+    expect(mayArbitrate(handed, manager)).toBe(true);
+  });
+
+  it("turns away everybody else", () => {
+    expect(mayArbitrate(handed, { ...manager, role: "TEAMMATE" })).toBe(false);
+    expect(mayArbitrate(handed, undefined)).toBe(false);
+  });
+
+  it("turns away the manager who asked for it", () => {
+    expect(
+      mayArbitrate({ ...handed, requester: { id: 1, label: "J. Buget" } }, manager),
+    ).toBe(false);
+  });
+
+  it("turns away a manager who carries it to the COMEX", () => {
+    expect(
+      mayArbitrate({ ...handed, sponsors: [{ id: 1, label: "J. Buget" }] }, manager),
+    ).toBe(false);
+  });
+
+  it("weighs nothing that is still being written, or already built", () => {
+    expect(mayArbitrate({ ...handed, state: "draft" }, manager)).toBe(false);
+    expect(mayArbitrate({ ...handed, state: "converted" }, manager)).toBe(false);
+  });
+
+  it("plays an arbitration again as long as nothing was built", () => {
+    expect(mayArbitrate({ ...handed, state: "deferred" }, manager)).toBe(true);
   });
 });

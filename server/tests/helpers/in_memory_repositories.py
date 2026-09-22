@@ -1022,11 +1022,11 @@ class InMemoryRequestRepository(RequestRepository):
             if request.requester_id == requester_id
         ]
 
-    async def list_all(self, include_drafts: bool = False) -> list[Request]:
+    async def list_readable_by(self, viewer_id: int) -> list[Request]:
         return [
             request
             for request in self._requests.values()
-            if include_drafts or not request.is_draft
+            if not request.is_draft or request.requester_id == viewer_id
         ]
 
     async def add(self, request: Request) -> Request:

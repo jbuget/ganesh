@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import date
 
+from src.modules.requests.domain.entities.request import RequestState
 from src.shared.enums.department import Department
 
 
@@ -40,3 +41,17 @@ class FillInRequestCommand:
     cost_of_inaction: str | None
     desired_by: date | None
     envisaged_solution: str | None
+
+
+@dataclass(frozen=True)
+class DecideRequestCommand:
+    """What the team decided of a need, and why.
+
+    The note is demanded for a refusal and for a « plus tard » — the request
+    itself says so — and offered for an acceptance.
+    """
+
+    actor_id: int
+    request_id: int
+    decision: RequestState
+    note: str | None

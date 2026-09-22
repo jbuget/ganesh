@@ -10,6 +10,9 @@ from src.core.config import get_settings
 from src.main import app
 from src.modules.auth.presentation.dependencies import get_signed_in_user
 from src.modules.notifications.domain.services.delivery import NotificationDelivery
+from src.modules.requests.application.use_cases.decide_request import (
+    DecideRequestUseCase,
+)
 from src.modules.requests.application.use_cases.delete_request import (
     DeleteRequestUseCase,
 )
@@ -20,6 +23,7 @@ from src.modules.requests.application.use_cases.fill_in_request import (
 from src.modules.requests.application.use_cases.read_requests import (
     GetRequestUseCase,
     ListMyRequestsUseCase,
+    ListRequestsUseCase,
     ListSponsorsUseCase,
 )
 from src.modules.requests.application.use_cases.submit_request import (
@@ -29,11 +33,13 @@ from src.modules.requests.application.use_cases.withdraw_request import (
     WithdrawRequestUseCase,
 )
 from src.modules.requests.presentation.dependencies import (
+    get_decide_request_use_case,
     get_delete_request_use_case,
     get_file_request_use_case,
     get_fill_in_request_use_case,
     get_my_requests_use_case,
     get_request_use_case,
+    get_requests_use_case,
     get_sponsors_use_case,
     get_submit_request_use_case,
     get_withdraw_request_use_case,
@@ -109,6 +115,12 @@ class Screen:
     async def hand_over(self, request_id: int):
         return await self.client.post(f"{REQUESTS}/{request_id}/submit")
 
+    async def weigh(self, request_id: int, decision: str, note: str | None = None):
+        return await self.client.post(
+            f"{REQUESTS}/{request_id}/decision",
+            json={"decision": decision, "note": note},
+        )
+
 
 def sign_in(as_user: User = METIER) -> Screen:
     users = InMemoryUserRepository([MANAGER, DIRECTION, METIER])
@@ -140,6 +152,12 @@ def sign_in(as_user: User = METIER) -> Screen:
     )
     app.dependency_overrides[get_my_requests_use_case] = lambda: ListMyRequestsUseCase(
         users=users, requests=store
+    )
+    app.dependency_overrides[get_requests_use_case] = lambda: ListRequestsUseCase(
+        users=users, requests=store
+    )
+    app.dependency_overrides[get_decide_request_use_case] = (
+        lambda: DecideRequestUseCase(users=users, requests=store, audit_logs=audit)
     )
     app.dependency_overrides[get_sponsors_use_case] = lambda: ListSponsorsUseCase(
         users=users
@@ -275,5 +293,75 @@ async def test_nobody_writes_the_sheet_of_somebody_else() -> None:
 
     app.dependency_overrides[get_signed_in_user] = lambda: MANAGER
     response = await screen.fill_in(filed["id"])
+
+    assert response.status_code == 403
+
+
+async def handed_over(screen: Screen) -> int:
+    """A need somebody filed and submitted, ready to be weighed."""
+    filed = (await screen.file()).json()
+    await screen.fill_in(filed["id"])
+    await screen.hand_over(filed["id"])
+    return int(filed["id"])
+
+
+async def test_the_team_reads_what_has_been_handed_over() -> None:
+    screen = sign_in()
+    request_id = await handed_over(screen)
+
+    app.dependency_overrides[get_signed_in_user] = lambda: MANAGER
+    response = await screen.client.get(REQUESTS)
+
+    assert response.status_code == 200
+    assert [line["id"] for line in response.json()] == [request_id]
+
+
+async def test_the_team_list_is_shut_to_a_requester() -> None:
+    screen = sign_in()
+    await handed_over(screen)
+
+    response = await screen.client.get(REQUESTS)
+
+    assert response.status_code == 403
+
+
+async def test_a_manager_weighs_a_need() -> None:
+    screen = sign_in()
+    request_id = await handed_over(screen)
+
+    app.dependency_overrides[get_signed_in_user] = lambda: MANAGER
+    response = await screen.weigh(request_id, "accepted")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["state"] == "accepted"
+    assert body["decided_by"]["label"] == "J. Buget"
+
+
+async def test_a_refusal_with_no_reason_is_turned_back() -> None:
+    screen = sign_in()
+    request_id = await handed_over(screen)
+
+    app.dependency_overrides[get_signed_in_user] = lambda: MANAGER
+    response = await screen.weigh(request_id, "rejected")
+
+    assert response.status_code == 422
+
+
+async def test_nobody_weighs_what_they_asked_for() -> None:
+    screen = sign_in(as_user=MANAGER)
+    request_id = await handed_over(screen)
+
+    response = await screen.weigh(request_id, "accepted")
+
+    assert response.status_code == 403
+
+
+async def test_a_requester_weighs_nothing() -> None:
+    screen = sign_in()
+    request_id = await handed_over(screen)
+
+    app.dependency_overrides[get_signed_in_user] = lambda: DIRECTION
+    response = await screen.weigh(request_id, "accepted")
 
     assert response.status_code == 403

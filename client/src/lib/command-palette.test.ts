@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { destinations, gestureLabel, grouped, matching } from "./command-palette";
+import { SCREENS } from "@/lib/navigation";
 import type {
   AuditAction,
   ProjectListItemResponse,
@@ -133,7 +134,9 @@ describe("matching", () => {
     const found = matching(all, "");
 
     expect(found.every((one) => one.group === "screen")).toBe(true);
-    expect(found).toHaveLength(12);
+    // Read from the list of screens rather than written down: a screen added
+    // to the application reaches the palette on its own.
+    expect(found).toHaveLength(SCREENS.length);
   });
 
   it("ignores the case and the accents", () => {

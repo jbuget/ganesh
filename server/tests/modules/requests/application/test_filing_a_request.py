@@ -8,8 +8,12 @@ from src.modules.audit_logs.domain.entities.audit_log import AuditAction
 from src.modules.notifications.domain.entities.notification import NotificationKind
 from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.requests.application.dtos.request_dto import (
+    DecideRequestCommand,
     FileRequestCommand,
     FillInRequestCommand,
+)
+from src.modules.requests.application.use_cases.decide_request import (
+    DecideRequestUseCase,
 )
 from src.modules.requests.application.use_cases.delete_request import (
     DeleteRequestUseCase,
@@ -81,6 +85,7 @@ def build(requests: list[Request] | None = None):
             users=users, requests=store, audit_logs=audit
         ),
         "delete": DeleteRequestUseCase(requests=store, audit_logs=audit),
+        "decide": DecideRequestUseCase(users=users, requests=store, audit_logs=audit),
         "store": store,
         "audit": audit,
         "inbox": inbox,
@@ -246,3 +251,60 @@ class TestDeleting:
 
         with pytest.raises(ForbiddenActionError):
             await app["delete"].execute(request_id=request.id, actor_id=MANAGER)
+
+
+class TestArbitrating:
+    async def test_a_manager_accepts_a_need(self) -> None:
+        app = build()
+        request = (await app["file"].execute(filing())).request
+        await app["fill_in"].execute(sheet(request_id=request.id))
+        await app["submit"].execute(request_id=request.id, actor_id=AUTHOR)
+
+        weighed = await app["decide"].execute(
+            DecideRequestCommand(
+                actor_id=MANAGER,
+                request_id=request.id,
+                decision=RequestState.ACCEPTED,
+                note=None,
+            )
+        )
+
+        assert weighed.request.state is RequestState.ACCEPTED
+        assert weighed.decided_by is not None
+        assert app["audit"].logs[-1].action is AuditAction.REQUEST_DECIDE
+
+    async def test_the_trace_says_what_was_decided_and_why(self) -> None:
+        app = build()
+        request = (await app["file"].execute(filing())).request
+        await app["fill_in"].execute(sheet(request_id=request.id))
+        await app["submit"].execute(request_id=request.id, actor_id=AUTHOR)
+
+        await app["decide"].execute(
+            DecideRequestCommand(
+                actor_id=MANAGER,
+                request_id=request.id,
+                decision=RequestState.REJECTED,
+                note="Déjà couvert par l'extranet.",
+            )
+        )
+
+        trace = app["audit"].logs[-1]
+        assert trace.new_value == "rejected"
+        assert trace.payload == {"note": "Déjà couvert par l'extranet."}
+
+    async def test_a_teammate_weighs_nothing(self) -> None:
+        """Arbitrating is a manager's, and the request says who among them."""
+        app = build()
+        request = (await app["file"].execute(filing())).request
+        await app["fill_in"].execute(sheet(request_id=request.id))
+        await app["submit"].execute(request_id=request.id, actor_id=AUTHOR)
+
+        with pytest.raises(ForbiddenActionError):
+            await app["decide"].execute(
+                DecideRequestCommand(
+                    actor_id=SPONSOR,
+                    request_id=request.id,
+                    decision=RequestState.ACCEPTED,
+                    note=None,
+                )
+            )

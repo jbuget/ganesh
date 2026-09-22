@@ -37,6 +37,7 @@ import { useListProjects } from "@/lib/api/generated/projects/projects";
 import {
   useListMyRequests,
   useListRequestSponsors,
+  useListRequests,
 } from "@/lib/api/generated/requests/requests";
 import {
   useGetMe,
@@ -230,4 +231,15 @@ export function useMyRequests() {
 export function useRequestSponsors() {
   const query = useListRequestSponsors();
   return { ...query, sponsors: successOf<RequestPersonResponse[]>(query.data) ?? [] };
+}
+
+/**
+ * The needs the team reads: everything handed over, plus one's own drafts.
+ *
+ * Narrowed in the browser rather than on the server: the whole company files
+ * a few dozen a year, and every criterion then answers as one types.
+ */
+export function useRequests() {
+  const query = useListRequests();
+  return { ...query, requests: successOf<RequestResponse[]>(query.data) ?? [] };
 }

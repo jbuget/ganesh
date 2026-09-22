@@ -69,3 +69,14 @@ class FillInRequestRequest(BaseModel):
     cost_of_inaction: str | None = None
     desired_by: date | None = None
     envisaged_solution: str | None = None
+
+
+class DecideRequestRequest(BaseModel):
+    """What the team decided of a need, and why.
+
+    A refusal and a « plus tard » are turned down without a note — the domain
+    says so, and says it in one place.
+    """
+
+    decision: RequestState
+    note: str | None = None

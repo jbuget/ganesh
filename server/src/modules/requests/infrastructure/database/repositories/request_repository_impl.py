@@ -1,6 +1,6 @@
 """SQLAlchemy implementation of the RequestRepository port."""
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.requests.domain.entities.request import Request, RequestState
@@ -67,10 +67,17 @@ class SqlRequestRepository(RequestRepository):
         )
         return await self._all(list(models))
 
-    async def list_all(self, include_drafts: bool = False) -> list[Request]:
-        query = select(RequestModel).order_by(RequestModel.created_at.desc())
-        if not include_drafts:
-            query = query.where(RequestModel.state != RequestState.DRAFT)
+    async def list_readable_by(self, viewer_id: int) -> list[Request]:
+        query = (
+            select(RequestModel)
+            .where(
+                or_(
+                    RequestModel.state != RequestState.DRAFT,
+                    RequestModel.requester_id == viewer_id,
+                )
+            )
+            .order_by(RequestModel.created_at.desc())
+        )
         models = (await self._session.execute(query)).scalars().all()
         return await self._all(list(models))
 

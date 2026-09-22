@@ -50,6 +50,26 @@ class ListMyRequestsUseCase:
         ]
 
 
+class ListRequestsUseCase:
+    """What the team reads: everything handed over, plus one's own drafts."""
+
+    def __init__(self, users: UserRepository, requests: RequestRepository) -> None:
+        self._users = users
+        self._requests = requests
+
+    async def execute(self, viewer_id: int) -> list[RequestDetail]:
+        viewer = await self._users.get_by_id(viewer_id)
+        if viewer is None:
+            raise EntityNotFoundError("The user cannot be found.")
+        if viewer.is_requester:
+            raise ForbiddenActionError("This list is the team's.")
+
+        return [
+            await describe(self._users, request)
+            for request in await self._requests.list_readable_by(viewer_id)
+        ]
+
+
 class ListSponsorsUseCase:
     """The people a need may be carried to.
 

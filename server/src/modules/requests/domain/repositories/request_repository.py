@@ -17,11 +17,12 @@ class RequestRepository(ABC):
         ...
 
     @abstractmethod
-    async def list_all(self, include_drafts: bool = False) -> list[Request]:
-        """What the team reads.
+    async def list_readable_by(self, viewer_id: int) -> list[Request]:
+        """What the team reads, through the eyes of one of them.
 
-        Drafts are left out by default: a need being written is its author's
-        alone until they hand it over.
+        Everything that has been handed over, plus that person's own drafts: a
+        need being written is its author's alone, and theirs is not somebody
+        else's to be hidden from them.
         """
         ...
 

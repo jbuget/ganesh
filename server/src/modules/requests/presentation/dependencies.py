@@ -14,6 +14,9 @@ from src.modules.notifications.domain.services.delivery import NotificationDeliv
 from src.modules.notifications.infrastructure.database.repositories.notification_repository_impl import (
     SqlNotificationRepository,
 )
+from src.modules.requests.application.use_cases.decide_request import (
+    DecideRequestUseCase,
+)
 from src.modules.requests.application.use_cases.delete_request import (
     DeleteRequestUseCase,
 )
@@ -24,6 +27,7 @@ from src.modules.requests.application.use_cases.fill_in_request import (
 from src.modules.requests.application.use_cases.read_requests import (
     GetRequestUseCase,
     ListMyRequestsUseCase,
+    ListRequestsUseCase,
     ListSponsorsUseCase,
 )
 from src.modules.requests.application.use_cases.submit_request import (
@@ -129,3 +133,18 @@ def get_sponsors_use_case(
     users: UserRepository = Depends(get_user_repository),
 ) -> ListSponsorsUseCase:
     return ListSponsorsUseCase(users=users)
+
+
+def get_decide_request_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    requests: RequestRepository = Depends(get_request_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> DecideRequestUseCase:
+    return DecideRequestUseCase(users=users, requests=requests, audit_logs=audit_logs)
+
+
+def get_requests_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    requests: RequestRepository = Depends(get_request_repository),
+) -> ListRequestsUseCase:
+    return ListRequestsUseCase(users=users, requests=requests)

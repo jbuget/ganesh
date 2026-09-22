@@ -1,4 +1,8 @@
-import type { RequestResponse, RequestState } from "@/lib/api/generated/model";
+import type {
+  RequestResponse,
+  RequestState,
+  UserResponse,
+} from "@/lib/api/generated/model";
 
 /**
  * Where a need stands, said in French.
@@ -53,4 +57,25 @@ export function sayMissing(missing: string[]): string {
   if (missing.length === 0) return "";
   if (missing.length === 1) return missing[0];
   return `${missing.slice(0, -1).join(", ")} et ${missing[missing.length - 1]}`;
+}
+
+/** The states one may still arbitrate: everything but a draft and a conversion. */
+const STILL_OPEN: RequestState[] = ["submitted", "accepted", "rejected", "deferred"];
+
+/**
+ * May this person weigh this need?
+ *
+ * Managers alone, and never the one who asked for it or carries it to the
+ * COMEX: one does not weigh what one is asking for. The API says the same
+ * thing and would refuse; this is what keeps the screen from offering a
+ * button that leads to a refusal.
+ */
+export function mayArbitrate(
+  request: RequestResponse,
+  user: UserResponse | undefined,
+): boolean {
+  if (!user || user.role !== "MANAGER") return false;
+  if (!STILL_OPEN.includes(request.state)) return false;
+  if (request.requester.id === user.id) return false;
+  return !request.sponsors.some((sponsor) => sponsor.id === user.id);
 }

@@ -89,21 +89,24 @@ async def test_rewriting_the_sheet_rewrites_both_lists(
     assert read.sponsor_ids == [sponsor]
 
 
-async def test_the_team_reads_everything_but_the_drafts(
+async def test_the_team_reads_everything_but_other_peoples_drafts(
     db_session: AsyncSession,
 ) -> None:
     author, sponsor = await seed(db_session)
     repository = SqlRequestRepository(db_session)
-    await repository.add(make_request(author, sponsor))
+    draft = await repository.add(make_request(author, sponsor))
     handed = await repository.add(
         make_request(author, sponsor, title="Un autre besoin")
     )
-    assert handed.id is not None
+    assert draft.id is not None and handed.id is not None
     handed.state = RequestState.SUBMITTED
     await repository.update(handed)
 
-    assert [r.id for r in await repository.list_all()] == [handed.id]
-    assert len(await repository.list_all(include_drafts=True)) == 2
+    # The sponsor is on the team here: what they see is what has been handed
+    # over, and nothing that is still being written.
+    assert [r.id for r in await repository.list_readable_by(sponsor)] == [handed.id]
+    # Its author sees their own draft in the same list.
+    assert len(await repository.list_readable_by(author)) == 2
     assert len(await repository.list_for_requester(author)) == 2
 
 

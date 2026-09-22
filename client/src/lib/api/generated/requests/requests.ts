@@ -21,6 +21,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  DecideRequestRequest,
   FileRequestRequest,
   FillInRequestRequest,
   HTTPValidationError,
@@ -179,6 +180,155 @@ export const useFileRequest = <TError = HTTPValidationError, TContext = unknown>
 > => {
   return useMutation(getFileRequestMutationOptions(options), queryClient);
 };
+export type listRequestsResponse200 = {
+  data: RequestResponse[];
+  status: 200;
+};
+
+export type listRequestsResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listRequestsResponseSuccess = listRequestsResponse200 & {
+  headers: Headers;
+};
+export type listRequestsResponseError = listRequestsResponse422 & {
+  headers: Headers;
+};
+
+export type listRequestsResponse =
+  listRequestsResponseSuccess | listRequestsResponseError;
+
+export const getListRequestsUrl = () => {
+  return `/api/v1/requests`;
+};
+
+/**
+ * What the team reads: everything handed over, plus one's own drafts.
+ * @summary List Requests
+ */
+export const listRequests = async (
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listRequestsResponse> => {
+  return bffFetcher<listRequestsResponse>(getListRequestsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListRequestsQueryKey = () => {
+  return [`/api/v1/requests`] as const;
+};
+
+export const getListRequestsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listRequests>>,
+  TError = HTTPValidationError,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof listRequests>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListRequestsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listRequests>>> = ({
+    signal,
+  }) => listRequests({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listRequests>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListRequestsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listRequests>>
+>;
+export type ListRequestsQueryError = HTTPValidationError;
+
+export function useListRequests<
+  TData = Awaited<ReturnType<typeof listRequests>>,
+  TError = HTTPValidationError,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listRequests>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRequests>>,
+          TError,
+          Awaited<ReturnType<typeof listRequests>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListRequests<
+  TData = Awaited<ReturnType<typeof listRequests>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listRequests>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRequests>>,
+          TError,
+          Awaited<ReturnType<typeof listRequests>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListRequests<
+  TData = Awaited<ReturnType<typeof listRequests>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listRequests>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Requests
+ */
+
+export function useListRequests<
+  TData = Awaited<ReturnType<typeof listRequests>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listRequests>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListRequestsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export type listMyRequestsResponse200 = {
   data: RequestResponse[];
   status: 200;
@@ -1087,4 +1237,138 @@ export const useWithdrawRequest = <TError = HTTPValidationError, TContext = unkn
   TContext
 > => {
   return useMutation(getWithdrawRequestMutationOptions(options), queryClient);
+};
+export type decideRequestResponse200 = {
+  data: RequestResponse;
+  status: 200;
+};
+
+export type decideRequestResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type decideRequestResponseSuccess = decideRequestResponse200 & {
+  headers: Headers;
+};
+export type decideRequestResponseError = decideRequestResponse422 & {
+  headers: Headers;
+};
+
+export type decideRequestResponse =
+  decideRequestResponseSuccess | decideRequestResponseError;
+
+export const getDecideRequestUrl = (requestId: number) => {
+  return `/api/v1/requests/${requestId}/decision`;
+};
+
+/**
+ * Weighs a need. Managers, bar the one who asked for it or carries it.
+ * @summary Decide Request
+ */
+export const decideRequest = async (
+  requestId: number,
+  decideRequestRequest: DecideRequestRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<decideRequestResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<decideRequestResponse>(getDecideRequestUrl(requestId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(decideRequestRequest),
+  });
+};
+
+export const getDecideRequestMutationKey = () => ["decideRequest"] as const;
+
+export const getDecideRequestMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof decideRequest>>,
+    TError,
+    DecideRequestMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof decideRequest>>,
+  TError,
+  DecideRequestMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDecideRequestMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof decideRequest>>,
+    DecideRequestMutationVariables
+  > = (props) => {
+    const { requestId, data } = props ?? {};
+
+    return decideRequest(requestId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DecideRequestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof decideRequest>>
+>;
+export type DecideRequestMutationBody = DecideRequestRequest;
+export type DecideRequestMutationError = HTTPValidationError;
+export type DecideRequestMutationVariables = {
+  requestId: number;
+  data: DecideRequestRequest;
+};
+
+/**
+ * @summary Decide Request
+ */
+export const useDecideRequest = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof decideRequest>>,
+      TError,
+      DecideRequestMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof decideRequest>>,
+  TError,
+  DecideRequestMutationVariables,
+  TContext
+> => {
+  return useMutation(getDecideRequestMutationOptions(options), queryClient);
 };

@@ -16,8 +16,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.database import get_db
 from src.modules.auth.presentation.dependencies import get_signed_in_user
 from src.modules.requests.application.dtos.request_dto import (
+    DecideRequestCommand,
     FileRequestCommand,
     FillInRequestCommand,
+)
+from src.modules.requests.application.use_cases.decide_request import (
+    DecideRequestUseCase,
 )
 from src.modules.requests.application.use_cases.delete_request import (
     DeleteRequestUseCase,
@@ -29,6 +33,7 @@ from src.modules.requests.application.use_cases.fill_in_request import (
 from src.modules.requests.application.use_cases.read_requests import (
     GetRequestUseCase,
     ListMyRequestsUseCase,
+    ListRequestsUseCase,
     ListSponsorsUseCase,
 )
 from src.modules.requests.application.use_cases.submit_request import (
@@ -42,17 +47,20 @@ from src.modules.requests.presentation.api.mappers.request_mapper import (
     to_sponsor_response,
 )
 from src.modules.requests.presentation.api.schemas.request_schemas import (
+    DecideRequestRequest,
     FileRequestRequest,
     FillInRequestRequest,
     RequestPersonResponse,
     RequestResponse,
 )
 from src.modules.requests.presentation.dependencies import (
+    get_decide_request_use_case,
     get_delete_request_use_case,
     get_file_request_use_case,
     get_fill_in_request_use_case,
     get_my_requests_use_case,
     get_request_use_case,
+    get_requests_use_case,
     get_sponsors_use_case,
     get_submit_request_use_case,
     get_withdraw_request_use_case,
@@ -98,6 +106,19 @@ async def list_my_requests(
     use_case: ListMyRequestsUseCase = Depends(get_my_requests_use_case),
 ) -> list[RequestResponse]:
     """Everything one filed, drafts included: they are all theirs."""
+    assert current_user.id is not None
+    return [
+        to_request_response(detail)
+        for detail in await use_case.execute(current_user.id)
+    ]
+
+
+@router.get("", response_model=list[RequestResponse], operation_id="listRequests")
+async def list_requests(
+    current_user: User = Depends(get_signed_in_user),
+    use_case: ListRequestsUseCase = Depends(get_requests_use_case),
+) -> list[RequestResponse]:
+    """What the team reads: everything handed over, plus one's own drafts."""
     assert current_user.id is not None
     return [
         to_request_response(detail)
@@ -212,3 +233,29 @@ async def delete_request(
     await use_case.execute(request_id, current_user.id)
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/{request_id}/decision",
+    response_model=RequestResponse,
+    operation_id="decideRequest",
+)
+async def decide_request(
+    request_id: int,
+    payload: DecideRequestRequest,
+    current_user: User = Depends(get_signed_in_user),
+    use_case: DecideRequestUseCase = Depends(get_decide_request_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> RequestResponse:
+    """Weighs a need. Managers, bar the one who asked for it or carries it."""
+    assert current_user.id is not None
+    detail = await use_case.execute(
+        DecideRequestCommand(
+            actor_id=current_user.id,
+            request_id=request_id,
+            decision=payload.decision,
+            note=payload.note,
+        )
+    )
+    await session.commit()
+    return to_request_response(detail)
