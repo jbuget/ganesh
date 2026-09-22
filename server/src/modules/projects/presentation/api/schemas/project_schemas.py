@@ -16,6 +16,7 @@ from src.modules.projects.domain.entities.service_registry import (
     Criticality,
     ServiceType,
 )
+from src.modules.projects.domain.entities.update_reaction import Reaction
 from src.modules.projects.domain.services.hierarchy import SubProjectPolicy
 from src.shared.enums.department import Department
 
@@ -354,6 +355,19 @@ class UpdateProjectRegistryRequest(BaseModel):
     depends_on: list[int] = []
 
 
+class UpdateReactionResponse(BaseModel):
+    """One sign left under an update, and who left it.
+
+    The names come back rather than a count alone: the screen shows them on
+    hover, and « L. Chen et N. Garo » is what makes a reaction worth reading.
+    """
+
+    reaction: Reaction
+    people: list[str]
+    #: True if the current reader is one of them.
+    is_mine: bool
+
+
 class ProjectUpdateResponse(BaseModel):
     """One update from the follow-up thread."""
 
@@ -365,6 +379,7 @@ class ProjectUpdateResponse(BaseModel):
     is_deleted: bool
     #: True if the current reader may correct or withdraw it.
     is_mine: bool
+    reactions: list[UpdateReactionResponse] = []
 
 
 class PostUpdateRequest(BaseModel):
