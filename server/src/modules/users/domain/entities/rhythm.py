@@ -1,9 +1,15 @@
 """How much of a week a teammate works, and since when.
 
-A rhythm is declared, never deduced, and it is never edited: one declares a
-new one beside the last. A coverage read over March must be read with what
-March knew — rewriting the motif in September would silently move every
-figure ever computed about the spring.
+A rhythm is declared, never deduced. Declaring a new one puts it beside the
+last rather than over it: a coverage read over March is read with what March
+knew, and going to four fifths in September moves no figure about the spring.
+
+**What this holds back is a silent rewrite, not a correction.** A line dated
+in the past may still be amended or withdrawn, and the readings over that
+stretch move with it — that is deliberate: a rhythm entered on the wrong date
+would otherwise be wrong for good. The difference is that it takes a gesture,
+aimed at a dated line, and the register keeps it. Nothing here is frozen; in
+Ganesh only a Gazette digest is.
 """
 
 from collections.abc import Iterable
