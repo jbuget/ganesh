@@ -259,7 +259,10 @@ class ListProjectUpdatesUseCase:
 
     async def execute(self, project_id: int) -> list[SignedUpdate]:
         users = {u.id: u for u in await self._users.list_all(True)}
-        left = await self._reactions.list_for_project(project_id)
+        thread = await self._updates.list_for_project(project_id)
+        left = await self._reactions.list_for_updates(
+            [update.id for update in thread if update.id is not None]
+        )
         return [
             SignedUpdate(
                 update=update,
@@ -274,6 +277,6 @@ class ListProjectUpdatesUseCase:
                     for one in tally(left.get(update.id or 0, []))
                 ],
             )
-            for update in await self._updates.list_for_project(project_id)
+            for update in thread
             if update.author_id in users
         ]

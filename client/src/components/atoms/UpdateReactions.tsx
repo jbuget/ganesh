@@ -40,27 +40,28 @@ export function UpdateReactions({ reactions, onToggle }: UpdateReactionsProps) {
 
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1">
-      {reactions.map((one) => (
-        <button
-          key={one.reaction}
-          type="button"
-          aria-pressed={one.is_mine}
-          aria-label={`${labelOf(one.reaction)} : ${whoReacted(one.people)}`}
-          onMouseMove={(event) =>
-            follow(event, `${labelOf(one.reaction)} : ${whoReacted(one.people)}`)
-          }
-          onMouseLeave={leave}
-          onClick={() => onToggle(one.reaction, !one.is_mine)}
-          className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs tabular-nums transition-colors ${
-            one.is_mine
-              ? "border-slate-500 bg-slate-100 text-slate-800"
-              : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
-          }`}
-        >
-          <span aria-hidden>{glyphOf(one.reaction)}</span>
-          {one.people.length}
-        </button>
-      ))}
+      {reactions.map((one) => {
+        const says = `${labelOf(one.reaction)} : ${whoReacted(one.people)}`;
+        return (
+          <button
+            key={one.reaction}
+            type="button"
+            aria-pressed={one.is_mine}
+            aria-label={says}
+            onMouseMove={(event) => follow(event, says)}
+            onMouseLeave={leave}
+            onClick={() => onToggle(one.reaction, !one.is_mine)}
+            className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs tabular-nums transition-colors ${
+              one.is_mine
+                ? "border-slate-500 bg-slate-100 text-slate-800"
+                : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            <span aria-hidden>{glyphOf(one.reaction)}</span>
+            {one.people.length}
+          </button>
+        );
+      })}
 
       <Popover open={picking} onOpenChange={setPicking}>
         <PopoverTrigger

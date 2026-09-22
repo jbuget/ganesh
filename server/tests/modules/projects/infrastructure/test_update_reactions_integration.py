@@ -40,7 +40,7 @@ WHEN = datetime(2026, 9, 17, 10, 0, tzinfo=UTC)
 
 
 async def a_thread(db_session: AsyncSession) -> tuple[int, int, int]:
-    """One mission, one update on it, one on another. Returns their ids."""
+    """One update, one on another mission, one author. Returns their ids."""
     people = SqlUserRepository(db_session)
     author = await people.add(
         User(
@@ -75,69 +75,74 @@ async def a_thread(db_session: AsyncSession) -> tuple[int, int, int]:
                 )
             )
         )
-    assert written[0].project_id and written[0].id and written[1].id and author.id
-    return written[0].project_id, written[0].id, author.id
+    assert written[0].id and written[1].id and author.id
+    return written[0].id, written[1].id, author.id
 
 
 async def test_the_same_sign_left_twice_counts_once(db_session: AsyncSession) -> None:
-    project_id, update_id, who = await a_thread(db_session)
+    update_id, _, who = await a_thread(db_session)
     reactions = SqlUpdateReactionRepository(db_session)
     sign = UpdateReaction(update_id, who, Reaction.THUMBS_UP, WHEN)
 
     await reactions.add(sign)
     await reactions.add(sign)
 
-    assert len((await reactions.list_for_project(project_id))[update_id]) == 1
+    assert len((await reactions.list_for_updates([update_id]))[update_id]) == 1
 
 
 async def test_one_person_may_leave_several_different_signs(
     db_session: AsyncSession,
 ) -> None:
-    project_id, update_id, who = await a_thread(db_session)
+    update_id, _, who = await a_thread(db_session)
     reactions = SqlUpdateReactionRepository(db_session)
 
     for sign in (Reaction.EYES, Reaction.ROCKET):
         await reactions.add(UpdateReaction(update_id, who, sign, WHEN))
 
-    left = (await reactions.list_for_project(project_id))[update_id]
+    left = (await reactions.list_for_updates([update_id]))[update_id]
     assert {one.reaction for one in left} == {Reaction.EYES, Reaction.ROCKET}
 
 
-async def test_a_thread_only_carries_its_own_signs(db_session: AsyncSession) -> None:
-    project_id, update_id, who = await a_thread(db_session)
+async def test_only_the_updates_asked_for_come_back(db_session: AsyncSession) -> None:
+    update_id, elsewhere, who = await a_thread(db_session)
     reactions = SqlUpdateReactionRepository(db_session)
     await reactions.add(UpdateReaction(update_id, who, Reaction.HEART, WHEN))
 
-    assert list(await reactions.list_for_project(project_id)) == [update_id]
-    assert await reactions.list_for_project(project_id + 1) == {}
+    assert list(await reactions.list_for_updates([update_id])) == [update_id]
+    assert await reactions.list_for_updates([elsewhere]) == {}
+
+
+async def test_an_empty_thread_asks_nothing(db_session: AsyncSession) -> None:
+    """A mission with no message must not send `IN ()` to the database."""
+    assert await SqlUpdateReactionRepository(db_session).list_for_updates([]) == {}
 
 
 async def test_a_sign_is_taken_back(db_session: AsyncSession) -> None:
-    project_id, update_id, who = await a_thread(db_session)
+    update_id, _, who = await a_thread(db_session)
     reactions = SqlUpdateReactionRepository(db_session)
     await reactions.add(UpdateReaction(update_id, who, Reaction.HEART, WHEN))
 
     await reactions.remove(update_id, who, Reaction.HEART)
 
-    assert await reactions.list_for_project(project_id) == {}
+    assert await reactions.list_for_updates([update_id]) == {}
 
 
 async def test_taking_back_a_sign_never_left_changes_nothing(
     db_session: AsyncSession,
 ) -> None:
-    project_id, update_id, who = await a_thread(db_session)
+    update_id, _, who = await a_thread(db_session)
     reactions = SqlUpdateReactionRepository(db_session)
     await reactions.add(UpdateReaction(update_id, who, Reaction.HEART, WHEN))
 
     await reactions.remove(update_id, who, Reaction.EYES)
 
-    assert len((await reactions.list_for_project(project_id))[update_id]) == 1
+    assert len((await reactions.list_for_updates([update_id]))[update_id]) == 1
 
 
 async def test_signs_come_back_in_the_order_people_left_them(
     db_session: AsyncSession,
 ) -> None:
-    project_id, update_id, first = await a_thread(db_session)
+    update_id, _, first = await a_thread(db_session)
     later = await SqlUserRepository(db_session).add(
         User(
             id=None,
@@ -159,5 +164,5 @@ async def test_signs_come_back_in_the_order_people_left_them(
     )
     await reactions.add(UpdateReaction(update_id, first, Reaction.THUMBS_UP, WHEN))
 
-    left = (await reactions.list_for_project(project_id))[update_id]
+    left = (await reactions.list_for_updates([update_id]))[update_id]
     assert [one.user_id for one in left] == [first, later.id]

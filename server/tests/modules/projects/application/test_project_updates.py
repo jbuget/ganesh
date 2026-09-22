@@ -58,7 +58,6 @@ WHEN = datetime(2026, 9, 17, 10, 0)
 def build(assigned: dict | None = None):
     updates = InMemoryProjectUpdateRepository()
     reactions = InMemoryUpdateReactionRepository()
-    reactions.updates = updates
     audit = InMemoryAuditLogRepository()
     assignees = InMemoryProjectAssigneeRepository(assigned or {})
     inbox = InMemoryNotificationRepository()

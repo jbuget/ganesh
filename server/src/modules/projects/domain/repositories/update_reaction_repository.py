@@ -1,6 +1,7 @@
 """Port for the reactions left on a mission's updates."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 
 from src.modules.projects.domain.entities.update_reaction import (
     Reaction,
@@ -12,13 +13,18 @@ class UpdateReactionRepository(ABC):
     """Persistence contract for the signs left under an update."""
 
     @abstractmethod
-    async def list_for_project(
-        self, project_id: int
+    async def list_for_updates(
+        self, update_ids: Sequence[int]
     ) -> dict[int, list[UpdateReaction]]:
-        """Every reaction of a mission's thread, by update.
+        """The reactions left on these updates, by update.
 
-        The thread is read whole: asking update by update would cost one query
-        per message for something drawn under every one of them.
+        The updates are named rather than their mission: which update belongs
+        to which mission is the thread's business, and a store that had to
+        answer that would be reading a table it does not own. The caller holds
+        the thread already.
+
+        They are asked for together: a reaction is drawn under every message,
+        and asking one by one would cost a query per line.
         """
         ...
 

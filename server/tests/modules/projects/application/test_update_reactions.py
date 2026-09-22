@@ -43,7 +43,6 @@ WHEN = datetime(2026, 9, 17, 10, 0)
 async def build():
     updates = InMemoryProjectUpdateRepository()
     reactions = InMemoryUpdateReactionRepository()
-    reactions.updates = updates
     users = InMemoryUserRepository([ALICE, NINO])
     posted = await updates.add(
         ProjectUpdate(

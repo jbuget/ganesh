@@ -48,7 +48,6 @@ URL = f"{get_settings().api_prefix}/projects"
 async def sign_in(as_who: User = NINO) -> tuple[AsyncClient, ProjectUpdate]:
     updates = InMemoryProjectUpdateRepository()
     reactions = InMemoryUpdateReactionRepository()
-    reactions.updates = updates
     posted = await updates.add(
         ProjectUpdate(
             id=None,

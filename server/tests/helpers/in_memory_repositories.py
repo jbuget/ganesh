@@ -4,7 +4,7 @@ They implement the same ports as the infrastructure: a use case that passes
 here passes in production, persistence aside.
 """
 
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from dataclasses import replace
 from datetime import date, datetime
 
@@ -604,21 +604,14 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
 class InMemoryUpdateReactionRepository(UpdateReactionRepository):
     def __init__(self) -> None:
         self.reactions: list[UpdateReaction] = []
-        self.updates: InMemoryProjectUpdateRepository | None = None
 
-    async def list_for_project(
-        self, project_id: int
+    async def list_for_updates(
+        self, update_ids: Sequence[int]
     ) -> dict[int, list[UpdateReaction]]:
-        thread = (
-            [u.id for u in await self.updates.list_for_project(project_id)]
-            if self.updates is not None
-            else None
-        )
         by_update: dict[int, list[UpdateReaction]] = {}
-        for one in self.reactions:
-            if thread is not None and one.update_id not in thread:
-                continue
-            by_update.setdefault(one.update_id, []).append(one)
+        for one in sorted(self.reactions, key=lambda r: r.at):
+            if one.update_id in update_ids:
+                by_update.setdefault(one.update_id, []).append(one)
         return by_update
 
     async def add(self, reaction: UpdateReaction) -> None:

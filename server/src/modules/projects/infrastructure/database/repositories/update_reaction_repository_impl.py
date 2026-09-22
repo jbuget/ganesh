@@ -1,5 +1,7 @@
 """Persistence of the signs left under an update."""
 
+from collections.abc import Sequence
+
 from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,9 +12,6 @@ from src.modules.projects.domain.entities.update_reaction import (
 )
 from src.modules.projects.domain.repositories.update_reaction_repository import (
     UpdateReactionRepository,
-)
-from src.modules.projects.infrastructure.database.models.project_update_model import (
-    ProjectUpdateModel,
 )
 from src.modules.projects.infrastructure.database.models.update_reaction_model import (
     UpdateReactionModel,
@@ -25,16 +24,16 @@ class SqlUpdateReactionRepository(UpdateReactionRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def list_for_project(
-        self, project_id: int
+    async def list_for_updates(
+        self, update_ids: Sequence[int]
     ) -> dict[int, list[UpdateReaction]]:
+        if not update_ids:
+            # A thread with no message asks nothing of the database.
+            return {}
+
         result = await self._session.execute(
             select(UpdateReactionModel)
-            .join(
-                ProjectUpdateModel,
-                ProjectUpdateModel.id == UpdateReactionModel.update_id,
-            )
-            .where(ProjectUpdateModel.project_id == project_id)
+            .where(UpdateReactionModel.update_id.in_(update_ids))
             .order_by(UpdateReactionModel.at)
         )
         by_update: dict[int, list[UpdateReaction]] = {}
