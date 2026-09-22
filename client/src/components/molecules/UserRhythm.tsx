@@ -55,6 +55,7 @@ export function UserRhythm({
 
   const shown = draft ?? declared;
   const changed = draft !== null && !sameAs(draft, declared);
+  const replaces = rhythms.find((one) => one.effective_from === effectiveFrom) ?? null;
 
   function giveUp() {
     setDraft(null);
@@ -133,6 +134,15 @@ export function UserRhythm({
               Annuler
             </Button>
           </div>
+
+          {/* A date carries one rhythm: declaring on a day already taken
+              corrects what is there. Said outright, because a rhythm replaced
+              in silence reads as one that vanished. */}
+          {replaces && (
+            <p className="text-xs text-amber-700">
+              Remplacera le rythme du {formatSpelledDate(replaces.effective_from)}.
+            </p>
+          )}
 
           {inForce && effectiveFrom < inForce.effective_from && (
             <p className="text-xs text-amber-700">

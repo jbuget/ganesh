@@ -162,6 +162,30 @@ describe("declaring one's own", () => {
     expect(screen.getByLabelText("À partir du")).toHaveValue("2026-03-01");
   });
 
+  it("says which rhythm a declaration would replace", async () => {
+    // A date carries one rhythm: declaring on a day already taken is a
+    // correction, and said nowhere it reads as a rhythm that vanished.
+    show([FOUR_FIFTHS, THREE_DAYS], { editable: true });
+
+    await userEvent.click(screen.getByLabelText(/^Jeudi/));
+    await userEvent.clear(screen.getByLabelText("À partir du"));
+    await userEvent.type(screen.getByLabelText("À partir du"), "2026-10-05");
+
+    expect(
+      screen.getByText(/remplacera le rythme du 5 oct. 2026/i),
+    ).toBeInTheDocument();
+  });
+
+  it("says nothing of the sort on a day no rhythm holds", async () => {
+    show([FOUR_FIFTHS], { editable: true });
+
+    await userEvent.click(screen.getByLabelText(/^Jeudi/));
+    await userEvent.clear(screen.getByLabelText("À partir du"));
+    await userEvent.type(screen.getByLabelText("À partir du"), "2026-11-02");
+
+    expect(screen.queryByText(/remplacera/i)).not.toBeInTheDocument();
+  });
+
   it("warns when a declaration would open under the one in force", async () => {
     show([FOUR_FIFTHS], { editable: true });
 
