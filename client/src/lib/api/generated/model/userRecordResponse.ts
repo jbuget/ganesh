@@ -7,6 +7,7 @@
 import type { DeclaredWindowResponse } from "./declaredWindowResponse";
 import type { MonthFillingResponse } from "./monthFillingResponse";
 import type { RecordedMissionResponse } from "./recordedMissionResponse";
+import type { WorkRhythmResponse } from "./workRhythmResponse";
 
 /**
  * What the register holds on one teammate.
@@ -16,4 +17,5 @@ export interface UserRecordResponse {
   missions: RecordedMissionResponse[];
   declared: DeclaredWindowResponse;
   months: MonthFillingResponse[];
+  rhythm?: WorkRhythmResponse | null;
 }

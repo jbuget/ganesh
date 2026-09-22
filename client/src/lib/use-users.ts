@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import {
   changeUserRole,
+  declareOwnRhythm,
   setUserActive,
   updateUserIdentity,
 } from "@/lib/api/generated/users/users";
@@ -13,6 +14,7 @@ import type {
   UserResponse,
 } from "@/lib/api/generated/model";
 import { useCurrentUser, useTeammates } from "@/lib/api/queries";
+import { type WeekPattern, toRequest } from "@/lib/rhythm";
 import { NO_USER_FILTER, filterUsers, type UserFilters } from "@/lib/user-filters";
 import { NO_USER_SORT, sortUsers, type UserSort } from "@/lib/user-sort";
 
@@ -84,6 +86,17 @@ export function useUsersScreen(
         github_username: user.github_username ?? null,
         ...change,
       });
+      await queryClient.invalidateQueries();
+    },
+
+    /**
+     * One's own rhythm, and nobody else's.
+     *
+     * The route carries no teammate: there is no colleague this could reach
+     * by mistake, which is the guarantee rather than a shorthand.
+     */
+    async declareOwnRhythm(pattern: WeekPattern, effectiveFrom: string) {
+      await declareOwnRhythm(toRequest(pattern, effectiveFrom));
       await queryClient.invalidateQueries();
     },
 

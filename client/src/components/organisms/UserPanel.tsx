@@ -14,6 +14,7 @@ import { SidePanel } from "@/components/atoms/SidePanel";
 import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { UserAvatar } from "@/components/atoms/UserAvatar";
 import { UserDeclaredDays } from "@/components/molecules/UserDeclaredDays";
+import { UserRhythm } from "@/components/molecules/UserRhythm";
 import { UserMissions } from "@/components/molecules/UserMissions";
 import { UserMonths } from "@/components/molecules/UserMonths";
 import type {
@@ -23,6 +24,7 @@ import type {
 } from "@/lib/api/generated/model";
 import { useUserRecord } from "@/lib/api/queries";
 import { isoDay } from "@/lib/dates";
+import type { WeekPattern } from "@/lib/rhythm";
 import { DEPARTMENTS } from "@/lib/departments";
 import { formatParisDateTime } from "@/lib/instants";
 import { since } from "@/lib/relative-dates";
@@ -35,11 +37,23 @@ interface UserPanelProps {
   canChangeStatus: boolean;
   /** Writing who a teammate is stays with the managers, like the role. */
   editable: boolean;
+  /**
+   * True on one's own account alone.
+   *
+   * Everybody declares their own rhythm: how many days a week somebody works
+   * is a fact about them, and relaying it through a manager would only put a
+   * delay between the fact and the register.
+   */
+  isMe: boolean;
   onChangeRole: (userId: number, role: Role) => void | Promise<void>;
   onSetActive: (userId: number, is_active: boolean) => void | Promise<void>;
   onUpdateIdentity: (
     user: UserResponse,
     change: UpdateUserIdentityRequest,
+  ) => void | Promise<void>;
+  onDeclareRhythm: (
+    pattern: WeekPattern,
+    effectiveFrom: string,
   ) => void | Promise<void>;
   /** Injected: a render dated by `new Date()` could not be tested. */
   now: Date;
@@ -65,9 +79,11 @@ export function UserPanel({
   roleModifiable,
   canChangeStatus,
   editable,
+  isMe,
   onChangeRole,
   onSetActive,
   onUpdateIdentity,
+  onDeclareRhythm,
   now,
   onClose,
 }: UserPanelProps) {
@@ -204,6 +220,18 @@ export function UserPanel({
 
           {record && (
             <>
+              {/* Before the projects: what somebody works is what one reads
+                  their months and their staffing against. */}
+              <section className="space-y-2">
+                <SheetSectionTitle>Rythme</SheetSectionTitle>
+                <UserRhythm
+                  rhythm={record.rhythm}
+                  editable={isMe}
+                  today={now}
+                  onDeclare={onDeclareRhythm}
+                />
+              </section>
+
               <section className="space-y-2">
                 <SheetSectionTitle>Projets</SheetSectionTitle>
                 <UserMissions missions={record.missions} />

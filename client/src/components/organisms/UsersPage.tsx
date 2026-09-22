@@ -91,9 +91,11 @@ export function UsersPage() {
           roleModifiable={screen.isManager}
           canChangeStatus={screen.isManager && opened.id !== screen.meId}
           editable={screen.isManager}
+          isMe={opened.id === screen.meId}
           onChangeRole={screen.changeRole}
           onSetActive={screen.setActive}
           onUpdateIdentity={screen.updateIdentity}
+          onDeclareRhythm={screen.declareOwnRhythm}
           now={screen.now}
           onClose={panel.close}
         />

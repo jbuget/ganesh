@@ -28,6 +28,7 @@ export const Surface = {
   gazette: "gazette",
   mood: "mood",
   notifications: "notifications",
+  work_rhythm: "work_rhythm",
   team_admin: "team_admin",
   api_keys: "api_keys",
   machine_access: "machine_access",
