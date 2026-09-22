@@ -78,6 +78,19 @@ vi.mock("@/lib/api/queries", () => ({
   useProjects: () => ({ missions: [] }),
 }));
 
+// The journal reads its own pages. Left alone, opening the panel sends a
+// request from a unit test, which is somebody else's job and nobody's here:
+// what it draws is the audit list's business, and tested where it lives.
+vi.mock("@/lib/use-request-audit", () => ({
+  useRequestAudit: () => ({
+    entries: [],
+    total: 0,
+    busy: false,
+    hasMore: false,
+    loadMore: vi.fn(),
+  }),
+}));
+
 describe("RequestsPage", () => {
   beforeEach(() => {
     state.requests = [HANDED];
