@@ -43,11 +43,16 @@ const HOP_BY_HOP = new Set(["connection", "keep-alive", "transfer-encoding", "ho
  * what turns a response into a file it offers to save, under the name the
  * register holds. Forcing `application/json` here, as this used to, made
  * every download a broken string.
+ *
+ * `Content-Length` is deliberately not among them. Caddy compresses what the
+ * API serves in production: `fetch` hands the body back decompressed but the
+ * headers as they came, so that length counts bytes we no longer hold. Relayed
+ * as such, it cut the answer off mid-object. The runtime counts the bytes it
+ * actually sends, which is the only count that can be right here.
  */
 const ABOUT_THE_BODY = [
   "content-type",
   "content-disposition",
-  "content-length",
   "x-content-type-options",
 ];
 
