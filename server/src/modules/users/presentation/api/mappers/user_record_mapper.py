@@ -1,6 +1,7 @@
 """Translating a teammate's record into API schemas."""
 
 from src.modules.users.application.dtos.user_record_dto import UserRecord
+from src.modules.users.presentation.api.schemas.rhythm_schemas import to_rhythm_response
 from src.modules.users.presentation.api.schemas.user_record_schemas import (
     DeclaredMissionResponse,
     DeclaredWindowResponse,
@@ -48,4 +49,5 @@ def to_user_record_response(record: UserRecord) -> UserRecordResponse:
             )
             for filling in record.months
         ],
+        rhythm=to_rhythm_response(record.rhythm) if record.rhythm else None,
     )

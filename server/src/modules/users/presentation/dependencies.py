@@ -1,7 +1,9 @@
 """Wiring of the teammate use cases."""
 
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.database import get_db
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
@@ -30,13 +32,26 @@ from src.modules.projects.presentation.dependencies import (
 from src.modules.users.application.use_cases.change_user_role import (
     ChangeUserRoleUseCase,
 )
+from src.modules.users.application.use_cases.declare_own_rhythm import (
+    DeclareOwnRhythmUseCase,
+)
 from src.modules.users.application.use_cases.get_user_record import GetUserRecordUseCase
 from src.modules.users.application.use_cases.list_users import ListUsersUseCase
 from src.modules.users.application.use_cases.set_user_active import SetUserActiveUseCase
 from src.modules.users.application.use_cases.update_user_identity import (
     UpdateUserIdentityUseCase,
 )
+from src.modules.users.domain.repositories.rhythm_repository import RhythmRepository
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.modules.users.infrastructure.database.repositories.rhythm_repository_impl import (
+    SqlRhythmRepository,
+)
+
+
+def get_rhythm_repository(
+    session: AsyncSession = Depends(get_db),
+) -> RhythmRepository:
+    return SqlRhythmRepository(session)
 
 
 def get_list_users_use_case(
@@ -78,6 +93,7 @@ def get_user_record_use_case(
     assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
     entries: EntryRepository = Depends(get_entry_repository),
     months: MonthRepository = Depends(get_month_repository),
+    rhythms: RhythmRepository = Depends(get_rhythm_repository),
 ) -> GetUserRecordUseCase:
     return GetUserRecordUseCase(
         users=users,
@@ -85,4 +101,13 @@ def get_user_record_use_case(
         assignees=assignees,
         entries=entries,
         months=months,
+        rhythms=rhythms,
     )
+
+
+def get_declare_own_rhythm_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    rhythms: RhythmRepository = Depends(get_rhythm_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> DeclareOwnRhythmUseCase:
+    return DeclareOwnRhythmUseCase(users=users, rhythms=rhythms, audit_logs=audit_logs)

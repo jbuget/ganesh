@@ -4,6 +4,7 @@ from datetime import date
 
 import pytest
 
+from src.modules.calendar.domain.entities.week_pattern import WeekPattern
 from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.months.domain.entities.month import Month, MonthState
 from src.modules.projects.domain.entities.project import (
@@ -14,6 +15,7 @@ from src.modules.projects.domain.entities.project import (
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.users.application.dtos.user_record_dto import GetUserRecordQuery
 from src.modules.users.application.use_cases.get_user_record import GetUserRecordUseCase
+from src.modules.users.domain.entities.rhythm import Rhythm
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 from tests.helpers.in_memory_repositories import (
@@ -21,6 +23,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryMonthRepository,
     InMemoryProjectAssigneeRepository,
     InMemoryProjectRepository,
+    InMemoryRhythmRepository,
     InMemoryUserRepository,
 )
 
@@ -68,6 +71,7 @@ def build(
     months: list[Month] | None = None,
     assignments: dict[tuple[int, ProjectRole], list[int]] | None = None,
     users: list[User] | None = None,
+    rhythms: list[Rhythm] | None = None,
 ) -> GetUserRecordUseCase:
     return GetUserRecordUseCase(
         users=InMemoryUserRepository(users if users is not None else [teammate()]),
@@ -75,6 +79,7 @@ def build(
         assignees=InMemoryProjectAssigneeRepository(assignments or {}),
         entries=InMemoryEntryRepository(entries or []),
         months=InMemoryMonthRepository(months or []),
+        rhythms=InMemoryRhythmRepository(rhythms or []),
     )
 
 
@@ -233,3 +238,46 @@ async def test_a_month_a_colleague_validated_is_not_read_as_ones_own() -> None:
     record = await read(use_case)
 
     assert all(filling.state is MonthState.OPEN for filling in record.months)
+
+
+async def test_the_record_carries_the_rhythm_in_force() -> None:
+    record = await read(
+        build(
+            rhythms=[
+                Rhythm(
+                    id=None,
+                    user_id=TEAMMATE_ID,
+                    pattern=WeekPattern(wednesday=0.0),
+                    effective_from=date(2026, 3, 1),
+                )
+            ]
+        )
+    )
+
+    assert record.rhythm is not None
+    assert record.rhythm.pattern.days_per_week == 4.0
+    assert record.rhythm.effective_from == date(2026, 3, 1)
+
+
+async def test_a_record_carries_no_rhythm_until_one_is_declared() -> None:
+    # Which reads as full time everywhere a figure is computed.
+    record = await read(build())
+
+    assert record.rhythm is None
+
+
+async def test_a_rhythm_opening_later_is_not_the_one_in_force() -> None:
+    record = await read(
+        build(
+            rhythms=[
+                Rhythm(
+                    id=None,
+                    user_id=TEAMMATE_ID,
+                    pattern=WeekPattern(wednesday=0.0),
+                    effective_from=date(2026, 11, 1),
+                )
+            ]
+        )
+    )
+
+    assert record.rhythm is None

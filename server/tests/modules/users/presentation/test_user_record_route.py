@@ -24,6 +24,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryMonthRepository,
     InMemoryProjectAssigneeRepository,
     InMemoryProjectRepository,
+    InMemoryRhythmRepository,
     InMemoryUserRepository,
 )
 
@@ -62,6 +63,7 @@ async def client() -> AsyncIterator[AsyncClient]:
             ]
         ),
         months=InMemoryMonthRepository(),
+        rhythms=InMemoryRhythmRepository(),
     )
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as http:

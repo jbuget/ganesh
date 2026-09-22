@@ -72,3 +72,27 @@ def test_a_day_off_says_nothing_about_the_day_that_follows() -> None:
 
     assert history.on(WEDNESDAY) == 0.0
     assert history.on(THURSDAY) == 1.0
+
+
+def test_the_rhythm_in_force_carries_the_day_it_opened_on() -> None:
+    # The panel shows since when, so the motif alone would not do.
+    history = RhythmHistory.of([_declared(FOUR_FIFTHS, MARCH)])
+
+    held = history.in_force_on(WEDNESDAY)
+    assert held is not None
+    assert held.effective_from == MARCH
+
+
+def test_nothing_is_in_force_before_the_first_declaration() -> None:
+    history = RhythmHistory.of([_declared(FOUR_FIFTHS, SEPTEMBER)])
+
+    assert history.in_force_on(WEDNESDAY) is None
+
+
+def test_a_rhythm_opening_later_is_not_the_one_in_force_today() -> None:
+    # Declaring for next month must not make a screen say somebody is
+    # already at four fifths.
+    history = RhythmHistory.of([_declared(FOUR_FIFTHS, SEPTEMBER)])
+
+    assert history.latest is not None
+    assert history.in_force_on(date(2026, 8, 31)) is None

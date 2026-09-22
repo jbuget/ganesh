@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from src.modules.projects.domain.entities.project import ProjectStatus
+from src.modules.users.domain.entities.rhythm import Rhythm
 from src.modules.users.domain.services.user_record import MonthFilling
 
 
@@ -57,3 +58,6 @@ class UserRecord:
     missions: list[RecordedMission]
     declared: DeclaredWindow
     months: list[MonthFilling]
+    #: The rhythm in force today. None while nothing was ever declared, which
+    #: reads as full time everywhere a figure is computed.
+    rhythm: Rhythm | None = None

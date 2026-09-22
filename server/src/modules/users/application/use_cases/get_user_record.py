@@ -24,6 +24,7 @@ from src.modules.users.application.dtos.user_record_dto import (
     RecordedMission,
     UserRecord,
 )
+from src.modules.users.domain.repositories.rhythm_repository import RhythmRepository
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.modules.users.domain.services.user_record import (
     days_by_project,
@@ -49,12 +50,14 @@ class GetUserRecordUseCase:
         assignees: ProjectAssigneeRepository,
         entries: EntryRepository,
         months: MonthRepository,
+        rhythms: RhythmRepository,
     ) -> None:
         self._users = users
         self._projects = projects
         self._assignees = assignees
         self._entries = entries
         self._months = months
+        self._rhythms = rhythms
 
     def _missions_held(
         self, roles: dict[int, list[ProjectRole]], known: dict[int, Project]
@@ -131,4 +134,7 @@ class GetUserRecordUseCase:
                 states=await self._months.list_for_user(query.user_id, span[-1]),
                 today=today,
             ),
+            # What holds today, never the last one declared: a rhythm opening
+            # next month is not the one somebody is working right now.
+            rhythm=(await self._rhythms.history_of(query.user_id)).in_force_on(today),
         )

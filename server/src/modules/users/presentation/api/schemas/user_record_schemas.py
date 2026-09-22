@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from src.modules.months.domain.entities.month import MonthState
 from src.modules.projects.domain.entities.project import ProjectStatus
+from src.modules.users.presentation.api.schemas.rhythm_schemas import WorkRhythmResponse
 
 
 class RecordedMissionResponse(BaseModel):
@@ -60,3 +61,5 @@ class UserRecordResponse(BaseModel):
     missions: list[RecordedMissionResponse]
     declared: DeclaredWindowResponse
     months: list[MonthFillingResponse]
+    #: Null while nothing was ever declared, which reads as full time.
+    rhythm: WorkRhythmResponse | None = None

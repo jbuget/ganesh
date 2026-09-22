@@ -12,12 +12,16 @@ from src.modules.auth.presentation.dependencies import (
 )
 from src.modules.users.application.dtos.user_dto import (
     ChangeRoleCommand,
+    DeclareOwnRhythmCommand,
     SetUserActiveCommand,
     UpdateUserIdentityCommand,
 )
 from src.modules.users.application.dtos.user_record_dto import GetUserRecordQuery
 from src.modules.users.application.use_cases.change_user_role import (
     ChangeUserRoleUseCase,
+)
+from src.modules.users.application.use_cases.declare_own_rhythm import (
+    DeclareOwnRhythmUseCase,
 )
 from src.modules.users.application.use_cases.get_user_record import GetUserRecordUseCase
 from src.modules.users.application.use_cases.list_users import ListUsersUseCase
@@ -30,6 +34,11 @@ from src.modules.users.presentation.api.mappers.user_mapper import to_user_respo
 from src.modules.users.presentation.api.mappers.user_record_mapper import (
     to_user_record_response,
 )
+from src.modules.users.presentation.api.schemas.rhythm_schemas import (
+    DeclareRhythmRequest,
+    WorkRhythmResponse,
+    to_rhythm_response,
+)
 from src.modules.users.presentation.api.schemas.user_record_schemas import (
     UserRecordResponse,
 )
@@ -41,6 +50,7 @@ from src.modules.users.presentation.api.schemas.user_schemas import (
 )
 from src.modules.users.presentation.dependencies import (
     get_change_role_use_case,
+    get_declare_own_rhythm_use_case,
     get_list_users_use_case,
     get_set_user_active_use_case,
     get_update_user_identity_use_case,
@@ -161,3 +171,34 @@ async def update_identity(
     )
     await session.commit()
     return to_user_response(user)
+
+
+@router.put(
+    "/me/rhythm",
+    response_model=WorkRhythmResponse,
+    operation_id="declareOwnRhythm",
+)
+async def declare_own_rhythm(
+    payload: DeclareRhythmRequest,
+    current_user: User = Depends(get_current_user),
+    use_case: DeclareOwnRhythmUseCase = Depends(get_declare_own_rhythm_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> WorkRhythmResponse:
+    """Declares how much of a week one works, from a given day.
+
+    The address carries no teammate, and that is the guarantee rather than a
+    shorthand: there is no colleague this route could reach by mistake. How
+    many days a week somebody works is a fact about them, and relaying it
+    through a manager would only put a delay between the fact and the
+    register.
+    """
+    assert current_user.id is not None
+    declared = await use_case.execute(
+        DeclareOwnRhythmCommand(
+            actor_id=current_user.id,
+            pattern=payload.to_pattern(),
+            effective_from=payload.effective_from,
+        )
+    )
+    await session.commit()
+    return to_rhythm_response(declared)

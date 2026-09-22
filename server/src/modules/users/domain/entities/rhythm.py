@@ -39,6 +39,15 @@ class RhythmHistory:
         """Orders what was declared, oldest first, whatever order it came in."""
         return cls(tuple(sorted(rhythms, key=lambda one: one.effective_from)))
 
+    def in_force_on(self, day: date) -> Rhythm | None:
+        """The rhythm that holds that day, if one had been declared by then."""
+        held: Rhythm | None = None
+        for rhythm in self._declared:
+            if rhythm.effective_from > day:
+                break
+            held = rhythm
+        return held
+
     def pattern_on(self, day: date) -> WeekPattern:
         """The motif in force that day.
 
@@ -46,12 +55,8 @@ class RhythmHistory:
         application assumed of everybody before rhythms existed, so declaring
         one moves nothing that came before it.
         """
-        in_force = FULL_TIME
-        for rhythm in self._declared:
-            if rhythm.effective_from > day:
-                break
-            in_force = rhythm.pattern
-        return in_force
+        held = self.in_force_on(day)
+        return held.pattern if held else FULL_TIME
 
     def on(self, day: date) -> float:
         """Days this teammate is expected to work on this day."""
