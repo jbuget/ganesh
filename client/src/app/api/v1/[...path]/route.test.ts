@@ -38,6 +38,13 @@ function upstream(response: Response): void {
   );
 }
 
+/** A request as a signed-in browser sends it: the session cookie is there. */
+function signedInRequest(url: string): NextRequest {
+  return new NextRequest(url, {
+    headers: { cookie: "timesheet_token.0=scelle" },
+  });
+}
+
 /** What the upstream was called with, whatever the relay did to it. */
 function called(): RequestInit & { url: string } {
   const spy = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
@@ -200,13 +207,13 @@ describe("the BFF relay", () => {
     );
 
     const response = await GET(
-      new NextRequest("http://localhost:3000/api/v1/users/me"),
+      signedInRequest("http://localhost:3000/api/v1/users/me"),
     );
 
     expect(response.status).toBe(401);
     // The name is written out rather than imported: it is a contract with the
     // browser, and renaming it would orphan every session already open.
-    const cleared = response.cookies.get("timesheet_token");
+    const cleared = response.cookies.get("timesheet_token.0");
     expect(cleared?.value).toBe("");
     expect(cleared?.maxAge).toBe(0);
   });
@@ -222,9 +229,9 @@ describe("the BFF relay", () => {
       }),
     );
 
-    const response = await GET(new NextRequest("http://localhost:3000/api/v1/users"));
+    const response = await GET(signedInRequest("http://localhost:3000/api/v1/users"));
 
     expect(response.status).toBe(403);
-    expect(response.cookies.get("timesheet_token")).toBeUndefined();
+    expect(response.cookies.get("timesheet_token.0")).toBeUndefined();
   });
 });

@@ -12,7 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { appOrigin, landingUrl, safeLanding } from "@/lib/auth/pending";
-import { sealSession, sessionCookie } from "@/lib/auth/session";
+import { sealSession, sessionCookies } from "@/lib/auth/session";
 
 const API_URL = process.env.API_URL ?? "http://localhost:8000";
 // `||` rather than `??`: an API_PREFIX left empty in the environment is a
@@ -60,17 +60,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // 303: what follows a form is a GET, not a second POST on the landing page.
     { status: 303 },
   );
-  response.cookies.set(
-    sessionCookie(
-      await sealSession({
-        idToken: accessToken,
-        // This door issues no renewal token: the session lasts what the token
-        // lasts, and signing in again is the way to extend it.
-        refreshToken: "",
-        expiresAt: Math.floor(Date.now() / 1000) + SESSION_SECONDS,
-        email: login,
-      }),
-    ),
-  );
+  const sealed = await sealSession({
+    idToken: accessToken,
+    // This door issues no renewal token: the session lasts what the token
+    // lasts, and signing in again is the way to extend it.
+    refreshToken: "",
+    expiresAt: Math.floor(Date.now() / 1000) + SESSION_SECONDS,
+    email: login,
+  });
+  for (const cookie of sessionCookies(
+    sealed,
+    request.cookies.getAll().map((held) => held.name),
+  )) {
+    response.cookies.set(cookie);
+  }
   return response;
 }

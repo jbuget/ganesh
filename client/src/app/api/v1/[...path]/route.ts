@@ -22,10 +22,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { needsRefresh, refreshTokens } from "@/lib/auth/entra";
 import {
-  SESSION_COOKIE,
+  clearedSessionCookies,
   currentSession,
   sealSession,
-  sessionCookie,
+  sessionCookies,
   type Session,
 } from "@/lib/auth/session";
 
@@ -139,10 +139,15 @@ async function proxy(request: NextRequest): Promise<NextResponse> {
   // 401 and nothing else: a 403 is the API saying the gesture is not theirs
   // to make, which says nothing about the session and must not sign anybody
   // out.
+  // What the browser sends now, so what this session does not use is taken
+  // away rather than left to be read back glued to it.
+  const carried = request.cookies.getAll().map((cookie) => cookie.name);
   if (response.status === 401) {
-    relayed.cookies.set(SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+    for (const cookie of clearedSessionCookies(carried)) relayed.cookies.set(cookie);
   } else if (renewed && session) {
-    relayed.cookies.set(sessionCookie(await sealSession(session)));
+    for (const cookie of sessionCookies(await sealSession(session), carried)) {
+      relayed.cookies.set(cookie);
+    }
   }
   return relayed;
 }

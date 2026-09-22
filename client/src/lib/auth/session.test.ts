@@ -1,6 +1,14 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { openSession, sealSession, type Session } from "./session";
+import {
+  SESSION_COOKIE,
+  clearedSessionCookies,
+  openSession,
+  sealSession,
+  sealedSessionFrom,
+  sessionCookies,
+  type Session,
+} from "./session";
 
 const SECRET = "a development session key, as long as it needs to be";
 
@@ -59,5 +67,90 @@ describe("the sealed session", () => {
   it("returns null on a cookie that means nothing", async () => {
     expect(await openSession("anything at all")).toBeNull();
     expect(await openSession("")).toBeNull();
+  });
+});
+
+/*
+  A browser drops a cookie over 4 096 bytes without a word — no error, no
+  console, nothing but a session that was never there on the next request. A
+  sealed session sits right on that line: an identity token and the one that
+  renews it, encrypted together, weigh between three and eight kilobytes
+  depending on whose claims they carry.
+
+  That is how it showed: the day production moved to Entra, half the team
+  signed in and the other half came back to the sign-in page with nothing to
+  say why. The measure settled it — 3 799 bytes for a session that worked, on
+  a limit of 4 096.
+*/
+describe("a session too big for one cookie", () => {
+  beforeEach(() => {
+    process.env.SESSION_SECRET = SECRET;
+  });
+
+  /** The store a browser would present, from the cookies it was handed. */
+  function browser(cookies: { name: string; value: string }[]) {
+    return (name: string) => cookies.find((cookie) => cookie.name === name)?.value;
+  }
+
+  const heavy: Session = { ...session, idToken: "e".repeat(6_000) };
+
+  it("is written across several cookies, none of them near the limit", async () => {
+    const written = sessionCookies(await sealSession(heavy));
+
+    expect(written.length).toBeGreaterThan(1);
+    for (const cookie of written) {
+      expect(cookie.name.length + cookie.value.length).toBeLessThan(4_096);
+    }
+  });
+
+  it("opens again from the cookies it was cut into", async () => {
+    const written = sessionCookies(await sealSession(heavy));
+
+    const sealed = sealedSessionFrom(browser(written));
+
+    expect(await openSession(sealed ?? "")).toEqual(heavy);
+  });
+
+  it("still opens a session written before the cut", async () => {
+    // A fortnight of live sessions were written as one cookie. Signing
+    // everybody out to ship this would be a fix nobody asked for.
+    const sealed = await sealSession(session);
+
+    const read = sealedSessionFrom(browser([{ name: SESSION_COOKIE, value: sealed }]));
+
+    expect(await openSession(read ?? "")).toEqual(session);
+  });
+
+  it("takes away the cookies the previous session used and this one does not", async () => {
+    // Left behind, a piece of the old session is read glued to the new one,
+    // and nothing opens at all.
+    const written = sessionCookies(await sealSession(session), [
+      `${SESSION_COOKIE}.0`,
+      `${SESSION_COOKIE}.1`,
+      `${SESSION_COOKIE}.2`,
+    ]);
+
+    const emptied = written.filter((cookie) => cookie.value === "");
+    expect(emptied.map((cookie) => cookie.name)).toEqual([
+      `${SESSION_COOKIE}.1`,
+      `${SESSION_COOKIE}.2`,
+    ]);
+    expect(emptied.every((cookie) => cookie.maxAge === 0)).toBe(true);
+  });
+
+  it("names every cookie a session is written across when signing out", () => {
+    const cleared = clearedSessionCookies([
+      SESSION_COOKIE,
+      `${SESSION_COOKIE}.0`,
+      `${SESSION_COOKIE}.1`,
+      "some_other_cookie",
+    ]);
+
+    expect(cleared.map((cookie) => cookie.name)).toEqual([
+      SESSION_COOKIE,
+      `${SESSION_COOKIE}.0`,
+      `${SESSION_COOKIE}.1`,
+    ]);
+    expect(cleared.every((cookie) => cookie.maxAge === 0)).toBe(true);
   });
 });

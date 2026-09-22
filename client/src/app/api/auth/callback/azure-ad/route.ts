@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { claimsFromIdToken, exchangeCode, isAllowedEmail } from "@/lib/auth/entra";
 import { PENDING_COOKIE, appOrigin, landingUrl, openPending } from "@/lib/auth/pending";
-import { sealSession, sessionCookie } from "@/lib/auth/session";
+import { sealSession, sessionCookies } from "@/lib/auth/session";
 
 /** Back to the sign-in screen, saying what went wrong in a word. */
 function refused(request: NextRequest, reason: string): NextResponse {
@@ -71,7 +71,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const response = NextResponse.redirect(
     landingUrl(pending.landing, appOrigin(request.nextUrl.origin)),
   );
-  response.cookies.set(sessionCookie(await sealSession({ ...tokens, email })));
+  for (const cookie of sessionCookies(
+    await sealSession({ ...tokens, email }),
+    request.cookies.getAll().map((held) => held.name),
+  )) {
+    response.cookies.set(cookie);
+  }
   response.cookies.delete(PENDING_COOKIE);
   return response;
 }
