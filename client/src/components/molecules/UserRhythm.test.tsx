@@ -91,3 +91,55 @@ describe("declaring one's own", () => {
     expect(screen.getByText(/4 jours par semaine/)).toBeInTheDocument();
   });
 });
+
+describe("a declaration that would be covered by the one in force", () => {
+  it("opens on the day the rhythm in force opened, so a correction replaces it", async () => {
+    // The first of the month would slip underneath the rhythm in force, which
+    // would go on covering it: the API would answer, and nothing would move.
+    show(FOUR_FIFTHS, { editable: true });
+
+    await userEvent.click(screen.getByLabelText(/^Jeudi/));
+
+    expect(screen.getByLabelText("À partir du")).toHaveValue("2026-03-01");
+  });
+
+  it("opens on the first of the month when nothing was ever declared", async () => {
+    show(null, { editable: true });
+
+    await userEvent.click(screen.getByLabelText(/^Mercredi/));
+
+    expect(screen.getByLabelText("À partir du")).toHaveValue("2026-09-01");
+  });
+
+  it("says so rather than letting one click into the void", async () => {
+    show(FOUR_FIFTHS, { editable: true });
+
+    await userEvent.click(screen.getByLabelText(/^Jeudi/));
+    await userEvent.clear(screen.getByLabelText("À partir du"));
+    await userEvent.type(screen.getByLabelText("À partir du"), "2026-01-15");
+
+    expect(screen.getByText(/restera en vigueur/)).toBeInTheDocument();
+  });
+});
+
+describe("when the API turns a rhythm down", () => {
+  it("says so rather than swallowing it", async () => {
+    const refuse = vi.fn().mockRejectedValue(new Error("nope"));
+    show(null, { editable: true, onDeclare: refuse });
+
+    await userEvent.click(screen.getByLabelText(/^Mercredi/));
+    await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+  });
+
+  it("keeps the motif so nothing typed is lost", async () => {
+    const refuse = vi.fn().mockRejectedValue(new Error("nope"));
+    show(null, { editable: true, onDeclare: refuse });
+
+    await userEvent.click(screen.getByLabelText(/^Mercredi/));
+    await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    expect(screen.getByText(/4,5 jours par semaine/)).toBeInTheDocument();
+  });
+});
