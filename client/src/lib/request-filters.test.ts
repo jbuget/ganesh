@@ -25,10 +25,20 @@ function need(title: string, over: Partial<RequestResponse> = {}): RequestRespon
 const titles = (requests: RequestResponse[]) => requests.map((r) => r.title);
 
 describe("filterRequests", () => {
-  it("opens on what is waiting to be weighed", () => {
-    const needs = [need("En attente"), need("Vieille", { state: "rejected" })];
+  it("opens on what still waits on somebody", () => {
+    // « Plus tard » answers nothing, it postpones: left out of sight, it is
+    // a need nobody ever comes back to.
+    const needs = [
+      need("En attente"),
+      need("Pas ce trimestre", { state: "deferred" }),
+      need("Vieille", { state: "rejected" }),
+      need("Batie", { state: "converted" }),
+    ];
 
-    expect(titles(filterRequests(needs, NO_REQUEST_FILTER))).toEqual(["En attente"]);
+    expect(titles(filterRequests(needs, NO_REQUEST_FILTER))).toEqual([
+      "En attente",
+      "Pas ce trimestre",
+    ]);
   });
 
   it("shows everything once no state is asked for", () => {
@@ -65,7 +75,10 @@ describe("filterRequests", () => {
 
 describe("the filters in the address", () => {
   it("opens on what is waiting when the address says nothing", () => {
-    expect(readRequestFilters(new URLSearchParams()).states).toEqual(["submitted"]);
+    expect(readRequestFilters(new URLSearchParams()).states).toEqual([
+      "submitted",
+      "deferred",
+    ]);
   });
 
   it("writes « every state » down, since an empty list cannot say it", () => {

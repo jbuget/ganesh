@@ -14,14 +14,19 @@ export interface RequestFilters {
 }
 
 /**
- * What the screen opens on: the needs waiting to be weighed.
+ * What the screen opens on: the needs still waiting on somebody.
  *
  * The only criterion whose empty value is not neutral, and for the same
  * reason the team list leaves requesters out: one comes to this screen to
  * answer what is waiting, and a list opening on everything ever asked for
- * would bury the three that need an answer today.
+ * would bury the few that need an answer today.
+ *
+ * « Plus tard » is in it, and that is the whole point of holding the state:
+ * it answers nothing, it postpones — a need put off and then out of sight is
+ * a need nobody ever comes back to, which is exactly what deferring is meant
+ * not to be. What was accepted, refused or built is read by asking for it.
  */
-export const WAITING: RequestState[] = ["submitted"];
+export const WAITING: RequestState[] = ["submitted", "deferred"];
 
 export const NO_REQUEST_FILTER: RequestFilters = {
   search: "",
