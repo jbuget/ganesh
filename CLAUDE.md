@@ -49,14 +49,23 @@ volume, and a key prefix is a needle for a secret scanner, not a brand.
 
 ### Roles
 
-| Action | `TEAMMATE` | `MANAGER` |
-|---|---|---|
-| Fill in one's own month, read and edit a colleague's open month | ✅ | ✅ |
-| Create / change a project, change its status | ✅ | ✅ |
-| Validate one's own month | ✅ | ✅ |
-| Reopen a validated month | ❌ | ✅ |
-| Manage teammates | ❌ | ✅ |
-| Sync to Monday (V1.1) | ❌ | ✅ |
+| Action | `REQUESTER` | `TEAMMATE` | `MANAGER` |
+|---|---|---|---|
+| Express a need, and read one's own | ✅ | ✅ | ✅ |
+| Fill in one's own month, read and edit a colleague's open month | ❌ | ✅ | ✅ |
+| Create / change a project, change its status | ❌ | ✅ | ✅ |
+| Validate one's own month | ❌ | ✅ | ✅ |
+| Read the needs the company expressed | ❌ | ✅ | ✅ |
+| Arbitrate a need, and make a mission of it | ❌ | ❌ | ✅ |
+| Reopen a validated month | ❌ | ❌ | ✅ |
+| Manage teammates | ❌ | ❌ | ✅ |
+| Sync to Monday (V1.1) | ❌ | ❌ | ✅ |
+
+**`REQUESTER` is what an unknown identity gets**, and it opens nothing: the
+whole company signs in through the same Entra tenant, so being recognised at
+the door says nothing about belonging to the team. A manager promotes the
+account the day they say whose it is — which means a new teammate has nothing
+until somebody fills in their sheet, and that is deliberate.
 
 ### Business invariants
 
@@ -528,6 +537,52 @@ to both. Inside the tab, « Rattachement » gathers what the service hangs from
   speaks camelCase on purpose — it is waat.tools's vocabulary, not ours.
 
 ---
+
+## Le recueil de besoins
+
+WAAT is organised in COMEX, COMOP and everybody else, and a need reaches the
+COMEX through one of its members. Ganesh holds that: anybody signing in may
+describe a need, names the member of the COMEX who carries it, and the team
+weighs it. A mission is born of what is accepted, and of nothing else.
+
+**A request is not a mission, and lives outside the reference list.** No time
+is booked against it, it appears on no board and in no plan. It may be
+refused, left to sleep, or picked up a year later — none of which a mission
+may do, and all of which a `ProjectStatus` would have had to pretend to.
+
+- **Only its author writes it, and only while it is a draft.** Submitting asks
+  for three things — the problem, who lives with it, what would change — and
+  refuses without them. Once handed over the sheet stops moving: the decision
+  bears on a text that has stopped changing, and taking it back to a draft is
+  what reopens it.
+- **Nobody weighs what they asked for, or what they carry.** The request turns
+  away its author and its sponsors, managers included; the role says who may
+  arbitrate at all, and the request says which of them may arbitrate *this*.
+- **A refusal says why**, and so does a « plus tard » — a « non » with no
+  reason attached comes back word for word three months later. An arbitration
+  is played again as often as it has to be, until something is actually built.
+- **Converting carries what the need said** — the title, the departments, and
+  a sheet written out of the problem, the people and the expected result — and
+  never what the team declares: the axis, the urgency, the estimate. It writes
+  one log line carrying both identifiers, which is what lets a mission's
+  journal say where it came from. `CONVERTED` is the end of the road.
+- **The team's list is read through the eyes of one reader**: everything handed
+  over, plus that person's own drafts. It opens on what is waiting to be
+  weighed, since one comes to that screen to answer.
+
+**Whoever only ever comes to ask for something sees « Mes demandes » and
+nothing else.** `get_current_user` turns a requester away, so every screen of
+the application stays the team's; the routes of the requests open themselves
+to them one at a time, the way a route opens itself to a machine. The one
+exception is `GET /users/me`: a screen has to know whose account it is
+drawing.
+
+Two things are deliberately out of V1, and adding either would be a decision:
+**no exchange on a request** — a manager goes and asks the person, which is
+the point — and **no notification to the requester**, who has no bell, and
+reads the decision and its motive on their own screen. The COMEX is named
+rather than convened: marking somebody COMEX puts them in the sponsor picker,
+and asks nothing of them in the application.
 
 ## La Gazette
 
