@@ -27,12 +27,24 @@ from src.shared.exceptions.domain_exceptions import ForbiddenActionError
 
 logger = logging.getLogger(__name__)
 
-#: Identity used when authentication is switched off in development.
-DEV_IDENTITY = EntraIdentity(
-    oid="dev-local",
-    email="j.buget@waat.fr",
-    display_name="J. Buget (dev)",
-)
+
+def dev_identity(email: str) -> EntraIdentity:
+    """The identity the open door hands over, in development.
+
+    Which account it is comes from `DEV_EMAIL`, so that one signs in as a
+    teammate or as somebody who only ever asks for something by editing one
+    line and restarting — never by rewriting a role in the database, which is
+    a one-way trip: a requester reaches no route that could promote them back.
+
+    The id is drawn from the address rather than fixed. A fixed one would
+    match whichever account was provisioned first and quietly hand over
+    somebody else's.
+    """
+    return EntraIdentity(
+        oid=f"dev-{email}",
+        email=email,
+        display_name=f"{email.split('@')[0]} (dev)",
+    )
 
 
 def local_token_service(settings: Settings) -> LocalTokenService:
@@ -102,8 +114,8 @@ async def get_signed_in_user(
     )
 
     if not settings.require_auth:
-        logger.warning("Authentication disabled: development identity.")
-        user = await provision.execute(DEV_IDENTITY)
+        logger.warning("Authentication disabled: signed in as %s.", settings.dev_email)
+        user = await provision.execute(dev_identity(settings.dev_email))
         await session.commit()
         return user
 

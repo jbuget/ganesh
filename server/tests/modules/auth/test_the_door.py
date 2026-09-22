@@ -3,7 +3,7 @@
 import pytest
 from fastapi import HTTPException
 
-from src.modules.auth.presentation.dependencies import admit
+from src.modules.auth.presentation.dependencies import admit, dev_identity
 from src.modules.users.domain.entities.user import Role, User
 
 
@@ -38,3 +38,18 @@ def test_a_requester_is_turned_away() -> None:
         admit(make_user(Role.REQUESTER))
 
     assert refusal.value.status_code == 403
+
+
+def test_the_open_door_hands_over_the_account_it_is_told_to() -> None:
+    """Development only, and the whole point of it.
+
+    Two audiences read this application: passing from one to the other must
+    take one line of configuration, never a role rewritten in the database —
+    a requester reaches no route that could promote them back.
+    """
+    assert dev_identity("a.metier@waat.fr").email == "a.metier@waat.fr"
+
+
+def test_two_development_accounts_are_never_taken_for_one_another() -> None:
+    """A fixed id would match whoever was provisioned first."""
+    assert dev_identity("a.metier@waat.fr").oid != dev_identity("j.buget@waat.fr").oid
