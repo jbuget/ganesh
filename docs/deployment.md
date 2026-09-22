@@ -173,13 +173,15 @@ Terraform state is not a vault.
 2. Amplify picks `amplify.yml` up on its own. The platform must be
    **WEB_COMPUTE** (SSR) — the BFF is Route Handlers, a static export would
    drop them silently.
-3. Environment variables, on the branch:
+3. Environment variables, on the application rather than on the branch —
+   one branch is deployed and a variable posted on it would have to be posted
+   again on the next one:
 
    | Variable | Value |
    |---|---|
    | `AZURE_AD_TENANT_ID` | `28d878fd-3802-4f94-931c-79cdf0a419dc` |
-   | `AZURE_AD_CLIENT_ID` | `c03d14e8-e876-4703-94a0-99bbda5d5d9d` |
-   | `AZURE_AD_CLIENT_SECRET` | the WAATcher app registration's secret |
+   | `AZURE_AD_CLIENT_ID` | `7941db35-0f8d-4200-adc3-11964170dd1e` |
+   | `AZURE_AD_CLIENT_SECRET` | the secret of that same app registration |
    | `AZURE_AD_REDIRECT_URI` | `https://ganesh.waat.tools/api/auth/callback/azure-ad` |
    | `SESSION_SECRET` | a long random string, this environment's own |
    | `ALLOWED_EMAIL_DOMAIN` | `waat.fr` |
@@ -208,8 +210,15 @@ Terraform state is not a vault.
    `amplify.yml` writes them straight in, so they stay readable in the
    repository and survive the application being recreated.
 4. Custom domain `ganesh.waat.tools`, then the CNAME of step 3.
-5. On the Entra app registration (shared with WAATcher), declare the redirect
-   URI `https://ganesh.waat.tools/api/auth/callback/azure-ad`.
+5. On Ganesh's own app registration, declare the redirect URI
+   `https://ganesh.waat.tools/api/auth/callback/azure-ad` — done. Entra sends
+   people back to an address it has been told about and to no other, so a URI
+   that is not declared ends the sign-in on a Microsoft error page.
+
+   **The client secret expires.** The day it does, everybody is turned away at
+   the door, and the whole of the diagnosis is that Entra refuses the
+   exchange. Putting a fresh secret in the console and rebuilding is the fix;
+   `AUTH_ENTRA=false` on both sides is the way to get back in meanwhile.
 
 ## What production actually is
 
@@ -271,17 +280,7 @@ stealing.
 
 ## What is not done yet
 
-**Waiting on the app registration.** Entra will only send people back to an
-address it has been told about, and declaring
-`https://ganesh.waat.tools/api/auth/callback/azure-ad` is the ops' to do. Until
-it is declared, deploy with `AUTH_ENTRA=false`: the fallback door opens on a
-single account with a password, and `REQUIRE_AUTH` stays `true` throughout —
-the application is never open to whoever knows the address.
-
-The day the redirect URI is declared, `AUTH_ENTRA=true` goes into the parameter
-on both sides, and the deploy that follows hands everyone their own account.
-
-Also left for later, in rough order of how much they will be missed:
+In rough order of how much they will be missed:
 
 - **Staging.** Copy `terraform/` to `terraform/staging/`, change
   `environment`, the CIDRs and the host names. Nothing in the code changes.

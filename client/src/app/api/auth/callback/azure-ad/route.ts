@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { claimsFromIdToken, exchangeCode, isAllowedEmail } from "@/lib/auth/entra";
 import { PENDING_COOKIE, appOrigin, landingUrl, openPending } from "@/lib/auth/pending";
-import { sealSession, sessionCookie } from "@/lib/auth/session";
+import { sealSession, sessionCookies } from "@/lib/auth/session";
 
 /** Back to the sign-in screen, saying what went wrong in a word. */
 function refused(request: NextRequest, reason: string): NextResponse {
@@ -29,7 +29,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const state = request.nextUrl.searchParams.get("state");
 
   // Entra says so itself when the person declined, or when the tenant refused.
-  if (request.nextUrl.searchParams.get("error")) {
+  const refusal = request.nextUrl.searchParams.get("error");
+  if (refusal) {
+    // Written down, because this is the one refusal whose reason lives
+    // nowhere else: Entra names it in `error_description`, as an AADSTS code,
+    // and that code is the whole of the diagnosis — an application nobody
+    // consented to, a person not assigned to it. Without it, a colleague who
+    // cannot sign in leaves « denied » in an address bar and nothing else.
+    // For the logs and not for them: it names the tenant and the client.
+    console.error(
+      "[auth] Entra a refusé la connexion :",
+      refusal,
+      request.nextUrl.searchParams.get("error_description") ?? "",
+    );
     return refused(request, "denied");
   }
   if (!code || !state) return refused(request, "incomplete");
@@ -59,7 +71,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const response = NextResponse.redirect(
     landingUrl(pending.landing, appOrigin(request.nextUrl.origin)),
   );
-  response.cookies.set(sessionCookie(await sealSession({ ...tokens, email })));
+  for (const cookie of sessionCookies(
+    await sealSession({ ...tokens, email }),
+    request.cookies.getAll().map((held) => held.name),
+  )) {
+    response.cookies.set(cookie);
+  }
   response.cookies.delete(PENDING_COOKIE);
   return response;
 }

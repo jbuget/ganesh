@@ -7,7 +7,8 @@
  * stolen in transit says nothing; a cookie rewritten on the way is refused.
  *
  * The tokens ride in the cookie rather than in a store because the BFF has no
- * database of its own. It costs the 4 KB a cookie may weigh: nothing else is
+ * database of its own. It costs the 4 KB a cookie may weigh — which is why a
+ * session is written across as many cookies as it takes, and nothing else is
  * ever to be put in here.
  */
 import { cookies } from "next/headers";
@@ -94,21 +95,120 @@ export async function openSession(sealed: string): Promise<Session | null> {
 /** The session the incoming request carries, if it carries one. */
 export async function currentSession(): Promise<Session | null> {
   const store = await cookies();
-  const sealed = store.get(SESSION_COOKIE)?.value;
+  const sealed = sealedSessionFrom((name) => store.get(name)?.value);
   return sealed ? openSession(sealed) : null;
 }
 
-/** How a sealed session is written down, wherever a response sets it. */
-export function sessionCookie(sealed: string) {
+/**
+ * How much of a sealed session one cookie carries.
+ *
+ * A browser drops a cookie over 4 096 bytes, name and attributes counted,
+ * without a word: no error, no console, nothing but a session that was never
+ * there on the next request. And a sealed session sits right on that line —
+ * an identity token and the one that renews it, encrypted together, weigh
+ * between three and eight kilobytes depending on whose claims they carry.
+ *
+ * It showed the day production moved to Entra: half the team signed in and
+ * the other half came back to the sign-in page with nothing anywhere to say
+ * why — not a log, not a refusal, not a `reason` in the address bar. A
+ * session that worked measured 3 799 bytes.
+ *
+ * 3 500 leaves room for the name, the attributes, and the margin a browser is
+ * entitled to take.
+ */
+const CHUNK = 3_500;
+
+/** What a response hands the browser to write a cookie down. */
+interface CookieToWrite {
+  name: string;
+  value: string;
+  httpOnly: boolean;
+  sameSite: "lax";
+  secure: boolean;
+  path: string;
+  maxAge: number;
+}
+
+/** The name of one piece of a session, in the order it is read back. */
+function pieceName(index: number): string {
+  return `${SESSION_COOKIE}.${index}`;
+}
+
+function cookieFor(name: string, value: string, maxAge: number): CookieToWrite {
   return {
-    name: SESSION_COOKIE,
-    value: sealed,
+    name,
+    value,
     httpOnly: true,
     sameSite: "lax" as const,
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    // A fortnight: long enough not to sign in every morning, short enough that
-    // a forgotten session on a shared machine does not outlive the month.
-    maxAge: 60 * 60 * 24 * 14,
+    maxAge,
   };
+}
+
+/** A fortnight: long enough not to sign in every morning, short enough that a
+ * forgotten session on a shared machine does not outlive the month. */
+const SESSION_MAX_AGE = 60 * 60 * 24 * 14;
+
+/** Every cookie name a session is written across, among those a browser sends. */
+export function sessionCookieNames(present: readonly string[]): string[] {
+  return present.filter(
+    (name) => name === SESSION_COOKIE || name.startsWith(`${SESSION_COOKIE}.`),
+  );
+}
+
+/**
+ * How a sealed session is written down, wherever a response sets it.
+ *
+ * `present` is what the browser currently sends. Whatever the session before
+ * was written across and this one does not use is taken away in the same
+ * breath: a piece left behind is read back glued to the new session, and then
+ * nothing opens at all. The single cookie sessions used to be written as is
+ * one such leftover, which is how a session from before the cut is replaced
+ * rather than doubled.
+ */
+export function sessionCookies(
+  sealed: string,
+  present: readonly string[] = [],
+): CookieToWrite[] {
+  const written: CookieToWrite[] = [];
+  for (let at = 0; at < sealed.length; at += CHUNK) {
+    written.push(
+      cookieFor(
+        pieceName(written.length),
+        sealed.slice(at, at + CHUNK),
+        SESSION_MAX_AGE,
+      ),
+    );
+  }
+  const stale = sessionCookieNames(present).filter(
+    (name) => !written.some((cookie) => cookie.name === name),
+  );
+  return [...written, ...stale.map((name) => cookieFor(name, "", 0))];
+}
+
+/** What a response sends to take a session away, whole. */
+export function clearedSessionCookies(present: readonly string[]): CookieToWrite[] {
+  return sessionCookieNames(present).map((name) => cookieFor(name, "", 0));
+}
+
+/**
+ * The sealed session a request carries, however many cookies it took.
+ *
+ * The single cookie comes first: sessions opened before the cut are still
+ * live, and shipping this is no reason to sign everybody out.
+ */
+export function sealedSessionFrom(
+  read: (name: string) => string | undefined,
+): string | null {
+  const whole = read(SESSION_COOKIE);
+  if (whole) return whole;
+
+  let sealed = "";
+  for (let index = 0; ; index += 1) {
+    const piece = read(pieceName(index));
+    if (piece === undefined) break;
+    sealed += piece;
+  }
+  return sealed || null;
 }

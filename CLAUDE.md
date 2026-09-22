@@ -758,10 +758,17 @@ or the CD workflow:
   deploy a success, and the migration runs once, inside the container, rather
   than in each worker as it boots.
 
-**The sign-in flow does not exist yet**, so production runs `REQUIRE_AUTH=false`
-and the application is open to whoever knows the address. That is a step, not a
-state: the day the Entra callback lands in the BFF, the parameter flips and the
-next deploy closes the door.
+**Production signs people in through Entra**, on an app registration of its
+own on the tenant WAATcher already uses. `REQUIRE_AUTH` and `AUTH_ENTRA` are
+both `true`: every request carries a token, and the token is one Entra signed.
+The fallback door — one account, one password — is what `AUTH_ENTRA=false`
+opens instead, never a second door open beside Entra, and it is the way back
+in the day Entra turns everybody away.
+
+The client id is written in two places, Amplify's environment and the API's,
+and it is one value: the BFF relays the identity token, the API validates it
+against that client id as the audience. Let the two drift and everybody signs
+in, then gets a 401 on every call they make.
 
 ---
 

@@ -15,14 +15,18 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { isAuthDisabled, isOpenPath } from "@/lib/auth/guard";
-import { SESSION_COOKIE, openSession } from "@/lib/auth/session";
+import {
+  clearedSessionCookies,
+  openSession,
+  sealedSessionFrom,
+} from "@/lib/auth/session";
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
 
   if (isAuthDisabled() || isOpenPath(pathname)) return NextResponse.next();
 
-  const sealed = request.cookies.get(SESSION_COOKIE)?.value;
+  const sealed = sealedSessionFrom((name) => request.cookies.get(name)?.value);
   if (sealed && (await openSession(sealed))) return NextResponse.next();
 
   // The API answers, it does not redirect: a fetch that lands on an HTML
@@ -34,7 +38,13 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   // A seal that no longer opens is a session that is over. Cleared here, or
   // the browser would keep sending it at every request for the fortnight it
   // was set to live, and signing in afresh would be the only way out.
-  if (sealed) response.cookies.set(SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+  if (sealed) {
+    for (const cookie of clearedSessionCookies(
+      request.cookies.getAll().map((held) => held.name),
+    )) {
+      response.cookies.set(cookie);
+    }
+  }
   return response;
 }
 

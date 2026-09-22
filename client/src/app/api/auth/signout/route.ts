@@ -5,12 +5,18 @@
  * this one can remove it. Redirecting is left to the caller, who knows where to
  * send the person.
  */
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-import { SESSION_COOKIE } from "@/lib/auth/session";
+import { clearedSessionCookies } from "@/lib/auth/session";
 
-export async function POST(): Promise<NextResponse> {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   const response = new NextResponse(null, { status: 204 });
-  response.cookies.set(SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+  // Every cookie the session is written across, not only the first: one piece
+  // left behind is a session that half exists.
+  for (const cookie of clearedSessionCookies(
+    request.cookies.getAll().map((held) => held.name),
+  )) {
+    response.cookies.set(cookie);
+  }
   return response;
 }
