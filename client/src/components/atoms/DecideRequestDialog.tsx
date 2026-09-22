@@ -55,7 +55,12 @@ export function DecideRequestDialog({
 }: DecideRequestDialogProps) {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
-  const wording = decision ? DECISIONS[decision] : null;
+  // The decision being taken is kept while the dialog closes: read from
+  // `decision` alone, the title would fall back to a generic one for the
+  // length of the closing, and the reader would see it change under them.
+  const [taken, setTaken] = useState<RequestState | null>(decision);
+  if (decision !== null && decision !== taken) setTaken(decision);
+  const wording = taken ? DECISIONS[taken] : null;
 
   const isValid = !wording?.demanded || note.trim().length > 0;
 
