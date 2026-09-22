@@ -93,10 +93,15 @@ resource "aws_instance" "app" {
     encrypted   = true
   }
 
+  # Two hops, not one: the API runs in a container on the Docker bridge, and a
+  # call to 169.254.169.254 from inside it crosses one more hop than the same
+  # call from the host. At a limit of 1 the packet dies in the bridge, botocore
+  # finds no credentials, and every write to the bucket fails with
+  # NoCredentialsError. Reads never notice — they touch the database alone.
   metadata_options {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
-    http_put_response_hop_limit = 1
+    http_put_response_hop_limit = 2
   }
 
   # The only compute host: it holds the Elastic IP association and Caddy's
