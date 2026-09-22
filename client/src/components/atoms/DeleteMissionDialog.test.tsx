@@ -14,6 +14,7 @@ function open(props: Partial<React.ComponentProps<typeof DeleteMissionDialog>> =
       deletable
       consumedDays={0}
       subProjects={0}
+      published={false}
       onConfirm={onConfirm}
       {...props}
     />,
@@ -34,6 +35,16 @@ describe("DeleteMissionDialog", () => {
     open();
 
     expect(screen.getByText(/mises à jour/)).toBeInTheDocument();
+  });
+
+  /**
+   * The bytes go with it, and nothing else in the product holds a copy. A
+   * confirmation that listed only the thread understated what the click costs.
+   */
+  it("warns that the files dropped on it go too", () => {
+    open();
+
+    expect(screen.getByText(/fichiers/)).toBeInTheDocument();
   });
 
   it("deletes the mission once confirmed", async () => {
@@ -98,6 +109,30 @@ describe("DeleteMissionDialog", () => {
 
     expect(screen.getByText(/4 jours saisis/)).toBeInTheDocument();
     expect(screen.getByText(/un sous-projet/)).toBeInTheDocument();
+  });
+
+  /**
+   * A published mission is an address somebody may have kept. Dropping its
+   * card off waat.tools must be a decision of its own, taken beforehand.
+   */
+  it("refuses a published mission, and names where to unpublish it", () => {
+    open({ deletable: false, published: true });
+
+    expect(screen.getByText("Suppression impossible")).toBeInTheDocument();
+    expect(screen.getByText(/publié au catalogue/)).toBeInTheDocument();
+    expect(screen.getByText(/Dépubliez-le/)).toBeInTheDocument();
+  });
+
+  /**
+   * On a mission that carries time, archiving is the whole answer: the
+   * catalogue keeps the card and marks it archived. Sending one to unpublish
+   * first would add a step that changes nothing.
+   */
+  it("says the time before the publication when it carries both", () => {
+    open({ deletable: false, consumedDays: 2, published: true });
+
+    expect(screen.getByText(/2 jours saisis/)).toBeInTheDocument();
+    expect(screen.queryByText(/Dépubliez-le/)).toBeNull();
   });
 
   /** Nothing can be done from here: the only way out is closing. */
