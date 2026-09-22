@@ -13,7 +13,12 @@ import type {
   UserResponse,
 } from "@/lib/api/generated/model";
 import { useCurrentUser, useTeammates } from "@/lib/api/queries";
-import { NO_USER_FILTER, filterUsers, type UserFilters } from "@/lib/user-filters";
+import {
+  NO_USER_FILTER,
+  filterUsers,
+  hiddenRequesters,
+  type UserFilters,
+} from "@/lib/user-filters";
 import { NO_USER_SORT, sortUsers, type UserSort } from "@/lib/user-sort";
 
 /**
@@ -60,6 +65,15 @@ export function useUsersScreen(
      */
     visible: kept.length,
     total: filterUsers(teammates, { ...NO_USER_FILTER, states: filters.states }).length,
+
+    /**
+     * How many requesters the list is keeping out of sight.
+     *
+     * The screen says it rather than leaving the reader to wonder: everybody
+     * at WAAT signs in through the same tenant, and a list showing fifteen
+     * rows out of three hundred owes them that much.
+     */
+    hidden: hiddenRequesters(teammates, filters),
 
     /** The teammate a panel is opened on, deactivated or not. */
     find: (userId: number) =>

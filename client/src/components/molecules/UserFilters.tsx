@@ -20,6 +20,9 @@ interface UserFiltersProps {
   /** Teammates shown, and teammates one would see with no criterion. */
   visible: number;
   total: number;
+  /** Requesters the criteria are keeping out of sight, if any. */
+  hidden: number;
+  onShowRequesters: () => void;
 }
 
 /**
@@ -37,6 +40,8 @@ export function UserFilters({
   onClear,
   visible,
   total,
+  hidden,
+  onShowRequesters,
 }: UserFiltersProps) {
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -66,16 +71,30 @@ export function UserFilters({
         {hasFilter && <ClearFilters onClear={onClear} />}
       </div>
 
-      {hasFilter && (
-        <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-4">
+        {/* The list shows the team and hides everybody who only ever comes to
+            ask for something. Said here rather than left to be discovered:
+            three hundred accounts missing without a word is what makes
+            somebody look for one they were never shown. */}
+        {hidden > 0 && (
+          <button
+            type="button"
+            onClick={onShowRequesters}
+            className="cursor-pointer text-sm text-slate-500 underline-offset-2 transition-colors hover:text-slate-900 hover:underline"
+          >
+            {hidden > 1 ? `Afficher les ${hidden} demandeurs` : "Afficher le demandeur"}
+          </button>
+        )}
+
+        {hasFilter && (
           <FilteredCount
             visible={visible}
             total={total}
             one="collaborateur"
             many="collaborateurs"
           />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

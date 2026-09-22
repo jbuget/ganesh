@@ -7,6 +7,7 @@ import { UserPanel } from "@/components/organisms/UserPanel";
 import { UsersTable } from "@/components/organisms/UsersTable";
 import { useOpenedUser } from "@/lib/opened-user";
 import { useUserFilters } from "@/lib/use-user-filters";
+import { withRequesters } from "@/lib/user-filters";
 import { useUserSort } from "@/lib/use-user-sort";
 import { useUsersScreen } from "@/lib/use-users";
 
@@ -56,6 +57,8 @@ export function UsersPage() {
             onClear={clear}
             visible={screen.visible}
             total={screen.total}
+            hidden={screen.hidden}
+            onShowRequesters={() => set(withRequesters(filters))}
           />
         </>
       }

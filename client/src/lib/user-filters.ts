@@ -93,6 +93,34 @@ export function filterUsers(
   return users.filter((user) => kept(user, filters));
 }
 
+/**
+ * How many requesters the criteria are keeping out of sight.
+ *
+ * The list hides them by default and would otherwise say nothing of it: on a
+ * screen showing fifteen rows out of three hundred, that silence is what
+ * makes somebody look for an account they were never shown. The other
+ * criteria still apply — a search for « chen » counts the requesters named
+ * Chen, and no others — so the figure is what one more click would actually
+ * bring.
+ */
+export function hiddenRequesters(users: UserResponse[], filters: UserFilters): number {
+  if (filters.roles.includes("REQUESTER")) return 0;
+  return filterUsers(users, { ...filters, roles: ["REQUESTER"] }).length;
+}
+
+/**
+ * The same question, asked with the requesters in sight.
+ *
+ * The empty role criterion means « the team », so it is written out before
+ * the requesters are added to it: setting « REQUESTER » alone would show them
+ * *instead of* the team, which is not what somebody clicking « afficher »
+ * asked for.
+ */
+export function withRequesters(filters: UserFilters): UserFilters {
+  const shown = filters.roles.length > 0 ? filters.roles : TEAM_ROLES;
+  return { ...filters, roles: [...shown, "REQUESTER"] };
+}
+
 const PARAMETERS = { name: "name", role: "role", state: "state" } as const;
 
 const KNOWN_ROLES = new Set<string>(ROLES.map((role) => role.value));

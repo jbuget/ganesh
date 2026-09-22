@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import type { UserResponse } from "@/lib/api/generated/model";
 import {
   NO_USER_FILTER,
+  hiddenRequesters,
+  withRequesters,
   filterUsers,
   hasActiveUserFilter,
   readUserFilters,
@@ -155,5 +157,41 @@ describe("writeUserFilters", () => {
     writeUserFilters(params, NO_USER_FILTER);
 
     expect(params.toString()).toBe("");
+  });
+});
+
+describe("the requesters the list keeps out of sight", () => {
+  const team = [
+    teammate("Chef", { role: "MANAGER" }),
+    teammate("Métier", { role: "REQUESTER" }),
+    teammate("Compta", { role: "REQUESTER" }),
+  ];
+
+  it("counts what one more click would bring", () => {
+    expect(hiddenRequesters(team, NO_USER_FILTER)).toBe(2);
+  });
+
+  it("counts nothing once they are asked for", () => {
+    expect(hiddenRequesters(team, { ...NO_USER_FILTER, roles: ["REQUESTER"] })).toBe(0);
+  });
+
+  it("counts only those the other criteria would keep", () => {
+    // A figure promising rows a search would still hide is a figure that lies.
+    expect(hiddenRequesters(team, { ...NO_USER_FILTER, name: "compta" })).toBe(1);
+  });
+
+  it("shows them beside the team rather than instead of it", () => {
+    const shown = filterUsers(team, withRequesters(NO_USER_FILTER));
+
+    expect(names(shown)).toEqual(["Chef", "Métier", "Compta"]);
+  });
+
+  it("adds them to a criterion already set", () => {
+    const shown = filterUsers(
+      team,
+      withRequesters({ ...NO_USER_FILTER, roles: ["MANAGER"] }),
+    );
+
+    expect(names(shown)).toEqual(["Chef", "Métier", "Compta"]);
   });
 });
