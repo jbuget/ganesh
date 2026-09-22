@@ -9,6 +9,7 @@ import { DayTotalCell } from "@/components/atoms/DayTotalCell";
 import { MissionLabel } from "@/components/atoms/MissionLabel";
 import { TotalCell } from "@/components/atoms/TotalCell";
 import type { MonthGridResponse } from "@/lib/api/generated/model";
+import { formatDecimalDays } from "@/lib/dates";
 
 interface TimesheetGridProps {
   grid: MonthGridResponse;
@@ -125,8 +126,12 @@ export function TimesheetGrid({
               className="sticky left-0 z-10 border-r border-b border-r-slate-500 border-b-slate-500 bg-slate-50 px-3 py-1.5 text-left text-sm font-medium"
             >
               Total
+              {/* What the month asks of this person, their rhythm honoured —
+                  not the working days of the calendar. Somebody at four
+                  fifths owes seventeen of a month of twenty-two, and a
+                  denominator that said twenty-two would read as a debt. */}
               <span className="ml-2 text-xs font-normal text-slate-500">
-                ({grid.working_days} jrs. ouvrés)
+                ({formatDecimalDays(grid.expected_days)} j. attendus)
               </span>
             </th>
             {grid.days.map((day, dayIndex) => (

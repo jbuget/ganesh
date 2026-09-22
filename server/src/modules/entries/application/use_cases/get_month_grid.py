@@ -1,8 +1,11 @@
 """Builds a month's entry grid: missions as rows, days as columns."""
 
+from calendar import monthrange
 from dataclasses import dataclass, field
 from datetime import date
 
+from src.modules.calendar.domain.entities.period import Period
+from src.modules.calendar.domain.services.expectations import expected_days
 from src.modules.calendar.domain.services.working_days import (
     CalendarDay,
     days_of_month,
@@ -19,6 +22,7 @@ from src.modules.projects.domain.entities.project import ProjectKind
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.users.domain.repositories.rhythm_repository import RhythmRepository
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 from src.shared.utils import clock
@@ -73,6 +77,10 @@ class MonthGrid:
     rows: list[GridRow]
     day_totals: list[DayTotal]
     working_days: int
+    #: What the month calls for from this person, their rhythm honoured. Equal
+    #: to `working_days` for anyone who declared nothing, which is what the
+    #: grid assumed of everybody before rhythms existed.
+    expected_days: float
     is_writable: bool
 
     @property
@@ -82,6 +90,11 @@ class MonthGrid:
     @property
     def forecast_total(self) -> float:
         return round(sum(row.forecast_total for row in self.rows), 2)
+
+
+def _last_day_of(month: date) -> date:
+    """The last day of the month a first-of-the-month opens."""
+    return month.replace(day=monthrange(month.year, month.month)[1])
 
 
 class GetMonthGridUseCase:
@@ -94,12 +107,14 @@ class GetMonthGridUseCase:
         entries: EntryRepository,
         months: MonthRepository,
         user_missions: UserMissionRepository,
+        rhythms: RhythmRepository,
     ) -> None:
         self._users = users
         self._projects = projects
         self._entries = entries
         self._months = months
         self._user_missions = user_missions
+        self._rhythms = rhythms
 
     async def _project_consumption(self, project_id: int, today: date) -> float:
         """Time already consumed on a project, forecast excluded."""
@@ -199,5 +214,9 @@ class GetMonthGridUseCase:
             rows=sorted(rows.values(), key=lambda r: r.label),
             day_totals=self._day_totals(calendar_days, rows),
             working_days=working_days_count(month.year, month.month),
+            expected_days=expected_days(
+                Period(start=month, end=_last_day_of(month)),
+                await self._rhythms.history_of(query.user_id),
+            ),
             is_writable=month_status.is_writable if month_status else True,
         )

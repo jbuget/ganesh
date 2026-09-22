@@ -38,6 +38,7 @@ function makeGrid(overrides: Partial<MonthGridResponse> = {}): MonthGridResponse
       exceeds_capacity: false,
     })),
     working_days: 22,
+    expected_days: 22,
     is_writable: true,
     actual_total: 1,
     forecast_total: 1,
@@ -269,8 +270,22 @@ describe("TimesheetGrid", () => {
   it("shows one total per day", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
-    const footer = screen.getByRole("row", { name: /jrs\. ouvrés/ });
+    const footer = screen.getByRole("row", { name: /j\. attendus/ });
     expect(within(footer).getAllByRole("cell").at(-1)).toHaveTextContent("2");
+  });
+
+  it("counts down from what the month asks of this person, not of the calendar", () => {
+    // Somebody at four fifths owes seventeen of a month of twenty-two, and a
+    // denominator saying twenty-two would read as a debt they do not have.
+    render(<TimesheetGrid {...baseProps} grid={makeGrid({ expected_days: 17 })} />);
+
+    expect(screen.getByText(/17 j\. attendus/)).toBeInTheDocument();
+  });
+
+  it("spells a half day with a comma, as the grid does everywhere", () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid({ expected_days: 17.5 })} />);
+
+    expect(screen.getByText(/17,5 j\. attendus/)).toBeInTheDocument();
   });
 
   it("puts the totals row right under the day header", () => {
@@ -278,7 +293,7 @@ describe("TimesheetGrid", () => {
 
     const rows = screen.getAllByRole("row");
     expect(rows[0]).toHaveTextContent("Projet");
-    expect(rows[1]).toHaveTextContent("22 jrs. ouvrés");
+    expect(rows[1]).toHaveTextContent("22 j. attendus");
     expect(rows[2]).toHaveTextContent("Portail bailleurs");
   });
 
@@ -290,7 +305,7 @@ describe("TimesheetGrid", () => {
     } as Partial<MonthGridResponse>);
     render(<TimesheetGrid {...baseProps} grid={grid} />);
 
-    const totalRow = screen.getByRole("row", { name: /jrs\. ouvrés/ });
+    const totalRow = screen.getByRole("row", { name: /j\. attendus/ });
     expect(within(totalRow).getAllByRole("cell")[0].className).toContain(
       "bg-emerald-100",
     );
@@ -304,7 +319,7 @@ describe("TimesheetGrid", () => {
     } as Partial<MonthGridResponse>);
     render(<TimesheetGrid {...baseProps} grid={grid} />);
 
-    const totalRow = screen.getByRole("row", { name: /jrs\. ouvrés/ });
+    const totalRow = screen.getByRole("row", { name: /j\. attendus/ });
     expect(within(totalRow).getAllByRole("cell")[0]).toHaveAttribute(
       "data-alert",
       "true",

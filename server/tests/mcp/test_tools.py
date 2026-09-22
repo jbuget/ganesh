@@ -208,6 +208,7 @@ def a_grid(
         rows=rows,
         day_totals=totals,
         working_days=kwargs.get("working_days", 22),  # type: ignore[arg-type]
+        expected_days=kwargs.get("expected_days", 22.0),  # type: ignore[arg-type]
         is_writable=kwargs.get("is_writable", True),  # type: ignore[arg-type]
     )
 

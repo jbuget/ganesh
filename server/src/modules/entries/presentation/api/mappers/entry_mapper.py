@@ -53,6 +53,7 @@ def to_month_grid_response(grid: MonthGrid) -> MonthGridResponse:
             for total in grid.day_totals
         ],
         working_days=grid.working_days,
+        expected_days=grid.expected_days,
         is_writable=grid.is_writable,
         actual_total=grid.actual_total,
         forecast_total=grid.forecast_total,

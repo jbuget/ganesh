@@ -2,6 +2,7 @@
 
 from datetime import date
 
+from src.modules.calendar.domain.entities.week_pattern import WeekPattern
 from src.modules.entries.application.use_cases.get_month_grid import (
     GetMonthGridQuery,
     GetMonthGridUseCase,
@@ -13,11 +14,13 @@ from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectStatus,
 )
+from src.modules.users.domain.entities.rhythm import Rhythm
 from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
     InMemoryEntryRepository,
     InMemoryMonthRepository,
     InMemoryProjectRepository,
+    InMemoryRhythmRepository,
     InMemoryUserMissionRepository,
     InMemoryUserRepository,
 )
@@ -44,6 +47,7 @@ def build(
     entries: list[Entry] | None = None,
     months: list[Month] | None = None,
     declared: list[tuple[int, int, date]] | None = None,
+    rhythms: list[Rhythm] | None = None,
 ):
     return GetMonthGridUseCase(
         users=InMemoryUserRepository([USER]),
@@ -51,6 +55,7 @@ def build(
         entries=InMemoryEntryRepository(entries or []),
         months=InMemoryMonthRepository(months or []),
         user_missions=InMemoryUserMissionRepository(declared or []),
+        rhythms=InMemoryRhythmRepository(rhythms or []),
     )
 
 
@@ -129,6 +134,46 @@ async def test_the_grid_reports_the_working_days_of_the_month() -> None:
     grid = await build().execute(GetMonthGridQuery(user_id=1, month=date(2026, 9, 1)))
 
     assert grid.working_days == 22
+
+
+async def test_a_full_time_month_expects_every_working_day() -> None:
+    # The default has to move no figure: it is what the grid assumed of
+    # everybody before rhythms existed.
+    grid = await build().execute(GetMonthGridQuery(user_id=1, month=date(2026, 9, 1)))
+
+    assert grid.expected_days == 22
+
+
+async def test_a_rhythm_takes_its_days_off_out_of_what_the_month_expects() -> None:
+    # Five Wednesdays in September 2026, and no public holiday in it.
+    grid = await build(
+        rhythms=[
+            Rhythm(
+                id=None,
+                user_id=1,
+                pattern=WeekPattern(wednesday=0.0),
+                effective_from=date(2026, 1, 1),
+            )
+        ]
+    ).execute(GetMonthGridQuery(user_id=1, month=date(2026, 9, 1)))
+
+    assert grid.working_days == 22
+    assert grid.expected_days == 17
+
+
+async def test_a_rhythm_opening_later_leaves_an_earlier_month_alone() -> None:
+    grid = await build(
+        rhythms=[
+            Rhythm(
+                id=None,
+                user_id=1,
+                pattern=WeekPattern(wednesday=0.0),
+                effective_from=date(2026, 12, 1),
+            )
+        ]
+    ).execute(GetMonthGridQuery(user_id=1, month=date(2026, 9, 1)))
+
+    assert grid.expected_days == 22
 
 
 async def test_an_untouched_month_is_open_and_editable() -> None:

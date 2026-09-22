@@ -18,6 +18,7 @@ export interface MonthGridResponse {
   rows: GridRowResponse[];
   day_totals: DayTotalResponse[];
   working_days: number;
+  expected_days: number;
   is_writable: boolean;
   actual_total: number;
   forecast_total: number;

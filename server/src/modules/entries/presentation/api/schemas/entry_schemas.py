@@ -70,6 +70,8 @@ class MonthGridResponse(BaseModel):
     rows: list[GridRowResponse]
     day_totals: list[DayTotalResponse]
     working_days: int
+    #: What the month calls for from this person, their rhythm honoured.
+    expected_days: float
     is_writable: bool
     actual_total: float
     forecast_total: float

@@ -4,7 +4,10 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
-from src.modules.entries.presentation.dependencies import get_user_repository
+from src.modules.entries.presentation.dependencies import (
+    get_rhythm_repository,
+    get_user_repository,
+)
 from src.modules.stats.application.use_cases.compute_statistics import (
     ComputeStatisticsUseCase,
 )
@@ -16,7 +19,6 @@ from src.modules.stats.infrastructure.database.repositories.statistics_repositor
 )
 from src.modules.users.domain.repositories.rhythm_repository import RhythmRepository
 from src.modules.users.domain.repositories.user_repository import UserRepository
-from src.modules.users.presentation.dependencies import get_rhythm_repository
 
 
 def get_statistics_repository(

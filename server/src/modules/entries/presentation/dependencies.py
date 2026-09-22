@@ -54,7 +54,11 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.infrastructure.database.repositories.project_repository_impl import (
     SqlProjectRepository,
 )
+from src.modules.users.domain.repositories.rhythm_repository import RhythmRepository
 from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.modules.users.infrastructure.database.repositories.rhythm_repository_impl import (
+    SqlRhythmRepository,
+)
 from src.modules.users.infrastructure.database.repositories.user_repository_impl import (
     SqlUserRepository,
 )
@@ -62,6 +66,12 @@ from src.modules.users.infrastructure.database.repositories.user_repository_impl
 
 def get_user_repository(session: AsyncSession = Depends(get_db)) -> UserRepository:
     return SqlUserRepository(session)
+
+
+def get_rhythm_repository(
+    session: AsyncSession = Depends(get_db),
+) -> RhythmRepository:
+    return SqlRhythmRepository(session)
 
 
 def get_project_repository(
@@ -132,6 +142,7 @@ def get_month_grid_use_case(
     entries: EntryRepository = Depends(get_entry_repository),
     months: MonthRepository = Depends(get_month_repository),
     user_missions: UserMissionRepository = Depends(get_user_mission_repository),
+    rhythms: RhythmRepository = Depends(get_rhythm_repository),
 ) -> GetMonthGridUseCase:
     return GetMonthGridUseCase(
         users=users,
@@ -139,6 +150,7 @@ def get_month_grid_use_case(
         entries=entries,
         months=months,
         user_missions=user_missions,
+        rhythms=rhythms,
     )
 
 

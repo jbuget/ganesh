@@ -1,9 +1,7 @@
 """Wiring of the teammate use cases."""
 
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.database import get_db
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
@@ -13,6 +11,7 @@ from src.modules.entries.presentation.dependencies import (
     get_entry_repository,
     get_month_repository,
     get_project_repository,
+    get_rhythm_repository,
     get_user_repository,
 )
 from src.modules.months.domain.repositories.month_repository import MonthRepository
@@ -43,15 +42,6 @@ from src.modules.users.application.use_cases.update_user_identity import (
 )
 from src.modules.users.domain.repositories.rhythm_repository import RhythmRepository
 from src.modules.users.domain.repositories.user_repository import UserRepository
-from src.modules.users.infrastructure.database.repositories.rhythm_repository_impl import (
-    SqlRhythmRepository,
-)
-
-
-def get_rhythm_repository(
-    session: AsyncSession = Depends(get_db),
-) -> RhythmRepository:
-    return SqlRhythmRepository(session)
 
 
 def get_list_users_use_case(

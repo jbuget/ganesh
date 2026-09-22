@@ -12,6 +12,7 @@ from src.modules.entries.presentation.dependencies import (
     get_audit_log_repository,
     get_entry_repository,
     get_project_repository,
+    get_rhythm_repository,
     get_user_repository,
 )
 from src.modules.planning.application.use_cases.get_roadmap import GetRoadmapUseCase
@@ -45,7 +46,6 @@ from src.modules.projects.presentation.dependencies import (
 )
 from src.modules.users.domain.repositories.rhythm_repository import RhythmRepository
 from src.modules.users.domain.repositories.user_repository import UserRepository
-from src.modules.users.presentation.dependencies import get_rhythm_repository
 
 
 def get_workload_plan_use_case(
