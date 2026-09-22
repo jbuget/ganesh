@@ -231,6 +231,27 @@ The Terraform-managed half is one command away: `terraform output` in
 
 ## Day to day
 
+**Shipping** — merging a pull request deploys nothing. The work is done on
+`jbuget/timesheet`, production is served from `waat-fr/ganesh`, and going live
+is the synchronisation of one onto the other:
+
+```bash
+git fetch waat
+git log --oneline waat/main..origin/main   # what would go out, and nothing else
+git push waat origin/main:main
+```
+
+Read that log before pushing rather than after: another branch merged in the
+meantime rides along with yours, and the push is what decides it. Amplify then
+builds the client on its own, and the CD workflow deploys the API — both watch
+`waat-fr/ganesh`, neither watches `jbuget/timesheet`. What actually left:
+
+```bash
+aws amplify list-jobs --app-id d5gyiguzjy1oj --branch-name main \
+  --profile waat-prod --region eu-west-3 --max-results 3 \
+  --query 'jobSummaries[].{job:jobId,status:status,commit:commitId}' --output table
+```
+
 **A shell on the host** — no SSH, no key:
 
 ```bash
