@@ -111,6 +111,7 @@ export * from "./notificationProjectResponse";
 export * from "./notificationResponse";
 export * from "./notificationResponsePayload";
 export * from "./openDayResponse";
+export * from "./orgLevel";
 export * from "./parentResponse";
 export * from "./periodRange";
 export * from "./periodResponse";

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from src.core.database import Base
 from src.modules.users.domain.entities.user import Role
 from src.shared.enums.department import Department
+from src.shared.enums.org_level import OrgLevel
 
 
 class UserModel(Base):
@@ -38,3 +39,9 @@ class UserModel(Base):
     )
     # The handle alone, never « @lea-chen »: the domain trims it on the way in.
     github_username: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Nullable, and left so for most: only whoever has to be told apart is
+    # placed — a sponsor of needs, today.
+    org_level: Mapped[OrgLevel | None] = mapped_column(
+        Enum(OrgLevel, name="org_level", native_enum=False, length=16),
+        nullable=True,
+    )

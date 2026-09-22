@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from src.modules.users.domain.entities.user import Role
 from src.shared.enums.department import Department
+from src.shared.enums.org_level import OrgLevel
 
 
 @dataclass(frozen=True)
@@ -37,7 +38,7 @@ class SetUserActiveCommand:
 class UpdateUserIdentityCommand:
     """Who a teammate is and where they work. Managers only.
 
-    The four fields travel together: the sheet is written as a whole, and a
+    The five fields travel together: the sheet is written as a whole, and a
     field left blank is a field one has decided to empty.
     """
 
@@ -47,3 +48,4 @@ class UpdateUserIdentityCommand:
     last_name: str | None
     department: Department | None
     github_username: str | None
+    org_level: OrgLevel | None

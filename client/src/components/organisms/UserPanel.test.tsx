@@ -92,6 +92,12 @@ describe("UserPanel", () => {
     expect(screen.getByText("Système d'information")).toBeInTheDocument();
   });
 
+  it("gives where the person sits in the company", () => {
+    openPanel({ org_level: "comex" });
+
+    expect(screen.getByText("COMEX")).toBeInTheDocument();
+  });
+
   it("gives where one finds a teammate on GitHub", () => {
     openPanel({ github_username: "jbuget" });
 
@@ -105,9 +111,10 @@ describe("UserPanel", () => {
       last_name: null,
       department: null,
       github_username: null,
+      org_level: null,
     });
 
-    expect(screen.getAllByText("Non renseigné")).toHaveLength(4);
+    expect(screen.getAllByText("Non renseigné")).toHaveLength(5);
   });
 
   it("does not offer writing the sheet without management rights", () => {

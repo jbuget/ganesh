@@ -31,6 +31,14 @@ vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries: vi.fn() }),
 }));
 
+const updateUserIdentity = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/api/generated/users/users", () => ({
+  changeUserRole: vi.fn(),
+  setUserActive: vi.fn(),
+  updateUserIdentity,
+}));
+
 vi.mock("@/lib/api/queries", () => ({
   useCurrentUser: () => ({ user: { id: 1, role: "MANAGER" } }),
   useTeammates: () => ({ teammates: TEAM, isLoading: false }),
@@ -72,5 +80,28 @@ describe("useUsersScreen", () => {
     const { result } = renderHook(() => useUsersScreen());
 
     expect(result.current.find(3)?.display_name).toBe("Partie");
+  });
+
+  it("carries the whole sheet when one of its fields changes", async () => {
+    /** What is left out is emptied: a level set last week must not go with it. */
+    const { result } = renderHook(() => useUsersScreen());
+
+    await result.current.updateIdentity(
+      teammate("Adrien", {
+        id: 1,
+        first_name: "Adrien",
+        department: "information_systems",
+        org_level: "comop",
+      }),
+      { last_name: "Dupont" },
+    );
+
+    expect(updateUserIdentity).toHaveBeenCalledWith(1, {
+      first_name: "Adrien",
+      last_name: "Dupont",
+      department: "information_systems",
+      github_username: null,
+      org_level: "comop",
+    });
   });
 });

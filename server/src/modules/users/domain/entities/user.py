@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 
 from src.shared.enums.department import Department
+from src.shared.enums.org_level import OrgLevel
 
 #: Below this, a fresh login is not worth a write to the database.
 #:
@@ -68,6 +69,9 @@ class User:
     #: The handle alone — « lea-chen », never « @lea-chen » nor a full URL:
     #: it is what the profile address is built from.
     github_username: str | None = None
+    #: Where this person stands in the company. Left unsaid for most: it is
+    #: filled in for whoever has to be told apart — a sponsor of needs, today.
+    org_level: OrgLevel | None = None
 
     def __post_init__(self) -> None:
         self.email = self.email.strip().lower()
@@ -81,16 +85,18 @@ class User:
         last_name: str | None,
         department: Department | None,
         github_username: str | None,
+        org_level: OrgLevel | None,
     ) -> None:
         """Gives away who this teammate is, and where they work.
 
-        The four go together: the sheet is written as a whole, and a field
+        The five go together: the sheet is written as a whole, and a field
         left out is a field one has decided to empty.
         """
         self.first_name = _trimmed(first_name)
         self.last_name = _trimmed(last_name)
         self.department = department
         self.github_username = _handle(github_username)
+        self.org_level = org_level
 
     @property
     def label(self) -> str:

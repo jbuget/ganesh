@@ -6,6 +6,7 @@ import pytest
 
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.enums.department import Department
+from src.shared.enums.org_level import OrgLevel
 
 
 def make_user(role: Role = Role.TEAMMATE, is_active: bool = True) -> User:
@@ -164,6 +165,7 @@ def test_a_civil_name_is_trimmed() -> None:
         last_name=" Chen ",
         department=None,
         github_username=None,
+        org_level=None,
     )
 
     assert user.first_name == "Léa"
@@ -174,7 +176,11 @@ def test_a_blank_name_reads_as_unknown_rather_than_empty() -> None:
     """« » and « nothing » say the same thing; the database should say it once."""
     user = make_user()
     user.set_identity(
-        first_name="   ", last_name="", department=None, github_username=None
+        first_name="   ",
+        last_name="",
+        department=None,
+        github_username=None,
+        org_level=None,
     )
 
     assert user.first_name is None
@@ -188,6 +194,7 @@ def test_a_teammate_belongs_to_one_department() -> None:
         last_name="Chen",
         department=Department.CUSTOMER_SERVICE,
         github_username=None,
+        org_level=None,
     )
 
     assert user.department is Department.CUSTOMER_SERVICE
@@ -196,7 +203,11 @@ def test_a_teammate_belongs_to_one_department() -> None:
 def test_the_name_one_reads_is_the_civil_one_once_it_is_known() -> None:
     user = make_user()
     user.set_identity(
-        first_name="Léa", last_name="Chen", department=None, github_username=None
+        first_name="Léa",
+        last_name="Chen",
+        department=None,
+        github_username=None,
+        org_level=None,
     )
 
     assert user.label == "Léa Chen"
@@ -205,7 +216,11 @@ def test_the_name_one_reads_is_the_civil_one_once_it_is_known() -> None:
 def test_a_half_known_name_is_still_better_than_the_account_one() -> None:
     user = make_user()
     user.set_identity(
-        first_name="Léa", last_name=None, department=None, github_username=None
+        first_name="Léa",
+        last_name=None,
+        department=None,
+        github_username=None,
+        org_level=None,
     )
 
     assert user.label == "Léa"
@@ -220,7 +235,11 @@ def test_a_github_handle_is_kept_as_the_handle_alone() -> None:
     """« @lea-chen » is how one writes a handle; « lea-chen » is what it is."""
     user = make_user()
     user.set_identity(
-        first_name=None, last_name=None, department=None, github_username=" @lea-chen "
+        first_name=None,
+        last_name=None,
+        department=None,
+        github_username=" @lea-chen ",
+        org_level=None,
     )
 
     assert user.github_username == "lea-chen"
@@ -229,7 +248,29 @@ def test_a_github_handle_is_kept_as_the_handle_alone() -> None:
 def test_a_blank_github_handle_reads_as_unknown() -> None:
     user = make_user()
     user.set_identity(
-        first_name=None, last_name=None, department=None, github_username="  "
+        first_name=None,
+        last_name=None,
+        department=None,
+        github_username="  ",
+        org_level=None,
     )
 
     assert user.github_username is None
+
+
+def test_a_teammate_sits_somewhere_in_the_organisation() -> None:
+    user = make_user()
+    user.set_identity(
+        first_name="Léa",
+        last_name="Chen",
+        department=Department.CUSTOMER_SERVICE,
+        github_username=None,
+        org_level=OrgLevel.COMEX,
+    )
+
+    assert user.org_level is OrgLevel.COMEX
+
+
+def test_a_level_nobody_has_said_reads_as_unknown() -> None:
+    """Three hundred people sign in; nobody qualifies them one by one."""
+    assert make_user().org_level is None

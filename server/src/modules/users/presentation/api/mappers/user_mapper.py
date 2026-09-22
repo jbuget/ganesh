@@ -19,4 +19,5 @@ def to_user_response(user: User) -> UserResponse:
         last_name=user.last_name,
         department=user.department,
         github_username=user.github_username,
+        org_level=user.org_level,
     )

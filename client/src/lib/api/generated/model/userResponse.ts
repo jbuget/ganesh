@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Department } from "./department";
+import type { OrgLevel } from "./orgLevel";
 import type { Role } from "./role";
 
 /**
@@ -22,4 +23,5 @@ export interface UserResponse {
   last_name?: string | null;
   department?: Department | null;
   github_username?: string | null;
+  org_level?: OrgLevel | null;
 }

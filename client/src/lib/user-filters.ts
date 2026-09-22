@@ -45,11 +45,22 @@ export function hasActiveUserFilter(filters: UserFilters): boolean {
 }
 
 /**
+ * The roles the list is about.
+ *
+ * Like the state, the empty role criterion is not neutral: everybody at WAAT
+ * signs in through the same tenant, so the list would otherwise fill up with
+ * three hundred accounts that only ever came to file a need. Requesters are
+ * shown when they are asked for, and not before.
+ */
+const TEAM_ROLES: Role[] = ["TEAMMATE", "MANAGER"];
+
+/**
  * Does a teammate pass the criteria?
  *
- * An empty criterion takes nothing away; several values within one criterion
- * add up, and criteria stack with each other. « Manager » and « che »
- * therefore shows the managers *whose name is being searched*.
+ * An empty criterion takes nothing away — bar the two whose empty value says
+ * something, the state and the role; several values within one criterion add
+ * up, and criteria stack with each other. « Manager » and « che » therefore
+ * shows the managers *whose name is being searched*.
  *
  * The search reads the name and the email: one looks a colleague up by
  * whichever one has to hand.
@@ -69,7 +80,8 @@ function kept(user: UserResponse, filters: UserFilters): boolean {
     return false;
   }
 
-  if (filters.roles.length > 0 && !filters.roles.includes(user.role)) return false;
+  const roles = filters.roles.length > 0 ? filters.roles : TEAM_ROLES;
+  if (!roles.includes(user.role)) return false;
 
   return true;
 }

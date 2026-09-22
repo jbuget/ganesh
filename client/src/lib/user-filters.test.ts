@@ -67,6 +67,30 @@ describe("filterUsers", () => {
     );
   });
 
+  it("leaves out whoever only ever came to file a need", () => {
+    const team = [
+      teammate("Chef", { role: "MANAGER" }),
+      teammate("Métier", {
+        role: "REQUESTER",
+      }),
+    ];
+
+    expect(names(filterUsers(team, NO_USER_FILTER))).toEqual(["Chef"]);
+  });
+
+  it("shows the requesters once they are asked for", () => {
+    const team = [
+      teammate("Chef", { role: "MANAGER" }),
+      teammate("Métier", {
+        role: "REQUESTER",
+      }),
+    ];
+
+    expect(
+      names(filterUsers(team, { ...NO_USER_FILTER, roles: ["REQUESTER"] })),
+    ).toEqual(["Métier"]);
+  });
+
   it("stacks the criteria: a manager whose name is searched", () => {
     const team = [
       teammate("Chef", { role: "MANAGER" }),

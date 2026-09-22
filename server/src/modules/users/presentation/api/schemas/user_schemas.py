@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 from src.modules.users.domain.entities.user import Role
 from src.shared.enums.department import Department
+from src.shared.enums.org_level import OrgLevel
 
 
 class UserResponse(BaseModel):
@@ -27,6 +28,8 @@ class UserResponse(BaseModel):
     department: Department | None = None
     #: The handle alone — « lea-chen », never « @lea-chen ».
     github_username: str | None = None
+    #: Null for everyone nobody had a reason to place.
+    org_level: OrgLevel | None = None
 
 
 class ChangeRoleRequest(BaseModel):
@@ -44,10 +47,11 @@ class SetActiveRequest(BaseModel):
 class UpdateUserIdentityRequest(BaseModel):
     """Who a teammate is, where they work, and how one finds them on GitHub.
 
-    The four fields travel together: what is left out is emptied.
+    The five fields travel together: what is left out is emptied.
     """
 
     first_name: str | None = Field(default=None, max_length=255)
     last_name: str | None = Field(default=None, max_length=255)
     department: Department | None = None
     github_username: str | None = Field(default=None, max_length=255)
+    org_level: OrgLevel | None = None

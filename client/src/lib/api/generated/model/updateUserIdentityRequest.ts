@@ -5,15 +5,17 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Department } from "./department";
+import type { OrgLevel } from "./orgLevel";
 
 /**
  * Who a teammate is, where they work, and how one finds them on GitHub.
  *
- * The four fields travel together: what is left out is emptied.
+ * The five fields travel together: what is left out is emptied.
  */
 export interface UpdateUserIdentityRequest {
   first_name?: string | null;
   last_name?: string | null;
   department?: Department | null;
   github_username?: string | null;
+  org_level?: OrgLevel | null;
 }
