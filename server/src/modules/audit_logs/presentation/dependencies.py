@@ -48,8 +48,9 @@ def get_month_audit_log_use_case(
 def get_audit_log_use_case(
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
     users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
 ) -> ListAuditLogUseCase:
-    return ListAuditLogUseCase(audit_logs=audit_logs, users=users)
+    return ListAuditLogUseCase(audit_logs=audit_logs, users=users, projects=projects)
 
 
 def get_touched_projects_use_case(

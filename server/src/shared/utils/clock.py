@@ -16,7 +16,7 @@ Two things are read here, and they are not the same thing:
   person entering it is living, and not to the one UTC is still on.
 """
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, time
 from zoneinfo import ZoneInfo
 
 #: The zone the team lives in, and the only one the domain reasons about.
@@ -44,3 +44,22 @@ def as_instant(value: datetime) -> datetime:
     if value.tzinfo is not None:
         return value
     return value.replace(tzinfo=PARIS).astimezone(UTC)
+
+
+def opens(day: date) -> datetime:
+    """The instant a day begins in Paris.
+
+    A reader asking for « le 3 » means the day they lived, which starts an
+    hour or two before UTC does. Read on UTC instead, the window would open
+    mid-morning and drop what was done first thing.
+    """
+    return datetime.combine(day, time.min, tzinfo=PARIS).astimezone(UTC)
+
+
+def closes(day: date) -> datetime:
+    """The last instant of a day in Paris, that day included.
+
+    « du 3 au 3 » reads the 3rd rather than nothing: both ends of a period
+    given in days belong to it, which is how a period is read out loud.
+    """
+    return datetime.combine(day, time.max, tzinfo=PARIS).astimezone(UTC)

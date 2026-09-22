@@ -28,7 +28,7 @@ from src.mcp.door import Machine, answers, current_machine
 from src.mcp.tools import say
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.audit_logs.application.dtos.audit_log_dto import SignedAuditLog
-from src.modules.audit_logs.domain.entities.audit_log import AuditAction
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLogFilter
 from src.modules.audit_logs.presentation.dependencies import (
     get_audit_log_use_case,
     get_project_audit_log_use_case,
@@ -122,7 +122,7 @@ async def _across_the_register(machine: Machine, opened: datetime) -> str:
     read for nothing.
     """
     log = await machine.resolve(get_audit_log_use_case)
-    page = await log.execute(limit=PAGE, offset=0, since=opened)
+    page = await log.execute(limit=PAGE, offset=0, kept=AuditLogFilter(since=opened))
     since = say.dated(_opening_day(opened))
     if not page.entries:
         return f"Rien n'a bougé dans le référentiel depuis le {since}."
