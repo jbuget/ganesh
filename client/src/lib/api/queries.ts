@@ -19,6 +19,8 @@ import type {
   MyMoodsResponse,
   PeriodRange,
   ProjectListItemResponse,
+  RequestPersonResponse,
+  RequestResponse,
   TouchedProjectResponse,
   ActivitySummaryResponse,
   StatisticsResponse,
@@ -32,6 +34,10 @@ import type { NotificationFilter } from "@/lib/api/generated/model";
 import { useGetActivity } from "@/lib/api/generated/activity/activity";
 import { useGetStatistics } from "@/lib/api/generated/stats/stats";
 import { useListProjects } from "@/lib/api/generated/projects/projects";
+import {
+  useListMyRequests,
+  useListRequestSponsors,
+} from "@/lib/api/generated/requests/requests";
 import {
   useGetMe,
   useGetUserRecord,
@@ -201,4 +207,27 @@ export function useNotifications(
 export function useDigest(month: string, version: number | null) {
   const query = useGetDigest({ month, ...(version === null ? {} : { version }) });
   return { ...query, digest: successOf<DigestResponse>(query.data) };
+}
+
+/**
+ * The needs one filed oneself, drafts included.
+ *
+ * The only list a requester ever reads: the team's own is another route, shut
+ * to them.
+ */
+export function useMyRequests() {
+  const query = useListMyRequests();
+  return { ...query, requests: successOf<RequestResponse[]>(query.data) ?? [] };
+}
+
+/**
+ * The members of the COMEX a need may be carried to.
+ *
+ * A route of the requests rather than the team list: whoever files a need
+ * reaches no list of teammates, and a name and an identifier are all the
+ * picker needs of them.
+ */
+export function useRequestSponsors() {
+  const query = useListRequestSponsors();
+  return { ...query, sponsors: successOf<RequestPersonResponse[]>(query.data) ?? [] };
 }

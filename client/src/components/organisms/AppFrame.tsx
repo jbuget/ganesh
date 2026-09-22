@@ -1,0 +1,54 @@
+"use client";
+
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+
+import { AppSidebar } from "@/components/organisms/AppSidebar";
+import { CommandPalette } from "@/components/organisms/CommandPalette";
+import { useCurrentUser } from "@/lib/api/queries";
+
+/** The one screen a requester reaches. */
+const REQUESTS = "/requests";
+
+/**
+ * The frame a screen is read in, which is not the same for everybody.
+ *
+ * The whole company signs in through the same Entra tenant, and whoever only
+ * ever comes to express a need gets « Mes demandes » and nothing else: no
+ * sidebar, no palette, no way through to the team's month, its board or its
+ * plan. The API says the same thing on its side — every other route turns
+ * them away — and this is what keeps the screen from offering what the server
+ * would refuse.
+ *
+ * Nothing is drawn until we know who is there: a sidebar shown for a moment
+ * and taken back would be a list of doors somebody was never meant to see.
+ */
+export function AppFrame({ children }: Readonly<{ children: React.ReactNode }>) {
+  const { user, isLoading } = useCurrentUser();
+  const pathname = usePathname();
+  const router = useRouter();
+  const isRequester = user?.role === "REQUESTER";
+  const astray = isRequester && pathname !== REQUESTS;
+
+  useEffect(() => {
+    // `replace` rather than `push`: the address they typed is not a place to
+    // go back to.
+    if (astray) router.replace(REQUESTS);
+  }, [astray, router]);
+
+  if (isLoading || !user) return null;
+
+  if (isRequester) {
+    return <div className="min-h-screen">{astray ? null : children}</div>;
+  }
+
+  return (
+    <div className="flex min-h-screen">
+      <AppSidebar />
+      <div className="min-w-0 flex-1">{children}</div>
+      {/* In the frame rather than on a screen: it is reached from every one of
+          them, and its shortcut listens to the whole window. */}
+      <CommandPalette />
+    </div>
+  );
+}
