@@ -121,7 +121,12 @@ describe("MyRequestsPage", () => {
     render(<MyRequestsPage />);
 
     expect(screen.queryByRole("button", { name: "Soumettre" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Reprendre" })).toBeInTheDocument();
+    // The label says what the gesture costs: « Modifier » alone would let
+    // somebody fix a typo and put their need to sleep without knowing.
+    expect(
+      screen.getByRole("button", { name: "Reprendre pour modifier" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/retire de la file d'arbitrage/)).toBeInTheDocument();
     // The fields no longer offer themselves: what is being weighed stops moving.
     expect(screen.queryByRole("button", { name: "Le problème" })).toBeNull();
   });

@@ -143,9 +143,14 @@ export function RequestPanel({
 
           {request.state === "submitted" && (
             <div className="space-y-2">
+              {/* The button says the intention and the price of it in one
+                  breath. « Modifier » alone would let somebody fix a typo and
+                  put their need to sleep without knowing: taking it back is
+                  what takes it out of the queue, and nobody waits for it
+                  until it is handed over again. */}
               <p className="text-xs text-slate-500">
-                Soumise : la fiche ne bouge plus tant qu&apos;elle n&apos;est pas
-                reprise.
+                Soumise : la fiche ne bouge plus. La reprendre la retire de la file
+                d&apos;arbitrage, et il faudra la soumettre à nouveau.
               </p>
               <Button
                 variant="outline"
@@ -153,7 +158,7 @@ export function RequestPanel({
                 disabled={busy}
                 onClick={() => void run(onWithdraw)}
               >
-                Reprendre
+                Reprendre pour modifier
               </Button>
             </div>
           )}
