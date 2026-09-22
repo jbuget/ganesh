@@ -119,7 +119,7 @@ async def accepted(app) -> Request:
             impact="Trois personnes de la compta.",
             expected_outcome="Une relance partie toute seule.",
             cost_of_inaction=None,
-            desired_by=None,
+            desired_timing=None,
             envisaged_solution=None,
         )
     )

@@ -1,8 +1,8 @@
 """SQLAlchemy models of the needs the company expresses."""
 
-from datetime import date, datetime
+from datetime import datetime
 
-from sqlalchemy import Date, DateTime, Enum, ForeignKey, Integer, String, Text, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
@@ -39,7 +39,7 @@ class RequestModel(Base):
     impact: Mapped[str | None] = mapped_column(Text, nullable=True)
     expected_outcome: Mapped[str | None] = mapped_column(Text, nullable=True)
     cost_of_inaction: Mapped[str | None] = mapped_column(Text, nullable=True)
-    desired_by: Mapped[date | None] = mapped_column(Date, nullable=True)
+    desired_timing: Mapped[str | None] = mapped_column(Text, nullable=True)
     envisaged_solution: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     submitted_at: Mapped[datetime | None] = mapped_column(

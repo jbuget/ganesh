@@ -17,6 +17,7 @@ HEADINGS = (
     ("Qui est concerné", "impact"),
     ("Résultat attendu", "expected_outcome"),
     ("Coût de l'inaction", "cost_of_inaction"),
+    ("Échéance souhaitée", "desired_timing"),
     ("Piste envisagée", "envisaged_solution"),
 )
 

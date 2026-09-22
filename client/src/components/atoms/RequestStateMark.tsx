@@ -15,7 +15,7 @@ interface RequestStateMarkProps {
  */
 export function RequestStateMark({ value }: RequestStateMarkProps) {
   return (
-    <span className="flex items-center gap-1.5 text-slate-700">
+    <span className="flex items-center gap-1.5 text-sm text-slate-700">
       <span
         className={`size-2.5 shrink-0 rounded-full ${requestStateDot(value)}`}
         aria-hidden

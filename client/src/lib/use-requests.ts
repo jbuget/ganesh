@@ -59,7 +59,7 @@ export function useRequestsScreen(filters: RequestFilters) {
         impact: request.impact ?? null,
         expected_outcome: request.expected_outcome ?? null,
         cost_of_inaction: request.cost_of_inaction ?? null,
-        desired_by: request.desired_by ?? null,
+        desired_timing: request.desired_timing ?? null,
         envisaged_solution: request.envisaged_solution ?? null,
         ...change,
       });

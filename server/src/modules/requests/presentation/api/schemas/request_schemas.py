@@ -1,6 +1,6 @@
 """Request schemas."""
 
-from datetime import date, datetime
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
@@ -37,7 +37,7 @@ class RequestResponse(BaseModel):
     impact: str | None = None
     expected_outcome: str | None = None
     cost_of_inaction: str | None = None
-    desired_by: date | None = None
+    desired_timing: str | None = None
     envisaged_solution: str | None = None
 
     submitted_at: datetime | None = None
@@ -68,7 +68,7 @@ class FillInRequestRequest(BaseModel):
     impact: str | None = None
     expected_outcome: str | None = None
     cost_of_inaction: str | None = None
-    desired_by: date | None = None
+    desired_timing: str | None = None
     envisaged_solution: str | None = None
 
 

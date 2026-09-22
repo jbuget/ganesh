@@ -1,6 +1,6 @@
 """The rules a need carries, from the day it is filed to the day it becomes one."""
 
-from datetime import date, datetime
+from datetime import datetime
 
 import pytest
 
@@ -128,14 +128,14 @@ class TestWritingTheSheet:
             impact="Trois personnes.",
             expected_outcome="Une relance automatique.",
             cost_of_inaction="Une demi-journée par semaine.",
-            desired_by=date(2026, 12, 31),
+            desired_timing="avant la clôture annuelle",
             envisaged_solution=None,
             by=AUTHOR,
         )
 
         assert request.title == "Relances de paiement"
         assert request.problem == "Tapées une par une."
-        assert request.desired_by == date(2026, 12, 31)
+        assert request.desired_timing == "avant la clôture annuelle"
 
     def test_nobody_else_writes_it(self) -> None:
         with pytest.raises(ForbiddenActionError):
@@ -147,7 +147,7 @@ class TestWritingTheSheet:
                 impact=None,
                 expected_outcome=None,
                 cost_of_inaction=None,
-                desired_by=None,
+                desired_timing=None,
                 envisaged_solution=None,
                 by=MANAGER,
             )
@@ -166,7 +166,7 @@ class TestWritingTheSheet:
                 impact=None,
                 expected_outcome=None,
                 cost_of_inaction=None,
-                desired_by=None,
+                desired_timing=None,
                 envisaged_solution=None,
                 by=AUTHOR,
             )
@@ -306,3 +306,14 @@ class TestDeleting:
         request.submit(by=AUTHOR, at=NOW)
 
         assert request.may_be_deleted_by(AUTHOR) is False
+
+
+def test_a_wished_timing_is_kept_in_the_words_it_was_said_in() -> None:
+    """« Avant la clôture annuelle » is what a wish sounds like.
+
+    A day would have been a precision nobody meant, and posting a date is
+    the roadmap's business — never a request's.
+    """
+    request = make_request(desired_timing="  avant la clôture annuelle  ")
+
+    assert request.desired_timing == "avant la clôture annuelle"

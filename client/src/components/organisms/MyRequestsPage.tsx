@@ -9,6 +9,7 @@ import { PageLayout } from "@/components/organisms/PageLayout";
 import { RequestPanel } from "@/components/organisms/RequestPanel";
 import { Button } from "@/components/ui/button";
 import { departmentLabel } from "@/lib/departments";
+import { useOpenedRequest } from "@/lib/opened-request";
 import { formatParisDateTime } from "@/lib/instants";
 import { STRONG_RULE } from "@/lib/table-frame";
 import { useMyRequestsScreen } from "@/lib/use-my-requests";
@@ -27,8 +28,11 @@ import { useMyRequestsScreen } from "@/lib/use-my-requests";
  */
 export function MyRequestsPage() {
   const screen = useMyRequestsScreen();
+  // Held by the URL, as on the team's list: a need opened is a need one can
+  // send to somebody, and going back closes it.
+  const panel = useOpenedRequest();
   const [filing, setFiling] = useState(false);
-  const opened = screen.opened;
+  const opened = panel.openedRequest ? screen.find(panel.openedRequest) : null;
 
   const header = (
     <PageHeader
@@ -57,7 +61,7 @@ export function MyRequestsPage() {
             <li key={request.id}>
               <button
                 type="button"
-                onClick={() => screen.open(request.id)}
+                onClick={() => panel.open(request.id)}
                 className="flex w-full cursor-pointer items-center gap-4 bg-white px-4 py-3 text-left transition-colors hover:bg-slate-50"
               >
                 <span className="min-w-0 flex-1">
@@ -82,7 +86,10 @@ export function MyRequestsPage() {
       <NewRequestDialog
         open={filing}
         onOpenChange={setFiling}
-        onConfirm={screen.file}
+        onConfirm={async (draft) => {
+          const filed = await screen.file(draft);
+          panel.open(filed.id);
+        }}
       />
 
       {opened && (
@@ -92,8 +99,11 @@ export function MyRequestsPage() {
           onChange={(change) => screen.fillIn(opened, change)}
           onSubmit={() => screen.submit(opened.id)}
           onWithdraw={() => screen.withdraw(opened.id)}
-          onDelete={() => screen.remove(opened.id)}
-          onClose={screen.close}
+          onDelete={async () => {
+            await screen.remove(opened.id);
+            panel.close();
+          }}
+          onClose={panel.close}
         />
       )}
     </PageLayout>

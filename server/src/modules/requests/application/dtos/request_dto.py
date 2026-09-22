@@ -1,7 +1,6 @@
 """Input data of the request use cases."""
 
 from dataclasses import dataclass
-from datetime import date
 
 from src.modules.projects.domain.entities.project import ProjectKind
 from src.modules.requests.domain.entities.request import RequestState
@@ -40,7 +39,7 @@ class FillInRequestCommand:
     impact: str | None
     expected_outcome: str | None
     cost_of_inaction: str | None
-    desired_by: date | None
+    desired_timing: str | None
     envisaged_solution: str | None
 
 

@@ -20,7 +20,21 @@ const screenState = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/use-my-requests", () => ({
-  useMyRequestsScreen: () => screenState,
+  useMyRequestsScreen: () => ({
+    ...screenState,
+    find: (id: number) =>
+      screenState.requests.find((request) => request.id === id) ?? null,
+  }),
+}));
+
+// The panel is held by the URL, on this screen as on the team's: a need one
+// has open is a need one can send to somebody.
+vi.mock("@/lib/opened-request", () => ({
+  useOpenedRequest: () => ({
+    openedRequest: screenState.opened?.id ?? null,
+    open: screenState.open,
+    close: screenState.close,
+  }),
 }));
 
 vi.mock("@/lib/api/queries", () => ({

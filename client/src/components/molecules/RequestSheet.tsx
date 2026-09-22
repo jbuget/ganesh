@@ -109,17 +109,16 @@ export function RequestSheet({ request, editable, onChange }: RequestSheetProps)
         </SheetRow>
 
         <SheetRow title="Échéance souhaitée">
+          {/* Words rather than a day: a wish is « avant la clôture annuelle »
+              far more often than a date, and asking for one would have people
+              invent a precision nobody meant. Posting a date is the roadmap's
+              business, and nowhere else. */}
           <InlineTextField
-            value={request.desired_by}
+            value={request.desired_timing}
             label="Échéance souhaitée"
-            placeholder="2026-12-31"
+            placeholder="avant la clôture annuelle, au T2 2027…"
             editable={editable}
-            validate={(value) =>
-              value && !/^\d{4}-\d{2}-\d{2}$/.test(value)
-                ? "Une date au format AAAA-MM-JJ."
-                : null
-            }
-            onChange={(desired_by) => onChange({ desired_by })}
+            onChange={(desired_timing) => onChange({ desired_timing })}
           />
         </SheetRow>
 

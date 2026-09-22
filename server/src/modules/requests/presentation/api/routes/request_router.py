@@ -179,7 +179,7 @@ async def fill_in_request(
             impact=payload.impact,
             expected_outcome=payload.expected_outcome,
             cost_of_inaction=payload.cost_of_inaction,
-            desired_by=payload.desired_by,
+            desired_timing=payload.desired_timing,
             envisaged_solution=payload.envisaged_solution,
         )
     )

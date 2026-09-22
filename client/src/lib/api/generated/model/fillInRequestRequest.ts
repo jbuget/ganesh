@@ -23,6 +23,6 @@ export interface FillInRequestRequest {
   impact?: string | null;
   expected_outcome?: string | null;
   cost_of_inaction?: string | null;
-  desired_by?: string | null;
+  desired_timing?: string | null;
   envisaged_solution?: string | null;
 }

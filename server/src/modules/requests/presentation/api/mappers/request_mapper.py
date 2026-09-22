@@ -41,7 +41,7 @@ def to_request_response(detail: RequestDetail) -> RequestResponse:
         impact=request.impact,
         expected_outcome=request.expected_outcome,
         cost_of_inaction=request.cost_of_inaction,
-        desired_by=request.desired_by,
+        desired_timing=request.desired_timing,
         envisaged_solution=request.envisaged_solution,
         submitted_at=request.submitted_at,
         decided_by=(

@@ -30,7 +30,7 @@ def to_entity(
         impact=model.impact,
         expected_outcome=model.expected_outcome,
         cost_of_inaction=model.cost_of_inaction,
-        desired_by=model.desired_by,
+        desired_timing=model.desired_timing,
         envisaged_solution=model.envisaged_solution,
         submitted_at=model.submitted_at,
         decided_at=model.decided_at,
@@ -91,7 +91,7 @@ class SqlRequestRepository(RequestRepository):
             impact=request.impact,
             expected_outcome=request.expected_outcome,
             cost_of_inaction=request.cost_of_inaction,
-            desired_by=request.desired_by,
+            desired_timing=request.desired_timing,
             envisaged_solution=request.envisaged_solution,
             submitted_at=request.submitted_at,
         )
@@ -114,7 +114,7 @@ class SqlRequestRepository(RequestRepository):
         model.impact = request.impact
         model.expected_outcome = request.expected_outcome
         model.cost_of_inaction = request.cost_of_inaction
-        model.desired_by = request.desired_by
+        model.desired_timing = request.desired_timing
         model.envisaged_solution = request.envisaged_solution
         model.submitted_at = request.submitted_at
         model.decided_at = request.decided_at

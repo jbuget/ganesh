@@ -42,7 +42,7 @@ class FillInRequestUseCase:
             impact=command.impact,
             expected_outcome=command.expected_outcome,
             cost_of_inaction=command.cost_of_inaction,
-            desired_by=command.desired_by,
+            desired_timing=command.desired_timing,
             envisaged_solution=command.envisaged_solution,
             by=command.actor_id,
         )

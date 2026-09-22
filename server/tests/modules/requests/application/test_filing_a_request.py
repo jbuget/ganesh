@@ -114,7 +114,7 @@ def sheet(**overrides) -> FillInRequestCommand:
         "impact": "Trois personnes de la compta.",
         "expected_outcome": "Une relance automatique.",
         "cost_of_inaction": None,
-        "desired_by": None,
+        "desired_timing": None,
         "envisaged_solution": None,
     }
     fields.update(overrides)

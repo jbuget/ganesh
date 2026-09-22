@@ -1,7 +1,7 @@
 """A need somebody expresses, and what becomes of it."""
 
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import datetime
 from enum import StrEnum
 
 from src.shared.enums.department import Department, in_declared_order
@@ -83,7 +83,11 @@ class Request:
     impact: str | None = None
     expected_outcome: str | None = None
     cost_of_inaction: str | None = None
-    desired_by: date | None = None
+    #: When it would be wanted, in the words whoever asked for it used —
+    #: « avant la clôture annuelle », « T2 2027 ». A wish, and never a date:
+    #: turning one into a day nobody said would invent a fact, and the only
+    #: place a date is posted is the roadmap.
+    desired_timing: str | None = None
     #: What the author already has in mind. Kept apart from the problem, and
     #: never asked for: a need that arrives as a solution is one nobody can
     #: weigh any more.
@@ -115,6 +119,7 @@ class Request:
         self.impact = _trimmed(self.impact)
         self.expected_outcome = _trimmed(self.expected_outcome)
         self.cost_of_inaction = _trimmed(self.cost_of_inaction)
+        self.desired_timing = _trimmed(self.desired_timing)
         self.envisaged_solution = _trimmed(self.envisaged_solution)
         self.decision_note = _trimmed(self.decision_note)
 
@@ -129,7 +134,7 @@ class Request:
         impact: str | None,
         expected_outcome: str | None,
         cost_of_inaction: str | None,
-        desired_by: date | None,
+        desired_timing: str | None,
         envisaged_solution: str | None,
         by: int,
     ) -> None:
@@ -149,7 +154,7 @@ class Request:
         self.impact = impact
         self.expected_outcome = expected_outcome
         self.cost_of_inaction = cost_of_inaction
-        self.desired_by = desired_by
+        self.desired_timing = desired_timing
         self.envisaged_solution = envisaged_solution
         self.__post_init__()
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 
 import type {
   Department,
@@ -27,16 +26,13 @@ import { mutationResult, useMyRequests } from "@/lib/api/queries";
 export function useMyRequestsScreen() {
   const queryClient = useQueryClient();
   const { requests, isLoading } = useMyRequests();
-  const [openedId, setOpened] = useState<number | null>(null);
-
-  const opened = requests.find((request) => request.id === openedId) ?? null;
 
   return {
     requests,
     isLoading,
-    opened,
-    open: (requestId: number) => setOpened(requestId),
-    close: () => setOpened(null),
+
+    find: (requestId: number) =>
+      requests.find((request) => request.id === requestId) ?? null,
 
     async file(draft: {
       title: string;
@@ -45,9 +41,9 @@ export function useMyRequestsScreen() {
     }) {
       const filed = mutationResult<RequestResponse>(await fileRequest(draft));
       await queryClient.invalidateQueries();
-      // Opened straight away: the dialog asked for three things, and the rest
-      // of the sheet is what one came to write.
-      setOpened(filed.id);
+      // Handed back so the screen can open it: the dialog asked for three
+      // things, and the rest of the sheet is what one came to write.
+      return filed;
     },
 
     async fillIn(request: RequestResponse, change: Partial<FillInRequestRequest>) {
@@ -59,7 +55,7 @@ export function useMyRequestsScreen() {
         impact: request.impact ?? null,
         expected_outcome: request.expected_outcome ?? null,
         cost_of_inaction: request.cost_of_inaction ?? null,
-        desired_by: request.desired_by ?? null,
+        desired_timing: request.desired_timing ?? null,
         envisaged_solution: request.envisaged_solution ?? null,
         ...change,
       });
@@ -79,7 +75,6 @@ export function useMyRequestsScreen() {
     async remove(requestId: number) {
       await deleteRequest(requestId);
       await queryClient.invalidateQueries();
-      setOpened(null);
     },
   };
 }
