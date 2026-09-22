@@ -46,6 +46,7 @@ from src.modules.projects.infrastructure.database.models import (  # noqa: F401,
     project_model,
 )
 from src.modules.users.infrastructure.database.models import (  # noqa: F401, E402
+    rhythm_model,
     user_model,
 )
 
