@@ -48,6 +48,16 @@ class RhythmHistory:
             held = rhythm
         return held
 
+    def next_after(self, day: date) -> Rhythm | None:
+        """The nearest rhythm that has not opened yet, if one was declared.
+
+        Told apart from what is in force so a screen can show both. Declaring
+        a rhythm that opens next month is legitimate; a panel that showed only
+        today's would send the declaration into a silence indistinguishable
+        from a write that failed.
+        """
+        return next((one for one in self._declared if one.effective_from > day), None)
+
     def pattern_on(self, day: date) -> WeekPattern:
         """The motif in force that day.
 

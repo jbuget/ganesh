@@ -281,3 +281,43 @@ async def test_a_rhythm_opening_later_is_not_the_one_in_force() -> None:
     )
 
     assert record.rhythm is None
+
+
+async def test_the_record_shows_a_rhythm_declared_for_later() -> None:
+    # Declared and shown nowhere is declared into the void: somebody would
+    # read their own change as a write that failed.
+    record = await read(
+        build(
+            rhythms=[
+                Rhythm(
+                    id=None,
+                    user_id=TEAMMATE_ID,
+                    pattern=WeekPattern(monday=0.0, tuesday=0.0),
+                    effective_from=date(2026, 10, 5),
+                )
+            ]
+        )
+    )
+
+    assert record.rhythm is None
+    assert record.upcoming_rhythm is not None
+    assert record.upcoming_rhythm.pattern.days_per_week == 3.0
+    assert record.upcoming_rhythm.effective_from == date(2026, 10, 5)
+
+
+async def test_a_record_announces_nothing_once_every_rhythm_has_opened() -> None:
+    record = await read(
+        build(
+            rhythms=[
+                Rhythm(
+                    id=None,
+                    user_id=TEAMMATE_ID,
+                    pattern=WeekPattern(wednesday=0.0),
+                    effective_from=date(2026, 3, 1),
+                )
+            ]
+        )
+    )
+
+    assert record.rhythm is not None
+    assert record.upcoming_rhythm is None

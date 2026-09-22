@@ -17,13 +17,28 @@ const FOUR_FIFTHS: WorkRhythmResponse = {
   days_per_week: 4,
 };
 
+const THREE_DAYS: WorkRhythmResponse = {
+  effective_from: "2026-10-05",
+  monday: 0,
+  tuesday: 0,
+  wednesday: 1,
+  thursday: 1,
+  friday: 1,
+  days_per_week: 3,
+};
+
 function show(
   rhythm: WorkRhythmResponse | null,
-  { editable = false, onDeclare = vi.fn() } = {},
+  {
+    editable = false,
+    onDeclare = vi.fn(),
+    upcoming = null as WorkRhythmResponse | null,
+  } = {},
 ) {
   render(
     <UserRhythm
       rhythm={rhythm}
+      upcoming={upcoming}
       editable={editable}
       today={TODAY}
       onDeclare={onDeclare}
@@ -141,5 +156,47 @@ describe("when the API turns a rhythm down", () => {
     await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
 
     expect(screen.getByText(/4,5 jours par semaine/)).toBeInTheDocument();
+  });
+});
+
+describe("a rhythm declared for later", () => {
+  it("is announced beside the one in force", () => {
+    // Declared and shown nowhere reads as a write that failed.
+    show(FOUR_FIFTHS, { upcoming: THREE_DAYS });
+
+    expect(screen.getByText(/4 jours par semaine/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/puis 3 jours à partir du 5 oct. 2026/),
+    ).toBeInTheDocument();
+  });
+
+  it("is announced even when nothing is in force yet", () => {
+    show(null, { upcoming: THREE_DAYS });
+
+    expect(
+      screen.getByText(/puis 3 jours à partir du 5 oct. 2026/),
+    ).toBeInTheDocument();
+  });
+
+  it("says nothing when every rhythm has opened", () => {
+    show(FOUR_FIFTHS);
+
+    expect(screen.queryByText(/à partir du/)).not.toBeInTheDocument();
+  });
+});
+
+describe("giving up on a change", () => {
+  it("gives the date back too, so it does not carry into the next one", async () => {
+    // A date left behind by an abandoned change would silently date the next
+    // declaration, which is how a rhythm ends up opening next month.
+    show(FOUR_FIFTHS, { editable: true });
+
+    await userEvent.click(screen.getByLabelText(/^Lundi/));
+    await userEvent.clear(screen.getByLabelText("À partir du"));
+    await userEvent.type(screen.getByLabelText("À partir du"), "2026-12-01");
+    await userEvent.click(screen.getByRole("button", { name: "Annuler" }));
+    await userEvent.click(screen.getByLabelText(/^Lundi/));
+
+    expect(screen.getByLabelText("À partir du")).toHaveValue("2026-03-01");
   });
 });

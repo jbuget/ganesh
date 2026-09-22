@@ -226,6 +226,7 @@ export function UserPanel({
                 <SheetSectionTitle>Rythme</SheetSectionTitle>
                 <UserRhythm
                   rhythm={record.rhythm}
+                  upcoming={record.upcoming_rhythm}
                   editable={isMe}
                   today={now}
                   onDeclare={onDeclareRhythm}

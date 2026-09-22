@@ -11,6 +11,14 @@ import { type WeekPattern, firstOfMonth, formatRhythm, patternOf } from "@/lib/r
 interface UserRhythmProps {
   /** Null while nothing was declared, which reads as full time. */
   rhythm: WorkRhythmResponse | null | undefined;
+  /**
+   * The nearest rhythm that has not opened yet, if one was declared.
+   *
+   * Shown beside the one in force rather than left out: declaring a rhythm
+   * for next month is legitimate, and a panel that showed only today's would
+   * make that declaration indistinguishable from a write that failed.
+   */
+  upcoming: WorkRhythmResponse | null | undefined;
   /** True on one's own account alone: everybody declares their own. */
   editable: boolean;
   today: Date;
@@ -27,15 +35,20 @@ interface UserRhythmProps {
  * The motif is held until it is sent: three clicks to say « Wednesday off »
  * would otherwise be three declarations, and three lines in the register.
  */
-export function UserRhythm({ rhythm, editable, today, onDeclare }: UserRhythmProps) {
+export function UserRhythm({
+  rhythm,
+  upcoming,
+  editable,
+  today,
+  onDeclare,
+}: UserRhythmProps) {
+  const opensOn = rhythm?.effective_from ?? firstOfMonth(today);
   const declared = patternOf(rhythm);
   const [draft, setDraft] = useState<WeekPattern | null>(null);
   // The day the rhythm in force opened on, so that correcting it replaces it.
   // The first of the month would slip underneath and go on being covered: the
   // API would answer, and nothing on the screen would move.
-  const [effectiveFrom, setEffectiveFrom] = useState(
-    rhythm?.effective_from ?? firstOfMonth(today),
-  );
+  const [effectiveFrom, setEffectiveFrom] = useState(opensOn);
   const [refused, setRefused] = useState(false);
 
   const shown = draft ?? declared;
@@ -69,6 +82,13 @@ export function UserRhythm({ rhythm, editable, today, onDeclare }: UserRhythmPro
           <span className="ml-2 text-xs text-slate-400">rythme non déclaré</span>
         )}
       </p>
+
+      {upcoming && !changed && (
+        <p className="text-xs text-slate-500">
+          puis {formatRhythm(patternOf(upcoming)).replace(" par semaine", "")} à partir
+          du {formatSpelledDate(upcoming.effective_from)}
+        </p>
+      )}
 
       {changed && (
         <div className="space-y-2">
@@ -114,6 +134,10 @@ export function UserRhythm({ rhythm, editable, today, onDeclare }: UserRhythmPro
               onClick={() => {
                 setDraft(null);
                 setRefused(false);
+                // The date goes back with the motif: left behind, it would
+                // silently date the next declaration, which is how a rhythm
+                // ends up opening a month one never asked for.
+                setEffectiveFrom(opensOn);
               }}
             >
               Annuler

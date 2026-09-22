@@ -96,3 +96,28 @@ def test_a_rhythm_opening_later_is_not_the_one_in_force_today() -> None:
 
     assert history.latest is not None
     assert history.in_force_on(date(2026, 8, 31)) is None
+
+
+def test_a_rhythm_declared_for_later_is_told_apart_from_the_one_in_force() -> None:
+    # Declaring for next month is legitimate — and a screen that could not
+    # show it would let somebody declare into the void.
+    history = RhythmHistory.of([_declared(FOUR_FIFTHS, SEPTEMBER)])
+
+    assert history.next_after(date(2026, 8, 31)) is not None
+    assert history.in_force_on(date(2026, 8, 31)) is None
+
+
+def test_nothing_comes_next_once_every_rhythm_has_opened() -> None:
+    history = RhythmHistory.of([_declared(FOUR_FIFTHS, MARCH)])
+
+    assert history.next_after(WEDNESDAY) is None
+
+
+def test_the_nearest_one_to_come_is_the_one_announced() -> None:
+    history = RhythmHistory.of(
+        [_declared(HALF_TIME, date(2026, 12, 1)), _declared(FOUR_FIFTHS, SEPTEMBER)]
+    )
+
+    upcoming = history.next_after(date(2026, 8, 31))
+    assert upcoming is not None
+    assert upcoming.effective_from == SEPTEMBER

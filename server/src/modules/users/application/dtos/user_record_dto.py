@@ -61,3 +61,6 @@ class UserRecord:
     #: The rhythm in force today. None while nothing was ever declared, which
     #: reads as full time everywhere a figure is computed.
     rhythm: Rhythm | None = None
+    #: The nearest one that has not opened yet. Shown beside the one in force,
+    #: so that declaring for next month does not look like a write that failed.
+    upcoming_rhythm: Rhythm | None = None

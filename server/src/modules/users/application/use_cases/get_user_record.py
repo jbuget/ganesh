@@ -118,6 +118,8 @@ class GetUserRecordUseCase:
             if (project := known.get(line.project_id)) is not None
         ]
 
+        rhythms = await self._rhythms.history_of(query.user_id)
+
         return UserRecord(
             user_id=query.user_id,
             missions=self._missions_held(
@@ -134,7 +136,9 @@ class GetUserRecordUseCase:
                 states=await self._months.list_for_user(query.user_id, span[-1]),
                 today=today,
             ),
-            # What holds today, never the last one declared: a rhythm opening
-            # next month is not the one somebody is working right now.
-            rhythm=(await self._rhythms.history_of(query.user_id)).in_force_on(today),
+            # What holds today, and what is to come: a rhythm opening next
+            # month is not the one somebody works now, and it must still be
+            # readable — declared and shown nowhere is declared into the void.
+            rhythm=rhythms.in_force_on(today),
+            upcoming_rhythm=rhythms.next_after(today),
         )

@@ -18,4 +18,5 @@ export interface UserRecordResponse {
   declared: DeclaredWindowResponse;
   months: MonthFillingResponse[];
   rhythm?: WorkRhythmResponse | null;
+  upcoming_rhythm?: WorkRhythmResponse | null;
 }
