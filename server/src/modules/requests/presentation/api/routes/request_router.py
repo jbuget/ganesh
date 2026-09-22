@@ -16,9 +16,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.database import get_db
 from src.modules.auth.presentation.dependencies import get_signed_in_user
 from src.modules.requests.application.dtos.request_dto import (
+    ConvertRequestCommand,
     DecideRequestCommand,
     FileRequestCommand,
     FillInRequestCommand,
+)
+from src.modules.requests.application.use_cases.convert_request import (
+    ConvertRequestUseCase,
 )
 from src.modules.requests.application.use_cases.decide_request import (
     DecideRequestUseCase,
@@ -47,6 +51,7 @@ from src.modules.requests.presentation.api.mappers.request_mapper import (
     to_sponsor_response,
 )
 from src.modules.requests.presentation.api.schemas.request_schemas import (
+    ConvertRequestRequest,
     DecideRequestRequest,
     FileRequestRequest,
     FillInRequestRequest,
@@ -54,6 +59,7 @@ from src.modules.requests.presentation.api.schemas.request_schemas import (
     RequestResponse,
 )
 from src.modules.requests.presentation.dependencies import (
+    get_convert_request_use_case,
     get_decide_request_use_case,
     get_delete_request_use_case,
     get_file_request_use_case,
@@ -255,6 +261,32 @@ async def decide_request(
             request_id=request_id,
             decision=payload.decision,
             note=payload.note,
+        )
+    )
+    await session.commit()
+    return to_request_response(detail)
+
+
+@router.post(
+    "/{request_id}/convert",
+    response_model=RequestResponse,
+    operation_id="convertRequest",
+)
+async def convert_request(
+    request_id: int,
+    payload: ConvertRequestRequest,
+    current_user: User = Depends(get_signed_in_user),
+    use_case: ConvertRequestUseCase = Depends(get_convert_request_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> RequestResponse:
+    """Makes a mission of an accepted need. Managers, and only once."""
+    assert current_user.id is not None
+    detail = await use_case.execute(
+        ConvertRequestCommand(
+            actor_id=current_user.id,
+            request_id=request_id,
+            kind=payload.kind,
+            parent_id=payload.parent_id,
         )
     )
     await session.commit()

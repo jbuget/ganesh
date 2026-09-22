@@ -34,6 +34,7 @@ const state = vi.hoisted(() => ({
   requests: [] as RequestResponse[],
   user: undefined as UserResponse | undefined,
   decide: vi.fn(),
+  convert: vi.fn(),
   opened: null as number | null,
 }));
 
@@ -50,6 +51,7 @@ vi.mock("@/lib/use-requests", () => ({
     submit: vi.fn(),
     withdraw: vi.fn(),
     remove: vi.fn(),
+    convert: state.convert,
     decide: state.decide,
   }),
 }));
@@ -73,6 +75,7 @@ vi.mock("@/lib/opened-request", () => ({
 
 vi.mock("@/lib/api/queries", () => ({
   useRequestSponsors: () => ({ sponsors: [{ id: 3, label: "C. Direction" }] }),
+  useProjects: () => ({ missions: [] }),
 }));
 
 describe("RequestsPage", () => {
@@ -149,5 +152,24 @@ describe("RequestsPage", () => {
     await userEvent.click(dialog.getByRole("button", { name: "Confirmer" }));
 
     expect(state.decide).toHaveBeenCalledWith(5, "rejected", "Déjà couvert.");
+  });
+
+  it("offers to make a mission of what was accepted, and not before", async () => {
+    state.opened = HANDED.id;
+    state.requests = [{ ...HANDED, state: "accepted" }];
+
+    render(<RequestsPage />);
+
+    const panel = within(screen.getByRole("complementary"));
+    // Accepting is behind it now: what is left to do is build the thing.
+    expect(panel.queryByRole("button", { name: "Accepter" })).toBeNull();
+    await userEvent.click(panel.getByRole("button", { name: "Convertir en projet" }));
+
+    const dialog = within(screen.getByRole("dialog"));
+    await userEvent.click(
+      dialog.getByRole("button", { name: "Créer un projet à part entière" }),
+    );
+
+    expect(state.convert).toHaveBeenCalledWith(5, "project", null);
   });
 });

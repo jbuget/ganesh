@@ -336,6 +336,11 @@ export function auditSentence(
 
     // Both names, and the log's own two columns carry them: what it was
     // called is as much the fact as what it is called now.
+    // The one gesture of a need that reaches a mission's journal: it carries
+    // both identifiers, and this is where a project says what it was born of.
+    case "request.convert":
+      return { action: `a converti la demande « ${after ?? ""} » en projet` };
+
     case "attachment.rename":
       return {
         action: "a renommé un fichier",

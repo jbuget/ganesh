@@ -21,6 +21,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  ConvertRequestRequest,
   DecideRequestRequest,
   FileRequestRequest,
   FillInRequestRequest,
@@ -1371,4 +1372,138 @@ export const useDecideRequest = <TError = HTTPValidationError, TContext = unknow
   TContext
 > => {
   return useMutation(getDecideRequestMutationOptions(options), queryClient);
+};
+export type convertRequestResponse200 = {
+  data: RequestResponse;
+  status: 200;
+};
+
+export type convertRequestResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type convertRequestResponseSuccess = convertRequestResponse200 & {
+  headers: Headers;
+};
+export type convertRequestResponseError = convertRequestResponse422 & {
+  headers: Headers;
+};
+
+export type convertRequestResponse =
+  convertRequestResponseSuccess | convertRequestResponseError;
+
+export const getConvertRequestUrl = (requestId: number) => {
+  return `/api/v1/requests/${requestId}/convert`;
+};
+
+/**
+ * Makes a mission of an accepted need. Managers, and only once.
+ * @summary Convert Request
+ */
+export const convertRequest = async (
+  requestId: number,
+  convertRequestRequest: ConvertRequestRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<convertRequestResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<convertRequestResponse>(getConvertRequestUrl(requestId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(convertRequestRequest),
+  });
+};
+
+export const getConvertRequestMutationKey = () => ["convertRequest"] as const;
+
+export const getConvertRequestMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof convertRequest>>,
+    TError,
+    ConvertRequestMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof convertRequest>>,
+  TError,
+  ConvertRequestMutationVariables,
+  TContext
+> => {
+  const mutationKey = getConvertRequestMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof convertRequest>>,
+    ConvertRequestMutationVariables
+  > = (props) => {
+    const { requestId, data } = props ?? {};
+
+    return convertRequest(requestId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ConvertRequestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof convertRequest>>
+>;
+export type ConvertRequestMutationBody = ConvertRequestRequest;
+export type ConvertRequestMutationError = HTTPValidationError;
+export type ConvertRequestMutationVariables = {
+  requestId: number;
+  data: ConvertRequestRequest;
+};
+
+/**
+ * @summary Convert Request
+ */
+export const useConvertRequest = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof convertRequest>>,
+      TError,
+      ConvertRequestMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof convertRequest>>,
+  TError,
+  ConvertRequestMutationVariables,
+  TContext
+> => {
+  return useMutation(getConvertRequestMutationOptions(options), queryClient);
 };

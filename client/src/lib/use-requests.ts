@@ -4,10 +4,12 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import type {
   FillInRequestRequest,
+  ProjectKind,
   RequestResponse,
   RequestState,
 } from "@/lib/api/generated/model";
 import {
+  convertRequest,
   decideRequest,
   deleteRequest,
   fileRequest,
@@ -76,6 +78,11 @@ export function useRequestsScreen(filters: RequestFilters) {
 
     async remove(requestId: number) {
       await deleteRequest(requestId);
+      await queryClient.invalidateQueries();
+    },
+
+    async convert(requestId: number, kind: ProjectKind, parentId: number | null) {
+      await convertRequest(requestId, { kind, parent_id: parentId });
       await queryClient.invalidateQueries();
     },
 

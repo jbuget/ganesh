@@ -4,6 +4,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
+from src.modules.projects.domain.entities.project import ProjectKind
 from src.modules.requests.domain.entities.request import RequestState
 from src.shared.enums.department import Department
 
@@ -80,3 +81,12 @@ class DecideRequestRequest(BaseModel):
 
     decision: RequestState
     note: str | None = None
+
+
+class ConvertRequestRequest(BaseModel):
+    """What the mission being born of a need still has to be told."""
+
+    kind: ProjectKind = ProjectKind.PROJECT
+    #: The mission a work package hangs from. Demanded for one, refused
+    #: elsewhere — the domain says so.
+    parent_id: int | None = None

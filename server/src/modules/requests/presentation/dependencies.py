@@ -14,6 +14,21 @@ from src.modules.notifications.domain.services.delivery import NotificationDeliv
 from src.modules.notifications.infrastructure.database.repositories.notification_repository_impl import (
     SqlNotificationRepository,
 )
+from src.modules.projects.domain.repositories.project_detail_repository import (
+    ProjectDetailRepository,
+)
+from src.modules.projects.domain.repositories.project_repository import (
+    ProjectRepository,
+)
+from src.modules.projects.infrastructure.database.repositories.project_detail_repository_impl import (
+    SqlProjectDetailRepository,
+)
+from src.modules.projects.infrastructure.database.repositories.project_repository_impl import (
+    SqlProjectRepository,
+)
+from src.modules.requests.application.use_cases.convert_request import (
+    ConvertRequestUseCase,
+)
 from src.modules.requests.application.use_cases.decide_request import (
     DecideRequestUseCase,
 )
@@ -148,3 +163,31 @@ def get_requests_use_case(
     requests: RequestRepository = Depends(get_request_repository),
 ) -> ListRequestsUseCase:
     return ListRequestsUseCase(users=users, requests=requests)
+
+
+def get_project_repository(
+    session: AsyncSession = Depends(get_db),
+) -> ProjectRepository:
+    return SqlProjectRepository(session)
+
+
+def get_project_detail_repository(
+    session: AsyncSession = Depends(get_db),
+) -> ProjectDetailRepository:
+    return SqlProjectDetailRepository(session)
+
+
+def get_convert_request_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    requests: RequestRepository = Depends(get_request_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    details: ProjectDetailRepository = Depends(get_project_detail_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> ConvertRequestUseCase:
+    return ConvertRequestUseCase(
+        users=users,
+        requests=requests,
+        projects=projects,
+        details=details,
+        audit_logs=audit_logs,
+    )

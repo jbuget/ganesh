@@ -370,6 +370,22 @@ describe("auditSentence", () => {
       "a effectué une action",
     );
   });
+
+  describe("a need turned into a mission", () => {
+    it("says on the mission's journal which need it came from", () => {
+      // The one gesture of a need that reaches a mission's journal: six
+      // months later, it is what says why this project exists.
+      expect(
+        auditSentence(
+          entry("request.convert", {
+            new_value: "Relances de paiement à la main",
+          }),
+        ),
+      ).toEqual({
+        action: "a converti la demande « Relances de paiement à la main » en projet",
+      });
+    });
+  });
 });
 
 describe("groupAuditByDay", () => {

@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import date
 
+from src.modules.projects.domain.entities.project import ProjectKind
 from src.modules.requests.domain.entities.request import RequestState
 from src.shared.enums.department import Department
 
@@ -55,3 +56,18 @@ class DecideRequestCommand:
     request_id: int
     decision: RequestState
     note: str | None
+
+
+@dataclass(frozen=True)
+class ConvertRequestCommand:
+    """What the mission being born of a need still has to be told.
+
+    Only what the request cannot say: whether it becomes a project of its own
+    or a work package, and of which mission. Everything else crosses over from
+    the need, or is left for the team to declare.
+    """
+
+    actor_id: int
+    request_id: int
+    kind: ProjectKind
+    parent_id: int | None

@@ -10,6 +10,9 @@ from src.core.config import get_settings
 from src.main import app
 from src.modules.auth.presentation.dependencies import get_signed_in_user
 from src.modules.notifications.domain.services.delivery import NotificationDelivery
+from src.modules.requests.application.use_cases.convert_request import (
+    ConvertRequestUseCase,
+)
 from src.modules.requests.application.use_cases.decide_request import (
     DecideRequestUseCase,
 )
@@ -33,6 +36,7 @@ from src.modules.requests.application.use_cases.withdraw_request import (
     WithdrawRequestUseCase,
 )
 from src.modules.requests.presentation.dependencies import (
+    get_convert_request_use_case,
     get_decide_request_use_case,
     get_delete_request_use_case,
     get_file_request_use_case,
@@ -49,6 +53,8 @@ from src.shared.enums.org_level import OrgLevel
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryNotificationRepository,
+    InMemoryProjectDetailRepository,
+    InMemoryProjectRepository,
     InMemoryRequestRepository,
     InMemoryUserRepository,
 )
@@ -90,6 +96,7 @@ class Screen:
     client: AsyncClient
     requests: InMemoryRequestRepository
     inbox: InMemoryNotificationRepository
+    projects: InMemoryProjectRepository
 
     async def file(self, **overrides):
         payload: dict = {
@@ -125,6 +132,7 @@ class Screen:
 def sign_in(as_user: User = METIER) -> Screen:
     users = InMemoryUserRepository([MANAGER, DIRECTION, METIER])
     store = InMemoryRequestRepository()
+    projects = InMemoryProjectRepository()
     audit = InMemoryAuditLogRepository()
     inbox = InMemoryNotificationRepository()
     delivery = NotificationDelivery(inbox)
@@ -159,6 +167,15 @@ def sign_in(as_user: User = METIER) -> Screen:
     app.dependency_overrides[get_decide_request_use_case] = (
         lambda: DecideRequestUseCase(users=users, requests=store, audit_logs=audit)
     )
+    app.dependency_overrides[get_convert_request_use_case] = (
+        lambda: ConvertRequestUseCase(
+            users=users,
+            requests=store,
+            projects=projects,
+            details=InMemoryProjectDetailRepository(),
+            audit_logs=audit,
+        )
+    )
     app.dependency_overrides[get_sponsors_use_case] = lambda: ListSponsorsUseCase(
         users=users
     )
@@ -166,6 +183,7 @@ def sign_in(as_user: User = METIER) -> Screen:
         client=AsyncClient(transport=ASGITransport(app=app), base_url="http://test"),
         requests=store,
         inbox=inbox,
+        projects=projects,
     )
 
 
@@ -365,3 +383,34 @@ async def test_a_requester_weighs_nothing() -> None:
     response = await screen.weigh(request_id, "accepted")
 
     assert response.status_code == 403
+
+
+async def test_an_accepted_need_becomes_a_mission() -> None:
+    screen = sign_in()
+    request_id = await handed_over(screen)
+
+    app.dependency_overrides[get_signed_in_user] = lambda: MANAGER
+    await screen.weigh(request_id, "accepted")
+    response = await screen.client.post(
+        f"{REQUESTS}/{request_id}/convert", json={"kind": "project"}
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["state"] == "converted"
+    assert body["converted_project_id"] is not None
+    project = await screen.projects.get_by_id(body["converted_project_id"])
+    assert project is not None
+    assert project.label == "Relances de paiement à la main"
+
+
+async def test_a_need_nobody_weighed_becomes_no_mission() -> None:
+    screen = sign_in()
+    request_id = await handed_over(screen)
+
+    app.dependency_overrides[get_signed_in_user] = lambda: MANAGER
+    response = await screen.client.post(
+        f"{REQUESTS}/{request_id}/convert", json={"kind": "project"}
+    )
+
+    assert response.status_code == 409

@@ -41,6 +41,7 @@ export * from "./changeStatusRequest";
 export * from "./chapterResponse";
 export * from "./clearEntryParams";
 export * from "./contributorResponse";
+export * from "./convertRequestRequest";
 export * from "./coverageResponse";
 export * from "./createApiKeyRequest";
 export * from "./createProjectRequest";

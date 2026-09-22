@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { ConvertRequestDialog } from "@/components/atoms/ConvertRequestDialog";
 import { DecideRequestDialog } from "@/components/atoms/DecideRequestDialog";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { NewRequestDialog } from "@/components/molecules/NewRequestDialog";
@@ -36,6 +37,7 @@ export function RequestsPage() {
   const panel = useOpenedRequest();
   const [filing, setFiling] = useState(false);
   const [deciding, setDeciding] = useState<RequestState | null>(null);
+  const [converting, setConverting] = useState(false);
 
   const opened = panel.openedRequest ? screen.find(panel.openedRequest) : null;
   const mine = opened?.requester.id === screen.user?.id;
@@ -107,15 +109,26 @@ export function RequestsPage() {
                 <p className="text-xs text-slate-500">
                   {opened.state === "submitted"
                     ? "À arbitrer."
-                    : "Déjà arbitrée : la décision peut être rejouée tant que rien n'a été construit."}
+                    : opened.state === "accepted"
+                      ? "Acceptée : il reste à en faire un projet."
+                      : "Déjà arbitrée : la décision peut être rejouée tant que rien n'a été construit."}
                 </p>
                 <div className="flex items-center gap-2">
-                  <Button
-                    className="cursor-pointer"
-                    onClick={() => setDeciding("accepted")}
-                  >
-                    Accepter
-                  </Button>
+                  {opened.state === "accepted" ? (
+                    <Button
+                      className="cursor-pointer"
+                      onClick={() => setConverting(true)}
+                    >
+                      Convertir en projet
+                    </Button>
+                  ) : (
+                    <Button
+                      className="cursor-pointer"
+                      onClick={() => setDeciding("accepted")}
+                    >
+                      Accepter
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     className="cursor-pointer"
@@ -134,6 +147,17 @@ export function RequestsPage() {
               </footer>
             ) : null
           }
+        />
+      )}
+
+      {converting && opened && (
+        <ConvertRequestDialog
+          open
+          onOpenChange={setConverting}
+          onConfirm={async (kind, parentId) => {
+            await screen.convert(opened.id, kind, parentId);
+            setConverting(false);
+          }}
         />
       )}
 
