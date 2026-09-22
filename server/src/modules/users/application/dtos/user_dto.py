@@ -1,7 +1,9 @@
 """Input data of the user use cases."""
 
 from dataclasses import dataclass
+from datetime import date
 
+from src.modules.calendar.domain.entities.week_pattern import WeekPattern
 from src.modules.users.domain.entities.user import Role
 from src.shared.enums.department import Department
 
@@ -47,3 +49,16 @@ class UpdateUserIdentityCommand:
     last_name: str | None
     department: Department | None
     github_username: str | None
+
+
+@dataclass(frozen=True)
+class DeclareOwnRhythmCommand:
+    """How much of a week one works, from when. One's own, and no one else's.
+
+    There is no target to write down: the command names the actor alone, so
+    there is no colleague it could reach by mistake.
+    """
+
+    actor_id: int
+    pattern: WeekPattern
+    effective_from: date

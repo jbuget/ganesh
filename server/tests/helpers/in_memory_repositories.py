@@ -4,7 +4,7 @@ They implement the same ports as the infrastructure: a use case that passes
 here passes in production, persistence aside.
 """
 
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from dataclasses import replace
 from datetime import date, datetime
 
@@ -73,7 +73,9 @@ from src.modules.stats.domain.entities.surface_usage import Surface, Tally, Trac
 from src.modules.stats.domain.repositories.statistics_repository import (
     StatisticsRepository,
 )
+from src.modules.users.domain.entities.rhythm import Rhythm, RhythmHistory
 from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.repositories.rhythm_repository import RhythmRepository
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.enums.department import Department, in_declared_order
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
@@ -114,6 +116,37 @@ class InMemoryUserRepository(UserRepository):
         if user.id is not None:
             self._users[user.id] = user
         return user
+
+
+class InMemoryRhythmRepository(RhythmRepository):
+    def __init__(self, rhythms: list[Rhythm] | None = None) -> None:
+        self._rhythms: list[Rhythm] = list(rhythms or [])
+        self._next_id = 1
+
+    async def history_of(self, user_id: int) -> RhythmHistory:
+        return RhythmHistory.of(one for one in self._rhythms if one.user_id == user_id)
+
+    async def histories_of(self, user_ids: Sequence[int]) -> dict[int, RhythmHistory]:
+        return {
+            user_id: RhythmHistory.of(
+                one for one in self._rhythms if one.user_id == user_id
+            )
+            for user_id in user_ids
+        }
+
+    async def declare(self, rhythm: Rhythm) -> Rhythm:
+        self._rhythms = [
+            one
+            for one in self._rhythms
+            if not (
+                one.user_id == rhythm.user_id
+                and one.effective_from == rhythm.effective_from
+            )
+        ]
+        stored = replace(rhythm, id=self._next_id)
+        self._next_id += 1
+        self._rhythms.append(stored)
+        return stored
 
 
 class InMemoryProjectRepository(ProjectRepository):

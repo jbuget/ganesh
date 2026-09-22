@@ -111,6 +111,15 @@ class User:
         """Anyone may edit an open month, a colleague's included."""
         return self.is_active
 
+    def can_declare_own_rhythm(self) -> bool:
+        """Everyone declares their own rhythm, and only their own.
+
+        No manager's business: how many days a week somebody works is a fact
+        about them, and asking a manager to relay it would only put a delay
+        between the fact and the register.
+        """
+        return self.is_active
+
     def can_deactivate(self, target: "User") -> bool:
         """Tells whether this manager may cut `target` off.
 

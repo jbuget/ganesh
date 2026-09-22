@@ -48,6 +48,7 @@ class Surface(StrEnum):
     GAZETTE = "gazette"
     MOOD = "mood"
     NOTIFICATIONS = "notifications"
+    WORK_RHYTHM = "work_rhythm"
     TEAM_ADMIN = "team_admin"
     API_KEYS = "api_keys"
     MACHINE_ACCESS = "machine_access"
@@ -103,6 +104,11 @@ SURFACE_OF: dict[AuditAction, Surface] = {
     AuditAction.SIMULATION_DELETE: Surface.PLANNING,
     # Reading the month back.
     AuditAction.GAZETTE_GENERATE: Surface.GAZETTE,
+    # Saying how much of a week one works. A line of its own rather than
+    # one more administrative gesture: it is declared by everyone, for
+    # themselves, and folded into team administration it would read as a
+    # busy month at the manager's desk.
+    AuditAction.USER_RHYTHM_DECLARE: Surface.WORK_RHYTHM,
     # Holding the team.
     AuditAction.USER_CREATE: Surface.TEAM_ADMIN,
     AuditAction.USER_ROLE_CHANGE: Surface.TEAM_ADMIN,
