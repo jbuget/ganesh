@@ -14,19 +14,22 @@ export interface RequestFilters {
 }
 
 /**
- * What the screen opens on: the needs still waiting on somebody.
+ * What the screen opens on: the needs that still owe somebody something.
  *
  * The only criterion whose empty value is not neutral, and for the same
  * reason the team list leaves requesters out: one comes to this screen to
  * answer what is waiting, and a list opening on everything ever asked for
- * would bury the few that need an answer today.
+ * would bury the few that call for something today.
  *
- * « Plus tard » is in it, and that is the whole point of holding the state:
- * it answers nothing, it postpones — a need put off and then out of sight is
- * a need nobody ever comes back to, which is exactly what deferring is meant
- * not to be. What was accepted, refused or built is read by asking for it.
+ * The three states are three unfinished things, and none of them closes on
+ * its own: one handed over waits to be weighed, one put off waits for the
+ * moment to come — « plus tard » answers nothing, it postpones — and one
+ * accepted waits to be built, since saying yes makes nothing exist. Each of
+ * them, left out of sight, is a need nobody ever comes back to.
+ *
+ * What was refused, or built, is read by asking for it: those are settled.
  */
-export const WAITING: RequestState[] = ["submitted", "deferred"];
+export const WAITING: RequestState[] = ["submitted", "deferred", "accepted"];
 
 export const NO_REQUEST_FILTER: RequestFilters = {
   search: "",

@@ -25,12 +25,14 @@ function need(title: string, over: Partial<RequestResponse> = {}): RequestRespon
 const titles = (requests: RequestResponse[]) => requests.map((r) => r.title);
 
 describe("filterRequests", () => {
-  it("opens on what still waits on somebody", () => {
-    // « Plus tard » answers nothing, it postpones: left out of sight, it is
-    // a need nobody ever comes back to.
+  it("opens on what still owes somebody something", () => {
+    // Three unfinished things: one waits to be weighed, one waits for the
+    // moment to come, and one waits to be built — saying yes makes nothing
+    // exist. What is refused or built is settled.
     const needs = [
       need("En attente"),
       need("Pas ce trimestre", { state: "deferred" }),
+      need("Dite oui", { state: "accepted" }),
       need("Vieille", { state: "rejected" }),
       need("Batie", { state: "converted" }),
     ];
@@ -38,6 +40,7 @@ describe("filterRequests", () => {
     expect(titles(filterRequests(needs, NO_REQUEST_FILTER))).toEqual([
       "En attente",
       "Pas ce trimestre",
+      "Dite oui",
     ]);
   });
 
@@ -78,6 +81,7 @@ describe("the filters in the address", () => {
     expect(readRequestFilters(new URLSearchParams()).states).toEqual([
       "submitted",
       "deferred",
+      "accepted",
     ]);
   });
 

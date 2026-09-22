@@ -21,11 +21,12 @@ import { useRequestsScreen } from "@/lib/use-requests";
 /**
  * What the company has asked for, and what the team decided of it.
  *
- * It opens on what still waits on somebody — handed over, or put off until
- * later: one comes here to answer, and a list opening on everything ever
- * asked for would bury the few that need an answer today. A « plus tard »
- * left out of sight is a need nobody comes back to, which is what deferring
- * is meant not to be. « Effacer » takes that default off with the rest.
+ * It opens on what still owes somebody something — handed over, put off, or
+ * accepted and not yet built: one comes here to answer, and a list opening
+ * on everything ever asked for would bury the few that call for something
+ * today. Saying yes makes nothing exist, and a « plus tard » left out of
+ * sight is a need nobody comes back to. « Effacer » takes that default off
+ * with the rest.
  *
  * A table rather than a board: the states are a cycle of arbitration and not
  * a flow one drags things through, and the board already steers what runs.
