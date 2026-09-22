@@ -1037,6 +1037,9 @@ class InMemoryRequestRepository(RequestRepository):
             if request.requester_id == requester_id
         ]
 
+    async def list_all(self) -> list[Request]:
+        return list(self._requests.values())
+
     async def list_readable_by(self, viewer_id: int) -> list[Request]:
         return [
             request

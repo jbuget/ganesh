@@ -606,6 +606,16 @@ whole design, and it is enforced rather than asked for politely:
 - **Nothing is invented.** A log line whose mission was deleted cannot be named
   and is not printed. A phase the register never recorded is not supplied.
 
+**What the company asked for has a chapter of its own.** A need is not a
+mission — the whole recueil rests on not confusing the two — so its month is
+told apart from the projects': what was handed over, what was accepted,
+refused or put off, and what became a mission. That last one stays with the
+needs rather than opening the project's chapter one line before its story
+starts. A draft makes no movement: a need nobody handed over has been asked
+of nobody. And the tally counts what was asked apart from what was built,
+because a month that filed six and built none says something either figure
+alone hides.
+
 **A digest is never rewritten.** Asking for a month again writes the next
 version beside the last; the screen reads the highest and the picker opens the
 others. What somebody quoted has to still be in the digest they quoted it from,

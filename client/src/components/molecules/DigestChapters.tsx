@@ -7,7 +7,7 @@ import { DigestFactLine } from "@/components/atoms/DigestFactLine";
 import type { ChapterResponse, MovementKind } from "@/lib/api/generated/model";
 import { formatShortDate } from "@/lib/dates";
 import { parisDay } from "@/lib/instants";
-import { chapterLine, chapterTitle } from "@/lib/gazette";
+import { chapterKey, chapterLine, chapterTitle } from "@/lib/gazette";
 import { STRONG_RULE } from "@/lib/table-frame";
 
 interface DigestChaptersProps {
@@ -33,6 +33,13 @@ const DOTS: Record<MovementKind, string> = {
   teammate_joined: "bg-violet-500",
   teammate_returned: "bg-violet-500",
   teammate_left: "bg-slate-400",
+  // What the company asked for: filed is plain, a refusal and a « plus tard »
+  // are marked, and a need that became a project is the good news of the lot.
+  request_filed: "bg-slate-300",
+  request_accepted: "bg-teal-500",
+  request_rejected: "bg-rose-500",
+  request_deferred: "bg-amber-500",
+  request_converted: "bg-emerald-500",
 };
 
 /**
@@ -50,28 +57,24 @@ const DOTS: Record<MovementKind, string> = {
  * projects the month touched, and how much happened to each.
  */
 export function DigestChapters({ chapters }: DigestChaptersProps) {
-  const [opened, setOpened] = useState<(number | null)[]>([]);
+  const [opened, setOpened] = useState<string[]>([]);
 
   return (
     <ul className={`overflow-hidden border ${STRONG_RULE}`}>
       {chapters.map((chapter) => {
-        const isOpen = opened.includes(chapter.project_id);
+        const key = chapterKey(chapter);
+        const isOpen = opened.includes(key);
         const title = chapterTitle(chapter);
 
         return (
-          <li
-            key={chapter.project_id ?? "team"}
-            className="border-b border-slate-200 last:border-b-0"
-          >
+          <li key={key} className="border-b border-slate-200 last:border-b-0">
             <button
               type="button"
               aria-expanded={isOpen}
               className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-slate-50"
               onClick={() =>
                 setOpened((open) =>
-                  isOpen
-                    ? open.filter((it) => it !== chapter.project_id)
-                    : [...open, chapter.project_id],
+                  isOpen ? open.filter((it) => it !== key) : [...open, key],
                 )
               }
             >

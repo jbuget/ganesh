@@ -2,6 +2,7 @@
 
 from datetime import datetime
 
+from src.modules.gazette.domain.entities.chapter import ChapterOf
 from src.modules.gazette.domain.entities.movement import Movement, MovementKind
 from src.modules.gazette.domain.services.chaptering import into_chapters
 
@@ -160,3 +161,66 @@ class TestIntoChapters:
         )
 
         assert [chapter.label for chapter in chapters] == ["Ganesh", None]
+
+
+class TestTheNeedsHaveAChapterOfTheirOwn:
+    """A need is not a mission: the feature rests on not confusing the two."""
+
+    def test_what_was_asked_is_gathered_apart(self) -> None:
+        chapters = into_chapters(
+            [
+                a_movement(day=3),
+                a_movement(
+                    subject="Relances de paiement",
+                    project_id=None,
+                    day=4,
+                    kind=MovementKind.REQUEST_FILED,
+                ),
+            ]
+        )
+
+        assert [chapter.of for chapter in chapters] == [
+            ChapterOf.PROJECT,
+            ChapterOf.REQUESTS,
+        ]
+        assert [m.subject for m in chapters[1].movements] == ["Relances de paiement"]
+
+    def test_a_need_that_became_a_mission_stays_with_the_needs(self) -> None:
+        """Its chapter opens the mission's story one line before it starts."""
+        chapters = into_chapters(
+            [
+                a_movement(
+                    subject="Relances de paiement",
+                    project_id=None,
+                    day=4,
+                    kind=MovementKind.REQUEST_CONVERTED,
+                ),
+            ]
+        )
+
+        assert [chapter.of for chapter in chapters] == [ChapterOf.REQUESTS]
+
+    def test_the_needs_are_told_before_the_team_and_after_the_work(self) -> None:
+        chapters = into_chapters(
+            [
+                a_movement(
+                    subject="Sam Okafor",
+                    project_id=None,
+                    day=1,
+                    kind=MovementKind.TEAMMATE_JOINED,
+                ),
+                a_movement(
+                    subject="Relances",
+                    project_id=None,
+                    day=2,
+                    kind=MovementKind.REQUEST_FILED,
+                ),
+                a_movement(day=3),
+            ]
+        )
+
+        assert [chapter.of for chapter in chapters] == [
+            ChapterOf.PROJECT,
+            ChapterOf.REQUESTS,
+            ChapterOf.TEAM,
+        ]

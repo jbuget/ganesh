@@ -24,6 +24,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryDigestRepository,
     InMemoryProjectRepository,
+    InMemoryRequestRepository,
     InMemoryUserRepository,
 )
 from tests.helpers.instants import paris
@@ -82,6 +83,7 @@ def a_use_case(
         projects=InMemoryProjectRepository(projects_in_the_list or [a_project()]),
         audit_logs=audit_logs,
         digests=digests,
+        requests=InMemoryRequestRepository(),
         writer=writer or StubProseWriter(),
     )
     return use_case, digests, audit_logs

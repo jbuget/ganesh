@@ -8,17 +8,30 @@ makes it a chronicle rather than a list.
 from collections.abc import Sequence
 from datetime import datetime
 
-from src.modules.gazette.domain.entities.chapter import Chapter
-from src.modules.gazette.domain.entities.movement import Movement
+from src.modules.gazette.domain.entities.chapter import Chapter, ChapterOf
+from src.modules.gazette.domain.entities.movement import Movement, MovementKind
 
 #: What a chapter about no project is sorted as: after everything else,
 #: whenever it happened. Who joined the team is context around the month's
 #: work rather than work itself, and opening on it would bury the month.
 _LAST = datetime.max
 
+#: What the company asked for. Told apart from the projects, because a need
+#: is not a mission — the feature rests on not confusing the two — and before
+#: the team, because it is still the month's work.
+_ABOUT_A_NEED = frozenset(
+    {
+        MovementKind.REQUEST_FILED,
+        MovementKind.REQUEST_ACCEPTED,
+        MovementKind.REQUEST_REJECTED,
+        MovementKind.REQUEST_DEFERRED,
+        MovementKind.REQUEST_CONVERTED,
+    }
+)
+
 
 def into_chapters(movements: Sequence[Movement]) -> list[Chapter]:
-    """The month, one chapter per project, packages told among their project.
+    """The month, one chapter per project, then the needs, then the team.
 
     A work package has no chapter of its own: its month is part of its
     project's month. Chapters open in the order their projects first appear,
@@ -27,9 +40,13 @@ def into_chapters(movements: Sequence[Movement]) -> list[Chapter]:
     """
     gathered: dict[int, list[Movement]] = {}
     labels: dict[int, str] = {}
+    needs: list[Movement] = []
     teamless: list[Movement] = []
 
     for movement in movements:
+        if movement.kind in _ABOUT_A_NEED:
+            needs.append(movement)
+            continue
         if movement.project_id is None:
             teamless.append(movement)
             continue
@@ -45,13 +62,24 @@ def into_chapters(movements: Sequence[Movement]) -> list[Chapter]:
             labels.setdefault(told_under, movement.parent_label)
 
     chapters = [
-        Chapter(project_id=project_id, label=labels.get(project_id), movements=told)
+        Chapter(
+            of=ChapterOf.PROJECT,
+            project_id=project_id,
+            label=labels.get(project_id),
+            movements=told,
+        )
         for project_id, told in gathered.items()
     ]
     chapters.sort(key=_opens_on)
 
+    if needs:
+        chapters.append(
+            Chapter(of=ChapterOf.REQUESTS, project_id=None, label=None, movements=needs)
+        )
     if teamless:
-        chapters.append(Chapter(project_id=None, label=None, movements=teamless))
+        chapters.append(
+            Chapter(of=ChapterOf.TEAM, project_id=None, label=None, movements=teamless)
+        )
     return chapters
 
 

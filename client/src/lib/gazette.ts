@@ -68,6 +68,18 @@ export function movementPredicate(movement: MovementResponse): string {
       return `est revenu ${phaseMove(movement)}`;
     case "news_posted":
       return "une actualité a été publiée";
+    // A need is feminine — « une demande » — and every one of these agrees
+    // with it. Nothing but opening the screen catches a « a été accepté ».
+    case "request_filed":
+      return "a été déposée";
+    case "request_accepted":
+      return "a été acceptée";
+    case "request_rejected":
+      return "a été refusée";
+    case "request_deferred":
+      return "a été reportée à plus tard";
+    case "request_converted":
+      return "est devenue un projet";
     case "teammate_joined":
       return "a rejoint l'équipe";
     case "teammate_returned":
@@ -168,12 +180,28 @@ export function chapterLine(
  * domain says « this is about no mission », and saying it in French is the
  * interface's business.
  */
+/**
+ * What tells one chapter from another.
+ *
+ * The project's id will not do on its own: two chapters carry none — the
+ * needs and the team — and keying both on nothing made them one. They opened
+ * and closed together, and React was told of two children sharing a key.
+ */
+export function chapterKey(chapter: ChapterResponse): string {
+  return chapter.of === "project" ? `project:${chapter.project_id}` : chapter.of;
+}
+
 export function chapterTitle(chapter: ChapterResponse): string {
+  if (chapter.of === "requests") return "Les demandes";
+  if (chapter.of === "team") return "L'équipe";
   return chapter.label === null ? "L'équipe" : missionName(chapter.label);
 }
 
 /** Every project a chapter names: its own, and those of its packages. */
 function namesIn(chapter: ChapterResponse): string[] {
+  // A chapter about no project names none: what it holds are needs, or
+  // people, and neither is a mission the chapeau may lean on.
+  if (chapter.of !== "project") return [];
   const own = chapter.label === null ? [] : [chapter.label];
   const packages = chapter.movements
     .filter((movement) => movement.project_id !== chapter.project_id)
@@ -269,6 +297,12 @@ export function tallyLines(tally: TallyResponse): TallyLine[] {
     line(tally.phase_changes, "changement de phase", "changements de phase"),
     line(tally.news_posted, "actualité publiée", "actualités publiées"),
     line(tally.months_validated, "mois validé", "mois validés"),
+    line(tally.requests_filed, "demande déposée", "demandes déposées"),
+    line(
+      tally.requests_converted,
+      "demande devenue un projet",
+      "demandes devenues des projets",
+    ),
   ];
 }
 

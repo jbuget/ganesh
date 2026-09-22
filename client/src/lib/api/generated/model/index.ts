@@ -38,6 +38,7 @@ export * from "./catalogLinkResponse";
 export * from "./categoryShareResponse";
 export * from "./changeRoleRequest";
 export * from "./changeStatusRequest";
+export * from "./chapterOf";
 export * from "./chapterResponse";
 export * from "./clearEntryParams";
 export * from "./contributorResponse";

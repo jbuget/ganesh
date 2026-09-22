@@ -14,6 +14,8 @@ from src.modules.projects.domain.entities.project import (
 MONTH = date(2026, 9, 1)
 
 PEOPLE = {1: "Léa Chen", 2: "Sam Okafor"}
+#: The needs the register can name, as the gazette reads them back.
+NEEDS = {4: "Relances de paiement à la main"}
 
 
 def a_project(
@@ -39,7 +41,7 @@ def on(day: int, hour: int = 9) -> datetime:
 
 class TestMovements:
     def test_a_month_nothing_happened_in_carries_no_movement(self) -> None:
-        brief = build_brief(MONTH, logs=[], projects={}, people=PEOPLE)
+        brief = build_brief(MONTH, logs=[], projects={}, people=PEOPLE, needs=NEEDS)
 
         assert brief.month == MONTH
         assert brief.movements == []
@@ -54,7 +56,9 @@ class TestMovements:
             )
         ]
 
-        brief = build_brief(MONTH, logs, {7: a_project(7, "Ganesh")}, PEOPLE)
+        brief = build_brief(
+            MONTH, logs, {7: a_project(7, "Ganesh")}, PEOPLE, needs=NEEDS
+        )
 
         assert [(m.kind, m.subject) for m in brief.movements] == [
             (MovementKind.PROJECT_CREATED, "Ganesh")
@@ -83,7 +87,11 @@ class TestMovements:
         ]
 
         brief = build_brief(
-            MONTH, logs, {7: a_project(7, "Ganesh"), 8: a_project(8, "NOMAD")}, PEOPLE
+            MONTH,
+            logs,
+            {7: a_project(7, "Ganesh"), 8: a_project(8, "NOMAD")},
+            PEOPLE,
+            needs=NEEDS,
         )
 
         assert [(m.kind, m.subject) for m in brief.movements] == [
@@ -105,7 +113,10 @@ class TestMovements:
             )
         ]
 
-        assert build_brief(MONTH, logs, {7: a_project(7)}, PEOPLE).movements == []
+        assert (
+            build_brief(MONTH, logs, {7: a_project(7)}, PEOPLE, needs=NEEDS).movements
+            == []
+        )
 
     def test_it_tells_a_phase_that_moved_on_from_one_that_went_back(self) -> None:
         logs = [
@@ -126,7 +137,11 @@ class TestMovements:
         ]
 
         brief = build_brief(
-            MONTH, logs, {7: a_project(7, "Ganesh"), 8: a_project(8, "NOMAD")}, PEOPLE
+            MONTH,
+            logs,
+            {7: a_project(7, "Ganesh"), 8: a_project(8, "NOMAD")},
+            PEOPLE,
+            needs=NEEDS,
         )
 
         assert [(m.kind, m.subject) for m in brief.movements] == [
@@ -153,7 +168,9 @@ class TestMovements:
             )
         ]
 
-        brief = build_brief(MONTH, logs, {7: a_project(7, "Ganesh")}, PEOPLE)
+        brief = build_brief(
+            MONTH, logs, {7: a_project(7, "Ganesh")}, PEOPLE, needs=NEEDS
+        )
 
         assert [(m.kind, m.subject) for m in brief.movements] == [
             (MovementKind.PHASE_ADVANCED, "Ganesh")
@@ -170,7 +187,9 @@ class TestMovements:
             )
         ]
 
-        movement = build_brief(MONTH, logs, {7: a_project(7)}, PEOPLE).movements[0]
+        movement = build_brief(
+            MONTH, logs, {7: a_project(7)}, PEOPLE, needs=NEEDS
+        ).movements[0]
 
         assert movement.from_status is ProjectStatus.SCOPING
         assert movement.to_status is ProjectStatus.DEVELOPMENT
@@ -187,7 +206,9 @@ class TestMovements:
             )
         ]
 
-        brief = build_brief(MONTH, logs, {7: a_project(7, "Ganesh")}, PEOPLE)
+        brief = build_brief(
+            MONTH, logs, {7: a_project(7, "Ganesh")}, PEOPLE, needs=NEEDS
+        )
 
         assert brief.movements[0].kind is MovementKind.WENT_LIVE
 
@@ -201,7 +222,9 @@ class TestMovements:
             )
         ]
 
-        brief = build_brief(MONTH, logs, {7: a_project(7, "Ganesh")}, PEOPLE)
+        brief = build_brief(
+            MONTH, logs, {7: a_project(7, "Ganesh")}, PEOPLE, needs=NEEDS
+        )
 
         assert [(m.kind, m.subject) for m in brief.movements] == [
             (MovementKind.NEWS_POSTED, "Ganesh")
@@ -223,7 +246,7 @@ class TestMovements:
             ),
         ]
 
-        brief = build_brief(MONTH, logs, {}, PEOPLE)
+        brief = build_brief(MONTH, logs, {}, PEOPLE, needs=NEEDS)
 
         assert [(m.kind, m.subject) for m in brief.movements] == [
             (MovementKind.TEAMMATE_JOINED, "Sam Okafor"),
@@ -245,7 +268,7 @@ class TestMovements:
             ),
         ]
 
-        assert build_brief(MONTH, logs, {}, PEOPLE).movements == []
+        assert build_brief(MONTH, logs, {}, PEOPLE, needs=NEEDS).movements == []
 
     def test_movements_read_in_the_order_they_happened(self) -> None:
         logs = [
@@ -258,7 +281,11 @@ class TestMovements:
         ]
 
         brief = build_brief(
-            MONTH, logs, {7: a_project(7, "Ganesh"), 8: a_project(8, "NOMAD")}, PEOPLE
+            MONTH,
+            logs,
+            {7: a_project(7, "Ganesh"), 8: a_project(8, "NOMAD")},
+            PEOPLE,
+            needs=NEEDS,
         )
 
         assert [m.subject for m in brief.movements] == ["Ganesh", "NOMAD"]
@@ -275,7 +302,7 @@ class TestMovements:
             )
         ]
 
-        assert build_brief(MONTH, logs, {}, PEOPLE).movements == []
+        assert build_brief(MONTH, logs, {}, PEOPLE, needs=NEEDS).movements == []
 
 
 class TestTally:
@@ -306,7 +333,11 @@ class TestTally:
         ]
 
         tally = build_brief(
-            MONTH, logs, {7: a_project(7, "Ganesh"), 8: a_project(8, "NOMAD")}, PEOPLE
+            MONTH,
+            logs,
+            {7: a_project(7, "Ganesh"), 8: a_project(8, "NOMAD")},
+            PEOPLE,
+            needs=NEEDS,
         ).tally
 
         assert tally.projects_created == 1
@@ -324,7 +355,10 @@ class TestTally:
             ),
         ]
 
-        assert build_brief(MONTH, logs, {}, PEOPLE).tally.months_validated == 2
+        assert (
+            build_brief(MONTH, logs, {}, PEOPLE, needs=NEEDS).tally.months_validated
+            == 2
+        )
 
     def test_a_month_closed_twice_is_closed_once(self) -> None:
         """Reopened then closed again is one month closed, not two."""
@@ -340,7 +374,10 @@ class TestTally:
             ),
         ]
 
-        assert build_brief(MONTH, logs, {}, PEOPLE).tally.months_validated == 1
+        assert (
+            build_brief(MONTH, logs, {}, PEOPLE, needs=NEEDS).tally.months_validated
+            == 1
+        )
 
     def test_a_month_closed_is_counted_and_never_told(self) -> None:
         """Who closed their month, and who did not, is nobody's business here.
@@ -354,7 +391,131 @@ class TestTally:
             )
         ]
 
-        brief = build_brief(MONTH, logs, {}, PEOPLE)
+        brief = build_brief(MONTH, logs, {}, PEOPLE, needs=NEEDS)
 
         assert brief.tally.months_validated == 1
         assert brief.movements == []
+
+
+class TestWhatTheCompanyAskedFor:
+    """A need is not a mission, and the gazette tells it as what it is."""
+
+    def test_it_reads_a_need_the_month_was_handed(self) -> None:
+        logs = [
+            AuditLog(
+                action=AuditAction.REQUEST_SUBMIT,
+                actor_id=1,
+                request_id=4,
+                at=on(3),
+                new_value="Relances de paiement à la main",
+            )
+        ]
+
+        brief = build_brief(MONTH, logs, {}, PEOPLE, NEEDS)
+
+        assert [(m.kind, m.subject) for m in brief.movements] == [
+            (MovementKind.REQUEST_FILED, "Relances de paiement à la main")
+        ]
+
+    def test_a_need_still_being_written_is_nobody_s_month(self) -> None:
+        """A draft has been asked of nobody: it is not a fact of the month."""
+        logs = [
+            AuditLog(
+                action=AuditAction.REQUEST_CREATE,
+                actor_id=1,
+                request_id=4,
+                at=on(3),
+                new_value="Relances de paiement à la main",
+            )
+        ]
+
+        assert build_brief(MONTH, logs, {}, PEOPLE, NEEDS).movements == []
+
+    def test_it_tells_the_three_things_arbitrating_can_say(self) -> None:
+        logs = [
+            AuditLog(
+                action=AuditAction.REQUEST_DECIDE,
+                actor_id=1,
+                request_id=4,
+                at=on(day),
+                new_value=said,
+            )
+            for day, said in ((4, "accepted"), (5, "rejected"), (6, "deferred"))
+        ]
+
+        brief = build_brief(MONTH, logs, {}, PEOPLE, NEEDS)
+
+        assert [m.kind for m in brief.movements] == [
+            MovementKind.REQUEST_ACCEPTED,
+            MovementKind.REQUEST_REJECTED,
+            MovementKind.REQUEST_DEFERRED,
+        ]
+
+    def test_a_decision_the_register_spells_otherwise_is_not_invented(self) -> None:
+        logs = [
+            AuditLog(
+                action=AuditAction.REQUEST_DECIDE,
+                actor_id=1,
+                request_id=4,
+                at=on(4),
+                new_value="something-else",
+            )
+        ]
+
+        assert build_brief(MONTH, logs, {}, PEOPLE, NEEDS).movements == []
+
+    def test_a_need_that_became_a_mission_is_told_as_a_need(self) -> None:
+        """It carries no project: a need is not a mission, even the day it is."""
+        logs = [
+            AuditLog(
+                action=AuditAction.REQUEST_CONVERT,
+                actor_id=1,
+                request_id=4,
+                project_id=7,
+                at=on(7),
+                new_value="Relances de paiement à la main",
+            )
+        ]
+
+        brief = build_brief(MONTH, logs, {7: a_project(7, "Relances")}, PEOPLE, NEEDS)
+
+        assert [(m.kind, m.project_id) for m in brief.movements] == [
+            (MovementKind.REQUEST_CONVERTED, None)
+        ]
+
+    def test_a_need_nobody_can_name_is_not_printed(self) -> None:
+        """The gazette invents nothing, here as everywhere else."""
+        logs = [
+            AuditLog(
+                action=AuditAction.REQUEST_SUBMIT,
+                actor_id=1,
+                request_id=99,
+                at=on(3),
+                new_value="Disparue",
+            )
+        ]
+
+        assert build_brief(MONTH, logs, {}, PEOPLE, NEEDS).movements == []
+
+    def test_what_was_asked_and_what_was_built_are_counted_apart(self) -> None:
+        """A month that filed six and built none says what either alone hides."""
+        logs = [
+            AuditLog(
+                action=AuditAction.REQUEST_SUBMIT,
+                actor_id=1,
+                request_id=4,
+                at=on(3),
+            ),
+            AuditLog(
+                action=AuditAction.REQUEST_CONVERT,
+                actor_id=1,
+                request_id=4,
+                project_id=7,
+                at=on(8),
+            ),
+        ]
+
+        tally = build_brief(MONTH, logs, {}, PEOPLE, NEEDS).tally
+
+        assert tally.requests_filed == 1
+        assert tally.requests_converted == 1

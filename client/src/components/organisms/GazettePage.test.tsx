@@ -33,9 +33,12 @@ function aDigest(over: Partial<DigestResponse> = {}): DigestResponse {
       phase_changes: 3,
       news_posted: 0,
       months_validated: 9,
+      requests_filed: 0,
+      requests_converted: 0,
     },
     chapters: [
       {
+        of: "project",
         project_id: 2,
         label: "WAATcher",
         movements: [
@@ -213,6 +216,7 @@ describe("GazettePage", () => {
     gazette.digest = aDigest({
       chapters: [
         {
+          of: "project",
           project_id: 2,
           label: "WAATcher",
           movements: [
@@ -239,6 +243,7 @@ describe("GazettePage", () => {
     gazette.digest = aDigest({
       chapters: [
         {
+          of: "project",
           project_id: 3,
           label: "Lecture des fichiers tableurs.",
           movements: [],

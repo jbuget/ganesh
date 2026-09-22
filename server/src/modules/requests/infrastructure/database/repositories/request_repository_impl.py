@@ -81,6 +81,18 @@ class SqlRequestRepository(RequestRepository):
         models = (await self._session.execute(query)).scalars().all()
         return await self._all(list(models))
 
+    async def list_all(self) -> list[Request]:
+        models = (
+            (
+                await self._session.execute(
+                    select(RequestModel).order_by(RequestModel.created_at.desc())
+                )
+            )
+            .scalars()
+            .all()
+        )
+        return await self._all(list(models))
+
     async def add(self, request: Request) -> Request:
         model = RequestModel(
             title=request.title,

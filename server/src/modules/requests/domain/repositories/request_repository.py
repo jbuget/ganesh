@@ -27,6 +27,16 @@ class RequestRepository(ABC):
         ...
 
     @abstractmethod
+    async def list_all(self) -> list[Request]:
+        """Every need ever filed, drafts included.
+
+        No screen reads this: it is what lets the gazette name a need its
+        month speaks of, the way it names a mission from the reference list.
+        A draft makes no movement, and being in the list costs nothing.
+        """
+        ...
+
+    @abstractmethod
     async def add(self, request: Request) -> Request: ...
 
     @abstractmethod
