@@ -25,9 +25,38 @@ describe("the signs under an update", () => {
   it("names on hover who left it", () => {
     draw([thumbs]);
 
-    expect(screen.getByRole("button", { name: /D'accord/ })).toHaveAccessibleName(
+    fireEvent.mouseMove(screen.getByRole("button", { name: /D'accord/ }));
+
+    expect(screen.getByRole("tooltip")).toHaveTextContent(
       "D'accord : L. Chen et N. Garo",
     );
+  });
+
+  it("lets go of the tooltip on leaving", () => {
+    draw([thumbs]);
+    const chip = screen.getByRole("button", { name: /D'accord/ });
+    fireEvent.mouseMove(chip);
+
+    fireEvent.mouseLeave(chip);
+
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+  });
+
+  it("leaves the native tooltip alone: it comes a second too late", () => {
+    draw([thumbs]);
+
+    expect(screen.getByRole("button", { name: /D'accord/ })).not.toHaveAttribute(
+      "title",
+    );
+  });
+
+  it("names each sign of the set on hover", () => {
+    draw([]);
+    fireEvent.click(screen.getByRole("button", { name: "Réagir" }));
+
+    fireEvent.mouseMove(screen.getByRole("button", { name: "Bravo" }));
+
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Bravo");
   });
 
   it("marks the sign the reader left", () => {

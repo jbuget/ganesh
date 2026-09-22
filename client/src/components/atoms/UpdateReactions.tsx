@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Reaction, UpdateReactionResponse } from "@/lib/api/generated/model";
 import { glyphOf, labelOf, REACTIONS, whoReacted } from "@/lib/reactions";
+import { useCursorTooltip } from "@/lib/use-cursor-tooltip";
 
 interface UpdateReactionsProps {
   reactions: UpdateReactionResponse[];
@@ -27,6 +28,10 @@ interface UpdateReactionsProps {
  */
 export function UpdateReactions({ reactions, onToggle }: UpdateReactionsProps) {
   const [picking, setPicking] = useState(false);
+  // One bubble for the whole bar, the picker included: the content is given on
+  // hover, and the native tooltip arrives a second too late to be read while
+  // running along a row of signs.
+  const { tooltip, follow, leave } = useCursorTooltip();
   // What the reader left, not what the thread left: picking a sign one has
   // already given is how one takes it back.
   const mine = new Set(
@@ -41,7 +46,10 @@ export function UpdateReactions({ reactions, onToggle }: UpdateReactionsProps) {
           type="button"
           aria-pressed={one.is_mine}
           aria-label={`${labelOf(one.reaction)} : ${whoReacted(one.people)}`}
-          title={`${labelOf(one.reaction)} : ${whoReacted(one.people)}`}
+          onMouseMove={(event) =>
+            follow(event, `${labelOf(one.reaction)} : ${whoReacted(one.people)}`)
+          }
+          onMouseLeave={leave}
           onClick={() => onToggle(one.reaction, !one.is_mine)}
           className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs tabular-nums transition-colors ${
             one.is_mine
@@ -67,7 +75,8 @@ export function UpdateReactions({ reactions, onToggle }: UpdateReactionsProps) {
               key={reaction}
               type="button"
               aria-label={label}
-              title={label}
+              onMouseMove={(event) => follow(event, label)}
+              onMouseLeave={leave}
               onClick={() => {
                 onToggle(reaction, !mine.has(reaction));
                 setPicking(false);
@@ -79,6 +88,8 @@ export function UpdateReactions({ reactions, onToggle }: UpdateReactionsProps) {
           ))}
         </PopoverContent>
       </Popover>
+
+      {tooltip}
     </div>
   );
 }
