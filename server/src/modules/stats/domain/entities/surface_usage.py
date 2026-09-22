@@ -109,6 +109,7 @@ SURFACE_OF: dict[AuditAction, Surface] = {
     # themselves, and folded into team administration it would read as a
     # busy month at the manager's desk.
     AuditAction.USER_RHYTHM_DECLARE: Surface.WORK_RHYTHM,
+    AuditAction.USER_RHYTHM_WITHDRAW: Surface.WORK_RHYTHM,
     # Holding the team.
     AuditAction.USER_CREATE: Surface.TEAM_ADMIN,
     AuditAction.USER_ROLE_CHANGE: Surface.TEAM_ADMIN,

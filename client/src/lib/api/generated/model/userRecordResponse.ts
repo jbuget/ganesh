@@ -17,6 +17,5 @@ export interface UserRecordResponse {
   missions: RecordedMissionResponse[];
   declared: DeclaredWindowResponse;
   months: MonthFillingResponse[];
-  rhythm?: WorkRhythmResponse | null;
-  upcoming_rhythm?: WorkRhythmResponse | null;
+  rhythms?: WorkRhythmResponse[];
 }

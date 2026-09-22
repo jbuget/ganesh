@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from datetime import date
 
 from src.modules.users.domain.entities.rhythm import Rhythm, RhythmHistory
 
@@ -19,6 +20,15 @@ class RhythmRepository(ABC):
         A screen reading a window over the whole team asks for the lot: a
         coverage computed thirty queries at a time is the same figure, read
         thirty times slower.
+        """
+
+    @abstractmethod
+    async def withdraw(self, user_id: int, effective_from: date) -> bool:
+        """Takes one rhythm out of somebody's history. Says whether it was there.
+
+        Addressed by the day it opens on rather than by an id: a history is
+        read and corrected by its dates, and an id would let a caller name a
+        row belonging to somebody else.
         """
 
     @abstractmethod

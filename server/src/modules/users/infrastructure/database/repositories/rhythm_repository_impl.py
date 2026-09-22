@@ -3,8 +3,9 @@
 from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import replace
+from datetime import date
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.calendar.domain.entities.week_pattern import WeekPattern
@@ -60,6 +61,15 @@ class SqlRhythmRepository(RhythmRepository):
         return {
             user_id: RhythmHistory.of(declared.get(user_id, ())) for user_id in user_ids
         }
+
+    async def withdraw(self, user_id: int, effective_from: date) -> bool:
+        result = await self._session.execute(
+            delete(WorkRhythmModel).where(
+                WorkRhythmModel.user_id == user_id,
+                WorkRhythmModel.effective_from == effective_from,
+            )
+        )
+        return result.rowcount > 0
 
     async def declare(self, rhythm: Rhythm) -> Rhythm:
         result = await self._session.execute(

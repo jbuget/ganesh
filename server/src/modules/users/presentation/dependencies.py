@@ -40,6 +40,9 @@ from src.modules.users.application.use_cases.set_user_active import SetUserActiv
 from src.modules.users.application.use_cases.update_user_identity import (
     UpdateUserIdentityUseCase,
 )
+from src.modules.users.application.use_cases.withdraw_own_rhythm import (
+    WithdrawOwnRhythmUseCase,
+)
 from src.modules.users.domain.repositories.rhythm_repository import RhythmRepository
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
@@ -101,3 +104,11 @@ def get_declare_own_rhythm_use_case(
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> DeclareOwnRhythmUseCase:
     return DeclareOwnRhythmUseCase(users=users, rhythms=rhythms, audit_logs=audit_logs)
+
+
+def get_withdraw_own_rhythm_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    rhythms: RhythmRepository = Depends(get_rhythm_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> WithdrawOwnRhythmUseCase:
+    return WithdrawOwnRhythmUseCase(users=users, rhythms=rhythms, audit_logs=audit_logs)

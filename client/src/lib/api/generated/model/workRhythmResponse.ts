@@ -6,7 +6,7 @@
  */
 
 /**
- * A rhythm in force, and what it adds up to over a week.
+ * One declared rhythm, and what it adds up to over a week.
  */
 export interface WorkRhythmResponse {
   effective_from: string;
@@ -16,4 +16,5 @@ export interface WorkRhythmResponse {
   thursday: number;
   friday: number;
   days_per_week: number;
+  is_in_force?: boolean;
 }

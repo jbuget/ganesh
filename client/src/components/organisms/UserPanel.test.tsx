@@ -39,6 +39,7 @@ const onChangeRole = vi.fn();
 const onUpdateIdentity = vi.fn();
 const onSetActive = vi.fn();
 const onDeclareRhythm = vi.fn();
+const onWithdrawRhythm = vi.fn();
 const onClose = vi.fn();
 
 function openPanel(
@@ -61,6 +62,7 @@ function openPanel(
       onSetActive={onSetActive}
       onUpdateIdentity={onUpdateIdentity}
       onDeclareRhythm={onDeclareRhythm}
+      onWithdrawRhythm={onWithdrawRhythm}
       now={NOW}
       onClose={onClose}
     />,

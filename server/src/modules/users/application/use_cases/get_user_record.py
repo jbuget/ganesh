@@ -136,9 +136,9 @@ class GetUserRecordUseCase:
                 states=await self._months.list_for_user(query.user_id, span[-1]),
                 today=today,
             ),
-            # What holds today, and what is to come: a rhythm opening next
-            # month is not the one somebody works now, and it must still be
-            # readable — declared and shown nowhere is declared into the void.
+            # The whole history, and which of it holds today: a rhythm
+            # opening next month is not the one somebody works now, and it
+            # must still be readable — and removable.
+            rhythms=rhythms.newest_first,
             rhythm=rhythms.in_force_on(today),
-            upcoming_rhythm=rhythms.next_after(today),
         )

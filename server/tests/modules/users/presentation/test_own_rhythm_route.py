@@ -1,6 +1,7 @@
 """The route by which everyone declares their own rhythm, and no one else's."""
 
 from collections.abc import AsyncIterator
+from datetime import date
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -8,11 +9,19 @@ from httpx import ASGITransport, AsyncClient
 from src.core.config import get_settings
 from src.main import app
 from src.modules.auth.presentation.dependencies import get_current_user
+from src.modules.calendar.domain.entities.week_pattern import WeekPattern
 from src.modules.users.application.use_cases.declare_own_rhythm import (
     DeclareOwnRhythmUseCase,
 )
+from src.modules.users.application.use_cases.withdraw_own_rhythm import (
+    WithdrawOwnRhythmUseCase,
+)
+from src.modules.users.domain.entities.rhythm import Rhythm
 from src.modules.users.domain.entities.user import Role, User
-from src.modules.users.presentation.dependencies import get_declare_own_rhythm_use_case
+from src.modules.users.presentation.dependencies import (
+    get_declare_own_rhythm_use_case,
+    get_withdraw_own_rhythm_use_case,
+)
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryRhythmRepository,
@@ -42,11 +51,28 @@ FOUR_FIFTHS = {
 @pytest.fixture
 async def client() -> AsyncIterator[AsyncClient]:
     users = InMemoryUserRepository([TEAMMATE])
+    rhythms = InMemoryRhythmRepository(
+        [
+            Rhythm(
+                id=None,
+                user_id=2,
+                pattern=WeekPattern(wednesday=0.0),
+                effective_from=date(2026, 10, 5),
+            )
+        ]
+    )
     app.dependency_overrides[get_current_user] = lambda: TEAMMATE
     app.dependency_overrides[get_declare_own_rhythm_use_case] = (
         lambda: DeclareOwnRhythmUseCase(
             users=users,
-            rhythms=InMemoryRhythmRepository(),
+            rhythms=rhythms,
+            audit_logs=InMemoryAuditLogRepository(),
+        )
+    )
+    app.dependency_overrides[get_withdraw_own_rhythm_use_case] = (
+        lambda: WithdrawOwnRhythmUseCase(
+            users=users,
+            rhythms=rhythms,
             audit_logs=InMemoryAuditLogRepository(),
         )
     )
@@ -109,6 +135,34 @@ async def test_there_is_no_route_to_declare_for_somebody_else(
     # to reach by mistake.
     response = await client.put(
         f"{get_settings().api_prefix}/users/2/rhythm", json=FOUR_FIFTHS
+    )
+
+    assert response.status_code == 404
+
+
+async def test_a_teammate_takes_one_of_their_rhythms_back_out(
+    client: AsyncClient,
+) -> None:
+    response = await client.delete(f"{URL}/2026-10-05")
+
+    assert response.status_code == 204
+
+
+async def test_withdrawing_a_rhythm_that_is_not_there_is_a_404(
+    client: AsyncClient,
+) -> None:
+    # Silence would read as a withdrawal, and the screen would stop showing a
+    # row the register still holds.
+    response = await client.delete(f"{URL}/2026-01-01")
+
+    assert response.status_code == 404
+
+
+async def test_there_is_no_route_to_withdraw_for_somebody_else(
+    client: AsyncClient,
+) -> None:
+    response = await client.delete(
+        f"{get_settings().api_prefix}/users/2/rhythm/2026-10-05"
     )
 
     assert response.status_code == 404

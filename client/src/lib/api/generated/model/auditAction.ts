@@ -36,6 +36,7 @@ export const AuditAction = {
   userrole_change: "user.role_change",
   useridentity_update: "user.identity_update",
   userrhythm_declare: "user.rhythm_declare",
+  userrhythm_withdraw: "user.rhythm_withdraw",
   userdeactivate: "user.deactivate",
   useractivate: "user.activate",
   api_keycreate: "api_key.create",

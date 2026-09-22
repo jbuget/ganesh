@@ -38,7 +38,7 @@ class DeclareRhythmRequest(BaseModel):
 
 
 class WorkRhythmResponse(BaseModel):
-    """A rhythm in force, and what it adds up to over a week."""
+    """One declared rhythm, and what it adds up to over a week."""
 
     effective_from: date
     monday: float
@@ -49,10 +49,15 @@ class WorkRhythmResponse(BaseModel):
     #: Computed rather than left to the client: two screens counting it
     #: themselves would eventually count it differently.
     days_per_week: float
+    #: Whether this is the one holding today. Answered here rather than worked
+    #: out by the client: which rhythm holds is a question for the domain, and
+    #: two screens deciding it themselves would eventually disagree.
+    is_in_force: bool = False
 
 
-def to_rhythm_response(rhythm: Rhythm) -> WorkRhythmResponse:
+def to_rhythm_response(rhythm: Rhythm, is_in_force: bool = False) -> WorkRhythmResponse:
     return WorkRhythmResponse(
+        is_in_force=is_in_force,
         effective_from=rhythm.effective_from,
         monday=rhythm.pattern.monday,
         tuesday=rhythm.pattern.tuesday,

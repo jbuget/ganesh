@@ -39,6 +39,15 @@ class RhythmHistory:
         """Orders what was declared, oldest first, whatever order it came in."""
         return cls(tuple(sorted(rhythms, key=lambda one: one.effective_from)))
 
+    @property
+    def newest_first(self) -> tuple[Rhythm, ...]:
+        """Every rhythm declared, latest first.
+
+        The order a list is read in to find what to correct: what one comes
+        to change is nearly always the last thing one declared.
+        """
+        return tuple(reversed(self._declared))
+
     def in_force_on(self, day: date) -> Rhythm | None:
         """The rhythm that holds that day, if one had been declared by then."""
         held: Rhythm | None = None

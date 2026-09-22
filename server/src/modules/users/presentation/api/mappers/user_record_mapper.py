@@ -49,10 +49,12 @@ def to_user_record_response(record: UserRecord) -> UserRecordResponse:
             )
             for filling in record.months
         ],
-        rhythm=to_rhythm_response(record.rhythm) if record.rhythm else None,
-        upcoming_rhythm=(
-            to_rhythm_response(record.upcoming_rhythm)
-            if record.upcoming_rhythm
-            else None
-        ),
+        rhythms=[
+            to_rhythm_response(
+                rhythm,
+                is_in_force=rhythm.effective_from
+                == (record.rhythm.effective_from if record.rhythm else None),
+            )
+            for rhythm in record.rhythms
+        ],
     )

@@ -1054,3 +1054,114 @@ export const useDeclareOwnRhythm = <TError = HTTPValidationError, TContext = unk
 > => {
   return useMutation(getDeclareOwnRhythmMutationOptions(options), queryClient);
 };
+export type withdrawOwnRhythmResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type withdrawOwnRhythmResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type withdrawOwnRhythmResponseSuccess = withdrawOwnRhythmResponse204 & {
+  headers: Headers;
+};
+export type withdrawOwnRhythmResponseError = withdrawOwnRhythmResponse422 & {
+  headers: Headers;
+};
+
+export type withdrawOwnRhythmResponse =
+  withdrawOwnRhythmResponseSuccess | withdrawOwnRhythmResponseError;
+
+export const getWithdrawOwnRhythmUrl = (effectiveFrom: string) => {
+  return `/api/v1/users/me/rhythm/${effectiveFrom}`;
+};
+
+/**
+ * Takes one of one's own rhythms back out of the register.
+ *
+ * Named by the day it opens on, on the same address as the declaration: a
+ * history one may only add to is one nobody can correct, and a rhythm dated
+ * by mistake would hold its place for good.
+ * @summary Withdraw Own Rhythm
+ */
+export const withdrawOwnRhythm = async (
+  effectiveFrom: string,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<withdrawOwnRhythmResponse> => {
+  return bffFetcher<withdrawOwnRhythmResponse>(getWithdrawOwnRhythmUrl(effectiveFrom), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getWithdrawOwnRhythmMutationKey = () => ["withdrawOwnRhythm"] as const;
+
+export const getWithdrawOwnRhythmMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof withdrawOwnRhythm>>,
+    TError,
+    WithdrawOwnRhythmMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof withdrawOwnRhythm>>,
+  TError,
+  WithdrawOwnRhythmMutationVariables,
+  TContext
+> => {
+  const mutationKey = getWithdrawOwnRhythmMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof withdrawOwnRhythm>>,
+    WithdrawOwnRhythmMutationVariables
+  > = (props) => {
+    const { effectiveFrom } = props ?? {};
+
+    return withdrawOwnRhythm(effectiveFrom, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type WithdrawOwnRhythmMutationResult = NonNullable<
+  Awaited<ReturnType<typeof withdrawOwnRhythm>>
+>;
+
+export type WithdrawOwnRhythmMutationError = HTTPValidationError;
+export type WithdrawOwnRhythmMutationVariables = { effectiveFrom: string };
+
+/**
+ * @summary Withdraw Own Rhythm
+ */
+export const useWithdrawOwnRhythm = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof withdrawOwnRhythm>>,
+      TError,
+      WithdrawOwnRhythmMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof withdrawOwnRhythm>>,
+  TError,
+  WithdrawOwnRhythmMutationVariables,
+  TContext
+> => {
+  return useMutation(getWithdrawOwnRhythmMutationOptions(options), queryClient);
+};

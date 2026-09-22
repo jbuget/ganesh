@@ -96,6 +96,7 @@ export function UsersPage() {
           onSetActive={screen.setActive}
           onUpdateIdentity={screen.updateIdentity}
           onDeclareRhythm={screen.declareOwnRhythm}
+          onWithdrawRhythm={screen.withdrawOwnRhythm}
           now={screen.now}
           onClose={panel.close}
         />

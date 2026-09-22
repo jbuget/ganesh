@@ -58,9 +58,11 @@ class UserRecord:
     missions: list[RecordedMission]
     declared: DeclaredWindow
     months: list[MonthFilling]
-    #: The rhythm in force today. None while nothing was ever declared, which
-    #: reads as full time everywhere a figure is computed.
+    #: Every rhythm declared, latest first. A history one may only add to is
+    #: one nobody can correct, so the screen reads the lot and withdraws from
+    #: it — and `in_force` says which of them holds today.
+    rhythms: tuple[Rhythm, ...] = ()
+    #: The one holding today, out of the list above. None while nothing was
+    #: ever declared — or while everything declared opens later — which reads
+    #: as full time everywhere a figure is computed.
     rhythm: Rhythm | None = None
-    #: The nearest one that has not opened yet. Shown beside the one in force,
-    #: so that declaring for next month does not look like a write that failed.
-    upcoming_rhythm: Rhythm | None = None

@@ -6,6 +6,7 @@ import {
   changeUserRole,
   declareOwnRhythm,
   setUserActive,
+  withdrawOwnRhythm,
   updateUserIdentity,
 } from "@/lib/api/generated/users/users";
 import type {
@@ -97,6 +98,17 @@ export function useUsersScreen(
      */
     async declareOwnRhythm(pattern: WeekPattern, effectiveFrom: string) {
       await declareOwnRhythm(toRequest(pattern, effectiveFrom));
+      await queryClient.invalidateQueries();
+    },
+
+    /**
+     * One of one's own rhythms, taken back out.
+     *
+     * A history one may only add to is one nobody can correct: a rhythm
+     * entered on the wrong date would hold its place for good.
+     */
+    async withdrawOwnRhythm(effectiveFrom: string) {
+      await withdrawOwnRhythm(effectiveFrom);
       await queryClient.invalidateQueries();
     },
 

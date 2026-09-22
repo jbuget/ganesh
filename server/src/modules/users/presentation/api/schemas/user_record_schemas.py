@@ -61,7 +61,6 @@ class UserRecordResponse(BaseModel):
     missions: list[RecordedMissionResponse]
     declared: DeclaredWindowResponse
     months: list[MonthFillingResponse]
-    #: Null while nothing was ever declared, which reads as full time.
-    rhythm: WorkRhythmResponse | None = None
-    #: The nearest rhythm that has not opened yet, if one was declared.
-    upcoming_rhythm: WorkRhythmResponse | None = None
+    #: Every rhythm declared, latest first; one of them may be in force.
+    #: Empty while nothing was ever declared, which reads as full time.
+    rhythms: list[WorkRhythmResponse] = []

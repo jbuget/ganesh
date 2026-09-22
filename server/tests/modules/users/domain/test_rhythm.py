@@ -121,3 +121,17 @@ def test_the_nearest_one_to_come_is_the_one_announced() -> None:
     upcoming = history.next_after(date(2026, 8, 31))
     assert upcoming is not None
     assert upcoming.effective_from == SEPTEMBER
+
+
+def test_the_history_reads_newest_first() -> None:
+    # The list is read to find what to correct, and what one corrects is
+    # nearly always the last thing declared.
+    history = RhythmHistory.of(
+        [_declared(FOUR_FIFTHS, MARCH), _declared(HALF_TIME, SEPTEMBER)]
+    )
+
+    assert [one.effective_from for one in history.newest_first] == [SEPTEMBER, MARCH]
+
+
+def test_an_empty_history_reads_as_nothing_declared() -> None:
+    assert RhythmHistory.of([]).newest_first == ()

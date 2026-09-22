@@ -1,5 +1,6 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { WeekPatternPicker } from "@/components/atoms/WeekPatternPicker";
@@ -9,20 +10,19 @@ import { formatSpelledDate } from "@/lib/dates";
 import { type WeekPattern, firstOfMonth, formatRhythm, patternOf } from "@/lib/rhythm";
 
 interface UserRhythmProps {
-  /** Null while nothing was declared, which reads as full time. */
-  rhythm: WorkRhythmResponse | null | undefined;
   /**
-   * The nearest rhythm that has not opened yet, if one was declared.
+   * Every rhythm declared, latest first; one of them may be in force.
    *
-   * Shown beside the one in force rather than left out: declaring a rhythm
-   * for next month is legitimate, and a panel that showed only today's would
-   * make that declaration indistinguishable from a write that failed.
+   * The whole history rather than today's alone: one may only add to it, so
+   * without the list a rhythm entered on the wrong date would hold its place
+   * for good, and the panel would go on announcing a change nobody meant.
    */
-  upcoming: WorkRhythmResponse | null | undefined;
+  rhythms: WorkRhythmResponse[];
   /** True on one's own account alone: everybody declares their own. */
   editable: boolean;
   today: Date;
   onDeclare: (pattern: WeekPattern, effectiveFrom: string) => void | Promise<void>;
+  onWithdraw: (effectiveFrom: string) => void | Promise<void>;
 }
 
 /**
@@ -36,59 +36,56 @@ interface UserRhythmProps {
  * would otherwise be three declarations, and three lines in the register.
  */
 export function UserRhythm({
-  rhythm,
-  upcoming,
+  rhythms,
   editable,
   today,
   onDeclare,
+  onWithdraw,
 }: UserRhythmProps) {
-  const opensOn = rhythm?.effective_from ?? firstOfMonth(today);
-  const declared = patternOf(rhythm);
-  const [draft, setDraft] = useState<WeekPattern | null>(null);
+  const inForce = rhythms.find((one) => one.is_in_force) ?? null;
+  const declared = patternOf(inForce);
   // The day the rhythm in force opened on, so that correcting it replaces it.
   // The first of the month would slip underneath and go on being covered: the
   // API would answer, and nothing on the screen would move.
+  const opensOn = inForce?.effective_from ?? firstOfMonth(today);
+
+  const [draft, setDraft] = useState<WeekPattern | null>(null);
   const [effectiveFrom, setEffectiveFrom] = useState(opensOn);
-  const [refused, setRefused] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
 
   const shown = draft ?? declared;
   const changed = draft !== null && !sameAs(draft, declared);
-  // Dated before what already holds, a declaration writes a page of history
-  // nobody is reading: said outright rather than left to be discovered.
-  const covered =
-    rhythm !== null && rhythm !== undefined
-      ? effectiveFrom < rhythm.effective_from
-      : false;
+
+  function giveUp() {
+    setDraft(null);
+    setFailed(null);
+    // The date goes back with the motif: left behind, it would silently date
+    // the next declaration, which is how a rhythm ends up opening a month one
+    // never asked for.
+    setEffectiveFrom(opensOn);
+  }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <WeekPatternPicker
         pattern={shown}
         editable={editable}
         onChange={(pattern) => {
-          setRefused(false);
+          setFailed(null);
           setDraft(pattern);
         }}
       />
 
       <p className="text-sm text-slate-700">
         {formatRhythm(shown)}
-        {rhythm && !changed && (
+        {!changed && (
           <span className="ml-2 text-xs text-slate-400">
-            depuis le {formatSpelledDate(rhythm.effective_from)}
+            {inForce
+              ? `depuis le ${formatSpelledDate(inForce.effective_from)}`
+              : "rythme non déclaré"}
           </span>
         )}
-        {!rhythm && !changed && (
-          <span className="ml-2 text-xs text-slate-400">rythme non déclaré</span>
-        )}
       </p>
-
-      {upcoming && !changed && (
-        <p className="text-xs text-slate-500">
-          puis {formatRhythm(patternOf(upcoming)).replace(" par semaine", "")} à partir
-          du {formatSpelledDate(upcoming.effective_from)}
-        </p>
-      )}
 
       {changed && (
         <div className="space-y-2">
@@ -103,7 +100,7 @@ export function UserRhythm({
               type="date"
               value={effectiveFrom}
               onChange={(event) => {
-                setRefused(false);
+                setFailed(null);
                 setEffectiveFrom(event.target.value);
               }}
               className="cursor-pointer rounded border border-slate-300 px-2 py-1 text-sm"
@@ -116,11 +113,11 @@ export function UserRhythm({
                 try {
                   await onDeclare(draft, effectiveFrom);
                   setDraft(null);
-                  setRefused(false);
+                  setFailed(null);
                 } catch {
                   // The motif stays on screen: nothing anybody entered is lost
                   // to a refusal they can still act on.
-                  setRefused(true);
+                  setFailed("Ce rythme n'a pas pu être enregistré.");
                 }
               }}
             >
@@ -131,32 +128,61 @@ export function UserRhythm({
               size="sm"
               variant="ghost"
               className="cursor-pointer"
-              onClick={() => {
-                setDraft(null);
-                setRefused(false);
-                // The date goes back with the motif: left behind, it would
-                // silently date the next declaration, which is how a rhythm
-                // ends up opening a month one never asked for.
-                setEffectiveFrom(opensOn);
-              }}
+              onClick={giveUp}
             >
               Annuler
             </Button>
           </div>
 
-          {covered && rhythm && (
+          {inForce && effectiveFrom < inForce.effective_from && (
             <p className="text-xs text-amber-700">
               Ce rythme ouvrira avant celui du{" "}
-              {formatSpelledDate(rhythm.effective_from)}, qui restera en vigueur.
-            </p>
-          )}
-
-          {refused && (
-            <p role="alert" className="text-xs text-red-700">
-              Ce rythme n&apos;a pas pu être enregistré.
+              {formatSpelledDate(inForce.effective_from)}, qui restera en vigueur.
             </p>
           )}
         </div>
+      )}
+
+      {/* The history, from which one withdraws. A single rhythm is the one
+          already said in the sentence above, so the list starts at two. */}
+      {rhythms.length > 1 && (
+        <ul className="space-y-1 border-t border-slate-200 pt-2">
+          {rhythms.map((one) => (
+            <li
+              key={one.effective_from}
+              className="flex items-center gap-2 text-xs text-slate-500"
+            >
+              <span className="text-slate-700">
+                {formatRhythm(patternOf(one)).replace(" par semaine", " / sem.")}
+              </span>
+              <span>à partir du {formatSpelledDate(one.effective_from)}</span>
+              {one.is_in_force && <span className="text-sky-700">en vigueur</span>}
+              {editable && (
+                <button
+                  type="button"
+                  aria-label={`Retirer le rythme du ${formatSpelledDate(one.effective_from)}`}
+                  onClick={async () => {
+                    try {
+                      await onWithdraw(one.effective_from);
+                      setFailed(null);
+                    } catch {
+                      setFailed("Ce rythme n'a pas pu être retiré.");
+                    }
+                  }}
+                  className="ml-auto cursor-pointer rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-red-700"
+                >
+                  <Trash2 className="size-3.5" aria-hidden />
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {failed && (
+        <p role="alert" className="text-xs text-red-700">
+          {failed}
+        </p>
       )}
     </div>
   );

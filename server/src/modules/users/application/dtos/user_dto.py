@@ -62,3 +62,15 @@ class DeclareOwnRhythmCommand:
     actor_id: int
     pattern: WeekPattern
     effective_from: date
+
+
+@dataclass(frozen=True)
+class WithdrawOwnRhythmCommand:
+    """Taking one of one's own rhythms back out. One's own, and no one else's.
+
+    The rhythm is named by the day it opens on, and the actor is the only
+    person it can belong to: there is no colleague's history this could reach.
+    """
+
+    actor_id: int
+    effective_from: date

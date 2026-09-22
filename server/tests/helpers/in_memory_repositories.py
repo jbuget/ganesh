@@ -134,6 +134,16 @@ class InMemoryRhythmRepository(RhythmRepository):
             for user_id in user_ids
         }
 
+    async def withdraw(self, user_id: int, effective_from: date) -> bool:
+        kept = [
+            one
+            for one in self._rhythms
+            if not (one.user_id == user_id and one.effective_from == effective_from)
+        ]
+        withdrawn = len(kept) != len(self._rhythms)
+        self._rhythms = kept
+        return withdrawn
+
     async def declare(self, rhythm: Rhythm) -> Rhythm:
         self._rhythms = [
             one

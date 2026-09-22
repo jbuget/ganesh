@@ -55,6 +55,7 @@ interface UserPanelProps {
     pattern: WeekPattern,
     effectiveFrom: string,
   ) => void | Promise<void>;
+  onWithdrawRhythm: (effectiveFrom: string) => void | Promise<void>;
   /** Injected: a render dated by `new Date()` could not be tested. */
   now: Date;
   onClose: () => void;
@@ -84,6 +85,7 @@ export function UserPanel({
   onSetActive,
   onUpdateIdentity,
   onDeclareRhythm,
+  onWithdrawRhythm,
   now,
   onClose,
 }: UserPanelProps) {
@@ -225,11 +227,11 @@ export function UserPanel({
               <section className="space-y-2">
                 <SheetSectionTitle>Rythme</SheetSectionTitle>
                 <UserRhythm
-                  rhythm={record.rhythm}
-                  upcoming={record.upcoming_rhythm}
+                  rhythms={record.rhythms ?? []}
                   editable={isMe}
                   today={now}
                   onDeclare={onDeclareRhythm}
+                  onWithdraw={onWithdrawRhythm}
                 />
               </section>
 

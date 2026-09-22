@@ -1,5 +1,7 @@
 """Teammate routes."""
 
+from datetime import date
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,6 +17,7 @@ from src.modules.users.application.dtos.user_dto import (
     DeclareOwnRhythmCommand,
     SetUserActiveCommand,
     UpdateUserIdentityCommand,
+    WithdrawOwnRhythmCommand,
 )
 from src.modules.users.application.dtos.user_record_dto import GetUserRecordQuery
 from src.modules.users.application.use_cases.change_user_role import (
@@ -28,6 +31,9 @@ from src.modules.users.application.use_cases.list_users import ListUsersUseCase
 from src.modules.users.application.use_cases.set_user_active import SetUserActiveUseCase
 from src.modules.users.application.use_cases.update_user_identity import (
     UpdateUserIdentityUseCase,
+)
+from src.modules.users.application.use_cases.withdraw_own_rhythm import (
+    WithdrawOwnRhythmUseCase,
 )
 from src.modules.users.domain.entities.user import User
 from src.modules.users.presentation.api.mappers.user_mapper import to_user_response
@@ -55,6 +61,7 @@ from src.modules.users.presentation.dependencies import (
     get_set_user_active_use_case,
     get_update_user_identity_use_case,
     get_user_record_use_case,
+    get_withdraw_own_rhythm_use_case,
 )
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -202,3 +209,29 @@ async def declare_own_rhythm(
     )
     await session.commit()
     return to_rhythm_response(declared)
+
+
+@router.delete(
+    "/me/rhythm/{effective_from}",
+    status_code=204,
+    operation_id="withdrawOwnRhythm",
+)
+async def withdraw_own_rhythm(
+    effective_from: date,
+    current_user: User = Depends(get_current_user),
+    use_case: WithdrawOwnRhythmUseCase = Depends(get_withdraw_own_rhythm_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> None:
+    """Takes one of one's own rhythms back out of the register.
+
+    Named by the day it opens on, on the same address as the declaration: a
+    history one may only add to is one nobody can correct, and a rhythm dated
+    by mistake would hold its place for good.
+    """
+    assert current_user.id is not None
+    await use_case.execute(
+        WithdrawOwnRhythmCommand(
+            actor_id=current_user.id, effective_from=effective_from
+        )
+    )
+    await session.commit()
