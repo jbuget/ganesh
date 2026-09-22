@@ -8,7 +8,12 @@ import { ActivityMatrix } from "@/components/organisms/ActivityMatrix";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ACTIVITY_RANGES, comparedWith } from "@/lib/activity";
+import {
+  ACTIVITY_RANGES,
+  awayContributors,
+  comparedWith,
+  silentContributors,
+} from "@/lib/activity";
 import { summarise } from "@/lib/statistics";
 import { useOpenedMission } from "@/lib/opened-mission";
 import { useActivityScreen, type ActivityView } from "@/lib/use-activity-summary";
@@ -57,9 +62,8 @@ export function ActivitySummaryPage() {
   }
 
   const against = comparedWith(range);
-  const silent = summary.contributors
-    .filter((someone) => someone.declared_days === 0)
-    .map((someone) => someone.display_name);
+  const silent = silentContributors(summary.contributors);
+  const away = awayContributors(summary.contributors);
 
   return (
     <PageLayout header={header}>
@@ -69,6 +73,7 @@ export function ActivitySummaryPage() {
           declaredDays={summary.declared_days}
           expectedDays={summary.expected_days}
           silent={silent}
+          away={away}
         />
 
         <Tabs value={view} onValueChange={(next) => setView(next as ActivityView)}>

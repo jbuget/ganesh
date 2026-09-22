@@ -7,6 +7,7 @@
 import type {
   ActivityLineResponse,
   ActivitySummaryResponse,
+  ContributorResponse,
   PeriodRange,
 } from "@/lib/api/generated/model";
 import { NOTHING, formatPersonDays } from "@/lib/statistics";
@@ -138,4 +139,30 @@ export function flatten(line: ActivityLineResponse): ActivityLineResponse[] {
  */
 export function countMissions(lines: ActivityLineResponse[]): number {
   return lines.length;
+}
+
+/**
+ * Teammates the window expected something of, who declared nothing.
+ *
+ * Whoever the window expects nothing of is left out rather than named here.
+ * Somebody on leave has declared nothing and owes nothing, and listing them
+ * under « n'ont rien déclaré » would read as a reproach for an absence the
+ * register was told about.
+ */
+export function silentContributors(contributors: ContributorResponse[]): string[] {
+  return contributors
+    .filter((someone) => someone.expected_days > 0 && someone.declared_days === 0)
+    .map((someone) => someone.display_name);
+}
+
+/**
+ * How many teammates the window expects nothing of at all.
+ *
+ * Counted rather than named: a rhythm says how much of a week somebody works
+ * and never why, and this figure exists so that nobody is quietly forgotten
+ * — a teammate away with no return declared shows in no coverage and holds
+ * no capacity, and the count is what puts them back in plain sight.
+ */
+export function awayContributors(contributors: ContributorResponse[]): number {
+  return contributors.filter((someone) => someone.expected_days === 0).length;
 }

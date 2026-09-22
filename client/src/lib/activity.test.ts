@@ -7,10 +7,12 @@ import type {
 
 import {
   ACTIVITY_RANGES,
+  awayContributors,
   comparedWith,
   formatDays,
   formatMovement,
   missionsOf,
+  silentContributors,
 } from "./activity";
 
 describe("activity windows", () => {
@@ -177,5 +179,54 @@ describe("missionsOf", () => {
     const summary = aSummary([aLine({ project_id: 1, days_by_contributor: { 7: 3 } })]);
 
     expect(missionsOf(summary, 99)).toEqual([]);
+  });
+});
+
+describe("who the window names, and who it only counts", () => {
+  function aContributor(
+    display_name: string,
+    expected_days: number,
+    declared_days: number,
+  ) {
+    return {
+      id: 1,
+      display_name,
+      expected_days,
+      declared_days,
+      coverage: expected_days === 0 ? null : declared_days / expected_days,
+      missions: 0,
+    };
+  }
+
+  it("names whoever owed something and declared nothing", () => {
+    const silent = silentContributors([
+      aContributor("Léa", 22, 0),
+      aContributor("Malik", 22, 12),
+    ]);
+
+    expect(silent).toEqual(["Léa"]);
+  });
+
+  it("leaves out whoever the window expects nothing of", () => {
+    // On leave: nothing declared, nothing owed. Listing them under « n'ont
+    // rien déclaré » would reproach an absence the register was told about.
+    const silent = silentContributors([
+      aContributor("Léa", 0, 0),
+      aContributor("Malik", 22, 0),
+    ]);
+
+    expect(silent).toEqual(["Malik"]);
+  });
+
+  it("counts those the window expects nothing of, without naming them", () => {
+    // So that nobody away is quietly forgotten: they show in no coverage and
+    // hold no capacity, and the count is what puts them back in plain sight.
+    const away = awayContributors([
+      aContributor("Léa", 0, 0),
+      aContributor("Nour", 0, 0),
+      aContributor("Malik", 22, 12),
+    ]);
+
+    expect(away).toBe(2);
   });
 });

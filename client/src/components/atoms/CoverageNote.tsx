@@ -6,6 +6,15 @@ interface CoverageNoteProps {
   expectedDays: number;
   /** Teammates the window expected something of, who declared nothing. */
   silent: string[];
+  /**
+   * How many the window expects nothing of at all.
+   *
+   * Counted, never named: a rhythm says how much of a week somebody works
+   * and never why. The figure is here so that nobody away is quietly
+   * forgotten — they weigh on no coverage and hold no capacity, and without
+   * it nothing on this screen would say they exist.
+   */
+  away: number;
 }
 
 /**
@@ -21,6 +30,7 @@ export function CoverageNote({
   declaredDays,
   expectedDays,
   silent,
+  away,
 }: CoverageNoteProps) {
   const known = coverage !== null && coverage !== undefined;
   // Below this, the matrix says more about who filled in their month than
@@ -42,6 +52,14 @@ export function CoverageNote({
         {declaredDays >= 2 ? "s" : ""} sur{" "}
         <span className="tabular-nums">{formatPersonDays(expectedDays)}</span>.
       </p>
+
+      {away > 0 && (
+        <p className="mt-1 text-sm text-slate-500">
+          {away === 1
+            ? "1 collaborateur sans jour attendu sur la période."
+            : `${away} collaborateurs sans jour attendu sur la période.`}
+        </p>
+      )}
 
       {silent.length > 0 && (
         <p className="mt-1 text-sm text-slate-500">
