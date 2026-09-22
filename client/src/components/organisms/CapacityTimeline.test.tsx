@@ -67,6 +67,16 @@ describe("CapacityTimeline", () => {
     ).toBeInTheDocument();
   });
 
+  it("offers the weeks to a keyboard, which has nothing else to reach them by", () => {
+    render(<CapacityTimeline people={[aPerson()]} weeks={WEEKS} />);
+
+    const window = screen.getByRole("region", {
+      name: "Charge de l'équipe, semaine par semaine",
+    });
+
+    expect(window).toHaveAttribute("tabindex", "0");
+  });
+
   it("announces an empty team in its own words", () => {
     render(<CapacityTimeline people={[]} weeks={WEEKS} />);
 
