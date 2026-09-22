@@ -4,6 +4,7 @@
  * Ganesh API
  * OpenAPI spec version: 0.1.0
  */
+import type { AuditAction } from "./auditAction";
 
 export type ListAuditLogParams = {
   /**
@@ -19,4 +20,20 @@ export type ListAuditLogParams = {
    * Only what was written at or after this moment.
    */
   since?: string | null;
+  /**
+   * Only what was written on this day or after, Paris time.
+   */
+  from_day?: string | null;
+  /**
+   * Only what was written on this day or before, Paris time.
+   */
+  to_day?: string | null;
+  /**
+   * Only these gestures. Repeat the parameter to name several.
+   */
+  action?: AuditAction[] | null;
+  /**
+   * Only what this person did.
+   */
+  actor_id?: number | null;
 };
