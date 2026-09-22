@@ -7,6 +7,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from src.core.config import get_settings
+from src.core.database import get_db
 from src.main import app
 from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.projects.application.use_cases.project_updates import (
@@ -45,6 +46,13 @@ WHEN = datetime(2026, 9, 17, 10, 0)
 URL = f"{get_settings().api_prefix}/projects"
 
 
+class FakeSession:
+    """Only what the routes ask of a session: that it be committed."""
+
+    async def commit(self) -> None:
+        return None
+
+
 async def sign_in(as_who: User = NINO) -> tuple[AsyncClient, ProjectUpdate]:
     updates = InMemoryProjectUpdateRepository()
     reactions = InMemoryUpdateReactionRepository()
@@ -59,6 +67,7 @@ async def sign_in(as_who: User = NINO) -> tuple[AsyncClient, ProjectUpdate]:
     )
 
     app.dependency_overrides[get_current_user] = lambda: as_who
+    app.dependency_overrides[get_db] = FakeSession
     app.dependency_overrides[get_react_to_update_use_case] = (
         lambda: ReactToUpdateUseCase(updates, reactions)
     )
@@ -131,8 +140,10 @@ async def test_reacting_to_an_unknown_update_is_a_404() -> None:
 
 async def test_reacting_to_a_withdrawn_update_is_refused() -> None:
     client, posted = await sign_in(as_who=ALICE)
-    await client.delete(f"{URL}/10/updates/{posted.id}")
-    posted.remove(by=1, at=WHEN)
+    # Withdrawn in the thread the routes read, not through the removal route:
+    # that one is another test's subject, and reaching it here would have this
+    # test talk to a database it overrides nothing of.
+    posted.remove(by=ALICE.id or 0, at=WHEN)
 
     refused = await client.put(f"{URL}/10/updates/{posted.id}/reactions/thumbs_up")
 
