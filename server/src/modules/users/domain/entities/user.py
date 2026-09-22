@@ -130,6 +130,15 @@ class User:
         """Managing teammates is reserved for managers."""
         return self.is_active and self.is_manager
 
+    def can_arbitrate_requests(self) -> bool:
+        """Weighing what the company asks for is reserved for managers.
+
+        Whether this particular manager may weigh this particular request is
+        another question, and the request answers it: nobody arbitrates what
+        they asked for or what they carry.
+        """
+        return self.is_active and self.is_manager
+
     def can_edit_open_months(self) -> bool:
         """Anyone on the team may edit an open month, a colleague's included.
 

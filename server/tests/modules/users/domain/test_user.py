@@ -76,6 +76,14 @@ def test_a_deactivated_user_can_no_longer_edit_anything() -> None:
     assert make_user(is_active=False).can_edit_open_months() is False
 
 
+def test_a_teammate_arbitrates_nothing() -> None:
+    assert make_user(Role.TEAMMATE).can_arbitrate_requests() is False
+
+
+def test_a_manager_arbitrates_what_the_company_asks_for() -> None:
+    assert make_user(Role.MANAGER).can_arbitrate_requests() is True
+
+
 def test_email_is_normalised_to_lowercase() -> None:
     user = User(
         id=None,
