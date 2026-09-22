@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from src.modules.projects.domain.entities.update_reaction import Reaction
+
 
 @dataclass(frozen=True)
 class PostUpdateCommand:
@@ -27,3 +29,16 @@ class RemoveUpdateCommand:
 
     actor_id: int
     update_id: int
+
+
+@dataclass(frozen=True)
+class ReactCommand:
+    """Leaving a sign under an update, or taking it back.
+
+    The same command carries both gestures: a withdrawal names the sign it
+    takes back, and names it for its own author alone.
+    """
+
+    actor_id: int
+    update_id: int
+    reaction: Reaction

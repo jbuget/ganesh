@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { BoardMemberResponse } from "./boardMemberResponse";
+import type { UpdateReactionResponse } from "./updateReactionResponse";
 
 /**
  * One update from the follow-up thread.
@@ -17,4 +18,5 @@ export interface ProjectUpdateResponse {
   edited_at: string | null;
   is_deleted: boolean;
   is_mine: boolean;
+  reactions?: UpdateReactionResponse[];
 }

@@ -106,14 +106,40 @@ the question one opens it with. Length is met by paging, never by filtering.
   vocabulary and the interface says it in French, in
   `client/src/lib/audit-log.ts` — under test, because a log nobody can read is
   not one.
-- **Two things are deliberately outside it**, and adding them would be a
+- **Three things are deliberately outside it**, and adding them would be a
   decision, not a fix: the rank of a card within a kanban column, which
-  decides nothing and would bury everything else, and every sign-in, which is
-  stamped on `last_login_at` and nowhere else. Moods are outside it too — they
-  are given in confidence, and a log of who felt what is not a log.
+  decides nothing and would bury everything else; every sign-in, which is
+  stamped on `last_login_at` and nowhere else; and the reactions left under a
+  mise à jour, which are posted by the dozen and decide nothing either — a
+  journal that recorded every 👍 would stop showing what steered the project.
+  Moods are outside it too — they are given in confidence, and a log of who
+  felt what is not a log.
 - Deleting a project sets its lines' `project_id` to `NULL`: the log survives,
   the tab it was read in does not. That is right — there is no project left to
   open.
+
+### Reacting to a mise à jour
+
+Answering a mise à jour without writing a line: the cheapest thing one can
+say, and the rules that keep it cheap.
+
+- **The set of signs is closed**, and it lives in `Reaction`, in the domain.
+  Eight of them, GitHub's, named in English and drawn in
+  `client/src/lib/reactions.ts` — the domain names a reaction as it names a
+  phase, and the interface gives it its glyph and its French label. An emoji
+  picker would mean the domain deciding what counts as an emoji, and two
+  people saying the same thing with two different glyphs.
+- **A reaction rings nowhere.** No notification is sent, not even to the
+  author: a sign that interrupted somebody would stop being the free gesture
+  it is. It is not in the journal either — see above.
+- **Leaving a sign is idempotent, and so is taking it back.** The key carries
+  the three columns, so `PUT` twice leaves one and `DELETE` on nothing is a
+  no-op. One person may leave several different signs, never the same one
+  twice.
+- **A withdrawn mise à jour refuses reactions**, in the entity: there is
+  nothing left to react to. The signs already left go with the text.
+- One takes back one's own sign and nobody else's — the command names its
+  actor and there is no id to pass for somebody else.
 
 ### Leaving the reference list
 

@@ -90,64 +90,76 @@ export function PlanningPage() {
         />
       }
     >
-      {isHypothesis && (
-        <p className="mb-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
-          {scenarioNotice(opened?.name ?? null, hasUnsavedChanges)}
-        </p>
-      )}
-
-      {plan && <PlanSummaryBar summary={plan.summary} />}
-
-      <LeaveWithoutSavingDialog
-        open={guard.isBlocking}
-        onOpenChange={(next) => {
-          if (!next) guard.stay();
-        }}
-        simulationName={opened?.name ?? null}
-        onDiscard={guard.discard}
-      />
-
-      <Tabs value={tab} onValueChange={setTab} className="flex min-h-0 flex-col">
-        <TabsList className="shrink-0">
-          <TabsTrigger value="missions" className="cursor-pointer">
-            Projets
-          </TabsTrigger>
-          <TabsTrigger value="people" className="cursor-pointer">
-            Personnes
-          </TabsTrigger>
-        </TabsList>
-
-        {isLoading && (
-          <p className="py-12 text-center text-sm text-slate-400">Calcul…</p>
-        )}
-
-        {hasError && (
-          <p className="py-12 text-center text-sm text-red-600">
-            La projection n&apos;a pas pu être calculée.
+      {/* The screen arranges its own scrolling, so the height has to travel
+          all the way down: without a column holding it, the tab panel would
+          have no room to be `flex-1` of, and its `overflow-auto` nothing to
+          scroll — the timeline simply ran off the bottom, clipped. */}
+      <div className="flex h-full min-h-0 flex-col">
+        {isHypothesis && (
+          <p className="mb-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
+            {scenarioNotice(opened?.name ?? null, hasUnsavedChanges)}
           </p>
         )}
 
-        {plan && (
-          <>
-            <TabsContent value="missions" className="min-h-0 flex-1 overflow-auto">
-              <WorkloadTimeline
-                missions={missions}
-                weeks={weeks}
-                team={plan.people.map((person) => person.user)}
-                onMove={move}
-                onTop={moveToTop}
-                onUp={moveUp}
-                onDown={moveDown}
-                onStaff={staff}
-              />
-            </TabsContent>
+        {plan && <PlanSummaryBar summary={plan.summary} />}
 
-            <TabsContent value="people" className="min-h-0 flex-1 overflow-auto">
-              <CapacityTimeline people={plan.people} weeks={weeks} />
-            </TabsContent>
-          </>
-        )}
-      </Tabs>
+        <LeaveWithoutSavingDialog
+          open={guard.isBlocking}
+          onOpenChange={(next) => {
+            if (!next) guard.stay();
+          }}
+          simulationName={opened?.name ?? null}
+          onDiscard={guard.discard}
+        />
+
+        <Tabs
+          value={tab}
+          onValueChange={setTab}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <TabsList className="shrink-0">
+            <TabsTrigger value="missions" className="cursor-pointer">
+              Projets
+            </TabsTrigger>
+            <TabsTrigger value="people" className="cursor-pointer">
+              Personnes
+            </TabsTrigger>
+          </TabsList>
+
+          {isLoading && (
+            <p className="py-12 text-center text-sm text-slate-400">Calcul…</p>
+          )}
+
+          {hasError && (
+            <p className="py-12 text-center text-sm text-red-600">
+              La projection n&apos;a pas pu être calculée.
+            </p>
+          )}
+
+          {plan && (
+            <>
+              {/* The panel gives the height; the scrolling belongs to the timeline,
+                  which carries the frame that closes it. */}
+              <TabsContent value="missions" className="min-h-0 flex-1">
+                <WorkloadTimeline
+                  missions={missions}
+                  weeks={weeks}
+                  team={plan.people.map((person) => person.user)}
+                  onMove={move}
+                  onTop={moveToTop}
+                  onUp={moveUp}
+                  onDown={moveDown}
+                  onStaff={staff}
+                />
+              </TabsContent>
+
+              <TabsContent value="people" className="min-h-0 flex-1">
+                <CapacityTimeline people={plan.people} weeks={weeks} />
+              </TabsContent>
+            </>
+          )}
+        </Tabs>
+      </div>
     </PageLayout>
   );
 }

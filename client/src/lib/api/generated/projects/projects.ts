@@ -46,6 +46,7 @@ import type {
   ProjectListItemResponse,
   ProjectResponse,
   ProjectUpdateResponse,
+  Reaction,
   RenameAttachmentRequest,
   UnassignMemberParams,
   UpdateDescriptionRequest,
@@ -3651,6 +3652,260 @@ export const useRemoveProjectUpdate = <
   TContext
 > => {
   return useMutation(getRemoveProjectUpdateMutationOptions(options), queryClient);
+};
+export type reactToProjectUpdateResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type reactToProjectUpdateResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type reactToProjectUpdateResponseSuccess = reactToProjectUpdateResponse204 & {
+  headers: Headers;
+};
+export type reactToProjectUpdateResponseError = reactToProjectUpdateResponse422 & {
+  headers: Headers;
+};
+
+export type reactToProjectUpdateResponse =
+  reactToProjectUpdateResponseSuccess | reactToProjectUpdateResponseError;
+
+export const getReactToProjectUpdateUrl = (
+  projectId: number,
+  updateId: number,
+  reaction: Reaction,
+) => {
+  return `/api/v1/projects/${projectId}/updates/${updateId}/reactions/${reaction}`;
+};
+
+/**
+ * Leaves a sign under an update. Leaving it twice changes nothing.
+ * @summary React To Project Update
+ */
+export const reactToProjectUpdate = async (
+  projectId: number,
+  updateId: number,
+  reaction: Reaction,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<reactToProjectUpdateResponse> => {
+  return bffFetcher<reactToProjectUpdateResponse>(
+    getReactToProjectUpdateUrl(projectId, updateId, reaction),
+    {
+      ...options,
+      method: "PUT",
+    },
+  );
+};
+
+export const getReactToProjectUpdateMutationKey = () =>
+  ["reactToProjectUpdate"] as const;
+
+export const getReactToProjectUpdateMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reactToProjectUpdate>>,
+    TError,
+    ReactToProjectUpdateMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reactToProjectUpdate>>,
+  TError,
+  ReactToProjectUpdateMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReactToProjectUpdateMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reactToProjectUpdate>>,
+    ReactToProjectUpdateMutationVariables
+  > = (props) => {
+    const { projectId, updateId, reaction } = props ?? {};
+
+    return reactToProjectUpdate(projectId, updateId, reaction, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReactToProjectUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reactToProjectUpdate>>
+>;
+
+export type ReactToProjectUpdateMutationError = HTTPValidationError;
+export type ReactToProjectUpdateMutationVariables = {
+  projectId: number;
+  updateId: number;
+  reaction: Reaction;
+};
+
+/**
+ * @summary React To Project Update
+ */
+export const useReactToProjectUpdate = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reactToProjectUpdate>>,
+      TError,
+      ReactToProjectUpdateMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reactToProjectUpdate>>,
+  TError,
+  ReactToProjectUpdateMutationVariables,
+  TContext
+> => {
+  return useMutation(getReactToProjectUpdateMutationOptions(options), queryClient);
+};
+export type withdrawProjectUpdateReactionResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type withdrawProjectUpdateReactionResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type withdrawProjectUpdateReactionResponseSuccess =
+  withdrawProjectUpdateReactionResponse204 & {
+    headers: Headers;
+  };
+export type withdrawProjectUpdateReactionResponseError =
+  withdrawProjectUpdateReactionResponse422 & {
+    headers: Headers;
+  };
+
+export type withdrawProjectUpdateReactionResponse =
+  | withdrawProjectUpdateReactionResponseSuccess
+  | withdrawProjectUpdateReactionResponseError;
+
+export const getWithdrawProjectUpdateReactionUrl = (
+  projectId: number,
+  updateId: number,
+  reaction: Reaction,
+) => {
+  return `/api/v1/projects/${projectId}/updates/${updateId}/reactions/${reaction}`;
+};
+
+/**
+ * Takes one's own sign back. Taking back one never left changes nothing.
+ * @summary Withdraw Project Update Reaction
+ */
+export const withdrawProjectUpdateReaction = async (
+  projectId: number,
+  updateId: number,
+  reaction: Reaction,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<withdrawProjectUpdateReactionResponse> => {
+  return bffFetcher<withdrawProjectUpdateReactionResponse>(
+    getWithdrawProjectUpdateReactionUrl(projectId, updateId, reaction),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getWithdrawProjectUpdateReactionMutationKey = () =>
+  ["withdrawProjectUpdateReaction"] as const;
+
+export const getWithdrawProjectUpdateReactionMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof withdrawProjectUpdateReaction>>,
+    TError,
+    WithdrawProjectUpdateReactionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof withdrawProjectUpdateReaction>>,
+  TError,
+  WithdrawProjectUpdateReactionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getWithdrawProjectUpdateReactionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof withdrawProjectUpdateReaction>>,
+    WithdrawProjectUpdateReactionMutationVariables
+  > = (props) => {
+    const { projectId, updateId, reaction } = props ?? {};
+
+    return withdrawProjectUpdateReaction(projectId, updateId, reaction, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type WithdrawProjectUpdateReactionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof withdrawProjectUpdateReaction>>
+>;
+
+export type WithdrawProjectUpdateReactionMutationError = HTTPValidationError;
+export type WithdrawProjectUpdateReactionMutationVariables = {
+  projectId: number;
+  updateId: number;
+  reaction: Reaction;
+};
+
+/**
+ * @summary Withdraw Project Update Reaction
+ */
+export const useWithdrawProjectUpdateReaction = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof withdrawProjectUpdateReaction>>,
+      TError,
+      WithdrawProjectUpdateReactionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof withdrawProjectUpdateReaction>>,
+  TError,
+  WithdrawProjectUpdateReactionMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getWithdrawProjectUpdateReactionMutationOptions(options),
+    queryClient,
+  );
 };
 export type listProjectAttachmentsResponse200 = {
   data: ProjectAttachmentResponse[];

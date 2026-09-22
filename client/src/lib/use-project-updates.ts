@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import type { ProjectUpdateResponse } from "@/lib/api/generated/model";
+import type { Reaction, ProjectUpdateResponse } from "@/lib/api/generated/model";
 import {
   editProjectUpdate,
   listProjectUpdates,
   postProjectUpdate,
+  reactToProjectUpdate,
   removeProjectUpdate,
+  withdrawProjectUpdateReaction,
 } from "@/lib/api/generated/projects/projects";
 
 /**
@@ -61,6 +63,20 @@ export function useProjectUpdates(
       await removeProjectUpdate(projectId, updateId);
       await reload();
       await onWrite?.();
+    },
+
+    /**
+     * Leaves a sign under an update, or takes it back.
+     *
+     * The thread alone is read back: a reaction changes no count and no latest
+     * message, so the reference list and the kanban have nothing to learn from
+     * it.
+     */
+    async react(updateId: number, reaction: Reaction, leaving: boolean) {
+      await (leaving
+        ? reactToProjectUpdate(projectId, updateId, reaction)
+        : withdrawProjectUpdateReaction(projectId, updateId, reaction));
+      await reload();
     },
   };
 }

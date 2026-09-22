@@ -5,6 +5,7 @@ import { UserAvatar } from "@/components/atoms/UserAvatar";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { PersonLoadResponse } from "@/lib/api/generated/model";
 import { formatDecimalDays, formatWeek } from "@/lib/dates";
+import { STRONG_SEPARATOR } from "@/lib/table-frame";
 
 interface PersonLoadRowProps {
   person: PersonLoadResponse;
@@ -19,8 +20,12 @@ interface PersonLoadRowProps {
  */
 export function PersonLoadRow({ person }: PersonLoadRowProps) {
   return (
-    <TableRow>
-      <TableCell className="sticky left-0 z-10 bg-white">
+    <TableRow className="group bg-slate-50 hover:bg-slate-100">
+      {/* The pinned column names the row, and stays white where the row takes
+          the page's tint: the subject reads as the line's anchor. */}
+      <TableCell
+        className={`sticky left-0 z-10 bg-white group-hover:bg-slate-50 ${STRONG_SEPARATOR}`}
+      >
         <div className="flex items-center gap-2">
           <UserAvatar initials={person.user.initials} name={person.user.display_name} />
           <span className="truncate text-sm text-slate-800">
