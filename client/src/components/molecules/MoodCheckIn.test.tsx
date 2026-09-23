@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { MoodCheckIn } from "./MoodCheckIn";
+import { STRONG_RULE } from "@/lib/table-frame";
 
 const TODAY = "2026-09-15";
 const BEFORE = "2026-09-14";
@@ -54,5 +55,16 @@ describe("MoodCheckIn", () => {
     );
 
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("what makes it stand out", () => {
+  it("closes at the weight the application closes an object at", () => {
+    // Drawn like the notices around it, the one block that asks something of
+    // the reader gets read like a notice.
+    show([{ day: TODAY, level: null }]);
+
+    const block = document.querySelector("section");
+    expect(block?.className).toContain(STRONG_RULE);
   });
 });
