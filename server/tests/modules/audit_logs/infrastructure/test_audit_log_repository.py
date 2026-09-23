@@ -115,3 +115,32 @@ async def test_a_month_keeps_to_whose_it_is(db_session: AsyncSession) -> None:
     page = await repository.list_for_user_month(mine, SEPTEMBER, limit=50, offset=0)
 
     assert [log.target_user_id for log in page] == [mine]
+
+
+@pytest.mark.asyncio
+async def test_a_value_longer_than_a_line_is_kept_whole(
+    db_session: AsyncSession,
+) -> None:
+    """What a field moved to is stored as it was typed, however long.
+
+    A documentation address runs well past the width of a sentence, and a
+    column that refused it turned an ordinary edit into a 500.
+    """
+    repository = SqlAuditLogRepository(db_session)
+    person = await a_teammate(db_session, "oid-long-value")
+    address = (
+        "https://docs.ai.waat.tools/doc/"
+        "initiative-recharge-a-domicile-no-capex-gYRDd1467z"
+    )
+
+    await repository.add(
+        AuditLog(
+            action=AuditAction.PROJECT_UPDATE,
+            actor_id=person,
+            new_value=address,
+            payload={"field": "documentation_link"},
+        )
+    )
+
+    page = await repository.list_all(limit=50, offset=0)
+    assert [log.new_value for log in page] == [address]

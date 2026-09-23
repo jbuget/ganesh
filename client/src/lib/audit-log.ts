@@ -197,7 +197,7 @@ function fieldSentence(entry: AuditLogEntryResponse): AuditSentence {
   // The id of a project says nothing to a reader, and looking up its name would
   // mean a request per line: the gesture is named, the mission is not.
   // A link is named rather than counted: « les liens » moving says nothing,
-  // and the address is too long for the column the log stores it in.
+  // and the name is what the screen showed it under.
   if (field === "links")
     return {
       action:
