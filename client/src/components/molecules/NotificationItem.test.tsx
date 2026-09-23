@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
+const push = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+
 import { NotificationItem } from "./NotificationItem";
 import type { NotificationResponse } from "@/lib/api/generated/model";
 
@@ -47,6 +50,31 @@ describe("NotificationItem", () => {
     renderItem();
 
     expect(screen.getByRole("link")).toHaveAttribute("href", "/projects/42");
+  });
+
+  it("leads to the thread, on the update it speaks of", () => {
+    renderItem({ kind: "project.update_posted", payload: { update_id: 412 } });
+
+    expect(screen.getByRole("link")).toHaveAttribute(
+      "href",
+      "/notifications?mission=42&tab=updates&update=412",
+    );
+  });
+
+  it("closes the lucarne it was read in", () => {
+    const onFollow = vi.fn();
+    render(
+      <NotificationItem
+        notification={line()}
+        now={NOW}
+        onToggleRead={vi.fn()}
+        onFollow={onFollow}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("link"));
+
+    expect(onFollow).toHaveBeenCalled();
   });
 
   it("leads nowhere once the subject is gone", () => {

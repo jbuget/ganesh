@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { useProjects, useTeammates, useTouchedProjects } from "@/lib/api/queries";
@@ -13,7 +12,7 @@ import {
   type Section,
 } from "@/lib/command-palette";
 import { closePalette, usePaletteOpen } from "@/lib/command-palette-store";
-import { goToAddress } from "@/lib/url-state";
+import { useGoTo } from "@/lib/url-state";
 
 /** What the palette knows, and what it can be asked to do. */
 export interface CommandPalette {
@@ -45,7 +44,7 @@ export interface CommandPalette {
  */
 export function useCommandPalette(): CommandPalette {
   const open = usePaletteOpen();
-  const router = useRouter();
+  const goTo = useGoTo();
 
   // Archived projects included: the palette is the only place one is reached
   // without first going to a screen and undoing a filter.
@@ -99,17 +98,7 @@ export function useCommandPalette(): CommandPalette {
     go(destination: Destination | undefined) {
       if (!destination) return;
       closePalette();
-
-      const here = `${window.location.pathname}${window.location.search}`;
-      if (destination.href === here) return;
-
-      // The screen one is already standing on does not mount again, and Next's
-      // router would move the address without a word to what reads it.
-      if (destination.href.split("?")[0] === window.location.pathname) {
-        goToAddress(destination.href);
-      } else {
-        router.push(destination.href);
-      }
+      goTo(destination.href);
     },
   };
 }

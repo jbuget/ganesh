@@ -42,14 +42,33 @@ describe("useOpenedMission", () => {
     expect(result.current.openTab).toBeNull();
   });
 
+  it("aims at one update inside the thread", () => {
+    const { result } = renderHook(() => useOpenedMission());
+
+    act(() => result.current.open(29, "updates", 412));
+
+    expect(result.current.openTab).toBe("updates");
+    expect(result.current.aimedAt).toBe(412);
+  });
+
+  it("forgets the update a previous opening aimed at", () => {
+    const { result } = renderHook(() => useOpenedMission());
+
+    act(() => result.current.open(29, "updates", 412));
+    act(() => result.current.open(30, "updates"));
+
+    expect(result.current.aimedAt).toBeNull();
+  });
+
   it("closes the panel without leaving its tab behind", () => {
     const { result } = renderHook(() => useOpenedMission());
 
-    act(() => result.current.open(29, "updates"));
+    act(() => result.current.open(29, "updates", 412));
     act(() => result.current.close());
 
     expect(result.current.openedMission).toBeNull();
     expect(window.location.search).not.toContain("tab");
+    expect(window.location.search).not.toContain("update");
   });
 
   it("leaves the screen's other parameters untouched", () => {

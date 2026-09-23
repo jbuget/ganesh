@@ -17,6 +17,8 @@ interface ProjectUpdatesTabProps {
   onChange?: () => void | Promise<void>;
   /** Puts the cursor in the composer as soon as it opens. */
   focusComposer?: boolean;
+  /** The update the visit was about, when a notification named one. */
+  aimedAt?: number | null;
 }
 
 /**
@@ -30,6 +32,7 @@ export function ProjectUpdatesTab({
   now,
   onChange,
   focusComposer = false,
+  aimedAt = null,
 }: ProjectUpdatesTabProps) {
   const thread = useProjectUpdates(projectId, onChange);
   // An image pasted here is a file of the project like any other: the
@@ -107,6 +110,7 @@ export function ProjectUpdatesTab({
             update={update}
             now={now}
             people={teammates}
+            aimed={update.id === aimedAt}
             onEdit={(body) => thread.edit(update.id, body)}
             onRemove={() => thread.remove(update.id)}
             onReact={(reaction, leaving) => thread.react(update.id, reaction, leaving)}

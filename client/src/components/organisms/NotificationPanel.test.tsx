@@ -8,6 +8,8 @@ const inbox = vi.hoisted(() => ({ state: {} as Record<string, unknown> }));
 
 vi.mock("@/lib/use-inbox", () => ({ useInbox: () => inbox.state }));
 
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
 function line(over: Partial<NotificationResponse> = {}): NotificationResponse {
   return {
     id: 1,

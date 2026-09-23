@@ -1,6 +1,7 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useSyncExternalStore } from "react";
 
 /**
  * The URL as the screen's shared state.
@@ -80,4 +81,30 @@ export function writeUrl(
 export function goToAddress(address: string): void {
   window.history.pushState(null, "", address);
   notify();
+}
+
+/**
+ * Follows an address, wherever one happens to be standing.
+ *
+ * Next's router is what crosses to another screen, and `goToAddress` is what
+ * moves on the one already mounted. Picking between them is not the caller's
+ * business: a link read from the sidebar lands on whichever screen the reader
+ * was on, and would otherwise work from five of them and quietly do nothing on
+ * the sixth.
+ */
+export function useGoTo(): (href: string) => void {
+  const router = useRouter();
+
+  return useCallback(
+    (href: string) => {
+      const here = `${window.location.pathname}${window.location.search}`;
+      if (href === here) return;
+
+      // The screen one is already standing on does not mount again, and Next's
+      // router would move the address without a word to what reads it.
+      if (href.split("?")[0] === window.location.pathname) goToAddress(href);
+      else router.push(href);
+    },
+    [router],
+  );
 }

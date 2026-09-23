@@ -48,6 +48,11 @@ function text(payload: NotificationResponse["payload"], key: string): string | n
   return typeof value === "string" ? value : null;
 }
 
+function number(payload: NotificationResponse["payload"], key: string): number | null {
+  const value = payload?.[key];
+  return typeof value === "number" ? value : null;
+}
+
 /** The project's name, or the one kept beside it for when it is gone. */
 function projectLabel(line: NotificationResponse): string {
   return line.project?.label ?? text(line.payload, "project_label") ?? NAMELESS;
@@ -140,12 +145,22 @@ function repeats(line: NotificationResponse): string | undefined {
   return `${line.count} modifications`;
 }
 
+/** The kinds that speak of one line of a thread, rather than of a mission. */
+const ABOUT_AN_UPDATE = ["project.update_posted", "update.mention"];
+
 /**
  * Where a line leads.
  *
  * A month notification opens the month it speaks of, a project one opens the
  * project. A line whose subject has been deleted leads nowhere — there is
  * nothing left to open, and a link to a 404 is worse than none.
+ *
+ * A line about an update leads back to the inbox rather than to the mission's
+ * own page: the panel opens over the list one was reading, on the thread, on
+ * the very update one was told about. Closing it leaves the reader where they
+ * were, which a full page would not. It is the address either surface hands
+ * over — the bell in the sidebar is read from screens that host no panel, and
+ * one line must not behave two ways.
  */
 function destination(line: NotificationResponse): string | undefined {
   if (line.kind.startsWith("month.") || line.kind === "timesheet.edited") {
@@ -153,7 +168,17 @@ function destination(line: NotificationResponse): string | undefined {
   }
   if (line.kind === "user.role_changed") return undefined;
   if (line.kind.startsWith("api_key.")) return "/api-mcp";
-  return line.project ? `/projects/${line.project.id}` : undefined;
+  if (!line.project) return undefined;
+
+  if (ABOUT_AN_UPDATE.includes(line.kind)) {
+    const panel = `/notifications?mission=${line.project.id}&tab=updates`;
+    const aimedAt = number(line.payload, "update_id");
+    // An old line carries no update_id: the thread whole is still where it
+    // was talking about, and naming nothing is better than naming a guess.
+    return aimedAt ? `${panel}&update=${aimedAt}` : panel;
+  }
+
+  return `/projects/${line.project.id}`;
 }
 
 /** One line of the inbox, ready to read. */

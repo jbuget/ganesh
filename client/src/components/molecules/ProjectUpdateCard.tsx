@@ -1,7 +1,7 @@
 "use client";
 
 import { Pencil, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { DeleteUpdateDialog } from "@/components/atoms/DeleteUpdateDialog";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
@@ -21,10 +21,18 @@ interface ProjectUpdateCardProps {
    * is now.
    */
   people?: MentionablePerson[];
+  /**
+   * Whether this is the update the visit was about — a notification named it.
+   * The card then brings itself under the eye and lights up for a moment.
+   */
+  aimed?: boolean;
   onEdit: (body: string) => Promise<void>;
   onRemove: () => Promise<void>;
   onReact: (reaction: Reaction, leaving: boolean) => Promise<void>;
 }
+
+/** How long a thread is given to settle before the reader is left to scroll. */
+const SETTLES_IN = 2000;
 
 /**
  * One update from the thread.
@@ -37,15 +45,50 @@ export function ProjectUpdateCard({
   update,
   now,
   people = [],
+  aimed = false,
   onEdit,
   onRemove,
   onReact,
 }: ProjectUpdateCardProps) {
   const [editing, setEditing] = useState(false);
   const [confirmingRemoval, setConfirmingRemoval] = useState(false);
+  const card = useRef<HTMLElement>(null);
+
+  // The thread loads after the panel opens, and the update aimed at may be the
+  // twentieth down: it brings itself under the eye once it is there.
+  //
+  // Once is not enough. An image posted above it is measured only when it has
+  // loaded, and the card that was centred a frame ago has been pushed off the
+  // screen by the time the reader looks. It is therefore followed while the
+  // ground under it keeps moving, and let go a moment later — after that the
+  // reader is the one scrolling, and being dragged back would be worse than
+  // scrolling for oneself.
+  useEffect(() => {
+    const it = card.current;
+    if (!aimed || !it) return;
+
+    const bringItUnderTheEye = () => it.scrollIntoView({ block: "center" });
+    bringItUnderTheEye();
+
+    // The thread, not the card: what moves the card is the height of what sits
+    // above it.
+    const thread = it.parentElement ?? it;
+    const watch = new ResizeObserver(bringItUnderTheEye);
+    watch.observe(thread);
+    const letGo = window.setTimeout(() => watch.disconnect(), SETTLES_IN);
+
+    return () => {
+      watch.disconnect();
+      window.clearTimeout(letGo);
+    };
+  }, [aimed]);
 
   return (
-    <article className="rounded-lg border border-slate-300 bg-white p-3">
+    <article
+      ref={card}
+      data-aimed={aimed || undefined}
+      className={`rounded-lg border border-slate-300 bg-white p-3 ${aimed ? "aimed-at" : ""}`}
+    >
       <header className="mb-2 flex items-center gap-2">
         <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-medium text-slate-700">
           {update.author.initials}

@@ -59,6 +59,10 @@ export function NotificationPanel({ collapsed = false }: { collapsed?: boolean }
                 notification={entry}
                 now={now}
                 onToggleRead={(id, read) => void inbox.toggleRead(id, read)}
+                // The lucarne has said what it had to say: following a line
+                // leaves it behind, and it must not stay hanging over the
+                // screen one lands on.
+                onFollow={() => setOpen(false)}
               />
             ))}
           </ul>
