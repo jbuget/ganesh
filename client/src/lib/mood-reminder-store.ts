@@ -7,7 +7,7 @@ const KEY = "timesheet.mood-reminder-dismissed";
 /**
  * The day the reminder was turned down on.
  *
- * A relance one cannot refuse is a relance that harasses, and the moral is
+ * A reminder one cannot refuse is a reminder that harasses, and the moral is
  * given in confidence: turning it down must cost one click and be believed.
  *
  * The day itself is kept rather than a flag. A refusal lasts until the evening

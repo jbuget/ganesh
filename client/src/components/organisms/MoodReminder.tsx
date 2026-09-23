@@ -12,7 +12,7 @@ import { useMoodReminder } from "@/lib/use-mood-reminder";
  * is ever asked is a question answered by whoever already thought of it. A
  * morale made of the diligent measures diligence.
  *
- * It is the relance that lets « Moral de l'équipe » go on reading and never
+ * It is the reminder that lets « Moral de l'équipe » go on reading and never
  * writing. The question comes to the reader, wherever they are, rather than
  * opening a second door on the one screen that shows what everybody else
  * answered — which is what the whole thing was built to avoid.

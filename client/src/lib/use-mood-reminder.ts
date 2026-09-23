@@ -16,7 +16,7 @@ import { useMood } from "@/lib/use-mood";
  * Read on the clock of the machine the reader sits at, which is the only one
  * that knows what time it is for them.
  */
-export const REMINDER_FROM_HOUR = 16;
+const REMINDER_FROM_HOUR = 16;
 
 /**
  * How often the hour is looked at again.
@@ -41,7 +41,7 @@ export const REMINDER_DELAY_MS = 4_000;
  *
  * « Moral » is the one that matters. Answering there would be answering under
  * the eyes of what the answer is about — the whole reason that screen reads
- * and never writes. The relance goes to the reader instead, which is what
+ * and never writes. The reminder goes to the reader instead, which is what
  * lets the rule stand.
  *
  * The home screen already carries the check-in at the head of its right-hand
@@ -74,7 +74,7 @@ function useLocalHour(): number | null {
  *
  * The wait starts again at each screen, so whoever is still moving around is
  * never caught on arrival — but only until the question has been put once.
- * After that it stands: a relance that went back into hiding at every
+ * After that it stands: a reminder that went back into hiding at every
  * navigation would rise again at the next one, and a panel that comes and goes
  * is read as a fault rather than as a question.
  */
@@ -99,7 +99,7 @@ function useSettledIn(pathname: string): boolean {
 /**
  * Whether to ask for today's mood, and the answering itself.
  *
- * Today alone, never the working day before: this is a relance about the day
+ * Today alone, never the working day before: this is a reminder about the day
  * one is finishing, not a form to catch up on the week. The home screen keeps
  * the two open days, and stays where one answers deliberately.
  *
@@ -119,8 +119,8 @@ export function useMoodReminder() {
 
   return {
     show:
-      open != null &&
-      open.level == null &&
+      open !== undefined &&
+      open.level === null &&
       settled &&
       hour !== null &&
       hour >= REMINDER_FROM_HOUR &&
