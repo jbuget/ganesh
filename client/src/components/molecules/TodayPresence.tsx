@@ -26,12 +26,15 @@ export function TodayPresence({
   users,
   today,
   meId = null,
+  onOpenMine,
 }: {
   /** The active team. A teammate who said nothing counts as on site. */
   users: UserResponse[];
   today: Date;
   /** Who is reading, so the block can hand them their own week to change. */
   meId?: number | null;
+  /** Opens a teammate's panel where the reader stands, without leaving. */
+  onOpenMine?: () => void;
 }) {
   if (users.length === 0) return null;
 
@@ -50,14 +53,15 @@ export function TodayPresence({
         <h2 className="text-sm font-medium text-slate-700">
           {day.isToday ? "Aujourd'hui" : day.label}
         </h2>
-        {/* Two ways out, and only these two: one to change one's own week,
-            one to read everyone's. The block itself still declares nothing. */}
+        {/* Two ways out, and only these two. One's own week opens where the
+            reader stands — changing a day is not worth a screen — while the
+            whole team's is another screen, and reached as one. */}
         <nav className="flex items-center gap-2 text-xs text-slate-500">
-          {meId !== null && (
+          {meId !== null && onOpenMine && (
             <>
-              <Link href={`/users?user=${meId}`} className={LINK}>
+              <button type="button" onClick={onOpenMine} className={LINK}>
                 Ma présence
-              </Link>
+              </button>
               <span aria-hidden className="text-slate-300">
                 |
               </span>

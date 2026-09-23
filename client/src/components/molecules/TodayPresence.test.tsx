@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 
 import { TodayPresence } from "@/components/molecules/TodayPresence";
 import type { UserResponse } from "@/lib/api/generated/model";
@@ -83,19 +84,29 @@ describe("handing over", () => {
     );
   });
 
-  it("hands the reader their own week, to change it", () => {
-    render(<TodayPresence today={WEDNESDAY} meId={7} users={[aUser(1, "Léa")]} />);
-
-    expect(screen.getByRole("link", { name: "Ma présence" })).toHaveAttribute(
-      "href",
-      "/users?user=7",
+  it("opens one's own week where the reader stands, without leaving", async () => {
+    // Moving a day is not worth a screen: the panel opens in place.
+    const onOpenMine = vi.fn();
+    render(
+      <TodayPresence
+        today={WEDNESDAY}
+        meId={7}
+        onOpenMine={onOpenMine}
+        users={[aUser(1, "Léa")]}
+      />,
     );
+
+    await userEvent.click(screen.getByRole("button", { name: "Ma présence" }));
+
+    expect(onOpenMine).toHaveBeenCalled();
   });
 
   it("offers it to nobody it cannot name", () => {
     render(<TodayPresence today={WEDNESDAY} users={[aUser(1, "Léa")]} />);
 
-    expect(screen.queryByRole("link", { name: "Ma présence" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Ma présence" }),
+    ).not.toBeInTheDocument();
   });
 
   it("draws nothing at all before the team has loaded", () => {
