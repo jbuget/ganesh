@@ -91,4 +91,22 @@ describe("how it sits on the page", () => {
 
     expect(screen.getByRole("status").className).toContain("z-30");
   });
+
+  it("rises into place rather than appearing outright", () => {
+    // A panel that is simply there was always there as far as the eye is
+    // concerned, and the eye does not go back to it.
+    render(<MoodReminder />);
+
+    const className = screen.getByRole("status").className;
+    expect(className).toContain("animate-in");
+    expect(className).toContain("slide-in-from-bottom-8");
+  });
+
+  it("holds still for whoever asked for less movement", () => {
+    render(<MoodReminder />);
+
+    expect(screen.getByRole("status").className).toContain(
+      "motion-reduce:animate-none",
+    );
+  });
 });

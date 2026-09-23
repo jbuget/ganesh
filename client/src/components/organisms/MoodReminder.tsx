@@ -26,6 +26,20 @@ import { useMoodReminder } from "@/lib/use-mood-reminder";
  * own, and what one opened oneself comes first. The frame is the strong rule
  * the application closes an object at — it asks something of the reader, and
  * a question drawn like a notice gets read like a notice.
+ *
+ * It rises into place rather than appearing outright: a panel that is simply
+ * there was always there as far as the eye is concerned, and the eye does not
+ * go back to it. The movement is what makes the question a question.
+ *
+ * It rises once, and not again at every screen. Nothing here arranges that:
+ * the reminder lives in the frame, so moving from « Projets » to « Kanban »
+ * leaves the same element in place and the animation has nothing to replay.
+ * Only a real disappearance and return plays it again — through « Moral », say,
+ * which the reminder stays away from — and there it is right, since the panel
+ * really did come back.
+ *
+ * Whoever asked for less movement gets none: the question is worth drawing the
+ * eye, never worth making somebody unwell.
  */
 export function MoodReminder() {
   const reminder = useMoodReminder();
@@ -38,7 +52,7 @@ export function MoodReminder() {
     <section
       role="status"
       aria-label="Mon moral"
-      className={`fixed bottom-4 right-4 z-30 w-72 max-w-[calc(100vw-2rem)] rounded-xl border bg-white p-3 shadow-lg ${STRONG_RULE}`}
+      className={`fixed bottom-4 right-4 z-30 w-72 max-w-[calc(100vw-2rem)] animate-in rounded-xl border bg-white p-3 shadow-lg duration-300 ease-out fade-in-0 slide-in-from-bottom-8 motion-reduce:animate-none ${STRONG_RULE}`}
     >
       <header className="mb-2">
         <h2 className="text-sm font-medium text-slate-700">
