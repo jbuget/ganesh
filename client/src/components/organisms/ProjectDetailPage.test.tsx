@@ -10,10 +10,21 @@ vi.mock("next/navigation", () => ({
   usePathname: () => pathname.value,
   useRouter: () => ({ back, push }),
 }));
+const invalidateQueries = vi.fn();
+
+vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({ invalidateQueries }),
+}));
 // The sheet itself is read elsewhere: here only the way out of it matters, and
-// a mission that cannot be found draws the header and nothing else.
+// a mission that cannot be found draws the header and nothing else. What the
+// page hands the sheet is kept, to check what a write does to the cache.
+const written: { call?: () => void | Promise<void> } = {};
+
 vi.mock("@/lib/use-project-detail", () => ({
-  useProjectDetail: () => ({ detail: null, notFound: true }),
+  useProjectDetail: (_projectId: number, onWrite?: () => void | Promise<void>) => {
+    written.call = onWrite;
+    return { detail: null, notFound: true };
+  },
 }));
 
 import { forgetTrail, useNavigationTrail } from "@/lib/navigation-trail";
@@ -38,6 +49,7 @@ beforeEach(() => {
   forgetTrail();
   back.mockClear();
   push.mockClear();
+  invalidateQueries.mockClear();
 });
 
 describe("ProjectDetailPage", () => {
@@ -62,5 +74,16 @@ describe("ProjectDetailPage", () => {
       "/projects",
     );
     expect(screen.queryByRole("button", { name: "Projets" })).not.toBeInTheDocument();
+  });
+
+  it("empties the cache after a write, so no screen reads a stale mission", async () => {
+    // A mission deleted from its own page was still in the reference list on
+    // the way back: nothing told the screens to read again.
+    landOn("/projects/12");
+
+    render(<ProjectDetailPage projectId={12} />);
+    await written.call?.();
+
+    expect(invalidateQueries).toHaveBeenCalled();
   });
 });
