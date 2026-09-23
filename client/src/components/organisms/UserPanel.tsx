@@ -14,6 +14,7 @@ import { SidePanel } from "@/components/atoms/SidePanel";
 import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { UserAvatar } from "@/components/atoms/UserAvatar";
 import { UserDeclaredDays } from "@/components/molecules/UserDeclaredDays";
+import { PresenceWeek } from "@/components/molecules/PresenceWeek";
 import { UserMissions } from "@/components/molecules/UserMissions";
 import { UserMonths } from "@/components/molecules/UserMonths";
 import type {
@@ -23,6 +24,7 @@ import type {
 } from "@/lib/api/generated/model";
 import { useUserRecord } from "@/lib/api/queries";
 import { isoDay } from "@/lib/dates";
+import { type WeekPresence, weekOf } from "@/lib/presence";
 import { DEPARTMENTS } from "@/lib/departments";
 import { formatParisDateTime } from "@/lib/instants";
 import { since } from "@/lib/relative-dates";
@@ -35,12 +37,21 @@ interface UserPanelProps {
   canChangeStatus: boolean;
   /** Writing who a teammate is stays with the managers, like the role. */
   editable: boolean;
+  /**
+   * True on one's own account alone.
+   *
+   * Everyone says their own week: where somebody works from is a fact about
+   * them, and relaying it through a manager would only put a delay between
+   * the fact and the board the team reads.
+   */
+  isMe: boolean;
   onChangeRole: (userId: number, role: Role) => void | Promise<void>;
   onSetActive: (userId: number, is_active: boolean) => void | Promise<void>;
   onUpdateIdentity: (
     user: UserResponse,
     change: UpdateUserIdentityRequest,
   ) => void | Promise<void>;
+  onDeclarePresence: (week: WeekPresence) => void | Promise<void>;
   /** Injected: a render dated by `new Date()` could not be tested. */
   now: Date;
   onClose: () => void;
@@ -65,9 +76,11 @@ export function UserPanel({
   roleModifiable,
   canChangeStatus,
   editable,
+  isMe,
   onChangeRole,
   onSetActive,
   onUpdateIdentity,
+  onDeclarePresence,
   now,
   onClose,
 }: UserPanelProps) {
@@ -197,8 +210,25 @@ export function UserPanel({
           )}
         </SheetRow>
 
-        {/* What the account is comes first and is edited here; what the person
-            carries follows, and is only read. */}
+        {/* Between the account and what the person carries: their ordinary
+            week is neither one nor the other — it is what they tell the team
+            about themselves, and the only thing on this panel they write. */}
+        <section className="mt-6 space-y-2">
+          <SheetSectionTitle>Présence</SheetSectionTitle>
+          <PresenceWeek
+            week={weekOf(user.presence)}
+            editable={isMe}
+            onChange={onDeclarePresence}
+          />
+          {!user.presence && (
+            <p className="text-xs text-slate-400">
+              {isMe
+                ? "Semaine non renseignée. Cliquez un jour pour la déclarer."
+                : "Semaine non renseignée."}
+            </p>
+          )}
+        </section>
+
         <div className="mt-6 space-y-6">
           {isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 

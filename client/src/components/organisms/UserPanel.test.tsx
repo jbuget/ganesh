@@ -38,11 +38,17 @@ const NOW = new Date("2026-09-17T10:00:00Z");
 const onChangeRole = vi.fn();
 const onUpdateIdentity = vi.fn();
 const onSetActive = vi.fn();
+const onDeclarePresence = vi.fn();
 const onClose = vi.fn();
 
 function openPanel(
   user: Partial<UserResponse> = {},
-  { roleModifiable = false, canChangeStatus = false, editable = false } = {},
+  {
+    roleModifiable = false,
+    canChangeStatus = false,
+    editable = false,
+    isMe = false,
+  } = {},
 ) {
   render(
     <UserPanel
@@ -53,6 +59,8 @@ function openPanel(
       onChangeRole={onChangeRole}
       onSetActive={onSetActive}
       onUpdateIdentity={onUpdateIdentity}
+      isMe={isMe}
+      onDeclarePresence={onDeclarePresence}
       now={NOW}
       onClose={onClose}
     />,
