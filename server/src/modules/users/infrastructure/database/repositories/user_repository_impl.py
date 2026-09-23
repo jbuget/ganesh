@@ -9,17 +9,15 @@ from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.modules.users.infrastructure.database.models.user_model import UserModel
 
 
-def _presence_of(model: UserModel) -> WeekPresence | None:
-    """The declared week, or None while none of it was ever said."""
-    said = [getattr(model, f"presence_{day}") for day in WEEKDAYS]
-    if any(value is None for value in said):
-        return None
-    return WeekPresence(**dict(zip(WEEKDAYS, said, strict=True)))
+def _presence_of(model: UserModel) -> WeekPresence:
+    """The week this teammate works, on site every day until they say so."""
+    said = {day: getattr(model, f"presence_{day}") for day in WEEKDAYS}
+    return WeekPresence(**{day: value for day, value in said.items() if value})
 
 
-def _write_presence(model: UserModel, presence: WeekPresence | None) -> None:
+def _write_presence(model: UserModel, presence: WeekPresence) -> None:
     for day in WEEKDAYS:
-        setattr(model, f"presence_{day}", getattr(presence, day, None))
+        setattr(model, f"presence_{day}", getattr(presence, day))
 
 
 def to_entity(model: UserModel) -> User:

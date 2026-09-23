@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 
 import { PresenceTable } from "@/components/organisms/PresenceTable";
 import type { UserResponse } from "@/lib/api/generated/model";
@@ -7,7 +8,7 @@ import type { UserResponse } from "@/lib/api/generated/model";
 function aUser(
   id: number,
   display_name: string,
-  presence: UserResponse["presence"] = null,
+  presence: UserResponse["presence"] = AT_THE_OFFICE,
 ): UserResponse {
   return {
     id,
@@ -35,6 +36,7 @@ describe("the week of the team", () => {
     // The figure the screen is opened for.
     render(
       <PresenceTable
+        onOpen={vi.fn()}
         users={[
           aUser(1, "Léa", { ...AT_THE_OFFICE, wednesday: "REMOTE" }),
           aUser(2, "Malik", { ...AT_THE_OFFICE, wednesday: "AWAY" }),
@@ -48,24 +50,38 @@ describe("the week of the team", () => {
     expect(cells[3]).toHaveTextContent("0sur 1 présent");
   });
 
-  it("leaves a week nobody declared blank rather than drawing five absences", () => {
-    // An office that merely looks empty would be read as an empty office.
+  it("counts everybody, since everybody has a week", () => {
+    // On site every day until somebody says otherwise: nothing is ever blank,
+    // so the count under each day covers the whole team.
     render(
-      <PresenceTable users={[aUser(1, "Léa"), aUser(2, "Malik", AT_THE_OFFICE)]} />,
+      <PresenceTable onOpen={vi.fn()} users={[aUser(1, "Léa"), aUser(2, "Malik")]} />,
     );
 
-    expect(screen.getByText("Lundi : non renseigné")).toBeInTheDocument();
     const footer = screen.getByRole("row", { name: /Sur site/ });
-    expect(within(footer).getAllByRole("cell")[1]).toHaveTextContent("1sur 1 présent");
+    expect(within(footer).getAllByRole("cell")[1]).toHaveTextContent("2sur 2 présents");
   });
 
   it("names each day of each week for whoever cannot see the marks", () => {
     render(
       <PresenceTable
+        onOpen={vi.fn()}
         users={[aUser(1, "Léa", { ...AT_THE_OFFICE, friday: "REMOTE" })]}
       />,
     );
 
     expect(screen.getByText("Vendredi : télétravail")).toBeInTheDocument();
+  });
+});
+
+describe("going from a week to the person", () => {
+  it("opens the teammate the row names", async () => {
+    // The two tabs are two readings of one list: a line means the same thing
+    // in both, so it opens the same panel.
+    const onOpen = vi.fn();
+    render(<PresenceTable onOpen={onOpen} users={[aUser(7, "Léa")]} />);
+
+    await userEvent.click(screen.getByText("Léa"));
+
+    expect(onOpen).toHaveBeenCalledWith(7);
   });
 });

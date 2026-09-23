@@ -21,6 +21,10 @@ interface PresenceWeekProps {
  *
  * A click walks the day round: sur site, télétravail, absent. Nothing here is
  * counted anywhere — it is told to the team, not measured on the person.
+ *
+ * On site every day until somebody says otherwise. That default needs no
+ * caption: it is the arrangement the team runs on, so five filled discs are
+ * true of whoever has said nothing rather than standing in for an answer.
  */
 export function PresenceWeek({ week, editable = false, onChange }: PresenceWeekProps) {
   return (

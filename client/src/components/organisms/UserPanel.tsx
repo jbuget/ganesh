@@ -220,13 +220,6 @@ export function UserPanel({
             editable={isMe}
             onChange={onDeclarePresence}
           />
-          {!user.presence && (
-            <p className="text-xs text-slate-400">
-              {isMe
-                ? "Semaine non renseignée. Cliquez un jour pour la déclarer."
-                : "Semaine non renseignée."}
-            </p>
-          )}
         </section>
 
         <div className="mt-6 space-y-6">

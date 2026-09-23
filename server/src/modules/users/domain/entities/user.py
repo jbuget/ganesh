@@ -61,9 +61,11 @@ class User:
     #: The handle alone — « lea-chen », never « @lea-chen » nor a full URL:
     #: it is what the profile address is built from.
     github_username: str | None = None
-    #: The ordinary week: which days one works, and from where. None until
-    #: somebody says — which is not the same as a week of absences.
-    presence: WeekPresence | None = None
+    #: The ordinary week: which days one works, and from where. On site every
+    #: day until somebody says otherwise — the arrangement the team runs on,
+    #: so it is what is true of anyone who has said nothing, not a placeholder
+    #: standing in for an answer.
+    presence: WeekPresence = field(default_factory=WeekPresence)
 
     def __post_init__(self) -> None:
         self.email = self.email.strip().lower()

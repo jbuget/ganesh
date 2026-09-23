@@ -42,8 +42,8 @@ def test_the_days_on_site_are_counted_for_the_team_view() -> None:
     assert week.days_present == 4
 
 
-def test_a_week_nobody_declared_is_not_a_week_of_absences() -> None:
-    # Told apart on purpose: « away all week » is something somebody said,
-    # « nothing declared » is something nobody has said yet, and a screen that
-    # drew them alike would report an empty office that is merely unknown.
-    assert WeekPresence.NOT_DECLARED is None
+def test_a_week_nobody_said_anything_about_is_a_week_on_site() -> None:
+    # The arrangement the team runs on, so it is what is true of anyone who
+    # has said nothing — not a placeholder standing in for an answer. Saying
+    # otherwise is what takes a click.
+    assert WeekPresence().days_on_site == 5

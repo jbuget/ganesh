@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import type { UserResponse } from "@/lib/api/generated/model";
 
 import { UserPanel } from "./UserPanel";
+import { A_WEEK_ON_SITE } from "@/lib/presence";
 
 /**
  * The record is read by the panel itself. Its three sections have their own
@@ -29,6 +30,7 @@ const jeremy: UserResponse = {
   display_name: "Jérémy Buget",
   initials: "JB",
   role: "MANAGER",
+  presence: A_WEEK_ON_SITE,
   is_active: true,
   last_login_at: "2026-09-17T07:00:00Z",
 };

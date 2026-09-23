@@ -6,6 +6,7 @@ import type { UserResponse } from "@/lib/api/generated/model";
 import { NO_USER_SORT } from "@/lib/user-sort";
 
 import { UsersTable } from "./UsersTable";
+import { A_WEEK_ON_SITE } from "@/lib/presence";
 
 const TEAM: UserResponse[] = [
   {
@@ -14,6 +15,7 @@ const TEAM: UserResponse[] = [
     display_name: "Jérémy Buget",
     initials: "JB",
     role: "MANAGER",
+    presence: A_WEEK_ON_SITE,
     is_active: true,
     last_login_at: "2026-09-17T07:00:00Z",
     github_username: "jbuget",
@@ -24,6 +26,7 @@ const TEAM: UserResponse[] = [
     display_name: "L. Chen",
     initials: "LC",
     role: "TEAMMATE",
+    presence: A_WEEK_ON_SITE,
     is_active: true,
     last_login_at: null,
   },

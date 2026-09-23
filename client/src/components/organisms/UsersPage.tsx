@@ -107,7 +107,7 @@ export function UsersPage() {
             </TabsContent>
 
             <TabsContent value="presence" className="mt-4">
-              <PresenceTable users={screen.users} />
+              <PresenceTable users={screen.users} onOpen={panel.open} />
             </TabsContent>
           </Tabs>
         )}

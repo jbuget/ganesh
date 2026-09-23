@@ -73,9 +73,8 @@ class UserResponse(BaseModel):
     department: Department | None = None
     #: The handle alone — « lea-chen », never « @lea-chen ».
     github_username: str | None = None
-    #: The ordinary week. Null until somebody says — which the team board
-    #: draws apart from a week spent away.
-    presence: WeekPresenceResponse | None = None
+    #: The ordinary week. On site every day until somebody says otherwise.
+    presence: WeekPresenceResponse
 
 
 class ChangeRoleRequest(BaseModel):

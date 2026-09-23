@@ -93,3 +93,16 @@ export function sayWeek(week: WeekPresence): string {
   if (onSite === 0) return `${present} jour${present > 1 ? "s" : ""} en télétravail`;
   return `${onSite} jour${onSite > 1 ? "s" : ""} sur site sur ${present}`;
 }
+
+/**
+ * A week on site, shaped as the API returns it.
+ *
+ * Exported for the tests that build a `UserResponse`: everyone has a week, so
+ * every fixture needs one, and repeating the seven fields in six files is how
+ * they drift apart.
+ */
+export const A_WEEK_ON_SITE: WeekPresenceResponse = {
+  ...AT_THE_OFFICE,
+  days_on_site: 5,
+  days_present: 5,
+};

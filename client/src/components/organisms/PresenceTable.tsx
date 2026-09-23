@@ -23,13 +23,19 @@ import { STRONG_SEPARATOR, TABLE_FRAME, TABLE_HEADER } from "@/lib/table-frame";
  * count under each day is what one opens this for — a room to book, a lunch
  * to plan, a meeting to put where the people are.
  *
- * A week nobody declared is left blank rather than drawn as five absences:
- * one is something nobody has said yet, the other is something somebody said,
- * and an office that merely looks empty would be read as an empty office.
+ * Everyone has a week: on site every day until they say otherwise, which is
+ * the arrangement the team runs on. Nothing here is ever blank, and the count
+ * under each day therefore covers the whole team.
  */
-export function PresenceTable({ users }: { users: UserResponse[] }) {
-  const declared = users.filter((user) => user.presence);
-
+export function PresenceTable({
+  users,
+  onOpen,
+}: {
+  users: UserResponse[];
+  /** A row opens the teammate, as on the accounts tab: the two tabs are two
+      readings of one list, and a line means the same thing in both. */
+  onOpen: (userId: number) => void;
+}) {
   return (
     <div className="[&_[data-slot=table-container]]:overflow-visible">
       <Table className={`border-separate border-spacing-0 ${TABLE_FRAME}`}>
@@ -46,7 +52,13 @@ export function PresenceTable({ users }: { users: UserResponse[] }) {
 
         <TableBody>
           {users.map((user) => (
-            <TableRow key={user.id} className="bg-slate-50 hover:bg-slate-100">
+            <TableRow
+              key={user.id}
+              onClick={() => onOpen(user.id)}
+              className={`group cursor-pointer bg-slate-50 hover:bg-slate-100 ${
+                user.is_active ? "" : "text-slate-400"
+              }`}
+            >
               <TableCell
                 className={`bg-white group-hover:bg-slate-50 ${STRONG_SEPARATOR}`}
               >
@@ -82,11 +94,11 @@ export function PresenceTable({ users }: { users: UserResponse[] }) {
               Sur site
             </TableCell>
             {WEEKDAYS.map((day) => {
-              const onSite = declared.filter(
-                (user) => user.presence?.[day.key] === "ON_SITE",
+              const onSite = users.filter(
+                (user) => user.presence[day.key] === "ON_SITE",
               ).length;
-              const present = declared.filter(
-                (user) => user.presence?.[day.key] !== "AWAY",
+              const present = users.filter(
+                (user) => user.presence[day.key] !== "AWAY",
               ).length;
 
               return (

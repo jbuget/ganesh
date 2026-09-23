@@ -20,6 +20,17 @@ describe("reading a colleague's week", () => {
   });
 });
 
+describe("a week nobody has said anything about", () => {
+  it("is drawn as five days on site, which is what is true of it", () => {
+    // The arrangement the team runs on, so the default is a fact rather than
+    // a placeholder: no caption has to contradict what the marks show.
+    render(<PresenceWeek week={AT_THE_OFFICE} />);
+
+    expect(screen.getAllByLabelText(/: sur site$/)).toHaveLength(5);
+    expect(screen.queryByText(/non renseigné/)).not.toBeInTheDocument();
+  });
+});
+
 describe("saying one's own", () => {
   it("walks a day from the office to home", async () => {
     const onChange = vi.fn();

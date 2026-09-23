@@ -23,5 +23,5 @@ export interface UserResponse {
   last_name?: string | null;
   department?: Department | null;
   github_username?: string | null;
-  presence?: WeekPresenceResponse | null;
+  presence: WeekPresenceResponse;
 }

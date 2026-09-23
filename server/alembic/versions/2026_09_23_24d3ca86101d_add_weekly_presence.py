@@ -1,8 +1,8 @@
 """add weekly presence
 
-Revision ID: 659a958d64fb
+Revision ID: 24d3ca86101d
 Revises: 65fbd74cd1f0
-Create Date: 2026-09-23 01:58:47.733689
+Create Date: 2026-09-23 02:08:38.094024
 
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 from alembic import op
 
-revision: str = "659a958d64fb"
+revision: str = "24d3ca86101d"
 down_revision: str | None = "65fbd74cd1f0"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -32,7 +32,8 @@ def upgrade() -> None:
                 native_enum=False,
                 length=8,
             ),
-            nullable=True,
+            server_default="ON_SITE",
+            nullable=False,
         ),
     )
     op.add_column(
@@ -47,7 +48,8 @@ def upgrade() -> None:
                 native_enum=False,
                 length=8,
             ),
-            nullable=True,
+            server_default="ON_SITE",
+            nullable=False,
         ),
     )
     op.add_column(
@@ -62,7 +64,8 @@ def upgrade() -> None:
                 native_enum=False,
                 length=8,
             ),
-            nullable=True,
+            server_default="ON_SITE",
+            nullable=False,
         ),
     )
     op.add_column(
@@ -77,7 +80,8 @@ def upgrade() -> None:
                 native_enum=False,
                 length=8,
             ),
-            nullable=True,
+            server_default="ON_SITE",
+            nullable=False,
         ),
     )
     op.add_column(
@@ -92,7 +96,8 @@ def upgrade() -> None:
                 native_enum=False,
                 length=8,
             ),
-            nullable=True,
+            server_default="ON_SITE",
+            nullable=False,
         ),
     )
     # ### end Alembic commands ###

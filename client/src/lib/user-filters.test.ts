@@ -8,6 +8,7 @@ import {
   readUserFilters,
   writeUserFilters,
 } from "@/lib/user-filters";
+import { A_WEEK_ON_SITE } from "@/lib/presence";
 
 const teammate = (
   display_name: string,
@@ -18,6 +19,7 @@ const teammate = (
   display_name,
   initials: display_name.slice(0, 2).toUpperCase(),
   role: "TEAMMATE",
+  presence: A_WEEK_ON_SITE,
   is_active: true,
   last_login_at: null,
   ...fields,

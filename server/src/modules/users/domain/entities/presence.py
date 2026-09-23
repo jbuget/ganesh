@@ -35,15 +35,11 @@ class DayPresence(StrEnum):
 class WeekPresence:
     """An ordinary week: five days, each one somewhere.
 
-    At the office unless said otherwise — the common case, so declaring a
-    Wednesday at home takes one field rather than five.
+    On site every day unless said otherwise. That default is not a stand-in
+    for an answer nobody gave: it is the arrangement the team runs on, so it
+    is what is true of whoever has said nothing. Declaring a Wednesday at home
+    therefore takes one field rather than five.
     """
-
-    #: What a teammate who has declared nothing has. Told apart from a week of
-    #: absences on purpose: one is something nobody said yet, the other is
-    #: something somebody said, and a screen drawing them alike would report an
-    #: empty office that is merely unknown.
-    NOT_DECLARED = None
 
     monday: DayPresence = DayPresence.ON_SITE
     tuesday: DayPresence = DayPresence.ON_SITE

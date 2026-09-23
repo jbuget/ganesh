@@ -40,25 +40,31 @@ class UserModel(Base):
     # The handle alone, never « @lea-chen »: the domain trims it on the way in.
     github_username: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    # The ordinary week. All five null together: nothing declared is not the
-    # same fact as a week spent away, and the team board draws them apart.
-    presence_monday: Mapped[DayPresence | None] = mapped_column(
+    # The ordinary week. On site every day until somebody says otherwise:
+    # the arrangement the team runs on, and therefore what is true of anyone
+    # who has said nothing.
+    presence_monday: Mapped[DayPresence] = mapped_column(
         Enum(DayPresence, name="day_presence", native_enum=False, length=8),
-        nullable=True,
+        nullable=False,
+        server_default=DayPresence.ON_SITE.value,
     )
-    presence_tuesday: Mapped[DayPresence | None] = mapped_column(
+    presence_tuesday: Mapped[DayPresence] = mapped_column(
         Enum(DayPresence, name="day_presence", native_enum=False, length=8),
-        nullable=True,
+        nullable=False,
+        server_default=DayPresence.ON_SITE.value,
     )
-    presence_wednesday: Mapped[DayPresence | None] = mapped_column(
+    presence_wednesday: Mapped[DayPresence] = mapped_column(
         Enum(DayPresence, name="day_presence", native_enum=False, length=8),
-        nullable=True,
+        nullable=False,
+        server_default=DayPresence.ON_SITE.value,
     )
-    presence_thursday: Mapped[DayPresence | None] = mapped_column(
+    presence_thursday: Mapped[DayPresence] = mapped_column(
         Enum(DayPresence, name="day_presence", native_enum=False, length=8),
-        nullable=True,
+        nullable=False,
+        server_default=DayPresence.ON_SITE.value,
     )
-    presence_friday: Mapped[DayPresence | None] = mapped_column(
+    presence_friday: Mapped[DayPresence] = mapped_column(
         Enum(DayPresence, name="day_presence", native_enum=False, length=8),
-        nullable=True,
+        nullable=False,
+        server_default=DayPresence.ON_SITE.value,
     )
