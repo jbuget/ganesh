@@ -187,6 +187,7 @@ export function ProjectTabs({
         deletable={detail.project.is_deletable}
         consumedDays={detail.consumed_days}
         subProjects={detail.sub_projects.length}
+        published={detail.project.is_published}
         onConfirm={deleteMission}
       />
 

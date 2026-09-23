@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from src.modules.users.domain.entities.presence import WeekPresence
 from src.modules.users.domain.entities.user import Role
 from src.shared.enums.department import Department
 
@@ -47,3 +48,15 @@ class UpdateUserIdentityCommand:
     last_name: str | None
     department: Department | None
     github_username: str | None
+
+
+@dataclass(frozen=True)
+class DeclareOwnPresenceCommand:
+    """One's ordinary week: which days one works, and from where.
+
+    There is no target to write down: the command names the actor alone, so
+    there is no colleague's week it could reach by mistake.
+    """
+
+    actor_id: int
+    week: WeekPresence

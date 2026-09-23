@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import type { UserResponse } from "@/lib/api/generated/model";
 
 import { UserPanel } from "./UserPanel";
+import { A_WEEK_ON_SITE } from "@/lib/presence";
 
 /**
  * The record is read by the panel itself. Its three sections have their own
@@ -29,6 +30,7 @@ const jeremy: UserResponse = {
   display_name: "Jérémy Buget",
   initials: "JB",
   role: "MANAGER",
+  presence: A_WEEK_ON_SITE,
   is_active: true,
   last_login_at: "2026-09-17T07:00:00Z",
 };
@@ -38,11 +40,17 @@ const NOW = new Date("2026-09-17T10:00:00Z");
 const onChangeRole = vi.fn();
 const onUpdateIdentity = vi.fn();
 const onSetActive = vi.fn();
+const onDeclarePresence = vi.fn();
 const onClose = vi.fn();
 
 function openPanel(
   user: Partial<UserResponse> = {},
-  { roleModifiable = false, canChangeStatus = false, editable = false } = {},
+  {
+    roleModifiable = false,
+    canChangeStatus = false,
+    editable = false,
+    isMe = false,
+  } = {},
 ) {
   render(
     <UserPanel
@@ -53,6 +61,8 @@ function openPanel(
       onChangeRole={onChangeRole}
       onSetActive={onSetActive}
       onUpdateIdentity={onUpdateIdentity}
+      isMe={isMe}
+      onDeclarePresence={onDeclarePresence}
       now={NOW}
       onClose={onClose}
     />,

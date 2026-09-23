@@ -22,6 +22,7 @@ import type {
 
 import type {
   ChangeRoleRequest,
+  DeclarePresenceRequest,
   HTTPValidationError,
   ListUsersParams,
   SetActiveRequest,
@@ -915,4 +916,137 @@ export const useUpdateUserIdentity = <TError = HTTPValidationError, TContext = u
   TContext
 > => {
   return useMutation(getUpdateUserIdentityMutationOptions(options), queryClient);
+};
+export type declareOwnPresenceResponse200 = {
+  data: UserResponse;
+  status: 200;
+};
+
+export type declareOwnPresenceResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type declareOwnPresenceResponseSuccess = declareOwnPresenceResponse200 & {
+  headers: Headers;
+};
+export type declareOwnPresenceResponseError = declareOwnPresenceResponse422 & {
+  headers: Headers;
+};
+
+export type declareOwnPresenceResponse =
+  declareOwnPresenceResponseSuccess | declareOwnPresenceResponseError;
+
+export const getDeclareOwnPresenceUrl = () => {
+  return `/api/v1/users/me/presence`;
+};
+
+/**
+ * Says which days one works, and from where.
+ *
+ * The address carries no teammate, and that is the guarantee rather than a
+ * shorthand: there is no colleague's week this route could reach.
+ * @summary Declare Own Presence
+ */
+export const declareOwnPresence = async (
+  declarePresenceRequest: DeclarePresenceRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<declareOwnPresenceResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<declareOwnPresenceResponse>(getDeclareOwnPresenceUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(declarePresenceRequest),
+  });
+};
+
+export const getDeclareOwnPresenceMutationKey = () => ["declareOwnPresence"] as const;
+
+export const getDeclareOwnPresenceMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof declareOwnPresence>>,
+    TError,
+    DeclareOwnPresenceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof declareOwnPresence>>,
+  TError,
+  DeclareOwnPresenceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeclareOwnPresenceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof declareOwnPresence>>,
+    DeclareOwnPresenceMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return declareOwnPresence(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeclareOwnPresenceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof declareOwnPresence>>
+>;
+export type DeclareOwnPresenceMutationBody = DeclarePresenceRequest;
+export type DeclareOwnPresenceMutationError = HTTPValidationError;
+export type DeclareOwnPresenceMutationVariables = { data: DeclarePresenceRequest };
+
+/**
+ * @summary Declare Own Presence
+ */
+export const useDeclareOwnPresence = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof declareOwnPresence>>,
+      TError,
+      DeclareOwnPresenceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof declareOwnPresence>>,
+  TError,
+  DeclareOwnPresenceMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeclareOwnPresenceMutationOptions(options), queryClient);
 };

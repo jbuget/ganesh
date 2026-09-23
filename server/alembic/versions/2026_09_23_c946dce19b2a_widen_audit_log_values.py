@@ -1,7 +1,7 @@
 """widen audit log values
 
 Revision ID: c946dce19b2a
-Revises: 778dd60ebd85
+Revises: 24d3ca86101d
 Create Date: 2026-09-23 11:00:13.726007
 
 The two columns holding what a field moved from and to were sixty-four
@@ -24,7 +24,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "c946dce19b2a"
-down_revision: str | None = "778dd60ebd85"
+down_revision: str | None = "24d3ca86101d"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

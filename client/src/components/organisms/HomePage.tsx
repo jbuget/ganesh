@@ -7,11 +7,15 @@ import { PageHeader } from "@/components/atoms/PageHeader";
 import { MissionCard } from "@/components/molecules/MissionCard";
 import { MonthBriefing } from "@/components/molecules/MonthBriefing";
 import { MoodCheckIn } from "@/components/molecules/MoodCheckIn";
+import { TodayPresence } from "@/components/molecules/TodayPresence";
 import { UpdateFeedItem } from "@/components/molecules/UpdateFeedItem";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
+import { UserPanel } from "@/components/organisms/UserPanel";
 import { useHome } from "@/lib/use-home";
+import { useOpenedUser } from "@/lib/opened-user";
 import { useMood } from "@/lib/use-mood";
+import { useUsersScreen } from "@/lib/use-users";
 import { useOpenedMission } from "@/lib/opened-mission";
 
 /**
@@ -25,6 +29,12 @@ import { useOpenedMission } from "@/lib/opened-mission";
  * the rest. Keeping it that way is what stops it from slowly becoming a second
  * Saisie des temps.
  *
+ * The presence block keeps to that rule: it says who is around today and
+ * hands the week over to the tab that holds it, without offering to declare
+ * anything. Declaring one's own week happens once and then almost never, and a
+ * picker posted here would be noise every morning for a gesture made twice a
+ * year.
+ *
  * The mood is the one exception, and it is a deliberate one. Answering is a
  * one-second gesture on a window that closes the next working day; behind a
  * link, it would simply never be made, and a morale nobody posts measures
@@ -35,6 +45,12 @@ import { useOpenedMission } from "@/lib/opened-mission";
 export function HomePage() {
   const home = useHome();
   const mood = useMood();
+  // The same hook the teammates screen uses: the home screen already reads
+  // the team for the presence block, and the panel is opened from here
+  // rather than reached by a screen — changing a day is not worth one.
+  const team = useUsersScreen();
+  const userPanel = useOpenedUser();
+  const openedUser = userPanel.openedUser ? team.find(userPanel.openedUser) : null;
   const panel = useOpenedMission();
   const now = useMemo(() => new Date(), []);
 
@@ -121,6 +137,17 @@ export function HomePage() {
             onPick={mood.post}
           />
 
+          {/* Read, never written: declaring one's own week happens once and
+            then almost never, and a picker posted here would be noise every
+            morning for a gesture made twice a year. Who is around is worth
+            knowing each day — and the whole week is one click away. */}
+          <TodayPresence
+            users={team.users}
+            today={now}
+            meId={home.me?.id ?? null}
+            onOpenMine={() => home.me && userPanel.open(home.me.id)}
+          />
+
           {/* Framed like a kanban column, and tinted like one: a stack of cards
             read one after the other is the same object on both screens, and the
             tint is what tells the eye where the stack stops. */}
@@ -166,6 +193,26 @@ export function HomePage() {
           // the card behind it.
           onMissionChanged={home.refresh}
           onOpenMission={(projectId) => panel.open(projectId)}
+        />
+      )}
+
+      {/* The teammate panel opens here rather than on another screen: one
+          comes to move a day of one's own week, and that is not worth
+          leaving what one was reading. It is the very same panel the
+          teammates screen opens, with the same rights. */}
+      {openedUser && (
+        <UserPanel
+          user={openedUser}
+          roleModifiable={team.isManager}
+          canChangeStatus={team.isManager && openedUser.id !== team.meId}
+          editable={team.isManager}
+          isMe={openedUser.id === team.meId}
+          onChangeRole={team.changeRole}
+          onSetActive={team.setActive}
+          onUpdateIdentity={team.updateIdentity}
+          onDeclarePresence={team.declareOwnPresence}
+          now={team.now}
+          onClose={userPanel.close}
         />
       )}
     </PageLayout>

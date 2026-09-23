@@ -15,7 +15,11 @@ from src.modules.activity.domain.repositories.activity_repository import (
 )
 from src.modules.api_keys.domain.entities.api_key import ApiKey
 from src.modules.api_keys.domain.repositories.api_key_repository import ApiKeyRepository
-from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
+from src.modules.audit_logs.domain.entities.audit_log import (
+    AuditAction,
+    AuditLog,
+    AuditLogFilter,
+)
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
@@ -389,20 +393,23 @@ class InMemoryAuditLogRepository(AuditLogRepository):
     async def count_for_project(self, project_id: int) -> int:
         return len(self._for_project(project_id))
 
-    def _all(self, since: datetime | None) -> list[AuditLog]:
+    def _all(self, kept: AuditLogFilter | None) -> list[AuditLog]:
+        # The criteria are answered by the filter itself rather than rewritten
+        # here: this register and the real one must not be able to disagree
+        # about what a reader asked for.
         return sorted(
-            (log for log in self.logs if since is None or log.at >= since),
+            (log for log in self.logs if kept is None or kept.holds(log)),
             key=lambda log: (log.at, log.id or 0),
             reverse=True,
         )
 
     async def list_all(
-        self, limit: int, offset: int, since: datetime | None = None
+        self, limit: int, offset: int, kept: AuditLogFilter | None = None
     ) -> list[AuditLog]:
-        return self._all(since)[offset : offset + limit]
+        return self._all(kept)[offset : offset + limit]
 
-    async def count_all(self, since: datetime | None = None) -> int:
-        return len(self._all(since))
+    async def count_all(self, kept: AuditLogFilter | None = None) -> int:
+        return len(self._all(kept))
 
     async def list_between(
         self,

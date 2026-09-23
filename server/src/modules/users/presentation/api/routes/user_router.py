@@ -12,12 +12,16 @@ from src.modules.auth.presentation.dependencies import (
 )
 from src.modules.users.application.dtos.user_dto import (
     ChangeRoleCommand,
+    DeclareOwnPresenceCommand,
     SetUserActiveCommand,
     UpdateUserIdentityCommand,
 )
 from src.modules.users.application.dtos.user_record_dto import GetUserRecordQuery
 from src.modules.users.application.use_cases.change_user_role import (
     ChangeUserRoleUseCase,
+)
+from src.modules.users.application.use_cases.declare_own_presence import (
+    DeclareOwnPresenceUseCase,
 )
 from src.modules.users.application.use_cases.get_user_record import GetUserRecordUseCase
 from src.modules.users.application.use_cases.list_users import ListUsersUseCase
@@ -35,12 +39,14 @@ from src.modules.users.presentation.api.schemas.user_record_schemas import (
 )
 from src.modules.users.presentation.api.schemas.user_schemas import (
     ChangeRoleRequest,
+    DeclarePresenceRequest,
     SetActiveRequest,
     UpdateUserIdentityRequest,
     UserResponse,
 )
 from src.modules.users.presentation.dependencies import (
     get_change_role_use_case,
+    get_declare_own_presence_use_case,
     get_list_users_use_case,
     get_set_user_active_use_case,
     get_update_user_identity_use_case,
@@ -158,6 +164,30 @@ async def update_identity(
             department=payload.department,
             github_username=payload.github_username,
         )
+    )
+    await session.commit()
+    return to_user_response(user)
+
+
+@router.put(
+    "/me/presence",
+    response_model=UserResponse,
+    operation_id="declareOwnPresence",
+)
+async def declare_own_presence(
+    payload: DeclarePresenceRequest,
+    current_user: User = Depends(get_current_user),
+    use_case: DeclareOwnPresenceUseCase = Depends(get_declare_own_presence_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> UserResponse:
+    """Says which days one works, and from where.
+
+    The address carries no teammate, and that is the guarantee rather than a
+    shorthand: there is no colleague's week this route could reach.
+    """
+    assert current_user.id is not None
+    user = await use_case.execute(
+        DeclareOwnPresenceCommand(actor_id=current_user.id, week=payload.to_week())
     )
     await session.commit()
     return to_user_response(user)

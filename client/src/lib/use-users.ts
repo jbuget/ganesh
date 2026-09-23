@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import {
   changeUserRole,
+  declareOwnPresence,
   setUserActive,
   updateUserIdentity,
 } from "@/lib/api/generated/users/users";
@@ -13,6 +14,7 @@ import type {
   UserResponse,
 } from "@/lib/api/generated/model";
 import { useCurrentUser, useTeammates } from "@/lib/api/queries";
+import type { WeekPresence } from "@/lib/presence";
 import { NO_USER_FILTER, filterUsers, type UserFilters } from "@/lib/user-filters";
 import { NO_USER_SORT, sortUsers, type UserSort } from "@/lib/user-sort";
 
@@ -84,6 +86,17 @@ export function useUsersScreen(
         github_username: user.github_username ?? null,
         ...change,
       });
+      await queryClient.invalidateQueries();
+    },
+
+    /**
+     * One's own week, and nobody else's.
+     *
+     * The route carries no teammate: there is no colleague's week this could
+     * reach by mistake, which is the guarantee rather than a shorthand.
+     */
+    async declareOwnPresence(week: WeekPresence) {
+      await declareOwnPresence(week);
       await queryClient.invalidateQueries();
     },
 
