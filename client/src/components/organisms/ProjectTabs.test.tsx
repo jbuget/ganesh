@@ -21,6 +21,8 @@ interface Sheet {
   consumed_days: number;
   /** Work packages under the mission, told apart by whether they still run. */
   sub_projects?: { is_active: boolean }[];
+  /** A project by default: it is the one kind that may carry packages. */
+  kind?: "project" | "work_package" | "off_project";
 }
 
 function sheet(project: Sheet) {
@@ -28,6 +30,7 @@ function sheet(project: Sheet) {
     project: {
       id: 10,
       label: "Portail",
+      kind: project.kind ?? "project",
       is_active: true,
       is_deletable: project.is_deletable,
       archived_at: null,
@@ -50,6 +53,7 @@ function sheet(project: Sheet) {
 function tabs(project: Sheet) {
   const deleteMission = vi.fn();
   const archive = vi.fn();
+  const addSubProject = vi.fn();
   render(
     <ProjectTabs
       detail={sheet(project)}
@@ -61,7 +65,7 @@ function tabs(project: Sheet) {
       saveRegistry={vi.fn()}
       addLink={vi.fn()}
       removeLink={vi.fn()}
-      addSubProject={vi.fn()}
+      addSubProject={addSubProject}
       attachTo={vi.fn()}
       detach={vi.fn()}
       archive={archive}
@@ -69,7 +73,7 @@ function tabs(project: Sheet) {
       deleteMission={deleteMission}
     />,
   );
-  return { deleteMission, archive };
+  return { deleteMission, archive, addSubProject };
 }
 
 async function askToDelete() {
@@ -140,5 +144,50 @@ describe("ProjectTabs", () => {
     await askToArchive();
 
     expect(archive).toHaveBeenCalledWith();
+  });
+});
+
+describe("ProjectTabs — cutting a project into packages", () => {
+  it("declares a sub-project from the menu of the project", async () => {
+    const { addSubProject } = tabs({ is_deletable: true, consumed_days: 0 });
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Actions sur le projet" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Déclarer un sous-projet…" }),
+    );
+    await userEvent.type(
+      screen.getByLabelText("Nom du sous-projet"),
+      "Reprise de données",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Déclarer" }));
+
+    expect(addSubProject).toHaveBeenCalledWith("Reprise de données");
+  });
+
+  /** The hierarchy stops at two levels, and off-project work carries nothing. */
+  it("offers nothing of the kind on a work package", async () => {
+    tabs({ is_deletable: true, consumed_days: 0, kind: "work_package" });
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Actions sur le projet" }),
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /Déclarer un sous-projet/ }),
+    ).toBeNull();
+  });
+
+  it("offers nothing of the kind on off-project work", async () => {
+    tabs({ is_deletable: true, consumed_days: 0, kind: "off_project" });
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Actions sur le projet" }),
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /Déclarer un sous-projet/ }),
+    ).toBeNull();
   });
 });

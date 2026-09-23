@@ -3,6 +3,7 @@
 import { ArchiveMissionDialog } from "@/components/atoms/ArchiveMissionDialog";
 import { ArchivedCallout } from "@/components/atoms/ArchivedCallout";
 import { AttachMissionDialog } from "@/components/atoms/AttachMissionDialog";
+import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { DeleteMissionDialog } from "@/components/atoms/DeleteMissionDialog";
 import { MissionMenu } from "@/components/atoms/MissionMenu";
 import { ProjectAttachmentsTab } from "@/components/organisms/ProjectAttachmentsTab";
@@ -100,6 +101,7 @@ export function ProjectTabs({
   const [isDeleteOpen, setDeleteOpen] = useState(false);
   const [isAttachOpen, setAttachOpen] = useState(false);
   const [isArchiveOpen, setArchiveOpen] = useState(false);
+  const [isSubProjectOpen, setSubProjectOpen] = useState(false);
 
   const { kind, parent_id: parentId } = detail.project;
   // Off-project work is not a slice of anything: absences and training belong
@@ -107,6 +109,10 @@ export function ProjectTabs({
   // is how an aim taken at the wrong project is corrected.
   const belongsToAProject = kind === "work_package";
   const canBeAttached = kind !== "off_project";
+  // The hierarchy stops at two levels, and off-project work carries nothing:
+  // the entry is offered where the server would accept the package, rather
+  // than everywhere and refused afterwards.
+  const canCarryAPackage = kind === "project";
 
   // Packages that already left settle nothing: the question is only about the
   // ones the archiving would leave behind, still steered on their own.
@@ -137,6 +143,7 @@ export function ProjectTabs({
 
         <MissionMenu
           archived={!detail.project.is_active}
+          onAddSubProject={canCarryAPackage ? () => setSubProjectOpen(true) : undefined}
           onAttach={canBeAttached ? () => setAttachOpen(true) : undefined}
           onDetach={belongsToAProject ? detach : undefined}
           parentLabel={detail.parent?.label ?? null}
@@ -145,6 +152,19 @@ export function ProjectTabs({
           onDelete={() => setDeleteOpen(true)}
         />
       </div>
+
+      {/* The same dialog as elsewhere: declaring a package asks exactly what
+          declaring a project asks — a name — and the dialog says which of the
+          two it is announcing. Mounted on opening, like the two below, so an
+          abandoned name is not the one that greets the next package. */}
+      {isSubProjectOpen && (
+        <DeclareProjectDialog
+          open
+          kind="work_package"
+          onOpenChange={setSubProjectOpen}
+          onConfirm={addSubProject}
+        />
+      )}
 
       {/* The packages the sheet already lists are the ones the dialog argues
           from, and the ones the server will settle. */}
