@@ -4,6 +4,7 @@ from datetime import datetime
 
 import pytest
 
+from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.enums.department import Department
 
@@ -203,3 +204,39 @@ def test_a_blank_github_handle_reads_as_unknown() -> None:
     )
 
     assert user.github_username is None
+
+
+def test_a_letter_comes_every_day_until_somebody_says_otherwise() -> None:
+    # Not a stand-in for an answer nobody gave: a reader who has said nothing
+    # is a reader the bell is not reaching, which is the whole point.
+    assert make_user().reminder_cadence is ReminderCadence.DAILY
+
+
+def test_everyone_chooses_how_often_they_are_written_to() -> None:
+    assert make_user().can_choose_own_reminder() is True
+
+
+def test_a_deactivated_account_chooses_nothing() -> None:
+    assert make_user(is_active=False).can_choose_own_reminder() is False
+
+
+def test_a_reader_asks_for_the_weekly_letter() -> None:
+    user = make_user()
+
+    user.choose_reminder_cadence(ReminderCadence.WEEKLY)
+
+    assert user.reminder_cadence is ReminderCadence.WEEKLY
+
+
+def test_a_reader_asks_for_no_letter_at_all() -> None:
+    user = make_user()
+
+    user.choose_reminder_cadence(ReminderCadence.NEVER)
+
+    assert user.reminder_cadence is ReminderCadence.NEVER
+    assert user.reminder_cadence.wants_mail is False
+
+
+@pytest.mark.parametrize("cadence", [ReminderCadence.DAILY, ReminderCadence.WEEKLY])
+def test_every_cadence_but_never_is_owed_a_letter(cadence: ReminderCadence) -> None:
+    assert cadence.wants_mail is True

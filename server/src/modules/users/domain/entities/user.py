@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 
 from src.modules.users.domain.entities.presence import WeekPresence
+from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.shared.enums.department import Department
 
 #: Below this, a fresh login is not worth a write to the database.
@@ -66,6 +67,10 @@ class User:
     #: so it is what is true of anyone who has said nothing, not a placeholder
     #: standing in for an answer.
     presence: WeekPresence = field(default_factory=WeekPresence)
+    #: How often this teammate wants the letter saying what is waiting. Every
+    #: day until they say otherwise: somebody who has never opened the setting
+    #: is precisely the reader the bell is failing to reach.
+    reminder_cadence: ReminderCadence = ReminderCadence.DAILY
 
     def __post_init__(self) -> None:
         self.email = self.email.strip().lower()
@@ -125,6 +130,18 @@ class User:
         the team reads.
         """
         return self.is_active
+
+    def can_choose_own_reminder(self) -> bool:
+        """Everyone says how often they are written to, and nobody else does.
+
+        No manager's business, for the same reason a declared week is not: how
+        often somebody wants their mailbox used is a fact about them.
+        """
+        return self.is_active
+
+    def choose_reminder_cadence(self, cadence: ReminderCadence) -> None:
+        """Takes down how often this teammate wants to be written to."""
+        self.reminder_cadence = cadence
 
     def can_deactivate(self, target: "User") -> bool:
         """Tells whether this manager may cut `target` off.
