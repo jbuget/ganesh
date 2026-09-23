@@ -32,6 +32,22 @@ class AuditLogRepository(ABC):
     async def count_for_user_month(self, target_user_id: int, month: date) -> int: ...
 
     @abstractmethod
+    async def list_for_user(
+        self, user_id: int, limit: int, offset: int
+    ) -> list[AuditLog]:
+        """Everything one person's id appears on, most recent first.
+
+        Both sides of it: what they did, and what was done to them. A log that
+        only held their own gestures would leave out the day their role was
+        changed and the month somebody filled in for them — the two things one
+        opens a colleague's panel to find out.
+        """
+        ...
+
+    @abstractmethod
+    async def count_for_user(self, user_id: int) -> int: ...
+
+    @abstractmethod
     async def list_for_project(
         self, project_id: int, limit: int, offset: int
     ) -> list[AuditLog]: ...

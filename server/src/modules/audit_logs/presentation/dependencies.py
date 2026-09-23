@@ -14,6 +14,9 @@ from src.modules.audit_logs.application.use_cases.list_project_audit_log import 
 from src.modules.audit_logs.application.use_cases.list_touched_projects import (
     ListTouchedProjectsUseCase,
 )
+from src.modules.audit_logs.application.use_cases.list_user_audit_log import (
+    ListUserAuditLogUseCase,
+)
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
@@ -41,6 +44,16 @@ def get_month_audit_log_use_case(
     projects: ProjectRepository = Depends(get_project_repository),
 ) -> ListMonthAuditLogUseCase:
     return ListMonthAuditLogUseCase(
+        audit_logs=audit_logs, users=users, projects=projects
+    )
+
+
+def get_user_audit_log_use_case(
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+) -> ListUserAuditLogUseCase:
+    return ListUserAuditLogUseCase(
         audit_logs=audit_logs, users=users, projects=projects
     )
 

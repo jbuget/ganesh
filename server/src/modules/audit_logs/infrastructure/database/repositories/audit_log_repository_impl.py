@@ -4,7 +4,7 @@ from collections.abc import Collection
 from datetime import date, datetime
 from typing import Any, TypeVar
 
-from sqlalchemy import Select, and_, extract, func, select
+from sqlalchemy import Select, and_, extract, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.elements import ColumnElement
@@ -91,6 +91,34 @@ class SqlAuditLogRepository(AuditLogRepository):
             select(func.count())
             .select_from(AuditLogModel)
             .where(self._within_the_month(target_user_id, month))
+        )
+        return int(result.scalar_one())
+
+    @staticmethod
+    def _names(user_id: int) -> ColumnElement[bool]:
+        """Either side of the line: what they did, or what was done to them."""
+        return or_(
+            AuditLogModel.actor_id == user_id,
+            AuditLogModel.target_user_id == user_id,
+        )
+
+    async def list_for_user(
+        self, user_id: int, limit: int, offset: int
+    ) -> list[AuditLog]:
+        result = await self._session.execute(
+            select(AuditLogModel)
+            .where(self._names(user_id))
+            # The same tie-break as everywhere else: one gesture that changed
+            # several fields wrote several lines at one timestamp.
+            .order_by(AuditLogModel.at.desc(), AuditLogModel.id.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return [to_entity(model) for model in result.scalars().all()]
+
+    async def count_for_user(self, user_id: int) -> int:
+        result = await self._session.execute(
+            select(func.count()).select_from(AuditLogModel).where(self._names(user_id))
         )
         return int(result.scalar_one())
 

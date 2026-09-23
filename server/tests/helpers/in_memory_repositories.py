@@ -378,6 +378,25 @@ class InMemoryAuditLogRepository(AuditLogRepository):
     async def count_for_user_month(self, target_user_id: int, month: date) -> int:
         return len(self._for_user_month(target_user_id, month))
 
+    def _for_user(self, user_id: int) -> list[AuditLog]:
+        return sorted(
+            (
+                log
+                for log in self.logs
+                if log.actor_id == user_id or log.target_user_id == user_id
+            ),
+            key=lambda log: (log.at, log.id or 0),
+            reverse=True,
+        )
+
+    async def list_for_user(
+        self, user_id: int, limit: int, offset: int
+    ) -> list[AuditLog]:
+        return self._for_user(user_id)[offset : offset + limit]
+
+    async def count_for_user(self, user_id: int) -> int:
+        return len(self._for_user(user_id))
+
     def _for_project(self, project_id: int) -> list[AuditLog]:
         return sorted(
             (log for log in self.logs if log.project_id == project_id),
