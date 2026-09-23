@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 
-from sqlalchemy import JSON, Date, DateTime, Enum, ForeignKey, Integer, String, func
+from sqlalchemy import JSON, Date, DateTime, Enum, ForeignKey, Integer, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
@@ -32,6 +32,10 @@ class AuditLogModel(Base):
         ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True
     )
     day: Mapped[date | None] = mapped_column(Date, nullable=True)
-    old_value: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    new_value: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    #: What a field moved from and to, as it was typed. Held without a width:
+    #: a documentation address, a summary or a list of scopes all run past any
+    #: line one would have guessed, and a column that refused them turned an
+    #: ordinary edit into a 500.
+    old_value: Mapped[str | None] = mapped_column(Text, nullable=True)
+    new_value: Mapped[str | None] = mapped_column(Text, nullable=True)
     payload: Mapped[dict | None] = mapped_column(JSON, nullable=True)

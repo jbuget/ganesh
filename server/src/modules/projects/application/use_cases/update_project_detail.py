@@ -110,8 +110,8 @@ async def _trace_link(
 
     Under the same field as the sheet's other lists: what one reads back is a
     project whose links changed, which is exactly what happened. The name is
-    kept rather than the address — it is what the screen showed, and an address
-    is often too long for the column the log stores it in.
+    kept rather than the address: it is what the screen showed, and what a
+    reader recognises the link by.
     """
     await audit_logs.add(
         AuditLog(

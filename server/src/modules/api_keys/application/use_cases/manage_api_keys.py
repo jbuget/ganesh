@@ -180,8 +180,8 @@ class UpdateApiKeyUseCase:
                     action=AuditAction.API_KEY_UPDATE,
                     actor_id=command.actor_id,
                     target_user_id=key.owner_id,
-                    old_value=before_value[:64],
-                    new_value=after_value[:64],
+                    old_value=before_value,
+                    new_value=after_value,
                     payload={
                         "field": field,
                         "api_key": key_material.masked(key.public_id),
