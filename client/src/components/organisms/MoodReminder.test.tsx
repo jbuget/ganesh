@@ -102,6 +102,14 @@ describe("how it sits on the page", () => {
     expect(className).toContain("slide-in-from-bottom-8");
   });
 
+  it("rises gently rather than shooting up", () => {
+    // A panel that darts into place is an interruption; one that rises is an
+    // offer.
+    render(<MoodReminder />);
+
+    expect(screen.getByRole("status").className).toContain("duration-700");
+  });
+
   it("holds still for whoever asked for less movement", () => {
     render(<MoodReminder />);
 

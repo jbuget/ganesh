@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { MoodLevel } from "@/lib/api/generated/model";
 import {
@@ -25,6 +25,16 @@ export const REMINDER_FROM_HOUR = 16;
  * left open since the morning would otherwise never reach four o'clock.
  */
 const TICK_MS = 60_000;
+
+/**
+ * How long the reader is left alone after landing somewhere.
+ *
+ * Somebody who has just opened a screen opened it to read it, and a panel
+ * rising over that is an interruption whatever it asks. Long enough to have
+ * found what one came for, short enough that the question still belongs to
+ * the screen one is on.
+ */
+export const REMINDER_DELAY_MS = 4_000;
 
 /**
  * The screens that already ask the question, and where it is not asked twice.
@@ -60,6 +70,33 @@ function useLocalHour(): number | null {
 }
 
 /**
+ * Whether the reader has been left alone long enough to be asked.
+ *
+ * The wait starts again at each screen, so whoever is still moving around is
+ * never caught on arrival — but only until the question has been put once.
+ * After that it stands: a relance that went back into hiding at every
+ * navigation would rise again at the next one, and a panel that comes and goes
+ * is read as a fault rather than as a question.
+ */
+function useSettledIn(pathname: string): boolean {
+  const [waited, setWaited] = useState(false);
+  const asked = useRef(false);
+
+  useEffect(() => {
+    if (asked.current) return;
+
+    setWaited(false);
+    const timer = setTimeout(() => {
+      asked.current = true;
+      setWaited(true);
+    }, REMINDER_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [pathname]);
+
+  return waited;
+}
+
+/**
  * Whether to ask for today's mood, and the answering itself.
  *
  * Today alone, never the working day before: this is a relance about the day
@@ -75,6 +112,7 @@ export function useMoodReminder() {
   const pathname = usePathname();
   const dismissedOn = useMoodReminderDismissedOn();
   const hour = useLocalHour();
+  const settled = useSettledIn(pathname);
 
   const today = mood.today;
   const open = mood.days.find((day) => day.day === today);
@@ -83,6 +121,7 @@ export function useMoodReminder() {
     show:
       open != null &&
       open.level == null &&
+      settled &&
       hour !== null &&
       hour >= REMINDER_FROM_HOUR &&
       !ASKED_ELSEWHERE.includes(pathname) &&

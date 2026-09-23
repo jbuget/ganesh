@@ -31,6 +31,10 @@ import { useMoodReminder } from "@/lib/use-mood-reminder";
  * there was always there as far as the eye is concerned, and the eye does not
  * go back to it. The movement is what makes the question a question.
  *
+ * Slowly, and after the reader has been left alone a moment — `useSettledIn`
+ * holds it back. A panel that shoots up the instant one lands somewhere is an
+ * interruption; one that rises gently once the page has been read is an offer.
+ *
  * It rises once, and not again at every screen. Nothing here arranges that:
  * the reminder lives in the frame, so moving from « Projets » to « Kanban »
  * leaves the same element in place and the animation has nothing to replay.
@@ -52,7 +56,7 @@ export function MoodReminder() {
     <section
       role="status"
       aria-label="Mon moral"
-      className={`fixed bottom-4 right-4 z-30 w-72 max-w-[calc(100vw-2rem)] animate-in rounded-xl border bg-white p-3 shadow-lg duration-300 ease-out fade-in-0 slide-in-from-bottom-8 motion-reduce:animate-none ${STRONG_RULE}`}
+      className={`fixed bottom-4 right-4 z-30 w-72 max-w-[calc(100vw-2rem)] animate-in rounded-xl border bg-white p-3 shadow-lg duration-700 ease-out fade-in-0 slide-in-from-bottom-8 motion-reduce:animate-none ${STRONG_RULE}`}
     >
       <header className="mb-2">
         <h2 className="text-sm font-medium text-slate-700">
