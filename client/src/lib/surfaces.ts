@@ -47,6 +47,7 @@ const WORDINGS: Record<Surface, SurfaceWording> = {
     counted: "humeurs déposées ; ce qu'elles disent n'est pas lu ici",
   },
   notifications: { label: "Notifications", counted: "notifications ouvertes" },
+  reminders: { label: "Rappels par mail", counted: "cadences choisies" },
   presence: { label: "Présence", counted: "semaines déclarées" },
   team_admin: { label: "Gestion de l'équipe" },
   api_keys: { label: "Clés API", counted: "créations, modifications, révocations" },

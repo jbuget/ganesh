@@ -342,6 +342,12 @@ export function auditSentence(
     case "user.presence_declare":
       return { action: "a déclaré sa semaine" };
 
+    // Which cadence is in the payload and read on one's own profile. The line
+    // says that somebody chose, never what a letter then said: a channel
+    // leaves no trace, only the gesture that opened or closed it.
+    case "user.reminder_choose":
+      return { action: "a choisi sa fréquence de rappel" };
+
     // A key is named by its masked public part — the only piece of it the
     // register holds, the secret having never been written anywhere.
     case "api_key.create":

@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Department } from "./department";
+import type { ReminderCadence } from "./reminderCadence";
 import type { Role } from "./role";
 import type { WeekPresenceResponse } from "./weekPresenceResponse";
 
@@ -24,4 +25,5 @@ export interface UserResponse {
   department?: Department | null;
   github_username?: string | null;
   presence: WeekPresenceResponse;
+  reminder_cadence: ReminderCadence;
 }

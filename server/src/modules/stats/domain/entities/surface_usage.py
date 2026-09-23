@@ -48,6 +48,7 @@ class Surface(StrEnum):
     GAZETTE = "gazette"
     MOOD = "mood"
     NOTIFICATIONS = "notifications"
+    REMINDERS = "reminders"
     PRESENCE = "presence"
     TEAM_ADMIN = "team_admin"
     API_KEYS = "api_keys"
@@ -108,6 +109,12 @@ SURFACE_OF: dict[AuditAction, Surface] = {
     # declared by everyone for themselves, and folded into team
     # administration it would read as a busy month at the manager's desk.
     AuditAction.USER_PRESENCE_DECLARE: Surface.PRESENCE,
+    # Saying how often one is written to. A line of its own rather than one
+    # shared with « Notifications », which counts notifications opened: mixing
+    # a setting somebody changed into a figure of what people read would give
+    # a number answering neither question. Zero here is a reading too — it
+    # says the default is what everybody is still on.
+    AuditAction.USER_REMINDER_CHOOSE: Surface.REMINDERS,
     # Holding the team.
     AuditAction.USER_CREATE: Surface.TEAM_ADMIN,
     AuditAction.USER_ROLE_CHANGE: Surface.TEAM_ADMIN,
