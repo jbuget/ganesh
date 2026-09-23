@@ -5,6 +5,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from src.modules.users.domain.entities.presence import DayPresence, WeekPresence
+from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.modules.users.domain.entities.user import Role
 from src.shared.enums.department import Department
 
@@ -75,6 +76,9 @@ class UserResponse(BaseModel):
     github_username: str | None = None
     #: The ordinary week. On site every day until somebody says otherwise.
     presence: WeekPresenceResponse
+    #: How often the letter saying what is waiting goes out. Every day until
+    #: this teammate says otherwise.
+    reminder_cadence: ReminderCadence
 
 
 class ChangeRoleRequest(BaseModel):
@@ -99,3 +103,9 @@ class UpdateUserIdentityRequest(BaseModel):
     last_name: str | None = Field(default=None, max_length=255)
     department: Department | None = None
     github_username: str | None = Field(default=None, max_length=255)
+
+
+class ChooseReminderCadenceRequest(BaseModel):
+    """How often one wants the letter saying what is waiting."""
+
+    cadence: ReminderCadence

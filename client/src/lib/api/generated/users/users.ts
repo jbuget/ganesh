@@ -23,6 +23,7 @@ import type {
 import type {
   AuditLogPageResponse,
   ChangeRoleRequest,
+  ChooseReminderCadenceRequest,
   DeclarePresenceRequest,
   HTTPValidationError,
   ListUserAuditLogParams,
@@ -1241,4 +1242,148 @@ export const useDeclareOwnPresence = <TError = HTTPValidationError, TContext = u
   TContext
 > => {
   return useMutation(getDeclareOwnPresenceMutationOptions(options), queryClient);
+};
+export type chooseOwnReminderCadenceResponse200 = {
+  data: UserResponse;
+  status: 200;
+};
+
+export type chooseOwnReminderCadenceResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type chooseOwnReminderCadenceResponseSuccess =
+  chooseOwnReminderCadenceResponse200 & {
+    headers: Headers;
+  };
+export type chooseOwnReminderCadenceResponseError =
+  chooseOwnReminderCadenceResponse422 & {
+    headers: Headers;
+  };
+
+export type chooseOwnReminderCadenceResponse =
+  chooseOwnReminderCadenceResponseSuccess | chooseOwnReminderCadenceResponseError;
+
+export const getChooseOwnReminderCadenceUrl = () => {
+  return `/api/v1/users/me/reminder-cadence`;
+};
+
+/**
+ * Says how often one wants the letter naming what is waiting.
+ *
+ * The address carries no teammate, as `/me/presence` does not: there is no
+ * colleague's mailbox this route could reach.
+ * @summary Choose Own Reminder Cadence
+ */
+export const chooseOwnReminderCadence = async (
+  chooseReminderCadenceRequest: ChooseReminderCadenceRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<chooseOwnReminderCadenceResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<chooseOwnReminderCadenceResponse>(
+    getChooseOwnReminderCadenceUrl(),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(chooseReminderCadenceRequest),
+    },
+  );
+};
+
+export const getChooseOwnReminderCadenceMutationKey = () =>
+  ["chooseOwnReminderCadence"] as const;
+
+export const getChooseOwnReminderCadenceMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof chooseOwnReminderCadence>>,
+    TError,
+    ChooseOwnReminderCadenceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof chooseOwnReminderCadence>>,
+  TError,
+  ChooseOwnReminderCadenceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChooseOwnReminderCadenceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof chooseOwnReminderCadence>>,
+    ChooseOwnReminderCadenceMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return chooseOwnReminderCadence(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChooseOwnReminderCadenceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof chooseOwnReminderCadence>>
+>;
+export type ChooseOwnReminderCadenceMutationBody = ChooseReminderCadenceRequest;
+export type ChooseOwnReminderCadenceMutationError = HTTPValidationError;
+export type ChooseOwnReminderCadenceMutationVariables = {
+  data: ChooseReminderCadenceRequest;
+};
+
+/**
+ * @summary Choose Own Reminder Cadence
+ */
+export const useChooseOwnReminderCadence = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof chooseOwnReminderCadence>>,
+      TError,
+      ChooseOwnReminderCadenceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof chooseOwnReminderCadence>>,
+  TError,
+  ChooseOwnReminderCadenceMutationVariables,
+  TContext
+> => {
+  return useMutation(getChooseOwnReminderCadenceMutationOptions(options), queryClient);
 };

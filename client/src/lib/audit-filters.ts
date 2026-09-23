@@ -94,6 +94,7 @@ export const ACTION_FAMILIES: ActionFamily[] = [
       { value: "user.role_change", label: "Changement de rôle" },
       { value: "user.identity_update", label: "Fiche modifiée" },
       { value: "user.presence_declare", label: "Semaine déclarée" },
+      { value: "user.reminder_choose", label: "Fréquence de rappel" },
       { value: "user.deactivate", label: "Désactivation" },
       { value: "user.activate", label: "Réactivation" },
     ],

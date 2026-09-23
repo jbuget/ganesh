@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
 from src.modules.users.domain.entities.presence import DayPresence
+from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.modules.users.domain.entities.user import Role
 from src.shared.enums.department import Department
 
@@ -39,6 +40,15 @@ class UserModel(Base):
     )
     # The handle alone, never « @lea-chen »: the domain trims it on the way in.
     github_username: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # How often the letter saying what is waiting goes out. Every day until
+    # somebody says otherwise: a reader who has never opened the setting is
+    # exactly the one the bell is failing to reach.
+    reminder_cadence: Mapped[ReminderCadence] = mapped_column(
+        Enum(ReminderCadence, name="reminder_cadence", native_enum=False, length=8),
+        nullable=False,
+        server_default=ReminderCadence.DAILY.value,
+    )
 
     # The ordinary week. On site every day until somebody says otherwise:
     # the arrangement the team runs on, and therefore what is true of anyone

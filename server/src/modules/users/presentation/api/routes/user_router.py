@@ -22,6 +22,7 @@ from src.modules.auth.presentation.dependencies import (
 )
 from src.modules.users.application.dtos.user_dto import (
     ChangeRoleCommand,
+    ChooseOwnReminderCadenceCommand,
     DeclareOwnPresenceCommand,
     SetUserActiveCommand,
     UpdateUserIdentityCommand,
@@ -29,6 +30,9 @@ from src.modules.users.application.dtos.user_dto import (
 from src.modules.users.application.dtos.user_record_dto import GetUserRecordQuery
 from src.modules.users.application.use_cases.change_user_role import (
     ChangeUserRoleUseCase,
+)
+from src.modules.users.application.use_cases.choose_own_reminder_cadence import (
+    ChooseOwnReminderCadenceUseCase,
 )
 from src.modules.users.application.use_cases.declare_own_presence import (
     DeclareOwnPresenceUseCase,
@@ -49,6 +53,7 @@ from src.modules.users.presentation.api.schemas.user_record_schemas import (
 )
 from src.modules.users.presentation.api.schemas.user_schemas import (
     ChangeRoleRequest,
+    ChooseReminderCadenceRequest,
     DeclarePresenceRequest,
     SetActiveRequest,
     UpdateUserIdentityRequest,
@@ -56,6 +61,7 @@ from src.modules.users.presentation.api.schemas.user_schemas import (
 )
 from src.modules.users.presentation.dependencies import (
     get_change_role_use_case,
+    get_choose_own_reminder_cadence_use_case,
     get_declare_own_presence_use_case,
     get_list_users_use_case,
     get_set_user_active_use_case,
@@ -222,6 +228,34 @@ async def declare_own_presence(
     assert current_user.id is not None
     user = await use_case.execute(
         DeclareOwnPresenceCommand(actor_id=current_user.id, week=payload.to_week())
+    )
+    await session.commit()
+    return to_user_response(user)
+
+
+@router.put(
+    "/me/reminder-cadence",
+    response_model=UserResponse,
+    operation_id="chooseOwnReminderCadence",
+)
+async def choose_own_reminder_cadence(
+    payload: ChooseReminderCadenceRequest,
+    current_user: User = Depends(get_current_user),
+    use_case: ChooseOwnReminderCadenceUseCase = Depends(
+        get_choose_own_reminder_cadence_use_case
+    ),
+    session: AsyncSession = Depends(get_db),
+) -> UserResponse:
+    """Says how often one wants the letter naming what is waiting.
+
+    The address carries no teammate, as `/me/presence` does not: there is no
+    colleague's mailbox this route could reach.
+    """
+    assert current_user.id is not None
+    user = await use_case.execute(
+        ChooseOwnReminderCadenceCommand(
+            actor_id=current_user.id, cadence=payload.cadence
+        )
     )
     await session.commit()
     return to_user_response(user)
