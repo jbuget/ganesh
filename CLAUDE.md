@@ -649,6 +649,42 @@ generated with their facts and no chapeau.
 
 ---
 
+## Being told when Ganesh is closed
+
+The bell only reaches whoever has the application open, which is most of the
+team almost never. A letter reaches everybody else. `docs/notifications-email.md`
+is the brief; five rules hold it together:
+
+- **The problem is « not seen », not « not seen fast ».** Nobody needs to learn
+  within thirty seconds that they were mentioned, so the answer is a digest and
+  not a channel. One letter, on a cadence the reader chooses — every working
+  day, the first working day of the week, or never.
+- **It points; it does not copy.** The letter counts by kind — « 2 mentions,
+  1 mois rouvert » — and leads back to the inbox, where the detail and the read
+  state live. **Receiving a letter is not reading an inbox**: nothing of
+  `deliver()`, of the fan-out or of `read_at` is touched, and no letter ever
+  clears a bell.
+- **Nothing is said twice, and nothing is said about nothing.** A letter holds
+  what arrived after the last one and is still unread; `roundup()` answers
+  nothing rather than an empty reminder. A letter that repeats itself, or that
+  arrives saying nothing, teaches its reader to filter the one that mattered.
+- **The clock is inside the application**, in `src/scheduler/` — a third way in
+  beside the routers and the tools, held there by the same two `import-linter`
+  contracts. It claims each run in `scheduled_run`, whose primary key is the
+  lock: the number of `uvicorn` workers stops mattering, and a deploy at 9 h
+  does not re-send the round of 8 h 30. Paris time, hard-coded, as the public
+  holidays are hard-coded to France.
+- **The French of the letter is on the server**, in
+  `domain/services/reminder_letter.py`, and that is the one exception to the
+  interface owning what the reader reads: a letter has no browser in the loop.
+  It is bounded to one noun per kind, and a test asserts every
+  `NotificationKind` has one.
+
+`SMTP_HOST` and what follows it are empty by default — the contract
+`GEMINI_API_KEY` already has. Without them the clock does not start, and
+nothing breaks. `make mail-up` stands up the MailPit that plays the mail server
+on a laptop, as MinIO plays S3.
+
 ## The files a project carries
 
 A capture of a bug, a mock-up, a PDF of the scoping: what a project carries
