@@ -1,10 +1,12 @@
 import type {
+  NotificationKind,
   NotificationResponse,
   ProjectStatus,
   Role,
 } from "@/lib/api/generated/model";
 import { phaseLabel } from "@/lib/board";
 import { formatMonthOf } from "@/lib/dates";
+import { panelAddress } from "@/lib/opened-mission";
 import { roleLabel } from "@/lib/roles";
 
 /**
@@ -146,7 +148,7 @@ function repeats(line: NotificationResponse): string | undefined {
 }
 
 /** The kinds that speak of one line of a thread, rather than of a mission. */
-const ABOUT_AN_UPDATE = ["project.update_posted", "update.mention"];
+const ABOUT_AN_UPDATE: NotificationKind[] = ["project.update_posted", "update.mention"];
 
 /**
  * Where a line leads.
@@ -171,11 +173,14 @@ function destination(line: NotificationResponse): string | undefined {
   if (!line.project) return undefined;
 
   if (ABOUT_AN_UPDATE.includes(line.kind)) {
-    const panel = `/notifications?mission=${line.project.id}&tab=updates`;
-    const aimedAt = number(line.payload, "update_id");
-    // An old line carries no update_id: the thread whole is still where it
-    // was talking about, and naming nothing is better than naming a guess.
-    return aimedAt ? `${panel}&update=${aimedAt}` : panel;
+    // An old line carries no update_id: the thread whole is still where it was
+    // talking about, and naming nothing is better than naming a guess.
+    return panelAddress(
+      "/notifications",
+      line.project.id,
+      "updates",
+      number(line.payload, "update_id"),
+    );
   }
 
   return `/projects/${line.project.id}`;

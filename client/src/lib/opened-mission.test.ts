@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { useOpenedMission } from "./opened-mission";
+import { panelAddress, useOpenedMission } from "./opened-mission";
 
 beforeEach(() => {
   window.history.replaceState(null, "", "/projects");
@@ -79,5 +79,24 @@ describe("useOpenedMission", () => {
     act(() => result.current.close());
 
     expect(window.location.search).toContain("phase=development");
+  });
+});
+
+describe("panelAddress", () => {
+  it("is read back by the hook, whole", () => {
+    window.history.replaceState(
+      null,
+      "",
+      panelAddress("/notifications", 42, "updates", 412),
+    );
+    const { result } = renderHook(() => useOpenedMission());
+
+    expect(result.current.openedMission).toBe(42);
+    expect(result.current.openTab).toBe("updates");
+    expect(result.current.aimedAt).toBe(412);
+  });
+
+  it("says nothing of a tab or a line nobody aimed at", () => {
+    expect(panelAddress("/notifications", 42)).toBe("/notifications?mission=42");
   });
 });

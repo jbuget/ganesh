@@ -86,7 +86,6 @@ export function ProjectUpdateCard({
   return (
     <article
       ref={card}
-      data-aimed={aimed || undefined}
       className={`rounded-lg border border-slate-300 bg-white p-3 ${aimed ? "aimed-at" : ""}`}
     >
       <header className="mb-2 flex items-center gap-2">

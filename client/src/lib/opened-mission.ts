@@ -7,6 +7,27 @@ const TAB = "tab";
 const AIM = "update";
 
 /**
+ * The address that opens a mission's panel on a screen that hosts one.
+ *
+ * Composed here rather than by whoever links to it: the three parameter names
+ * are this module's vocabulary, and a link spelling them out by hand would go
+ * on saying « update » long after the hook had stopped reading it — with both
+ * sets of tests still green.
+ */
+export function panelAddress(
+  screen: string,
+  projectId: number,
+  tab?: string,
+  aimedAt?: number | null,
+): string {
+  const params = new URLSearchParams();
+  params.set(PARAM, String(projectId));
+  if (tab) params.set(TAB, tab);
+  if (aimedAt) params.set(AIM, String(aimedAt));
+  return `${screen}?${params}`;
+}
+
+/**
  * The mission open in the side panel, held by the URL.
  *
  * The URL is the source: a panel is shared by a link, and going back closes it.
