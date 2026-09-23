@@ -71,6 +71,10 @@ class User:
     #: day until they say otherwise: somebody who has never opened the setting
     #: is precisely the reader the bell is failing to reach.
     reminder_cadence: ReminderCadence = ReminderCadence.DAILY
+    #: When the last letter actually went out. `None` until the first one
+    #: does — and a letter that failed leaves it where it was, so the next run
+    #: considers the same window again. That is the only retry there is.
+    reminder_sent_at: datetime | None = None
 
     def __post_init__(self) -> None:
         self.email = self.email.strip().lower()
@@ -142,6 +146,14 @@ class User:
     def choose_reminder_cadence(self, cadence: ReminderCadence) -> None:
         """Takes down how often this teammate wants to be written to."""
         self.reminder_cadence = cadence
+
+    def stamp_reminder(self, at: datetime) -> None:
+        """Takes down that a letter went out, so the next one starts after it.
+
+        Called once a letter has actually been handed over, never before: a
+        stamp moved on a letter that failed would lose what it announced.
+        """
+        self.reminder_sent_at = at
 
     def can_deactivate(self, target: "User") -> bool:
         """Tells whether this manager may cut `target` off.

@@ -50,6 +50,12 @@ class UserModel(Base):
         server_default=ReminderCadence.DAILY.value,
     )
 
+    # When the last letter went out. Nullable: nobody has been written to
+    # before the first run, and a letter that failed leaves it untouched.
+    reminder_sent_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     # The ordinary week. On site every day until somebody says otherwise:
     # the arrangement the team runs on, and therefore what is true of anyone
     # who has said nothing.

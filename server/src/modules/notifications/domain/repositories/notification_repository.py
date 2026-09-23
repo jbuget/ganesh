@@ -44,6 +44,21 @@ class NotificationRepository(ABC):
         ...
 
     @abstractmethod
+    async def list_waiting_since(
+        self, recipient_id: int, since: datetime | None
+    ) -> list[Notification]:
+        """What is still unread and arrived after `since`, oldest first.
+
+        What a letter is made of. Unread, because what has been read in the
+        application has been seen and does not need announcing; arrived after,
+        because a letter that listed everything waiting would list the same
+        lines every morning until its reader gave in and filtered it.
+
+        `None` means everything unread — the first letter somebody ever gets.
+        """
+        ...
+
+    @abstractmethod
     async def count_for(self, recipient_id: int, unread_only: bool) -> int: ...
 
     @abstractmethod

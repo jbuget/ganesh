@@ -1,9 +1,11 @@
-.PHONY: install check lint test db-up storage-up db-down migrate catalog dev-server dev-client
+.PHONY: install check lint test db-up storage-up mail-up db-down migrate catalog dev-server dev-client
 
 # Ports and the Docker project name come from the root .env, and are passed on
 # to the sub-commands: one instance moves in full by changing that one file.
 -include .env
 export
+
+MAILPIT_WEB_PORT ?= 8025
 
 install:
 	$(MAKE) -C server install
@@ -16,6 +18,11 @@ db-up:
 # production, pointed at MinIO; `minio-init` creates the bucket and leaves.
 storage-up:
 	docker compose up -d minio minio-init
+
+# Where the reminder letters land on a laptop: a mailbox nobody outside this
+# machine can reach. Read them on http://localhost:$(MAILPIT_WEB_PORT).
+mail-up:
+	docker compose up -d mailpit
 
 db-down:
 	docker compose down

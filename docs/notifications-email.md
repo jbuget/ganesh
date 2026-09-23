@@ -1,8 +1,9 @@
 # Reminders by mail (V1)
 
-> **A brief, and the reference for what is being built.** Three pull requests:
-> the cadence one chooses, the letter that goes out, and the clock that sends
-> it. *Out of scope for V1* says what was left out on purpose.
+> **Built.** This was the design brief; it is now the reference for what
+> shipped — the cadence on `users`, the letter in `modules/notifications`, the
+> clock in `src/scheduler/`. *Out of scope for V1* still says what was left out
+> on purpose.
 
 ## The gap it closes
 
@@ -173,6 +174,8 @@ So the number of processes is made not to matter:
 
 ```sql
 scheduled_run(job text, due_on date, claimed_at timestamptz)   -- PK (job, due_on)
+-- job reads "reminder:daily" or "reminder:weekly": two rounds on one day
+-- are two claims, never one.
 ```
 
 Each tick tries an `INSERT … ON CONFLICT DO NOTHING`. Whoever inserted works;
@@ -271,11 +274,16 @@ addition on top of what is built:
 |---|---|
 | `server/src/modules/users/domain/entities/reminder_cadence.py` | The three values |
 | `server/src/modules/users/application/use_cases/choose_own_reminder_cadence.py` | Saying which |
+| `server/src/modules/notifications/domain/entities/reminder.py` | What is waiting, by kind |
 | `server/src/modules/notifications/domain/services/roundup.py` | Grouping, and « never empty » |
 | `server/src/modules/notifications/domain/services/reminder_letter.py` | The French, under test |
 | `server/src/modules/notifications/domain/repositories/mailer.py` | The port |
 | `server/src/modules/notifications/infrastructure/mail/smtp_mailer.py` | The adapter |
 | `server/src/modules/notifications/application/use_cases/send_due_reminders.py` | One cadence, one run |
-| `server/src/scheduler/` | The clock, and the claim |
+| `server/src/scheduler/due.py` | What is owed, read off a clock |
+| `server/src/scheduler/claim.py` | The lock, and the ledger |
+| `server/src/scheduler/clock.py` | The loop |
+| `server/src/scheduler/wiring.py` | Where it gets a session and a round |
 | `client/src/components/organisms/ProfilePage.tsx` | Where one chooses |
+| `client/src/lib/reminders.ts` | The three cadences, in French |
 | `client/src/components/atoms/UserMenu.tsx` | How one gets there |

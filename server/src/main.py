@@ -1,5 +1,10 @@
 """Entry point of the Ganesh API."""
 
+import asyncio
+import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -45,19 +50,45 @@ from src.modules.stats.presentation.api.routes.statistics_router import (
     router as statistics_router,
 )
 from src.modules.users.presentation.api.routes.user_router import router as user_router
+from src.scheduler.wiring import build_clock
 
 settings = get_settings()
 
+logger = logging.getLogger(__name__)
+
 #: The tools the team reaches from a terminal client. One server, started once.
 tools = ToolServer()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """What runs for as long as the API does: the tools, and the clock.
+
+    The MCP session manager has to be up the whole time — a `mount` does not
+    run the lifespan of what it mounts — and the reminder clock is a task
+    beside it. The clock is absent when no mail server is configured, which is
+    the ordinary case on a laptop and not a failure.
+    """
+    clock = build_clock(settings)
+    ticking = asyncio.create_task(clock.run_forever()) if clock else None
+    try:
+        async with tools.lifespan(app):
+            yield
+    finally:
+        if ticking is not None:
+            ticking.cancel()
+            try:
+                await ticking
+            except asyncio.CancelledError:
+                logger.info("Reminder clock stopped.")
+
 
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
     openapi_url=f"{settings.api_prefix}/openapi.json",
     docs_url=f"{settings.api_prefix}/docs" if settings.debug else None,
-    # The MCP server's session manager has to run for as long as the API does.
-    lifespan=tools.lifespan,
+    lifespan=lifespan,
 )
 
 # Declared before CORS, which in Starlette puts it *inside* it: a body too

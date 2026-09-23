@@ -29,6 +29,11 @@ httpx==0.28.1
 python-multipart==0.0.20
 aioboto3==13.2.0
 
+# The letter saying what is waiting. SMTP rather than a provider's SDK: it is
+# the one interface every mail service speaks, so the adapter reaches Mailgun
+# in production and the MailPit of docker-compose on a laptop unchanged.
+aiosmtplib==3.0.2
+
 # Tools the team reaches from a terminal client. Served at /mcp, behind the
 # same keys and the same scopes as the rest.
 mcp==2.2.0

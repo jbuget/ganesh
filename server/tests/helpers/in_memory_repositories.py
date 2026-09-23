@@ -1005,6 +1005,16 @@ class InMemoryNotificationRepository(NotificationRepository):
     ) -> list[Notification]:
         return self._mine(recipient_id, unread_only)[offset : offset + limit]
 
+    async def list_waiting_since(
+        self, recipient_id: int, since: datetime | None
+    ) -> list[Notification]:
+        waiting = [
+            notification
+            for notification in self._mine(recipient_id, unread_only=True)
+            if since is None or notification.at > since
+        ]
+        return list(reversed(waiting))
+
     async def count_for(self, recipient_id: int, unread_only: bool) -> int:
         return len(self._mine(recipient_id, unread_only))
 
