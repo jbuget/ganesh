@@ -3,9 +3,23 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.modules.users.domain.entities.presence import WEEKDAYS, WeekPresence
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.modules.users.infrastructure.database.models.user_model import UserModel
+
+
+def _presence_of(model: UserModel) -> WeekPresence | None:
+    """The declared week, or None while none of it was ever said."""
+    said = [getattr(model, f"presence_{day}") for day in WEEKDAYS]
+    if any(value is None for value in said):
+        return None
+    return WeekPresence(**dict(zip(WEEKDAYS, said, strict=True)))
+
+
+def _write_presence(model: UserModel, presence: WeekPresence | None) -> None:
+    for day in WEEKDAYS:
+        setattr(model, f"presence_{day}", getattr(presence, day, None))
 
 
 def to_entity(model: UserModel) -> User:
@@ -21,6 +35,7 @@ def to_entity(model: UserModel) -> User:
         last_name=model.last_name,
         department=model.department,
         github_username=model.github_username,
+        presence=_presence_of(model),
     )
 
 
@@ -68,6 +83,7 @@ class SqlUserRepository(UserRepository):
             department=user.department,
             github_username=user.github_username,
         )
+        _write_presence(model, user.presence)
         self._session.add(model)
         await self._session.flush()
         user.id = model.id
@@ -89,5 +105,6 @@ class SqlUserRepository(UserRepository):
         model.last_name = user.last_name
         model.department = user.department
         model.github_username = user.github_username
+        _write_presence(model, user.presence)
         await self._session.flush()
         return user

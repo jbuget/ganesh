@@ -6,6 +6,7 @@ from sqlalchemy import Boolean, DateTime, Enum, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
+from src.modules.users.domain.entities.presence import DayPresence
 from src.modules.users.domain.entities.user import Role
 from src.shared.enums.department import Department
 
@@ -38,3 +39,26 @@ class UserModel(Base):
     )
     # The handle alone, never « @lea-chen »: the domain trims it on the way in.
     github_username: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # The ordinary week. All five null together: nothing declared is not the
+    # same fact as a week spent away, and the team board draws them apart.
+    presence_monday: Mapped[DayPresence | None] = mapped_column(
+        Enum(DayPresence, name="day_presence", native_enum=False, length=8),
+        nullable=True,
+    )
+    presence_tuesday: Mapped[DayPresence | None] = mapped_column(
+        Enum(DayPresence, name="day_presence", native_enum=False, length=8),
+        nullable=True,
+    )
+    presence_wednesday: Mapped[DayPresence | None] = mapped_column(
+        Enum(DayPresence, name="day_presence", native_enum=False, length=8),
+        nullable=True,
+    )
+    presence_thursday: Mapped[DayPresence | None] = mapped_column(
+        Enum(DayPresence, name="day_presence", native_enum=False, length=8),
+        nullable=True,
+    )
+    presence_friday: Mapped[DayPresence | None] = mapped_column(
+        Enum(DayPresence, name="day_presence", native_enum=False, length=8),
+        nullable=True,
+    )

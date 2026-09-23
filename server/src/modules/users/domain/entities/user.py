@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import StrEnum
 
+from src.modules.users.domain.entities.presence import WeekPresence
 from src.shared.enums.department import Department
 
 #: Below this, a fresh login is not worth a write to the database.
@@ -60,6 +61,9 @@ class User:
     #: The handle alone — « lea-chen », never « @lea-chen » nor a full URL:
     #: it is what the profile address is built from.
     github_username: str | None = None
+    #: The ordinary week: which days one works, and from where. None until
+    #: somebody says — which is not the same as a week of absences.
+    presence: WeekPresence | None = None
 
     def __post_init__(self) -> None:
         self.email = self.email.strip().lower()
@@ -109,6 +113,15 @@ class User:
 
     def can_edit_open_months(self) -> bool:
         """Anyone may edit an open month, a colleague's included."""
+        return self.is_active
+
+    def can_declare_own_presence(self) -> bool:
+        """Everyone says their own week, and nobody else's.
+
+        No manager's business: where somebody works from is a fact about them,
+        and relaying it would only put a delay between the fact and the board
+        the team reads.
+        """
         return self.is_active
 
     def can_deactivate(self, target: "User") -> bool:

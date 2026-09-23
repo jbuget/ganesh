@@ -1,7 +1,10 @@
 """Translating teammates into API schemas."""
 
 from src.modules.users.domain.entities.user import User
-from src.modules.users.presentation.api.schemas.user_schemas import UserResponse
+from src.modules.users.presentation.api.schemas.user_schemas import (
+    UserResponse,
+    to_presence_response,
+)
 from src.shared.utils.initials import initials
 
 
@@ -19,4 +22,5 @@ def to_user_response(user: User) -> UserResponse:
         last_name=user.last_name,
         department=user.department,
         github_username=user.github_username,
+        presence=to_presence_response(user.presence) if user.presence else None,
     )
