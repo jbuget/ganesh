@@ -4,7 +4,11 @@ from abc import ABC, abstractmethod
 from collections.abc import Collection
 from datetime import date, datetime
 
-from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
+from src.modules.audit_logs.domain.entities.audit_log import (
+    AuditAction,
+    AuditLog,
+    AuditLogFilter,
+)
 
 
 class AuditLogRepository(ABC):
@@ -37,11 +41,20 @@ class AuditLogRepository(ABC):
 
     @abstractmethod
     async def list_all(
-        self, limit: int, offset: int, since: datetime | None = None
-    ) -> list[AuditLog]: ...
+        self, limit: int, offset: int, kept: AuditLogFilter | None = None
+    ) -> list[AuditLog]:
+        """The whole register, most recent first, narrowed to what was asked.
+
+        The filter is one object rather than a criterion per argument: they are
+        answered together, and a reader adding a fourth must not have to widen
+        every signature that carries them.
+        """
+        ...
 
     @abstractmethod
-    async def count_all(self, since: datetime | None = None) -> int: ...
+    async def count_all(self, kept: AuditLogFilter | None = None) -> int:
+        """How long the register is once narrowed — not how long a page is."""
+        ...
 
     @abstractmethod
     async def list_between(

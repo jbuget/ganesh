@@ -4,6 +4,7 @@ Transparency is deliberate: anyone may edit a colleague's open month. That
 freedom only makes sense if every move leaves a readable trace.
 """
 
+from collections.abc import Collection
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import StrEnum
@@ -238,3 +239,42 @@ class AuditLog:
             new_value=new_status,
             at=at or clock.now(),
         )
+
+
+@dataclass(frozen=True)
+class AuditLogFilter:
+    """What a reader narrowed the register down to.
+
+    Every criterion left out widens rather than narrows: an empty filter is
+    the whole register, which is what a screen opens on. They combine — a
+    reader after « what did she archive in March » states all three, and the
+    register answers the three at once rather than one after the other.
+
+    Both ends of the period are included, and they are moments rather than
+    days: the caller turns « the 3rd » into the instants that open and close
+    it, because only the caller knows which clock the reader is on.
+    """
+
+    since: datetime | None = None
+    until: datetime | None = None
+    #: The gestures being looked for. None is every gesture; an empty
+    #: collection is none of them, and answers nothing — a reader who cleared
+    #: every box asked for nothing, and is not handed the whole register back.
+    actions: Collection[AuditAction] | None = None
+    actor_id: int | None = None
+
+    def holds(self, log: AuditLog) -> bool:
+        """Whether one line falls inside it.
+
+        The register itself narrows the read in SQL. This says the same thing
+        over lines already in hand, and the two must not be able to disagree:
+        it is what the in-memory register answers with, and what a caller
+        holding a slice sifts it with.
+        """
+        if self.since is not None and log.at < self.since:
+            return False
+        if self.until is not None and log.at > self.until:
+            return False
+        if self.actions is not None and log.action not in self.actions:
+            return False
+        return not (self.actor_id is not None and log.actor_id != self.actor_id)
