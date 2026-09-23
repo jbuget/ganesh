@@ -108,6 +108,16 @@ key beside it: the instance reaches the bucket through the role it already
 has, and botocore finds that on its own. A key written there would be a key
 to rotate, for nothing.
 
+The **SMTP block** is in it as well, and optional in the same way: with no
+`SMTP_HOST` the reminder clock does not start, nothing is posted, and the bell
+works exactly as before. `SMTP_PASSWORD` is Mailgun's, and a secret like every
+other one here — it reaches the host inside this file, never through Terraform
+and never through the SSM payload.
+
+`WEB_URL` goes with it and is **not** `API_URL`: one is where the API answers,
+the other is where the reader reads. A letter that pointed at
+`api.ganesh.waat.tools` would lead every reader to a 404.
+
 **The deploy token:**
 
 ```bash
