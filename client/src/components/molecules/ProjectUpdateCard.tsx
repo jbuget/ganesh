@@ -3,6 +3,7 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
+import { DeleteUpdateDialog } from "@/components/atoms/DeleteUpdateDialog";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { RichTextEditor } from "@/components/atoms/RichTextEditor";
 import { UpdateReactions } from "@/components/atoms/UpdateReactions";
@@ -40,7 +41,8 @@ export function ProjectUpdateCard({
   onRemove,
   onReact,
 }: ProjectUpdateCardProps) {
-  const [enEdition, setEnEdition] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [confirmingRemoval, setConfirmingRemoval] = useState(false);
 
   return (
     <article className="rounded-lg border border-slate-300 bg-white p-3">
@@ -56,12 +58,12 @@ export function ProjectUpdateCard({
           {update.edited_at && !update.is_deleted && " · modifiée"}
         </span>
 
-        {update.is_mine && !update.is_deleted && !enEdition && (
+        {update.is_mine && !update.is_deleted && !editing && (
           <span className="ml-auto flex items-center gap-0.5">
             <button
               type="button"
               aria-label="Modifier la mise à jour"
-              onClick={() => setEnEdition(true)}
+              onClick={() => setEditing(true)}
               className="cursor-pointer rounded p-1 text-slate-300 transition-colors hover:bg-slate-100 hover:text-slate-600"
             >
               <Pencil className="size-3.5" aria-hidden />
@@ -69,7 +71,7 @@ export function ProjectUpdateCard({
             <button
               type="button"
               aria-label="Supprimer la mise à jour"
-              onClick={() => void onRemove()}
+              onClick={() => setConfirmingRemoval(true)}
               className="cursor-pointer rounded p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
             >
               <Trash2 className="size-3.5" aria-hidden />
@@ -80,14 +82,14 @@ export function ProjectUpdateCard({
 
       {update.is_deleted ? (
         <p className="text-sm text-slate-400 italic">Message supprimé</p>
-      ) : enEdition ? (
+      ) : editing ? (
         <Correction
           value={update.body}
           people={people}
-          onCancel={() => setEnEdition(false)}
+          onCancel={() => setEditing(false)}
           onSave={async (body) => {
             await onEdit(body);
-            setEnEdition(false);
+            setEditing(false);
           }}
         />
       ) : (
@@ -99,6 +101,15 @@ export function ProjectUpdateCard({
           />
         </>
       )}
+
+      <DeleteUpdateDialog
+        open={confirmingRemoval}
+        onOpenChange={setConfirmingRemoval}
+        onConfirm={() => {
+          setConfirmingRemoval(false);
+          return onRemove();
+        }}
+      />
     </article>
   );
 }
