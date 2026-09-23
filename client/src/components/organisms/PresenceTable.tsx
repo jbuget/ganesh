@@ -13,7 +13,15 @@ import {
 } from "@/components/ui/table";
 import type { UserResponse } from "@/lib/api/generated/model";
 import { WEEKDAYS, sayDay } from "@/lib/presence";
-import { STRONG_SEPARATOR, TABLE_FRAME, TABLE_HEADER } from "@/lib/table-frame";
+import {
+  NAMING_BUTTON,
+  NAMING_CELL,
+  NAMING_COLUMN,
+  NAMING_CONTENT,
+  STRONG_SEPARATOR,
+  TABLE_FRAME,
+  TABLE_HEADER,
+} from "@/lib/table-frame";
 
 /**
  * Who is there this week, and from where.
@@ -41,7 +49,9 @@ export function PresenceTable({
       <Table className={`border-separate border-spacing-0 ${TABLE_FRAME}`}>
         <TableHeader className={TABLE_HEADER}>
           <TableRow>
-            <TableHead className={STRONG_SEPARATOR}>Collaborateur</TableHead>
+            <TableHead className={`${NAMING_COLUMN} ${STRONG_SEPARATOR}`}>
+              Collaborateur
+            </TableHead>
             {WEEKDAYS.map((day) => (
               <TableHead key={day.key} className="text-center">
                 {day.label}
@@ -59,16 +69,26 @@ export function PresenceTable({
                 user.is_active ? "" : "text-slate-400"
               }`}
             >
-              <TableCell
-                className={`bg-white group-hover:bg-slate-50 ${STRONG_SEPARATOR}`}
-              >
-                <span className="flex items-center gap-2">
+              <TableCell className={NAMING_CELL}>
+                <span className={NAMING_CONTENT}>
                   <UserAvatar
                     initials={user.initials}
                     name={user.display_name}
                     dimmed={!user.is_active}
                   />
-                  <span className="truncate">{user.display_name}</span>
+                  {/* The whole row responds to the mouse; this button gives
+                      the same opening to the keyboard, without opening
+                      twice. */}
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onOpen(user.id);
+                    }}
+                    className={NAMING_BUTTON}
+                  >
+                    {user.display_name}
+                  </button>
                 </span>
               </TableCell>
 
@@ -90,7 +110,9 @@ export function PresenceTable({
 
         <TableFooter className="bg-white">
           <TableRow>
-            <TableCell className={`text-sm text-slate-500 ${STRONG_SEPARATOR}`}>
+            <TableCell
+              className={`text-sm text-slate-500 ${NAMING_COLUMN} ${STRONG_SEPARATOR}`}
+            >
               Sur site
             </TableCell>
             {WEEKDAYS.map((day) => {

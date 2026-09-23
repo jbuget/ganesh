@@ -60,3 +60,29 @@ export const TABLE_HEADER =
  * begins.
  */
 export const STRONG_SEPARATOR = "border-r border-r-slate-500";
+
+/**
+ * The width of the column that names the row.
+ *
+ * Fixed, and the same in every table, because the tables of one screen are
+ * read one after the other: the teammates' accounts and their week are two
+ * readings of one list, and a name column that changed width between two tabs
+ * makes the whole page shift under the reader for no reason at all.
+ */
+export const NAMING_COLUMN = "w-[300px]";
+
+/**
+ * The cell that names the row: white, off the tinted row, one step behind it
+ * on hover.
+ *
+ * Held here rather than written out in each table for the same reason as the
+ * frame around them: two tables that read alike must not be able to drift
+ * apart, and a padding or a gap typed twice eventually is.
+ */
+export const NAMING_CELL = `bg-white py-2 group-hover:bg-slate-50 ${STRONG_SEPARATOR}`;
+
+/** What sits inside it: a mark, then the name, always spaced the same. */
+export const NAMING_CONTENT = "flex items-center gap-2.5";
+
+/** The name itself, which opens the row — and gives the keyboard the same way in. */
+export const NAMING_BUTTON = "min-w-0 cursor-pointer truncate text-left font-medium";

@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { UserResponse } from "@/lib/api/generated/model";
+import { NAMING_COLUMN } from "@/lib/table-frame";
 import { NO_USER_SORT } from "@/lib/user-sort";
 
 import { UsersTable } from "./UsersTable";
@@ -128,5 +129,17 @@ describe("UsersTable", () => {
     expect(screen.getByRole("columnheader", { name: "Collaborateur" })).toHaveClass(
       "border-r-slate-500",
     );
+  });
+});
+
+describe("the naming column", () => {
+  it("is as wide as it is on the presence tab", () => {
+    // Held in `table-frame` so the two cannot drift: the accounts and the week
+    // are read one after the other, and the column that names the row must not
+    // move between them.
+    renderTable();
+
+    const header = screen.getByRole("columnheader", { name: /Collaborateur/ });
+    expect(header.className).toContain(NAMING_COLUMN);
   });
 });

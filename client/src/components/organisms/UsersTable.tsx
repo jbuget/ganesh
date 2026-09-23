@@ -4,7 +4,12 @@ import { SortableColumnHeader } from "@/components/atoms/SortableColumnHeader";
 import { UserRow } from "@/components/molecules/UserRow";
 import { Table, TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import type { UserResponse } from "@/lib/api/generated/model";
-import { STRONG_SEPARATOR, TABLE_FRAME, TABLE_HEADER } from "@/lib/table-frame";
+import {
+  NAMING_COLUMN,
+  STRONG_SEPARATOR,
+  TABLE_FRAME,
+  TABLE_HEADER,
+} from "@/lib/table-frame";
 import type { UserSort, UserSortColumn } from "@/lib/user-sort";
 
 interface UsersTableProps {
@@ -45,7 +50,7 @@ export function UsersTable({ users, sorted, onSort, now, onOpen }: UsersTablePro
               label="Collaborateur"
               sorted={sorted}
               onToggle={onSort}
-              className={STRONG_SEPARATOR}
+              className={`${NAMING_COLUMN} ${STRONG_SEPARATOR}`}
             />
             <SortableColumnHeader
               column="email"

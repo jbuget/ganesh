@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { PresenceTable } from "@/components/organisms/PresenceTable";
 import type { UserResponse } from "@/lib/api/generated/model";
+import { NAMING_COLUMN } from "@/lib/table-frame";
 
 function aUser(
   id: number,
@@ -83,5 +84,24 @@ describe("going from a week to the person", () => {
     await userEvent.click(screen.getByText("Léa"));
 
     expect(onOpen).toHaveBeenCalledWith(7);
+  });
+});
+
+describe("the same grammar as the accounts tab", () => {
+  it("names the teammate through a button, as the accounts row does", () => {
+    // Two readings of one list: the name is the anchor of the line in both,
+    // it looks the same and it opens the same way — including by keyboard.
+    render(<PresenceTable onOpen={vi.fn()} users={[aUser(7, "Léa")]} />);
+
+    expect(screen.getByRole("button", { name: "Léa" })).toBeInTheDocument();
+  });
+
+  it("gives the naming column the width every table gives it", () => {
+    // A name column that changed width between two tabs makes the whole page
+    // shift under the reader for no reason at all.
+    render(<PresenceTable onOpen={vi.fn()} users={[aUser(7, "Léa")]} />);
+
+    const header = screen.getByRole("columnheader", { name: "Collaborateur" });
+    expect(header.className).toContain(NAMING_COLUMN);
   });
 });
