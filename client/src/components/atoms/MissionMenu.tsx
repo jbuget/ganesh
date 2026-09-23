@@ -6,6 +6,7 @@ import {
   CornerDownRight,
   CornerLeftUp,
   MoreHorizontal,
+  Plus,
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
@@ -15,6 +16,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 interface MissionMenuProps {
   /** Whether the mission has already left the reference list. */
   archived: boolean;
+  /**
+   * Declares a work package under the mission.
+   *
+   * Left out where the hierarchy forbids one: a work package carries nothing
+   * under it, and off-project work is not cut into slices.
+   */
+  onAddSubProject?: () => void;
   /**
    * Makes the mission a slice of another project.
    *
@@ -52,6 +60,7 @@ interface MissionMenuProps {
  */
 export function MissionMenu({
   archived,
+  onAddSubProject,
   onAttach,
   onDetach,
   parentLabel,
@@ -76,7 +85,25 @@ export function MissionMenu({
 
       <PopoverContent align="end" className="w-60 p-1">
         <ul>
-          {/* Where the mission sits in the reference list comes first: it is
+          {/* What adds comes before what moves, and both before what takes
+              the mission out: the entries read from the least costly down. */}
+          {onAddSubProject && (
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onAddSubProject();
+                }}
+                className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
+              >
+                <Plus className="size-4 shrink-0 text-slate-400" aria-hidden />
+                Déclarer un sous-projet…
+              </button>
+            </li>
+          )}
+
+          {/* Where the mission sits in the reference list comes next: it is
               the one action that changes what the other screens read of it,
               and it is read before those that take it out. */}
           {onAttach && (

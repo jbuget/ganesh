@@ -255,3 +255,94 @@ describe("MissionMenu — where the mission sits", () => {
     expect(screen.queryByRole("button", { name: /Détacher/ })).toBeNull();
   });
 });
+
+describe("MissionMenu — cutting a project into packages", () => {
+  it("offers to declare a sub-project on a mission that can carry one", async () => {
+    const declare = vi.fn();
+    render(
+      <MissionMenu
+        archived={false}
+        onAddSubProject={declare}
+        onArchive={vi.fn()}
+        onUnarchive={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Actions sur le projet" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Déclarer un sous-projet…" }),
+    );
+
+    expect(declare).toHaveBeenCalledTimes(1);
+  });
+
+  /** The dialog takes over the screen: the menu must not stay under it. */
+  it("closes the menu once the declaration is asked for", async () => {
+    render(
+      <MissionMenu
+        archived={false}
+        onAddSubProject={vi.fn()}
+        onArchive={vi.fn()}
+        onUnarchive={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Actions sur le projet" }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Déclarer un sous-projet…" }),
+    );
+
+    expect(
+      screen.queryByRole("button", { name: "Déclarer un sous-projet…" }),
+    ).toBeNull();
+  });
+
+  /** Creating comes before moving, and both before what takes the mission out. */
+  it("reads before the entries that move the mission and those that take it out", async () => {
+    render(
+      <MissionMenu
+        archived={false}
+        onAddSubProject={vi.fn()}
+        onAttach={vi.fn()}
+        onArchive={vi.fn()}
+        onUnarchive={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Actions sur le projet" }),
+    );
+
+    const entries = screen.getAllByRole("listitem").map((entry) => entry.textContent);
+    expect(entries).toEqual([
+      "Déclarer un sous-projet…",
+      "Rattacher à un projet…",
+      "Archiver",
+      "Supprimer",
+    ]);
+  });
+
+  it("says nothing of it where the mission cannot carry a package", async () => {
+    render(
+      <MissionMenu
+        archived={false}
+        onArchive={vi.fn()}
+        onUnarchive={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Actions sur le projet" }),
+    );
+
+    expect(screen.queryByRole("button", { name: /sous-projet/ })).toBeNull();
+  });
+});
