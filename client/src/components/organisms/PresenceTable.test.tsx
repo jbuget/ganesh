@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { PresenceTable } from "@/components/organisms/PresenceTable";
 import type { UserResponse } from "@/lib/api/generated/model";
 import { NAMING_COLUMN } from "@/lib/table-frame";
+import { NO_USER_SORT } from "@/lib/user-sort";
 
 function aUser(
   id: number,
@@ -37,6 +38,8 @@ describe("the week of the team", () => {
     // The figure the screen is opened for.
     render(
       <PresenceTable
+        sorted={NO_USER_SORT}
+        onSort={vi.fn()}
         onOpen={vi.fn()}
         users={[
           aUser(1, "Léa", { ...AT_THE_OFFICE, wednesday: "REMOTE" }),
@@ -55,7 +58,12 @@ describe("the week of the team", () => {
     // On site every day until somebody says otherwise: nothing is ever blank,
     // so the count under each day covers the whole team.
     render(
-      <PresenceTable onOpen={vi.fn()} users={[aUser(1, "Léa"), aUser(2, "Malik")]} />,
+      <PresenceTable
+        sorted={NO_USER_SORT}
+        onSort={vi.fn()}
+        onOpen={vi.fn()}
+        users={[aUser(1, "Léa"), aUser(2, "Malik")]}
+      />,
     );
 
     const footer = screen.getByRole("row", { name: /Sur site/ });
@@ -65,6 +73,8 @@ describe("the week of the team", () => {
   it("names each day of each week for whoever cannot see the marks", () => {
     render(
       <PresenceTable
+        sorted={NO_USER_SORT}
+        onSort={vi.fn()}
         onOpen={vi.fn()}
         users={[aUser(1, "Léa", { ...AT_THE_OFFICE, friday: "REMOTE" })]}
       />,
@@ -79,7 +89,14 @@ describe("going from a week to the person", () => {
     // The two tabs are two readings of one list: a line means the same thing
     // in both, so it opens the same panel.
     const onOpen = vi.fn();
-    render(<PresenceTable onOpen={onOpen} users={[aUser(7, "Léa")]} />);
+    render(
+      <PresenceTable
+        sorted={NO_USER_SORT}
+        onSort={vi.fn()}
+        onOpen={onOpen}
+        users={[aUser(7, "Léa")]}
+      />,
+    );
 
     await userEvent.click(screen.getByText("Léa"));
 
@@ -91,7 +108,14 @@ describe("the same grammar as the accounts tab", () => {
   it("names the teammate through a button, as the accounts row does", () => {
     // Two readings of one list: the name is the anchor of the line in both,
     // it looks the same and it opens the same way — including by keyboard.
-    render(<PresenceTable onOpen={vi.fn()} users={[aUser(7, "Léa")]} />);
+    render(
+      <PresenceTable
+        sorted={NO_USER_SORT}
+        onSort={vi.fn()}
+        onOpen={vi.fn()}
+        users={[aUser(7, "Léa")]}
+      />,
+    );
 
     expect(screen.getByRole("button", { name: "Léa" })).toBeInTheDocument();
   });
@@ -99,9 +123,35 @@ describe("the same grammar as the accounts tab", () => {
   it("gives the naming column the width every table gives it", () => {
     // A name column that changed width between two tabs makes the whole page
     // shift under the reader for no reason at all.
-    render(<PresenceTable onOpen={vi.fn()} users={[aUser(7, "Léa")]} />);
+    render(
+      <PresenceTable
+        sorted={NO_USER_SORT}
+        onSort={vi.fn()}
+        onOpen={vi.fn()}
+        users={[aUser(7, "Léa")]}
+      />,
+    );
 
     const header = screen.getByRole("columnheader", { name: "Collaborateur" });
     expect(header.className).toContain(NAMING_COLUMN);
+  });
+});
+
+describe("arranging the week", () => {
+  it("sorts by the same column, and says so the same way", async () => {
+    const onSort = vi.fn();
+    render(
+      <PresenceTable
+        sorted={NO_USER_SORT}
+        onSort={onSort}
+        onOpen={vi.fn()}
+        users={[aUser(1, "Léa"), aUser(2, "Malik")]}
+      />,
+    );
+
+    // The whole cell answers the click, and a button inside it carries it.
+    await userEvent.click(screen.getByRole("button", { name: /Collaborateur/ }));
+
+    expect(onSort).toHaveBeenCalledWith("name");
   });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { PresenceMark } from "@/components/atoms/PresenceMark";
+import { SortableColumnHeader } from "@/components/atoms/SortableColumnHeader";
 import { UserAvatar } from "@/components/atoms/UserAvatar";
 import {
   Table,
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import type { UserResponse } from "@/lib/api/generated/model";
 import { WEEKDAYS, sayDay } from "@/lib/presence";
+import type { UserSort, UserSortColumn } from "@/lib/user-sort";
 import {
   NAMING_BUTTON,
   NAMING_CELL,
@@ -37,9 +39,14 @@ import {
  */
 export function PresenceTable({
   users,
+  sorted,
+  onSort,
   onOpen,
 }: {
+  /** The teammates to draw, already filtered and already in order. */
   users: UserResponse[];
+  sorted: UserSort;
+  onSort: (column: UserSortColumn) => void;
   /** A row opens the teammate, as on the accounts tab: the two tabs are two
       readings of one list, and a line means the same thing in both. */
   onOpen: (userId: number) => void;
@@ -49,9 +56,16 @@ export function PresenceTable({
       <Table className={`border-separate border-spacing-0 ${TABLE_FRAME}`}>
         <TableHeader className={TABLE_HEADER}>
           <TableRow>
-            <TableHead className={`${NAMING_COLUMN} ${STRONG_SEPARATOR}`}>
-              Collaborateur
-            </TableHead>
+            {/* Arranged from the same header as the accounts tab, and by
+                the same order: one list read two ways, so a name sorted on
+                one side is sorted on the other. */}
+            <SortableColumnHeader
+              column="name"
+              label="Collaborateur"
+              sorted={sorted}
+              onToggle={onSort}
+              className={`${NAMING_COLUMN} ${STRONG_SEPARATOR}`}
+            />
             {WEEKDAYS.map((day) => (
               <TableHead key={day.key} className="text-center">
                 {day.label}

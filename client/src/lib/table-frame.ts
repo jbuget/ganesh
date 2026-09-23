@@ -35,6 +35,12 @@ export const TABLE_FRAME = [
   // The last row closes the table, and carries the strong rule rather than the
   // line that separates two rows.
   "[&_tbody_tr:last-child_td]:border-b-slate-500",
+  // A footer carries a total, not one more row: the frame goes round it, and
+  // the rule above it breaks the reading in two rather than separating two
+  // lines. Tables without one are untouched.
+  "[&_tfoot_td]:border-b [&_tfoot_td]:border-b-slate-500",
+  "[&_tfoot_td:first-child]:border-l [&_tfoot_td:first-child]:border-l-slate-500",
+  "[&_tfoot_td:last-child]:border-r [&_tfoot_td:last-child]:border-r-slate-500",
 ].join(" ");
 
 /**
