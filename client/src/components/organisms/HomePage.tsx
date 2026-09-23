@@ -7,10 +7,12 @@ import { PageHeader } from "@/components/atoms/PageHeader";
 import { MissionCard } from "@/components/molecules/MissionCard";
 import { MonthBriefing } from "@/components/molecules/MonthBriefing";
 import { MoodCheckIn } from "@/components/molecules/MoodCheckIn";
+import { TodayPresence } from "@/components/molecules/TodayPresence";
 import { UpdateFeedItem } from "@/components/molecules/UpdateFeedItem";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { useHome } from "@/lib/use-home";
+import { useTeammates } from "@/lib/api/queries";
 import { useMood } from "@/lib/use-mood";
 import { useOpenedMission } from "@/lib/opened-mission";
 
@@ -25,6 +27,12 @@ import { useOpenedMission } from "@/lib/opened-mission";
  * the rest. Keeping it that way is what stops it from slowly becoming a second
  * Saisie des temps.
  *
+ * The presence block keeps to that rule: it says who is around today and
+ * hands the week over to the tab that holds it, without offering to declare
+ * anything. Declaring one's own week happens once and then almost never, and a
+ * picker posted here would be noise every morning for a gesture made twice a
+ * year.
+ *
  * The mood is the one exception, and it is a deliberate one. Answering is a
  * one-second gesture on a window that closes the next working day; behind a
  * link, it would simply never be made, and a morale nobody posts measures
@@ -35,6 +43,7 @@ import { useOpenedMission } from "@/lib/opened-mission";
 export function HomePage() {
   const home = useHome();
   const mood = useMood();
+  const { teammates } = useTeammates();
   const panel = useOpenedMission();
   const now = useMemo(() => new Date(), []);
 
@@ -120,6 +129,12 @@ export function HomePage() {
             savingDay={mood.savingDay}
             onPick={mood.post}
           />
+
+          {/* Read, never written: declaring one's own week happens once and
+            then almost never, and a picker posted here would be noise every
+            morning for a gesture made twice a year. Who is around is worth
+            knowing each day — and the whole week is one click away. */}
+          <TodayPresence users={teammates} today={now} />
 
           {/* Framed like a kanban column, and tinted like one: a stack of cards
             read one after the other is the same object on both screens, and the

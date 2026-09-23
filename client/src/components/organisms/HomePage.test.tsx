@@ -35,6 +35,9 @@ const mood = vi.hoisted(() => ({
 
 vi.mock("@/lib/use-home", () => ({ useHome: () => home.state }));
 vi.mock("@/lib/use-mood", () => ({ useMood: () => mood.state }));
+// The presence block reads the team; the screen is tested without a
+// QueryClient around it, as every other block here is.
+vi.mock("@/lib/api/queries", () => ({ useTeammates: () => ({ teammates: [] }) }));
 vi.mock("@/lib/opened-mission", () => ({
   useOpenedMission: () => ({
     openedMission: null,

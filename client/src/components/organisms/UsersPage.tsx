@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { UserFilters } from "@/components/molecules/UserFilters";
 import { PageLayout } from "@/components/organisms/PageLayout";
@@ -13,6 +11,7 @@ import { useOpenedUser } from "@/lib/opened-user";
 import { useUserFilters } from "@/lib/use-user-filters";
 import { useUserSort } from "@/lib/use-user-sort";
 import { useUsersScreen } from "@/lib/use-users";
+import { type UsersView, useUsersView } from "@/lib/use-users-view";
 
 /**
  * The list of teammates.
@@ -41,7 +40,7 @@ export function UsersPage() {
   const screen = useUsersScreen(filters, sorted);
   const panel = useOpenedUser();
   const opened = panel.openedUser ? screen.find(panel.openedUser) : null;
-  const [view, setView] = useState("comptes");
+  const { view, show } = useUsersView();
 
   return (
     <PageLayout
@@ -86,7 +85,7 @@ export function UsersPage() {
         )}
 
         {screen.users.length > 0 && (
-          <Tabs value={view} onValueChange={setView}>
+          <Tabs value={view} onValueChange={(next) => show(next as UsersView)}>
             <TabsList>
               <TabsTrigger value="comptes" className="cursor-pointer">
                 Comptes
