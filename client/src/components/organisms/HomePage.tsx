@@ -134,7 +134,7 @@ export function HomePage() {
             then almost never, and a picker posted here would be noise every
             morning for a gesture made twice a year. Who is around is worth
             knowing each day — and the whole week is one click away. */}
-          <TodayPresence users={teammates} today={now} />
+          <TodayPresence users={teammates} today={now} meId={home.me?.id ?? null} />
 
           {/* Framed like a kanban column, and tinted like one: a stack of cards
             read one after the other is the same object on both screens, and the

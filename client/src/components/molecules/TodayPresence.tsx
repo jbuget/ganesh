@@ -9,6 +9,8 @@ import { STRONG_RULE } from "@/lib/table-frame";
 /** Beyond this, the avatars stop being faces and become a wall. */
 const NAMED = 8;
 
+const LINK = "cursor-pointer underline-offset-2 hover:text-slate-900 hover:underline";
+
 /**
  * Who is in today, and from where.
  *
@@ -23,10 +25,13 @@ const NAMED = 8;
 export function TodayPresence({
   users,
   today,
+  meId = null,
 }: {
   /** The active team. A teammate who said nothing counts as on site. */
   users: UserResponse[];
   today: Date;
+  /** Who is reading, so the block can hand them their own week to change. */
+  meId?: number | null;
 }) {
   if (users.length === 0) return null;
 
@@ -45,12 +50,23 @@ export function TodayPresence({
         <h2 className="text-sm font-medium text-slate-700">
           {day.isToday ? "Aujourd'hui" : day.label}
         </h2>
-        <Link
-          href="/users?vue=presence"
-          className="cursor-pointer text-xs text-slate-500 underline-offset-2 hover:text-slate-900 hover:underline"
-        >
-          Toute la semaine
-        </Link>
+        {/* Two ways out, and only these two: one to change one's own week,
+            one to read everyone's. The block itself still declares nothing. */}
+        <nav className="flex items-center gap-2 text-xs text-slate-500">
+          {meId !== null && (
+            <>
+              <Link href={`/users?user=${meId}`} className={LINK}>
+                Ma présence
+              </Link>
+              <span aria-hidden className="text-slate-300">
+                |
+              </span>
+            </>
+          )}
+          <Link href="/users?vue=presence" className={LINK}>
+            Toute la semaine
+          </Link>
+        </nav>
       </header>
 
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-700">

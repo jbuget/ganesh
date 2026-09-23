@@ -83,6 +83,21 @@ describe("handing over", () => {
     );
   });
 
+  it("hands the reader their own week, to change it", () => {
+    render(<TodayPresence today={WEDNESDAY} meId={7} users={[aUser(1, "Léa")]} />);
+
+    expect(screen.getByRole("link", { name: "Ma présence" })).toHaveAttribute(
+      "href",
+      "/users?user=7",
+    );
+  });
+
+  it("offers it to nobody it cannot name", () => {
+    render(<TodayPresence today={WEDNESDAY} users={[aUser(1, "Léa")]} />);
+
+    expect(screen.queryByRole("link", { name: "Ma présence" })).not.toBeInTheDocument();
+  });
+
   it("draws nothing at all before the team has loaded", () => {
     const { container } = render(<TodayPresence today={WEDNESDAY} users={[]} />);
 
