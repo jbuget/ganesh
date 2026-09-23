@@ -65,6 +65,26 @@ describe("AuditLogFilters", () => {
     expect(onChange).toHaveBeenCalledWith({ actorIds: ["2"] });
   });
 
+  it("looks a colleague up rather than scrolling to them", async () => {
+    const { onChange } = bar();
+
+    await userEvent.click(screen.getByRole("button", { name: /Auteur/ }));
+    await userEvent.type(screen.getByLabelText("Rechercher un collaborateur"), "nino");
+    await userEvent.click(screen.getByRole("button", { name: "Nino Garo" }));
+
+    expect(screen.queryByRole("button", { name: "Lin Chen" })).toBeNull();
+    expect(onChange).toHaveBeenCalledWith({ actorIds: ["2"] });
+  });
+
+  /** The gestures are grouped and few enough to read: a field there is furniture. */
+  it("offers no search on the gestures", async () => {
+    bar();
+
+    await userEvent.click(screen.getByRole("button", { name: /Geste/ }));
+
+    expect(screen.queryByRole("searchbox")).toBeNull();
+  });
+
   it("asks for a period in days", async () => {
     const { onChange } = bar();
 

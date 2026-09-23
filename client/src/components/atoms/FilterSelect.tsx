@@ -1,9 +1,12 @@
 "use client";
 
-import { Check, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { Check, ChevronDown, Search } from "lucide-react";
+import { useMemo, useState } from "react";
 
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SEARCH_FIELD, SEARCH_ICON } from "@/lib/search-field";
+import { normalise } from "@/lib/search-text";
 
 export interface FilterOption {
   value: string;
@@ -24,6 +27,16 @@ interface FilterSelectProps {
   options: FilterOption[];
   values: string[];
   onChange: (values: string[]) => void;
+  /**
+   * What the field searches, where the list is long enough to need one:
+   * « Rechercher un collaborateur ». Its presence is what opens the field,
+   * and it labels it — a placeholder is not a label, and a field named one
+   * way to the eye and another to a screen reader is two fields.
+   *
+   * Left out, the list is read whole, which is right for a handful of
+   * choices: a field above five options is furniture.
+   */
+  search?: string;
 }
 
 /**
@@ -35,11 +48,28 @@ interface FilterSelectProps {
  *
  * A long list scrolls inside the panel rather than growing past the top of
  * the screen, and is read under the headings its options name — thirty
- * choices in one flat column is a column abandoned at the third line.
+ * choices in one flat column is a column abandoned at the third line. Longer
+ * still, or made of names, it is searched: `search` opens the field.
+ *
+ * Narrowing the list is a way of finding a value, never of unticking the ones
+ * it hides: what was kept is kept, and the trigger goes on counting it.
  */
-export function FilterSelect({ label, options, values, onChange }: FilterSelectProps) {
+export function FilterSelect({
+  label,
+  options,
+  values,
+  onChange,
+  search,
+}: FilterSelectProps) {
   const [isOpen, setOpen] = useState(false);
+  const [typed, setTyped] = useState("");
   const chosen = new Set(values);
+
+  const shown = useMemo(() => {
+    const looked = normalise(typed.trim());
+    if (looked === "") return options;
+    return options.filter((option) => normalise(option.label).includes(looked));
+  }, [options, typed]);
 
   function toggle(value: string) {
     const next = new Set(chosen);
@@ -51,7 +81,16 @@ export function FilterSelect({ label, options, values, onChange }: FilterSelectP
   }
 
   return (
-    <Popover open={isOpen} onOpenChange={setOpen}>
+    <Popover
+      open={isOpen}
+      onOpenChange={(opening) => {
+        setOpen(opening);
+        // Closed and reopened, the panel shows the whole list again: what one
+        // typed to find a name last time is not a question one is still
+        // asking, and it would hide the list with no visible reason.
+        if (!opening) setTyped("");
+      }}
+    >
       <PopoverTrigger
         className={`flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm transition-colors ${
           values.length > 0
@@ -72,13 +111,35 @@ export function FilterSelect({ label, options, values, onChange }: FilterSelectP
         align="start"
         className="max-h-[min(60vh,24rem)] w-72 overflow-y-auto p-1"
       >
+        {search !== undefined && (
+          <div className="relative mb-1">
+            <Search className={SEARCH_ICON} aria-hidden />
+            <Input
+              type="search"
+              value={typed}
+              onChange={(event) => setTyped(event.target.value)}
+              placeholder={search}
+              aria-label={search}
+              className={SEARCH_FIELD}
+            />
+          </div>
+        )}
+
+        {shown.length === 0 && (
+          <p className="px-2 py-3 text-center text-sm text-slate-400">
+            Aucun résultat.
+          </p>
+        )}
+
         <ul>
-          {options.map((option, rank) => {
+          {shown.map((option, rank) => {
             const kept = chosen.has(option.value);
             // Drawn where the family changes, and never above the first one:
             // a heading is what breaks a long list into readable stretches.
+            // Read off what is shown rather than off every option: narrowed to
+            // one family, the others' headings have nothing left under them.
             const opensFamily =
-              option.group !== undefined && option.group !== options[rank - 1]?.group;
+              option.group !== undefined && option.group !== shown[rank - 1]?.group;
             return (
               <li key={option.value}>
                 {opensFamily && (

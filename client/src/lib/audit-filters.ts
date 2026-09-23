@@ -77,7 +77,7 @@ export const ACTION_FAMILIES: ActionFamily[] = [
     ],
   },
   {
-    label: "Fils et fichiers",
+    label: "Mises à jour et fichiers",
     actions: [
       { value: "update.post", label: "Mise à jour publiée" },
       { value: "update.edit", label: "Mise à jour modifiée" },

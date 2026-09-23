@@ -46,6 +46,10 @@ export function AuditLogFilters({ filters, onChange, onClear }: AuditLogFiltersP
 
         <FilterSelect
           label="Auteur"
+          // The team is a list of names, and a list of names is looked up
+          // rather than read: one knows who they are after, and scrolling
+          // past thirty colleagues to reach them is the slow way of typing.
+          search="Rechercher un collaborateur"
           options={teammates.map((person) => ({
             value: String(person.id),
             label: person.display_name,
