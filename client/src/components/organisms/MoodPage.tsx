@@ -12,8 +12,10 @@ import { useTeamMoodScreen } from "@/lib/use-team-mood";
  *
  * Everyone reads it, and that is assumed: it is a mirror the team holds up to
  * itself, not a measure taken of it. Which is also why nothing is answered
- * from here — one posts one's own day from the home screen, and a screen that
- * did both would put the answer under the eyes of what it is about.
+ * from here — a screen that did both would put the answer under the eyes of
+ * what it is about. One posts one's own day from the home screen, or from the
+ * reminder of the late afternoon, which keeps away from this screen for that
+ * very reason.
  *
  * Two tabs over the same fortnight, and the order between them is the reading:
  * « Récap » names who said what, « Tendances » sums it up. One starts on the

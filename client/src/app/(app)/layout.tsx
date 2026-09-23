@@ -6,6 +6,7 @@
  */
 import { AppSidebar } from "@/components/organisms/AppSidebar";
 import { CommandPalette } from "@/components/organisms/CommandPalette";
+import { MoodReminder } from "@/components/organisms/MoodReminder";
 
 export default function AppLayout({
   children,
@@ -17,6 +18,11 @@ export default function AppLayout({
       {/* In the frame rather than on a screen: it is reached from every one of
           them, and its shortcut listens to the whole window. */}
       <CommandPalette />
+      {/* In the frame for the opposite reason: it is not reached at all. It
+          comes to whoever is there at the end of the afternoon, whatever they
+          happen to be reading — which is what spares « Moral de l'équipe »
+          from having to ask the question itself. */}
+      <MoodReminder />
     </div>
   );
 }

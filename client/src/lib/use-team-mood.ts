@@ -6,9 +6,13 @@ import { todayIso } from "@/lib/dates";
 /**
  * State of the team morale screen.
  *
- * It reads and never writes: one answers for one's own day from the home
- * screen, and nowhere else. A screen that both showed the team and let one
- * answer would put the answer under the eyes of what it is about.
+ * It reads and never writes, and that is the rule the rest was built around:
+ * a screen that both showed the team and let one answer would put the answer
+ * under the eyes of what it is about.
+ *
+ * One answers from the home screen, or from the reminder that comes round at
+ * the end of the afternoon — which is what lets this screen go on refusing.
+ * The reminder deliberately keeps away from here.
  */
 export function useTeamMoodScreen() {
   const { window, isLoading } = useTeamMoods();
