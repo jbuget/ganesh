@@ -66,10 +66,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
   // from: nothing here can name the one to read again. Every write therefore
   // empties the cache whole — a mission deleted from its own page must not
   // still be in the reference list on the way back.
-  const forgetCache = useCallback(
-    () => queryClient.invalidateQueries(),
-    [queryClient],
-  );
+  const forgetCache = useCallback(() => queryClient.invalidateQueries(), [queryClient]);
   const sheet = useProjectDetail(projectId, forgetCache);
   const detail = sheet.detail;
 
