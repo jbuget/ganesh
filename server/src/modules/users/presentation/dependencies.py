@@ -30,6 +30,9 @@ from src.modules.projects.presentation.dependencies import (
 from src.modules.users.application.use_cases.change_user_role import (
     ChangeUserRoleUseCase,
 )
+from src.modules.users.application.use_cases.declare_own_presence import (
+    DeclareOwnPresenceUseCase,
+)
 from src.modules.users.application.use_cases.get_user_record import GetUserRecordUseCase
 from src.modules.users.application.use_cases.list_users import ListUsersUseCase
 from src.modules.users.application.use_cases.set_user_active import SetUserActiveUseCase
@@ -86,3 +89,10 @@ def get_user_record_use_case(
         entries=entries,
         months=months,
     )
+
+
+def get_declare_own_presence_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> DeclareOwnPresenceUseCase:
+    return DeclareOwnPresenceUseCase(users=users, audit_logs=audit_logs)

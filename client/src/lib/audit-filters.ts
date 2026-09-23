@@ -93,6 +93,7 @@ export const ACTION_FAMILIES: ActionFamily[] = [
       { value: "user.create", label: "Arrivée" },
       { value: "user.role_change", label: "Changement de rôle" },
       { value: "user.identity_update", label: "Fiche modifiée" },
+      { value: "user.presence_declare", label: "Semaine déclarée" },
       { value: "user.deactivate", label: "Désactivation" },
       { value: "user.activate", label: "Réactivation" },
     ],

@@ -6,6 +6,7 @@
  */
 import type { Department } from "./department";
 import type { Role } from "./role";
+import type { WeekPresenceResponse } from "./weekPresenceResponse";
 
 /**
  * A teammate.
@@ -22,4 +23,5 @@ export interface UserResponse {
   last_name?: string | null;
   department?: Department | null;
   github_username?: string | null;
+  presence: WeekPresenceResponse;
 }

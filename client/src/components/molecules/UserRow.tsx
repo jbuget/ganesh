@@ -7,7 +7,7 @@ import type { UserResponse } from "@/lib/api/generated/model";
 import { formatParisDateTime } from "@/lib/instants";
 import { since } from "@/lib/relative-dates";
 import { roleLabel } from "@/lib/roles";
-import { STRONG_SEPARATOR } from "@/lib/table-frame";
+import { NAMING_BUTTON, NAMING_CELL, NAMING_CONTENT } from "@/lib/table-frame";
 
 interface UserRowProps {
   user: UserResponse;
@@ -35,10 +35,8 @@ export function UserRow({ user, now, onOpen }: UserRowProps) {
         user.is_active ? "" : "text-slate-400"
       }`}
     >
-      <TableCell
-        className={`bg-white py-2 group-hover:bg-slate-50 ${STRONG_SEPARATOR}`}
-      >
-        <span className="flex items-center gap-2.5">
+      <TableCell className={NAMING_CELL}>
+        <span className={NAMING_CONTENT}>
           <UserAvatar
             initials={user.initials}
             name={user.display_name}
@@ -52,7 +50,7 @@ export function UserRow({ user, now, onOpen }: UserRowProps) {
               event.stopPropagation();
               onOpen();
             }}
-            className="min-w-0 cursor-pointer truncate text-left font-medium"
+            className={NAMING_BUTTON}
           >
             {user.display_name}
           </button>

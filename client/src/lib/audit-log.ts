@@ -336,6 +336,12 @@ export function auditSentence(
     case "user.identity_update":
       return { action: `a modifié la fiche de ${who}` };
 
+    // Which days, and from where, is in the payload and read on the team's
+    // presence board. The line says that the week moved, never why it did:
+    // that is nobody's to record.
+    case "user.presence_declare":
+      return { action: "a déclaré sa semaine" };
+
     // A key is named by its masked public part — the only piece of it the
     // register holds, the secret having never been written anywhere.
     case "api_key.create":

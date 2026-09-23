@@ -6,6 +6,7 @@ import { Table, TableBody } from "@/components/ui/table";
 import type { UserResponse } from "@/lib/api/generated/model";
 
 import { UserRow } from "./UserRow";
+import { A_WEEK_ON_SITE } from "@/lib/presence";
 
 const jeremy: UserResponse = {
   id: 1,
@@ -13,6 +14,7 @@ const jeremy: UserResponse = {
   display_name: "Jérémy Buget",
   initials: "JB",
   role: "MANAGER",
+  presence: A_WEEK_ON_SITE,
   is_active: true,
 };
 
