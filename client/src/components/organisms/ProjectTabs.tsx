@@ -28,6 +28,8 @@ interface ProjectTabsProps {
   detail: ProjectDetailResponse;
   /** Which tab to open on; steering by default. */
   initialTab?: string | null;
+  /** The update the visit was about, when a notification named one. */
+  aimedAt?: number | null;
   onChange: () => void | Promise<void>;
   saveSheet: (
     departments: Department[],
@@ -79,6 +81,7 @@ interface ProjectTabsProps {
 export function ProjectTabs({
   detail,
   initialTab,
+  aimedAt,
   onChange,
   saveSheet,
   saveDescription,
@@ -227,10 +230,12 @@ export function ProjectTabs({
           projectId={detail.project.id}
           now={now}
           onChange={onChange}
+          aimedAt={aimedAt}
           // Coming from the counter, one comes to write: the cursor is already
           // waiting in the editor. Coming from the panel, one comes to read
-          // first.
-          focusComposer={initialTab === "updates"}
+          // first — and sent to one line in particular, one comes to read that
+          // line, which the cursor would scroll straight back out of sight.
+          focusComposer={initialTab === "updates" && !aimedAt}
         />
       </TabsContent>
 

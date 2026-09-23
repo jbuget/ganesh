@@ -168,3 +168,35 @@ body {
   height: 0;
   pointer-events: none;
 }
+
+/*
+ * The line one was sent to.
+ *
+ * A notification names one update in a thread of twenty: the ring lights it
+ * for a moment, then lets go. Nothing stays lit once it has been found — a
+ * mark that outlived its errand would read as a state of the update itself.
+ * Colour marks, it does not fill: the ring sits outside the card.
+ *
+ * A reader who asked for no movement keeps the ring, plainly. Landing without
+ * knowing where is worse than a mark that stays.
+ */
+@keyframes aimed-at {
+  0%,
+  60% {
+    box-shadow: 0 0 0 3px var(--color-blue-400);
+  }
+  100% {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}
+
+.aimed-at {
+  animation: aimed-at 1.6s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aimed-at {
+    animation: none;
+    box-shadow: 0 0 0 3px var(--color-blue-400);
+  }
+}

@@ -138,6 +138,27 @@ describe("where a notification leads", () => {
     ).toBe("/timesheet?month=2026-01");
   });
 
+  it("opens the thread on the update one was told about", () => {
+    expect(
+      notificationSentence(
+        line("project.update_posted", { payload: { update_id: 412 } }),
+      ).href,
+    ).toBe("/notifications?mission=42&tab=updates&update=412");
+  });
+
+  it("opens the thread of a mention the same way", () => {
+    expect(
+      notificationSentence(line("update.mention", { payload: { update_id: 412 } }))
+        .href,
+    ).toBe("/notifications?mission=42&tab=updates&update=412");
+  });
+
+  it("opens the thread whole when the update itself is not named", () => {
+    expect(notificationSentence(line("project.update_posted")).href).toBe(
+      "/notifications?mission=42&tab=updates",
+    );
+  });
+
   it("leads nowhere once the mission is gone", () => {
     expect(
       notificationSentence(line("project.deleted", { project: null })).href,

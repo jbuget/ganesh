@@ -21,11 +21,16 @@ function anUpdate(over: Partial<ProjectUpdateResponse> = {}): ProjectUpdateRespo
   };
 }
 
-function renderCard(over: Partial<ProjectUpdateResponse> = {}, onRemove = vi.fn()) {
+function renderCard(
+  over: Partial<ProjectUpdateResponse> = {},
+  onRemove = vi.fn(),
+  aimed = false,
+) {
   render(
     <ProjectUpdateCard
       update={anUpdate(over)}
       now={NOW}
+      aimed={aimed}
       onEdit={vi.fn()}
       onRemove={onRemove}
       onReact={vi.fn()}
@@ -35,6 +40,22 @@ function renderCard(over: Partial<ProjectUpdateResponse> = {}, onRemove = vi.fn(
 }
 
 describe("ProjectUpdateCard", () => {
+  it("marks out the update one was sent to, and brings it under the eye", () => {
+    const scrolled = vi.spyOn(Element.prototype, "scrollIntoView");
+
+    renderCard({}, vi.fn(), true);
+
+    expect(screen.getByRole("article")).toHaveClass("aimed-at");
+    expect(scrolled).toHaveBeenCalled();
+    scrolled.mockRestore();
+  });
+
+  it("leaves every other update of the thread alone", () => {
+    renderCard();
+
+    expect(screen.getByRole("article")).not.toHaveClass("aimed-at");
+  });
+
   it("asks before withdrawing, and withdraws nothing yet", async () => {
     const onRemove = renderCard();
 
