@@ -14,9 +14,19 @@ const list = (subProjects: ProjectResponse[], onAdd = vi.fn()) => {
 };
 
 async function add(label: string) {
-  await userEvent.click(screen.getByRole("button", { name: "Ajouter un sous-projet" }));
+  await openTheForm();
   await userEvent.type(screen.getByLabelText("Nom du sous-projet"), label);
-  await userEvent.click(screen.getByRole("button", { name: "Ajouter" }));
+  await userEvent.click(screen.getByRole("button", { name: "Déclarer" }));
+}
+
+/**
+ * The same entry as the one folded in the mission menu, word for word: two
+ * ways in, one gesture, and nothing to tell apart once it is open.
+ */
+async function openTheForm() {
+  await userEvent.click(
+    screen.getByRole("button", { name: "Déclarer un sous-projet…" }),
+  );
 }
 
 describe("ProjectSubProjects", () => {
@@ -69,11 +79,21 @@ describe("ProjectSubProjects", () => {
   it("refuses to attach a nameless sub-project", async () => {
     const onAdd = list([]);
 
-    await userEvent.click(
-      screen.getByRole("button", { name: "Ajouter un sous-projet" }),
-    );
+    await openTheForm();
 
-    expect(screen.getByRole("button", { name: "Ajouter" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Déclarer" })).toBeDisabled();
     expect(onAdd).not.toHaveBeenCalled();
+  });
+
+  /** The dialog is the one the menu opens: it says what it is declaring. */
+  it("declares the package under the project rather than beside it", async () => {
+    list([]);
+
+    await openTheForm();
+
+    expect(
+      screen.getByRole("heading", { name: "Déclarer un sous-projet" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/rattaché au projet/)).toBeInTheDocument();
   });
 });
