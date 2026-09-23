@@ -97,6 +97,12 @@ the question one opens it with. Length is met by paging, never by filtering.
   vocabulary and the interface says it in French, in
   `client/src/lib/audit-log.ts` — under test, because a log nobody can read is
   not one.
+- **Le panneau d'un collaborateur lit les deux côtés de son id** — ce qu'il a
+  fait et ce qu'on lui a fait. Un journal qui ne tiendrait que ses propres
+  gestes laisserait dehors le jour où son rôle a changé ; un qui ne tiendrait
+  que les changements subis laisserait dehors le mois qu'il a rempli pour un
+  collègue. Chaque ligne y nomme son projet, comme le registre lu en travers :
+  le panneau est une personne, pas un projet.
 - **Three things are deliberately outside it**, and adding them would be a
   decision, not a fix: the rank of a card within a kanban column, which
   decides nothing and would bury everything else; every sign-in, which is

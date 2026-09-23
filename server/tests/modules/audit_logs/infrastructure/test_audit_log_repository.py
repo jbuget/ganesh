@@ -228,3 +228,75 @@ async def test_a_value_longer_than_a_line_is_kept_whole(
 
     page = await repository.list_all(limit=50, offset=0)
     assert [log.new_value for log in page] == [address]
+
+
+@pytest.mark.asyncio
+async def test_a_teammate_s_log_holds_both_sides_of_their_id(
+    db_session: AsyncSession,
+) -> None:
+    """What they did, and what was done to them — and nothing else."""
+    repository = SqlAuditLogRepository(db_session)
+    her = await a_teammate(db_session, "oid-her")
+    somebody_else = await a_teammate(db_session, "oid-else")
+    await repository.add(
+        AuditLog(
+            action=AuditAction.PROJECT_CREATE,
+            actor_id=her,
+            at=clock.as_instant(datetime(2026, 9, 1, 9, 0)),
+        )
+    )
+    await repository.add(
+        AuditLog(
+            action=AuditAction.USER_ROLE_CHANGE,
+            actor_id=somebody_else,
+            target_user_id=her,
+            at=clock.as_instant(datetime(2026, 9, 2, 9, 0)),
+        )
+    )
+    await repository.add(
+        AuditLog(
+            action=AuditAction.PROJECT_CREATE,
+            actor_id=somebody_else,
+            at=clock.as_instant(datetime(2026, 9, 3, 9, 0)),
+        )
+    )
+
+    page = await repository.list_for_user(her, limit=50, offset=0)
+
+    assert [log.action for log in page] == [
+        AuditAction.USER_ROLE_CHANGE,
+        AuditAction.PROJECT_CREATE,
+    ]
+    assert await repository.count_for_user(her) == 2
+
+
+@pytest.mark.asyncio
+async def test_a_teammate_s_log_is_paged_and_counted_whole(
+    db_session: AsyncSession,
+) -> None:
+    repository = SqlAuditLogRepository(db_session)
+    person = await a_teammate(db_session, "oid-paged")
+    for day in range(1, 6):
+        await repository.add(
+            a_declaration(person, date(2026, 9, day), datetime(2026, 9, day, 9, 0))
+        )
+
+    page = await repository.list_for_user(person, limit=2, offset=2)
+
+    assert [log.day for log in page] == [date(2026, 9, 3), date(2026, 9, 2)]
+    assert await repository.count_for_user(person) == 5
+
+
+@pytest.mark.asyncio
+async def test_a_teammate_s_log_counts_a_line_once_when_it_names_them_twice(
+    db_session: AsyncSession,
+) -> None:
+    """Declaring on one's own month names oneself on both sides of the line."""
+    repository = SqlAuditLogRepository(db_session)
+    person = await a_teammate(db_session, "oid-twice")
+    await repository.add(
+        a_declaration(person, date(2026, 9, 3), datetime(2026, 9, 3, 9, 0))
+    )
+
+    assert len(await repository.list_for_user(person, limit=50, offset=0)) == 1
+    assert await repository.count_for_user(person) == 1

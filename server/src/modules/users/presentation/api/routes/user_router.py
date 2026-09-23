@@ -6,6 +6,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.database import get_db
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.api_keys.presentation.dependencies import Caller, open_to_machines
+from src.modules.audit_logs.application.use_cases.list_user_audit_log import (
+    ListUserAuditLogUseCase,
+)
+from src.modules.audit_logs.presentation.api.mappers.audit_log_mapper import (
+    to_audit_log_page_response,
+)
+from src.modules.audit_logs.presentation.api.schemas.audit_log_schemas import (
+    AuditLogPageResponse,
+)
+from src.modules.audit_logs.presentation.dependencies import get_user_audit_log_use_case
 from src.modules.auth.presentation.dependencies import (
     get_current_manager,
     get_current_user,
@@ -97,6 +107,30 @@ async def get_user_record(
     """
     record = await use_case.execute(GetUserRecordQuery(user_id=user_id))
     return to_user_record_response(record)
+
+
+@router.get(
+    "/{user_id}/audit",
+    response_model=AuditLogPageResponse,
+    operation_id="listUserAuditLog",
+)
+async def list_user_audit_log(
+    user_id: int,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    _: User = Depends(get_current_user),
+    use_case: ListUserAuditLogUseCase = Depends(get_user_audit_log_use_case),
+) -> AuditLogPageResponse:
+    """Everything the register holds on a teammate, most recent first.
+
+    Open to the whole team, like the record beside it and for the same reason:
+    the register is what makes a team that may enter a colleague's month
+    trustworthy, and a log only some may read would be a weaker promise than
+    the one already made.
+    """
+    return to_audit_log_page_response(
+        await use_case.execute(user_id=user_id, limit=limit, offset=offset)
+    )
 
 
 @router.patch(

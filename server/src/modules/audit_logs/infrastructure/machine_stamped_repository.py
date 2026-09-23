@@ -55,6 +55,14 @@ class MachineStampedAuditLog(AuditLogRepository):
     async def count_for_user_month(self, target_user_id: int, month: date) -> int:
         return await self._inner.count_for_user_month(target_user_id, month)
 
+    async def list_for_user(
+        self, user_id: int, limit: int, offset: int
+    ) -> list[AuditLog]:
+        return await self._inner.list_for_user(user_id, limit, offset)
+
+    async def count_for_user(self, user_id: int) -> int:
+        return await self._inner.count_for_user(user_id)
+
     async def list_for_project(
         self, project_id: int, limit: int, offset: int
     ) -> list[AuditLog]:

@@ -84,6 +84,7 @@ export * from "./listNotificationsParams";
 export * from "./listProjectAuditLogParams";
 export * from "./listProjectsParams";
 export * from "./listTouchedProjectsParams";
+export * from "./listUserAuditLogParams";
 export * from "./listUsersParams";
 export * from "./localSignInRequest";
 export * from "./localSignInResponse";
