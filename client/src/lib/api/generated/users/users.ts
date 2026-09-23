@@ -21,9 +21,11 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AuditLogPageResponse,
   ChangeRoleRequest,
   DeclarePresenceRequest,
   HTTPValidationError,
+  ListUserAuditLogParams,
   ListUsersParams,
   SetActiveRequest,
   UpdateUserIdentityRequest,
@@ -510,6 +512,196 @@ export function useGetUserRecord<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetUserRecordQueryOptions(userId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listUserAuditLogResponse200 = {
+  data: AuditLogPageResponse;
+  status: 200;
+};
+
+export type listUserAuditLogResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listUserAuditLogResponseSuccess = listUserAuditLogResponse200 & {
+  headers: Headers;
+};
+export type listUserAuditLogResponseError = listUserAuditLogResponse422 & {
+  headers: Headers;
+};
+
+export type listUserAuditLogResponse =
+  listUserAuditLogResponseSuccess | listUserAuditLogResponseError;
+
+export const getListUserAuditLogUrl = (
+  userId: number,
+  params?: ListUserAuditLogParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/users/${userId}/audit?${stringifiedParams}`
+    : `/api/v1/users/${userId}/audit`;
+};
+
+/**
+ * Everything the register holds on a teammate, most recent first.
+ *
+ * Open to the whole team, like the record beside it and for the same reason:
+ * the register is what makes a team that may enter a colleague's month
+ * trustworthy, and a log only some may read would be a weaker promise than
+ * the one already made.
+ * @summary List User Audit Log
+ */
+export const listUserAuditLog = async (
+  userId: number,
+  params?: ListUserAuditLogParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listUserAuditLogResponse> => {
+  return bffFetcher<listUserAuditLogResponse>(getListUserAuditLogUrl(userId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListUserAuditLogQueryKey = (
+  userId: number,
+  params?: ListUserAuditLogParams,
+) => {
+  return [`/api/v1/users/${userId}/audit`, ...(params ? [params] : [])] as const;
+};
+
+export const getListUserAuditLogQueryOptions = <
+  TData = Awaited<ReturnType<typeof listUserAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  userId: number,
+  params?: ListUserAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listUserAuditLog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListUserAuditLogQueryKey(userId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listUserAuditLog>>> = ({
+    signal,
+  }) => listUserAuditLog(userId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: userId !== null && userId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listUserAuditLog>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListUserAuditLogQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listUserAuditLog>>
+>;
+export type ListUserAuditLogQueryError = HTTPValidationError;
+
+export function useListUserAuditLog<
+  TData = Awaited<ReturnType<typeof listUserAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  userId: number,
+  params: undefined | ListUserAuditLogParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listUserAuditLog>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listUserAuditLog>>,
+          TError,
+          Awaited<ReturnType<typeof listUserAuditLog>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListUserAuditLog<
+  TData = Awaited<ReturnType<typeof listUserAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  userId: number,
+  params?: ListUserAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listUserAuditLog>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listUserAuditLog>>,
+          TError,
+          Awaited<ReturnType<typeof listUserAuditLog>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListUserAuditLog<
+  TData = Awaited<ReturnType<typeof listUserAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  userId: number,
+  params?: ListUserAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listUserAuditLog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List User Audit Log
+ */
+
+export function useListUserAuditLog<
+  TData = Awaited<ReturnType<typeof listUserAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  userId: number,
+  params?: ListUserAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listUserAuditLog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListUserAuditLogQueryOptions(userId, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
