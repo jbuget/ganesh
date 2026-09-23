@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   AT_THE_OFFICE,
+  dayShown,
   daysOnSite,
   daysPresent,
   nextDay,
+  presenceOfDay,
   sayDay,
   sayWeek,
   weekOf,
@@ -76,5 +78,54 @@ describe("counting the week", () => {
 describe("a week nobody declared", () => {
   it("starts from a week at the office, which is where most weeks start", () => {
     expect(weekOf(null)).toEqual(AT_THE_OFFICE);
+  });
+});
+
+describe("the day the home screen reads", () => {
+  it("is today, from Monday to Friday", () => {
+    // Wednesday 23 September 2026.
+    expect(dayShown(new Date(2026, 8, 23))).toEqual({
+      key: "wednesday",
+      label: "Mercredi",
+      isToday: true,
+    });
+  });
+
+  it("is Monday at the weekend, where today answers nothing", () => {
+    // Saturday 26 September 2026: what one opens the screen for is the week
+    // about to start.
+    expect(dayShown(new Date(2026, 8, 26))).toEqual({
+      key: "monday",
+      label: "Lundi",
+      isToday: false,
+    });
+    expect(dayShown(new Date(2026, 8, 27)).key).toBe("monday");
+  });
+});
+
+describe("how many are where, that day", () => {
+  const week = (wednesday: "ON_SITE" | "REMOTE" | "AWAY") => ({
+    ...AT_THE_OFFICE,
+    wednesday,
+    days_on_site: 4,
+    days_present: 5,
+  });
+
+  it("counts the three places apart", () => {
+    expect(
+      presenceOfDay(
+        [week("ON_SITE"), week("REMOTE"), week("REMOTE"), week("AWAY")],
+        "wednesday",
+      ),
+    ).toEqual({ onSite: 1, remote: 2, away: 1 });
+  });
+
+  it("counts a teammate who said nothing as on site", () => {
+    // The arrangement the team runs on, here as everywhere else.
+    expect(presenceOfDay([null, undefined], "monday")).toEqual({
+      onSite: 2,
+      remote: 0,
+      away: 0,
+    });
   });
 });

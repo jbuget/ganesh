@@ -106,3 +106,43 @@ export const A_WEEK_ON_SITE: WeekPresenceResponse = {
   days_on_site: 5,
   days_present: 5,
 };
+
+export interface DayShown {
+  key: Weekday["key"];
+  label: string;
+  /** False at the weekend, where what one wants to know is Monday. */
+  isToday: boolean;
+}
+
+/**
+ * The day the home screen reads the team's presence for.
+ *
+ * Today, from Monday to Friday. At the weekend, Monday: « qui est là
+ * aujourd'hui » answers nothing on a Sunday, and what one actually opens the
+ * screen for is the week about to start.
+ */
+export function dayShown(today: Date): DayShown {
+  const weekday = (today.getDay() + 6) % 7;
+  return weekday < WEEKDAYS.length
+    ? { ...WEEKDAYS[weekday], isToday: true }
+    : { ...WEEKDAYS[0], isToday: false };
+}
+
+export interface PresenceOfDay {
+  onSite: number;
+  remote: number;
+  away: number;
+}
+
+/** How many are where, that day, out of a list already reduced to the team. */
+export function presenceOfDay(
+  weeks: (WeekPresenceResponse | null | undefined)[],
+  day: Weekday["key"],
+): PresenceOfDay {
+  const days = weeks.map((week) => week?.[day] ?? "ON_SITE");
+  return {
+    onSite: days.filter((one) => one === "ON_SITE").length,
+    remote: days.filter((one) => one === "REMOTE").length,
+    away: days.filter((one) => one === "AWAY").length,
+  };
+}

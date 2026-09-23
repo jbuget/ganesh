@@ -35,6 +35,24 @@ const mood = vi.hoisted(() => ({
 
 vi.mock("@/lib/use-home", () => ({ useHome: () => home.state }));
 vi.mock("@/lib/use-mood", () => ({ useMood: () => mood.state }));
+// The presence block reads the team, and the panel writes to it; the screen
+// is tested without a QueryClient around it, as every other block here is.
+vi.mock("@/lib/use-users", () => ({
+  useUsersScreen: () => ({
+    users: [],
+    isManager: false,
+    meId: 1,
+    now: new Date("2026-09-17T12:00:00"),
+    find: () => null,
+    changeRole: vi.fn(),
+    setActive: vi.fn(),
+    updateIdentity: vi.fn(),
+    declareOwnPresence: vi.fn(),
+  }),
+}));
+vi.mock("@/lib/opened-user", () => ({
+  useOpenedUser: () => ({ openedUser: null, open: vi.fn(), close: vi.fn() }),
+}));
 vi.mock("@/lib/opened-mission", () => ({
   useOpenedMission: () => ({
     openedMission: null,
