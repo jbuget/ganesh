@@ -42,12 +42,18 @@ export function AppSidebar() {
         // the fold. No transition on the width: `transition-[width]` froze the
         // bar at its starting width, and folding had no visible effect.
         "flex min-w-0 shrink-0 flex-col overflow-hidden border-r border-slate-300 bg-white",
+        // Held to the height of the window, like the screen it stands beside:
+        // `PageLayout` is `h-screen` and scrolls its own content, so the bar
+        // is measured the same way rather than growing with the page. On a
+        // short screen its foot — the bell, the name, the way out — used to
+        // sit below the fold with no way to reach it.
+        "h-screen",
         collapsed ? "w-14" : "w-56",
       ].join(" ")}
     >
       <div
         className={[
-          "flex items-center gap-2 px-3 py-4",
+          "flex shrink-0 items-center gap-2 px-3 py-4",
           collapsed ? "flex-col gap-3" : "justify-between",
         ].join(" ")}
       >
@@ -77,7 +83,7 @@ export function AppSidebar() {
       {/* Above the tabs, where one reads before choosing: the palette leads
           to the same screens and to what is inside them, and a shortcut
           nobody is shown is a shortcut nobody uses. */}
-      <div className="px-2 pb-2">
+      <div className="shrink-0 px-2 pb-2">
         <button
           type="button"
           onClick={openPalette}
@@ -100,7 +106,14 @@ export function AppSidebar() {
         </button>
       </div>
 
-      <nav aria-label="Navigation principale" className="flex-1 px-2">
+      {/* The one part of the bar that scrolls: the tabs. `min-h-0` is what
+          lets it, a flex child refusing by default to shrink under its own
+          content — without it the list would push the foot out of the window
+          instead of overflowing. */}
+      <nav
+        aria-label="Navigation principale"
+        className="min-h-0 flex-1 overflow-y-auto px-2"
+      >
         <ul className="flex flex-col gap-1">
           {SCREENS.map(({ href, label, Icon }) => {
             const isActive = pathname === href;
@@ -133,12 +146,16 @@ export function AppSidebar() {
           navigation lists what the team shares, and an inbox belongs to one
           person. « Tout voir » is what leads to the page. */}
       {user && (
-        <div className="border-t border-slate-200 px-2 py-1.5">
+        <div className="shrink-0 border-t border-slate-200 px-2 py-1.5">
           <NotificationPanel collapsed={collapsed} />
         </div>
       )}
 
-      {user && <UserMenu user={user} collapsed={collapsed} onSignOut={signOut} />}
+      {user && (
+        <div className="shrink-0">
+          <UserMenu user={user} collapsed={collapsed} onSignOut={signOut} />
+        </div>
+      )}
     </aside>
   );
 }

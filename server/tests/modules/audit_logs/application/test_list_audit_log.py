@@ -12,10 +12,20 @@ import pytest
 from src.modules.audit_logs.application.use_cases.list_audit_log import (
     ListAuditLogUseCase,
 )
-from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
+from src.modules.audit_logs.domain.entities.audit_log import (
+    AuditAction,
+    AuditLog,
+    AuditLogFilter,
+)
+from src.modules.projects.domain.entities.project import (
+    Project,
+    ProjectKind,
+    ProjectStatus,
+)
 from src.modules.users.domain.entities.user import User
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
+    InMemoryProjectRepository,
     InMemoryUserRepository,
 )
 
@@ -34,11 +44,20 @@ def a_line(at: datetime, project_id: int | None = 3, actor_id: int = 1) -> Audit
     )
 
 
+PORTAL = Project(
+    id=3, label="Portail", kind=ProjectKind.PROJECT, status=ProjectStatus.SCOPING
+)
+
+
 async def use_case(lines: list[AuditLog]) -> ListAuditLogUseCase:
     logs = InMemoryAuditLogRepository()
     for line in lines:
         await logs.add(line)
-    return ListAuditLogUseCase(logs, InMemoryUserRepository([ALICE, BOB]))
+    return ListAuditLogUseCase(
+        logs,
+        InMemoryUserRepository([ALICE, BOB]),
+        InMemoryProjectRepository([PORTAL]),
+    )
 
 
 @pytest.mark.asyncio
@@ -77,7 +96,9 @@ async def test_a_page_says_how_long_the_log_is() -> None:
 async def test_a_reader_asks_only_for_what_came_after_it_last_looked() -> None:
     case = await use_case([a_line(datetime(2026, 9, 1)), a_line(datetime(2026, 9, 20))])
 
-    page = await case.execute(limit=10, offset=0, since=datetime(2026, 9, 10))
+    page = await case.execute(
+        limit=10, offset=0, kept=AuditLogFilter(since=datetime(2026, 9, 10))
+    )
 
     assert [line.log.at for line in page.entries] == [datetime(2026, 9, 20)]
     assert page.total == 1
@@ -91,3 +112,29 @@ async def test_a_deactivated_teammate_still_signs_what_they_did() -> None:
 
     assert page.entries[0].actor is not None
     assert page.entries[0].actor.label == "B. Cy"
+
+
+@pytest.mark.asyncio
+async def test_every_line_names_the_mission_it_is_about() -> None:
+    """Read across, a gesture with no mission beside it cannot be placed.
+
+    A mission's own log leaves the name out — the page is the mission. Here
+    there is no page to say it, so every line carries it.
+    """
+    case = await use_case([a_line(datetime(2026, 9, 1))])
+
+    [line] = (await case.execute(limit=10, offset=0)).entries
+
+    assert line.project is not None
+    assert line.project.label == "Portail"
+
+
+@pytest.mark.asyncio
+async def test_a_line_whose_mission_is_gone_names_none() -> None:
+    """Which is right: a deletion leaves no mission to name, and the line
+    stays rather than being dropped."""
+    case = await use_case([a_line(datetime(2026, 9, 1), project_id=None)])
+
+    [line] = (await case.execute(limit=10, offset=0)).entries
+
+    assert line.project is None

@@ -34,6 +34,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryProjectAssigneeRepository,
     InMemoryProjectRepository,
     InMemoryProjectUpdateRepository,
+    InMemoryUpdateReactionRepository,
     InMemoryUserRepository,
 )
 
@@ -56,6 +57,7 @@ WHEN = datetime(2026, 9, 17, 10, 0)
 
 def build(assigned: dict | None = None):
     updates = InMemoryProjectUpdateRepository()
+    reactions = InMemoryUpdateReactionRepository()
     audit = InMemoryAuditLogRepository()
     assignees = InMemoryProjectAssigneeRepository(assigned or {})
     inbox = InMemoryNotificationRepository()
@@ -79,7 +81,9 @@ def build(assigned: dict | None = None):
         PostProjectUpdateUseCase(**deps, assignees=assignees, notifications=delivery),
         EditProjectUpdateUseCase(**deps, assignees=assignees, notifications=delivery),
         RemoveProjectUpdateUseCase(**deps, assignees=assignees, notifications=delivery),
-        ListProjectUpdatesUseCase(updates=updates, users=deps["users"]),
+        ListProjectUpdatesUseCase(
+            updates=updates, users=deps["users"], reactions=reactions
+        ),
         audit,
         inbox,
     )

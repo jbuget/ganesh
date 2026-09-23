@@ -3,6 +3,10 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from src.modules.projects.domain.entities.update_reaction import (
+    Reaction,
+    UpdateReaction,
+)
 from src.shared.exceptions.domain_exceptions import (
     ForbiddenActionError,
     ValidationError,
@@ -52,6 +56,18 @@ class ProjectUpdate:
             raise ValidationError("An update cannot be empty.")
         self.body = new_one
         self.edited_at = at
+
+    def react(self, who: int, reaction: Reaction, at: datetime) -> UpdateReaction:
+        """Answers without writing.
+
+        Anyone may, including the author: a reaction is not applause one owes
+        someone else. A withdrawn update is refused — there is nothing left to
+        react to.
+        """
+        if self.is_deleted:
+            raise ForbiddenActionError("A withdrawn update cannot be reacted to.")
+        assert self.id is not None
+        return UpdateReaction(update_id=self.id, user_id=who, reaction=reaction, at=at)
 
     def remove(self, by: int, at: datetime) -> None:
         self._require_author(by)

@@ -16,7 +16,7 @@ both because they were never written here: they are given in confidence, and
 a log of who felt what is not a log. A scope cannot talk them open.
 """
 
-from datetime import datetime
+from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, Query
 
@@ -28,6 +28,7 @@ from src.modules.audit_logs.application.use_cases.list_audit_log import (
 from src.modules.audit_logs.application.use_cases.list_touched_projects import (
     ListTouchedProjectsUseCase,
 )
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLogFilter
 from src.modules.audit_logs.presentation.api.mappers.audit_log_mapper import (
     to_audit_log_page_response,
 )
@@ -59,20 +60,54 @@ async def list_audit_log(
         default=None,
         description="Only what was written at or after this moment.",
     ),
+    from_day: date | None = Query(
+        default=None,
+        description="Only what was written on this day or after, Paris time.",
+    ),
+    to_day: date | None = Query(
+        default=None,
+        description="Only what was written on this day or before, Paris time.",
+    ),
+    action: list[AuditAction] | None = Query(
+        default=None,
+        description="Only these gestures. Repeat the parameter to name several.",
+    ),
+    actor_id: int | None = Query(
+        default=None, description="Only what this person did."
+    ),
     _: Caller = Depends(audit_reader),
     use_case: ListAuditLogUseCase = Depends(get_audit_log_use_case),
 ) -> AuditLogPageResponse:
-    """The log, most recent first, paged.
+    """The log, most recent first, paged and narrowed to what was asked.
 
     `total` counts what the window holds, not what the page shows: a reader
     knows from the first call how much is left to fetch.
+
+    Two ways of naming a period, for two readers. A machine pulling what it
+    does not yet hold says `since`, a moment. A screen says `from_day` /
+    `to_day`, which are days on the Paris clock — the ones the team lived,
+    both ends included. Stating both narrows twice rather than choosing: the
+    later start wins, as an intersection does.
     """
     # A caller that states no zone is read on the Paris clock: `since` is a
     # moment someone looked at, and the host's own clock is nobody's.
+    opened = [
+        moment
+        for moment in (
+            None if since is None else clock.as_instant(since),
+            None if from_day is None else clock.opens(from_day),
+        )
+        if moment is not None
+    ]
     page = await use_case.execute(
         limit=limit,
         offset=offset,
-        since=None if since is None else clock.as_instant(since),
+        kept=AuditLogFilter(
+            since=max(opened) if opened else None,
+            until=None if to_day is None else clock.closes(to_day),
+            actions=action,
+            actor_id=actor_id,
+        ),
     )
     return to_audit_log_page_response(page)
 

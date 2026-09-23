@@ -22,6 +22,8 @@ interface DeleteMissionDialogProps {
   consumedDays: number;
   /** Work packages attached to it. */
   subProjects: number;
+  /** Whether the catalogue draws a card for it. */
+  published: boolean;
   onConfirm: () => void | Promise<void>;
 }
 
@@ -35,13 +37,25 @@ interface DeleteMissionDialogProps {
  * y a du temps » on a project whose own count is zero, because a package
  * under it carries some, would send one looking for entries that are not
  * there.
+ *
+ * The publication is said last, and only on its own: archiving answers the
+ * time in full — the catalogue keeps the card and marks it archived — so
+ * sending one to unpublish first would add a step that changes nothing.
  */
-function refusal(label: string, consumedDays: number, subProjects: number): string {
+function refusal({
+  label,
+  consumedDays,
+  subProjects,
+  published,
+}: Pick<
+  DeleteMissionDialogProps,
+  "label" | "consumedDays" | "subProjects" | "published"
+>): string {
   const said: string[] = [];
   if (consumedDays > 0) {
     const days = consumedDays >= 2 ? "jours saisis" : "jour saisi";
     said.push(
-      `« ${label} » porte ${formatDecimalDays(consumedDays)} ${days} : la supprimer effacerait du temps déclaré. Archivez-la plutôt, elle sort des listes sans que rien ne soit perdu.`,
+      `« ${label} » porte ${formatDecimalDays(consumedDays)} ${days} : le supprimer effacerait du temps déclaré. Archivez-le plutôt, il sort des listes sans que rien ne soit perdu.`,
     );
   }
   if (subProjects > 0) {
@@ -49,6 +63,11 @@ function refusal(label: string, consumedDays: number, subProjects: number): stri
       subProjects > 1
         ? `« ${label} » porte ${subProjects} sous-projets, qui peuvent eux-mêmes porter du temps. Traitez-les d'abord : la suppression ne descend pas dans l'arborescence.`
         : `« ${label} » porte un sous-projet, qui peut lui-même porter du temps. Traitez-le d'abord : la suppression ne descend pas dans l'arborescence.`,
+    );
+  }
+  if (published && said.length === 0) {
+    said.push(
+      `« ${label} » est publié au catalogue : sa carte quitterait waat.tools sans que personne ne l'ait décidé. Dépubliez-le d'abord, depuis l'onglet « Catalogue ».`,
     );
   }
   return said.join(" ");
@@ -69,6 +88,7 @@ export function DeleteMissionDialog({
   deletable,
   consumedDays,
   subProjects,
+  published,
   onConfirm,
 }: DeleteMissionDialogProps) {
   return (
@@ -80,8 +100,8 @@ export function DeleteMissionDialog({
           </AlertDialogTitle>
           <AlertDialogDescription>
             {deletable
-              ? "Ce projet n'a jamais porté de temps. Sa suppression est définitive, et emporte les mises à jour publiées sur son fil : rien ne permettra de le rétablir."
-              : refusal(label, consumedDays, subProjects)}
+              ? "Ce projet n'a jamais porté de temps. Sa suppression est définitive : elle emporte le fil de ses mises à jour, les fichiers qui y ont été déposés, ses contributeurs et ses dates de passage de phase. Rien ne permettra de le rétablir."
+              : refusal({ label, consumedDays, subProjects, published })}
           </AlertDialogDescription>
         </AlertDialogHeader>
 

@@ -4,7 +4,7 @@ They implement the same ports as the infrastructure: a use case that passes
 here passes in production, persistence aside.
 """
 
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from dataclasses import replace
 from datetime import date, datetime
 
@@ -15,7 +15,11 @@ from src.modules.activity.domain.repositories.activity_repository import (
 )
 from src.modules.api_keys.domain.entities.api_key import ApiKey
 from src.modules.api_keys.domain.repositories.api_key_repository import ApiKeyRepository
-from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
+from src.modules.audit_logs.domain.entities.audit_log import (
+    AuditAction,
+    AuditLog,
+    AuditLogFilter,
+)
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
@@ -53,6 +57,10 @@ from src.modules.projects.domain.entities.project_attachment import ProjectAttac
 from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
+from src.modules.projects.domain.entities.update_reaction import (
+    Reaction,
+    UpdateReaction,
+)
 from src.modules.projects.domain.repositories.attachment_store import AttachmentStore
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
@@ -68,6 +76,9 @@ from src.modules.projects.domain.repositories.project_repository import (
 )
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
+)
+from src.modules.projects.domain.repositories.update_reaction_repository import (
+    UpdateReactionRepository,
 )
 from src.modules.stats.domain.entities.surface_usage import Surface, Tally, Trace
 from src.modules.stats.domain.repositories.statistics_repository import (
@@ -382,20 +393,23 @@ class InMemoryAuditLogRepository(AuditLogRepository):
     async def count_for_project(self, project_id: int) -> int:
         return len(self._for_project(project_id))
 
-    def _all(self, since: datetime | None) -> list[AuditLog]:
+    def _all(self, kept: AuditLogFilter | None) -> list[AuditLog]:
+        # The criteria are answered by the filter itself rather than rewritten
+        # here: this register and the real one must not be able to disagree
+        # about what a reader asked for.
         return sorted(
-            (log for log in self.logs if since is None or log.at >= since),
+            (log for log in self.logs if kept is None or kept.holds(log)),
             key=lambda log: (log.at, log.id or 0),
             reverse=True,
         )
 
     async def list_all(
-        self, limit: int, offset: int, since: datetime | None = None
+        self, limit: int, offset: int, kept: AuditLogFilter | None = None
     ) -> list[AuditLog]:
-        return self._all(since)[offset : offset + limit]
+        return self._all(kept)[offset : offset + limit]
 
-    async def count_all(self, since: datetime | None = None) -> int:
-        return len(self._all(since))
+    async def count_all(self, kept: AuditLogFilter | None = None) -> int:
+        return len(self._all(kept))
 
     async def list_between(
         self,
@@ -592,6 +606,41 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
 
     async def update(self, update: ProjectUpdate) -> ProjectUpdate:
         return update
+
+
+class InMemoryUpdateReactionRepository(UpdateReactionRepository):
+    def __init__(self) -> None:
+        self.reactions: list[UpdateReaction] = []
+
+    async def list_for_updates(
+        self, update_ids: Sequence[int]
+    ) -> dict[int, list[UpdateReaction]]:
+        by_update: dict[int, list[UpdateReaction]] = {}
+        for one in sorted(self.reactions, key=lambda r: r.at):
+            if one.update_id in update_ids:
+                by_update.setdefault(one.update_id, []).append(one)
+        return by_update
+
+    async def add(self, reaction: UpdateReaction) -> None:
+        already = any(
+            one.update_id == reaction.update_id
+            and one.user_id == reaction.user_id
+            and one.reaction == reaction.reaction
+            for one in self.reactions
+        )
+        if not already:
+            self.reactions.append(reaction)
+
+    async def remove(self, update_id: int, user_id: int, reaction: Reaction) -> None:
+        self.reactions = [
+            one
+            for one in self.reactions
+            if not (
+                one.update_id == update_id
+                and one.user_id == user_id
+                and one.reaction == reaction
+            )
+        ]
 
 
 class InMemoryProjectAttachmentRepository(ProjectAttachmentRepository):

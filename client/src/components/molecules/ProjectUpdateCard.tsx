@@ -5,8 +5,9 @@ import { useState } from "react";
 
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { RichTextEditor } from "@/components/atoms/RichTextEditor";
+import { UpdateReactions } from "@/components/atoms/UpdateReactions";
 import { Button } from "@/components/ui/button";
-import type { ProjectUpdateResponse } from "@/lib/api/generated/model";
+import type { Reaction, ProjectUpdateResponse } from "@/lib/api/generated/model";
 import { renderMentions, type MentionablePerson } from "@/lib/mentions";
 import { since } from "@/lib/relative-dates";
 
@@ -21,6 +22,7 @@ interface ProjectUpdateCardProps {
   people?: MentionablePerson[];
   onEdit: (body: string) => Promise<void>;
   onRemove: () => Promise<void>;
+  onReact: (reaction: Reaction, leaving: boolean) => Promise<void>;
 }
 
 /**
@@ -36,6 +38,7 @@ export function ProjectUpdateCard({
   people = [],
   onEdit,
   onRemove,
+  onReact,
 }: ProjectUpdateCardProps) {
   const [enEdition, setEnEdition] = useState(false);
 
@@ -88,7 +91,13 @@ export function ProjectUpdateCard({
           }}
         />
       ) : (
-        <MarkdownView body={renderMentions(update.body, people)} />
+        <>
+          <MarkdownView body={renderMentions(update.body, people)} />
+          <UpdateReactions
+            reactions={update.reactions ?? []}
+            onToggle={(reaction, leaving) => void onReact(reaction, leaving)}
+          />
+        </>
       )}
     </article>
   );

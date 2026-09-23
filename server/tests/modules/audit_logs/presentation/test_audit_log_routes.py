@@ -1,4 +1,4 @@
-"""The window a machine pulls the log through."""
+"""The window the log is read through — by a machine, and by the screen."""
 
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
@@ -13,6 +13,7 @@ from src.modules.audit_logs.application.use_cases.list_audit_log import (
     AuditLogPage,
     ListAuditLogUseCase,
 )
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLogFilter
 from src.modules.audit_logs.presentation.api.routes.audit_log_router import audit_reader
 from src.modules.audit_logs.presentation.dependencies import get_audit_log_use_case
 
@@ -23,13 +24,17 @@ class SpyUseCase(ListAuditLogUseCase):
     """Reads nothing; remembers the window it was handed."""
 
     def __init__(self) -> None:
-        self.since: datetime | None = None
+        self.kept: AuditLogFilter | None = None
 
     async def execute(
-        self, limit: int, offset: int, since: datetime | None = None
+        self, limit: int, offset: int, kept: AuditLogFilter | None = None
     ) -> AuditLogPage:
-        self.since = since
+        self.kept = kept
         return AuditLogPage(entries=[], total=0)
+
+    @property
+    def since(self) -> datetime | None:
+        return None if self.kept is None else self.kept.since
 
 
 @pytest.fixture
@@ -78,4 +83,68 @@ async def test_no_window_asked_for_reads_the_whole_log(
     response = await http.get(URL)
 
     assert response.status_code == 200
-    assert spy.since is None
+    assert spy.kept == AuditLogFilter()
+
+
+@pytest.mark.asyncio
+async def test_a_period_given_in_days_is_read_on_the_paris_clock(
+    http: AsyncClient, spy: SpyUseCase
+) -> None:
+    """What the screen asks with: the days the team lived, both included."""
+    response = await http.get(
+        URL, params={"from_day": "2026-07-20", "to_day": "2026-07-21"}
+    )
+
+    assert response.status_code == 200
+    assert spy.kept is not None
+    assert spy.kept.since == datetime(2026, 7, 19, 22, 0, tzinfo=UTC)
+    assert spy.kept.until == datetime(2026, 7, 21, 21, 59, 59, 999999, tzinfo=UTC)
+
+
+@pytest.mark.asyncio
+async def test_a_moment_and_a_day_narrow_together(
+    http: AsyncClient, spy: SpyUseCase
+) -> None:
+    """Two ways of opening a period state one intersection, not a choice."""
+    response = await http.get(
+        URL, params={"since": "2026-07-20T10:00:00Z", "from_day": "2026-07-01"}
+    )
+
+    assert response.status_code == 200
+    assert spy.kept is not None
+    # The later of the two: what both callers asked for at once.
+    assert spy.kept.since == datetime(2026, 7, 20, 10, 0, tzinfo=UTC)
+
+
+@pytest.mark.asyncio
+async def test_the_gestures_asked_for_narrow_the_read(
+    http: AsyncClient, spy: SpyUseCase
+) -> None:
+    response = await http.get(
+        URL, params=[("action", "project.delete"), ("action", "project.create")]
+    )
+
+    assert response.status_code == 200
+    assert spy.kept is not None
+    assert spy.kept.actions == [AuditAction.PROJECT_DELETE, AuditAction.PROJECT_CREATE]
+
+
+@pytest.mark.asyncio
+async def test_a_gesture_the_register_never_writes_is_refused(
+    http: AsyncClient, spy: SpyUseCase
+) -> None:
+    """A typo answers nothing rather than quietly answering everything."""
+    response = await http.get(URL, params={"action": "project.burn"})
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_one_person_s_gestures_can_be_asked_for(
+    http: AsyncClient, spy: SpyUseCase
+) -> None:
+    response = await http.get(URL, params={"actor_id": 7})
+
+    assert response.status_code == 200
+    assert spy.kept is not None
+    assert spy.kept.actor_id == 7

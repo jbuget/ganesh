@@ -13,7 +13,11 @@ promised when the keys shipped.
 from collections.abc import Collection
 from datetime import date, datetime
 
-from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
+from src.modules.audit_logs.domain.entities.audit_log import (
+    AuditAction,
+    AuditLog,
+    AuditLogFilter,
+)
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
@@ -60,12 +64,12 @@ class MachineStampedAuditLog(AuditLogRepository):
         return await self._inner.count_for_project(project_id)
 
     async def list_all(
-        self, limit: int, offset: int, since: datetime | None = None
+        self, limit: int, offset: int, kept: AuditLogFilter | None = None
     ) -> list[AuditLog]:
-        return await self._inner.list_all(limit, offset, since)
+        return await self._inner.list_all(limit, offset, kept)
 
-    async def count_all(self, since: datetime | None = None) -> int:
-        return await self._inner.count_all(since)
+    async def count_all(self, kept: AuditLogFilter | None = None) -> int:
+        return await self._inner.count_all(kept)
 
     async def list_between(
         self,

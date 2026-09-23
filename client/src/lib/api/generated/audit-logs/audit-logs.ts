@@ -71,6 +71,15 @@ export const getListAuditLogUrl = (params?: ListAuditLogParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = ["action"];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? "null" : String(v));
+      });
+      return;
+    }
+
     if (value !== undefined) {
       normalizedParams.append(key, value === null ? "null" : String(value));
     }
@@ -84,10 +93,16 @@ export const getListAuditLogUrl = (params?: ListAuditLogParams) => {
 };
 
 /**
- * The log, most recent first, paged.
+ * The log, most recent first, paged and narrowed to what was asked.
  *
  * `total` counts what the window holds, not what the page shows: a reader
  * knows from the first call how much is left to fetch.
+ *
+ * Two ways of naming a period, for two readers. A machine pulling what it
+ * does not yet hold says `since`, a moment. A screen says `from_day` /
+ * `to_day`, which are days on the Paris clock — the ones the team lived,
+ * both ends included. Stating both narrows twice rather than choosing: the
+ * later start wins, as an intersection does.
  * @summary List Audit Log
  */
 export const listAuditLog = async (

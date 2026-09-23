@@ -17,6 +17,7 @@ import type {
 } from "@/lib/api/generated/model";
 import { phaseDot, phaseLabel } from "@/lib/board";
 import { formatDecimalDays } from "@/lib/dates";
+import { STRONG_SEPARATOR } from "@/lib/table-frame";
 
 interface PlannedMissionRowProps {
   mission: PlannedMissionResponse;
@@ -61,9 +62,13 @@ export function PlannedMissionRow({
     <TableRow
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={isDragging ? "bg-sky-50" : undefined}
+      // One background, chosen: a carried row is blue and stops answering to
+      // hover, rather than two tints left to a class merger to arbitrate.
+      className={`group ${isDragging ? "bg-sky-50" : "bg-slate-50 hover:bg-slate-100"}`}
     >
-      <TableCell className="sticky left-0 z-10 bg-white">
+      {/* The pinned columns name the row, and stay white where the row takes
+          the page's tint: the subject reads as the line's anchor. */}
+      <TableCell className="sticky left-0 z-10 bg-white group-hover:bg-slate-50">
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -93,7 +98,9 @@ export function PlannedMissionRow({
       {/* The width is set on the content and not on the header alone: the
           table sizes itself on what it holds, and a mission named in a full
           sentence would otherwise push the weeks out of sight. */}
-      <TableCell className="sticky left-[7.5rem] z-10 bg-white">
+      <TableCell
+        className={`sticky left-[7.5rem] z-10 bg-white group-hover:bg-slate-50 ${STRONG_SEPARATOR}`}
+      >
         <div className="flex w-[22rem] items-center gap-2">
           {mission.status && (
             <span
