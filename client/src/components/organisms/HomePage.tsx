@@ -38,7 +38,9 @@ import { useOpenedMission } from "@/lib/opened-mission";
  * The mood is the one exception, and it is a deliberate one. Answering is a
  * one-second gesture on a window that closes the next working day; behind a
  * link, it would simply never be made, and a morale nobody posts measures
- * nothing. It sits at the head of the right-hand column, where one reads at
+ * nothing. Whoever does not pass by here is asked again at the end of the
+ * afternoon, by a reminder that keeps away from this screen and from the team's
+ * own. It sits at the head of the right-hand column, where one reads at
  * one's own pace: the left column is the month and what it still owes, and a
  * question about the day has no business pushing that down.
  */
