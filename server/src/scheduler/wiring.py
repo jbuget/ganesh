@@ -42,8 +42,20 @@ def build_clock(settings: Settings) -> ReminderClock | None:
             await session.commit()
             return sent
 
+    try:
+        send_at = time.fromisoformat(settings.reminder_send_at)
+    except ValueError:
+        # Loudly, and without taking the API down with it: a typo in one
+        # setting must not stop everybody signing in, and a clock that did not
+        # start in silence would never be found.
+        logger.error(
+            "REMINDER_SEND_AT is not a time (%r): the reminder clock does not start.",
+            settings.reminder_send_at,
+        )
+        return None
+
     return ReminderClock(
-        send_at=time.fromisoformat(settings.reminder_send_at),
+        send_at=send_at,
         tick_seconds=settings.reminder_tick_seconds,
         claim_run=claim_run,
         run_round=run_round,

@@ -9,6 +9,7 @@ stops two places from disagreeing about what somebody has seen.
 from dataclasses import dataclass
 
 from src.modules.notifications.domain.entities.notification import NotificationKind
+from src.shared.exceptions.domain_exceptions import ValidationError
 
 
 @dataclass(frozen=True)
@@ -32,7 +33,7 @@ class Reminder:
 
     def __post_init__(self) -> None:
         if not self.lines:
-            raise ValueError("A reminder with nothing in it is not one.")
+            raise ValidationError("A reminder with nothing in it is not one.")
 
     @property
     def total(self) -> int:

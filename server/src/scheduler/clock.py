@@ -12,7 +12,7 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, date, datetime, time
 
 from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
-from src.scheduler.due import JOB, cadences_due
+from src.scheduler.due import JOB, PARIS, cadences_due
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,10 @@ class ReminderClock:
         """
         sent = 0
         for cadence in cadences_due(now, self._send_at):
-            due_on = now.astimezone().date()
+            # Paris, explicitly: `astimezone()` with no argument reads the
+            # machine's own timezone, and a claim taken under the host's day
+            # would not be the day the round was decided on.
+            due_on = now.astimezone(PARIS).date()
             job = f"{JOB}:{cadence.value.lower()}"
             if not await self._claim_run(job, due_on, now):
                 continue

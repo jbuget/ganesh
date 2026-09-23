@@ -3,6 +3,7 @@
 import asyncio
 import contextlib
 from datetime import date, datetime, time
+from zoneinfo import ZoneInfo
 
 from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.scheduler.clock import ReminderClock
@@ -14,7 +15,12 @@ SATURDAY = datetime(2026, 9, 26, 9, 0, tzinfo=PARIS)
 MONDAY = datetime(2026, 9, 21, 9, 0, tzinfo=PARIS)
 
 
-def build(claims: bool = True, sent: int = 1, fails: bool = False):
+def build(
+    claims: bool = True,
+    sent: int = 1,
+    fails: bool = False,
+    send_at: time = AT,
+):
     taken: list[tuple[str, date]] = []
     rounds: list[ReminderCadence] = []
 
@@ -29,7 +35,7 @@ def build(claims: bool = True, sent: int = 1, fails: bool = False):
         return sent
 
     clock = ReminderClock(
-        send_at=AT, tick_seconds=1, claim_run=claim_run, run_round=run_round
+        send_at=send_at, tick_seconds=1, claim_run=claim_run, run_round=run_round
     )
     return clock, taken, rounds
 
@@ -54,6 +60,18 @@ class TestWhatOneTickDoes:
 
         assert await clock.tick(SATURDAY) == 0
         assert taken == [] and rounds == []
+
+    async def test_a_run_is_claimed_under_the_paris_day(self) -> None:
+        # 22:30 UTC on 22 September is 00:30 Paris on the 23rd — a Wednesday.
+        # The round is decided on the Paris day, so the claim has to be taken
+        # under it: `astimezone()` with no argument reads the machine's own
+        # zone, and on a host in UTC that is the 22nd.
+        clock, taken, _ = build(send_at=time(0, 0))
+        late = datetime(2026, 9, 22, 22, 30, tzinfo=ZoneInfo("UTC"))
+
+        await clock.tick(late)
+
+        assert taken == [("reminder:daily", date(2026, 9, 23))]
 
 
 class TestWhenSomebodyElseGotThere:
