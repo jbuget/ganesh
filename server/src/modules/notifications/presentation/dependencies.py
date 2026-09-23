@@ -3,13 +3,18 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.config import get_settings
 from src.core.database import get_db
 from src.modules.notifications.application.use_cases.list_my_notifications import (
     ListMyNotificationsUseCase,
 )
+from src.modules.notifications.application.use_cases.send_due_reminders import (
+    SendDueRemindersUseCase,
+)
 from src.modules.notifications.application.use_cases.set_notifications_read_state import (
     SetNotificationsReadStateUseCase,
 )
+from src.modules.notifications.domain.repositories.mailer import Mailer
 from src.modules.notifications.domain.repositories.notification_repository import (
     NotificationRepository,
 )
@@ -17,6 +22,7 @@ from src.modules.notifications.domain.services.delivery import NotificationDeliv
 from src.modules.notifications.infrastructure.database.repositories.notification_repository_impl import (
     SqlNotificationRepository,
 )
+from src.modules.notifications.infrastructure.mail.smtp_mailer import SmtpMailer
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
@@ -66,3 +72,37 @@ def get_set_notifications_read_state_use_case(
     notifications: NotificationRepository = Depends(get_notification_repository),
 ) -> SetNotificationsReadStateUseCase:
     return SetNotificationsReadStateUseCase(notifications)
+
+
+def get_mailer() -> Mailer:
+    """What carries a letter out. SMTP, wherever it points.
+
+    With no host configured it takes letters and drops them, which is what
+    lets the whole application run on a machine that can reach no mail server.
+    """
+    settings = get_settings()
+    return SmtpMailer(
+        host=settings.smtp_host,
+        port=settings.smtp_port,
+        username=settings.smtp_username,
+        password=settings.smtp_password,
+        sender=settings.mail_from,
+        use_starttls=settings.smtp_starttls,
+    )
+
+
+def build_send_due_reminders_use_case(
+    session: AsyncSession,
+) -> SendDueRemindersUseCase:
+    """Assembles one round of letters, outside any request.
+
+    The clock has no request to hang `Depends` off, so the assembly is
+    described here — where a route would find it too — rather than a second
+    time in `src/scheduler/`.
+    """
+    return SendDueRemindersUseCase(
+        users=SqlUserRepository(session),
+        notifications=SqlNotificationRepository(session),
+        mailer=get_mailer(),
+        web_url=get_settings().web_url,
+    )

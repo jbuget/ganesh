@@ -231,3 +231,68 @@ async def test_a_line_survives_the_account_that_acted(db_session: AsyncSession) 
 
     [line] = await repository.list_for(alice, unread_only=False, limit=20, offset=0)
     assert line.actor_id == 0
+
+
+async def test_a_letter_holds_what_arrived_after_the_last_one(
+    db_session: AsyncSession,
+) -> None:
+    alice, bob = await seed(db_session)
+    repository = SqlNotificationRepository(db_session)
+    await repository.add(an_edit(alice, bob, MONDAY))
+    fresh = await repository.add(
+        Notification(
+            recipient_id=alice,
+            kind=NotificationKind.UPDATE_MENTION,
+            actor_id=bob,
+            at=TUESDAY,
+        )
+    )
+
+    waiting = await repository.list_waiting_since(alice, since=MONDAY)
+
+    assert [line.id for line in waiting] == [fresh.id]
+
+
+async def test_the_first_letter_holds_everything_still_waiting(
+    db_session: AsyncSession,
+) -> None:
+    alice, bob = await seed(db_session)
+    repository = SqlNotificationRepository(db_session)
+    older = await repository.add(an_edit(alice, bob, MONDAY))
+    newer = await repository.add(
+        Notification(
+            recipient_id=alice,
+            kind=NotificationKind.UPDATE_MENTION,
+            actor_id=bob,
+            at=TUESDAY,
+        )
+    )
+
+    waiting = await repository.list_waiting_since(alice, since=None)
+
+    # Oldest first: a letter reads in the order things happened.
+    assert [line.id for line in waiting] == [older.id, newer.id]
+
+
+async def test_what_has_been_read_is_never_announced_by_letter(
+    db_session: AsyncSession,
+) -> None:
+    # Seen in the application is seen. A letter saying it again would announce
+    # what its reader has already dealt with.
+    alice, bob = await seed(db_session)
+    repository = SqlNotificationRepository(db_session)
+    seen = await repository.add(an_edit(alice, bob, MONDAY))
+    assert seen.id is not None
+    await repository.set_read_state(alice, ids=[seen.id], read=True, at=TUESDAY)
+
+    assert await repository.list_waiting_since(alice, since=None) == []
+
+
+async def test_nobody_is_written_to_about_somebody_else_s_inbox(
+    db_session: AsyncSession,
+) -> None:
+    alice, bob = await seed(db_session)
+    repository = SqlNotificationRepository(db_session)
+    await repository.add(an_edit(alice, bob, MONDAY))
+
+    assert await repository.list_waiting_since(bob, since=None) == []

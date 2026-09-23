@@ -66,6 +66,26 @@ class Settings(BaseSettings):
     # same number, and it is Caddy that actually keeps the bytes off the host.
     max_request_bytes: int = 12 * 1024 * 1024
 
+    # The letter saying what is waiting. Empty everywhere by default: with no
+    # host, nothing is sent and nothing breaks — the contract `gemini_api_key`
+    # already has. Mailgun in production, the MailPit of docker-compose on a
+    # laptop, and the same adapter reaches both.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_starttls: bool = True
+    mail_from: str = "Ganesh <notifications@ganesh.waat.tools>"
+
+    # When the letter goes out, and how often the clock looks. Paris time —
+    # hard-coded, as the public holidays are hard-coded to France.
+    reminder_send_at: str = "08:30"
+    reminder_tick_seconds: int = 300
+
+    # Where a letter points back to. The API knew no address but its own:
+    # `api_url` is where the API answers, this is where the reader reads.
+    web_url: str = "http://localhost:3000"
+
     # How often one API key may call, as a token bucket. Counted per process:
     # behind several workers the effective allowance is multiplied by their
     # number. Generous on purpose — this is a guard rail against a runaway
