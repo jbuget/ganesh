@@ -28,7 +28,9 @@ import {
   todayIso,
 } from "@/lib/dates";
 import { assignedMissionIds, missionsToDeclare } from "@/lib/missions";
+import { withPendingEntries } from "@/lib/pending-entries";
 import { useQueryString, writeUrl } from "@/lib/url-state";
+import { usePendingEntries } from "@/lib/use-pending-entries";
 
 /**
  * State and actions of a month's entry screen.
@@ -63,13 +65,36 @@ export function useTimesheetMonth() {
   const reopenMonth = useReopenMonth();
 
   const gridQuery = useMonthGrid(month, viewedUserId, Boolean(me?.id));
-  const grid = gridQuery.grid;
-
-  const target = viewedUserId ? { user_id: viewedUserId } : undefined;
 
   async function refresh() {
     await queryClient.invalidateQueries();
   }
+
+  const target = viewedUserId ? { user_id: viewedUserId } : undefined;
+
+  /**
+   * Clicks are answered on the spot and written once they have settled: a half
+   * day is two clicks on one cell, and one write.
+   *
+   * The cell names whose month it is in, so a write still waiting when one
+   * walks to a colleague's month goes where it was clicked.
+   */
+  const entries = usePendingEntries({
+    async write({ userId, projectId, day }, value) {
+      const whose = userId === me?.id ? undefined : { user_id: userId };
+      if (value === 0) {
+        await clearEntry({ project_id: projectId, day, ...whose });
+      } else {
+        await setEntry({ project_id: projectId, day, value }, whose);
+      }
+    },
+    refresh,
+  });
+
+  /** What the server holds, the cells awaiting their write laid over it. */
+  const grid = gridQuery.grid
+    ? withPendingEntries(gridQuery.grid, entries.pending, today)
+    : gridQuery.grid;
 
   /** Changing month is a navigation: going back must bring the previous one. */
   function goToMonth(next: { year: number; month: number }) {
@@ -149,14 +174,15 @@ export function useTimesheetMonth() {
       });
     },
 
-    /** A null value removes the entry; any other value writes it. */
-    async setDayValue(projectId: number, day: string, value: DayValue) {
-      if (value === 0) {
-        await clearEntry({ project_id: projectId, day, ...target });
-      } else {
-        await setEntry({ project_id: projectId, day, value: value }, target);
-      }
-      await refresh();
+    /**
+     * Takes a cell's new value. A `0` removes the entry, any other writes it.
+     *
+     * Nothing leaves at once: the write goes out when the clicking has stopped,
+     * and the grid reads the value in the meantime.
+     */
+    setDayValue(projectId: number, day: string, value: DayValue) {
+      if (targetUserId === null) return;
+      entries.setValue({ userId: targetUserId, projectId, day }, value);
     },
 
     /**
@@ -173,6 +199,8 @@ export function useTimesheetMonth() {
 
     /** Removes a mission from the month, with the time it carries. */
     async removeMission(projectId: number) {
+      // A cell still waiting would write itself back onto a row that has gone.
+      await entries.flush();
       await removeMissionFromMonth({ project_id: projectId, month, ...target });
       await refresh();
     },
@@ -189,6 +217,9 @@ export function useTimesheetMonth() {
     },
 
     async validate() {
+      // The month closes to writes: what is waiting goes out before it does,
+      // or it would be refused and lost.
+      await entries.flush();
       await validateMonth.mutateAsync({ month });
       await refresh();
     },
