@@ -11,8 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useReadPlatform } from "@/lib/api/generated/admin/admin";
-import type { PlatformResponse } from "@/lib/api/generated/model";
+import { usePlatform } from "@/lib/api/queries";
 import { doorDetail, doorLabel, serviceLabel, serviceSays } from "@/lib/platform";
 import {
   NAMING_CELL,
@@ -37,8 +36,7 @@ import {
  * actually opens it with: « est-ce que tout est branché ? »
  */
 export function AdminPage() {
-  const query = useReadPlatform();
-  const platform = query.data?.data as PlatformResponse | undefined;
+  const { platform, isLoading } = usePlatform();
 
   const header = (
     <PageHeader
@@ -47,7 +45,7 @@ export function AdminPage() {
     />
   );
 
-  if (query.isLoading) {
+  if (isLoading) {
     return (
       <PageLayout header={header}>
         <p className="text-sm text-slate-500">Chargement…</p>

@@ -6,24 +6,20 @@ import { AdminPage } from "./AdminPage";
 const platform = vi.hoisted(() => ({
   state: {
     isLoading: false,
-    data: {
-      data: {
-        environment: "production",
-        door: "ENTRA",
-        services: [
-          { name: "entra", configured: true, detail: "tenant-1" },
-          { name: "gemini", configured: false, detail: "" },
-          { name: "smtp", configured: true, detail: "smtp.mailgun.org:587" },
-          { name: "s3", configured: true, detail: "ganesh-attachments" },
-        ],
-      },
+    platform: {
+      environment: "production",
+      door: "ENTRA",
+      services: [
+        { name: "entra", configured: true, detail: "tenant-1" },
+        { name: "gemini", configured: false, detail: "" },
+        { name: "smtp", configured: true, detail: "smtp.mailgun.org:587" },
+        { name: "s3", configured: true, detail: "ganesh-attachments" },
+      ],
     },
   } as Record<string, unknown>,
 }));
 
-vi.mock("@/lib/api/generated/admin/admin", () => ({
-  useReadPlatform: () => platform.state,
-}));
+vi.mock("@/lib/api/queries", () => ({ usePlatform: () => platform.state }));
 
 describe("AdminPage", () => {
   it("says which door signs people in", () => {

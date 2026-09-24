@@ -32,8 +32,18 @@ export const ROLES: { value: Role; label: string; description: string }[] = [
 
 const BY_VALUE = new Map(ROLES.map((role) => [role.value, role.label]));
 
-/** Where each role stands on the ladder. */
+/** Where each role stands on the ladder, read off the order above. */
 const RANK = new Map(ROLES.map((role, position) => [role.value, position]));
+
+/**
+ * How far up the ladder a role stands, as a number.
+ *
+ * Exported for the one thing a boolean cannot do: put a list of people in
+ * order. Everything else asks `holds`, which says what it means.
+ */
+export function roleRank(role: Role): number {
+  return rank(role);
+}
 
 export function roleLabel(value: Role): string {
   return BY_VALUE.get(value) ?? value;
@@ -53,6 +63,12 @@ export function canWrite(role: Role | undefined): boolean {
   return role !== undefined && role !== "GUEST";
 }
 
+/** Whoever holds a role: the account reading, and the account read. */
+interface Holder {
+  id: number;
+  role: Role;
+}
+
 /**
  * Which roles `actor` may hand out to `target`.
  *
@@ -63,14 +79,11 @@ export function canWrite(role: Role | undefined): boolean {
  *
  * An empty list means the role shows and does not open.
  */
-export function assignableRoles(
-  actor: { id?: number; role?: Role } | undefined,
-  target: { id?: number; role: Role },
-): Role[] {
-  if (actor?.role === undefined || !holds(actor.role, "MANAGER")) return [];
-  if (actor.id !== undefined && actor.id === target.id) return [];
-  if (rank(target.role) > rank(actor.role)) return [];
-  return ROLES.filter((role) => rank(role.value) <= rank(actor.role!)).map(
-    (role) => role.value,
-  );
+export function assignableRoles(actor: Holder | undefined, target: Holder): Role[] {
+  if (actor === undefined || !holds(actor.role, "MANAGER")) return [];
+  if (actor.id === target.id) return [];
+
+  const ceiling = rank(actor.role);
+  if (rank(target.role) > ceiling) return [];
+  return ROLES.filter((role) => rank(role.value) <= ceiling).map((role) => role.value);
 }

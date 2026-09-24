@@ -73,6 +73,15 @@ the application whole and declares nothing into it. The seed is the other door
 in — and `make grant-role EMAIL=… ROLE=ADMIN` is the third, from a shell on the
 host, which is the only place the *first* administrator can be made.
 
+**Authentication switched off admits an administrator.** `REQUIRE_AUTH=false`
+provisions `DEV_IDENTITY`, and it does so as an admin: with no door there is
+nobody to promote that account and nothing it could be confused with, where a
+guest would mean a laptop on which nothing can be declared. That identity is a
+**constant**, not a setting — `AUTH_LOCAL_EMAIL` feeds the fallback door
+(`AUTH_ENTRA=false`), never this one, and the provisioning matches on
+`entra_oid` first, so changing an email alone would hand back the same account.
+To try another role locally, move your own with `make grant-role`.
+
 **Two bounds hold every role change**, and they live on the entity: nobody
 hands out a role above their own, and nobody moves somebody who stands above
 them. A manager therefore promotes up to manager and leaves an admin alone —

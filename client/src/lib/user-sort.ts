@@ -1,5 +1,5 @@
 import type { UserResponse } from "@/lib/api/generated/model";
-import { ROLES } from "@/lib/roles";
+import { roleRank } from "@/lib/roles";
 import {
   NO_COLUMN_SORT,
   compareValues,
@@ -26,9 +26,6 @@ const COLUMNS: UserSortColumn[] = [
   "status",
 ];
 
-/** From the least to the most empowered, as the roles are declared. */
-const ROLE_RANKS = new Map(ROLES.map((role, rank) => [role.value, rank]));
-
 /**
  * What each column gives to compare.
  *
@@ -42,7 +39,8 @@ const VALUES: Record<UserSortColumn, (user: UserResponse) => string | number | n
   name: (user) => user.display_name,
   email: (user) => user.email,
   github: (user) => user.github_username ?? null,
-  role: (user) => ROLE_RANKS.get(user.role) ?? null,
+  // From the least to the most empowered, as the ladder declares them.
+  role: (user) => roleRank(user.role),
   login: (user) => (user.last_login_at ? new Date(user.last_login_at).getTime() : null),
   status: (user) => (user.is_active ? 0 : 1),
 };
