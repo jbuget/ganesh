@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from "react";
 
-import { useProjects, useTeammates, useTouchedProjects } from "@/lib/api/queries";
+import {
+  useCurrentUser,
+  useProjects,
+  useTeammates,
+  useTouchedProjects,
+} from "@/lib/api/queries";
 import {
   destinations,
   grouped,
@@ -52,13 +57,15 @@ export function useCommandPalette(): CommandPalette {
   const { teammates } = useTeammates(false, open);
   // What the register saw move, which no mission carries the date of.
   const { touched } = useTouchedProjects(TOUCHED_ASKED_FOR, open);
+  // The palette leads where the sidebar leads, and no further.
+  const { user: me } = useCurrentUser();
 
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
 
   const all = useMemo(
-    () => destinations({ missions, teammates, touched }),
-    [missions, teammates, touched],
+    () => destinations({ missions, teammates, touched, role: me?.role }),
+    [missions, teammates, touched, me?.role],
   );
   const sections = useMemo(() => grouped(matching(all, query)), [all, query]);
   // The sections read one after the other give back the ranked order: that is

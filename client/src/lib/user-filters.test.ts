@@ -107,7 +107,7 @@ describe("readUserFilters", () => {
   });
 
   it("ignores a value it does not know rather than emptying the screen", () => {
-    const params = new URLSearchParams("role=ADMIN&state=zombie");
+    const params = new URLSearchParams("role=SORCIER&state=zombie");
 
     expect(readUserFilters(params)).toEqual(NO_USER_FILTER);
   });

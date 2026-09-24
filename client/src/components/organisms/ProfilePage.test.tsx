@@ -8,6 +8,12 @@ import { A_WEEK_ON_SITE } from "@/lib/presence";
 
 const profile = vi.hoisted(() => ({ state: {} as Record<string, unknown> }));
 
+// The reading of « may this person write? » is its own hook, and its own
+// tests: here it is answered yes, so that what is under test stays what the
+// file says it is.
+const mayWrite = vi.hoisted(() => ({ value: true }));
+vi.mock("@/lib/use-may-write", () => ({ useMayWrite: () => mayWrite.value }));
+
 vi.mock("@/lib/use-profile", () => ({ useProfileScreen: () => profile.state }));
 
 const USER = {

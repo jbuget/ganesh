@@ -17,6 +17,7 @@ import { useCurrentUser, useTeammates } from "@/lib/api/queries";
 import type { WeekPresence } from "@/lib/presence";
 import { NO_USER_FILTER, filterUsers, type UserFilters } from "@/lib/user-filters";
 import { NO_USER_SORT, sortUsers, type UserSort } from "@/lib/user-sort";
+import { assignableRoles, holds } from "@/lib/roles";
 
 /**
  * State and actions of the teammates screen.
@@ -41,7 +42,17 @@ export function useUsersScreen(
 
   return {
     isLoading,
-    isManager: me?.role === "MANAGER",
+    isManager: holds(me?.role, "MANAGER"),
+
+    /**
+     * The roles one may hand a given account.
+     *
+     * Read here rather than in the screen, so that the panel opened from
+     * « Accueil » and the one opened from « Utilisateurs » cannot disagree
+     * about what a manager is allowed to do.
+     */
+    rolesAssignableTo: (target: UserResponse) => assignableRoles(me, target),
+
     // Nobody cuts off their own access: the account would be turned away on
     // the next request, and no one could reopen it from inside.
     meId: me?.id,

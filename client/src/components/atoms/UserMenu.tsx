@@ -44,7 +44,7 @@ export function UserMenu({ user, onSignOut, collapsed = false }: UserMenuProps) 
         </span>
         <span className={collapsed ? "sr-only" : "min-w-0 text-left"}>
           <span className="block truncate text-sm">{user.display_name}</span>
-          {user.role === "MANAGER" && (
+          {user.role !== "TEAMMATE" && (
             <span className="block text-xs text-slate-500">{roleLabel(user.role)}</span>
           )}
         </span>

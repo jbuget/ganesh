@@ -120,7 +120,7 @@ export function UsersPage() {
       {opened && (
         <UserPanel
           user={opened}
-          roleModifiable={screen.isManager}
+          assignableRoles={screen.rolesAssignableTo(opened)}
           canChangeStatus={screen.isManager && opened.id !== screen.meId}
           editable={screen.isManager}
           onChangeRole={screen.changeRole}

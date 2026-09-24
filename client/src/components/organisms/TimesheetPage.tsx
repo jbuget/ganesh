@@ -70,7 +70,7 @@ export function TimesheetPage() {
     >
       {/* Before the month it speaks of: what the team put one on is read first,
           and the reminder never passes for a row of the grid. */}
-      {grid?.is_writable && (
+      {month.writable && (
         <AssignedMissionsCallout
           missions={month.missionsToDeclare.map((mission) => ({
             id: mission.id,
@@ -175,12 +175,13 @@ export function TimesheetPage() {
       {grid && (
         <TimesheetGrid
           grid={grid}
+          readOnly={!month.writable}
           today={month.today}
           onSetValue={month.setDayValue}
-          onRemoveMission={grid.is_writable ? askToRemove : undefined}
+          onRemoveMission={month.writable ? askToRemove : undefined}
           onOpenMission={(projectId) => panel.open(projectId)}
           addingMission={
-            grid.is_writable ? (
+            month.writable ? (
               <MissionSelector
                 projects={month.projects}
                 excludedIds={month.displayedProjectIds}

@@ -19,10 +19,12 @@ interface AttachmentCardProps {
   file: ProjectAttachmentResponse;
   /** Shows the file at full size. */
   onOpen: () => void;
-  /** Asks to call it something else. What answers is a dialog. */
-  onRename: () => void;
-  /** Asks for it to go. What answers is a dialog. */
-  onRemove: () => void;
+  /** Asks to call it something else. What answers is a dialog. Left out
+   * where the file may be read and not renamed. */
+  onRename?: () => void;
+  /** Asks for it to go. What answers is a dialog. Left out where the file
+   * may be read and not withdrawn. */
+  onRemove?: () => void;
 }
 
 /** An icon that says what kind of file it is, when there is no image to show. */
