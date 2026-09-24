@@ -48,6 +48,12 @@ export const getSignInLocallyUrl = () => {
 
 /**
  * Opens the fallback door, while Entra has yet to know this application.
+ *
+ * The door being shut answers 404 on its own: `FallbackDoorClosedError`
+ * narrows `EntityNotFoundError`, which the shared handler already maps.
+ * Refused credentials are the one case this route translates itself — 401 is
+ * the status no shared exception carries, because signing in is the only
+ * place it means anything.
  * @summary Sign In Locally
  */
 export const signInLocally = async (

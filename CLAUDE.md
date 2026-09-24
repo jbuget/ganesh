@@ -305,9 +305,11 @@ Modules: `users`, `projects`, `entries`, `months`, `calendar`, `audit_logs`.
   would be a route deciding what to orchestrate, and the layer that exists to
   answer that question would have been stepped over. « Il n'y a rien à
   orchestrer » is not an exemption — a use case with one call is still where
-  the next call will go. Three routes predate this rule and do not follow it
-  (`POST /auth/local`, `GET /calendar/{year}/{month}`, `GET /users/me`); they
-  are debts, not precedents.
+  the next call will go. **`test_routes_reach_use_cases` reads the
+  application to say so**, and the two routes that answer without one of their
+  own are named in it, with the reason: the liveness probe, which must survive
+  the application being down, and `GET /users/me`, whose whole work is the
+  `ProvisionUserUseCase` its dependency already ran.
 - Always depend on the interface, never on the concrete implementation.
 
 **These rules are not declarative: they are enforced by `import-linter`**
