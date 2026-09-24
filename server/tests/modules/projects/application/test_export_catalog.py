@@ -31,8 +31,20 @@ from tests.helpers.in_memory_repositories import (
 )
 
 TEAM = [
-    User(id=1, entra_oid="a", email="j.buget@waat.fr", display_name="Jérémy BUGET"),
-    User(id=2, entra_oid="b", email="t.da@waat.fr", display_name="Toni DA RODDA"),
+    User(
+        id=1,
+        entra_oid="a",
+        email="j.buget@waat.fr",
+        display_name="Jérémy BUGET",
+        role=Role.TEAMMATE,
+    ),
+    User(
+        id=2,
+        entra_oid="b",
+        email="t.da@waat.fr",
+        display_name="Toni DA RODDA",
+        role=Role.TEAMMATE,
+    ),
     User(
         id=3,
         entra_oid="c",

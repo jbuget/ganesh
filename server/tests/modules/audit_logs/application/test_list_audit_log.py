@@ -22,16 +22,23 @@ from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectStatus,
 )
-from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryProjectRepository,
     InMemoryUserRepository,
 )
 
-ALICE = User(id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba")
+ALICE = User(
+    id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba", role=Role.TEAMMATE
+)
 BOB = User(
-    id=2, entra_oid="oid-2", email="b@waat.fr", display_name="B. Cy", is_active=False
+    id=2,
+    entra_oid="oid-2",
+    email="b@waat.fr",
+    display_name="B. Cy",
+    is_active=False,
+    role=Role.TEAMMATE,
 )
 
 

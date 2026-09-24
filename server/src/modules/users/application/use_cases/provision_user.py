@@ -28,8 +28,18 @@ class ProvisionUserUseCase:
         self._audit_logs = audit_logs
 
     async def execute(
-        self, identity: EntraIdentity, now: datetime | None = None
+        self,
+        identity: EntraIdentity,
+        now: datetime | None = None,
+        first_role: Role = Role.GUEST,
     ) -> User:
+        """Finds or creates. `first_role` is read on creation and never after.
+
+        It exists for the development door, where authentication is switched
+        off and the identity at the keyboard is the person who runs the
+        laptop. Every real door leaves it alone, which is what makes a guest
+        the answer to « who is this? » rather than a setting.
+        """
         now = now or clock.now()
 
         existing = await self._users.get_by_entra_oid(identity.oid)
@@ -51,7 +61,13 @@ class ProvisionUserUseCase:
                 entra_oid=identity.oid,
                 email=identity.email,
                 display_name=identity.display_name,
-                role=Role.TEAMMATE,
+                # Somebody nobody has declared is a guest: they read the
+                # application whole and write nothing into it, until a
+                # manager says who they are on the team. The seed is the
+                # other door, and it is the one above — matching by email
+                # is what preserves a role handed out before the first
+                # sign-in.
+                role=first_role,
                 last_login_at=now,
             )
         )
