@@ -190,3 +190,33 @@ class TestWhoCarriesTheWork:
 
     def test_it_may_staff_a_mission_nobody_was_on(self) -> None:
         assert staffed({}, {10: [1]})[10] == [1]
+
+
+class TestTheBacklogDoesNotAskTheBoard:
+    """What the plan holds is decided by the phase, not by the board.
+
+    The two used to answer alike. They no longer do: activities carry what is
+    left to build and never appear on the board, so a plan reading the board
+    would drop exactly the lines it is meant to serve.
+    """
+
+    def test_an_activity_is_not_a_mission_the_plan_orders(self) -> None:
+        """It hangs under one, and the mission is what the backlog ranks."""
+        activity = Project(
+            id=40,
+            label="Chefferie de projet",
+            kind=ProjectKind.WORKSTREAM,
+            status=None,
+            parent_id=20,
+        )
+
+        assert ids(still_to_build([activity, a_mission(20)])) == [20]
+
+    def test_what_the_board_draws_no_longer_decides_what_the_plan_holds(
+        self,
+    ) -> None:
+        mission = a_mission(20)
+
+        assert mission.appears_on_board is True
+        assert mission.carries_a_phase is True
+        assert ids(still_to_build([mission])) == [20]

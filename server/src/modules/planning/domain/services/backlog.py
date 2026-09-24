@@ -80,11 +80,17 @@ def still_to_build(missions: Iterable[Project]) -> list[Project]:
 
     A work package stands on its own line: it carries its own estimate and its
     own people, and folding it into its parent would place the same days twice.
+
+    What the plan asks of a mission is whether it carries a phase, never
+    whether the board draws it. The two answered alike while the board drew
+    every mission that had one; now that activities are out of the board and
+    into the estimates, asking the board would quietly drop from the plan the
+    very lines that carry what is left to build.
     """
     return [
         mission
         for mission in missions
-        if mission.appears_on_board and mission.status is not ProjectStatus.OPERATIONS
+        if mission.carries_a_phase and mission.status is not ProjectStatus.OPERATIONS
     ]
 
 
