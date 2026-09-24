@@ -43,4 +43,5 @@ export const AuditAction = {
   api_keyupdate: "api_key.update",
   api_keyrevoke: "api_key.revoke",
   gazettegenerate: "gazette.generate",
+  reminderrun: "reminder.run",
 } as const;

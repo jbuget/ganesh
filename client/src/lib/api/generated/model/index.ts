@@ -154,6 +154,8 @@ export * from "./roadmapResponse";
 export * from "./roadmapSegmentResponse";
 export * from "./roadmapSummaryResponse";
 export * from "./role";
+export * from "./runRemindersRequest";
+export * from "./runRemindersResponse";
 export * from "./saveSimulationRequest";
 export * from "./saveSimulationRequestStaffing";
 export * from "./segmentKind";

@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { PageHeader } from "@/components/atoms/PageHeader";
+import { RunRemindersPanel } from "@/components/atoms/RunRemindersPanel";
 import { NotificationItem } from "@/components/molecules/NotificationItem";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import type { NotificationFilter } from "@/lib/api/generated/model";
 import { useOpenedMission } from "@/lib/opened-mission";
 import { STRONG_RULE } from "@/lib/table-frame";
+import { useCurrentUser } from "@/lib/api/queries";
 import { useInbox } from "@/lib/use-inbox";
 
 const FILTERS: { value: NotificationFilter; label: string }[] = [
@@ -32,9 +34,15 @@ const FILTERS: { value: NotificationFilter; label: string }[] = [
  * carrying the reader off to its page: one comes to go through what one was
  * told, and closing the panel puts the reader back where they were, on the
  * next line down.
+ *
+ * At the foot, and for managers alone, the one gesture that writes to the
+ * whole team: sending a round of reminder letters by hand. It is the odd one
+ * out on a page that is otherwise entirely one's own, and it is kept apart by
+ * a rule rather than moved — every other home for it would be worse.
  */
 export function NotificationsPage() {
   const inbox = useInbox();
+  const { user } = useCurrentUser();
   const panel = useOpenedMission();
   const now = new Date();
   const first = inbox.page * inbox.pageSize;
@@ -153,6 +161,8 @@ export function NotificationsPage() {
             </div>
           </div>
         )}
+
+        {user?.role === "MANAGER" && <RunRemindersPanel />}
       </div>
     </PageLayout>
   );
