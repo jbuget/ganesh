@@ -300,7 +300,14 @@ Modules: `users`, `projects`, `entries`, `months`, `calendar`, `audit_logs`.
   infrastructure.
 - **A use case may never call another use case.** Extract shared logic into a
   domain service.
-- **FastAPI routes never inject a repository directly** — use cases only.
+- **A FastAPI route reaches a use case, and nothing else.** Not a repository,
+  and not a domain service either: a route that called `read_wiring` straight
+  would be a route deciding what to orchestrate, and the layer that exists to
+  answer that question would have been stepped over. « Il n'y a rien à
+  orchestrer » is not an exemption — a use case with one call is still where
+  the next call will go. Three routes predate this rule and do not follow it
+  (`POST /auth/local`, `GET /calendar/{year}/{month}`, `GET /users/me`); they
+  are debts, not precedents.
 - Always depend on the interface, never on the concrete implementation.
 
 **These rules are not declarative: they are enforced by `import-linter`**
