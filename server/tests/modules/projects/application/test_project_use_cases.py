@@ -25,6 +25,7 @@ from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError, ValidationError
 from tests.helpers.in_memory_repositories import (
+    InMemoryActivityRepository,
     InMemoryAuditLogRepository,
     InMemoryEntryRepository,
     InMemoryNotificationRepository,
@@ -70,6 +71,7 @@ def build(projects: list[Project] | None = None):
         ),
         ListProjectsUseCase(
             projects=repo,
+            activities=InMemoryActivityRepository(),
             entries=InMemoryEntryRepository(),
             assignees=InMemoryProjectAssigneeRepository(),
             users=users,

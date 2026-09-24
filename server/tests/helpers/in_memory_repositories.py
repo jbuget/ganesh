@@ -175,8 +175,12 @@ class InMemoryActivityRepository(ActivityRepository):
         self._activities: dict[int, Activity] = {}
         self._next_id = 1
         for activity in activities or []:
-            self._activities[activity.id or self._next_id] = activity
-            self._next_id = max(self._next_id, (activity.id or 0) + 1)
+            # Two activities handed over without an id must not land on the
+            # same key: the second would silently replace the first.
+            if activity.id is None:
+                activity.id = self._next_id
+            self._activities[activity.id] = activity
+            self._next_id = max(self._next_id, activity.id + 1)
         #: Shared with the entry double where a test hands both the same list,
         #: so that counting days does not need a repository of its own.
         self._entries = entries if entries is not None else []
