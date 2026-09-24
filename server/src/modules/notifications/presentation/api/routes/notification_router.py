@@ -7,8 +7,6 @@ people are told is written by the gestures that concern them, never by hand.
 They hang off `get_current_user`, which refuses API keys: an inbox is human.
 """
 
-from datetime import UTC, datetime
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -127,8 +125,11 @@ async def run_reminders(
     configuration.
     """
     assert current_user.id is not None
-    sent = await use_case.execute(
-        payload.cadence, now=datetime.now(UTC), requested_by=current_user.id
-    )
-    await session.commit()
+    try:
+        sent = await use_case.execute(payload.cadence, requested_by=current_user.id)
+    finally:
+        # Failure included: the stamps of the letters that did go out say so,
+        # and rolling them back would send those again. It is also what makes
+        # the line in the register survive a round that stopped halfway.
+        await session.commit()
     return RunRemindersResponse(sent=sent)

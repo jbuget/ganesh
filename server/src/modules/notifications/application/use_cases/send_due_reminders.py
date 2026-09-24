@@ -23,6 +23,7 @@ from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
     ForbiddenActionError,
 )
+from src.shared.utils import clock
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ class SendDueRemindersUseCase:
     async def execute(
         self,
         cadence: ReminderCadence,
-        now: datetime,
+        now: datetime | None = None,
         requested_by: int | None = None,
     ) -> int:
         """Writes to everybody on this cadence. Returns how many letters went.
@@ -75,6 +76,9 @@ class SendDueRemindersUseCase:
         is what puts a line in the register: a round the clock ran is a
         channel, a round somebody asked for is a gesture.
         """
+        # Given by the clock, which holds the instant of its tick; read here
+        # for anybody else, as every other use case of the application does.
+        now = now or clock.now()
         if requested_by is not None:
             await self._check_may_ask(requested_by)
         if not cadence.wants_mail:

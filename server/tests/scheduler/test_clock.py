@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 from src.modules.notifications.domain.repositories.mailer import MailerUnavailableError
 from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.scheduler.clock import ReminderClock
-from src.scheduler.due import PARIS
+from src.shared.utils.clock import PARIS
 
 AT = time(8, 30)
 WEDNESDAY = datetime(2026, 9, 23, 8, 45, tzinfo=PARIS)

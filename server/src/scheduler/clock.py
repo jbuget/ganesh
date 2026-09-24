@@ -13,7 +13,8 @@ from datetime import UTC, date, datetime, time
 
 from src.modules.notifications.domain.repositories.mailer import MailerUnavailableError
 from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
-from src.scheduler.due import JOB, PARIS, cadences_due
+from src.scheduler.due import JOB, cadences_due
+from src.shared.utils.clock import PARIS
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,8 @@ class ReminderClock:
         for cadence in cadences_due(now, self._send_at):
             # Paris, explicitly: `astimezone()` with no argument reads the
             # machine's own timezone, and a claim taken under the host's day
-            # would not be the day the round was decided on.
+            # would not be the day the round was decided on. Same zone the
+            # rest of the application reads its days in.
             due_on = now.astimezone(PARIS).date()
             job = f"{JOB}:{cadence.value.lower()}"
             if not await self._claim_run(job, due_on, now):

@@ -42,9 +42,15 @@ def build_clock(settings: Settings) -> ReminderClock | None:
     async def run_round(cadence: ReminderCadence, now: datetime) -> int:
         async with AsyncSessionLocal() as session:
             use_case = build_send_due_reminders_use_case(session)
-            sent = await use_case.execute(cadence, now)
-            await session.commit()
-            return sent
+            try:
+                return await use_case.execute(cadence, now)
+            finally:
+                # Committed on the way out, failure included. Every stamp the
+                # round moved says a letter *actually went out*; rolling them
+                # back because the round died later would send those letters
+                # a second time on the retry, which is exactly what the stamp
+                # exists to prevent.
+                await session.commit()
 
     try:
         send_at = time.fromisoformat(settings.reminder_send_at)

@@ -219,7 +219,11 @@ is not that. Every letter of the round would meet the same wall, so:
 - the adapter raises `MailerUnavailableError` rather than one exception per
   recipient;
 - the round **stops where it is**, and whoever was already written to keeps
-  their stamp, so the retry writes to the rest and to nobody twice;
+  their stamp, so the retry writes to the rest and to nobody twice. That last
+  part is not free: both callers commit **on the way out, failure included**,
+  because a stamp rolled back is a letter sent twice. In memory it is free and
+  no unit test can see it, which is why one integration test pins it against a
+  real database;
 - the clock says it once, as a sentence rather than fifteen stack traces, and
   **gives the run back** — `release()` deletes the claim, so the next tick
   retries. Without that, the claim being taken before the work means a key
