@@ -23,3 +23,11 @@ class ForbiddenActionError(DomainError):
 
 class ConflictError(DomainError):
     """The action conflicts with the current state."""
+
+
+class ServiceUnavailableError(DomainError):
+    """Something Ganesh depends on is not answering.
+
+    Not the caller's fault, which is the whole point of telling it apart: a
+    400 would send whoever asked looking at their own request.
+    """
