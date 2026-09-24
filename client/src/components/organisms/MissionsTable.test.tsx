@@ -81,6 +81,7 @@ describe("MissionsTable", () => {
       "Mise en service",
       "Référents",
       "Intervenants",
+      "Dernière mise à jour",
       "Publié",
     ]) {
       expect(screen.getByText(title)).toBeInTheDocument();
