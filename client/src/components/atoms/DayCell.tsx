@@ -14,6 +14,17 @@ interface DayCellProps {
   isLastDay?: boolean;
   /** A non-working day shrinks to a band, unless it carries an entry. */
   isNarrow?: boolean;
+  /**
+   * How the grid names this cell, so the keys can find it back. The handler
+   * lives on the table: the cell only has to say which one it is.
+   */
+  cellId: string;
+  /**
+   * Whether this cell is the grid's one stop in the tab order. A grid holds a
+   * single one, which follows the focus — tabbing through three hundred cells
+   * to reach what comes after them is not navigation.
+   */
+  isTabStop?: boolean;
   label: string;
   onChange: (next: DayValue) => void;
 }
@@ -37,6 +48,8 @@ export function DayCell({
   isLastRow = false,
   isLastDay = false,
   isNarrow = false,
+  cellId,
+  isTabStop = false,
   label,
   onChange,
 }: DayCellProps) {
@@ -61,6 +74,8 @@ export function DayCell({
     >
       <button
         type="button"
+        data-cell={cellId}
+        tabIndex={isTabStop ? 0 : -1}
         aria-label={label}
         title={label}
         disabled={isLocked}

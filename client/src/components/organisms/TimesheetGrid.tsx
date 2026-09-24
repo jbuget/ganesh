@@ -8,6 +8,8 @@ import { DayHeader } from "@/components/atoms/DayHeader";
 import { DayTotalCell } from "@/components/atoms/DayTotalCell";
 import { MissionLabel } from "@/components/atoms/MissionLabel";
 import { TotalCell } from "@/components/atoms/TotalCell";
+import { cellId } from "@/lib/grid-navigation";
+import { useGridNavigation } from "@/lib/use-grid-navigation";
 import type { MonthGridResponse } from "@/lib/api/generated/model";
 
 interface TimesheetGridProps {
@@ -80,9 +82,29 @@ export function TimesheetGrid({
   const isNarrow = (day: string, isOffDay: boolean) =>
     isOffDay && (totalByDate.get(day)?.total ?? 0) === 0;
 
+  const offDays = new Set(grid.days.filter((day) => day.is_off_day).map((d) => d.day));
+
+  /**
+   * The grid as the keys read it.
+   *
+   * A cell is open exactly when it takes an entry — which is the same rule the
+   * cell draws itself by. A validated month opens nothing, so the arrows have
+   * nowhere to go and do nothing: there is no cursor to move through a month
+   * one cannot write on.
+   */
+  const keys = useGridNavigation({
+    rows: rows.map((row) => row.project_id),
+    days: grid.days.map((day) => day.day),
+    isOpen: (cell) => !readOnly && !offDays.has(cell.day),
+  });
+
   return (
-    <div className="max-w-full overflow-x-auto">
-      <table className="w-max border-separate border-spacing-0 border-l border-slate-500 text-slate-800">
+    <div className="max-w-full overflow-x-auto" data-grid-scroller>
+      <table
+        className="w-max border-separate border-spacing-0 border-l border-slate-500 text-slate-800"
+        onKeyDown={keys.onKeyDown}
+        onFocus={keys.onFocus}
+      >
         <caption className="sr-only">Temps saisi par projet et par jour</caption>
         <thead>
           <tr>
@@ -205,6 +227,11 @@ export function TimesheetGrid({
               {grid.days.map((day, dayIndex) => (
                 <DayCell
                   key={day.day}
+                  cellId={cellId({ projectId: row.project_id, day: day.day })}
+                  isTabStop={keys.isTabStop({
+                    projectId: row.project_id,
+                    day: day.day,
+                  })}
                   isLastDay={dayIndex === grid.days.length - 1}
                   value={(row.values[day.day] ?? 0) as DayValue}
                   isOffDay={day.is_off_day}
