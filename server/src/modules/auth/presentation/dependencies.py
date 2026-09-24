@@ -14,6 +14,10 @@ from src.modules.api_keys.domain.services import key_material
 from src.modules.audit_logs.infrastructure.database.repositories.audit_log_repository_impl import (
     SqlAuditLogRepository,
 )
+from src.modules.auth.application.use_cases.sign_in_locally import (
+    ExpectedCredentials,
+    SignInLocallyUseCase,
+)
 from src.modules.auth.infrastructure.entra_token_validator import EntraTokenValidator
 from src.modules.auth.infrastructure.local_tokens import LocalTokenService
 from src.modules.auth.presentation.identity import identity_from_claims
@@ -33,6 +37,24 @@ DEV_IDENTITY = EntraIdentity(
     email="j.buget@waat.fr",
     display_name="J. Buget (dev)",
 )
+
+
+def get_sign_in_locally_use_case(
+    settings: Settings = Depends(get_settings),
+) -> SignInLocallyUseCase:
+    """Wires the fallback door from the environment, and nowhere deeper.
+
+    Whether the door exists at all is read here: `auth_entra` is a setting,
+    and a use case that consulted one would be a use case that knows what a
+    setting is.
+    """
+    return SignInLocallyUseCase(
+        fallback_is_open=not settings.auth_entra,
+        expected=ExpectedCredentials(
+            login=settings.auth_login, password=settings.auth_password
+        ),
+        issuer=local_token_service(settings),
+    )
 
 
 def local_token_service(settings: Settings) -> LocalTokenService:
