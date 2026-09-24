@@ -11,7 +11,11 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
-from src.modules.auth.presentation.dependencies import get_current_user
+from src.modules.auth.presentation.dependencies import (
+    get_contributor,
+    get_current_manager,
+    get_current_user,
+)
 from src.modules.notifications.application.dtos.notification_dtos import (
     ReadStateCommand,
 )
@@ -79,7 +83,7 @@ async def list_notifications(
 )
 async def set_read_state(
     payload: SetReadStateRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: SetNotificationsReadStateUseCase = Depends(
         get_set_notifications_read_state_use_case
     ),
@@ -103,7 +107,11 @@ async def set_read_state(
 )
 async def run_reminders(
     payload: RunRemindersRequest,
-    current_user: User = Depends(get_current_user),
+    # The door says « managers only » rather than the use case alone: every
+    # route that writes hangs off one, and `test_write_doors` reads the
+    # application to say so. The entity keeps its own check — a second caller
+    # must meet the same rule.
+    manager: User = Depends(get_current_manager),
     use_case: SendDueRemindersUseCase = Depends(get_send_due_reminders_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> RunRemindersResponse:
@@ -124,9 +132,9 @@ async def run_reminders(
     post at all — which is the answer worth having when one is testing the
     configuration.
     """
-    assert current_user.id is not None
+    assert manager.id is not None
     try:
-        sent = await use_case.execute(payload.cadence, requested_by=current_user.id)
+        sent = await use_case.execute(payload.cadence, requested_by=manager.id)
     finally:
         # Failure included: the stamps of the letters that did go out say so,
         # and rolling them back would send those again. It is also what makes

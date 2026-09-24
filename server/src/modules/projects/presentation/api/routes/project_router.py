@@ -30,7 +30,7 @@ from src.modules.audit_logs.presentation.api.schemas.audit_log_schemas import (
 from src.modules.audit_logs.presentation.dependencies import (
     get_project_audit_log_use_case,
 )
-from src.modules.auth.presentation.dependencies import get_current_user
+from src.modules.auth.presentation.dependencies import get_contributor, get_current_user
 from src.modules.projects.application.dtos.assignment_dto import AssignmentCommand
 from src.modules.projects.application.dtos.attachment_dto import (
     RemoveAttachmentCommand,
@@ -319,7 +319,7 @@ async def update_project(
 async def attach_project(
     project_id: int,
     payload: AttachProjectRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: AttachProjectUseCase = Depends(get_attach_project_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectResponse:
@@ -343,7 +343,7 @@ async def attach_project(
 )
 async def detach_project(
     project_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: DetachProjectUseCase = Depends(get_detach_project_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectResponse:
@@ -435,7 +435,7 @@ async def import_projects(
 )
 async def delete_project(
     project_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: DeleteProjectUseCase = Depends(get_delete_project_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -484,7 +484,7 @@ async def get_board(
 async def move_project(
     project_id: int,
     payload: MoveProjectRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: MoveProjectUseCase = Depends(get_move_project_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectResponse:
@@ -513,7 +513,7 @@ async def assign_member(
     role: ProjectRole = Query(
         default=ProjectRole.CONTRIBUTOR, description="A quel titre."
     ),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: AssignMemberUseCase = Depends(get_assign_member_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -542,7 +542,7 @@ async def unassign_member(
     role: ProjectRole = Query(
         default=ProjectRole.CONTRIBUTOR, description="A quel titre."
     ),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: UnassignMemberUseCase = Depends(get_unassign_member_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -582,7 +582,7 @@ async def get_project_detail(
 async def update_project_detail(
     project_id: int,
     payload: UpdateProjectDetailRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: UpdateProjectDetailUseCase = Depends(get_update_project_detail_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -608,7 +608,7 @@ async def update_project_detail(
 async def update_project_registry(
     project_id: int,
     payload: UpdateProjectRegistryRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: UpdateProjectRegistryUseCase = Depends(
         get_update_project_registry_use_case
     ),
@@ -638,7 +638,7 @@ async def update_project_registry(
 async def add_project_link(
     project_id: int,
     payload: AddLinkRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: AddProjectLinkUseCase = Depends(get_add_project_link_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> ProjectLinkResponse:
@@ -668,7 +668,7 @@ async def add_project_link(
 async def remove_project_link(
     project_id: int,
     link_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: RemoveProjectLinkUseCase = Depends(get_remove_project_link_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -687,7 +687,7 @@ async def remove_project_link(
 async def update_project_description(
     project_id: int,
     payload: UpdateDescriptionRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: UpdateDescriptionUseCase = Depends(get_update_description_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -776,7 +776,7 @@ async def edit_project_update(
     project_id: int,
     update_id: int,
     payload: PostUpdateRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: EditProjectUpdateUseCase = Depends(get_edit_update_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -799,7 +799,7 @@ async def edit_project_update(
 async def remove_project_update(
     project_id: int,
     update_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: RemoveProjectUpdateUseCase = Depends(get_remove_update_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -821,7 +821,7 @@ async def react_to_project_update(
     project_id: int,
     update_id: int,
     reaction: Reaction,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: ReactToUpdateUseCase = Depends(get_react_to_update_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -843,7 +843,7 @@ async def withdraw_project_update_reaction(
     project_id: int,
     update_id: int,
     reaction: Reaction,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: WithdrawReactionUseCase = Depends(get_withdraw_reaction_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -882,7 +882,7 @@ async def list_project_attachments(
 async def upload_project_attachment(
     project_id: int,
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: UploadProjectAttachmentUseCase = Depends(get_upload_attachment_use_case),
     list_attachments: ListProjectAttachmentsUseCase = Depends(
         get_list_attachments_use_case
@@ -962,7 +962,7 @@ async def download_project_attachment(
 async def remove_project_attachment(
     project_id: int,
     attachment_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: RemoveProjectAttachmentUseCase = Depends(get_remove_attachment_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -988,7 +988,7 @@ async def rename_project_attachment(
     project_id: int,
     attachment_id: int,
     payload: RenameAttachmentRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: RenameProjectAttachmentUseCase = Depends(get_rename_attachment_use_case),
     list_attachments: ListProjectAttachmentsUseCase = Depends(
         get_list_attachments_use_case

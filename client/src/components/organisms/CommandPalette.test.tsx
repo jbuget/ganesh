@@ -9,6 +9,9 @@ const push = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/lib/api/queries", () => ({
+  // The palette leads where the sidebar leads: the reader's rung decides
+  // which screens are offered at all.
+  useCurrentUser: () => ({ user: { id: 1, role: "TEAMMATE" } }),
   useProjects: () => ({
     missions: [
       {

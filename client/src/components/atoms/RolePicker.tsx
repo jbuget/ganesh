@@ -9,21 +9,27 @@ import { ROLES, roleLabel } from "@/lib/roles";
 
 interface RolePickerProps {
   role: Role;
-  /** Only a manager promotes or demotes a teammate. */
-  modifiable: boolean;
+  /**
+   * The roles the person reading may hand out, `assignableRoles` having read
+   * the two bounds the API carries. Empty means the role shows and does not
+   * open — which is also what a manager gets on an admin's row.
+   */
+  choices: Role[];
   onChange: (role: Role) => void | Promise<void>;
 }
 
 /**
  * A teammate's role, changed from the list.
  *
- * Without management rights, the role still shows: knowing who can reopen a
- * validated month concerns the whole team, not only those who decide it.
+ * Without the rights to change it, the role still shows: knowing who can
+ * reopen a validated month concerns the whole team, not only those who decide
+ * it. And the list only ever offers what the API would accept — a choice that
+ * came back refused would be the screen's fault, not the reader's.
  */
-export function RolePicker({ role, modifiable, onChange }: RolePickerProps) {
+export function RolePicker({ role, choices, onChange }: RolePickerProps) {
   const [isOpen, setOpen] = useState(false);
 
-  if (!modifiable) {
+  if (choices.length === 0) {
     return <span className="text-sm text-slate-600">{roleLabel(role)}</span>;
   }
 
@@ -38,7 +44,7 @@ export function RolePicker({ role, modifiable, onChange }: RolePickerProps) {
 
       <PopoverContent align="start" className="w-72 p-1">
         <ul>
-          {ROLES.map((choice) => (
+          {ROLES.filter((choice) => choices.includes(choice.value)).map((choice) => (
             <li key={choice.value}>
               <button
                 type="button"

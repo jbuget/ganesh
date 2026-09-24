@@ -305,6 +305,15 @@ def open_to_machines(
     ) -> Caller:
         if teammate is not None:
             assert teammate.id is not None
+            # A scope says its verb, and a write scope admits nobody who may
+            # not write. A guest comes in through every reading door beside
+            # this one, and is turned back here — the same refusal
+            # `get_contributor` gives on a route no machine reaches.
+            if not scope.is_read and not teammate.can_write():
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="This account may read Ganesh, not write into it.",
+                )
             return Caller(actor_id=teammate.id)
 
         machine = await admit_machine(

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { UserIdentityTab } from "./UserIdentityTab";
-import type { UserResponse } from "@/lib/api/generated/model";
+import type { Role, UserResponse } from "@/lib/api/generated/model";
 import { A_WEEK_ON_SITE } from "@/lib/presence";
 
 const jeremy: UserResponse = {
@@ -28,7 +28,7 @@ const onDeclarePresence = vi.fn();
 function openTab(
   user: Partial<UserResponse> = {},
   {
-    roleModifiable = false,
+    assignableRoles = [] as Role[],
     canChangeStatus = false,
     editable = false,
     isMe = false,
@@ -37,7 +37,7 @@ function openTab(
   render(
     <UserIdentityTab
       user={{ ...jeremy, ...user }}
-      roleModifiable={roleModifiable}
+      assignableRoles={assignableRoles}
       canChangeStatus={canChangeStatus}
       editable={editable}
       isMe={isMe}
@@ -165,7 +165,7 @@ describe("UserIdentityTab", () => {
   });
 
   it("lets a manager change the role", async () => {
-    openTab({}, { roleModifiable: true });
+    openTab({}, { assignableRoles: ["GUEST", "TEAMMATE", "MANAGER"] });
 
     await userEvent.click(screen.getByRole("button", { name: /Changer le rôle/ }));
     await userEvent.click(screen.getByRole("button", { name: /Collaborateur/ }));

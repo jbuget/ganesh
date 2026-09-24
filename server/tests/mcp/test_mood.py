@@ -26,11 +26,19 @@ from src.modules.moods.application.dtos.mood_dtos import TeamMoods
 from src.modules.moods.domain.entities.mood import Mood, MoodLevel
 from src.modules.moods.domain.services.mood_report import build_report
 from src.modules.moods.presentation.dependencies import get_team_moods_use_case
-from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.entities.user import Role, User
 
-OWNER = User(id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba")
+OWNER = User(
+    id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba", role=Role.TEAMMATE
+)
 TEAM = [
-    User(id=n, entra_oid=f"oid-{n}", email=f"{n}@waat.fr", display_name=f"P{n} Nom")
+    User(
+        id=n,
+        entra_oid=f"oid-{n}",
+        email=f"{n}@waat.fr",
+        display_name=f"P{n} Nom",
+        role=Role.TEAMMATE,
+    )
     for n in range(1, 13)
 ]
 

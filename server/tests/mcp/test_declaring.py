@@ -28,13 +28,15 @@ from src.modules.entries.application.dtos.set_entry_dto import SetEntryCommand
 from src.modules.entries.domain.entities.entry import Entry
 from src.modules.entries.presentation.dependencies import get_set_entry_use_case
 from src.modules.projects.domain.entities.project import ProjectStatus
-from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
     ForbiddenActionError,
 )
 
-OWNER = User(id=7, entra_oid="oid-7", email="a@waat.fr", display_name="A. Ba")
+OWNER = User(
+    id=7, entra_oid="oid-7", email="a@waat.fr", display_name="A. Ba", role=Role.TEAMMATE
+)
 
 
 class Writer:

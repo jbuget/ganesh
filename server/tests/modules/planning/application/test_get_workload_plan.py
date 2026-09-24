@@ -16,7 +16,7 @@ from src.modules.projects.domain.entities.project import (
     ProjectStatus,
 )
 from src.modules.projects.domain.entities.project_role import ProjectRole
-from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import ValidationError
 from tests.helpers.in_memory_repositories import (
     InMemoryEntryRepository,
@@ -28,8 +28,12 @@ from tests.helpers.in_memory_repositories import (
 # A Friday. The window therefore opens on a working day.
 TODAY = date(2026, 9, 18)
 
-ALICE = User(id=1, entra_oid="a", email="alice@waat.fr", display_name="Alice")
-BOB = User(id=2, entra_oid="b", email="bob@waat.fr", display_name="Bob")
+ALICE = User(
+    id=1, entra_oid="a", email="alice@waat.fr", display_name="Alice", role=Role.TEAMMATE
+)
+BOB = User(
+    id=2, entra_oid="b", email="bob@waat.fr", display_name="Bob", role=Role.TEAMMATE
+)
 
 
 def a_mission(

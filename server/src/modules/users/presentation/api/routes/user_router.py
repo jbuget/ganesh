@@ -17,6 +17,7 @@ from src.modules.audit_logs.presentation.api.schemas.audit_log_schemas import (
 )
 from src.modules.audit_logs.presentation.dependencies import get_user_audit_log_use_case
 from src.modules.auth.presentation.dependencies import (
+    get_contributor,
     get_current_manager,
     get_current_user,
 )
@@ -216,7 +217,7 @@ async def update_identity(
 )
 async def declare_own_presence(
     payload: DeclarePresenceRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: DeclareOwnPresenceUseCase = Depends(get_declare_own_presence_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> UserResponse:
@@ -240,7 +241,7 @@ async def declare_own_presence(
 )
 async def choose_own_reminder_cadence(
     payload: ChooseReminderCadenceRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: ChooseOwnReminderCadenceUseCase = Depends(
         get_choose_own_reminder_cadence_use_case
     ),

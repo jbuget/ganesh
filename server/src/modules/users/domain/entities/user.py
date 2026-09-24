@@ -35,10 +35,28 @@ def _handle(value: str | None) -> str | None:
 
 
 class Role(StrEnum):
-    """What a user is allowed to do."""
+    """What a user is allowed to do, from the door to the platform.
 
+    The order is a fact the whole application reads: nobody hands out a role
+    above their own, and a role is only ever changed by someone who holds at
+    least as much. Declaring them from the least to the most empowered is
+    therefore what makes `RANK` below say the truth.
+    """
+
+    #: Whoever has just signed in for the first time, and nothing more. They
+    #: read the application whole and write nothing into it, until somebody
+    #: says who they are on the team.
+    GUEST = "GUEST"
     TEAMMATE = "TEAMMATE"
     MANAGER = "MANAGER"
+    #: A manager, plus the platform itself: the administration screen, and the
+    #: one role a manager cannot hand out.
+    ADMIN = "ADMIN"
+
+
+#: Where each role stands on the ladder. Written from `Role` rather than by
+#: hand, so a role added between two others cannot be forgotten here.
+RANK: dict[Role, int] = {Role(role): position for position, role in enumerate(Role)}
 
 
 @dataclass
@@ -49,7 +67,9 @@ class User:
     entra_oid: str
     email: str
     display_name: str
-    role: Role = Role.TEAMMATE
+    #: A guest until somebody says otherwise: what is true of an account
+    #: nobody has declared, not a placeholder standing in for an answer.
+    role: Role = Role.GUEST
     is_active: bool = field(default=True)
     last_login_at: datetime | None = None
     #: Civil name, told apart from the display name Entra provides: « L. Chen »
@@ -112,7 +132,35 @@ class User:
 
     @property
     def is_manager(self) -> bool:
-        return self.role is Role.MANAGER
+        """Whether this account reaches as far as a manager does.
+
+        An admin does: the ladder is one axis, and a role above manager holds
+        everything a manager holds. Reading it as « the role is MANAGER »
+        would mean every screen listing both, and one of them forgetting to.
+        """
+        return self.holds(Role.MANAGER)
+
+    @property
+    def is_admin(self) -> bool:
+        return self.role is Role.ADMIN
+
+    def holds(self, role: Role) -> bool:
+        """Whether this account stands at `role` on the ladder, or above."""
+        return RANK[self.role] >= RANK[role]
+
+    def can_write(self) -> bool:
+        """Whether this account may enter anything at all.
+
+        A guest reads the application whole and writes nothing into it: a
+        month, a project, a mise à jour, a mood. The rule is one line here so
+        that every use case that writes asks the same question, and the day a
+        role is added nobody has to remember which side of it it falls on.
+        """
+        return self.is_active and self.role is not Role.GUEST
+
+    def can_administrate(self) -> bool:
+        """Only an admin opens the administration of the platform."""
+        return self.is_active and self.is_admin
 
     def can_reopen_month(self) -> bool:
         """Only a manager can reopen a validated month."""
@@ -122,9 +170,26 @@ class User:
         """Managing teammates is reserved for managers."""
         return self.is_active and self.is_manager
 
+    def can_change_role_of(self, target: "User", role: Role) -> bool:
+        """Tells whether this user may move `target` to `role`.
+
+        Two bounds, read the same way: nobody hands out a role above their
+        own, and nobody moves someone who stands above them. A manager
+        therefore promotes up to manager and leaves an admin alone — being
+        able to demote the one who could undo it is the same door read
+        backwards.
+
+        Nobody changes their own role either, for the reason nobody
+        deactivates themselves: an admin demoting themselves would leave the
+        platform short of an administrator, with no way back in from inside.
+        """
+        if not self.can_manage_teammates() or target.id == self.id:
+            return False
+        return self.holds(role) and self.holds(target.role)
+
     def can_edit_open_months(self) -> bool:
         """Anyone may edit an open month, a colleague's included."""
-        return self.is_active
+        return self.can_write()
 
     def can_declare_own_presence(self) -> bool:
         """Everyone says their own week, and nobody else's.
@@ -133,7 +198,7 @@ class User:
         and relaying it would only put a delay between the fact and the board
         the team reads.
         """
-        return self.is_active
+        return self.can_write()
 
     def can_choose_own_reminder(self) -> bool:
         """Everyone says how often they are written to, and nobody else does.
@@ -141,7 +206,7 @@ class User:
         No manager's business, for the same reason a declared week is not: how
         often somebody wants their mailbox used is a fact about them.
         """
-        return self.is_active
+        return self.can_write()
 
     def choose_reminder_cadence(self, cadence: ReminderCadence) -> None:
         """Takes down how often this teammate wants to be written to."""

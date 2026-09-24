@@ -49,14 +49,55 @@ volume, and a key prefix is a needle for a secret scanner, not a brand.
 
 ### Roles
 
-| Action | `TEAMMATE` | `MANAGER` |
-|---|---|---|
-| Fill in one's own month, read and edit a colleague's open month | ✅ | ✅ |
-| Create / change a project, change its status | ✅ | ✅ |
-| Validate one's own month | ✅ | ✅ |
-| Reopen a validated month | ❌ | ✅ |
-| Manage teammates | ❌ | ✅ |
-| Sync to Monday (V1.1) | ❌ | ✅ |
+One ladder, four rungs, `GUEST` < `TEAMMATE` < `MANAGER` < `ADMIN`. It is one
+axis on purpose: an admin holds everything a manager holds, so no screen has to
+list two roles and forget one of them. `RANK` is read off `Role` rather than
+written down, and a rung added between two others cannot be forgotten.
+
+| Action | `GUEST` | `TEAMMATE` | `MANAGER` | `ADMIN` |
+|---|---|---|---|---|
+| Read every screen | ✅ | ✅ | ✅ | ✅ |
+| Fill in one's own month, read and edit a colleague's open month | ❌ | ✅ | ✅ | ✅ |
+| Create / change a project, change its status | ❌ | ✅ | ✅ | ✅ |
+| Validate one's own month | ❌ | ✅ | ✅ | ✅ |
+| Reopen a validated month | ❌ | ❌ | ✅ | ✅ |
+| Manage teammates | ❌ | ❌ | ✅ | ✅ |
+| Hand out a role, up to one's own | ❌ | ❌ | ✅ | ✅ |
+| Open the administration of the platform | ❌ | ❌ | ❌ | ✅ |
+| Sync to Monday (V1.1) | ❌ | ❌ | ✅ | ✅ |
+
+**A guest is what anybody is on their first sign-in**, and it is an answer
+rather than a placeholder: somebody the reference list has never heard of reads
+the application whole and declares nothing into it. The seed is the other door
+— matching by email is what preserves a role handed out before anybody logged
+in — and `make grant-role EMAIL=… ROLE=ADMIN` is the third, from a shell on the
+host, which is the only place the *first* administrator can be made.
+
+**Authentication switched off admits an administrator.** `REQUIRE_AUTH=false`
+provisions `DEV_IDENTITY`, and it does so as an admin: with no door there is
+nobody to promote that account and nothing it could be confused with, where a
+guest would mean a laptop on which nothing can be declared. That identity is a
+**constant**, not a setting — `AUTH_LOCAL_EMAIL` feeds the fallback door
+(`AUTH_ENTRA=false`), never this one, and the provisioning matches on
+`entra_oid` first, so changing an email alone would hand back the same account.
+To try another role locally, move your own with `make grant-role`.
+
+**Two bounds hold every role change**, and they live on the entity: nobody
+hands out a role above their own, and nobody moves somebody who stands above
+them. A manager therefore promotes up to manager and leaves an admin alone —
+being able to demote the one who could undo it is the same door read backwards.
+Nobody changes their own role either, for the reason nobody deactivates
+themselves.
+
+**A route that writes hangs off a door a guest cannot come through.** There are
+forty-odd of them, and checking them one by one is how one ends up forgotten:
+`get_contributor`, `get_current_manager` and `get_admin` are the three human
+doors, a machine door counts when the scope it asks for is a write scope, and
+`test_write_doors` reads the application itself to say so. A key never reaches
+further than the person who answers for it.
+
+On the client the same reading is one hook, `useMayWrite`, and the band above
+every screen says it once rather than a dozen times over.
 
 ### Business invariants
 

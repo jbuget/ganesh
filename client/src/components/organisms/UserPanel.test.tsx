@@ -42,7 +42,7 @@ function openPanel({ canChangeStatus = false } = {}) {
   render(
     <UserPanel
       user={jeremy}
-      roleModifiable={false}
+      assignableRoles={[]}
       canChangeStatus={canChangeStatus}
       editable={false}
       onChangeRole={onChangeRole}

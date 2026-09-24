@@ -18,8 +18,8 @@ import type { WeekPresence } from "@/lib/presence";
 
 interface UserPanelProps {
   user: UserResponse;
-  /** Managing users is reserved for managers. */
-  roleModifiable: boolean;
+  /** The roles the person reading may hand this account; empty for none. */
+  assignableRoles: Role[];
   /** False on one's own account: nobody cuts off their own access. */
   canChangeStatus: boolean;
   /** Writing who a teammate is stays with the managers, like the role. */
@@ -61,7 +61,7 @@ interface UserPanelProps {
  */
 export function UserPanel({
   user,
-  roleModifiable,
+  assignableRoles,
   canChangeStatus,
   editable,
   isMe,
@@ -121,7 +121,7 @@ export function UserPanel({
           <TabsContent value="identity">
             <UserIdentityTab
               user={user}
-              roleModifiable={roleModifiable}
+              assignableRoles={assignableRoles}
               canChangeStatus={canChangeStatus}
               editable={editable}
               isMe={isMe}

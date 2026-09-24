@@ -12,6 +12,14 @@ import type { MonthGridResponse } from "@/lib/api/generated/model";
 
 interface TimesheetGridProps {
   grid: MonthGridResponse;
+  /**
+   * Whether the grid only reads.
+   *
+   * Given rather than worked out from `is_writable`: a month can be open and
+   * still refuse the person looking at it — a guest reads every month of the
+   * team and declares on none.
+   */
+  readOnly: boolean;
   today: string;
   onSetValue: (projectId: number, day: string, value: DayValue) => void;
   /** Mission picker, housed in the last row. Absent when the month is closed. */
@@ -44,6 +52,7 @@ interface DisplayRow {
  */
 export function TimesheetGrid({
   grid,
+  readOnly,
   today,
   onSetValue,
   addingMission,
@@ -63,7 +72,6 @@ export function TimesheetGrid({
     }))
     .sort((a, b) => a.label.localeCompare(b.label, "fr"));
 
-  const readOnly = !grid.is_writable;
   const totalByDate = new Map(grid.day_totals.map((total) => [total.day, total]));
 
   /**

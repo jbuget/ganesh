@@ -60,6 +60,7 @@ const EMPTY_ROW: GridRowResponse = {
 
 const baseProps = {
   today: TODAY,
+  readOnly: false,
   onSetValue: vi.fn(),
 };
 
@@ -117,8 +118,8 @@ describe("TimesheetGrid", () => {
     expect(screen.getByRole("rowheader", { name: /Absences/ })).toBeInTheDocument();
   });
 
-  it("locks every cell when the month is validated", () => {
-    render(<TimesheetGrid {...baseProps} grid={makeGrid({ is_writable: false })} />);
+  it("locks every cell when the grid only reads", () => {
+    render(<TimesheetGrid {...baseProps} readOnly grid={makeGrid()} />);
 
     const cells = screen.getAllByRole("button", { name: /Portail bailleurs/ });
     expect(cells.every((cell) => cell.hasAttribute("disabled"))).toBe(true);
@@ -135,12 +136,7 @@ describe("TimesheetGrid", () => {
    * gesture the grid refuses.
    */
   it("states emptiness rather than inviting to add on a validated month", () => {
-    render(
-      <TimesheetGrid
-        {...baseProps}
-        grid={makeGrid({ rows: [], is_writable: false })}
-      />,
-    );
+    render(<TimesheetGrid {...baseProps} readOnly grid={makeGrid({ rows: [] })} />);
 
     expect(
       screen.getByText(/Aucun projet n'a été déclaré sur ce mois/),
@@ -232,8 +228,8 @@ describe("TimesheetGrid", () => {
     expect(totals.className).toContain("border-t-slate-500");
   });
 
-  it("offers no removal when the month is closed", () => {
-    render(<TimesheetGrid {...baseProps} grid={makeGrid({ is_writable: false })} />);
+  it("offers no removal when the grid only reads", () => {
+    render(<TimesheetGrid {...baseProps} readOnly grid={makeGrid()} />);
 
     expect(screen.queryByRole("button", { name: /^Retirer/ })).toBeNull();
   });

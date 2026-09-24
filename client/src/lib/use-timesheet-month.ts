@@ -31,6 +31,8 @@ import { assignedMissionIds, missionsToDeclare } from "@/lib/missions";
 import { withPendingEntries } from "@/lib/pending-entries";
 import { useQueryString, writeUrl } from "@/lib/url-state";
 import { usePendingEntries } from "@/lib/use-pending-entries";
+import { holds } from "@/lib/roles";
+import { useMayWrite } from "@/lib/use-may-write";
 
 /**
  * State and actions of a month's entry screen.
@@ -58,6 +60,7 @@ export function useTimesheetMonth() {
   const month = firstDayOfMonth(cursor.year, cursor.month);
 
   const { user: me } = useCurrentUser();
+  const mayWrite = useMayWrite();
   const { teammates } = useTeammates();
   const { missions, projects } = useProjects();
   const createProject = useCreateProject();
@@ -138,8 +141,18 @@ export function useTimesheetMonth() {
      * reopening is about being a manager, whoever the month belongs to. The
      * state of the month is what tells them apart, so they never show together.
      */
-    canValidate: Boolean(grid?.is_writable) && isOwnMonth,
-    canReopen: Boolean(grid && !grid.is_writable) && me?.role === "MANAGER",
+    /**
+     * Whether this month accepts the person reading.
+     *
+     * Two things at once, and both have to hold: the month is open, and the
+     * reader is not a guest. The screen asks this rather than `is_writable`,
+     * which says what is true of the *month* — a guest reading an open month
+     * would otherwise be offered every cell of it.
+     */
+    writable: Boolean(grid?.is_writable) && mayWrite,
+
+    canValidate: Boolean(grid?.is_writable) && isOwnMonth && mayWrite,
+    canReopen: Boolean(grid && !grid.is_writable) && holds(me?.role, "MANAGER"),
 
     /** Missions the viewer contributes to, offered first when adding a row. */
     assignedIds: assignedMissionIds(missions, me?.id ?? null),

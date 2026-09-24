@@ -22,8 +22,11 @@ import { since } from "@/lib/relative-dates";
 
 interface UserIdentityTabProps {
   user: UserResponse;
-  /** Managing users is reserved for managers. */
-  roleModifiable: boolean;
+  /**
+   * The roles the person reading may hand this account. Empty when they may
+   * hand none — a teammate reading, or a manager reading an admin's row.
+   */
+  assignableRoles: Role[];
   /** False on one's own account: nobody cuts off their own access. */
   canChangeStatus: boolean;
   /** Writing who a teammate is stays with the managers, like the role. */
@@ -50,7 +53,7 @@ interface UserIdentityTabProps {
  */
 export function UserIdentityTab({
   user,
-  roleModifiable,
+  assignableRoles,
   canChangeStatus,
   editable,
   isMe,
@@ -121,7 +124,7 @@ export function UserIdentityTab({
       <SheetRow title="Rôle">
         <RolePicker
           role={user.role}
-          modifiable={roleModifiable}
+          choices={assignableRoles}
           onChange={(role) => onChangeRole(user.id, role)}
         />
       </SheetRow>

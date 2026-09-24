@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.database import get_db
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.api_keys.presentation.dependencies import Caller, open_to_machines
-from src.modules.auth.presentation.dependencies import get_current_user
+from src.modules.auth.presentation.dependencies import get_contributor, get_current_user
 from src.modules.planning.application.dtos.workload_dto import (
     PersonLoadRow,
     PlannedMissionRow,
@@ -313,7 +313,7 @@ async def list_simulations(
 )
 async def save_simulation(
     body: SaveSimulationRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     session: AsyncSession = Depends(get_db),
     use_case: SaveSimulationUseCase = Depends(get_save_simulation_use_case),
 ) -> SimulationResponse:
@@ -332,7 +332,7 @@ async def save_simulation(
 async def update_simulation(
     simulation_id: int,
     body: SaveSimulationRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     session: AsyncSession = Depends(get_db),
     use_case: UpdateSimulationUseCase = Depends(get_update_simulation_use_case),
 ) -> SimulationResponse:
@@ -352,7 +352,7 @@ async def update_simulation(
 )
 async def delete_simulation(
     simulation_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     session: AsyncSession = Depends(get_db),
     use_case: DeleteSimulationUseCase = Depends(get_delete_simulation_use_case),
 ) -> Response:

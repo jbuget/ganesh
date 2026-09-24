@@ -13,6 +13,7 @@ import { useOpenedMission } from "@/lib/opened-mission";
 import { STRONG_RULE } from "@/lib/table-frame";
 import { useCurrentUser } from "@/lib/api/queries";
 import { useInbox } from "@/lib/use-inbox";
+import { holds } from "@/lib/roles";
 
 const FILTERS: { value: NotificationFilter; label: string }[] = [
   { value: "all", label: "Toutes" },
@@ -162,7 +163,7 @@ export function NotificationsPage() {
           </div>
         )}
 
-        {user?.role === "MANAGER" && <RunRemindersPanel />}
+        {holds(user?.role, "MANAGER") && <RunRemindersPanel />}
       </div>
     </PageLayout>
   );

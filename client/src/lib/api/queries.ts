@@ -13,16 +13,17 @@ import { useGetMonthGrid } from "@/lib/api/generated/entries/entries";
 import { useListTouchedProjects } from "@/lib/api/generated/audit-logs/audit-logs";
 import { useGetDigest } from "@/lib/api/generated/gazette/gazette";
 import type {
+  ActivitySummaryResponse,
   DigestResponse,
   MonthGridResponse,
-  NotificationFeedResponse,
   MyMoodsResponse,
+  NotificationFeedResponse,
   PeriodRange,
+  PlatformResponse,
   ProjectListItemResponse,
-  TouchedProjectResponse,
-  ActivitySummaryResponse,
   StatisticsResponse,
   TeamMoodsResponse,
+  TouchedProjectResponse,
   UserRecordResponse,
   UserResponse,
 } from "@/lib/api/generated/model";
@@ -30,6 +31,7 @@ import { useGetMyMoods, useGetTeamMoods } from "@/lib/api/generated/moods/moods"
 import { useListNotifications } from "@/lib/api/generated/notifications/notifications";
 import type { NotificationFilter } from "@/lib/api/generated/model";
 import { useGetActivity } from "@/lib/api/generated/activity/activity";
+import { useReadPlatform } from "@/lib/api/generated/admin/admin";
 import { useGetStatistics } from "@/lib/api/generated/stats/stats";
 import { useListProjects } from "@/lib/api/generated/projects/projects";
 import {
@@ -45,6 +47,15 @@ function successOf<T>(response: { data: unknown } | undefined): T | undefined {
 /** Same reasoning for the result of a mutation. */
 export function mutationResult<T>(response: { data: unknown }): T {
   return response.data as T;
+}
+
+/**
+ * How the platform is wired. Administrators only — it answers 403 to anyone
+ * else, which is why no screen but « Administration » asks for it.
+ */
+export function usePlatform() {
+  const query = useReadPlatform();
+  return { ...query, platform: successOf<PlatformResponse>(query.data) };
 }
 
 /** The current user. */

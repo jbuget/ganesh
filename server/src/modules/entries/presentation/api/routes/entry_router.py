@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.database import get_db
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.api_keys.presentation.dependencies import Caller, open_to_machines
-from src.modules.auth.presentation.dependencies import get_current_user
+from src.modules.auth.presentation.dependencies import get_contributor, get_current_user
 from src.modules.entries.application.dtos.set_entry_dto import (
     AddMissionCommand,
     ClearEntryCommand,
@@ -124,7 +124,7 @@ async def set_entry(
         default=None,
         description="Teammate whose month is changed.",
     ),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: SetEntryUseCase = Depends(get_set_entry_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> EntryResponse:
@@ -154,7 +154,7 @@ async def clear_entry(
     user_id: int | None = Query(
         default=None, description="Teammate whose month is changed."
     ),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: ClearEntryUseCase = Depends(get_clear_entry_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -182,7 +182,7 @@ async def add_mission_to_month(
     user_id: int | None = Query(
         default=None, description="Teammate whose month is changed."
     ),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: AddMissionToMonthUseCase = Depends(get_add_mission_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -211,7 +211,7 @@ async def remove_mission_from_month(
     user_id: int | None = Query(
         default=None, description="Teammate whose month is changed."
     ),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: RemoveMissionFromMonthUseCase = Depends(get_remove_mission_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:

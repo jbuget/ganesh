@@ -25,6 +25,8 @@ import {
 } from "@/lib/mission-filters";
 import { NO_SORT, type MissionSort } from "@/lib/mission-sort";
 import { buildProjectTree } from "@/lib/project-tree";
+import { holds } from "@/lib/roles";
+import { useMayWrite } from "@/lib/use-may-write";
 
 /**
  * State and actions of the reference list screen.
@@ -52,6 +54,7 @@ export function useProjectsScreen(
   // A move the server turned away: the table shows the reference list as it
   // is, so the refusal has to be said in words.
   const [attachFailed, setAttachFailed] = useState(false);
+  const mayWrite = useMayWrite();
 
   const toggle = useCallback((id: number) => {
     setExpanded((current) => {
@@ -67,7 +70,9 @@ export function useProjectsScreen(
 
   return {
     isLoading,
-    isManager: me?.role === "MANAGER",
+    isManager: holds(me?.role, "MANAGER"),
+    /** Whether the person reading may change the reference list at all. */
+    mayWrite,
     tree: buildProjectTree(kept, sorted),
 
     /** Missions kept, and missions the reference list carries in all. */

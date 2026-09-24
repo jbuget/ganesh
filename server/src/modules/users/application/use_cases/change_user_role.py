@@ -18,7 +18,11 @@ from src.shared.utils import clock
 
 
 class ChangeUserRoleUseCase:
-    """Promotes or demotes a teammate. Managers only."""
+    """Promotes or demotes a teammate.
+
+    Managers and above, within what they hold: the two bounds live on the
+    entity, which is where they are tested.
+    """
 
     def __init__(
         self,
@@ -34,12 +38,15 @@ class ChangeUserRoleUseCase:
         actor = await self._users.get_by_id(command.actor_id)
         if actor is None:
             raise EntityNotFoundError("The user cannot be found.")
-        if not actor.can_manage_teammates():
-            raise ForbiddenActionError("Only a manager can change a teammate's role.")
 
         target = await self._users.get_by_id(command.target_user_id)
         if target is None:
             raise EntityNotFoundError("The teammate cannot be found.")
+
+        if not actor.can_change_role_of(target, command.role):
+            raise ForbiddenActionError(
+                "This role cannot be handed out by this account."
+            )
 
         previous = target.role
         target.role = command.role

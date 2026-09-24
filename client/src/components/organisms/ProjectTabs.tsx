@@ -13,6 +13,8 @@ import { ProjectSheetTab } from "@/components/organisms/ProjectSheetTab";
 import { ProjectUpdatesTab } from "@/components/organisms/ProjectUpdatesTab";
 import { useState } from "react";
 
+import { useMayWrite } from "@/lib/use-may-write";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { SheetFields } from "@/lib/service-sheet";
 import type {
@@ -100,6 +102,9 @@ export function ProjectTabs({
   // Freezes the reference time for the duration of the visit: « il y a 3
   // min » must not recompute on every render, and the thread is only
   // loaded after mounting anyway — nothing is rendered server-side.
+  // Read here rather than handed down: the panel and the full-page sheet
+  // both draw these tabs, and a right read twice could be read differently.
+  const mayWrite = useMayWrite();
   const [now] = useState(() => new Date());
   const [isDeleteOpen, setDeleteOpen] = useState(false);
   const [isAttachOpen, setAttachOpen] = useState(false);
@@ -144,16 +149,24 @@ export function ProjectTabs({
           <TabsTrigger value="audit">Journal</TabsTrigger>
         </TabsList>
 
-        <MissionMenu
-          archived={!detail.project.is_active}
-          onAddSubProject={canCarryAPackage ? () => setSubProjectOpen(true) : undefined}
-          onAttach={canBeAttached ? () => setAttachOpen(true) : undefined}
-          onDetach={belongsToAProject ? detach : undefined}
-          parentLabel={detail.parent?.label ?? null}
-          onArchive={liveSubProjects > 0 ? () => setArchiveOpen(true) : () => archive()}
-          onUnarchive={unarchive}
-          onDelete={() => setDeleteOpen(true)}
-        />
+        {/* Every entry of the menu writes — declaring, attaching, archiving,
+            deleting. Nothing of it is left for a guest, so it goes whole. */}
+        {mayWrite && (
+          <MissionMenu
+            archived={!detail.project.is_active}
+            onAddSubProject={
+              canCarryAPackage ? () => setSubProjectOpen(true) : undefined
+            }
+            onAttach={canBeAttached ? () => setAttachOpen(true) : undefined}
+            onDetach={belongsToAProject ? detach : undefined}
+            parentLabel={detail.parent?.label ?? null}
+            onArchive={
+              liveSubProjects > 0 ? () => setArchiveOpen(true) : () => archive()
+            }
+            onUnarchive={unarchive}
+            onDelete={() => setDeleteOpen(true)}
+          />
+        )}
       </div>
 
       {/* The same dialog as elsewhere: declaring a package asks exactly what
@@ -217,6 +230,7 @@ export function ProjectTabs({
       <TabsContent value="steering">
         <ProjectSteeringTab
           detail={detail}
+          editable={mayWrite}
           onChange={onChange}
           saveSheet={saveSheet}
           changePhase={changePhase}
@@ -229,6 +243,7 @@ export function ProjectTabs({
         <ProjectUpdatesTab
           projectId={detail.project.id}
           now={now}
+          editable={mayWrite}
           onChange={onChange}
           aimedAt={aimedAt}
           // Coming from the counter, one comes to write: the cursor is already
@@ -240,12 +255,17 @@ export function ProjectTabs({
       </TabsContent>
 
       <TabsContent value="files">
-        <ProjectAttachmentsTab projectId={detail.project.id} onChange={onChange} />
+        <ProjectAttachmentsTab
+          projectId={detail.project.id}
+          editable={mayWrite}
+          onChange={onChange}
+        />
       </TabsContent>
 
       <TabsContent value="catalog" className="min-h-0 flex-1">
         <ProjectSheetTab
           detail={detail}
+          editable={mayWrite}
           updateFields={updateFields}
           saveDescription={saveDescription}
           saveRegistry={saveRegistry}

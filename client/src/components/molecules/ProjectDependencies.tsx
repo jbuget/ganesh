@@ -11,6 +11,14 @@ import { useProjects } from "@/lib/api/queries";
 interface ProjectDependenciesProps {
   projectId: number;
   dependencies: MissionRefResponse[];
+  /**
+   * Whether the reader may change it.
+   *
+   * Editable by default: a field one cannot change is the exception, and it
+   * is the screen holding the field that knows — a guest reads every sheet of
+   * the reference list and rewrites none.
+   */
+  editable?: boolean;
   onChange: (dependsOn: number[]) => void | Promise<void>;
 }
 
@@ -25,6 +33,7 @@ interface ProjectDependenciesProps {
 export function ProjectDependencies({
   projectId,
   dependencies,
+  editable = true,
   onChange,
 }: ProjectDependenciesProps) {
   const { missions } = useProjects();
@@ -58,65 +67,69 @@ export function ProjectDependencies({
           className="flex items-center gap-1 rounded border border-slate-200 bg-white py-0.5 pr-1 pl-2 text-sm text-slate-700"
         >
           {dependency.label}
-          <button
-            type="button"
-            aria-label={`Retirer ${dependency.label}`}
-            onClick={() => toggle(dependency.id)}
-            className="cursor-pointer rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-          >
-            <X className="size-3" aria-hidden />
-          </button>
+          {editable && (
+            <button
+              type="button"
+              aria-label={`Retirer ${dependency.label}`}
+              onClick={() => toggle(dependency.id)}
+              className="cursor-pointer rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            >
+              <X className="size-3" aria-hidden />
+            </button>
+          )}
         </span>
       ))}
 
-      <Popover open={isOpen} onOpenChange={setOpen}>
-        <PopoverTrigger
-          aria-label="Dépendances"
-          className="flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 text-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-        >
-          <Plus className="size-3.5" aria-hidden />
-          {dependencies.length === 0 ? "Dépendances" : "Ajouter"}
-        </PopoverTrigger>
+      {editable && (
+        <Popover open={isOpen} onOpenChange={setOpen}>
+          <PopoverTrigger
+            aria-label="Dépendances"
+            className="flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 text-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+          >
+            <Plus className="size-3.5" aria-hidden />
+            {dependencies.length === 0 ? "Dépendances" : "Ajouter"}
+          </PopoverTrigger>
 
-        <PopoverContent align="start" className="w-72 p-1">
-          <div className="flex items-center gap-2 border-b border-slate-200 px-2 pb-1.5">
-            <Search className="size-3.5 shrink-0 text-slate-400" aria-hidden />
-            <input
-              type="text"
-              autoFocus
-              value={search}
-              placeholder="Rechercher un projet…"
-              aria-label="Rechercher un projet"
-              onChange={(event) => setSearch(event.target.value)}
-              className="min-w-0 flex-1 bg-transparent py-0.5 text-sm focus:outline-none"
-            />
-          </div>
+          <PopoverContent align="start" className="w-72 p-1">
+            <div className="flex items-center gap-2 border-b border-slate-200 px-2 pb-1.5">
+              <Search className="size-3.5 shrink-0 text-slate-400" aria-hidden />
+              <input
+                type="text"
+                autoFocus
+                value={search}
+                placeholder="Rechercher un projet…"
+                aria-label="Rechercher un projet"
+                onChange={(event) => setSearch(event.target.value)}
+                className="min-w-0 flex-1 bg-transparent py-0.5 text-sm focus:outline-none"
+              />
+            </div>
 
-          {offered.length === 0 ? (
-            <p className="px-2 py-3 text-center text-sm text-slate-400">
-              Aucun projet ne correspond.
-            </p>
-          ) : (
-            <ul className="max-h-64 overflow-y-auto pt-1">
-              {offered.map((mission) => (
-                <li key={mission.id}>
-                  <button
-                    type="button"
-                    aria-pressed={chosen.includes(mission.id)}
-                    onClick={() => toggle(mission.id)}
-                    className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
-                  >
-                    <span className="min-w-0 flex-1 truncate">{mission.label}</span>
-                    {chosen.includes(mission.id) && (
-                      <Check className="size-4 shrink-0 text-sky-600" aria-hidden />
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </PopoverContent>
-      </Popover>
+            {offered.length === 0 ? (
+              <p className="px-2 py-3 text-center text-sm text-slate-400">
+                Aucun projet ne correspond.
+              </p>
+            ) : (
+              <ul className="max-h-64 overflow-y-auto pt-1">
+                {offered.map((mission) => (
+                  <li key={mission.id}>
+                    <button
+                      type="button"
+                      aria-pressed={chosen.includes(mission.id)}
+                      onClick={() => toggle(mission.id)}
+                      className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
+                    >
+                      <span className="min-w-0 flex-1 truncate">{mission.label}</span>
+                      {chosen.includes(mission.id) && (
+                        <Check className="size-4 shrink-0 text-sky-600" aria-hidden />
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   );
 }
