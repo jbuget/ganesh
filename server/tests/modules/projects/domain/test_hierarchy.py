@@ -1,4 +1,4 @@
-"""The hierarchy of the reference list stops at two levels."""
+"""The hierarchy of the reference list stops at three levels."""
 
 import pytest
 
@@ -21,6 +21,7 @@ from src.modules.projects.domain.services.hierarchy import (
     ensure_sub_projects_are_settled,
     with_resolved_category,
 )
+from src.shared.enums.work_nature import WorkNature
 from src.shared.exceptions.domain_exceptions import ValidationError
 
 
@@ -40,23 +41,23 @@ def work_package() -> Project:
     )
 
 
-def activity() -> Project:
+def off_project() -> Project:
     return Project(id=3, label="Absences", kind=ProjectKind.OFF_PROJECT, status=None)
 
 
 def test_a_project_can_carry_work_packages() -> None:
-    ensure_can_be_parent(project())
+    ensure_can_be_parent(project(), ProjectKind.WORK_PACKAGE)
 
 
 def test_a_work_package_cannot_carry_another_one() -> None:
-    """Two levels are enough: a sub-sub-project makes no sense here."""
+    """A sub-sub-project makes no sense: a package carries activities."""
     with pytest.raises(ValidationError, match="sub-project"):
-        ensure_can_be_parent(work_package())
+        ensure_can_be_parent(work_package(), ProjectKind.WORK_PACKAGE)
 
 
-def test_an_off_project_activity_cannot_carry_anything() -> None:
+def test_off_project_work_cannot_carry_anything() -> None:
     with pytest.raises(ValidationError):
-        ensure_can_be_parent(activity())
+        ensure_can_be_parent(off_project(), ProjectKind.WORK_PACKAGE)
 
 
 def test_a_project_carries_its_own_category() -> None:
@@ -146,11 +147,11 @@ class TestAttaching:
     def test_off_project_work_cannot_be_attached(self) -> None:
         """Absences and training are not a slice of a project."""
         with pytest.raises(ValidationError, match="off-project"):
-            ensure_can_be_attached(activity(), parent=published(), sub_projects=0)
+            ensure_can_be_attached(off_project(), parent=published(), sub_projects=0)
 
     def test_a_project_carrying_sub_projects_cannot_be_attached(self) -> None:
-        """Attaching it would open a third level, which the list does not read."""
-        with pytest.raises(ValidationError, match="two levels"):
+        """It would put a sub-project under a sub-project."""
+        with pytest.raises(ValidationError, match="carries no sub-project"):
             ensure_can_be_attached(project(), parent=published(), sub_projects=2)
 
     def test_a_published_project_cannot_be_attached(self) -> None:
@@ -158,8 +159,9 @@ class TestAttaching:
         with pytest.raises(ValidationError, match="catalogue"):
             ensure_can_be_attached(published(), parent=project(), sub_projects=0)
 
-    def test_nothing_can_be_attached_under_a_work_package(self) -> None:
-        with pytest.raises(ValidationError, match="two levels"):
+    def test_a_project_cannot_be_attached_under_a_work_package(self) -> None:
+        """What a package refuses is a package; activities hang under it."""
+        with pytest.raises(ValidationError, match="already a sub-project"):
             ensure_can_be_attached(project(), parent=work_package(), sub_projects=0)
 
 
@@ -190,3 +192,41 @@ class TestArchivingAProjectCutIntoPackages:
         """Left behind, they would be steered on behalf of a project gone."""
         with pytest.raises(ValidationError, match="sub-project"):
             ensure_sub_projects_are_settled(project(), sub_projects=3, policy=None)
+
+
+# --- The third level --------------------------------------------------------
+
+
+def an_activity() -> Project:
+    return Project(
+        id=3,
+        label="Chefferie de projet",
+        kind=ProjectKind.WORKSTREAM,
+        status=None,
+        parent_id=2,
+        nature=WorkNature.PROJECT_MANAGEMENT,
+    )
+
+
+def test_a_project_can_carry_an_activity() -> None:
+    ensure_can_be_parent(project(), ProjectKind.WORKSTREAM)
+
+
+def test_a_work_package_can_carry_an_activity() -> None:
+    """The level a package refuses is another package, never an activity."""
+    ensure_can_be_parent(work_package(), ProjectKind.WORKSTREAM)
+
+
+def test_an_activity_cannot_carry_an_activity() -> None:
+    with pytest.raises(ValidationError, match="three levels"):
+        ensure_can_be_parent(an_activity(), ProjectKind.WORKSTREAM)
+
+
+def test_an_activity_cannot_carry_a_work_package() -> None:
+    with pytest.raises(ValidationError, match="three levels"):
+        ensure_can_be_parent(an_activity(), ProjectKind.WORK_PACKAGE)
+
+
+def test_off_project_work_cannot_carry_an_activity() -> None:
+    with pytest.raises(ValidationError):
+        ensure_can_be_parent(off_project(), ProjectKind.WORKSTREAM)

@@ -153,7 +153,7 @@ class TestAttaching:
         )
         attach, _, _, _ = build([edit(), version_one(), package])
 
-        with pytest.raises(ValidationError, match="two levels"):
+        with pytest.raises(ValidationError, match="carries no sub-project"):
             await attach.execute(
                 AttachProjectCommand(actor_id=1, project_id=20, parent_id=10)
             )
@@ -169,7 +169,7 @@ class TestAttaching:
         )
         attach, _, _, _ = build([edit(), version_one(), package])
 
-        with pytest.raises(ValidationError, match="two levels"):
+        with pytest.raises(ValidationError, match="already a sub-project"):
             await attach.execute(
                 AttachProjectCommand(actor_id=1, project_id=20, parent_id=30)
             )

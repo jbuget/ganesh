@@ -50,7 +50,7 @@ class CreateProjectUseCase:
                 raise EntityNotFoundError(
                     "The parent project of the work package cannot be found."
                 )
-            ensure_can_be_parent(parent)
+            ensure_can_be_parent(parent, command.kind)
 
         project = await self._projects.add(
             Project(

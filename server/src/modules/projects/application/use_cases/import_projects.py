@@ -88,7 +88,7 @@ class ImportProjectsUseCase:
                 raise EntityNotFoundError(
                     f"parent project « {line.parent_label} » not found."
                 )
-            ensure_can_be_parent(parent)
+            ensure_can_be_parent(parent, line.kind)
             parent_id = parent.id
 
         return await self._projects.add(
