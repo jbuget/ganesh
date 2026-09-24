@@ -64,6 +64,10 @@ These rules are tested **at the domain level**, independently of the API and of
 the UI:
 
 - An entry is `0.5` or `1.0`, never anything else.
+- **A project or a work package is declared on through one of its activities,
+  never directly.** Off-project work is the exception and is declared on as
+  itself: absences carry neither estimate nor trade, and an activity for them
+  would be one more click for nothing.
 - **No entry is possible on a non-working day** (weekend or French public
   holiday). The domain carries the rule and the API refuses the write: locking
   the cell on the client is only its reflection.
@@ -77,6 +81,9 @@ the UI:
   synced.
 - A project cut into work packages cannot leave the reference list without
   saying what becomes of them.
+- **The estimate lives on the activity, never on the mission.** A mission
+  reads the sum of what its trades are budgeted at, and reads nothing at all
+  while one of them is left unbudgeted.
 - Every action that matters is traced in `audit_log`.
 
 ### What the log holds
@@ -137,6 +144,46 @@ say, and the rules that keep it cheap.
   nothing left to react to. The signs already left go with the text.
 - One takes back one's own sign and nobody else's — the command names its
   actor and there is no id to pass for somebody else.
+
+### The trades a mission is cut into
+
+An estimate is counted in build days. The moment a chef de projet books
+against the mission, those days come off the same figure and the ratio turns
+red on a mission whose development is perfectly in the clear. The activity is
+what fixes it: a mission is cut into the trades its days are booked under, and
+each carries the budget for its own.
+
+- **A day is booked against an activity, never against the mission.** That is
+  the whole point of the level, and the domain refuses the write rather than
+  trusting a screen to lock the cell. A mission carrying no activity cannot be
+  declared on at all, and the sheet says so.
+- **The estimate descends with it.** Mission and work package hold none of
+  their own any more; they sum. One trade left unbudgeted leaves the mission
+  unestimated rather than summing what happens to be filled in — a ratio drawn
+  from half a budget announces an overrun nobody measured, in red, on a screen
+  people steer by.
+- **The list therefore reads three levels**: a project, its work packages, and
+  under either of them the activities. It stops there. A work package carries
+  activities and never another package.
+- **An activity holds nothing that steers.** No phase, no urgency, no
+  strategic axis, no catalogue entry — it reads all of it from the mission
+  above. The entity has no field for any of them rather than a rule refusing
+  each one, which is why it is a table of its own rather than a fourth
+  `ProjectKind`: an entity defined by what it does not carry is in the wrong
+  place.
+- **It never reaches the Kanban.** The board steers missions; one card per
+  trade would bury the dozen that decide something. The reference list is
+  where a mission is unfolded into its trades.
+- **`WorkNature` is closed, and it names a hat rather than an act** —
+  développement, design, chefferie de projet, delivery. Here a developer also
+  does the ops and a designer does both UX and UI: naming the act would leave
+  a developer's day on Terraform undecidable. It answers « en tant que quoi »,
+  never « sur quoi », and nothing in the domain branches on it — it is read,
+  never computed with. Adding one is a decision about the organisation, so it
+  lives in the domain beside `Department` rather than in a table somebody can
+  extend between two meetings.
+- What the reprise took over carries no trade: nobody ever declared which one
+  those days were spent under, and filling one in would invent it.
 
 ### Leaving the reference list
 
