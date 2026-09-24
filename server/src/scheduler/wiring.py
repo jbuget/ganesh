@@ -14,7 +14,7 @@ from src.modules.notifications.presentation.dependencies import (
     build_send_due_reminders_use_case,
 )
 from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
-from src.scheduler.claim import claim
+from src.scheduler.claim import claim, release
 from src.scheduler.clock import ReminderClock
 
 logger = logging.getLogger(__name__)
@@ -34,6 +34,10 @@ def build_clock(settings: Settings) -> ReminderClock | None:
     async def claim_run(job: str, due_on: date, at: datetime) -> bool:
         async with AsyncSessionLocal() as session:
             return await claim(session, job, due_on, at)
+
+    async def release_run(job: str, due_on: date) -> None:
+        async with AsyncSessionLocal() as session:
+            await release(session, job, due_on)
 
     async def run_round(cadence: ReminderCadence, now: datetime) -> int:
         async with AsyncSessionLocal() as session:
@@ -59,4 +63,5 @@ def build_clock(settings: Settings) -> ReminderClock | None:
         tick_seconds=settings.reminder_tick_seconds,
         claim_run=claim_run,
         run_round=run_round,
+        release_run=release_run,
     )

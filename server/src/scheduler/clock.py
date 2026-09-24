@@ -11,6 +11,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from datetime import UTC, date, datetime, time
 
+from src.modules.notifications.domain.repositories.mailer import MailerUnavailableError
 from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.scheduler.due import JOB, PARIS, cadences_due
 
@@ -21,6 +22,9 @@ Claimer = Callable[[str, date, datetime], Awaitable[bool]]
 
 #: Writes to everybody on one cadence. Answers how many letters went out.
 Round = Callable[[ReminderCadence, datetime], Awaitable[int]]
+
+#: Gives a run back, so the next tick does it instead.
+Releaser = Callable[[str, date], Awaitable[None]]
 
 
 class ReminderClock:
@@ -37,11 +41,13 @@ class ReminderClock:
         tick_seconds: int,
         claim_run: Claimer,
         run_round: Round,
+        release_run: Releaser,
     ) -> None:
         self._send_at = send_at
         self._tick_seconds = tick_seconds
         self._claim_run = claim_run
         self._run_round = run_round
+        self._release_run = release_run
 
     async def tick(self, now: datetime) -> int:
         """One look at the clock. Answers how many letters went out.
@@ -59,7 +65,16 @@ class ReminderClock:
             if not await self._claim_run(job, due_on, now):
                 continue
             logger.info("Reminder round %s claimed for %s", cadence.value, due_on)
-            sent += await self._run_round(cadence, now)
+            try:
+                sent += await self._run_round(cadence, now)
+            except MailerUnavailableError as error:
+                # The feature being off, not a letter lost. Said once, as a
+                # sentence rather than as a stack trace repeated per recipient,
+                # and the run is given back so the next tick retries it —
+                # without this, a key refused at 8 h 30 costs the whole day.
+                logger.error("Reminder round %s not sent: %s", cadence.value, error)
+                await self._release_run(job, due_on)
+                break
         return sent
 
     async def run_forever(self) -> None:

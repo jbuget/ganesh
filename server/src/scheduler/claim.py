@@ -13,7 +13,7 @@ not re-send the round of 8 h 30, and neither does a crash-restart.
 
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, String
+from sqlalchemy import Date, DateTime, String, delete
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
@@ -49,3 +49,22 @@ async def claim(session: AsyncSession, job: str, due_on: date, at: datetime) -> 
     )
     await session.commit()
     return bool(result.rowcount)
+
+
+async def release(session: AsyncSession, job: str, due_on: date) -> None:
+    """Gives the run back, so the next tick does it instead.
+
+    For the one failure worth retrying within the day: there was nowhere to
+    post anything. The claim is taken before the work — it has to be, or two
+    processes would both do it — so without this a key refused at 8 h 30 and
+    fixed at 9 h would still cost the whole day.
+
+    Whoever was already written to keeps their stamp, so the retry writes to
+    the rest and to nobody twice.
+    """
+    await session.execute(
+        delete(ScheduledRunModel).where(
+            ScheduledRunModel.job == job, ScheduledRunModel.due_on == due_on
+        )
+    )
+    await session.commit()

@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.scheduler.claim import claim
+from src.scheduler.claim import claim, release
 
 pytestmark = pytest.mark.db
 
@@ -50,3 +50,32 @@ async def test_the_next_day_is_a_run_of_its_own(db_session: AsyncSession) -> Non
     await claim(db_session, "reminder:daily", DAY, AT)
 
     assert await claim(db_session, "reminder:daily", date(2026, 9, 24), AT) is True
+
+
+async def test_a_released_run_can_be_taken_again(db_session: AsyncSession) -> None:
+    # What turns « the key was wrong at 8 h 30 » from a lost day into a
+    # five-minute delay.
+    await claim(db_session, "reminder:daily", DAY, AT)
+
+    await release(db_session, "reminder:daily", DAY)
+
+    assert await claim(db_session, "reminder:daily", DAY, AT) is True
+
+
+async def test_releasing_a_run_leaves_the_others_alone(
+    db_session: AsyncSession,
+) -> None:
+    await claim(db_session, "reminder:daily", DAY, AT)
+    await claim(db_session, "reminder:weekly", DAY, AT)
+
+    await release(db_session, "reminder:daily", DAY)
+
+    assert await claim(db_session, "reminder:weekly", DAY, AT) is False
+
+
+async def test_releasing_a_run_nobody_took_is_a_no_op(
+    db_session: AsyncSession,
+) -> None:
+    await release(db_session, "reminder:daily", DAY)
+
+    assert await claim(db_session, "reminder:daily", DAY, AT) is True
