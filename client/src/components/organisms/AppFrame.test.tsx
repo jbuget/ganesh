@@ -52,7 +52,7 @@ describe("AppFrame", () => {
   });
 
   it("opens no door to whoever only comes to ask for something", () => {
-    user.current = { id: 7, role: "REQUESTER" };
+    user.current = { id: 7, role: "GUEST" };
     pathname.current = "/requests";
 
     draw();
@@ -62,7 +62,7 @@ describe("AppFrame", () => {
   });
 
   it("sends a requester back to their own screen", () => {
-    user.current = { id: 7, role: "REQUESTER" };
+    user.current = { id: 7, role: "GUEST" };
     pathname.current = "/timesheet";
 
     draw();

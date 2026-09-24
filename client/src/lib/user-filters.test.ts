@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import type { UserResponse } from "@/lib/api/generated/model";
 import {
   NO_USER_FILTER,
-  hiddenRequesters,
-  withRequesters,
+  hiddenGuests,
+  withGuests,
   filterUsers,
   hasActiveUserFilter,
   readUserFilters,
@@ -73,7 +73,7 @@ describe("filterUsers", () => {
     const team = [
       teammate("Chef", { role: "MANAGER" }),
       teammate("Métier", {
-        role: "REQUESTER",
+        role: "GUEST",
       }),
     ];
 
@@ -84,13 +84,13 @@ describe("filterUsers", () => {
     const team = [
       teammate("Chef", { role: "MANAGER" }),
       teammate("Métier", {
-        role: "REQUESTER",
+        role: "GUEST",
       }),
     ];
 
-    expect(
-      names(filterUsers(team, { ...NO_USER_FILTER, roles: ["REQUESTER"] })),
-    ).toEqual(["Métier"]);
+    expect(names(filterUsers(team, { ...NO_USER_FILTER, roles: ["GUEST"] }))).toEqual([
+      "Métier",
+    ]);
   });
 
   it("stacks the criteria: a manager whose name is searched", () => {
@@ -130,7 +130,7 @@ describe("readUserFilters", () => {
   });
 
   it("ignores a value it does not know rather than emptying the screen", () => {
-    const params = new URLSearchParams("role=ADMIN&state=zombie");
+    const params = new URLSearchParams("role=INTERN&state=zombie");
 
     expect(readUserFilters(params)).toEqual(NO_USER_FILTER);
   });
@@ -163,25 +163,25 @@ describe("writeUserFilters", () => {
 describe("the requesters the list keeps out of sight", () => {
   const team = [
     teammate("Chef", { role: "MANAGER" }),
-    teammate("Métier", { role: "REQUESTER" }),
-    teammate("Compta", { role: "REQUESTER" }),
+    teammate("Métier", { role: "GUEST" }),
+    teammate("Compta", { role: "GUEST" }),
   ];
 
   it("counts what one more click would bring", () => {
-    expect(hiddenRequesters(team, NO_USER_FILTER)).toBe(2);
+    expect(hiddenGuests(team, NO_USER_FILTER)).toBe(2);
   });
 
   it("counts nothing once they are asked for", () => {
-    expect(hiddenRequesters(team, { ...NO_USER_FILTER, roles: ["REQUESTER"] })).toBe(0);
+    expect(hiddenGuests(team, { ...NO_USER_FILTER, roles: ["GUEST"] })).toBe(0);
   });
 
   it("counts only those the other criteria would keep", () => {
     // A figure promising rows a search would still hide is a figure that lies.
-    expect(hiddenRequesters(team, { ...NO_USER_FILTER, name: "compta" })).toBe(1);
+    expect(hiddenGuests(team, { ...NO_USER_FILTER, name: "compta" })).toBe(1);
   });
 
   it("shows them beside the team rather than instead of it", () => {
-    const shown = filterUsers(team, withRequesters(NO_USER_FILTER));
+    const shown = filterUsers(team, withGuests(NO_USER_FILTER));
 
     expect(names(shown)).toEqual(["Chef", "Métier", "Compta"]);
   });
@@ -189,7 +189,7 @@ describe("the requesters the list keeps out of sight", () => {
   it("adds them to a criterion already set", () => {
     const shown = filterUsers(
       team,
-      withRequesters({ ...NO_USER_FILTER, roles: ["MANAGER"] }),
+      withGuests({ ...NO_USER_FILTER, roles: ["MANAGER"] }),
     );
 
     expect(names(shown)).toEqual(["Chef", "Métier", "Compta"]);

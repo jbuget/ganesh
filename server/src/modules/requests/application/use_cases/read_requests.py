@@ -30,7 +30,7 @@ class GetRequestUseCase:
         if request is None:
             raise EntityNotFoundError("The request cannot be found.")
 
-        if not request.is_readable_by(actor_id, not reader.is_requester):
+        if not request.is_readable_by(actor_id, not reader.is_guest):
             raise ForbiddenActionError("This request is not yours to read.")
 
         return await describe(self._users, request)
@@ -61,7 +61,7 @@ class ListRequestsUseCase:
         viewer = await self._users.get_by_id(viewer_id)
         if viewer is None:
             raise EntityNotFoundError("The user cannot be found.")
-        if viewer.is_requester:
+        if viewer.is_guest:
             raise ForbiddenActionError("This list is the team's.")
 
         return [

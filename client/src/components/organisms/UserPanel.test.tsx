@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import type { UserResponse } from "@/lib/api/generated/model";
+import type { Role, UserResponse } from "@/lib/api/generated/model";
 
 import { UserPanel } from "./UserPanel";
 
@@ -42,12 +42,18 @@ const onClose = vi.fn();
 
 function openPanel(
   user: Partial<UserResponse> = {},
-  { roleModifiable = false, canChangeStatus = false, editable = false } = {},
+  {
+    roleModifiable = false,
+    canChangeStatus = false,
+    editable = false,
+    grantable = ["GUEST", "TEAMMATE", "MANAGER"] as Role[],
+  } = {},
 ) {
   render(
     <UserPanel
       user={{ ...jeremy, ...user }}
       roleModifiable={roleModifiable}
+      grantable={grantable}
       canChangeStatus={canChangeStatus}
       editable={editable}
       onChangeRole={onChangeRole}

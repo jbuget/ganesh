@@ -35,7 +35,7 @@ def test_a_deactivated_account_is_turned_away() -> None:
 def test_a_requester_is_turned_away() -> None:
     """The door opens on the application; the requests open their own."""
     with pytest.raises(HTTPException) as refusal:
-        admit(make_user(Role.REQUESTER))
+        admit(make_user(Role.GUEST))
 
     assert refusal.value.status_code == 403
 

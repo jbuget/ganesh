@@ -52,6 +52,7 @@ export * from "./dayTotalResponse";
 export * from "./decideRequestRequest";
 export * from "./declaredMissionResponse";
 export * from "./declaredWindowResponse";
+export * from "./declareUserRequest";
 export * from "./department";
 export * from "./digestResponse";
 export * from "./digestVersionResponse";

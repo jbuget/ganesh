@@ -30,8 +30,15 @@ import { since } from "@/lib/relative-dates";
 
 interface UserPanelProps {
   user: UserResponse;
-  /** Managing users is reserved for managers. */
+  /**
+   * Whether this reader may move this account on the ladder.
+   *
+   * Not « is a manager » any more: nobody changes their own rank, and nobody
+   * touches somebody standing above them.
+   */
   roleModifiable: boolean;
+  /** The ranks this reader may hand out — never above their own. */
+  grantable: Role[];
   /** False on one's own account: nobody cuts off their own access. */
   canChangeStatus: boolean;
   /** Writing who a teammate is stays with the managers, like the role. */
@@ -64,6 +71,7 @@ interface UserPanelProps {
 export function UserPanel({
   user,
   roleModifiable,
+  grantable,
   canChangeStatus,
   editable,
   onChangeRole,
@@ -183,6 +191,7 @@ export function UserPanel({
           <RolePicker
             role={user.role}
             modifiable={roleModifiable}
+            grantable={grantable}
             onChange={(role) => onChangeRole(user.id, role)}
           />
         </SheetRow>

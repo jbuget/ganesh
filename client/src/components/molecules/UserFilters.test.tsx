@@ -13,7 +13,7 @@ const bar = (over: Partial<Criteria> = {}, hidden = 0) => {
   const filters = { ...NO_USER_FILTER, ...over };
   const onChange = vi.fn();
   const onClear = vi.fn();
-  const onShowRequesters = vi.fn();
+  const onShowGuests = vi.fn();
   render(
     <UserFilters
       filters={filters}
@@ -23,10 +23,10 @@ const bar = (over: Partial<Criteria> = {}, hidden = 0) => {
       visible={3}
       total={12}
       hidden={hidden}
-      onShowRequesters={onShowRequesters}
+      onShowGuests={onShowGuests}
     />,
   );
-  return { onChange, onClear, onShowRequesters };
+  return { onChange, onClear, onShowGuests };
 };
 
 describe("UserFilters", () => {
@@ -83,13 +83,13 @@ describe("UserFilters", () => {
 });
 
 describe("what the list is not showing", () => {
-  it("says how many requesters it keeps out of sight", () => {
+  it("says how many guests it keeps out of sight", () => {
     // Fifteen rows out of three hundred, with nothing said, is what makes
     // somebody look for an account they were never shown.
     bar({}, 312);
 
     expect(
-      screen.getByRole("button", { name: "Afficher les 312 demandeurs" }),
+      screen.getByRole("button", { name: "Afficher les 312 invités" }),
     ).toBeInTheDocument();
   });
 
@@ -97,7 +97,7 @@ describe("what the list is not showing", () => {
     bar({}, 1);
 
     expect(
-      screen.getByRole("button", { name: "Afficher le demandeur" }),
+      screen.getByRole("button", { name: "Afficher l'invité" }),
     ).toBeInTheDocument();
   });
 
@@ -108,12 +108,12 @@ describe("what the list is not showing", () => {
   });
 
   it("brings them into the list on a click", async () => {
-    const { onShowRequesters } = bar({}, 312);
+    const { onShowGuests } = bar({}, 312);
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Afficher les 312 demandeurs" }),
+      screen.getByRole("button", { name: "Afficher les 312 invités" }),
     );
 
-    expect(onShowRequesters).toHaveBeenCalled();
+    expect(onShowGuests).toHaveBeenCalled();
   });
 });

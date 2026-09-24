@@ -30,6 +30,7 @@ from src.modules.projects.presentation.dependencies import (
 from src.modules.users.application.use_cases.change_user_role import (
     ChangeUserRoleUseCase,
 )
+from src.modules.users.application.use_cases.declare_user import DeclareUserUseCase
 from src.modules.users.application.use_cases.get_user_record import GetUserRecordUseCase
 from src.modules.users.application.use_cases.list_users import ListUsersUseCase
 from src.modules.users.application.use_cases.set_user_active import SetUserActiveUseCase
@@ -43,6 +44,13 @@ def get_list_users_use_case(
     users: UserRepository = Depends(get_user_repository),
 ) -> ListUsersUseCase:
     return ListUsersUseCase(users=users)
+
+
+def get_declare_user_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> DeclareUserUseCase:
+    return DeclareUserUseCase(users=users, audit_logs=audit_logs)
 
 
 def get_change_role_use_case(

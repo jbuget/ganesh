@@ -8,13 +8,16 @@
 /**
  * What a user is allowed to do.
  *
- * Declared from the least to the most: an account comes into being as a
- * requester, and a manager says afterwards who is behind it.
+ * **The declaration order is the ladder**, from the least to the most, and
+ * `rank` reads nothing else: a rung inserted in the middle lifts everything
+ * above it, which is what one wants. An account comes into being at the
+ * bottom, and somebody already above says afterwards who is behind it.
  */
 export type Role = (typeof Role)[keyof typeof Role];
 
 export const Role = {
-  REQUESTER: "REQUESTER",
+  GUEST: "GUEST",
   TEAMMATE: "TEAMMATE",
   MANAGER: "MANAGER",
+  ADMIN: "ADMIN",
 } as const;

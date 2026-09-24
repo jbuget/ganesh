@@ -17,6 +17,7 @@ import type {
 } from "@/lib/api/generated/model";
 import { mutationResult, useCurrentUser, useProjects } from "@/lib/api/queries";
 import { parseProjectsCsv } from "@/lib/csv-import";
+import { isManager } from "@/lib/roles";
 import {
   NO_FILTER,
   filterMissions,
@@ -67,7 +68,7 @@ export function useProjectsScreen(
 
   return {
     isLoading,
-    isManager: me?.role === "MANAGER",
+    isManager: isManager(me),
     tree: buildProjectTree(kept, sorted),
 
     /** Missions kept, and missions the reference list carries in all. */

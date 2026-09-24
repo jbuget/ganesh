@@ -45,8 +45,8 @@ class SetUserActiveUseCase:
 
         if not self._is_allowed(actor, target, command.is_active):
             raise ForbiddenActionError(
-                "Only a manager can cut off a teammate's access, "
-                "and nobody can cut off their own."
+                "Only a manager can cut off a teammate's access — "
+                "never their own, and never a rank above their own."
             )
 
         previous = target.is_active

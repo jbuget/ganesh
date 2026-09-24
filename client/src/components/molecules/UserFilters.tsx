@@ -20,9 +20,9 @@ interface UserFiltersProps {
   /** Teammates shown, and teammates one would see with no criterion. */
   visible: number;
   total: number;
-  /** Requesters the criteria are keeping out of sight, if any. */
+  /** Guests the criteria are keeping out of sight, if any. */
   hidden: number;
-  onShowRequesters: () => void;
+  onShowGuests: () => void;
 }
 
 /**
@@ -41,7 +41,7 @@ export function UserFilters({
   visible,
   total,
   hidden,
-  onShowRequesters,
+  onShowGuests,
 }: UserFiltersProps) {
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -79,10 +79,10 @@ export function UserFilters({
         {hidden > 0 && (
           <button
             type="button"
-            onClick={onShowRequesters}
+            onClick={onShowGuests}
             className="cursor-pointer text-sm text-slate-500 underline-offset-2 transition-colors hover:text-slate-900 hover:underline"
           >
-            {hidden > 1 ? `Afficher les ${hidden} demandeurs` : "Afficher le demandeur"}
+            {hidden > 1 ? `Afficher les ${hidden} invités` : "Afficher l'invité"}
           </button>
         )}
 

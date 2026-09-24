@@ -22,6 +22,7 @@ import type {
 
 import type {
   ChangeRoleRequest,
+  DeclareUserRequest,
   HTTPValidationError,
   ListUsersParams,
   SetActiveRequest,
@@ -357,6 +358,139 @@ export function useListUsers<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export type declareUserResponse201 = {
+  data: UserResponse;
+  status: 201;
+};
+
+export type declareUserResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type declareUserResponseSuccess = declareUserResponse201 & {
+  headers: Headers;
+};
+export type declareUserResponseError = declareUserResponse422 & {
+  headers: Headers;
+};
+
+export type declareUserResponse = declareUserResponseSuccess | declareUserResponseError;
+
+export const getDeclareUserUrl = () => {
+  return `/api/v1/users`;
+};
+
+/**
+ * Makes an account exist before its owner has ever signed in.
+ *
+ * Managers and admins, and neither of them above their own rank. The account
+ * carries no Entra id: the first sign-in claims it by its address, so an
+ * address already in the register is refused rather than duplicated.
+ * @summary Declare User
+ */
+export const declareUser = async (
+  declareUserRequest: DeclareUserRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<declareUserResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<declareUserResponse>(getDeclareUserUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(declareUserRequest),
+  });
+};
+
+export const getDeclareUserMutationKey = () => ["declareUser"] as const;
+
+export const getDeclareUserMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof declareUser>>,
+    TError,
+    DeclareUserMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof declareUser>>,
+  TError,
+  DeclareUserMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeclareUserMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof declareUser>>,
+    DeclareUserMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return declareUser(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeclareUserMutationResult = NonNullable<
+  Awaited<ReturnType<typeof declareUser>>
+>;
+export type DeclareUserMutationBody = DeclareUserRequest;
+export type DeclareUserMutationError = HTTPValidationError;
+export type DeclareUserMutationVariables = { data: DeclareUserRequest };
+
+/**
+ * @summary Declare User
+ */
+export const useDeclareUser = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof declareUser>>,
+      TError,
+      DeclareUserMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof declareUser>>,
+  TError,
+  DeclareUserMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeclareUserMutationOptions(options), queryClient);
+};
 export type getUserRecordResponse200 = {
   data: UserRecordResponse;
   status: 200;
@@ -547,7 +681,11 @@ export const getChangeUserRoleUrl = (userId: number) => {
 };
 
 /**
- * Changes a teammate's role. Managers only.
+ * Changes a teammate's role.
+ *
+ * Managers and admins. Who may put whom where is the domain's business:
+ * nobody changes their own rank, and nobody acts on somebody above them nor
+ * confers above themselves.
  * @summary Change Role
  */
 export const changeUserRole = async (

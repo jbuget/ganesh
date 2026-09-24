@@ -324,7 +324,11 @@ export function auditSentence(
       return { action: `a supprimé la simulation « ${after ?? ""} »` };
 
     case "user.create":
-      return { action: "a rejoint Ganesh" };
+      // Two ways an account comes into being, told apart by who acted: a
+      // first sign-in names itself, a declaration names whoever decided it.
+      return entry.target_user && entry.target_user.id !== entry.actor?.id
+        ? { action: `a déclaré ${who}` }
+        : { action: "a rejoint Ganesh" };
 
     case "project.create":
       return { action: "a créé le projet" };

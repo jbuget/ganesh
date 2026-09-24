@@ -35,7 +35,8 @@ const state = vi.hoisted(() => ({
   changeRole: vi.fn(),
   updateIdentity: vi.fn(),
   setActive: vi.fn(),
-  meId: 1,
+  me: { id: 1, role: "MANAGER" } as { id: number; role: string },
+  declare: vi.fn(),
   now: new Date("2026-09-17T12:00:00"),
 }));
 
@@ -78,7 +79,9 @@ describe("UsersPage", () => {
   beforeEach(() => {
     state.users = USERS.map((user) => ({ ...user }));
     state.isManager = false;
-    state.meId = 1;
+    // Who is reading, by default: a teammate. The panel offers what it offers
+    // on the rank of the reader, not on a flag beside it.
+    state.me = { id: 3, role: "TEAMMATE" };
     state.find = vi.fn(
       (id: number) => state.users.find((user) => user.id === id) ?? null,
     );
@@ -169,11 +172,25 @@ describe("UsersPage", () => {
   });
 
   it("does not offer a teammate changing a role", () => {
+    // The screen reads the account rather than a flag: what may be moved
+    // depends on the rank of whoever is looking, not only on being a manager.
     panel.openedUser = 2;
     state.isManager = false;
+    state.me = { id: 3, role: "TEAMMATE" };
     render(<UsersPage />);
 
     expect(screen.queryByRole("button", { name: /Changer le rôle/ })).toBeNull();
+  });
+
+  it("does not offer a manager touching an admin", () => {
+    panel.openedUser = 2;
+    state.isManager = true;
+    state.me = { id: 1, role: "MANAGER" };
+    state.users = [state.users[0], { ...state.users[1], role: "ADMIN" }];
+    render(<UsersPage />);
+
+    expect(screen.queryByRole("button", { name: /Changer le rôle/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Désactiver ce compte" })).toBeNull();
   });
 
   it("gives the civil name and the department in the panel", () => {
@@ -192,6 +209,7 @@ describe("UsersPage", () => {
   it("lets a manager change the role from the panel", () => {
     panel.openedUser = 2;
     state.isManager = true;
+    state.me = { id: 1, role: "MANAGER" };
     render(<UsersPage />);
 
     expect(screen.getByRole("button", { name: /Changer le rôle/ })).toBeInTheDocument();
@@ -201,7 +219,7 @@ describe("UsersPage", () => {
     // Deactivating oneself is locking oneself out: the API refuses it, and the
     // screen has no business offering a move that will be rejected.
     state.isManager = true;
-    state.meId = 1;
+    state.me = { id: 1, role: "MANAGER" };
 
     panel.openedUser = 1;
     const own = render(<UsersPage />);

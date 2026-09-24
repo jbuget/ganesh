@@ -56,7 +56,7 @@ class ProvisionUserUseCase:
                 entra_oid=identity.oid,
                 email=identity.email,
                 display_name=identity.display_name,
-                role=Role.REQUESTER,
+                role=Role.GUEST,
                 last_login_at=now,
             )
         )

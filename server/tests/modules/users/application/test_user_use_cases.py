@@ -50,6 +50,16 @@ def make_teammate() -> User:
     )
 
 
+def make_admin() -> User:
+    return User(
+        id=3,
+        entra_oid="oid-admin",
+        email="a.dmin@waat.fr",
+        display_name="A. Dmin",
+        role=Role.ADMIN,
+    )
+
+
 def build(users: list[User] | None = None):
     repo = InMemoryUserRepository(users if users is not None else [])
     audit = InMemoryAuditLogRepository()
@@ -65,7 +75,7 @@ def build(users: list[User] | None = None):
     )
 
 
-async def test_an_unknown_identity_creates_a_requester() -> None:
+async def test_an_unknown_identity_creates_a_guest() -> None:
     """The whole company signs in through Entra; the team is named by hand.
 
     An account therefore comes into being with the role that opens the least,
@@ -78,7 +88,7 @@ async def test_an_unknown_identity_creates_a_requester() -> None:
     )
 
     assert user.id is not None
-    assert user.role is Role.REQUESTER
+    assert user.role is Role.GUEST
     assert len(await repo.list_all()) == 1
 
 
@@ -131,7 +141,7 @@ async def test_a_declared_sponsor_is_claimed_rather_than_duplicated() -> None:
         display_name="Claire Direction",
         first_name="Claire",
         last_name="Direction",
-        role=Role.REQUESTER,
+        role=Role.GUEST,
         org_level=OrgLevel.COMEX,
     )
     provision, _, repo, _, _, _ = build([declared])
@@ -149,7 +159,7 @@ async def test_a_declared_sponsor_is_claimed_rather_than_duplicated() -> None:
     assert user.id == 1
     assert len(await repo.list_all()) == 1
     assert user.org_level is OrgLevel.COMEX
-    assert user.role is Role.REQUESTER
+    assert user.role is Role.GUEST
     # Entra names the account, and the civil name given on declaring them is
     # what the team keeps reading.
     assert user.display_name == "C. Direction"
@@ -170,7 +180,7 @@ async def test_a_sponsor_declared_at_another_address_is_a_second_account() -> No
         entra_oid=None,
         email="c.direction@waat.fr",
         display_name="Claire Direction",
-        role=Role.REQUESTER,
+        role=Role.GUEST,
         org_level=OrgLevel.COMEX,
     )
     provision, _, repo, _, _, _ = build([declared])
@@ -428,3 +438,80 @@ async def test_a_teammate_hears_their_account_come_back() -> None:
         NotificationKind.USER_DEACTIVATED,
         NotificationKind.USER_ACTIVATED,
     ]
+
+
+async def test_a_manager_cannot_put_anybody_at_the_top_of_the_ladder() -> None:
+    """A manager who could name an admin would be one, with an extra click."""
+    _, change_role, repo, _, _, _ = build([make_manager(), make_teammate()])
+
+    with pytest.raises(ForbiddenActionError):
+        await change_role.execute(
+            ChangeRoleCommand(actor_id=1, target_user_id=2, role=Role.ADMIN)
+        )
+
+    user = await repo.get_by_id(2)
+    assert user is not None
+    assert user.role is Role.TEAMMATE
+
+
+async def test_a_manager_cannot_demote_an_admin() -> None:
+    _, change_role, repo, _, _, _ = build([make_manager(), make_admin()])
+
+    with pytest.raises(ForbiddenActionError):
+        await change_role.execute(
+            ChangeRoleCommand(actor_id=1, target_user_id=3, role=Role.TEAMMATE)
+        )
+
+    user = await repo.get_by_id(3)
+    assert user is not None
+    assert user.role is Role.ADMIN
+
+
+async def test_an_admin_names_another_admin() -> None:
+    _, change_role, repo, _, _, _ = build([make_admin(), make_manager()])
+
+    await change_role.execute(
+        ChangeRoleCommand(actor_id=3, target_user_id=1, role=Role.ADMIN)
+    )
+
+    user = await repo.get_by_id(1)
+    assert user is not None
+    assert user.role is Role.ADMIN
+
+
+async def test_nobody_demotes_themselves() -> None:
+    """No route would promote the account back, whoever holds it."""
+    _, change_role, repo, _, _, _ = build([make_admin()])
+
+    with pytest.raises(ForbiddenActionError):
+        await change_role.execute(
+            ChangeRoleCommand(actor_id=3, target_user_id=3, role=Role.TEAMMATE)
+        )
+
+    user = await repo.get_by_id(3)
+    assert user is not None
+    assert user.role is Role.ADMIN
+
+
+async def test_a_role_set_to_what_it_already_was_leaves_no_trace() -> None:
+    _, change_role, _, audit, _, _ = build([make_manager(), make_teammate()])
+
+    await change_role.execute(
+        ChangeRoleCommand(actor_id=1, target_user_id=2, role=Role.TEAMMATE)
+    )
+
+    assert audit.logs == []
+
+
+async def test_a_manager_cannot_cut_off_an_admin() -> None:
+    """The one-way trip, taken on somebody else."""
+    _, _, repo, _, set_active, _ = build([make_manager(), make_admin()])
+
+    with pytest.raises(ForbiddenActionError):
+        await set_active.execute(
+            SetUserActiveCommand(actor_id=1, target_user_id=3, is_active=False)
+        )
+
+    user = await repo.get_by_id(3)
+    assert user is not None
+    assert user.is_active is True

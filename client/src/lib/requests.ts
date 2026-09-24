@@ -3,6 +3,7 @@ import type {
   RequestState,
   UserResponse,
 } from "@/lib/api/generated/model";
+import { isManager } from "@/lib/roles";
 
 /**
  * Where a need stands, said in French.
@@ -74,7 +75,7 @@ export function mayArbitrate(
   request: RequestResponse,
   user: UserResponse | undefined,
 ): boolean {
-  if (!user || user.role !== "MANAGER") return false;
+  if (!isManager(user)) return false;
   if (!STILL_OPEN.includes(request.state)) return false;
   if (request.requester.id === user.id) return false;
   return !request.sponsors.some((sponsor) => sponsor.id === user.id);

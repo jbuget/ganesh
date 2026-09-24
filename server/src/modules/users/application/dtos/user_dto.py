@@ -17,6 +17,24 @@ class EntraIdentity:
 
 
 @dataclass(frozen=True)
+class DeclareUserCommand:
+    """Making an account exist before its first sign-in. Managers and admins.
+
+    The civil name is not optional: declaring somebody is saying who they are,
+    and an account without it says no more than waiting for Entra would.
+    """
+
+    actor_id: int
+    email: str
+    first_name: str
+    last_name: str
+    role: Role
+    department: Department | None = None
+    github_username: str | None = None
+    org_level: OrgLevel | None = None
+
+
+@dataclass(frozen=True)
 class ChangeRoleCommand:
     """Promotion or demotion. Managers only."""
 

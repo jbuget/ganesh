@@ -15,6 +15,7 @@ import type {
 } from "@/lib/api/generated/model";
 import { useCurrentUser } from "@/lib/api/queries";
 import { sortKeys } from "@/lib/api-keys";
+import { isManager } from "@/lib/roles";
 
 /**
  * State and actions of the service accounts screen.
@@ -61,7 +62,7 @@ export function useApiKeysScreen() {
   return {
     keys,
     isLoading,
-    isManager: me?.role === "MANAGER",
+    isManager: isManager(me),
     minted,
     /** Read from the list rather than held apart: one truth on screen. */
     opened: keys.find((key) => key.id === openedId) ?? null,

@@ -4,19 +4,22 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import {
   changeUserRole,
+  declareUser,
   setUserActive,
   updateUserIdentity,
 } from "@/lib/api/generated/users/users";
 import type {
+  DeclareUserRequest,
   Role,
   UpdateUserIdentityRequest,
   UserResponse,
 } from "@/lib/api/generated/model";
 import { useCurrentUser, useTeammates } from "@/lib/api/queries";
+import { isManager } from "@/lib/roles";
 import {
   NO_USER_FILTER,
   filterUsers,
-  hiddenRequesters,
+  hiddenGuests,
   type UserFilters,
 } from "@/lib/user-filters";
 import { NO_USER_SORT, sortUsers, type UserSort } from "@/lib/user-sort";
@@ -44,10 +47,15 @@ export function useUsersScreen(
 
   return {
     isLoading,
-    isManager: me?.role === "MANAGER",
-    // Nobody cuts off their own access: the account would be turned away on
-    // the next request, and no one could reopen it from inside.
-    meId: me?.id,
+    isManager: isManager(me),
+    /**
+     * Who is signed in — read for their rank, not only for their id.
+     *
+     * Nobody touches their own account, and nobody touches one standing above
+     * their own: both answers need the rank, so the screen is handed the
+     * account rather than an id.
+     */
+    me,
 
     // One reference instant per render: without it, two rows of the same list
     // would compare against two different « now ».
@@ -67,17 +75,28 @@ export function useUsersScreen(
     total: filterUsers(teammates, { ...NO_USER_FILTER, states: filters.states }).length,
 
     /**
-     * How many requesters the list is keeping out of sight.
+     * How many guests the list is keeping out of sight.
      *
      * The screen says it rather than leaving the reader to wonder: everybody
      * at WAAT signs in through the same tenant, and a list showing fifteen
      * rows out of three hundred owes them that much.
      */
-    hidden: hiddenRequesters(teammates, filters),
+    hidden: hiddenGuests(teammates, filters),
 
     /** The teammate a panel is opened on, deactivated or not. */
     find: (userId: number) =>
       teammates.find((teammate) => teammate.id === userId) ?? null,
+
+    /**
+     * Makes an account exist before its owner has ever signed in.
+     *
+     * The refusal is left to travel: the address is the one thing the API can
+     * turn down on its own, and the dialog says so where it was typed.
+     */
+    async declare(declaration: DeclareUserRequest) {
+      await declareUser(declaration);
+      await queryClient.invalidateQueries();
+    },
 
     async changeRole(userId: number, role: Role) {
       await changeUserRole(userId, { role });

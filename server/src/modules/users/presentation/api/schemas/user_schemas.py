@@ -32,6 +32,25 @@ class UserResponse(BaseModel):
     org_level: OrgLevel | None = None
 
 
+class DeclareUserRequest(BaseModel):
+    """Declaring a teammate before their first sign-in.
+
+    The civil name is required where the identity sheet leaves it optional:
+    an account nobody has named is what a first sign-in already produces, so
+    declaring one would say nothing.
+    """
+
+    email: str = Field(max_length=255)
+    first_name: str = Field(min_length=1, max_length=255)
+    last_name: str = Field(min_length=1, max_length=255)
+    #: Said out loud rather than defaulted: this route exists to hand out a
+    #: rank, and the rank it hands out should never be one nobody chose.
+    role: Role
+    department: Department | None = None
+    github_username: str | None = Field(default=None, max_length=255)
+    org_level: OrgLevel | None = None
+
+
 class ChangeRoleRequest(BaseModel):
     """Promoting or demoting a teammate."""
 

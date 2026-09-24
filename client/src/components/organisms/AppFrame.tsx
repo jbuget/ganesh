@@ -27,8 +27,8 @@ export function AppFrame({ children }: Readonly<{ children: React.ReactNode }>) 
   const { user, isLoading } = useCurrentUser();
   const pathname = usePathname();
   const router = useRouter();
-  const isRequester = user?.role === "REQUESTER";
-  const astray = isRequester && pathname !== REQUESTS;
+  const isGuest = user?.role === "GUEST";
+  const astray = isGuest && pathname !== REQUESTS;
 
   useEffect(() => {
     // `replace` rather than `push`: the address they typed is not a place to
@@ -38,7 +38,7 @@ export function AppFrame({ children }: Readonly<{ children: React.ReactNode }>) 
 
   if (isLoading || !user) return null;
 
-  if (isRequester) {
+  if (isGuest) {
     return <div className="min-h-screen">{astray ? null : children}</div>;
   }
 

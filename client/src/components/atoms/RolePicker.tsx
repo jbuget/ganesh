@@ -9,8 +9,21 @@ import { ROLES, roleLabel } from "@/lib/roles";
 
 interface RolePickerProps {
   role: Role;
-  /** Only a manager promotes or demotes a teammate. */
+  /**
+   * Whether this reader may move this account at all.
+   *
+   * Nobody changes their own rank, and nobody acts on somebody standing
+   * above them: the page works it out, the picker only draws the answer.
+   */
   modifiable: boolean;
+  /**
+   * The ranks the reader may hand out — never above their own.
+   *
+   * Passed rather than derived: an atom reads no account. What is left out
+   * is not shown, so a manager never sees « Administrateur » in the list and
+   * then meets a refusal on clicking it.
+   */
+  grantable: Role[];
   onChange: (role: Role) => void | Promise<void>;
 }
 
@@ -20,10 +33,15 @@ interface RolePickerProps {
  * Without management rights, the role still shows: knowing who can reopen a
  * validated month concerns the whole team, not only those who decide it.
  */
-export function RolePicker({ role, modifiable, onChange }: RolePickerProps) {
+export function RolePicker({ role, modifiable, grantable, onChange }: RolePickerProps) {
   const [isOpen, setOpen] = useState(false);
+  // The rank held is always in the list, whether or not it may be handed out:
+  // a picker that could not show what it is set to would read as empty.
+  const choices = ROLES.filter(
+    (choice) => choice.value === role || grantable.includes(choice.value),
+  );
 
-  if (!modifiable) {
+  if (!modifiable || choices.length < 2) {
     return <span className="text-sm text-slate-600">{roleLabel(role)}</span>;
   }
 
@@ -38,7 +56,7 @@ export function RolePicker({ role, modifiable, onChange }: RolePickerProps) {
 
       <PopoverContent align="start" className="w-72 p-1">
         <ul>
-          {ROLES.map((choice) => (
+          {choices.map((choice) => (
             <li key={choice.value}>
               <button
                 type="button"

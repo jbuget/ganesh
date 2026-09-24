@@ -16,5 +16,5 @@ export function RequestsScreen() {
   const { user } = useCurrentUser();
 
   if (!user) return null;
-  return user.role === "REQUESTER" ? <MyRequestsPage /> : <RequestsPage />;
+  return user.role === "GUEST" ? <MyRequestsPage /> : <RequestsPage />;
 }

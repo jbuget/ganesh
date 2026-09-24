@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { UserResponse } from "@/lib/api/generated/model";
-import { roleLabel } from "@/lib/roles";
+import { isManager, roleLabel } from "@/lib/roles";
 
 interface UserMenuProps {
   user: UserResponse;
@@ -41,7 +41,7 @@ export function UserMenu({ user, onSignOut, collapsed = false }: UserMenuProps) 
         </span>
         <span className={collapsed ? "sr-only" : "min-w-0 text-left"}>
           <span className="block truncate text-sm">{user.display_name}</span>
-          {user.role === "MANAGER" && (
+          {isManager(user) && (
             <span className="block text-xs text-slate-500">{roleLabel(user.role)}</span>
           )}
         </span>

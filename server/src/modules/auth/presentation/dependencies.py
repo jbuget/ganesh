@@ -75,7 +75,7 @@ def admit(user: User) -> User:
     # of the application leans on this dependency, and therefore stays the
     # team's. The requests open themselves to them, one route at a time, the
     # way a route opens itself to a machine.
-    if user.is_requester:
+    if user.is_guest:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This account may only reach the requests.",

@@ -49,23 +49,56 @@ volume, and a key prefix is a needle for a secret scanner, not a brand.
 
 ### Roles
 
-| Action | `REQUESTER` | `TEAMMATE` | `MANAGER` |
-|---|---|---|---|
-| Express a need, and read one's own | ✅ | ✅ | ✅ |
-| Fill in one's own month, read and edit a colleague's open month | ❌ | ✅ | ✅ |
-| Create / change a project, change its status | ❌ | ✅ | ✅ |
-| Validate one's own month | ❌ | ✅ | ✅ |
-| Read the needs the company expressed | ❌ | ✅ | ✅ |
-| Arbitrate a need, and make a mission of it | ❌ | ❌ | ✅ |
-| Reopen a validated month | ❌ | ❌ | ✅ |
-| Manage teammates | ❌ | ❌ | ✅ |
-| Sync to Monday (V1.1) | ❌ | ❌ | ✅ |
+| Action | `GUEST` | `TEAMMATE` | `MANAGER` | `ADMIN` |
+|---|---|---|---|---|
+| Express a need, and read one's own | ✅ | ✅ | ✅ | ✅ |
+| Fill in one's own month, read and edit a colleague's open month | ❌ | ✅ | ✅ | ✅ |
+| Create / change a project, change its status | ❌ | ✅ | ✅ | ✅ |
+| Validate one's own month | ❌ | ✅ | ✅ | ✅ |
+| Read the needs the company expressed | ❌ | ✅ | ✅ | ✅ |
+| Arbitrate a need, and make a mission of it | ❌ | ❌ | ✅ | ✅ |
+| Reopen a validated month | ❌ | ❌ | ✅ | ✅ |
+| Manage teammates, and declare one before their first sign-in | ❌ | ❌ | ✅ | ✅ |
+| Confer the rank of `ADMIN` | ❌ | ❌ | ❌ | ✅ |
+| Sync to Monday (V1.1) | ❌ | ❌ | ✅ | ✅ |
 
-**`REQUESTER` is what an unknown identity gets**, and it opens nothing: the
-whole company signs in through the same Entra tenant, so being recognised at
-the door says nothing about belonging to the team. A manager promotes the
-account the day they say whose it is — which means a new teammate has nothing
-until somebody fills in their sheet, and that is deliberate.
+**The declaration order of `Role` is the ladder**, and `rank` reads nothing
+else. `is_manager` therefore means *manager or above*: an admin turned away
+from what a manager decides would be the weaker of the two, which is not what
+a rung above means.
+
+**`GUEST` is what an unknown identity gets**, and it opens nothing: the whole
+company signs in through the same Entra tenant, so being recognised at the
+door says nothing about belonging to the team. The role is named after what
+the person **is** — of the company, not of the team — rather than after the
+one thing they may do today, which is to express a need: the day a guest reads
+a project, a role called `REQUESTER` would be lying, and renaming it then would
+cost a migration on more data than it does now.
+
+**Two rules hold the whole ladder**, and the last admin is protected by them
+rather than by a rule of their own:
+
+- **Nobody changes their own rank, nor cuts off their own access.** Both are
+  one-way trips: the account reaches no route that would undo them.
+- **Nobody acts on somebody standing above them, nor confers a rank above
+  their own.** A manager who could name an admin would be an admin with one
+  extra click; a manager who could demote one would make the rung above hold
+  nothing.
+
+Put together, the only account that could demote the last admin is that admin,
+and they cannot. **Which means the first admin is named outside the
+application** — by `make seed`, whose team file carries a role per address, or
+by one `UPDATE` on `users.role`. That is deliberate: a bootstrap route open to
+whoever arrives first is a door nobody closes afterwards.
+
+**Declaring an account** (`POST /users`) makes it exist before its owner has
+ever signed in, so that whoever arrives on Monday can be put on a project on
+Friday. It carries no Entra id: the first sign-in claims it **by its address**,
+which is therefore the one thing to get right — declared at an address Entra
+does not send, the person signs in as somebody new and the declared account
+stays unclaimable. The civil name is required where the identity sheet leaves
+it optional: declaring somebody is saying who they are, and an account without
+that says no more than waiting for the first sign-in would.
 
 ### Business invariants
 
@@ -597,9 +630,9 @@ may do, and all of which a `ProjectStatus` would have had to pretend to.
   weighed, since one comes to that screen to answer.
 
 **Whoever only ever comes to ask for something sees « Mes demandes » and
-nothing else.** `get_current_user` turns a requester away, so every screen of
-the application stays the team's; the routes of the requests open themselves
-to them one at a time, the way a route opens itself to a machine. The one
+nothing else.** `get_current_user` turns a guest away, so every screen of the
+application stays the team's; the routes of the requests open themselves to
+them one at a time, the way a route opens itself to a machine. The one
 exception is `GET /users/me`: a screen has to know whose account it is
 drawing.
 

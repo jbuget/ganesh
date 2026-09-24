@@ -19,6 +19,7 @@ import {
   useTeammates,
 } from "@/lib/api/queries";
 import type { DayValue } from "@/lib/day-value";
+import { isManager } from "@/lib/roles";
 import {
   firstDayOfMonth,
   monthParam,
@@ -114,7 +115,7 @@ export function useTimesheetMonth() {
      * state of the month is what tells them apart, so they never show together.
      */
     canValidate: Boolean(grid?.is_writable) && isOwnMonth,
-    canReopen: Boolean(grid && !grid.is_writable) && me?.role === "MANAGER",
+    canReopen: Boolean(grid && !grid.is_writable) && isManager(me),
 
     /** Missions the viewer contributes to, offered first when adding a row. */
     assignedIds: assignedMissionIds(missions, me?.id ?? null),

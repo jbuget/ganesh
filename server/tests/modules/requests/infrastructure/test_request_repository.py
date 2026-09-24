@@ -26,7 +26,7 @@ async def seed(session: AsyncSession) -> tuple[int, int]:
             entra_oid="oid-request-1",
             email="a.metier@waat.fr",
             display_name="A. Métier",
-            role=Role.REQUESTER,
+            role=Role.GUEST,
         )
     )
     sponsor = await users.add(
@@ -35,7 +35,7 @@ async def seed(session: AsyncSession) -> tuple[int, int]:
             entra_oid="oid-request-2",
             email="c.direction@waat.fr",
             display_name="C. Direction",
-            role=Role.REQUESTER,
+            role=Role.GUEST,
             org_level=OrgLevel.COMEX,
         )
     )

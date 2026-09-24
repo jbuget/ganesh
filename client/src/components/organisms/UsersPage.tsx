@@ -1,13 +1,19 @@
 "use client";
 
+import { UserPlus } from "lucide-react";
+import { useState } from "react";
+
 import { PageHeader } from "@/components/atoms/PageHeader";
+import { DeclareUserDialog } from "@/components/molecules/DeclareUserDialog";
 import { UserFilters } from "@/components/molecules/UserFilters";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { UserPanel } from "@/components/organisms/UserPanel";
 import { UsersTable } from "@/components/organisms/UsersTable";
+import { Button } from "@/components/ui/button";
 import { useOpenedUser } from "@/lib/opened-user";
+import { grantableBy, mayActOn } from "@/lib/roles";
 import { useUserFilters } from "@/lib/use-user-filters";
-import { withRequesters } from "@/lib/user-filters";
+import { withGuests } from "@/lib/user-filters";
 import { useUserSort } from "@/lib/use-user-sort";
 import { useUsersScreen } from "@/lib/use-users";
 
@@ -32,6 +38,9 @@ export function UsersPage() {
   const screen = useUsersScreen(filters, sorted);
   const panel = useOpenedUser();
   const opened = panel.openedUser ? screen.find(panel.openedUser) : null;
+  const [declaring, setDeclaring] = useState(false);
+  // Worked out once, here: the picker and the panel only draw the answer.
+  const grantable = grantableBy(screen.me);
 
   return (
     <PageLayout
@@ -43,6 +52,14 @@ export function UsersPage() {
               screen.isManager
                 ? "Qui compose l'équipe, et qui peut quoi. Chaque changement est tracé."
                 : "Qui compose l'équipe, et qui peut quoi. Seul un manager change un rôle."
+            }
+            actions={
+              screen.isManager ? (
+                <Button className="cursor-pointer" onClick={() => setDeclaring(true)}>
+                  <UserPlus className="size-4" aria-hidden />
+                  Déclarer un utilisateur
+                </Button>
+              ) : undefined
             }
           />
 
@@ -58,7 +75,7 @@ export function UsersPage() {
             visible={screen.visible}
             total={screen.total}
             hidden={screen.hidden}
-            onShowRequesters={() => set(withRequesters(filters))}
+            onShowGuests={() => set(withGuests(filters))}
           />
         </>
       }
@@ -73,7 +90,7 @@ export function UsersPage() {
           <p className="py-8 text-center text-sm text-slate-500">
             {hasFilter
               ? "Aucun collaborateur ne répond aux filtres."
-              : "Aucun utilisateur. Les comptes se créent à la première connexion."}
+              : "Aucun utilisateur. Un compte naît d'une déclaration, ou de la première connexion de son titulaire."}
           </p>
         )}
 
@@ -88,11 +105,22 @@ export function UsersPage() {
         )}
       </div>
 
+      {screen.isManager && (
+        <DeclareUserDialog
+          open={declaring}
+          onOpenChange={setDeclaring}
+          grantable={grantable}
+          onConfirm={screen.declare}
+        />
+      )}
+
       {opened && (
         <UserPanel
           user={opened}
-          roleModifiable={screen.isManager}
-          canChangeStatus={screen.isManager && opened.id !== screen.meId}
+          // Nobody moves their own rank, nor one standing above their own.
+          roleModifiable={mayActOn(screen.me, opened)}
+          grantable={grantable}
+          canChangeStatus={mayActOn(screen.me, opened)}
           editable={screen.isManager}
           onChangeRole={screen.changeRole}
           onSetActive={screen.setActive}

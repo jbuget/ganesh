@@ -1,6 +1,6 @@
 """Teammate routes."""
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
@@ -13,6 +13,7 @@ from src.modules.auth.presentation.dependencies import (
 )
 from src.modules.users.application.dtos.user_dto import (
     ChangeRoleCommand,
+    DeclareUserCommand,
     SetUserActiveCommand,
     UpdateUserIdentityCommand,
 )
@@ -20,6 +21,7 @@ from src.modules.users.application.dtos.user_record_dto import GetUserRecordQuer
 from src.modules.users.application.use_cases.change_user_role import (
     ChangeUserRoleUseCase,
 )
+from src.modules.users.application.use_cases.declare_user import DeclareUserUseCase
 from src.modules.users.application.use_cases.get_user_record import GetUserRecordUseCase
 from src.modules.users.application.use_cases.list_users import ListUsersUseCase
 from src.modules.users.application.use_cases.set_user_active import SetUserActiveUseCase
@@ -36,12 +38,14 @@ from src.modules.users.presentation.api.schemas.user_record_schemas import (
 )
 from src.modules.users.presentation.api.schemas.user_schemas import (
     ChangeRoleRequest,
+    DeclareUserRequest,
     SetActiveRequest,
     UpdateUserIdentityRequest,
     UserResponse,
 )
 from src.modules.users.presentation.dependencies import (
     get_change_role_use_case,
+    get_declare_user_use_case,
     get_list_users_use_case,
     get_set_user_active_use_case,
     get_update_user_identity_use_case,
@@ -79,6 +83,41 @@ async def list_users(
     return [to_user_response(user) for user in users]
 
 
+@router.post(
+    "",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="declareUser",
+)
+async def declare_user(
+    payload: DeclareUserRequest,
+    manager: User = Depends(get_current_manager),
+    use_case: DeclareUserUseCase = Depends(get_declare_user_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> UserResponse:
+    """Makes an account exist before its owner has ever signed in.
+
+    Managers and admins, and neither of them above their own rank. The account
+    carries no Entra id: the first sign-in claims it by its address, so an
+    address already in the register is refused rather than duplicated.
+    """
+    assert manager.id is not None
+    user = await use_case.execute(
+        DeclareUserCommand(
+            actor_id=manager.id,
+            email=payload.email,
+            first_name=payload.first_name,
+            last_name=payload.last_name,
+            role=payload.role,
+            department=payload.department,
+            github_username=payload.github_username,
+            org_level=payload.org_level,
+        )
+    )
+    await session.commit()
+    return to_user_response(user)
+
+
 @router.get(
     "/{user_id}/record",
     response_model=UserRecordResponse,
@@ -110,7 +149,12 @@ async def change_role(
     use_case: ChangeUserRoleUseCase = Depends(get_change_role_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> UserResponse:
-    """Changes a teammate's role. Managers only."""
+    """Changes a teammate's role.
+
+    Managers and admins. Who may put whom where is the domain's business:
+    nobody changes their own rank, and nobody acts on somebody above them nor
+    confers above themselves.
+    """
     assert manager.id is not None
     user = await use_case.execute(
         ChangeRoleCommand(
