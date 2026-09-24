@@ -7,6 +7,8 @@ people are told is written by the gestures that concern them, never by hand.
 They hang off `get_current_user`, which refuses API keys: an inbox is human.
 """
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,6 +19,9 @@ from src.modules.notifications.application.dtos.notification_dtos import (
 )
 from src.modules.notifications.application.use_cases.list_my_notifications import (
     ListMyNotificationsUseCase,
+)
+from src.modules.notifications.application.use_cases.send_due_reminders import (
+    SendDueRemindersUseCase,
 )
 from src.modules.notifications.application.use_cases.set_notifications_read_state import (
     SetNotificationsReadStateUseCase,
@@ -29,10 +34,13 @@ from src.modules.notifications.presentation.api.schemas.notification_schemas imp
     NotificationFeedResponse,
     NotificationFilter,
     ReadStateResponse,
+    RunRemindersRequest,
+    RunRemindersResponse,
     SetReadStateRequest,
 )
 from src.modules.notifications.presentation.dependencies import (
     get_list_my_notifications_use_case,
+    get_send_due_reminders_use_case,
     get_set_notifications_read_state_use_case,
 )
 from src.modules.users.domain.entities.user import User
@@ -88,3 +96,39 @@ async def set_read_state(
     )
     await session.commit()
     return to_read_state_response(outcome)
+
+
+@router.post(
+    "/reminders/run",
+    response_model=RunRemindersResponse,
+    operation_id="runReminders",
+)
+async def run_reminders(
+    payload: RunRemindersRequest,
+    current_user: User = Depends(get_current_user),
+    use_case: SendDueRemindersUseCase = Depends(get_send_due_reminders_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> RunRemindersResponse:
+    """Sends a round by hand. Managers only, and traced.
+
+    The clock sends the round once a working day and gives it back when there
+    was nowhere to post. This is the other way in: the morning the clock got
+    wrong, and the only way to see a real letter before trusting the whole
+    thing to a schedule.
+
+    It answers to no clock — no send time, no working day — and takes no
+    claim: a run that respected the day's claim would do nothing at all after
+    a failed morning, which is the one moment it exists for. Nothing is sent
+    twice for that: `reminder_sent_at` moves as each letter goes, so a second
+    press writes only to whoever has something new.
+
+    Raises 403 for anybody but a manager, and 503 when there is nowhere to
+    post at all — which is the answer worth having when one is testing the
+    configuration.
+    """
+    assert current_user.id is not None
+    sent = await use_case.execute(
+        payload.cadence, now=datetime.now(UTC), requested_by=current_user.id
+    )
+    await session.commit()
+    return RunRemindersResponse(sent=sent)

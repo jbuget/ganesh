@@ -7,6 +7,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from src.modules.notifications.domain.entities.notification import NotificationKind
+from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 
 
 class NotificationFilter(StrEnum):
@@ -83,3 +84,22 @@ class ReadStateResponse(BaseModel):
 
     updated: int
     unread_count: int
+
+
+class RunRemindersRequest(BaseModel):
+    """Which round to send by hand.
+
+    Named rather than assumed: « chaque jour » and « chaque semaine » are two
+    sets of readers, and a button that sent both would write to whoever asked
+    for one letter a week on an ordinary Tuesday.
+    """
+
+    cadence: ReminderCadence
+
+
+class RunRemindersResponse(BaseModel):
+    """What the round did."""
+
+    #: How many letters actually went out. Zero is an answer: it means nobody
+    #: on that cadence had anything waiting that has not already been posted.
+    sent: int
