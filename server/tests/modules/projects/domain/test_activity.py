@@ -10,12 +10,12 @@ from datetime import UTC, datetime
 
 import pytest
 
-from src.modules.projects.domain.entities.workstream import Workstream
+from src.modules.projects.domain.entities.activity import Activity
 from src.shared.enums.work_nature import WorkNature
 from src.shared.exceptions.domain_exceptions import ValidationError
 
 
-def a_workstream(**overrides: object) -> Workstream:
+def an_activity(**overrides: object) -> Activity:
     fields: dict[str, object] = {
         "id": 1,
         "project_id": 10,
@@ -23,73 +23,73 @@ def a_workstream(**overrides: object) -> Workstream:
         "nature": WorkNature.PROJECT_MANAGEMENT,
     }
     fields.update(overrides)
-    return Workstream(**fields)  # type: ignore[arg-type]
+    return Activity(**fields)  # type: ignore[arg-type]
 
 
 class TestWhatItHolds:
     def test_it_hangs_under_a_mission(self) -> None:
-        assert a_workstream(project_id=42).project_id == 42
+        assert an_activity(project_id=42).project_id == 42
 
     def test_it_carries_the_trade_it_was_given(self) -> None:
-        assert a_workstream(nature=WorkNature.DESIGN).nature is WorkNature.DESIGN
+        assert an_activity(nature=WorkNature.DESIGN).nature is WorkNature.DESIGN
 
     def test_what_the_reprise_took_over_carries_no_trade(self) -> None:
         """Nobody declared it, so nothing is filled in on their behalf."""
-        assert a_workstream(nature=None).nature is None
+        assert an_activity(nature=None).nature is None
 
     def test_it_carries_the_estimate_for_its_trade(self) -> None:
-        assert a_workstream(estimated_days=12.5).estimated_days == 12.5
+        assert an_activity(estimated_days=12.5).estimated_days == 12.5
 
     def test_an_activity_nobody_budgeted_carries_no_estimate(self) -> None:
-        assert a_workstream().estimated_days is None
+        assert an_activity().estimated_days is None
 
     def test_a_label_is_trimmed(self) -> None:
-        assert a_workstream(label="  Développement  ").label == "Développement"
+        assert an_activity(label="  Développement  ").label == "Développement"
 
     def test_a_label_cannot_be_empty(self) -> None:
         with pytest.raises(ValidationError):
-            a_workstream(label="   ")
+            an_activity(label="   ")
 
     def test_an_estimate_cannot_be_negative(self) -> None:
         with pytest.raises(ValidationError):
-            a_workstream(estimated_days=-1.0)
+            an_activity(estimated_days=-1.0)
 
     def test_an_estimate_of_zero_is_allowed(self) -> None:
         """A trade budgeted at nothing is a decision, not a mistake."""
-        assert a_workstream(estimated_days=0.0).estimated_days == 0.0
+        assert an_activity(estimated_days=0.0).estimated_days == 0.0
 
 
 class TestLeavingTheList:
     def test_it_starts_active(self) -> None:
-        assert a_workstream().is_active is True
-        assert a_workstream().archived_at is None
+        assert an_activity().is_active is True
+        assert an_activity().archived_at is None
 
     def test_archiving_stamps_when_it_left(self) -> None:
-        workstream = a_workstream()
+        activity = an_activity()
 
-        workstream.archive()
+        activity.archive()
 
-        assert workstream.is_active is False
-        assert workstream.archived_at is not None
+        assert activity.is_active is False
+        assert activity.archived_at is not None
 
     def test_archiving_twice_keeps_the_first_exit(self) -> None:
-        workstream = a_workstream()
-        workstream.archive()
-        first_exit = workstream.archived_at
+        activity = an_activity()
+        activity.archive()
+        first_exit = activity.archived_at
 
-        workstream.archive()
+        activity.archive()
 
-        assert workstream.archived_at == first_exit
+        assert activity.archived_at == first_exit
 
     def test_unarchiving_forgets_the_exit(self) -> None:
-        workstream = a_workstream(
+        activity = an_activity(
             is_active=False, archived_at=datetime(2026, 1, 1, tzinfo=UTC)
         )
 
-        workstream.unarchive()
+        activity.unarchive()
 
-        assert workstream.is_active is True
-        assert workstream.archived_at is None
+        assert activity.is_active is True
+        assert activity.archived_at is None
 
 
 class TestWhatItDeliberatelyCannotHold:
@@ -106,4 +106,4 @@ class TestWhatItDeliberatelyCannotHold:
     )
     def test_it_has_no_field_for_what_steers_a_mission(self, field: str) -> None:
         with pytest.raises(TypeError):
-            a_workstream(**{field: "anything"})
+            an_activity(**{field: "anything"})

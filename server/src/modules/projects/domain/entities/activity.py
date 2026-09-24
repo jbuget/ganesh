@@ -7,8 +7,9 @@ the whole of it — a phase, an urgency, a strategic axis or a catalogue entry
 all belong to the mission above, and an activity holding any of them would
 give two answers to one question.
 
-Called a workstream here and an « activité » on screen: the module `activity`
-already names the Synthèse d'activité, and one word must name one thing.
+One word names it everywhere — the table, the code and the screen all say
+activity. The Synthèse d'activité, which used to hold the plain word, was
+renamed after what it produces so that this one could take it.
 """
 
 from dataclasses import dataclass
@@ -20,7 +21,7 @@ from src.shared.utils import clock
 
 
 @dataclass
-class Workstream:
+class Activity:
     """A trade a mission's days are booked under."""
 
     id: int | None

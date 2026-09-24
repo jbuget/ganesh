@@ -25,7 +25,9 @@ from src.shared.utils import clock
 router = APIRouter(prefix="/activity-summary", tags=["activity-summary"])
 
 
-@router.get("", response_model=ActivitySummaryResponse, operation_id="getActivitySummary")
+@router.get(
+    "", response_model=ActivitySummaryResponse, operation_id="getActivitySummary"
+)
 async def get_activity_summary(
     range_: PeriodRange = Query(PeriodRange.LAST_WEEK, alias="range"),
     _: User = Depends(get_current_user),
