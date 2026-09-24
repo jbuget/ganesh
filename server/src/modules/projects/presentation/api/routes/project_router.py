@@ -4,7 +4,16 @@ Creating and changing status are open to the whole team: trust is the stance,
 traceability the safeguard.
 """
 
-from fastapi import APIRouter, Depends, File, Query, Response, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Query,
+    Request,
+    Response,
+    UploadFile,
+    status,
+)
 from fastapi.responses import Response as RawResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,6 +40,12 @@ from src.modules.audit_logs.presentation.dependencies import (
     get_project_audit_log_use_case,
 )
 from src.modules.auth.presentation.dependencies import get_current_user
+from src.modules.entries.presentation.dependencies import get_activity_repository
+from src.modules.projects.application.dtos.activity_dto import (
+    ArchiveActivityCommand,
+    CreateActivityCommand,
+    UpdateActivityCommand,
+)
 from src.modules.projects.application.dtos.assignment_dto import AssignmentCommand
 from src.modules.projects.application.dtos.attachment_dto import (
     RemoveAttachmentCommand,
@@ -88,6 +103,12 @@ from src.modules.projects.application.use_cases.import_projects import (
     ImportProjectsUseCase,
 )
 from src.modules.projects.application.use_cases.list_projects import ListProjectsUseCase
+from src.modules.projects.application.use_cases.manage_activities import (
+    ArchiveActivityUseCase,
+    CreateActivityUseCase,
+    UnarchiveActivityUseCase,
+    UpdateActivityUseCase,
+)
 from src.modules.projects.application.use_cases.move_project import MoveProjectUseCase
 from src.modules.projects.application.use_cases.project_attachments import (
     DownloadProjectAttachmentUseCase,
@@ -123,6 +144,9 @@ from src.modules.projects.application.use_cases.update_project_registry import (
 from src.modules.projects.domain.entities.project_attachment import MAX_ATTACHMENT_BYTES
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.entities.update_reaction import Reaction
+from src.modules.projects.domain.repositories.activity_repository import (
+    ActivityRepository,
+)
 from src.modules.projects.presentation.api.attachment_serving import (
     CONTENT_POLICY,
     DOWNLOAD_TYPE,
@@ -130,6 +154,7 @@ from src.modules.projects.presentation.api.attachment_serving import (
     served_as,
 )
 from src.modules.projects.presentation.api.mappers.project_mapper import (
+    to_activity_response,
     to_board_response,
     to_catalog_entry_response,
     to_listed_project_response,
@@ -139,12 +164,14 @@ from src.modules.projects.presentation.api.mappers.project_mapper import (
     to_project_update_response,
 )
 from src.modules.projects.presentation.api.schemas.project_schemas import (
+    ActivityResponse,
     AddLinkRequest,
     ArchiveProjectRequest,
     AttachProjectRequest,
     BoardResponse,
     CatalogEntryResponse,
     ChangeStatusRequest,
+    CreateActivityRequest,
     CreateProjectRequest,
     ImportProjectsRequest,
     ImportReportResponse,
@@ -157,6 +184,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     ProjectResponse,
     ProjectUpdateResponse,
     RenameAttachmentRequest,
+    UpdateActivityRequest,
     UpdateDescriptionRequest,
     UpdateProjectDetailRequest,
     UpdateProjectRegistryRequest,
@@ -164,11 +192,13 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
 )
 from src.modules.projects.presentation.dependencies import (
     get_add_project_link_use_case,
+    get_archive_activity_use_case,
     get_archive_project_use_case,
     get_assign_member_use_case,
     get_attach_project_use_case,
     get_board_use_case,
     get_change_status_use_case,
+    get_create_activity_use_case,
     get_create_project_use_case,
     get_delete_project_use_case,
     get_detach_project_use_case,
@@ -187,8 +217,10 @@ from src.modules.projects.presentation.dependencies import (
     get_remove_project_link_use_case,
     get_remove_update_use_case,
     get_rename_attachment_use_case,
+    get_unarchive_activity_use_case,
     get_unarchive_project_use_case,
     get_unassign_member_use_case,
+    get_update_activity_use_case,
     get_update_description_use_case,
     get_update_project_detail_use_case,
     get_update_project_registry_use_case,
@@ -1012,3 +1044,134 @@ async def rename_project_attachment(
         if one.attachment.id == attachment_id
     )
     return to_project_attachment_response(signed)
+
+
+# --- Activities ---------------------------------------------------------
+# What a mission is cut into: the trades its days are booked under. They hang
+# under the mission in the URL because that is what they belong to — there is
+# no activity to reach without naming the mission it cuts up.
+
+
+@router.get(
+    "/{project_id}/activities",
+    response_model=list[ActivityResponse],
+    operation_id="listProjectActivities",
+)
+async def list_project_activities(
+    project_id: int,
+    activities: ActivityRepository = Depends(get_activity_repository),
+    _: User = Depends(get_current_user),
+) -> list[ActivityResponse]:
+    """The activities of a mission, archived ones included."""
+    found = await activities.list_for_project(project_id)
+    counts = {
+        activity.id: await activities.count_entries(activity.id or 0)
+        for activity in found
+    }
+    return [to_activity_response(a, counts.get(a.id, 0)) for a in found]
+
+
+@router.post(
+    "/{project_id}/activities",
+    response_model=ActivityResponse,
+    status_code=201,
+    operation_id="createProjectActivity",
+)
+async def create_project_activity(
+    project_id: int,
+    payload: CreateActivityRequest,
+    caller: Caller = Depends(projects_writer),
+    use_case: CreateActivityUseCase = Depends(get_create_activity_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> ActivityResponse:
+    """Cuts a new trade into a mission."""
+    activity = await use_case.execute(
+        CreateActivityCommand(
+            actor_id=caller.actor_id,
+            project_id=project_id,
+            label=payload.label,
+            nature=payload.nature,
+            estimated_days=payload.estimated_days,
+        )
+    )
+    await session.commit()
+    return to_activity_response(activity, 0)
+
+
+@router.patch(
+    "/{project_id}/activities/{activity_id}",
+    response_model=ActivityResponse,
+    operation_id="updateProjectActivity",
+)
+async def update_project_activity(
+    project_id: int,
+    activity_id: int,
+    payload: UpdateActivityRequest,
+    request: Request,
+    caller: Caller = Depends(projects_writer),
+    use_case: UpdateActivityUseCase = Depends(get_update_activity_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> ActivityResponse:
+    """Changes what an activity says — its label, its trade, its budget."""
+    named = await request.json()
+    activity = await use_case.execute(
+        UpdateActivityCommand(
+            actor_id=caller.actor_id,
+            activity_id=activity_id,
+            label=payload.label,
+            nature=payload.nature,
+            estimated_days=payload.estimated_days,
+            # Told apart from « leave as is » by having been named at all,
+            # so that clearing a trade is possible and editing the budget
+            # alone does not blank it.
+            sets_nature="nature" in named,
+            sets_estimated_days="estimated_days" in named,
+        )
+    )
+    await session.commit()
+    return to_activity_response(activity, 0)
+
+
+@router.post(
+    "/{project_id}/activities/{activity_id}/archive",
+    response_model=ActivityResponse,
+    operation_id="archiveProjectActivity",
+)
+async def archive_project_activity(
+    project_id: int,
+    activity_id: int,
+    caller: Caller = Depends(projects_writer),
+    use_case: ArchiveActivityUseCase = Depends(get_archive_activity_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> ActivityResponse:
+    """Takes an activity out of what a month can be declared on.
+
+    A gesture of its own rather than a field of the PATCH, as archiving a
+    mission is: days already booked stay readable and only the list one can
+    still declare on shrinks.
+    """
+    activity = await use_case.execute(
+        ArchiveActivityCommand(actor_id=caller.actor_id, activity_id=activity_id)
+    )
+    await session.commit()
+    return to_activity_response(activity, 0)
+
+
+@router.post(
+    "/{project_id}/activities/{activity_id}/unarchive",
+    response_model=ActivityResponse,
+    operation_id="unarchiveProjectActivity",
+)
+async def unarchive_project_activity(
+    project_id: int,
+    activity_id: int,
+    caller: Caller = Depends(projects_writer),
+    use_case: UnarchiveActivityUseCase = Depends(get_unarchive_activity_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> ActivityResponse:
+    """Puts an activity back among what can be declared on."""
+    activity = await use_case.execute(
+        ArchiveActivityCommand(actor_id=caller.actor_id, activity_id=activity_id)
+    )
+    await session.commit()
+    return to_activity_response(activity, 0)

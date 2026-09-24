@@ -52,6 +52,12 @@ from src.modules.projects.application.use_cases.import_projects import (
     ImportProjectsUseCase,
 )
 from src.modules.projects.application.use_cases.list_projects import ListProjectsUseCase
+from src.modules.projects.application.use_cases.manage_activities import (
+    ArchiveActivityUseCase,
+    CreateActivityUseCase,
+    UnarchiveActivityUseCase,
+    UpdateActivityUseCase,
+)
 from src.modules.projects.application.use_cases.move_project import MoveProjectUseCase
 from src.modules.projects.application.use_cases.project_attachments import (
     DownloadProjectAttachmentUseCase,
@@ -545,3 +551,34 @@ def get_rename_attachment_use_case(
     return RenameProjectAttachmentUseCase(
         attachments=attachments, store=store, audit_logs=audit_logs
     )
+
+
+def get_create_activity_use_case(
+    projects: ProjectRepository = Depends(get_project_repository),
+    activities: ActivityRepository = Depends(get_activity_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> CreateActivityUseCase:
+    return CreateActivityUseCase(
+        projects=projects, activities=activities, audit_logs=audit_logs
+    )
+
+
+def get_update_activity_use_case(
+    activities: ActivityRepository = Depends(get_activity_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> UpdateActivityUseCase:
+    return UpdateActivityUseCase(activities=activities, audit_logs=audit_logs)
+
+
+def get_archive_activity_use_case(
+    activities: ActivityRepository = Depends(get_activity_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> ArchiveActivityUseCase:
+    return ArchiveActivityUseCase(activities=activities, audit_logs=audit_logs)
+
+
+def get_unarchive_activity_use_case(
+    activities: ActivityRepository = Depends(get_activity_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> UnarchiveActivityUseCase:
+    return UnarchiveActivityUseCase(activities=activities, audit_logs=audit_logs)
