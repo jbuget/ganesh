@@ -8,7 +8,7 @@ import { DayHeader } from "@/components/atoms/DayHeader";
 import { DayTotalCell } from "@/components/atoms/DayTotalCell";
 import { MissionLabel } from "@/components/atoms/MissionLabel";
 import { TotalCell } from "@/components/atoms/TotalCell";
-import type { MonthGridResponse } from "@/lib/api/generated/model";
+import type { MonthGridResponse, ProjectKind } from "@/lib/api/generated/model";
 
 interface TimesheetGridProps {
   grid: MonthGridResponse;
@@ -33,6 +33,7 @@ interface TimesheetGridProps {
 interface DisplayRow {
   project_id: number;
   activity_id: number | null;
+  kind: ProjectKind;
   label: string;
   /** The mission above the row, so two « Développement » never read alike. */
   project_label: string;
@@ -67,6 +68,7 @@ export function TimesheetGrid({
     .map((row) => ({
       project_id: row.project_id,
       activity_id: row.activity_id ?? null,
+      kind: row.kind,
       label: row.label,
       project_label: row.project_label,
       estimated_days: row.estimated_days ?? null,
@@ -85,6 +87,17 @@ export function TimesheetGrid({
     );
 
   const readOnly = !grid.is_writable;
+
+  /**
+   * A row carrying no trade on a mission that expects one.
+   *
+   * It can only be a leftover: everything is declared under an activity now,
+   * off-project work aside. Nothing can be written on it — the API refuses —
+   * so it reads as what it is, a past left unattributed, rather than looking
+   * like a row one may click.
+   */
+  const isUnattributed = (row: DisplayRow): boolean =>
+    row.activity_id === null && row.kind !== "off_project";
   const totalByDate = new Map(grid.day_totals.map((total) => [total.day, total]));
 
   /**
@@ -213,6 +226,7 @@ export function TimesheetGrid({
                       label={row.label}
                       mission={row.project_label}
                       isUnderItsMission={row.activity_id !== null}
+                      isUnattributed={isUnattributed(row)}
                       consumedDays={row.total_consumed_days}
                       estimatedDays={row.estimated_days}
                     />
@@ -222,6 +236,7 @@ export function TimesheetGrid({
                     label={row.label}
                     mission={row.project_label}
                     isUnderItsMission={row.activity_id !== null}
+                    isUnattributed={isUnattributed(row)}
                     consumedDays={row.total_consumed_days}
                     estimatedDays={row.estimated_days}
                   />
@@ -235,7 +250,7 @@ export function TimesheetGrid({
                   isOffDay={day.is_off_day}
                   isNarrow={isNarrow(day.day, day.is_off_day)}
                   isFuture={day.day > today}
-                  isReadOnly={readOnly}
+                  isReadOnly={readOnly || isUnattributed(row)}
                   isLastRow={closesTheTable(rowIndex)}
                   // The mission is part of the name: a dozen missions cut
                   // into « Développement » would otherwise give a dozen cells

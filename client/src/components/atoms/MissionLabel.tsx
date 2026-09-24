@@ -22,6 +22,13 @@ interface MissionLabelProps {
   mission?: string | null;
   /** Whether the row names a trade, and so reads under its mission. */
   isUnderItsMission?: boolean;
+  /**
+   * Whether the row carries days nobody attributed to a trade.
+   *
+   * Nothing can be written on it, so it says so instead of looking like a
+   * row one may click: what is refused on click has to be legible before.
+   */
+  isUnattributed?: boolean;
   consumedDays: number;
   estimatedDays: number | null;
 }
@@ -37,6 +44,7 @@ export function MissionLabel({
   label,
   mission = null,
   isUnderItsMission = false,
+  isUnattributed = false,
   consumedDays,
   estimatedDays,
 }: MissionLabelProps) {
@@ -84,6 +92,14 @@ export function MissionLabel({
       >
         {label}
       </span>
+      {isUnattributed && (
+        <span
+          className="ml-2 shrink-0 rounded border border-slate-300 px-1 text-xs text-slate-500"
+          title="Ces jours précèdent les activités : ils restent lisibles, mais on ne peut plus en saisir ici."
+        >
+          non ventilé
+        </span>
+      )}
       {tooltip}
     </span>
   );

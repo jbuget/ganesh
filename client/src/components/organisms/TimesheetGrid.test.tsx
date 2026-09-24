@@ -126,6 +126,29 @@ describe("TimesheetGrid", () => {
     expect(screen.getByRole("rowheader", { name: /Absences/ })).toBeInTheDocument();
   });
 
+  it("locks a row whose days nobody attributed to a trade", () => {
+    // What is refused on click has to be legible before: everything is
+    // declared under an activity now, so a mission row carrying none is a
+    // leftover nothing can be written on.
+    const leftover = {
+      ...makeGrid().rows[0],
+      activity_id: null,
+      label: "Portail bailleurs",
+      project_label: "Portail bailleurs",
+    };
+    render(<TimesheetGrid {...baseProps} grid={makeGrid({ rows: [leftover] })} />);
+
+    expect(screen.getByText("non ventilé")).toBeInTheDocument();
+    const cells = screen.getAllByRole("button", { name: /Portail bailleurs/ });
+    expect(cells.every((cell) => cell.hasAttribute("disabled"))).toBe(true);
+  });
+
+  it("leaves off-project work alone: it is declared on directly", () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid({ rows: [EMPTY_ROW] })} />);
+
+    expect(screen.queryByText("non ventilé")).not.toBeInTheDocument();
+  });
+
   it("locks every cell when the month is validated", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid({ is_writable: false })} />);
 
