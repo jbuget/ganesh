@@ -25,6 +25,7 @@ export const AuditAction = {
   activityupdate: "activity.update",
   activityarchive: "activity.archive",
   activityunarchive: "activity.unarchive",
+  activitydelete: "activity.delete",
   projectassign: "project.assign",
   projectunassign: "project.unassign",
   updatepost: "update.post",

@@ -67,6 +67,7 @@ export const ACTION_FAMILIES: ActionFamily[] = [
       { value: "activity.update", label: "Modification" },
       { value: "activity.archive", label: "Archivage" },
       { value: "activity.unarchive", label: "Réouverture" },
+      { value: "activity.delete", label: "Suppression" },
     ],
   },
   {

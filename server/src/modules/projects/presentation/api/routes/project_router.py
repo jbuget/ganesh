@@ -44,6 +44,7 @@ from src.modules.entries.presentation.dependencies import get_activity_repositor
 from src.modules.projects.application.dtos.activity_dto import (
     ArchiveActivityCommand,
     CreateActivityCommand,
+    DeleteActivityCommand,
     UpdateActivityCommand,
 )
 from src.modules.projects.application.dtos.assignment_dto import AssignmentCommand
@@ -106,6 +107,7 @@ from src.modules.projects.application.use_cases.list_projects import ListProject
 from src.modules.projects.application.use_cases.manage_activities import (
     ArchiveActivityUseCase,
     CreateActivityUseCase,
+    DeleteActivityUseCase,
     UnarchiveActivityUseCase,
     UpdateActivityUseCase,
 )
@@ -200,6 +202,7 @@ from src.modules.projects.presentation.dependencies import (
     get_change_status_use_case,
     get_create_activity_use_case,
     get_create_project_use_case,
+    get_delete_activity_use_case,
     get_delete_project_use_case,
     get_detach_project_use_case,
     get_download_attachment_use_case,
@@ -1175,3 +1178,28 @@ async def unarchive_project_activity(
     )
     await session.commit()
     return to_activity_response(activity, 0)
+
+
+@router.delete(
+    "/{project_id}/activities/{activity_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="deleteProjectActivity",
+)
+async def delete_project_activity(
+    project_id: int,
+    activity_id: int,
+    caller: Caller = Depends(projects_writer),
+    use_case: DeleteActivityUseCase = Depends(get_delete_activity_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Removes an activity nobody ever declared on.
+
+    One carrying days is archived instead, and the API refuses rather than
+    leaving it to a screen: a validated month is immutable, and deleting
+    would empty cells inside one without anybody reopening it.
+    """
+    await use_case.execute(
+        DeleteActivityCommand(actor_id=caller.actor_id, activity_id=activity_id)
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

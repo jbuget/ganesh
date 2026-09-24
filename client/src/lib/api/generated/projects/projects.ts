@@ -5162,6 +5162,128 @@ export const useUpdateProjectActivity = <
 > => {
   return useMutation(getUpdateProjectActivityMutationOptions(options), queryClient);
 };
+export type deleteProjectActivityResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteProjectActivityResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type deleteProjectActivityResponseSuccess = deleteProjectActivityResponse204 & {
+  headers: Headers;
+};
+export type deleteProjectActivityResponseError = deleteProjectActivityResponse422 & {
+  headers: Headers;
+};
+
+export type deleteProjectActivityResponse =
+  deleteProjectActivityResponseSuccess | deleteProjectActivityResponseError;
+
+export const getDeleteProjectActivityUrl = (projectId: number, activityId: number) => {
+  return `/api/v1/projects/${projectId}/activities/${activityId}`;
+};
+
+/**
+ * Removes an activity nobody ever declared on.
+ *
+ * One carrying days is archived instead, and the API refuses rather than
+ * leaving it to a screen: a validated month is immutable, and deleting
+ * would empty cells inside one without anybody reopening it.
+ * @summary Delete Project Activity
+ */
+export const deleteProjectActivity = async (
+  projectId: number,
+  activityId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<deleteProjectActivityResponse> => {
+  return bffFetcher<deleteProjectActivityResponse>(
+    getDeleteProjectActivityUrl(projectId, activityId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getDeleteProjectActivityMutationKey = () =>
+  ["deleteProjectActivity"] as const;
+
+export const getDeleteProjectActivityMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteProjectActivity>>,
+    TError,
+    DeleteProjectActivityMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteProjectActivity>>,
+  TError,
+  DeleteProjectActivityMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteProjectActivityMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteProjectActivity>>,
+    DeleteProjectActivityMutationVariables
+  > = (props) => {
+    const { projectId, activityId } = props ?? {};
+
+    return deleteProjectActivity(projectId, activityId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteProjectActivityMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteProjectActivity>>
+>;
+
+export type DeleteProjectActivityMutationError = HTTPValidationError;
+export type DeleteProjectActivityMutationVariables = {
+  projectId: number;
+  activityId: number;
+};
+
+/**
+ * @summary Delete Project Activity
+ */
+export const useDeleteProjectActivity = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteProjectActivity>>,
+      TError,
+      DeleteProjectActivityMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteProjectActivity>>,
+  TError,
+  DeleteProjectActivityMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteProjectActivityMutationOptions(options), queryClient);
+};
 export type archiveProjectActivityResponse200 = {
   data: ActivityResponse;
   status: 200;

@@ -162,6 +162,12 @@ each carries the budget for its own.
   unestimated rather than summing what happens to be filled in — a ratio drawn
   from half a budget announces an overrun nobody measured, in red, on a screen
   people steer by.
+- **An activity carrying days is archived, never deleted.** A validated
+  month is immutable, and deleting would empty cells inside one without
+  anybody reopening it — the days would go without a trace from a month
+  somebody signed off. Deleting is for the trade added by mistake that never
+  carried anything, exactly as a mission is only deletable while it never
+  held time. The API refuses rather than leaving it to a screen.
 - **One trade, once per mission.** Two « Développement » would split the
   budget across two lines nobody can tell apart, and leave whoever fills in a
   month choosing between two rows saying exactly the same. Held by the domain

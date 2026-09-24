@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { InlineNumberField } from "@/components/atoms/InlineNumberField";
 import { InlineTextField } from "@/components/atoms/InlineTextField";
+import { WithdrawActivityDialog } from "@/components/atoms/WithdrawActivityDialog";
 import type { ActivityResponse, WorkNature } from "@/lib/api/generated/model";
 import { WORK_NATURES, workNatureLabel } from "@/lib/work-natures";
 
@@ -16,6 +17,8 @@ interface ProjectActivitiesProps {
     fields: { label?: string; estimated_days?: number | null },
   ) => void | Promise<void>;
   onArchive: (activityId: number) => void | Promise<void>;
+  /** Only ever called on an activity nobody declared on. */
+  onRemove: (activityId: number) => void | Promise<void>;
   onUnarchive: (activityId: number) => void | Promise<void>;
 }
 
@@ -43,9 +46,11 @@ export function ProjectActivities({
   onAdd,
   onChange,
   onArchive,
+  onRemove,
   onUnarchive,
 }: ProjectActivitiesProps) {
   const [adding, setAdding] = useState<WorkNature | null>(null);
+  const [withdrawing, setWithdrawing] = useState<ActivityResponse | null>(null);
 
   const live = activities.filter((activity) => activity.is_active);
   // A trade is one thing per mission: two « Développement » would split the
@@ -96,9 +101,9 @@ export function ProjectActivities({
 
               <button
                 type="button"
-                aria-label={`Archiver ${activity.label}`}
+                aria-label={`Retirer ${activity.label}`}
                 title={booked(activity)}
-                onClick={() => void onArchive(activity.id)}
+                onClick={() => setWithdrawing(activity)}
                 className="shrink-0 cursor-pointer rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
               >
                 <Archive className="size-4" aria-hidden />
@@ -142,6 +147,24 @@ export function ProjectActivities({
           </button>
         ))}
       </div>
+
+      {withdrawing && (
+        <WithdrawActivityDialog
+          open
+          onOpenChange={(isOpen) => !isOpen && setWithdrawing(null)}
+          label={withdrawing.label}
+          entries={withdrawing.entries ?? 0}
+          onConfirm={async () => {
+            // Deleted when it carries nothing, archived when it does: the
+            // API refuses the other way round, and the dialog has already
+            // said which of the two this is.
+            await ((withdrawing.entries ?? 0) > 0
+              ? onArchive(withdrawing.id)
+              : onRemove(withdrawing.id));
+            setWithdrawing(null);
+          }}
+        />
+      )}
 
       {archived.length > 0 && (
         <details className="pt-1">

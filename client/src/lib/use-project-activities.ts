@@ -6,6 +6,7 @@ import type { ActivityResponse, WorkNature } from "@/lib/api/generated/model";
 import {
   archiveProjectActivity,
   createProjectActivity,
+  deleteProjectActivity,
   listProjectActivities,
   unarchiveProjectActivity,
   updateProjectActivity,
@@ -82,6 +83,18 @@ export function useProjectActivities(
       },
     ) {
       await updateProjectActivity(projectId, activityId, fields);
+      await afterWrite();
+    },
+
+    /**
+     * Removes an activity for good.
+     *
+     * Only ever offered on one nobody declared on; the API refuses the rest,
+     * because a validated month is immutable and deleting would empty cells
+     * inside one without anybody reopening it.
+     */
+    async remove(activityId: number) {
+      await deleteProjectActivity(projectId, activityId);
       await afterWrite();
     },
 

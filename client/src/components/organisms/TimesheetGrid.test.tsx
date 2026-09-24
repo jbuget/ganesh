@@ -73,7 +73,7 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     expect(
-      screen.getByRole("rowheader", { name: /Portail bailleurs ·Développement/ }),
+      screen.getByRole("rowheader", { name: /Portail bailleurs\s*Développement/ }),
     ).toBeInTheDocument();
   });
 
@@ -200,7 +200,7 @@ describe("TimesheetGrid", () => {
     expect(cells[0].className).toContain("border-b-slate-500");
     // The mission before no longer closes anything: a light rule separates it.
     const mission = screen.getByRole("rowheader", {
-      name: /Portail bailleurs ·Développement/,
+      name: /Portail bailleurs\s*Développement/,
     });
     expect(mission.className).toContain("border-b-slate-300");
   });

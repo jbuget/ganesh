@@ -215,6 +215,9 @@ class InMemoryActivityRepository(ActivityRepository):
                 grouped.setdefault(activity.project_id, []).append(activity)
         return grouped
 
+    async def delete(self, activity_id: int) -> None:
+        self._activities.pop(activity_id, None)
+
     async def count_entries(self, activity_id: int) -> int:
         return sum(1 for e in self._entries if e.activity_id == activity_id)
 

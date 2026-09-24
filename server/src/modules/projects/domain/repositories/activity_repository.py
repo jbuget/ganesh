@@ -36,6 +36,11 @@ class ActivityRepository(ABC):
         ...
 
     @abstractmethod
+    async def delete(self, activity_id: int) -> None:
+        """Removes an activity for good. Only ever called on an empty one."""
+        ...
+
+    @abstractmethod
     async def count_entries(self, activity_id: int) -> int:
         """How many days are booked against it.
 

@@ -1,16 +1,21 @@
 """Cutting a mission into the trades its days are booked under."""
 
+from datetime import date
+
 import pytest
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction
+from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.projects.application.dtos.activity_dto import (
     ArchiveActivityCommand,
     CreateActivityCommand,
+    DeleteActivityCommand,
     UpdateActivityCommand,
 )
 from src.modules.projects.application.use_cases.manage_activities import (
     ArchiveActivityUseCase,
     CreateActivityUseCase,
+    DeleteActivityUseCase,
     UnarchiveActivityUseCase,
     UpdateActivityUseCase,
 )
@@ -351,3 +356,61 @@ class TestOneTradeOncePerMission:
 
         with pytest.raises(ValidationError):
             await unarchive.execute(ArchiveActivityCommand(actor_id=1, activity_id=101))
+
+
+class TestRemovingOneForGood:
+    """Deleting is for the trade added by mistake five minutes ago.
+
+    One carrying days is archived instead, and the API refuses rather than
+    trusting a screen: a validated month is immutable, and deleting would
+    empty cells inside one without anybody reopening it.
+    """
+
+    def _dev(self) -> Activity:
+        return Activity(
+            id=100,
+            project_id=10,
+            label="Développement",
+            nature=WorkNature.DEVELOPMENT,
+        )
+
+    async def test_an_activity_nobody_declared_on_is_removed(self) -> None:
+        repo = InMemoryActivityRepository([self._dev()])
+        audit = InMemoryAuditLogRepository()
+
+        await DeleteActivityUseCase(repo, audit).execute(
+            DeleteActivityCommand(actor_id=1, activity_id=100)
+        )
+
+        assert await repo.list_for_project(10) == []
+        assert audit.logs[0].action is AuditAction.ACTIVITY_DELETE
+
+    async def test_one_carrying_days_is_refused(self) -> None:
+        booked = [
+            Entry(
+                id=None,
+                user_id=1,
+                project_id=10,
+                activity_id=100,
+                day=date(2026, 9, 21),
+                value=DayValue(1.0),
+            )
+        ]
+        repo = InMemoryActivityRepository([self._dev()], entries=booked)
+        audit = InMemoryAuditLogRepository()
+
+        with pytest.raises(ValidationError, match="archive it rather than"):
+            await DeleteActivityUseCase(repo, audit).execute(
+                DeleteActivityCommand(actor_id=1, activity_id=100)
+            )
+
+        assert len(await repo.list_for_project(10)) == 1
+        assert audit.logs == []
+
+    async def test_an_activity_nobody_can_find_is_refused(self) -> None:
+        repo = InMemoryActivityRepository([])
+
+        with pytest.raises(EntityNotFoundError):
+            await DeleteActivityUseCase(repo, InMemoryAuditLogRepository()).execute(
+                DeleteActivityCommand(actor_id=1, activity_id=999)
+            )

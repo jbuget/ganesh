@@ -7,6 +7,7 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 from src.modules.projects.application.dtos.activity_dto import (
     ArchiveActivityCommand,
     CreateActivityCommand,
+    DeleteActivityCommand,
     UpdateActivityCommand,
 )
 from src.modules.projects.domain.entities.activity import Activity
@@ -210,3 +211,49 @@ def _said(state: tuple[str, object, float | None]) -> str:
     trade = str(nature) if nature is not None else "—"
     days = f"{estimated:g} j" if estimated is not None else "—"
     return f"{label} · {trade} · {days}"
+
+
+class DeleteActivityUseCase:
+    """Removes an activity nobody ever declared on.
+
+    Only an empty one. An activity carrying days is archived instead, and the
+    reason is not squeamishness: a validated month is immutable, and deleting
+    would empty cells inside one without anybody reopening it. The days would
+    go without a trace, from a month somebody signed off.
+
+    Archiving answers the need that is actually there — « one can no longer
+    declare on this » — and loses nothing. Deleting is for the trade added by
+    mistake, five minutes ago, that never carried anything.
+    """
+
+    def __init__(
+        self,
+        activities: ActivityRepository,
+        audit_logs: AuditLogRepository,
+    ) -> None:
+        self._activities = activities
+        self._audit_logs = audit_logs
+
+    async def execute(self, command: DeleteActivityCommand) -> None:
+        activity = await self._activities.get_by_id(command.activity_id)
+        if activity is None:
+            raise EntityNotFoundError("The activity cannot be found.")
+
+        booked = await self._activities.count_entries(command.activity_id)
+        if booked > 0:
+            raise ValidationError(
+                f"« {activity.label} » carries {booked} entr"
+                f"{'ies' if booked > 1 else 'y'}: archive it rather than "
+                "delete it, so the days already declared stay readable."
+            )
+
+        await self._activities.delete(command.activity_id)
+        await self._audit_logs.add(
+            AuditLog(
+                action=AuditAction.ACTIVITY_DELETE,
+                actor_id=command.actor_id,
+                project_id=activity.project_id,
+                old_value=activity.label,
+                payload={"activity_id": activity.id},
+            )
+        )

@@ -41,3 +41,11 @@ class ArchiveActivityCommand:
 
     actor_id: int
     activity_id: int
+
+
+@dataclass(frozen=True)
+class DeleteActivityCommand:
+    """Request to remove an activity that never carried a day."""
+
+    actor_id: int
+    activity_id: int

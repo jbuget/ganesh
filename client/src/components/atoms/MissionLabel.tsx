@@ -12,7 +12,16 @@ interface MissionLabelProps {
    * « Développement » would otherwise read as the same line — and it is the
    * mission one recognises a row by.
    */
+  /**
+   * The mission this row hangs under, shown only at the head of its group.
+   *
+   * Named once rather than beside every trade: a dozen rows repeating « API
+   * Sitetracker » in grey read as noise, and the grid is already sorted so
+   * that a mission's trades follow one another.
+   */
   mission?: string | null;
+  /** Whether the row names a trade, and so reads as set under its mission. */
+  isUnderItsMission?: boolean;
   consumedDays: number;
   estimatedDays: number | null;
 }
@@ -27,6 +36,7 @@ interface MissionLabelProps {
 export function MissionLabel({
   label,
   mission = null,
+  isUnderItsMission = false,
   consumedDays,
   estimatedDays,
 }: MissionLabelProps) {
@@ -46,16 +56,25 @@ export function MissionLabel({
 
   return (
     <span
-      className="flex items-center"
+      className="flex min-w-0 items-start"
       onMouseMove={(event) => follow(event, content)}
       onMouseLeave={leave}
     >
-      {mission && (
-        <span className="mr-1 shrink-0 truncate text-xs text-muted-foreground">
-          {mission} ·
+      <span className="flex min-w-0 flex-col">
+        {mission && (
+          <span className="truncate font-medium text-slate-900">{mission}</span>
+        )}
+        <span
+          className={[
+            "truncate",
+            // Set in, so a trade reads as part of the mission above rather
+            // than as a mission of its own.
+            isUnderItsMission ? "pl-3 text-slate-600" : "",
+          ].join(" ")}
+        >
+          {label}
         </span>
-      )}
-      <span className="truncate">{label}</span>
+      </span>
       {tooltip}
     </span>
   );

@@ -84,6 +84,12 @@ export function TimesheetGrid({
         a.label.localeCompare(b.label, "fr"),
     );
 
+  // The mission is named once, at the head of its group: repeated beside
+  // every trade it read as noise, and the rows are already sorted by mission
+  // then by trade, so the first of each group is the one that carries it.
+  const opensItsMission = (rank: number): boolean =>
+    rank === 0 || rows[rank - 1].project_id !== rows[rank].project_id;
+
   const readOnly = !grid.is_writable;
   const totalByDate = new Map(grid.day_totals.map((total) => [total.day, total]));
 
@@ -211,7 +217,8 @@ export function TimesheetGrid({
                   >
                     <MissionLabel
                       label={row.label}
-                      mission={row.activity_id === null ? null : row.project_label}
+                      mission={opensItsMission(rowIndex) ? row.project_label : null}
+                      isUnderItsMission={row.activity_id !== null}
                       consumedDays={row.total_consumed_days}
                       estimatedDays={row.estimated_days}
                     />
@@ -219,7 +226,8 @@ export function TimesheetGrid({
                 ) : (
                   <MissionLabel
                     label={row.label}
-                    mission={row.activity_id === null ? null : row.project_label}
+                    mission={opensItsMission(rowIndex) ? row.project_label : null}
+                    isUnderItsMission={row.activity_id !== null}
                     consumedDays={row.total_consumed_days}
                     estimatedDays={row.estimated_days}
                   />

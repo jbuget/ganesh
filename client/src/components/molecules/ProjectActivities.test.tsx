@@ -21,6 +21,7 @@ const baseProps = {
   onAdd: vi.fn(),
   onChange: vi.fn(),
   onArchive: vi.fn(),
+  onRemove: vi.fn(),
   onUnarchive: vi.fn(),
 };
 
@@ -37,7 +38,7 @@ describe("ProjectActivities", () => {
     // The trade shows twice: as the row's own name, and among the buttons
     // that add one — so the row is found by what only it carries.
     expect(
-      screen.getByRole("button", { name: "Archiver Développement" }),
+      screen.getByRole("button", { name: "Retirer Développement" }),
     ).toBeInTheDocument();
     expect(screen.getByText(/15/)).toBeInTheDocument();
   });
@@ -81,8 +82,54 @@ describe("ProjectActivities", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: "Archiver Développement" }),
+      screen.getByRole("button", { name: "Retirer Développement" }),
     ).toHaveAttribute("title", "12 saisies restent lisibles");
+  });
+
+  it("archives a trade that carries days, and says nothing is erased", async () => {
+    const onArchive = vi.fn();
+    const onRemove = vi.fn();
+    render(
+      <ProjectActivities
+        {...baseProps}
+        onArchive={onArchive}
+        onRemove={onRemove}
+        activities={[activity({ entries: 12 })]}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Retirer Développement" }),
+    );
+
+    expect(screen.getByRole("alertdialog")).toHaveTextContent(/porte 12 saisies/);
+    expect(screen.getByRole("alertdialog")).toHaveTextContent(/Rien n'est effacé/);
+
+    await userEvent.click(screen.getByRole("button", { name: "Archiver l'activité" }));
+
+    expect(onArchive).toHaveBeenCalledWith(100);
+    expect(onRemove).not.toHaveBeenCalled();
+  });
+
+  it("deletes a trade nobody declared on", async () => {
+    const onArchive = vi.fn();
+    const onRemove = vi.fn();
+    render(
+      <ProjectActivities
+        {...baseProps}
+        onArchive={onArchive}
+        onRemove={onRemove}
+        activities={[activity({ entries: 0 })]}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Retirer Développement" }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Supprimer l'activité" }));
+
+    expect(onRemove).toHaveBeenCalledWith(100);
+    expect(onArchive).not.toHaveBeenCalled();
   });
 
   it("does not offer a trade the mission already carries", () => {

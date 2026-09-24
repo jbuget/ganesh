@@ -89,6 +89,12 @@ class SqlActivityRepository(ActivityRepository):
             by_project.setdefault(model.project_id, []).append(_to_entity(model))
         return by_project
 
+    async def delete(self, activity_id: int) -> None:
+        model = await self._session.get(ActivityModel, activity_id)
+        if model is not None:
+            await self._session.delete(model)
+            await self._session.flush()
+
     async def count_entries(self, activity_id: int) -> int:
         result = await self._session.execute(
             select(func.count())

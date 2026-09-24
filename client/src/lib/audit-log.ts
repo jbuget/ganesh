@@ -391,6 +391,11 @@ export function auditSentence(
         action: `a archivé l'activité${before ? ` « ${before} »` : ""}`,
       };
 
+    case "activity.delete":
+      return {
+        action: `a supprimé l'activité${before ? ` « ${before} »` : ""}`,
+      };
+
     case "activity.unarchive":
       return {
         action: `a rouvert l'activité${after ? ` « ${after} »` : ""}`,

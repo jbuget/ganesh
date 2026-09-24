@@ -43,11 +43,14 @@ describe("AuditLogFilters", () => {
     const { onChange } = bar();
 
     await userEvent.click(screen.getByRole("button", { name: /Geste/ }));
-    // « Suppression » is offered under three families; the one under
-    // « Projets » is what a reader after a deleted mission clicks.
-    await userEvent.click(
-      screen.getByRole("button", { name: "Suppression", pressed: false }),
-    );
+    // « Suppression » is offered under several families, as « Création » and
+    // « Modification » are: the first one is the mission's, which is what a
+    // reader after a deleted mission clicks.
+    const [deletions] = screen.getAllByRole("button", {
+      name: "Suppression",
+      pressed: false,
+    });
+    await userEvent.click(deletions);
 
     expect(onChange).toHaveBeenCalledWith({ actions: ["project.delete"] });
   });

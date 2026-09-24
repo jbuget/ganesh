@@ -199,6 +199,7 @@ export function ProjectSteeringTab({
             onAdd={activities.add}
             onChange={activities.change}
             onArchive={activities.archive}
+            onRemove={activities.remove}
             onUnarchive={activities.unarchive}
           />
         </section>

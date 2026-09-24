@@ -30,6 +30,7 @@ class AuditAction(StrEnum):
     ACTIVITY_UPDATE = "activity.update"
     ACTIVITY_ARCHIVE = "activity.archive"
     ACTIVITY_UNARCHIVE = "activity.unarchive"
+    ACTIVITY_DELETE = "activity.delete"
     PROJECT_ASSIGN = "project.assign"
     PROJECT_UNASSIGN = "project.unassign"
     UPDATE_POST = "update.post"
