@@ -148,7 +148,7 @@ async def test_a_work_package_is_attached_to_its_parent() -> None:
 
 
 async def test_a_work_package_cannot_be_attached_to_another_one() -> None:
-    """A sub-project carries activities, never another sub-project."""
+    """The hierarchy stops at two levels."""
     parent = make_portail()
     work_package = Project(
         id=20,

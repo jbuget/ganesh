@@ -195,24 +195,12 @@ class TestWhoCarriesTheWork:
 class TestTheBacklogDoesNotAskTheBoard:
     """What the plan holds is decided by the phase, not by the board.
 
-    The two used to answer alike. They no longer do: activities carry what is
-    left to build and never appear on the board, so a plan reading the board
-    would drop exactly the lines it is meant to serve.
+    The two answer alike today, and that is precisely why the question is
+    worth asking of the phase: a plan that reads a screen follows whatever
+    that screen is later made to draw.
     """
 
-    def test_an_activity_is_not_a_mission_the_plan_orders(self) -> None:
-        """It hangs under one, and the mission is what the backlog ranks."""
-        activity = Project(
-            id=40,
-            label="Chefferie de projet",
-            kind=ProjectKind.WORKSTREAM,
-            status=None,
-            parent_id=20,
-        )
-
-        assert ids(still_to_build([activity, a_mission(20)])) == [20]
-
-    def test_what_the_board_draws_no_longer_decides_what_the_plan_holds(
+    def test_what_the_board_draws_does_not_decide_what_the_plan_holds(
         self,
     ) -> None:
         mission = a_mission(20)

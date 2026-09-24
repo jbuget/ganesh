@@ -145,7 +145,7 @@ async def test_a_work_package_under_a_work_package_is_reported() -> None:
 
     assert report.created == 2
     assert len(report.errors) == 1
-    assert "already a sub-project" in report.errors[0]
+    assert "two levels" in report.errors[0]
 
 
 async def test_an_empty_label_is_reported_not_crashed() -> None:

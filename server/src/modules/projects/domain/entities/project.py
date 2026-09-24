@@ -10,24 +10,16 @@ from src.modules.projects.domain.entities.service_registry import (
     clean_slug,
 )
 from src.modules.projects.domain.entities.web_address import clean_address
-from src.shared.enums.work_nature import WorkNature
 from src.shared.exceptions.domain_exceptions import ValidationError
 from src.shared.utils import clock
 
 
 class ProjectKind(StrEnum):
-    """What kind of mission this is.
-
-    The first three name what the team steers; the fourth names what a day is
-    actually booked against. An activity hangs under a project or one of its
-    work packages — « Chefferie de projet » under « Edit V2 » under « Edit » —
-    and the hierarchy stops there.
-    """
+    """What kind of mission this is."""
 
     PROJECT = "project"
     WORK_PACKAGE = "work_package"
     OFF_PROJECT = "off_project"
-    WORKSTREAM = "workstream"
 
 
 class ProjectStatus(StrEnum):
@@ -97,11 +89,6 @@ class Project:
     #: Declared urgency. Optional: a mission only carries one if the team saw
     #: a point in placing it against the others.
     priority: ProjectPriority | None = None
-    #: The trade an activity is declared under, and only an activity. Optional,
-    #: because the activities the reprise created carry none: nobody ever said
-    #: which trade the days before them were spent under, and filling one in
-    #: would invent it.
-    nature: WorkNature | None = None
     go_live_date: date | None = None
     #: Rank within its board column, chosen by the team.
     position: int = 0
@@ -155,25 +142,17 @@ class Project:
         if not self.label:
             raise ValidationError("A mission label cannot be empty.")
 
-        if self.carries_a_phase and self.status is None:
+        if self.kind is ProjectKind.OFF_PROJECT and self.status is not None:
+            raise ValidationError("An off-project activity carries no phase status.")
+        if self.kind is not ProjectKind.OFF_PROJECT and self.status is None:
             raise ValidationError(
                 "A project or a work package must carry a phase status."
-            )
-        if not self.carries_a_phase and self.status is not None:
-            raise ValidationError(
-                f"A mission of kind {self.kind} carries no phase status."
             )
 
         if self.kind is ProjectKind.WORK_PACKAGE and self.parent_id is None:
             raise ValidationError(
                 "A work package must be attached to a parent project."
             )
-        if self.kind is ProjectKind.WORKSTREAM and self.parent_id is None:
-            raise ValidationError(
-                "An activity must be attached to a project or a work package."
-            )
-
-        self._check_what_only_a_mission_carries()
 
         if self.position < 0:
             raise ValidationError("A mission rank cannot be negative.")
@@ -210,10 +189,6 @@ class Project:
             raise ValidationError(
                 "A work package is published through its project, " "never on its own."
             )
-        # An activity is a way of spending days, not a service: there is no
-        # card to draw for « Chefferie de projet ».
-        if self.is_activity:
-            raise ValidationError("An activity is never published.")
         # What the catalogue cannot draw a usable card without. The rest may
         # stay blank: a service with no stack listed still reads.
         if self.slug is None:
@@ -225,35 +200,15 @@ class Project:
         if self.service_type is None:
             raise ValidationError("A published mission must carry a service type.")
 
-    def _check_what_only_a_mission_carries(self) -> None:
-        """Keeps on the mission what steers it, and on the activity what it is.
-
-        An activity is not steered: it is read under the phase, the urgency and
-        the axis of the mission above it. Letting it hold its own would mean
-        two answers to one question, and the screens would have to pick.
-        """
-        if self.kind is ProjectKind.WORKSTREAM:
-            if self.category is not None:
-                raise ValidationError(
-                    "An activity reads the strategic axis of its project, "
-                    "never one of its own."
-                )
-            if self.priority is not None:
-                raise ValidationError(
-                    "An activity reads the urgency of its project, "
-                    "never one of its own."
-                )
-        elif self.nature is not None:
-            raise ValidationError("Only an activity is declared under a trade.")
-
     @property
     def carries_a_phase(self) -> bool:
-        """Whether the mission is one the board follows through the phases."""
-        return self.kind in (ProjectKind.PROJECT, ProjectKind.WORK_PACKAGE)
+        """Whether the mission goes through the phases the board follows.
 
-    @property
-    def is_activity(self) -> bool:
-        return self.kind is ProjectKind.WORKSTREAM
+        What the plan asks of a mission, where it used to ask the board. The
+        two answer alike today; they are not the same question, and the plan
+        has no business depending on what a screen happens to draw.
+        """
+        return not self.is_off_project
 
     @property
     def is_off_project(self) -> bool:
@@ -261,12 +216,8 @@ class Project:
 
     @property
     def appears_on_board(self) -> bool:
-        """Only what carries a phase is steered on the board.
-
-        Activities are deliberately out: the board steers missions, and one
-        card per trade would bury the dozen that decide something.
-        """
-        return self.carries_a_phase
+        """Only what carries a phase is steered on the board."""
+        return not self.is_off_project
 
     @property
     def is_syncable_to_monday(self) -> bool:

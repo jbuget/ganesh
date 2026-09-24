@@ -37,27 +37,21 @@ def ensure_sub_projects_are_settled(
         )
 
 
-def ensure_can_be_parent(parent: Project, child: ProjectKind) -> None:
-    """Refuses a parent that cannot carry the kind being hung under it.
+def ensure_can_be_parent(parent: Project) -> None:
+    """Refuses attaching anything under something other than a project.
 
-    The list has three levels and stops there: a project, its work packages,
-    and under either of them the activities days are booked against. What the
-    level decides is what may hang under it — a work package carries
-    activities but never another package, and an activity carries nothing.
+    The hierarchy deliberately stops at two levels: a project, its work
+    packages. A third level would complicate entry and totals without giving
+    steering anything.
     """
-    if parent.is_activity:
-        raise ValidationError(
-            f"« {parent.label} » is an activity: "
-            "the hierarchy stops at three levels."
-        )
-    if parent.is_off_project:
-        raise ValidationError(
-            f"« {parent.label} » is off-project work: it carries nothing."
-        )
-    if child is ProjectKind.WORK_PACKAGE and parent.kind is ProjectKind.WORK_PACKAGE:
+    if parent.kind is ProjectKind.WORK_PACKAGE:
         raise ValidationError(
             f"« {parent.label} » is already a sub-project: "
-            "a sub-project carries activities, never another sub-project."
+            "the hierarchy stops at two levels."
+        )
+    if parent.kind is ProjectKind.OFF_PROJECT:
+        raise ValidationError(
+            f"« {parent.label} » is off-project work: " "it cannot carry a sub-project."
         )
 
 
@@ -113,14 +107,14 @@ def ensure_can_be_attached(
     if sub_projects > 0:
         raise ValidationError(
             f"« {project.label} » carries sub-projects of its own: "
-            "a sub-project carries no sub-project. Detach them first."
+            "the hierarchy stops at two levels. Detach them first."
         )
     if project.is_published:
         raise ValidationError(
             f"« {project.label} » is published in the catalogue: "
             "unpublish it before attaching it, or the card disappears."
         )
-    ensure_can_be_parent(parent, ProjectKind.WORK_PACKAGE)
+    ensure_can_be_parent(parent)
 
 
 def ensure_can_be_detached(project: Project) -> None:
