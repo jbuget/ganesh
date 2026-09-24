@@ -65,13 +65,25 @@ export function MissionLabel({
           {/* Plain text rather than a faint grey: the mission is what one
               scans this column for, and washing it out made it read as an
               aside on the row it actually names. */}
-          <span className="truncate text-slate-900">{mission}</span>
+          {/* The mission gives way first: names run to fifty characters
+              here, and a row whose trade is cut off is a row one cannot tell
+              from its neighbour. The tooltip gives both back in full. */}
+          <span className="min-w-0 truncate text-slate-900">{mission}</span>
           <span className="mx-1 shrink-0 text-slate-400" aria-hidden>
             ·
           </span>
         </>
       )}
-      <span className="truncate font-medium text-slate-900">{label}</span>
+      <span
+        className={[
+          "font-medium text-slate-900",
+          // Never given up: the trade is what tells two rows of one mission
+          // apart, and what the reader is choosing between.
+          isUnderItsMission ? "shrink-0" : "truncate",
+        ].join(" ")}
+      >
+        {label}
+      </span>
       {tooltip}
     </span>
   );

@@ -109,7 +109,7 @@ export function TimesheetGrid({
           <tr>
             <th
               scope="col"
-              className="sticky left-0 z-10 h-11 w-56 border-t border-r border-b border-t-slate-500 border-r-slate-500 border-b-slate-300 bg-white px-3 text-left text-xs font-medium text-slate-600"
+              className="sticky left-0 z-10 h-11 w-72 border-t border-r border-b border-t-slate-500 border-r-slate-500 border-b-slate-300 bg-white px-3 text-left text-xs font-medium text-slate-600"
             >
               <span className="sr-only">Projet</span>
             </th>
@@ -193,7 +193,7 @@ export function TimesheetGrid({
               <th
                 scope="row"
                 className={[
-                  "sticky left-0 z-10 w-56 border-r border-b border-r-slate-500 bg-white px-3 py-1.5 text-left text-sm font-normal",
+                  "sticky left-0 z-10 w-72 border-r border-b border-r-slate-500 bg-white px-3 py-1.5 text-left text-sm font-normal",
                   closesTheTable(rowIndex)
                     ? "border-b-slate-500"
                     : "border-b-slate-300",
@@ -270,7 +270,7 @@ export function TimesheetGrid({
               <th
                 scope="row"
                 // Closes the table at the bottom, as the last mission did.
-                className="sticky left-0 z-10 w-56 border-r border-b border-r-slate-500 border-b-slate-500 bg-white px-3 py-1.5 text-left font-normal"
+                className="sticky left-0 z-10 w-72 border-r border-b border-r-slate-500 border-b-slate-500 bg-white px-3 py-1.5 text-left font-normal"
               >
                 {addingMission}
               </th>
