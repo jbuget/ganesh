@@ -15,6 +15,9 @@ from src.mcp.server import ToolServer
 from src.modules.activity.presentation.api.routes.activity_router import (
     router as activity_router,
 )
+from src.modules.admin.presentation.api.routes.admin_router import (
+    router as admin_router,
+)
 from src.modules.api_keys.presentation.api.routes.api_key_router import (
     router as api_key_router,
 )
@@ -121,6 +124,7 @@ for module_router in (
     activity_router,
     statistics_router,
     gazette_router,
+    admin_router,
 ):
     app.include_router(module_router, prefix=settings.api_prefix)
 
