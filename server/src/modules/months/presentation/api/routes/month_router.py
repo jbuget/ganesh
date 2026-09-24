@@ -19,6 +19,7 @@ from src.modules.audit_logs.presentation.dependencies import (
     get_month_audit_log_use_case,
 )
 from src.modules.auth.presentation.dependencies import (
+    get_contributor,
     get_current_manager,
     get_current_user,
 )
@@ -44,7 +45,7 @@ router = APIRouter(prefix="/months", tags=["months"])
 )
 async def validate_month(
     month: date,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: ValidateMonthUseCase = Depends(get_validate_month_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> MonthResponse:

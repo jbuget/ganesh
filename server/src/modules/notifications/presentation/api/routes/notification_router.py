@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
-from src.modules.auth.presentation.dependencies import get_current_user
+from src.modules.auth.presentation.dependencies import get_contributor, get_current_user
 from src.modules.notifications.application.dtos.notification_dtos import (
     ReadStateCommand,
 )
@@ -73,7 +73,7 @@ async def list_notifications(
 )
 async def set_read_state(
     payload: SetReadStateRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: SetNotificationsReadStateUseCase = Depends(
         get_set_notifications_read_state_use_case
     ),
