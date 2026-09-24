@@ -230,3 +230,15 @@ def test_an_activity_cannot_carry_a_work_package() -> None:
 def test_off_project_work_cannot_carry_an_activity() -> None:
     with pytest.raises(ValidationError):
         ensure_can_be_parent(off_project(), ProjectKind.WORKSTREAM)
+
+
+def test_an_activity_is_handed_no_strategic_axis() -> None:
+    """It reads none, and inheriting one would contradict the entity.
+
+    The axis qualifies the product. An activity is a way of spending days on
+    it, so it carries none of its own and is handed none: the axis shows on
+    the line of the mission, which is where it is read.
+    """
+    resolved = with_resolved_category(an_activity(), work_package())
+
+    assert resolved.category is None

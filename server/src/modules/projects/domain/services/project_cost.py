@@ -109,20 +109,48 @@ def split_delivered(
 def roll_up(
     costs: Mapping[int, ProjectCost], parents: Mapping[int, int | None]
 ) -> dict[int, ProjectCost]:
-    """Adds to each mission what its work packages cost.
+    """Adds to each mission what hangs under it, however deep.
 
     A folded row tells what the service cost as a whole — its own build, that
     of its evolutions, and the run of all of it. Unfolded, every row reads its
-    own figure again, which is why work packages are left untouched here.
+    own figure again, which is why the children are left untouched here.
+
+    The list has three levels, so a child must be added to its parent only
+    once it has absorbed its own: the deepest are climbed first, and each
+    carries up the total it holds by then rather than what it cost alone.
+    Added in the order a mapping happens to yield, an activity would reach its
+    work package after the package had already been handed to its project, and
+    the days booked at the bottom would never arrive at the top.
     """
     totals = dict(costs)
 
-    for project_id, parent_id in parents.items():
+    for project_id in sorted(
+        parents, key=lambda pid: _depth(pid, parents), reverse=True
+    ):
+        parent_id = parents.get(project_id)
         if parent_id is None or parent_id not in totals:
             continue
-        totals[parent_id] = totals[parent_id] + costs.get(project_id, NO_COST)
+        totals[parent_id] = totals[parent_id] + totals.get(project_id, NO_COST)
 
     return totals
+
+
+def _depth(project_id: int, parents: Mapping[int, int | None]) -> int:
+    """How many levels sit above a mission, cycles included without hanging.
+
+    Nothing should ever write a cycle, and a reading is not the place to
+    discover it: the walk simply stops on anything it has already seen.
+    """
+    depth = 0
+    seen = {project_id}
+
+    parent_id = parents.get(project_id)
+    while parent_id is not None and parent_id not in seen:
+        seen.add(parent_id)
+        depth += 1
+        parent_id = parents.get(parent_id)
+
+    return depth
 
 
 def _sum_build(by_status: Mapping[ProjectStatus | None, float]) -> float:
