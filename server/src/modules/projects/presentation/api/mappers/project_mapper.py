@@ -141,6 +141,7 @@ def to_listed_project_response(
         comments=listed.comments,
         latest_update=to_latest_update(listed.latest_update),
         departments=listed.departments,
+        activities=[to_activity_response(a) for a in listed.activities],
     )
 
 

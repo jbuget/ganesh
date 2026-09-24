@@ -24,6 +24,7 @@ from src.modules.users.domain.entities.user import User
 from src.shared.enums.department import Department
 from src.shared.exceptions.domain_exceptions import ValidationError
 from tests.helpers.in_memory_repositories import (
+    InMemoryActivityRepository,
     InMemoryEntryRepository,
     InMemoryProjectAssigneeRepository,
     InMemoryProjectDetailRepository,
@@ -106,6 +107,7 @@ async def read(
     use_case = GetRoadmapUseCase(
         projects=InMemoryProjectRepository(missions),
         entries=InMemoryEntryRepository(entries or []),
+        activities=InMemoryActivityRepository(),
         details=details,
         assignees=assignees,
         users=InMemoryUserRepository([ALICE]),

@@ -128,6 +128,8 @@ class ProjectListItemResponse(BaseModel):
     project: ProjectResponse
     leads: list["BoardMemberResponse"]
     contributors: list["BoardMemberResponse"]
+    #: The trades the mission is cut into: what a day is declared under.
+    activities: list["ActivityResponse"] = []
     #: Days declared, forecast excluded.
     delivered_days: float
     #: What the mission cost, on its own.

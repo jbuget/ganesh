@@ -5,6 +5,7 @@ from datetime import date, timedelta
 
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.projects.application.dtos.last_update import LastUpdate
+from src.modules.projects.domain.entities.activity import Activity
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.entities.project_role import ProjectRole
@@ -60,6 +61,10 @@ class ListedProject:
     links: list[ProjectLink] = field(default_factory=list)
     #: The departments the mission serves, in the order they are declared.
     departments: list[Department] = field(default_factory=list)
+    #: The trades the mission is cut into — what a day is booked under, and
+    #: what carries the budget. Served with the list rather than fetched per
+    #: mission: the entry grid offers them all at once.
+    activities: list[Activity] = field(default_factory=list)
     #: Live updates in the follow-up thread.
     comments: int = 0
     #: The latest of them, to announce the thread without opening it.
@@ -113,6 +118,12 @@ class ListProjectsUseCase:
                 children[mission.parent_id] = children.get(mission.parent_id, 0) + 1
 
         costs = await self._costs(all_missions, day)
+        # The trades every mission is cut into, read in one query: the entry
+        # grid offers them all at once, and asking per mission would put the
+        # count of the list into the count of the queries.
+        activities = await self._activities.list_for_projects(
+            [m.id for m in all_missions if m.id is not None]
+        )
 
         # Archived projects included: a work package outlives the archiving of
         # its project, and goes on reading with the axis of that project.
@@ -150,6 +161,7 @@ class ListProjectsUseCase:
                 delivered_days=delivered.get(mission.id or 0, 0.0),
                 links=links.get(mission.id or 0, []),
                 departments=departments.get(mission.id or 0, []),
+                activities=activities.get(mission.id or 0, []),
                 cost=costs.own.get(mission.id or 0, NO_COST),
                 tree_cost=costs.tree.get(mission.id or 0, NO_COST),
                 comments=comments.get(mission.id or 0, 0),
