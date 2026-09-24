@@ -674,6 +674,20 @@ is the brief; five rules hold it together:
   lock: the number of `uvicorn` workers stops mattering, and a deploy at 9 h
   does not re-send the round of 8 h 30. Paris time, hard-coded, as the public
   holidays are hard-coded to France.
+- **A letter refused and nowhere to post are not the same failure.** One
+  reader's is stepped over and the round carries on; `MailerUnavailableError`
+  stops the round, is said once rather than per recipient, and **gives the run
+  back** so the next tick retries — the claim is taken before the work, so
+  without that a key refused at 8 h 30 costs the whole day. An unconfigured
+  mailer refuses for the same reason: answering « envoyée » having sent
+  nothing would move every stamp it touched, and what it announced would never
+  be announced again.
+- **A manager may send a round by hand**, from the foot of « Notifications ».
+  It answers to no clock and takes no claim — a run that respected the day's
+  claim would do nothing after the failed morning it exists for — and the
+  stamps are what keep it from writing twice. Unlike the clock's round, it is
+  traced: a letter is a channel, somebody deliberately sending one is a
+  gesture.
 - **The French of the letter is on the server**, in
   `domain/services/reminder_letter.py`, and that is the one exception to the
   interface owning what the reader reads: a letter has no browser in the loop.

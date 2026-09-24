@@ -203,18 +203,75 @@ sets correctly. Read in UTC, « 8 h 30 » drifts by an hour twice a year.
 
 ## Sending, and failing
 
-- **A letter that fails is lost, and that is the contract.** No retry queue, no
-  outbox. What it was announcing is still in the inbox, and the bell is the
-  truth. The stamp does not move for somebody whose letter failed, so the next
-  run tries the same window again — which is the only retry there is, and it
-  is enough.
-- **One reader's failure is not another's.** The loop catches per recipient.
-- **Without SMTP configured, the clock does not start**, and it says so once in
-  the log. Same contract as `GEMINI_API_KEY`: a laptop with no mail server
-  runs the whole application and nothing is broken. `docker-compose.yml` gets
-  a MailPit beside the MinIO that already stands in for S3 — one adapter, two
-  addresses, and letters you can read locally without sending anything to
-  anybody.
+**Two kinds of failure, and telling them apart is what the `Mailer` port is
+for.** They are not handled alike, and treating them alike is what makes a
+feature go dark without anybody noticing.
+
+**One reader's letter refused** — an address that no longer exists, a mailbox
+that is full — is that letter lost, and the round carries on. The stamp does
+not move for whoever was not written to, so the next run considers the same
+window again. That is the only retry there is, and it is enough: no queue, no
+outbox, and what the letter announced is still in the inbox.
+
+**Nowhere to post at all** — a key Mailgun refuses, a host nobody can reach —
+is not that. Every letter of the round would meet the same wall, so:
+
+- the adapter raises `MailerUnavailableError` rather than one exception per
+  recipient;
+- the round **stops where it is**, and whoever was already written to keeps
+  their stamp, so the retry writes to the rest and to nobody twice;
+- the clock says it once, as a sentence rather than fifteen stack traces, and
+  **gives the run back** — `release()` deletes the claim, so the next tick
+  retries. Without that, the claim being taken before the work means a key
+  refused at 8 h 30 and fixed at 9 h still costs the whole day.
+
+**An unconfigured mailer refuses too**, and that is the point rather than an
+oversight. The clock never starts without a host, so the only caller that can
+reach an unconfigured mailer is a manager pressing « envoyer » — usually to
+find out whether the configuration works. Dropping the letter and answering
+« envoyée » would tell them it does, send nothing, and move every stamp it
+touched: what it announced would never be announced again.
+
+**Without SMTP configured the clock does not start**, and says so in the log.
+Same contract as `GEMINI_API_KEY`: a laptop with no mail server runs the whole
+application and nothing is broken. `docker-compose.yml` has a MailPit beside
+the MinIO that already stands in for S3 — one adapter, two addresses, and
+letters you can read locally without sending anything to anybody.
+
+## The round a manager sends by hand
+
+`POST /notifications/reminders/run`, naming the cadence. It exists for two
+mornings: the one the clock got wrong, and the first one — seeing a real
+letter before trusting the whole thing to a schedule.
+
+- **It answers to no clock.** No send time, no working day: the manager
+  decided.
+- **It takes no claim**, and that is deliberate. A run that respected the
+  day's claim would do nothing at all after a failed morning, which is the one
+  moment it exists for. Nothing is sent twice for it: `reminder_sent_at` moves
+  as each letter goes, so a second press writes only to whoever has something
+  new. Two managers pressing within the same second could double-write to one
+  reader; the window closes on the first stamp, and that is judged small
+  enough to name rather than to engineer around.
+- **Managers only**, and the rule lives in the use case rather than on the
+  route alone: it writes to the whole team at once, and a second way in — a
+  tool, a script — must meet the same wall.
+- **It is traced**, where the clock's round is not. A letter is a channel; a
+  manager sending one deliberately is a gesture, as generating a numéro of La
+  Gazette is. The line carries the cadence and how many letters went out,
+  including zero — « j'ai lancé la campagne et rien n'est parti » is exactly
+  what one opens the register for.
+- It answers **503** when there is nowhere to post, which is the answer worth
+  having when one is testing the configuration: it is not the caller's request
+  that is wrong. `ServiceUnavailableError` is new in `src/shared/`, and
+  `status_for` now walks an exception's parents so a module narrowing one of
+  these keeps its status instead of falling through to 400.
+
+The button sits at the foot of « Notifications », for managers alone. The
+tension is worth naming: that page is *mine*, this writes to *everybody*. It
+is kept apart by a rule and a heading rather than moved — the profile is
+personal, the teammates screen is about people, and a screen of its own for
+one button would be furniture.
 
 ## What it never does
 
@@ -277,13 +334,14 @@ addition on top of what is built:
 | `server/src/modules/notifications/domain/entities/reminder.py` | What is waiting, by kind |
 | `server/src/modules/notifications/domain/services/roundup.py` | Grouping, and « never empty » |
 | `server/src/modules/notifications/domain/services/reminder_letter.py` | The French, under test |
-| `server/src/modules/notifications/domain/repositories/mailer.py` | The port |
+| `server/src/modules/notifications/domain/repositories/mailer.py` | The port, and the two kinds of failure |
 | `server/src/modules/notifications/infrastructure/mail/smtp_mailer.py` | The adapter |
 | `server/src/modules/notifications/application/use_cases/send_due_reminders.py` | One cadence, one run |
 | `server/src/scheduler/due.py` | What is owed, read off a clock |
-| `server/src/scheduler/claim.py` | The lock, and the ledger |
+| `server/src/scheduler/claim.py` | The lock, the ledger, and giving a run back |
 | `server/src/scheduler/clock.py` | The loop |
 | `server/src/scheduler/wiring.py` | Where it gets a session and a round |
 | `client/src/components/organisms/ProfilePage.tsx` | Where one chooses |
 | `client/src/lib/reminders.ts` | The three cadences, in French |
+| `client/src/components/atoms/RunRemindersPanel.tsx` | Where a manager sends one by hand |
 | `client/src/components/atoms/UserMenu.tsx` | How one gets there |
