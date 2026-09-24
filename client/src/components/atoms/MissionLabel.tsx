@@ -13,14 +13,14 @@ interface MissionLabelProps {
    * mission one recognises a row by.
    */
   /**
-   * The mission this row hangs under, shown only at the head of its group.
+   * The mission this row hangs under, named on every row that carries a trade.
    *
-   * Named once rather than beside every trade: a dozen rows repeating « API
-   * Sitetracker » in grey read as noise, and the grid is already sorted so
-   * that a mission's trades follow one another.
+   * Each row stands on its own: two missions both cut into « Développement »
+   * would otherwise give two lines reading alike, and one scans this column
+   * looking for a mission rather than for a trade.
    */
   mission?: string | null;
-  /** Whether the row names a trade, and so reads as set under its mission. */
+  /** Whether the row names a trade, and so reads under its mission. */
   isUnderItsMission?: boolean;
   consumedDays: number;
   estimatedDays: number | null;
@@ -56,25 +56,22 @@ export function MissionLabel({
 
   return (
     <span
-      className="flex min-w-0 items-start"
+      className="flex min-w-0 items-center"
       onMouseMove={(event) => follow(event, content)}
       onMouseLeave={leave}
     >
-      <span className="flex min-w-0 flex-col">
-        {mission && (
-          <span className="truncate font-medium text-slate-900">{mission}</span>
-        )}
-        <span
-          className={[
-            "truncate",
-            // Set in, so a trade reads as part of the mission above rather
-            // than as a mission of its own.
-            isUnderItsMission ? "pl-3 text-slate-600" : "",
-          ].join(" ")}
-        >
-          {label}
-        </span>
-      </span>
+      {mission && isUnderItsMission && (
+        <>
+          {/* Plain text rather than a faint grey: the mission is what one
+              scans this column for, and washing it out made it read as an
+              aside on the row it actually names. */}
+          <span className="truncate text-slate-900">{mission}</span>
+          <span className="mx-1 shrink-0 text-slate-400" aria-hidden>
+            ·
+          </span>
+        </>
+      )}
+      <span className="truncate font-medium text-slate-900">{label}</span>
       {tooltip}
     </span>
   );
