@@ -7,10 +7,12 @@ changeable, and that is the point — the model, the key and the mail server are
 configured in the environment and nowhere else, so a screen offering to change
 them would be offering something it cannot do.
 
-**No secret ever crosses this reading.** What a service is asked is whether it
-is wired and what identifies it — a model's name, a bucket, a host. A key is
-read as « set » or « not set », never quoted: a key the application could hand
-back through a screen is a key worth stealing.
+**No secret ever crosses this reading**, and the signature is what makes that
+true rather than a promise: a key arrives as `has_gemini_key`, a boolean the
+presentation layer computed, so there is nothing here to leak. What a service
+is asked is whether it is wired and what identifies it — a model's name, a
+bucket, a host. A key the application could hand back through a screen is a
+key worth stealing.
 """
 
 from dataclasses import dataclass
@@ -68,7 +70,7 @@ def read_wiring(
     require_auth: bool,
     auth_entra: bool,
     tenant_id: str,
-    gemini_api_key: str,
+    has_gemini_key: bool,
     gemini_model: str,
     smtp_host: str,
     smtp_port: int,
@@ -94,7 +96,7 @@ def read_wiring(
             # no chapeau. « Not wired » is therefore a reading, not a fault.
             Service(
                 name="gemini",
-                configured=bool(gemini_api_key),
+                configured=has_gemini_key,
                 detail=gemini_model,
             ),
             # Without a host the clock does not start, and no letter goes out.

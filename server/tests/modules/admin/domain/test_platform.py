@@ -7,7 +7,7 @@ WIRED = {
     "require_auth": True,
     "auth_entra": True,
     "tenant_id": "tenant-1",
-    "gemini_api_key": "a-secret",
+    "has_gemini_key": True,
     "gemini_model": "gemini-3.8-flash",
     "smtp_host": "smtp.mailgun.org",
     "smtp_port": 587,
@@ -32,17 +32,16 @@ def test_no_authentication_outranks_which_door_would_have_been_open() -> None:
     assert read_door(require_auth=False, auth_entra=True) is Door.OPEN
 
 
-def test_no_secret_crosses_the_reading() -> None:
-    """The reading says a key is set. It never says what it is."""
+def test_a_key_is_read_as_set_and_never_as_itself() -> None:
+    """The signature carries a boolean: there is no secret here to leak."""
     wiring = read_wiring(**WIRED)
 
-    assert "a-secret" not in repr(wiring)
     assert by_name(wiring, "gemini").configured is True
     assert by_name(wiring, "gemini").detail == "gemini-3.8-flash"
 
 
 def test_a_service_nobody_wired_reads_as_such() -> None:
-    wiring = read_wiring(**{**WIRED, "gemini_api_key": "", "smtp_host": ""})
+    wiring = read_wiring(**{**WIRED, "has_gemini_key": False, "smtp_host": ""})
 
     assert by_name(wiring, "gemini").configured is False
     assert by_name(wiring, "smtp").configured is False
