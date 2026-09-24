@@ -17,6 +17,7 @@ import {
   DAYS_COLUMN,
   DEPARTMENTS_COLUMN,
   GO_LIVE_COLUMN,
+  LAST_UPDATE_COLUMN,
   LEFT_MARGIN,
   MEMBERS_COLUMN,
   MISSIONS_TABLE,
@@ -208,6 +209,19 @@ export function MissionsTable({
               )}
               {shows("contributors") && (
                 <TableHead className={MEMBERS_COLUMN}>Intervenants</TableHead>
+              )}
+              {/* Who carries it, then when they last said something about it: the
+                column one arranges the list by to find what has gone quiet.
+                The thread column, pinned at the left, says how much was
+                said; this one says when it was last said. */}
+              {shows("lastUpdate") && (
+                <SortableColumnHeader
+                  column="lastUpdate"
+                  label="Dernière mise à jour"
+                  sorted={sorted}
+                  onToggle={onSort}
+                  className={LAST_UPDATE_COLUMN}
+                />
               )}
               {/* Last, and without a width: it takes what is left when the screen
                 is wider than the table. The catalogue is the end of the

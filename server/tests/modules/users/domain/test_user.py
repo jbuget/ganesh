@@ -363,3 +363,16 @@ def test_nobody_changes_their_own_role() -> None:
     actor.id = 1
 
     assert actor.can_change_role_of(actor, Role.TEAMMATE) is False
+
+
+def test_a_manager_sends_the_round_by_hand() -> None:
+    assert make_user(Role.MANAGER).can_run_reminders() is True
+
+
+def test_a_teammate_does_not_send_the_round_by_hand() -> None:
+    # It writes to the whole team at once.
+    assert make_user(Role.TEAMMATE).can_run_reminders() is False
+
+
+def test_a_deactivated_manager_sends_nothing() -> None:
+    assert make_user(Role.MANAGER, is_active=False).can_run_reminders() is False

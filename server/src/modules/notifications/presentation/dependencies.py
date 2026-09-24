@@ -5,6 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import get_settings
 from src.core.database import get_db
+from src.modules.audit_logs.infrastructure.database.repositories.audit_log_repository_impl import (
+    SqlAuditLogRepository,
+)
 from src.modules.notifications.application.use_cases.list_my_notifications import (
     ListMyNotificationsUseCase,
 )
@@ -104,5 +107,13 @@ def build_send_due_reminders_use_case(
         users=SqlUserRepository(session),
         notifications=SqlNotificationRepository(session),
         mailer=get_mailer(),
+        audit_logs=SqlAuditLogRepository(session),
         web_url=get_settings().web_url,
     )
+
+
+def get_send_due_reminders_use_case(
+    session: AsyncSession = Depends(get_db),
+) -> SendDueRemindersUseCase:
+    """The same round the clock runs, reached from a request."""
+    return build_send_due_reminders_use_case(session)

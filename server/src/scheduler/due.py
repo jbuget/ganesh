@@ -1,18 +1,16 @@
 """What is due now, read off a clock. Pure, so it is tested without one.
 
-Europe/Paris, hard-coded, as the public holidays are hard-coded to France and
-for the same reason: this is one team in one country, and a timezone in the
-configuration is a setting nobody ever sets correctly. Read in UTC, « 8 h 30 »
-drifts by an hour twice a year.
+The zone comes from `shared.utils.clock`, which already holds the reasoning and
+is the only place in the application that names it: « 8 h 30 » read in UTC
+drifts by an hour twice a year, and a host set to Paris and one set to UTC
+must not disagree about which day a round belongs to.
 """
 
 from datetime import date, datetime, time, timedelta
-from zoneinfo import ZoneInfo
 
 from src.modules.calendar.domain.services.working_days import DayKind, classify_day
 from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
-
-PARIS = ZoneInfo("Europe/Paris")
+from src.shared.utils.clock import PARIS
 
 #: The name a claim is taken under, one per cadence. Carried in the ledger so
 #: that « the weekly round of 23 September » and « the daily one » are two

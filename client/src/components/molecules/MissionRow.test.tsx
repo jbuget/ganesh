@@ -235,6 +235,46 @@ describe("MissionRow", () => {
     expect(screen.getByLabelText("3 mises à jour")).toHaveTextContent("3");
   });
 
+  it("dates the last update, and says the exact instant on hover", () => {
+    const withComments = {
+      ...mission(),
+      comments: 1,
+      latest_update: {
+        author: { id: 1, display_name: "Léa Chen", initials: "LÉ" },
+        body: "La recette commence lundi",
+        published_at: "2026-09-17T09:00:00Z",
+      },
+    } as ProjectListItemResponse;
+
+    line(
+      <MissionRow
+        mission={withComments}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.getByText("il y a 3 h")).toHaveAttribute(
+      "title",
+      "17/09/2026 à 11:00",
+    );
+  });
+
+  /** The thread column already shows nothing: a word here would say it twice. */
+  it("leaves the date empty for a mission nobody has posted on", () => {
+    line(
+      <MissionRow
+        mission={mission()}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(screen.queryByText(/il y a/)).toBeNull();
+  });
+
   it("shows on hover the latest message, signed, dated and formatted", () => {
     const withComments = {
       ...mission(),

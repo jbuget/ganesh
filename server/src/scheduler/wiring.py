@@ -14,7 +14,7 @@ from src.modules.notifications.presentation.dependencies import (
     build_send_due_reminders_use_case,
 )
 from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
-from src.scheduler.claim import claim
+from src.scheduler.claim import claim, release
 from src.scheduler.clock import ReminderClock
 
 logger = logging.getLogger(__name__)
@@ -35,12 +35,22 @@ def build_clock(settings: Settings) -> ReminderClock | None:
         async with AsyncSessionLocal() as session:
             return await claim(session, job, due_on, at)
 
+    async def release_run(job: str, due_on: date) -> None:
+        async with AsyncSessionLocal() as session:
+            await release(session, job, due_on)
+
     async def run_round(cadence: ReminderCadence, now: datetime) -> int:
         async with AsyncSessionLocal() as session:
             use_case = build_send_due_reminders_use_case(session)
-            sent = await use_case.execute(cadence, now)
-            await session.commit()
-            return sent
+            try:
+                return await use_case.execute(cadence, now)
+            finally:
+                # Committed on the way out, failure included. Every stamp the
+                # round moved says a letter *actually went out*; rolling them
+                # back because the round died later would send those letters
+                # a second time on the retry, which is exactly what the stamp
+                # exists to prevent.
+                await session.commit()
 
     try:
         send_at = time.fromisoformat(settings.reminder_send_at)
@@ -59,4 +69,5 @@ def build_clock(settings: Settings) -> ReminderClock | None:
         tick_seconds=settings.reminder_tick_seconds,
         claim_run=claim_run,
         run_round=run_round,
+        release_run=release_run,
     )

@@ -45,6 +45,17 @@ const mission = (
     departments: [],
   }) as ProjectListItemResponse;
 
+/** A mission and the day it was last posted on, or `null` for a silent one. */
+const spokenOf = (label: string, publishedAt: string | null) =>
+  ({
+    ...mission(label),
+    latest_update: publishedAt && {
+      author: { id: 1, display_name: "Léa Chen", initials: "LÉ" },
+      body: "La recette commence lundi",
+      published_at: publishedAt,
+    },
+  }) as ProjectListItemResponse;
+
 const labels = (missions: ProjectListItemResponse[], sorted: MissionSort) =>
   [...missions].sort(sortComparator(sorted)).map((m) => m.project.label);
 
@@ -127,6 +138,53 @@ describe("the reference list order", () => {
     expect(labels(missions, { column: "run", direction: "asc" })).toEqual([
       "Peu",
       "Beaucoup",
+    ]);
+  });
+
+  it("arranges by when the mission was last spoken of", () => {
+    const missions = [
+      spokenOf("Ancienne", "2026-03-04T09:00:00Z"),
+      spokenOf("Récente", "2026-09-20T09:00:00Z"),
+    ];
+
+    expect(labels(missions, { column: "lastUpdate", direction: "asc" })).toEqual([
+      "Ancienne",
+      "Récente",
+    ]);
+    expect(labels(missions, { column: "lastUpdate", direction: "desc" })).toEqual([
+      "Récente",
+      "Ancienne",
+    ]);
+  });
+
+  /** Two updates the same morning are not a tie: the column reads the hour. */
+  it("separates two updates posted on the same day", () => {
+    const missions = [
+      spokenOf("Alpha", "2026-09-20T17:00:00Z"),
+      spokenOf("Bravo", "2026-09-20T08:00:00Z"),
+    ];
+
+    expect(labels(missions, { column: "lastUpdate", direction: "desc" })).toEqual([
+      "Alpha",
+      "Bravo",
+    ]);
+  });
+
+  it("leaves a mission nobody ever spoke of at the end, in both directions", () => {
+    // « Jamais » is not « il y a très longtemps »: a silent mission must not
+    // take the top of a descending sort.
+    const missions = [
+      spokenOf("Muette", null),
+      spokenOf("Parlante", "2026-03-04T09:00:00Z"),
+    ];
+
+    expect(labels(missions, { column: "lastUpdate", direction: "asc" })).toEqual([
+      "Parlante",
+      "Muette",
+    ]);
+    expect(labels(missions, { column: "lastUpdate", direction: "desc" })).toEqual([
+      "Parlante",
+      "Muette",
     ]);
   });
 

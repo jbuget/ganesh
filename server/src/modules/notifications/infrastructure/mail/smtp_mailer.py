@@ -6,20 +6,34 @@ MinIO. SMTP rather than Mailgun's template API on purpose — a template held by
 the provider would take the French out of the repository, out of git and out of
 the tests, and weld Ganesh to one supplier for the privilege.
 
-With no host configured the mailer says so once and drops what it is handed:
-the whole application runs on a machine that can reach no mail server, which is
-the contract `GEMINI_API_KEY` already has.
+With no host configured there is nowhere to post, and saying so is the whole
+job: the clock never starts without one, so the only caller that can reach an
+unconfigured mailer is a manager pressing « envoyer » — usually to find out
+whether the configuration works. Dropping the letter and answering « envoyée »
+would tell them it does, send nothing, and move every stamp it touched, so
+what it announced would never be announced again.
 """
 
-import logging
 from email.message import EmailMessage
 
 import aiosmtplib
 
 from src.modules.notifications.domain.entities.letter import Letter
-from src.modules.notifications.domain.repositories.mailer import Mailer
+from src.modules.notifications.domain.repositories.mailer import (
+    Mailer,
+    MailerUnavailableError,
+)
 
-logger = logging.getLogger(__name__)
+#: What means « nowhere to post anything », as opposed to « this one letter was
+#: refused ». Authentication and connection sit on the transport, not on the
+#: envelope: every letter of the round would meet the same wall.
+UNUSABLE = (
+    aiosmtplib.SMTPAuthenticationError,
+    aiosmtplib.SMTPConnectError,
+    aiosmtplib.SMTPConnectTimeoutError,
+    aiosmtplib.SMTPServerDisconnected,
+    OSError,
+)
 
 
 class SmtpMailer(Mailer):
@@ -40,17 +54,12 @@ class SmtpMailer(Mailer):
         self._password = password
         self._sender = sender
         self._use_starttls = use_starttls
-        if not host:
-            logger.info("No SMTP host configured: reminders are not sent.")
-
-    @property
-    def is_configured(self) -> bool:
-        """Whether there is anywhere to hand a letter to."""
-        return bool(self._host)
 
     async def send(self, letter: Letter) -> None:
-        if not self.is_configured:
-            return
+        if not self._host:
+            raise MailerUnavailableError(
+                "No SMTP host is configured: there is nowhere to post a letter."
+            )
 
         message = EmailMessage()
         message["From"] = self._sender
@@ -62,11 +71,19 @@ class SmtpMailer(Mailer):
         message.set_content(letter.text)
         message.add_alternative(letter.html, subtype="html")
 
-        await aiosmtplib.send(
-            message,
-            hostname=self._host,
-            port=self._port,
-            username=self._username or None,
-            password=self._password or None,
-            start_tls=self._use_starttls,
-        )
+        try:
+            await aiosmtplib.send(
+                message,
+                hostname=self._host,
+                port=self._port,
+                username=self._username or None,
+                password=self._password or None,
+                start_tls=self._use_starttls,
+            )
+        except UNUSABLE as error:
+            # Nothing would get through, for anybody: a key the server refuses,
+            # a host nobody can reach. Said once and raised as such, rather
+            # than repeated to every recipient in turn.
+            raise MailerUnavailableError(
+                f"The mail server at {self._host}:{self._port} cannot be used: {error}"
+            ) from error

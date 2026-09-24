@@ -44,6 +44,10 @@ export function UserMenu({ user, onSignOut, collapsed = false }: UserMenuProps) 
         </span>
         <span className={collapsed ? "sr-only" : "min-w-0 text-left"}>
           <span className="block truncate text-sm">{user.display_name}</span>
+          {/* The ordinary role goes unsaid; every other one is worth
+              reading under the name — a guest needs to know they are one, and
+              a manager which hat they are wearing. A display rule, not a
+              right: nothing here decides what anybody may do. */}
           {user.role !== "TEAMMATE" && (
             <span className="block text-xs text-slate-500">{roleLabel(user.role)}</span>
           )}
