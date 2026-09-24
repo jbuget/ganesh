@@ -108,8 +108,15 @@ export function TimesheetGrid({
 
   return (
     <div className="max-w-full overflow-x-auto" data-grid-scroller>
+      {/* `relative` is load-bearing, not decoration. The header cells carry
+          `sr-only` labels, and Tailwind draws those `position: absolute`:
+          with no positioned ancestor they resolve against the document
+          instead of the table, escape this scroller entirely, and stretch the
+          page a couple of hundred pixels to the right. The whole window then
+          scrolls sideways and takes the sidebar off screen. Positioning the
+          table pins them back inside it. */}
       <table
-        className="w-max border-separate border-spacing-0 border-l border-slate-500 text-slate-800"
+        className="relative w-max border-separate border-spacing-0 border-l border-slate-500 text-slate-800"
         onKeyDown={keys.onKeyDown}
         onFocus={keys.onFocus}
       >

@@ -426,3 +426,21 @@ describe("TimesheetGrid, moved around with the keys", () => {
     expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-14", 1);
   });
 });
+
+describe("TimesheetGrid, held inside its own scroller", () => {
+  /**
+   * A regression test on a class name, which is unusual — but the defect it
+   * guards is a layout one, and jsdom computes no layout.
+   *
+   * The header cells carry `sr-only` labels, drawn `position: absolute`. With
+   * no positioned ancestor they resolve against the document rather than the
+   * table, escape the scroller, and stretch the page a couple of hundred
+   * pixels to the right: reaching the end of a month then scrolled the whole
+   * window sideways and took the sidebar off screen.
+   */
+  it("positions the table, so its screen-reader labels cannot escape it", () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    expect(screen.getByRole("table")).toHaveClass("relative");
+  });
+});
