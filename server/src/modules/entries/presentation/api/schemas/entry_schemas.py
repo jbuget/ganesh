@@ -11,6 +11,9 @@ class SetEntryRequest(BaseModel):
     """Request to write an entry."""
 
     project_id: int
+    #: The activity the day is booked under. Left out only for off-project
+    #: work, which is declared on directly.
+    activity_id: int | None = None
     day: date
     value: float = Field(description="0.5 for a half day, 1 for a full day")
 
@@ -19,6 +22,7 @@ class AddMissionRequest(BaseModel):
     """Request to put a mission on a month, before any time is entered on it."""
 
     project_id: int
+    activity_id: int | None = None
     month: date = Field(description="Any day of the month aimed at")
 
 
@@ -26,6 +30,7 @@ class EntryResponse(BaseModel):
     """A recorded entry."""
 
     project_id: int
+    activity_id: int | None
     day: date
     value: float
 
@@ -40,10 +45,15 @@ class CalendarDayResponse(BaseModel):
 
 
 class GridRowResponse(BaseModel):
-    """One grid row: a mission and its entries."""
+    """One grid row: an activity of a mission, or off-project work itself."""
 
     project_id: int
+    #: None on off-project work, which is a row of its own.
+    activity_id: int | None
+    #: What names the row: the activity, or the mission when there is none.
     label: str
+    #: The mission the row hangs under, so the grid can group its rows.
+    project_label: str
     kind: ProjectKind
     estimated_days: float | None
     values: dict[date, float]

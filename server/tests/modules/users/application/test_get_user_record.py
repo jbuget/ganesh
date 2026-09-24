@@ -58,6 +58,7 @@ def entry(day: date, project_id: int, value: float = 1.0) -> Entry:
         id=None,
         user_id=TEAMMATE_ID,
         project_id=project_id,
+        activity_id=None,
         day=day,
         value=DayValue(value),
     )

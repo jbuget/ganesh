@@ -51,6 +51,7 @@ def entry(day: date, value: float = 1.0) -> Entry:
         id=None,
         user_id=1,
         project_id=10,
+        activity_id=None,
         day=day,
         value=DayValue(value),
         status_at_entry=ProjectStatus.SCOPING,

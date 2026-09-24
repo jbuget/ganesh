@@ -56,6 +56,7 @@ async def client() -> AsyncIterator[AsyncClient]:
                     id=None,
                     user_id=2,
                     project_id=1,
+                    activity_id=None,
                     day=clock.today(),
                     value=DayValue(0.5),
                 )

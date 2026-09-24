@@ -27,11 +27,20 @@ class Entry:
 
     An entry remembers the project status at the moment it is written, which
     makes it possible to measure time consumed per phase.
+
+    It names both the mission and the activity, rather than the activity
+    alone: every reading that counts by mission — the statistics, the
+    Gazette, the Synthèse — asks one column, and off-project work carries no
+    activity to be asked for.
     """
 
     id: int | None
     user_id: int
     project_id: int
+    #: The activity the day is booked under. None on off-project work, which
+    #: is declared against directly, and on what predates the activities,
+    #: where nobody ever said which trade the day was spent under.
+    activity_id: int | None
     day: date
     value: DayValue
     status_at_entry: ProjectStatus | None = None

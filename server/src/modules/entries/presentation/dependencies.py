@@ -48,8 +48,14 @@ from src.modules.notifications.domain.services.delivery import NotificationDeliv
 from src.modules.notifications.presentation.dependencies import (
     get_notification_delivery,
 )
+from src.modules.projects.domain.repositories.activity_repository import (
+    ActivityRepository,
+)
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
+)
+from src.modules.projects.infrastructure.database.repositories.activity_repository_impl import (
+    SqlActivityRepository,
 )
 from src.modules.projects.infrastructure.database.repositories.project_repository_impl import (
     SqlProjectRepository,
@@ -68,6 +74,12 @@ def get_project_repository(
     session: AsyncSession = Depends(get_db),
 ) -> ProjectRepository:
     return SqlProjectRepository(session)
+
+
+def get_activity_repository(
+    session: AsyncSession = Depends(get_db),
+) -> ActivityRepository:
+    return SqlActivityRepository(session)
 
 
 def get_entry_repository(session: AsyncSession = Depends(get_db)) -> EntryRepository:
@@ -111,6 +123,7 @@ def get_audit_log_repository(
 def get_set_entry_use_case(
     users: UserRepository = Depends(get_user_repository),
     projects: ProjectRepository = Depends(get_project_repository),
+    activities: ActivityRepository = Depends(get_activity_repository),
     entries: EntryRepository = Depends(get_entry_repository),
     months: MonthRepository = Depends(get_month_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
@@ -119,6 +132,7 @@ def get_set_entry_use_case(
     return SetEntryUseCase(
         users=users,
         projects=projects,
+        activities=activities,
         entries=entries,
         months=months,
         audit_logs=audit_logs,
@@ -129,6 +143,7 @@ def get_set_entry_use_case(
 def get_month_grid_use_case(
     users: UserRepository = Depends(get_user_repository),
     projects: ProjectRepository = Depends(get_project_repository),
+    activities: ActivityRepository = Depends(get_activity_repository),
     entries: EntryRepository = Depends(get_entry_repository),
     months: MonthRepository = Depends(get_month_repository),
     user_missions: UserMissionRepository = Depends(get_user_mission_repository),
@@ -136,6 +151,7 @@ def get_month_grid_use_case(
     return GetMonthGridUseCase(
         users=users,
         projects=projects,
+        activities=activities,
         entries=entries,
         months=months,
         user_missions=user_missions,

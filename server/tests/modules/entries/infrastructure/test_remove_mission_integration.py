@@ -87,6 +87,7 @@ async def an_entry(
             id=None,
             user_id=user_id,
             project_id=project_id,
+            activity_id=None,
             day=date(2026, 9, day),
             value=DayValue(value),
             status_at_entry=ProjectStatus.DEVELOPMENT,
@@ -115,7 +116,11 @@ async def test_the_mission_leaves_the_month_and_its_neighbours_stay(
 
     removed = await build(db_session).execute(
         RemoveMissionCommand(
-            actor_id=user_id, target_user_id=user_id, project_id=target, month=MONTH
+            actor_id=user_id,
+            target_user_id=user_id,
+            project_id=target,
+            activity_id=None,
+            month=MONTH,
         )
     )
 
@@ -132,7 +137,11 @@ async def test_a_month_without_the_mission_is_left_untouched(
 
     removed = await build(db_session).execute(
         RemoveMissionCommand(
-            actor_id=user_id, target_user_id=user_id, project_id=target, month=MONTH
+            actor_id=user_id,
+            target_user_id=user_id,
+            project_id=target,
+            activity_id=None,
+            month=MONTH,
         )
     )
 
@@ -145,14 +154,18 @@ async def test_a_mission_lined_up_without_time_leaves_the_month_for_good(
 ) -> None:
     user_id, target, spared = await seed(db_session)
     rows = SqlUserMissionRepository(db_session)
-    await rows.add(user_id, target, MONTH)
-    await rows.add(user_id, spared, MONTH)
+    await rows.add(user_id, target, None, MONTH)
+    await rows.add(user_id, spared, None, MONTH)
 
     removed = await build(db_session).execute(
         RemoveMissionCommand(
-            actor_id=user_id, target_user_id=user_id, project_id=target, month=MONTH
+            actor_id=user_id,
+            target_user_id=user_id,
+            project_id=target,
+            activity_id=None,
+            month=MONTH,
         )
     )
 
     assert removed == 0
-    assert await rows.list_for_month(user_id, MONTH) == [spared]
+    assert await rows.list_for_month(user_id, MONTH) == [(spared, None)]

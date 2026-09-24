@@ -40,7 +40,7 @@ MONTH = date(2026, 9, 1)
 def build(
     entries: list[Entry] | None = None,
     months: list[Month] | None = None,
-    declared: list[tuple[int, int, date]] | None = None,
+    declared: list[tuple[int, int, int | None, date]] | None = None,
 ):
     users = InMemoryUserRepository([ALICE])
     entry_repo = InMemoryEntryRepository(entries or [])
@@ -64,6 +64,7 @@ def an_entry(
         id=entry_id,
         user_id=1,
         project_id=project_id,
+        activity_id=None,
         day=date(2026, 9, day),
         value=DayValue(value),
         status_at_entry=ProjectStatus.SCOPING,
@@ -72,7 +73,11 @@ def an_entry(
 
 def a_command(project_id: int = 10) -> RemoveMissionCommand:
     return RemoveMissionCommand(
-        actor_id=1, target_user_id=1, project_id=project_id, month=MONTH
+        actor_id=1,
+        target_user_id=1,
+        project_id=project_id,
+        activity_id=None,
+        month=MONTH,
     )
 
 
@@ -137,14 +142,18 @@ async def test_an_unknown_actor_is_refused() -> None:
     with pytest.raises(EntityNotFoundError):
         await use_case.execute(
             RemoveMissionCommand(
-                actor_id=99, target_user_id=1, project_id=10, month=MONTH
+                actor_id=99,
+                target_user_id=1,
+                project_id=10,
+                activity_id=None,
+                month=MONTH,
             )
         )
 
 
 async def test_the_mission_is_taken_off_the_month() -> None:
     """A row lined up but still empty must go for good, not come back reloaded."""
-    use_case, _, _, rows = build(declared=[(1, 10, MONTH)])
+    use_case, _, _, rows = build(declared=[(1, 10, None, MONTH)])
 
     await use_case.execute(a_command())
 
@@ -152,22 +161,22 @@ async def test_the_mission_is_taken_off_the_month() -> None:
 
 
 async def test_taking_a_mission_off_leaves_the_other_rows_of_the_month() -> None:
-    use_case, _, _, rows = build(declared=[(1, 10, MONTH), (1, 11, MONTH)])
+    use_case, _, _, rows = build(declared=[(1, 10, None, MONTH), (1, 11, None, MONTH)])
 
     await use_case.execute(a_command())
 
-    assert await rows.list_for_month(1, MONTH) == [11]
+    assert await rows.list_for_month(1, MONTH) == [(11, None)]
 
 
 async def test_a_validated_month_keeps_its_rows() -> None:
     month = Month(user_id=1, month=MONTH)
     month.validate(by=ALICE)
-    use_case, _, _, rows = build(months=[month], declared=[(1, 10, MONTH)])
+    use_case, _, _, rows = build(months=[month], declared=[(1, 10, None, MONTH)])
 
     with pytest.raises(ForbiddenActionError):
         await use_case.execute(a_command())
 
-    assert await rows.list_for_month(1, MONTH) == [10]
+    assert await rows.list_for_month(1, MONTH) == [(10, None)]
 
 
 async def test_a_row_leaving_a_month_is_traced_even_when_it_carried_nothing() -> None:
@@ -180,7 +189,11 @@ async def test_a_row_leaving_a_month_is_traced_even_when_it_carried_nothing() ->
 
     await use_case.execute(
         RemoveMissionCommand(
-            actor_id=1, target_user_id=1, project_id=10, month=date(2026, 9, 23)
+            actor_id=1,
+            target_user_id=1,
+            project_id=10,
+            activity_id=None,
+            month=date(2026, 9, 23),
         )
     )
 

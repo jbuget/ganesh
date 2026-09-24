@@ -16,6 +16,7 @@ def to_entity(model: EntryModel) -> Entry:
         id=model.id,
         user_id=model.user_id,
         project_id=model.project_id,
+        activity_id=model.activity_id,
         day=model.day,
         value=DayValue(model.value),
         status_at_entry=model.status_at_entry,
@@ -29,21 +30,32 @@ class SqlEntryRepository(EntryRepository):
         self._session = session
 
     async def _get_model(
-        self, user_id: int, project_id: int, day: date
+        self, user_id: int, project_id: int, activity_id: int | None, day: date
     ) -> EntryModel | None:
         result = await self._session.execute(
             select(EntryModel).where(
                 and_(
                     EntryModel.user_id == user_id,
                     EntryModel.project_id == project_id,
+                    # `is_` rather than `==`: null is never equal to null in
+                    # SQL, and an entry carrying no activity would never be
+                    # found again — the grid would keep writing new rows
+                    # beside it until the unique constraint refused one.
+                    (
+                        EntryModel.activity_id.is_(None)
+                        if activity_id is None
+                        else EntryModel.activity_id == activity_id
+                    ),
                     EntryModel.day == day,
                 )
             )
         )
         return result.scalar_one_or_none()
 
-    async def get(self, user_id: int, project_id: int, day: date) -> Entry | None:
-        model = await self._get_model(user_id, project_id, day)
+    async def get(
+        self, user_id: int, project_id: int, activity_id: int | None, day: date
+    ) -> Entry | None:
+        model = await self._get_model(user_id, project_id, activity_id, day)
         return to_entity(model) if model else None
 
     async def list_for_month(self, user_id: int, month: date) -> list[Entry]:
@@ -166,11 +178,14 @@ class SqlEntryRepository(EntryRepository):
         return [to_entity(model) for model in result.scalars().all()]
 
     async def upsert(self, entry: Entry) -> Entry:
-        model = await self._get_model(entry.user_id, entry.project_id, entry.day)
+        model = await self._get_model(
+            entry.user_id, entry.project_id, entry.activity_id, entry.day
+        )
         if model is None:
             model = EntryModel(
                 user_id=entry.user_id,
                 project_id=entry.project_id,
+                activity_id=entry.activity_id,
                 day=entry.day,
                 value=float(entry.value),
                 status_at_entry=entry.status_at_entry,
@@ -183,8 +198,10 @@ class SqlEntryRepository(EntryRepository):
         entry.id = model.id
         return entry
 
-    async def delete(self, user_id: int, project_id: int, day: date) -> None:
-        model = await self._get_model(user_id, project_id, day)
+    async def delete(
+        self, user_id: int, project_id: int, activity_id: int | None, day: date
+    ) -> None:
+        model = await self._get_model(user_id, project_id, activity_id, day)
         if model is not None:
             await self._session.delete(model)
             await self._session.flush()

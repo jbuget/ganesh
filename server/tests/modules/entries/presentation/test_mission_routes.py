@@ -112,7 +112,7 @@ async def test_a_mission_is_put_on_ones_own_month(screen: Screen) -> None:
     response = await screen.add(project_id=10)
 
     assert response.status_code == 204
-    assert await screen.rows.list_for_month(1, MONTH) == [10]
+    assert await screen.rows.list_for_month(1, MONTH) == [(10, None)]
 
 
 async def test_a_mission_is_put_on_a_colleagues_month(screen: Screen) -> None:
@@ -120,7 +120,7 @@ async def test_a_mission_is_put_on_a_colleagues_month(screen: Screen) -> None:
     response = await screen.add(project_id=10, user_id=2)
 
     assert response.status_code == 204
-    assert await screen.rows.list_for_month(2, MONTH) == [10]
+    assert await screen.rows.list_for_month(2, MONTH) == [(10, None)]
     assert await screen.rows.list_for_month(1, MONTH) == []
 
 

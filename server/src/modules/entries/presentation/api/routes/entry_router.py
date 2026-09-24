@@ -135,6 +135,7 @@ async def set_entry(
             actor_id=current_user.id,
             target_user_id=user_id or current_user.id,
             project_id=payload.project_id,
+            activity_id=payload.activity_id,
             day=payload.day,
             value=payload.value,
         )
@@ -151,6 +152,10 @@ async def set_entry(
 async def clear_entry(
     project_id: int,
     day: date,
+    activity_id: int | None = Query(
+        default=None,
+        description="Activity the day was booked under; omitted off-project.",
+    ),
     user_id: int | None = Query(
         default=None, description="Teammate whose month is changed."
     ),
@@ -165,6 +170,7 @@ async def clear_entry(
             actor_id=current_user.id,
             target_user_id=user_id or current_user.id,
             project_id=project_id,
+            activity_id=activity_id,
             day=day,
         )
     )
@@ -193,6 +199,7 @@ async def add_mission_to_month(
             actor_id=current_user.id,
             target_user_id=user_id or current_user.id,
             project_id=payload.project_id,
+            activity_id=payload.activity_id,
             month=payload.month,
         )
     )
@@ -208,6 +215,10 @@ async def add_mission_to_month(
 async def remove_mission_from_month(
     project_id: int,
     month: date = Query(description="Any day of the month aimed at"),
+    activity_id: int | None = Query(
+        default=None,
+        description="Activity the row stands for; omitted off-project.",
+    ),
     user_id: int | None = Query(
         default=None, description="Teammate whose month is changed."
     ),
@@ -222,6 +233,7 @@ async def remove_mission_from_month(
             actor_id=current_user.id,
             target_user_id=user_id or current_user.id,
             project_id=project_id,
+            activity_id=activity_id,
             month=month,
         )
     )

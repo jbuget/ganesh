@@ -62,6 +62,7 @@ async def client() -> AsyncIterator[AsyncClient]:
                 id=None,
                 user_id=1,
                 project_id=10,
+                activity_id=None,
                 day=date(2026, 5, 4),
                 value=DayValue(1.0),
                 status_at_entry=ProjectStatus.DEVELOPMENT,

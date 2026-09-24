@@ -58,6 +58,7 @@ def days_spent(
             id=None,
             user_id=1,
             project_id=project_id,
+            activity_id=None,
             day=ending - timedelta(days=offset),
             value=DayValue(1.0),
             status_at_entry=status,

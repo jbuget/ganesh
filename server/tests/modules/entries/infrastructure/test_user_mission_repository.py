@@ -54,9 +54,9 @@ async def test_a_mission_put_on_a_month_is_read_back(
     user_id, project_id = await seed(db_session)
     rows = SqlUserMissionRepository(db_session)
 
-    await rows.add(user_id, project_id, MONTH)
+    await rows.add(user_id, project_id, None, MONTH)
 
-    assert await rows.list_for_month(user_id, MONTH) == [project_id]
+    assert await rows.list_for_month(user_id, MONTH) == [(project_id, None)]
 
 
 async def test_any_day_of_the_month_lands_on_the_same_row(
@@ -66,17 +66,17 @@ async def test_any_day_of_the_month_lands_on_the_same_row(
     user_id, project_id = await seed(db_session)
     rows = SqlUserMissionRepository(db_session)
 
-    await rows.add(user_id, project_id, date(2026, 9, 24))
-    await rows.add(user_id, project_id, MONTH)
+    await rows.add(user_id, project_id, None, date(2026, 9, 24))
+    await rows.add(user_id, project_id, None, MONTH)
 
-    assert await rows.list_for_month(user_id, date(2026, 9, 30)) == [project_id]
+    assert await rows.list_for_month(user_id, date(2026, 9, 30)) == [(project_id, None)]
 
 
 async def test_another_month_is_left_out(db_session: AsyncSession) -> None:
     user_id, project_id = await seed(db_session)
     rows = SqlUserMissionRepository(db_session)
 
-    await rows.add(user_id, project_id, MONTH)
+    await rows.add(user_id, project_id, None, MONTH)
 
     assert await rows.list_for_month(user_id, date(2026, 8, 1)) == []
 
@@ -84,9 +84,9 @@ async def test_another_month_is_left_out(db_session: AsyncSession) -> None:
 async def test_a_mission_taken_off_is_gone(db_session: AsyncSession) -> None:
     user_id, project_id = await seed(db_session)
     rows = SqlUserMissionRepository(db_session)
-    await rows.add(user_id, project_id, MONTH)
+    await rows.add(user_id, project_id, None, MONTH)
 
-    await rows.remove(user_id, project_id, MONTH)
+    await rows.remove(user_id, project_id, None, MONTH)
 
     assert await rows.list_for_month(user_id, MONTH) == []
 
@@ -97,6 +97,6 @@ async def test_taking_off_a_mission_that_was_not_there_is_harmless(
     user_id, project_id = await seed(db_session)
     rows = SqlUserMissionRepository(db_session)
 
-    await rows.remove(user_id, project_id, MONTH)
+    await rows.remove(user_id, project_id, None, MONTH)
 
     assert await rows.list_for_month(user_id, MONTH) == []

@@ -15,6 +15,8 @@ class SetEntryCommand:
     actor_id: int
     target_user_id: int
     project_id: int
+    #: The activity the day is booked under. None only for off-project work.
+    activity_id: int | None
     day: date
     value: float
 
@@ -26,6 +28,7 @@ class ClearEntryCommand:
     actor_id: int
     target_user_id: int
     project_id: int
+    activity_id: int | None
     day: date
 
 
@@ -39,6 +42,7 @@ class RemoveMissionCommand:
     actor_id: int
     target_user_id: int
     project_id: int
+    activity_id: int | None
     month: date
 
 
@@ -52,4 +56,5 @@ class AddMissionCommand:
     actor_id: int
     target_user_id: int
     project_id: int
+    activity_id: int | None
     month: date

@@ -61,7 +61,10 @@ class RemoveMissionFromMonthUseCase:
         )
 
         await self._user_missions.remove(
-            command.target_user_id, command.project_id, command.month
+            command.target_user_id,
+            command.project_id,
+            command.activity_id,
+            command.month,
         )
         # The row leaving is its own fact, said beside the entries it cleared:
         # a row taken off while empty would otherwise leave nothing at all.
@@ -86,12 +89,16 @@ class RemoveMissionFromMonthUseCase:
                 command.target_user_id, command.month
             )
             if entry.project_id == command.project_id
+            and entry.activity_id == command.activity_id
         ]
 
         removed = 0.0
         for entry in entries:
             await self._entries.delete(
-                command.target_user_id, command.project_id, entry.day
+                command.target_user_id,
+                command.project_id,
+                command.activity_id,
+                entry.day,
             )
             await self._audit_logs.add(
                 AuditLog.entry_clear(

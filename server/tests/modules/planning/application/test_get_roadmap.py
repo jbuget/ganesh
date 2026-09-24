@@ -71,6 +71,7 @@ def entries_on(project_id: int, days: list[date]) -> list[Entry]:
             id=None,
             user_id=1,
             project_id=project_id,
+            activity_id=None,
             day=day,
             value=DayValue(1.0),
             status_at_entry=ProjectStatus.DEVELOPMENT,

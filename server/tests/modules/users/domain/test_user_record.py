@@ -16,7 +16,12 @@ TODAY = date(2026, 9, 17)
 
 def entry(day: date, project_id: int = 1, value: float = 1.0) -> Entry:
     return Entry(
-        id=None, user_id=7, project_id=project_id, day=day, value=DayValue(value)
+        id=None,
+        user_id=7,
+        project_id=project_id,
+        activity_id=None,
+        day=day,
+        value=DayValue(value),
     )
 
 

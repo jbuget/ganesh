@@ -14,6 +14,7 @@ def make_entry(value: float = 1.0, day: date = date(2026, 9, 15)) -> Entry:
         id=None,
         user_id=1,
         project_id=2,
+        activity_id=None,
         day=day,
         value=DayValue(value),
         status_at_entry=ProjectStatus.DEVELOPMENT,

@@ -40,10 +40,14 @@ from src.mcp.tools import say
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.calendar.domain.services.working_days import DayKind, classify_day
 from src.modules.entries.application.dtos.set_entry_dto import SetEntryCommand
-from src.modules.entries.presentation.dependencies import get_set_entry_use_case
+from src.modules.entries.presentation.dependencies import (
+    get_activity_repository,
+    get_set_entry_use_case,
+)
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
     ForbiddenActionError,
+    ValidationError,
 )
 
 SCOPE = ApiKeyScope.ENTRIES_WRITE
@@ -59,12 +63,19 @@ OFF_DAYS = {
 
 
 @answers(SCOPE)
-async def declare_time(project_id: int, day: str, value: float) -> str:
-    """Déclare du temps sur un projet, pour le porteur de la clé.
+async def declare_time(
+    project_id: int, day: str, value: float, activity_id: int | None = None
+) -> str:
+    """Déclare du temps sur une activité d'un projet, pour le porteur de la clé.
 
     Le jour se donne au format AAAA-MM-JJ, la valeur vaut 0,5 ou 1. Écrit dans
     votre mois et dans aucun autre. L'identifiant du projet se trouve avec
-    `find_project`.
+    `find_project`, qui nomme aussi ses activités.
+
+    Un temps se déclare sur une activité du projet — « Développement »,
+    « Chefferie de projet » — et non sur le projet lui-même : c'est l'activité
+    qui porte le budget du métier sous lequel la journée est passée. Seul le
+    hors-projet, absences et formation, se déclare en direct.
     """
     written = _day(day)
     if written is None:
@@ -93,6 +104,7 @@ async def declare_time(project_id: int, day: str, value: float) -> str:
         # this on purpose: no colleague to hit by mistake.
         target_user_id=machine.caller.actor_id,
         project_id=project_id,
+        activity_id=activity_id,
         day=written,
         value=value,
     )
@@ -110,6 +122,11 @@ async def declare_time(project_id: int, day: str, value: float) -> str:
             f"Aucun projet ne porte l'identifiant {project_id}. "
             "`find_project` le donne à partir d'un nom."
         ) from missing
+    except ValidationError as refused:
+        # The activity is missing, or belongs to another mission. Naming the
+        # ones that would answer says more than repeating the refusal: a
+        # model told only « non » guesses an identifier.
+        raise ToolError(f"{refused} {await _activities_of(project_id)}") from refused
     await machine.wiring.session.commit()
 
     # Read back rather than confirmed: « c'est fait » asks to be trusted, and
@@ -118,6 +135,21 @@ async def declare_time(project_id: int, day: str, value: float) -> str:
         f"{say.days(float(entry.value))} sur le projet #{entry.project_id} "
         f"le {say.dated(entry.day)}."
     )
+
+
+async def _activities_of(project_id: int) -> str:
+    """The activities one may declare on, named so a model need not guess."""
+    machine = current_machine()
+    activities = await machine.resolve(get_activity_repository)
+    open_ones = [
+        a for a in await activities.list_for_project(project_id) if a.is_active
+    ]
+
+    if not open_ones:
+        return "Ce projet ne porte aucune activité ouverte."
+
+    named = ", ".join(f"« {a.label} » (#{a.id})" for a in open_ones)
+    return f"Les activités de ce projet : {named}."
 
 
 def _day(given: str) -> date | None:

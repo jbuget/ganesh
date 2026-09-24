@@ -52,6 +52,7 @@ class Writer:
             id=1,
             user_id=command.target_user_id,
             project_id=command.project_id,
+            activity_id=None,
             day=command.day,
             value=command.value,
             status_at_entry=ProjectStatus.DEVELOPMENT,
