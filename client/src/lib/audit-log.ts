@@ -348,6 +348,13 @@ export function auditSentence(
     case "user.reminder_choose":
       return { action: "a choisi sa fréquence de rappel" };
 
+    // A manager sending the round by hand — the morning the clock got it
+    // wrong, or a first letter before trusting the whole thing to a schedule.
+    // How many letters went out is in the payload, which no screen reads: the
+    // manager was told on the spot, and the line says the campaign was run.
+    case "reminder.run":
+      return { action: "a lancé les rappels par e-mail" };
+
     // A key is named by its masked public part — the only piece of it the
     // register holds, the secret having never been written anywhere.
     case "api_key.create":

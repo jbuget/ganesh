@@ -5,8 +5,19 @@ import { NotificationsPage } from "./NotificationsPage";
 import type { NotificationResponse } from "@/lib/api/generated/model";
 
 const inbox = vi.hoisted(() => ({ state: {} as Record<string, unknown> }));
+const signedIn = vi.hoisted(() => ({ role: "TEAMMATE" as string }));
 
 vi.mock("@/lib/use-inbox", () => ({ useInbox: () => inbox.state, PAGE_SIZE: 20 }));
+
+/** Only the role is read here: it decides whether the manager panel shows. */
+vi.mock("@/lib/api/queries", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  useCurrentUser: () => ({ user: { id: 1, role: signedIn.role } }),
+}));
+
+vi.mock("@/lib/use-reminders", () => ({
+  useReminderRuns: () => ({ isRunning: false, outcome: null, run: vi.fn() }),
+}));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
@@ -31,6 +42,7 @@ beforeEach(() => {
   // The open panel lives in the address, and a line only opens one on the
   // screen it points at: the inbox is where these tests stand.
   window.history.replaceState(null, "", "/notifications");
+  signedIn.role = "TEAMMATE";
 });
 
 function line(over: Partial<NotificationResponse> = {}): NotificationResponse {
@@ -159,5 +171,22 @@ describe("NotificationsPage", () => {
     expect(
       screen.queryByRole("button", { name: "Page suivante" }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("the round a manager sends by hand", () => {
+  it("is offered to a manager, at the foot of their own inbox", () => {
+    signedIn.role = "MANAGER";
+    render(<NotificationsPage />);
+
+    expect(screen.getByText("Rappels par e-mail")).toBeInTheDocument();
+  });
+
+  it("is not offered to a teammate", () => {
+    // It writes to the whole team at once.
+    signedIn.role = "TEAMMATE";
+    render(<NotificationsPage />);
+
+    expect(screen.queryByText("Rappels par e-mail")).not.toBeInTheDocument();
   });
 });

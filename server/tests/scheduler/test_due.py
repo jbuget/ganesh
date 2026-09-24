@@ -4,7 +4,8 @@ from datetime import datetime, time
 from zoneinfo import ZoneInfo
 
 from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
-from src.scheduler.due import PARIS, cadences_due, first_working_day_of_week
+from src.scheduler.due import cadences_due, first_working_day_of_week
+from src.shared.utils.clock import PARIS
 
 UTC = ZoneInfo("UTC")
 AT = time(8, 30)

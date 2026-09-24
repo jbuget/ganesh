@@ -95,6 +95,7 @@ export const ACTION_FAMILIES: ActionFamily[] = [
       { value: "user.identity_update", label: "Fiche modifiée" },
       { value: "user.presence_declare", label: "Semaine déclarée" },
       { value: "user.reminder_choose", label: "Fréquence de rappel" },
+      { value: "reminder.run", label: "Rappels envoyés" },
       { value: "user.deactivate", label: "Désactivation" },
       { value: "user.activate", label: "Réactivation" },
     ],

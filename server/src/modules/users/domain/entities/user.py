@@ -155,6 +155,15 @@ class User:
         """
         self.reminder_sent_at = at
 
+    def can_run_reminders(self) -> bool:
+        """Only a manager sends the round by hand.
+
+        It writes to the whole team at once, which is a gesture nobody should
+        be able to make by wandering into a screen — and the one reason it
+        exists is to repair a morning the clock got wrong.
+        """
+        return self.is_active and self.is_manager
+
     def can_deactivate(self, target: "User") -> bool:
         """Tells whether this manager may cut `target` off.
 

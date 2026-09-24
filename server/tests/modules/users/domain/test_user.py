@@ -240,3 +240,16 @@ def test_a_reader_asks_for_no_letter_at_all() -> None:
 @pytest.mark.parametrize("cadence", [ReminderCadence.DAILY, ReminderCadence.WEEKLY])
 def test_every_cadence_but_never_is_owed_a_letter(cadence: ReminderCadence) -> None:
     assert cadence.wants_mail is True
+
+
+def test_a_manager_sends_the_round_by_hand() -> None:
+    assert make_user(Role.MANAGER).can_run_reminders() is True
+
+
+def test_a_teammate_does_not_send_the_round_by_hand() -> None:
+    # It writes to the whole team at once.
+    assert make_user(Role.TEAMMATE).can_run_reminders() is False
+
+
+def test_a_deactivated_manager_sends_nothing() -> None:
+    assert make_user(Role.MANAGER, is_active=False).can_run_reminders() is False
