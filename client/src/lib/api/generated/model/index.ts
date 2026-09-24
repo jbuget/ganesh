@@ -62,6 +62,7 @@ export * from "./exportEntriesParams";
 export * from "./freshnessResponse";
 export * from "./generateDigestRequest";
 export * from "./getActivityParams";
+export * from "./getActivitySummaryParams";
 export * from "./getBoardParams";
 export * from "./getDigestParams";
 export * from "./getMonthGridParams";

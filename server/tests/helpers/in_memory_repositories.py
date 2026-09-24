@@ -8,8 +8,8 @@ from collections.abc import Collection, Sequence
 from dataclasses import replace
 from datetime import date, datetime
 
-from src.modules.activity.domain.repositories.activity_repository import (
-    ActivityRepository,
+from src.modules.activity_summary.domain.repositories.activity_summary_repository import (
+    ActivitySummaryRepository,
     DeclaredDays,
     MissionRecord,
 )
@@ -716,7 +716,7 @@ class InMemoryAttachmentStore(AttachmentStore):
         self.types.pop(key, None)
 
 
-class InMemoryActivityRepository(ActivityRepository):
+class InMemoryActivitySummaryRepository(ActivitySummaryRepository):
     """What the Synthèse d'activité reads, held in memory.
 
     Rows are handed in already grouped, as the database would return them:

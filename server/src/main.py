@@ -7,7 +7,7 @@ from src.common.body_limit import BodySizeLimit
 from src.common.exception_handlers import register_domain_exception_handlers
 from src.core.config import get_settings
 from src.mcp.server import ToolServer
-from src.modules.activity.presentation.api.routes.activity_router import (
+from src.modules.activity_summary.presentation.api.routes.activity_summary_router import (
     router as activity_router,
 )
 from src.modules.api_keys.presentation.api.routes.api_key_router import (

@@ -1,4 +1,4 @@
-export * from "./activity/activity";
+export * from "./activity-summary/activity-summary";
 export * from "./api-keys/api-keys";
 export * from "./audit-logs/audit-logs";
 export * from "./auth/auth";
