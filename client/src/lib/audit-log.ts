@@ -376,6 +376,26 @@ export function auditSentence(
     case "project.status_change":
       return { action: "a changé la phase", ...movement("status", before, after) };
 
+    // What a mission is cut into. The line names the activity rather than the
+    // mission, which the heading above it already says.
+    case "activity.create":
+      return {
+        action: `a ajouté l'activité${after ? ` « ${after} »` : ""}`,
+      };
+
+    case "activity.update":
+      return { action: "a modifié une activité", ...movement("", before, after) };
+
+    case "activity.archive":
+      return {
+        action: `a archivé l'activité${before ? ` « ${before} »` : ""}`,
+      };
+
+    case "activity.unarchive":
+      return {
+        action: `a rouvert l'activité${after ? ` « ${after} »` : ""}`,
+      };
+
     case "project.update":
       return fieldSentence(entry);
 

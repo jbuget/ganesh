@@ -61,6 +61,15 @@ export const ACTION_FAMILIES: ActionFamily[] = [
     ],
   },
   {
+    label: "Activités",
+    actions: [
+      { value: "activity.create", label: "Création" },
+      { value: "activity.update", label: "Modification" },
+      { value: "activity.archive", label: "Archivage" },
+      { value: "activity.unarchive", label: "Réouverture" },
+    ],
+  },
+  {
     label: "Temps déclaré",
     actions: [
       { value: "entry.set", label: "Déclaration" },

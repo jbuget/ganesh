@@ -9,6 +9,10 @@ export type ClearEntryParams = {
   project_id: number;
   day: string;
   /**
+   * Activity the day was booked under; omitted off-project.
+   */
+  activity_id?: number | null;
+  /**
    * Teammate whose month is changed.
    */
   user_id?: number | null;
