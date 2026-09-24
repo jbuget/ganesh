@@ -8,6 +8,7 @@ what a screen has to say before withdrawing an activity.
 from datetime import date
 
 import pytest
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.entries.domain.entities.entry import DayValue, Entry
@@ -107,7 +108,10 @@ async def test_the_activities_of_one_mission_come_back_in_label_order(
 ) -> None:
     edit = await _mission(db_session, "Edit")
     await _activity(db_session, edit, "Développement")
-    await _activity(db_session, edit, "Chefferie de projet")
+    # A different trade, because one mission carries each only once.
+    await _activity(
+        db_session, edit, "Chefferie de projet", nature=WorkNature.PROJECT_MANAGEMENT
+    )
 
     activities = await SqlActivityRepository(db_session).list_for_project(edit)
 
@@ -198,3 +202,16 @@ async def test_an_activity_nobody_declared_on_counts_nothing(
     activity = await _activity(db_session, edit, "Développement")
 
     assert await SqlActivityRepository(db_session).count_entries(activity.id or 0) == 0
+
+
+async def test_the_database_refuses_a_second_activity_of_the_same_trade(
+    db_session: AsyncSession,
+) -> None:
+    """The rule is in the domain, and the table holds it too: a call that
+    went round the use case must not be able to split a mission's budget
+    across two lines nobody can tell apart."""
+    edit = await _mission(db_session, "Edit")
+    await _activity(db_session, edit, "Développement")
+
+    with pytest.raises(IntegrityError):
+        await _activity(db_session, edit, "Dev back")

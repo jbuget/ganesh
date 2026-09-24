@@ -162,6 +162,12 @@ each carries the budget for its own.
   unestimated rather than summing what happens to be filled in — a ratio drawn
   from half a budget announces an overrun nobody measured, in red, on a screen
   people steer by.
+- **One trade, once per mission.** Two « Développement » would split the
+  budget across two lines nobody can tell apart, and leave whoever fills in a
+  month choosing between two rows saying exactly the same. Held by the domain
+  and by a partial unique index, `is_active` being what the index is partial
+  on: an archived activity no longer holds the place, which is how a budget is
+  started over without losing the days booked against the old line.
 - **The list therefore reads three levels**: a project, its work packages, and
   under either of them the activities. It stops there. A work package carries
   activities and never another package.

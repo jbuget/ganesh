@@ -85,6 +85,25 @@ describe("ProjectActivities", () => {
     ).toHaveAttribute("title", "12 saisies restent lisibles");
   });
 
+  it("does not offer a trade the mission already carries", () => {
+    render(<ProjectActivities {...baseProps} activities={[activity()]} />);
+
+    const already = screen.getByRole("button", { name: "Développement" });
+    expect(already).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Design" })).toBeEnabled();
+  });
+
+  it("offers a trade again once its activity is archived", () => {
+    render(
+      <ProjectActivities
+        {...baseProps}
+        activities={[activity({ is_active: false })]}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Développement" })).toBeEnabled();
+  });
+
   it("folds the archived trades away rather than dropping them", () => {
     render(
       <ProjectActivities

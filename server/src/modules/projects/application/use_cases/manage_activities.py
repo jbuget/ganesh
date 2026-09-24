@@ -16,6 +16,7 @@ from src.modules.projects.domain.repositories.activity_repository import (
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.projects.domain.services.estimates import ensure_the_trade_is_free
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError, ValidationError
 
 
@@ -42,6 +43,11 @@ class CreateActivityUseCase:
             raise ValidationError(
                 f"« {mission.label} » is off-project work: it carries no activity."
             )
+
+        ensure_the_trade_is_free(
+            await self._activities.list_for_project(command.project_id),
+            command.nature,
+        )
 
         activity = await self._activities.add(
             Activity(
@@ -85,6 +91,13 @@ class UpdateActivityUseCase:
         if command.label is not None:
             activity.label = command.label
         if command.sets_nature:
+            # Checked before the change, not after: the trade it is leaving
+            # would otherwise read as taken by itself.
+            ensure_the_trade_is_free(
+                await self._activities.list_for_project(activity.project_id),
+                command.nature,
+                moving=activity.id,
+            )
             activity.nature = command.nature
         if command.sets_estimated_days:
             activity.estimated_days = command.estimated_days
@@ -167,6 +180,14 @@ class UnarchiveActivityUseCase:
             raise EntityNotFoundError("The activity cannot be found.")
 
         was_archived = not activity.is_active
+        # Coming back has to find the trade free: another activity may have
+        # taken it over while this one was away.
+        if was_archived:
+            ensure_the_trade_is_free(
+                await self._activities.list_for_project(activity.project_id),
+                activity.nature,
+                moving=activity.id,
+            )
         activity.unarchive()
         saved = await self._activities.update(activity)
 

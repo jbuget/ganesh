@@ -249,3 +249,105 @@ class TestLeavingWhatCanBeDeclaredOn:
         assert back.is_active is True
         assert back.archived_at is None
         assert audit.logs[0].action is AuditAction.ACTIVITY_UNARCHIVE
+
+
+class TestOneTradeOncePerMission:
+    def _dev(self, is_active: bool = True) -> Activity:
+        return Activity(
+            id=100,
+            project_id=10,
+            label="Développement",
+            nature=WorkNature.DEVELOPMENT,
+            is_active=is_active,
+        )
+
+    async def test_a_second_activity_of_the_same_trade_is_refused(self) -> None:
+        create, _, _, _, repo, audit = build([self._dev()])
+
+        with pytest.raises(ValidationError, match="already carries that trade"):
+            await create.execute(
+                CreateActivityCommand(
+                    actor_id=1,
+                    project_id=10,
+                    label="Dev back",
+                    nature=WorkNature.DEVELOPMENT,
+                )
+            )
+
+        assert len(await repo.list_for_project(10)) == 1
+        assert audit.logs == []
+
+    async def test_another_trade_is_welcome(self) -> None:
+        create, _, _, _, repo, _ = build([self._dev()])
+
+        await create.execute(
+            CreateActivityCommand(
+                actor_id=1,
+                project_id=10,
+                label="Design",
+                nature=WorkNature.DESIGN,
+            )
+        )
+
+        assert len(await repo.list_for_project(10)) == 2
+
+    async def test_an_archived_trade_frees_the_place(self) -> None:
+        create, _, _, _, repo, _ = build([self._dev(is_active=False)])
+
+        await create.execute(
+            CreateActivityCommand(
+                actor_id=1,
+                project_id=10,
+                label="Développement",
+                nature=WorkNature.DEVELOPMENT,
+            )
+        )
+
+        assert len(await repo.list_for_project(10)) == 2
+
+    async def test_moving_an_activity_onto_a_taken_trade_is_refused(self) -> None:
+        design = Activity(
+            id=101, project_id=10, label="Design", nature=WorkNature.DESIGN
+        )
+        _, update, _, _, _, _ = build([self._dev(), design])
+
+        with pytest.raises(ValidationError):
+            await update.execute(
+                UpdateActivityCommand(
+                    actor_id=1,
+                    activity_id=101,
+                    nature=WorkNature.DEVELOPMENT,
+                    sets_nature=True,
+                )
+            )
+
+    async def test_an_activity_keeping_its_own_trade_is_not_blocked_by_itself(
+        self,
+    ) -> None:
+        _, update, _, _, _, _ = build([self._dev()])
+
+        changed = await update.execute(
+            UpdateActivityCommand(
+                actor_id=1,
+                activity_id=100,
+                nature=WorkNature.DEVELOPMENT,
+                sets_nature=True,
+                label="Développement back",
+            )
+        )
+
+        assert changed.label == "Développement back"
+
+    async def test_coming_back_finds_the_trade_taken(self) -> None:
+        """Another activity may have taken it over while this one was away."""
+        away = Activity(
+            id=101,
+            project_id=10,
+            label="Ancien dev",
+            nature=WorkNature.DEVELOPMENT,
+            is_active=False,
+        )
+        _, _, _, unarchive, _, _ = build([self._dev(), away])
+
+        with pytest.raises(ValidationError):
+            await unarchive.execute(ArchiveActivityCommand(actor_id=1, activity_id=101))

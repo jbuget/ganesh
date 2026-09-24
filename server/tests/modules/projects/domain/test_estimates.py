@@ -1,8 +1,14 @@
-"""What a mission is estimated at, read from its activities."""
+"""What a mission is estimated at, and which trades it may still be cut into."""
+
+import pytest
 
 from src.modules.projects.domain.entities.activity import Activity
-from src.modules.projects.domain.services.estimates import estimate_of
+from src.modules.projects.domain.services.estimates import (
+    ensure_the_trade_is_free,
+    estimate_of,
+)
 from src.shared.enums.work_nature import WorkNature
+from src.shared.exceptions.domain_exceptions import ValidationError
 
 
 def an_activity(
@@ -54,3 +60,38 @@ def test_an_archived_activity_takes_its_budget_with_it() -> None:
 
 def test_a_mission_whose_every_activity_is_archived_reads_its_own_figure() -> None:
     assert estimate_of([an_activity(5.0, is_active=False)], own=20.0) == 20.0
+
+
+class TestOneTradeOncePerMission:
+    """Two « Développement » on one mission split its budget across two lines
+    nobody can tell apart, and leave whoever fills in a month choosing between
+    two rows saying exactly the same."""
+
+    def test_a_free_trade_is_accepted(self) -> None:
+        ensure_the_trade_is_free([an_activity()], WorkNature.DESIGN)
+
+    def test_a_trade_already_carried_is_refused(self) -> None:
+        with pytest.raises(ValidationError, match="already carries that trade"):
+            ensure_the_trade_is_free([an_activity()], WorkNature.DEVELOPMENT)
+
+    def test_a_mission_cut_into_nothing_accepts_any_trade(self) -> None:
+        ensure_the_trade_is_free([], WorkNature.DEVELOPMENT)
+
+    def test_an_archived_activity_no_longer_holds_the_place(self) -> None:
+        """That is how a budget is started over without losing the days
+        booked against the old line."""
+        ensure_the_trade_is_free([an_activity(is_active=False)], WorkNature.DEVELOPMENT)
+
+    def test_an_activity_never_blocks_itself(self) -> None:
+        kept = an_activity()
+        kept.id = 7
+
+        ensure_the_trade_is_free([kept], WorkNature.DEVELOPMENT, moving=7)
+
+    def test_a_second_activity_without_a_trade_is_refused_too(self) -> None:
+        """« No trade stated » is as undecidable twice as « Développement »."""
+        blank = an_activity(label="Reprise")
+        blank.nature = None
+
+        with pytest.raises(ValidationError):
+            ensure_the_trade_is_free([blank], None)

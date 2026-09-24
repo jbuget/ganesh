@@ -2,7 +2,18 @@
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, String, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    func,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
@@ -13,6 +24,22 @@ class ActivityModel(Base):
     """An activity: a trade a mission's days are booked under."""
 
     __tablename__ = "activities"
+    __table_args__ = (
+        # One trade, once per mission. A partial index rather than a plain
+        # constraint: an archived activity no longer holds the place, which
+        # is how a budget is started over without losing the days booked
+        # against the old line. NULLS NOT DISTINCT so that « no trade stated »
+        # is itself unique — two of those would be as undecidable as two
+        # « Développement ».
+        Index(
+            "uq_activity_trade",
+            "project_id",
+            "nature",
+            unique=True,
+            postgresql_where=text("is_active"),
+            postgresql_nulls_not_distinct=True,
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     #: Cascade rather than restrict: the activities of a mission are part of

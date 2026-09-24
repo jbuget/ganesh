@@ -48,6 +48,11 @@ export function ProjectActivities({
   const [adding, setAdding] = useState<WorkNature | null>(null);
 
   const live = activities.filter((activity) => activity.is_active);
+  // A trade is one thing per mission: two « Développement » would split the
+  // budget across two lines nobody can tell apart. Offered greyed rather than
+  // hidden, so the list of trades stays the same list from one mission to the
+  // next and one can see at a glance what is already covered.
+  const taken = new Set(live.map((activity) => activity.nature));
   const archived = activities.filter((activity) => !activity.is_active);
   const unbudgeted = live.filter((activity) => activity.estimated_days === null);
 
@@ -119,13 +124,18 @@ export function ProjectActivities({
           <button
             key={nature.value}
             type="button"
-            disabled={adding !== null}
+            disabled={adding !== null || taken.has(nature.value)}
             onClick={async () => {
               setAdding(nature.value);
               await onAdd(nature.label, nature.value);
               setAdding(null);
             }}
-            className="flex cursor-pointer items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-50"
+            title={
+              taken.has(nature.value)
+                ? `Ce projet porte déjà une activité de ${nature.label}`
+                : undefined
+            }
+            className="flex cursor-pointer items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Plus className="size-3 shrink-0 text-slate-400" aria-hidden />
             {nature.label}
