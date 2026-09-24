@@ -102,8 +102,8 @@ describe("MonthBriefing", () => {
       <MonthBriefing
         {...SETTLED}
         missionsToDeclare={[
-          { id: 1, label: "Portail bailleurs" },
-          { id: 2, label: "Refonte extranet" },
+          { projectId: 1, projectLabel: "Portail bailleurs" },
+          { projectId: 2, projectLabel: "Refonte extranet" },
         ]}
       />,
     );

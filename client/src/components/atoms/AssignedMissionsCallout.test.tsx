@@ -5,8 +5,8 @@ import userEvent from "@testing-library/user-event";
 import { AssignedMissionsCallout } from "./AssignedMissionsCallout";
 
 const MISSIONS = [
-  { id: 1, label: "Portail bailleurs" },
-  { id: 3, label: "Lot 1" },
+  { id: 1, activityId: 100, label: "Développement", mission: "Portail bailleurs" },
+  { id: 3, activityId: 300, label: "Développement", mission: "Lot 1" },
 ];
 
 describe("AssignedMissionsCallout", () => {
@@ -30,9 +30,11 @@ describe("AssignedMissionsCallout", () => {
     const onAdd = vi.fn();
     render(<AssignedMissionsCallout missions={MISSIONS} onAdd={onAdd} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Ajouter Lot 1" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Ajouter Lot 1 — Développement" }),
+    );
 
-    expect(onAdd).toHaveBeenCalledWith(3);
+    expect(onAdd).toHaveBeenCalledWith(3, 300);
   });
 
   it("says nothing when there is nothing to add", () => {

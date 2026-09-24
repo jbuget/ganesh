@@ -2,15 +2,23 @@
 
 import { Plus, UserRoundCheck } from "lucide-react";
 
-/** A mission the team put someone on, as named by the reminder. */
+/**
+ * A line the reminder offers: a mission, and the trade to declare under.
+ *
+ * The trade rather than the mission alone, because a day is declared under an
+ * activity: a button adding the mission would offer something the API refuses.
+ */
 interface AssignedMission {
   id: number;
+  activityId: number | null;
   label: string;
+  /** The mission above it, shown so two « Développement » read apart. */
+  mission: string;
 }
 
 interface AssignedMissionsCalloutProps {
   missions: AssignedMission[];
-  onAdd: (projectId: number) => void;
+  onAdd: (projectId: number, activityId: number | null) => void;
 }
 
 /**
@@ -57,15 +65,17 @@ export function AssignedMissionsCallout({
 
       <ul className="flex flex-wrap gap-1.5">
         {missions.map((mission) => (
-          <li key={mission.id}>
+          <li key={`${mission.id}:${mission.activityId ?? ""}`}>
             <button
               type="button"
-              aria-label={`Ajouter ${mission.label}`}
-              onClick={() => onAdd(mission.id)}
+              aria-label={`Ajouter ${mission.mission} — ${mission.label}`}
+              onClick={() => onAdd(mission.id, mission.activityId)}
               className="flex cursor-pointer items-center gap-1 rounded-md border border-amber-300 bg-white px-2 py-1 text-xs text-amber-900 transition-colors hover:border-amber-400 hover:bg-amber-100"
             >
               <Plus className="size-3 shrink-0 text-amber-500" aria-hidden />
-              {mission.label}
+              {mission.activityId === null
+                ? mission.label
+                : `${mission.mission} · ${mission.label}`}
             </button>
           </li>
         ))}

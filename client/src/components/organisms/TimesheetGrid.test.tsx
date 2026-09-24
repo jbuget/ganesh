@@ -22,7 +22,9 @@ function makeGrid(overrides: Partial<MonthGridResponse> = {}): MonthGridResponse
     rows: [
       {
         project_id: 10,
-        label: "Portail bailleurs",
+        activity_id: 100,
+        label: "Développement",
+        project_label: "Portail bailleurs",
         kind: "project",
         estimated_days: 20,
         values: { "2026-09-15": 1, "2026-09-25": 1 },
@@ -48,7 +50,10 @@ function makeGrid(overrides: Partial<MonthGridResponse> = {}): MonthGridResponse
 /** A mission put on the month, with nothing entered on it yet. */
 const EMPTY_ROW: GridRowResponse = {
   project_id: 11,
+  // Off-project work is declared on directly: it carries no activity.
+  activity_id: null,
   label: "Absences",
+  project_label: "Absences",
   kind: "off_project",
   estimated_days: null,
   values: {},
@@ -68,7 +73,7 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     expect(
-      screen.getByRole("rowheader", { name: /Portail bailleurs/ }),
+      screen.getByRole("rowheader", { name: /Portail bailleurs ·Développement/ }),
     ).toBeInTheDocument();
   });
 
@@ -76,7 +81,7 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     // The ratio lives in the mission's tooltip, which follows the cursor.
-    fireEvent.mouseMove(screen.getByText("Portail bailleurs"), {
+    fireEvent.mouseMove(screen.getByText("Développement"), {
       clientX: 50,
       clientY: 80,
     });
@@ -89,10 +94,12 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} onSetValue={onSetValue} />);
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Portail bailleurs — 2026-09-14" }),
+      screen.getByRole("button", {
+        name: "Portail bailleurs — Développement — 2026-09-14",
+      }),
     );
 
-    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-14", 1);
+    expect(onSetValue).toHaveBeenCalledWith(10, 100, "2026-09-14", 1);
   });
 
   it("cycles a full day to a half day", async () => {
@@ -100,10 +107,12 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} onSetValue={onSetValue} />);
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Portail bailleurs — 2026-09-15" }),
+      screen.getByRole("button", {
+        name: "Portail bailleurs — Développement — 2026-09-15",
+      }),
     );
 
-    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-15", 0.5);
+    expect(onSetValue).toHaveBeenCalledWith(10, 100, "2026-09-15", 0.5);
   });
 
   it("shows a mission put on the month with nothing entered on it", () => {
@@ -120,7 +129,9 @@ describe("TimesheetGrid", () => {
   it("locks every cell when the month is validated", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid({ is_writable: false })} />);
 
-    const cells = screen.getAllByRole("button", { name: /Portail bailleurs/ });
+    const cells = screen.getAllByRole("button", {
+      name: /Portail bailleurs — Développement/,
+    });
     expect(cells.every((cell) => cell.hasAttribute("disabled"))).toBe(true);
   });
 
@@ -188,7 +199,9 @@ describe("TimesheetGrid", () => {
     const cells = within(lines.at(-1)!).getAllByRole("rowheader");
     expect(cells[0].className).toContain("border-b-slate-500");
     // The mission before no longer closes anything: a light rule separates it.
-    const mission = screen.getByRole("rowheader", { name: /Portail bailleurs/ });
+    const mission = screen.getByRole("rowheader", {
+      name: /Portail bailleurs ·Développement/,
+    });
     expect(mission.className).toContain("border-b-slate-300");
   });
 
@@ -215,9 +228,11 @@ describe("TimesheetGrid", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Retirer Portail bailleurs" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Retirer Portail bailleurs — Développement" }),
+    );
 
-    expect(onRemoveMission).toHaveBeenCalledWith(10);
+    expect(onRemoveMission).toHaveBeenCalledWith(10, 100);
   });
 
   it("stops the top rule at the last data column", () => {
@@ -318,7 +333,7 @@ describe("TimesheetGrid", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Ouvrir Portail bailleurs" }),
+      screen.getByRole("button", { name: "Ouvrir Portail bailleurs — Développement" }),
     );
 
     expect(onOpenMission).toHaveBeenCalledWith(10);
@@ -328,7 +343,9 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     expect(
-      screen.queryByRole("button", { name: "Ouvrir Portail bailleurs" }),
+      screen.queryByRole("button", {
+        name: "Ouvrir Portail bailleurs — Développement",
+      }),
     ).not.toBeInTheDocument();
   });
 });

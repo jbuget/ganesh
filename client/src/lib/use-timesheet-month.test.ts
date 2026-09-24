@@ -63,10 +63,10 @@ describe("useTimesheetMonth", () => {
   it("puts a mission on the month server-side, before any time is entered", async () => {
     const screen = month();
 
-    await screen.current.addMission(10);
+    await screen.current.addMission(10, 100);
 
     expect(entries.addMissionToMonth).toHaveBeenCalledWith(
-      { project_id: 10, month: screen.current.month },
+      { project_id: 10, activity_id: 100, month: screen.current.month },
       undefined,
     );
   });
@@ -75,7 +75,7 @@ describe("useTimesheetMonth", () => {
     const screen = month();
     act(() => screen.current.viewTeammate(7));
 
-    await screen.current.addMission(10);
+    await screen.current.addMission(10, 100);
 
     expect(entries.addMissionToMonth).toHaveBeenCalledWith(expect.anything(), {
       user_id: 7,
@@ -101,10 +101,11 @@ describe("useTimesheetMonth", () => {
   it("takes a mission off the month server-side, even an empty one", async () => {
     const screen = month();
 
-    await screen.current.removeMission(10);
+    await screen.current.removeMission(10, 100);
 
     expect(entries.removeMissionFromMonth).toHaveBeenCalledWith({
       project_id: 10,
+      activity_id: 100,
       month: screen.current.month,
     });
   });

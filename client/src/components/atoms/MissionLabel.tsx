@@ -5,6 +5,14 @@ import { useCursorTooltip } from "@/lib/use-cursor-tooltip";
 
 interface MissionLabelProps {
   label: string;
+  /**
+   * The mission the row hangs under, when the label names an activity.
+   *
+   * Shown small beside the name, because two missions both cut into
+   * « Développement » would otherwise read as the same line — and it is the
+   * mission one recognises a row by.
+   */
+  mission?: string | null;
   consumedDays: number;
   estimatedDays: number | null;
 }
@@ -18,6 +26,7 @@ interface MissionLabelProps {
  */
 export function MissionLabel({
   label,
+  mission = null,
   consumedDays,
   estimatedDays,
 }: MissionLabelProps) {
@@ -25,6 +34,7 @@ export function MissionLabel({
 
   const content = (
     <>
+      {mission && <span className="text-slate-300">{mission} · </span>}
       <span className="font-medium">{label}</span>
       {estimatedDays !== null && (
         <span className="ml-2 text-slate-300">
@@ -40,6 +50,11 @@ export function MissionLabel({
       onMouseMove={(event) => follow(event, content)}
       onMouseLeave={leave}
     >
+      {mission && (
+        <span className="mr-1 shrink-0 truncate text-xs text-muted-foreground">
+          {mission} ·
+        </span>
+      )}
       <span className="truncate">{label}</span>
       {tooltip}
     </span>

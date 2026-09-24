@@ -78,12 +78,84 @@ export function missionsToDeclare(
   missions: ProjectListItemResponse[],
   userId: number | null,
   displayedProjectIds: number[],
-): ProjectResponse[] {
+): OfferedRow[] {
   const assigned = assignedMissionIds(missions, userId);
-  return missions
-    .map((mission) => mission.project)
-    .filter(
-      (project) =>
-        assigned.includes(project.id) && !displayedProjectIds.includes(project.id),
+  const silent = missions.filter(
+    (mission) =>
+      assigned.includes(mission.project.id) &&
+      !displayedProjectIds.includes(mission.project.id),
+  );
+
+  // One line per trade, because a trade is what a day is declared under: the
+  // reminder has to offer something one can actually write on.
+  return offeredRows(silent, []);
+}
+
+/** A row one may add to the grid: a mission, and the trade it is booked under. */
+export interface OfferedRow {
+  projectId: number;
+  activityId: number | null;
+  /** What names the row: the activity, or the mission when it carries none. */
+  label: string;
+  /** The mission above it, shown beside the label so two « Développement »
+   *  never read as the same line. */
+  projectLabel: string;
+  kind: ProjectResponse["kind"];
+}
+
+/** The key a displayed row is recognised by: a mission **and** a trade. */
+export function rowKey(projectId: number, activityId: number | null): string {
+  return `${projectId}:${activityId ?? ""}`;
+}
+
+/**
+ * What the selector may offer, one line per trade.
+ *
+ * A mission is declared on through one of its activities, so it is the
+ * activities that are offered — never the mission itself, which the API
+ * would refuse. Off-project work is the exception and stands for itself.
+ *
+ * A mission carrying no activity yet offers nothing: there is nothing to
+ * declare on until somebody cuts it up, and offering a line the write would
+ * refuse is worse than offering none.
+ */
+export function offeredRows(
+  missions: ProjectListItemResponse[],
+  displayedRowKeys: string[],
+): OfferedRow[] {
+  const rows: OfferedRow[] = [];
+
+  for (const mission of missions) {
+    const project = mission.project;
+    if (!project.is_active) continue;
+
+    if (project.kind === "off_project") {
+      rows.push({
+        projectId: project.id,
+        activityId: null,
+        label: project.label,
+        projectLabel: project.label,
+        kind: project.kind,
+      });
+      continue;
+    }
+
+    for (const activity of mission.activities ?? []) {
+      if (!activity.is_active) continue;
+      rows.push({
+        projectId: project.id,
+        activityId: activity.id,
+        label: activity.label,
+        projectLabel: project.label,
+        kind: project.kind,
+      });
+    }
+  }
+
+  return rows
+    .filter((row) => !displayedRowKeys.includes(rowKey(row.projectId, row.activityId)))
+    .sort(
+      (a, b) =>
+        a.projectLabel.localeCompare(b.projectLabel) || a.label.localeCompare(b.label),
     );
 }

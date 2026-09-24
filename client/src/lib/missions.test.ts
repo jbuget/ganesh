@@ -86,6 +86,22 @@ const listed = (
 ): ProjectListItemResponse =>
   ({
     project,
+    // A mission is declared on through its activities, so a mission carrying
+    // none offers nothing — every fixture needs one to be offered at all.
+    activities:
+      project.kind === "off_project"
+        ? []
+        : [
+            {
+              id: project.id * 100,
+              project_id: project.id,
+              label: "Développement",
+              nature: "development",
+              estimated_days: null,
+              is_active: true,
+              entries: 0,
+            },
+          ],
     contributors: contributors.map((id) => ({
       id,
       display_name: `U${id}`,
@@ -137,7 +153,8 @@ describe("availableMissions", () => {
 
 describe("missionsToDeclare", () => {
   it("names what one contributes to with nothing declared on it", () => {
-    expect(missionsToDeclare(MISSIONS, 7, []).map((p) => p.label)).toEqual([
+    // One line per trade, because that is what a day is declared under.
+    expect(missionsToDeclare(MISSIONS, 7, []).map((row) => row.projectLabel)).toEqual([
       "Portail bailleurs",
     ]);
   });

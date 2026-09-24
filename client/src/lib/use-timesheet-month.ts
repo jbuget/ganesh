@@ -82,7 +82,23 @@ export function useTimesheetMonth() {
     cursor.year === Number(today.slice(0, 4)) &&
     cursor.month === Number(today.slice(5, 7));
 
-  /** Missions already in the grid, not to be offered again. */
+  /**
+   * Rows already in the grid, not to be offered again.
+   *
+   * A row is a mission **and** an activity: the same mission shows once per
+   * trade somebody declares under, so offering it again is right as long as
+   * the trade differs.
+   */
+  const displayedRowKeys =
+    grid?.rows.map((row) => `${row.project_id}:${row.activity_id ?? ""}`) ?? [];
+
+  /**
+   * Missions with at least one row on the grid.
+   *
+   * What the reminder of assigned missions reads: it says « you are on this
+   * and have declared nothing », which is answered as soon as one of its
+   * trades carries a row — whichever one.
+   */
   const displayedProjectIds = grid?.rows.map((row) => row.project_id) ?? [];
 
   return {
@@ -93,6 +109,8 @@ export function useTimesheetMonth() {
     isLoading: gridQuery.isLoading,
     teammates,
     projects,
+    /** The reference list with its activities: what the selector offers. */
+    missions,
     /** Replays the month's queries — what a panel edit changes shows here. */
     refresh,
 
@@ -132,6 +150,7 @@ export function useTimesheetMonth() {
         : [],
 
     displayedProjectIds,
+    displayedRowKeys,
 
     goToPreviousMonth() {
       goToMonth(previousMonth(cursor.year, cursor.month));
@@ -149,12 +168,36 @@ export function useTimesheetMonth() {
       });
     },
 
-    /** A null value removes the entry; any other value writes it. */
-    async setDayValue(projectId: number, day: string, value: DayValue) {
+    /**
+     * A null value removes the entry; any other value writes it.
+     *
+     * The activity is part of what names the slot: the same person may
+     * declare on the same mission the same day under two trades, and those
+     * are two entries rather than one overwriting the other.
+     */
+    async setDayValue(
+      projectId: number,
+      activityId: number | null,
+      day: string,
+      value: DayValue,
+    ) {
       if (value === 0) {
-        await clearEntry({ project_id: projectId, day, ...target });
+        await clearEntry({
+          project_id: projectId,
+          activity_id: activityId,
+          day,
+          ...target,
+        });
       } else {
-        await setEntry({ project_id: projectId, day, value: value }, target);
+        await setEntry(
+          {
+            project_id: projectId,
+            activity_id: activityId,
+            day,
+            value: value,
+          },
+          target,
+        );
       }
       await refresh();
     },
@@ -166,14 +209,22 @@ export function useTimesheetMonth() {
      * about to work on is a gesture of its own, and it must still be there
      * after a reload.
      */
-    async addMission(projectId: number) {
-      await addMissionToMonth({ project_id: projectId, month }, target);
+    async addMission(projectId: number, activityId: number | null) {
+      await addMissionToMonth(
+        { project_id: projectId, activity_id: activityId, month },
+        target,
+      );
       await refresh();
     },
 
-    /** Removes a mission from the month, with the time it carries. */
-    async removeMission(projectId: number) {
-      await removeMissionFromMonth({ project_id: projectId, month, ...target });
+    /** Removes a row from the month, with the time it carries. */
+    async removeMission(projectId: number, activityId: number | null) {
+      await removeMissionFromMonth({
+        project_id: projectId,
+        activity_id: activityId,
+        month,
+        ...target,
+      });
       await refresh();
     },
 

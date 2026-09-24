@@ -13,11 +13,16 @@ import type { MonthGridResponse } from "@/lib/api/generated/model";
 interface TimesheetGridProps {
   grid: MonthGridResponse;
   today: string;
-  onSetValue: (projectId: number, day: string, value: DayValue) => void;
+  onSetValue: (
+    projectId: number,
+    activityId: number | null,
+    day: string,
+    value: DayValue,
+  ) => void;
   /** Mission picker, housed in the last row. Absent when the month is closed. */
   addingMission?: React.ReactNode;
   /** Removing a mission. Absent when the month is closed. */
-  onRemoveMission?: (projectId: number) => void;
+  onRemoveMission?: (projectId: number, activityId: number | null) => void;
   /**
    * Opening a mission in the side panel. Available whatever the month's state:
    * reading a mission's sheet is not writing on it.
@@ -27,7 +32,10 @@ interface TimesheetGridProps {
 
 interface DisplayRow {
   project_id: number;
+  activity_id: number | null;
   label: string;
+  /** The mission above the row, so two « Développement » never read alike. */
+  project_label: string;
   estimated_days: number | null;
   values: Record<string, number>;
   actual_total: number;
@@ -42,6 +50,11 @@ interface DisplayRow {
  * A mission put on the month holds its row with nothing on it: the grid reads
  * what was lined up as much as what was entered.
  */
+/** What names a row out loud: the mission, then the trade under it. */
+function rowName(row: DisplayRow): string {
+  return row.activity_id === null ? row.label : `${row.project_label} — ${row.label}`;
+}
+
 export function TimesheetGrid({
   grid,
   today,
@@ -53,7 +66,9 @@ export function TimesheetGrid({
   const rows: DisplayRow[] = grid.rows
     .map((row) => ({
       project_id: row.project_id,
+      activity_id: row.activity_id ?? null,
       label: row.label,
+      project_label: row.project_label,
       estimated_days: row.estimated_days ?? null,
       values: row.values as Record<string, number>,
       actual_total: row.actual_total,
@@ -61,7 +76,13 @@ export function TimesheetGrid({
       total: row.total,
       total_consumed_days: row.total_consumed_days,
     }))
-    .sort((a, b) => a.label.localeCompare(b.label, "fr"));
+    // Grouped by mission, then by trade: the grid reads as the list of
+    // missions one works on, each cut into what one does on it.
+    .sort(
+      (a, b) =>
+        a.project_label.localeCompare(b.project_label, "fr") ||
+        a.label.localeCompare(b.label, "fr"),
+    );
 
   const readOnly = !grid.is_writable;
   const totalByDate = new Map(grid.day_totals.map((total) => [total.day, total]));
@@ -168,7 +189,7 @@ export function TimesheetGrid({
             </tr>
           )}
           {rows.map((row, rowIndex) => (
-            <tr key={row.project_id}>
+            <tr key={`${row.project_id}:${row.activity_id ?? ""}`}>
               <th
                 scope="row"
                 className={[
@@ -184,12 +205,13 @@ export function TimesheetGrid({
                 {onOpenMission ? (
                   <button
                     type="button"
-                    aria-label={`Ouvrir ${row.label}`}
+                    aria-label={`Ouvrir ${rowName(row)}`}
                     onClick={() => onOpenMission(row.project_id)}
                     className="flex w-full min-w-0 cursor-pointer text-left hover:underline"
                   >
                     <MissionLabel
                       label={row.label}
+                      mission={row.activity_id === null ? null : row.project_label}
                       consumedDays={row.total_consumed_days}
                       estimatedDays={row.estimated_days}
                     />
@@ -197,6 +219,7 @@ export function TimesheetGrid({
                 ) : (
                   <MissionLabel
                     label={row.label}
+                    mission={row.activity_id === null ? null : row.project_label}
                     consumedDays={row.total_consumed_days}
                     estimatedDays={row.estimated_days}
                   />
@@ -212,8 +235,13 @@ export function TimesheetGrid({
                   isFuture={day.day > today}
                   isReadOnly={readOnly}
                   isLastRow={closesTheTable(rowIndex)}
-                  label={`${row.label} — ${day.day}`}
-                  onChange={(next) => onSetValue(row.project_id, day.day, next)}
+                  // The mission is part of the name: a dozen missions cut
+                  // into « Développement » would otherwise give a dozen cells
+                  // reading alike to anyone listening rather than looking.
+                  label={`${rowName(row)} — ${day.day}`}
+                  onChange={(next) =>
+                    onSetValue(row.project_id, row.activity_id, day.day, next)
+                  }
                 />
               ))}
               <TotalCell
@@ -225,8 +253,8 @@ export function TimesheetGrid({
                 <td className="w-10 pl-2 align-middle">
                   <button
                     type="button"
-                    aria-label={`Retirer ${row.label}`}
-                    onClick={() => onRemoveMission(row.project_id)}
+                    aria-label={`Retirer ${rowName(row)}`}
+                    onClick={() => onRemoveMission(row.project_id, row.activity_id)}
                     className="cursor-pointer rounded p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
                   >
                     <Trash2 className="size-4" aria-hidden />
