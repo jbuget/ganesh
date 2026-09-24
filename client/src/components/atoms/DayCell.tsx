@@ -1,7 +1,6 @@
 "use client";
 
-import { cycleDayValue, type DayValue } from "@/lib/day-value";
-import { formatDays } from "@/lib/dates";
+import { cycleDayValue, formatHours, type DayValue } from "@/lib/day-value";
 
 interface DayCellProps {
   value: DayValue;
@@ -88,7 +87,7 @@ export function DayCell({
           isLocked ? "cursor-not-allowed" : "cursor-pointer hover:bg-sky-50",
         ].join(" ")}
       >
-        {formatDays(value)}
+        {formatHours(value)}
       </button>
     </td>
   );

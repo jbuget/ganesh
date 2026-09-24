@@ -1,4 +1,4 @@
-import { formatDays } from "@/lib/dates";
+import { formatHours } from "@/lib/day-value";
 
 /** Side of a cell carrying a strong rule rather than the grid line. */
 export type StrongSide = "right" | "bottom";
@@ -17,6 +17,10 @@ interface DayTotalCellProps {
  * The background carries the state of the day: green when it is complete, red
  * when it is not — whether time is missing or there is too much. That is the
  * useful daily reading: spotting at a glance the days to fix.
+ *
+ * Read in hours, like the cells it adds up: a « 8 » under a column of hours
+ * is the sum one checks at a glance, where « 1 » would have to be converted
+ * back before it said anything.
  */
 function backgroundFor(value: number, isOffDay: boolean) {
   if (value > 0) {
@@ -46,7 +50,7 @@ export function DayTotalCell({
         backgroundFor(value, isOffDay),
       ].join(" ")}
     >
-      {formatDays(value)}
+      {formatHours(value)}
     </td>
   );
 }

@@ -265,7 +265,7 @@ describe("TimesheetGrid", () => {
   it("shows one total per day", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
-    const footer = screen.getByRole("row", { name: /jrs\. ouvrés/ });
+    const footer = screen.getByRole("row", { name: /en heures/ });
     expect(within(footer).getAllByRole("cell").at(-1)).toHaveTextContent("2");
   });
 
@@ -274,7 +274,7 @@ describe("TimesheetGrid", () => {
 
     const rows = screen.getAllByRole("row");
     expect(rows[0]).toHaveTextContent("Projet");
-    expect(rows[1]).toHaveTextContent("22 jrs. ouvrés");
+    expect(rows[1]).toHaveTextContent("Total");
     expect(rows[2]).toHaveTextContent("Portail bailleurs");
   });
 
@@ -286,7 +286,7 @@ describe("TimesheetGrid", () => {
     } as Partial<MonthGridResponse>);
     render(<TimesheetGrid {...baseProps} grid={grid} />);
 
-    const totalRow = screen.getByRole("row", { name: /jrs\. ouvrés/ });
+    const totalRow = screen.getByRole("row", { name: /en heures/ });
     expect(within(totalRow).getAllByRole("cell")[0].className).toContain(
       "bg-emerald-100",
     );
@@ -300,7 +300,7 @@ describe("TimesheetGrid", () => {
     } as Partial<MonthGridResponse>);
     render(<TimesheetGrid {...baseProps} grid={grid} />);
 
-    const totalRow = screen.getByRole("row", { name: /jrs\. ouvrés/ });
+    const totalRow = screen.getByRole("row", { name: /en heures/ });
     expect(within(totalRow).getAllByRole("cell")[0]).toHaveAttribute(
       "data-alert",
       "true",
@@ -424,6 +424,103 @@ describe("TimesheetGrid, moved around with the keys", () => {
     await userEvent.keyboard(" ");
 
     expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-14", 1);
+  });
+});
+
+/**
+ * Entering a day two hours at a time.
+ *
+ * The cell shows hours and takes the same key: what is stored stays a
+ * fraction of a day, which is what the domain and every screen built on it
+ * count in.
+ */
+describe("TimesheetGrid, entered from the keyboard", () => {
+  function cell(label: string, day: string): HTMLElement {
+    return screen.getByRole("button", { name: `${label} — ${day}` });
+  }
+
+  it.each([
+    ["2", 0.25],
+    ["4", 0.5],
+    ["6", 0.75],
+    ["8", 1],
+  ])("writes %s hours as %s of a day", async (key, value) => {
+    const onSetValue = vi.fn();
+    render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
+
+    cell("Portail bailleurs", "2026-09-14").focus();
+    await userEvent.keyboard(key);
+
+    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-14", value);
+  });
+
+  it("empties the cell on a zero", async () => {
+    const onSetValue = vi.fn();
+    render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
+
+    cell("Portail bailleurs", "2026-09-15").focus();
+    await userEvent.keyboard("0");
+
+    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-15", 0);
+  });
+
+  it("writes nothing for an hour the day does not divide into", async () => {
+    const onSetValue = vi.fn();
+    render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
+
+    cell("Portail bailleurs", "2026-09-14").focus();
+    await userEvent.keyboard("3");
+
+    expect(onSetValue).not.toHaveBeenCalled();
+  });
+
+  it("leaves the arrows alone: typing must not cost navigation", async () => {
+    const onSetValue = vi.fn();
+    render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
+
+    cell("Portail bailleurs", "2026-09-14").focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    expect(cell("Portail bailleurs", "2026-09-15")).toHaveFocus();
+    expect(onSetValue).not.toHaveBeenCalled();
+  });
+
+  it("shows a day's total in hours, under the cells it adds up", () => {
+    const grid = makeGrid({
+      day_totals: [{ day: "2026-09-15", total: 1, exceeds_capacity: false }],
+      days: [{ day: "2026-09-15", kind: "working", label: null, is_off_day: false }],
+      rows: [],
+    } as Partial<MonthGridResponse>);
+    render(<TimesheetGrid {...baseProps} grid={grid} />);
+
+    const totalRow = screen.getByRole("row", { name: /en heures/ });
+    expect(within(totalRow).getAllByRole("cell")[0]).toHaveTextContent("8");
+  });
+
+  /**
+   * The corner is a count, not a total: « 23 » declared can hide two empty
+   * days and two counted twice, and a month is validated on what is filled in.
+   */
+  it("counts the days filled in at the corner of the grid", () => {
+    const grid = makeGrid({
+      days: [
+        { day: "2026-09-14", kind: "working", label: null, is_off_day: false },
+        { day: "2026-09-15", kind: "working", label: null, is_off_day: false },
+        { day: "2026-09-16", kind: "working", label: null, is_off_day: false },
+      ],
+      day_totals: [
+        { day: "2026-09-14", total: 1, exceeds_capacity: false },
+        { day: "2026-09-15", total: 0.75, exceeds_capacity: false },
+        { day: "2026-09-16", total: 1, exceeds_capacity: false },
+      ],
+      working_days: 22,
+      rows: [],
+    } as Partial<MonthGridResponse>);
+    render(<TimesheetGrid {...baseProps} grid={grid} />);
+
+    const totalRow = screen.getByRole("row", { name: /en heures/ });
+    const cells = within(totalRow).getAllByRole("cell");
+    expect(cells[cells.length - 1]).toHaveTextContent("2/22");
   });
 });
 

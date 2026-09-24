@@ -176,7 +176,7 @@ async def test_an_invalid_value_is_rejected() -> None:
     with pytest.raises(ValidationError):
         await use_case.execute(
             SetEntryCommand(
-                actor_id=1, target_user_id=1, project_id=10, day=DAY, value=0.75
+                actor_id=1, target_user_id=1, project_id=10, day=DAY, value=0.8
             )
         )
 

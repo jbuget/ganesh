@@ -44,10 +44,18 @@ describe("DayCell", () => {
     expect(onChange).toHaveBeenCalledWith(1);
   });
 
-  it("shows a half day readably", () => {
+  it("shows the hours a cell holds, not the fraction of a day", () => {
+    // A day is entered two hours at a time, and « 4 » fits a 36px cell where
+    // « 0,5 » does not. The value stored is still half a day.
     renderInRow(<DayCell {...baseProps} value={0.5} onChange={vi.fn()} />);
 
-    expect(screen.getByRole("button")).toHaveTextContent("½");
+    expect(screen.getByRole("button")).toHaveTextContent("4");
+  });
+
+  it("shows a quarter of a day as two hours", () => {
+    renderInRow(<DayCell {...baseProps} value={0.25} onChange={vi.fn()} />);
+
+    expect(screen.getByRole("button")).toHaveTextContent("2");
   });
 
   it("shows nothing when the cell is empty", () => {

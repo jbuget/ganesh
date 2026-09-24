@@ -48,9 +48,10 @@ from src.shared.exceptions.domain_exceptions import (
 
 SCOPE = ApiKeyScope.ENTRIES_WRITE
 
-#: What a grid holds: half a day, or a whole one. The domain refuses the rest,
-#: and saying so here says it better than a translated `ValidationError`.
-HELD = (0.5, 1.0)
+#: What a grid holds: a quarter of a day, or a multiple of it — two hours on
+#: an eight-hour day. The domain refuses the rest, and saying so here says it
+#: better than a translated `ValidationError`.
+HELD = (0.25, 0.5, 0.75, 1.0)
 
 OFF_DAYS = {
     DayKind.WEEKEND: "un week-end",
@@ -62,9 +63,9 @@ OFF_DAYS = {
 async def declare_time(project_id: int, day: str, value: float) -> str:
     """Déclare du temps sur un projet, pour le porteur de la clé.
 
-    Le jour se donne au format AAAA-MM-JJ, la valeur vaut 0,5 ou 1. Écrit dans
-    votre mois et dans aucun autre. L'identifiant du projet se trouve avec
-    `find_project`.
+    Le jour se donne au format AAAA-MM-JJ, la valeur vaut 0,25, 0,5, 0,75 ou 1
+    — un quart de journée valant deux heures. Écrit dans votre mois et dans
+    aucun autre. L'identifiant du projet se trouve avec `find_project`.
     """
     written = _day(day)
     if written is None:
@@ -74,8 +75,8 @@ async def declare_time(project_id: int, day: str, value: float) -> str:
         )
     if value not in HELD:
         raise ToolError(
-            f"Une journée se déclare par 0,5 ou 1, jamais {say.as_given(value)}. "
-            "Une demi-journée ou une journée entière."
+            f"Une journée se déclare par 0,25, 0,5, 0,75 ou 1, jamais "
+            f"{say.as_given(value)}. Un quart de journée vaut deux heures."
         )
 
     kind = classify_day(written)

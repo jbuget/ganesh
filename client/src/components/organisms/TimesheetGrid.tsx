@@ -2,13 +2,15 @@
 
 import { Trash2 } from "lucide-react";
 
+import { CompletionCell } from "@/components/atoms/CompletionCell";
 import { DayCell } from "@/components/atoms/DayCell";
-import type { DayValue } from "@/lib/day-value";
+import { valueForKey, type DayValue } from "@/lib/day-value";
 import { DayHeader } from "@/components/atoms/DayHeader";
 import { DayTotalCell } from "@/components/atoms/DayTotalCell";
 import { MissionLabel } from "@/components/atoms/MissionLabel";
 import { TotalCell } from "@/components/atoms/TotalCell";
-import { cellId } from "@/lib/grid-navigation";
+import { cellId, parseCellId } from "@/lib/grid-navigation";
+import { countCompleteDays } from "@/lib/month-completion";
 import { useGridNavigation } from "@/lib/use-grid-navigation";
 import type { MonthGridResponse } from "@/lib/api/generated/model";
 
@@ -106,6 +108,29 @@ export function TimesheetGrid({
     isOpen: (cell) => !readOnly && !offDays.has(cell.day),
   });
 
+  /**
+   * One types what one reads: the cell shows « 4 » and the key is `4`.
+   *
+   * The hours are read before the arrows, and only an even one writes —
+   * anything else falls through, so the arrows, Tab and the browser's own
+   * shortcuts keep working. The cell itself is never asked: a locked one is
+   * `disabled` and fires no key event at all.
+   */
+  const onKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    const cell = parseCellId((event.target as HTMLElement).dataset?.cell);
+    const typed = cell ? valueForKey(event.key) : null;
+
+    if (cell && typed !== null) {
+      event.preventDefault();
+      onSetValue(cell.projectId, cell.day, typed);
+      return;
+    }
+
+    keys.onKeyDown(event);
+  };
+
+  const completeDays = countCompleteDays(grid.days, grid.day_totals);
+
   return (
     <div className="max-w-full overflow-x-auto" data-grid-scroller>
       {/* `relative` is load-bearing, not decoration. The header cells carry
@@ -117,7 +142,7 @@ export function TimesheetGrid({
           table pins them back inside it. */}
       <table
         className="relative w-max border-separate border-spacing-0 border-l border-slate-500 text-slate-800"
-        onKeyDown={keys.onKeyDown}
+        onKeyDown={onKeyDown}
         onFocus={keys.onFocus}
       >
         <caption className="sr-only">Temps saisi par projet et par jour</caption>
@@ -163,7 +188,7 @@ export function TimesheetGrid({
             >
               Total
               <span className="ml-2 text-xs font-normal text-slate-500">
-                ({grid.working_days} jrs. ouvrés)
+                (en heures)
               </span>
             </th>
             {grid.days.map((day, dayIndex) => (
@@ -177,9 +202,9 @@ export function TimesheetGrid({
                 }
               />
             ))}
-            <TotalCell
-              value={grid.actual_total + grid.forecast_total}
-              isStrong
+            <CompletionCell
+              complete={completeDays}
+              workingDays={grid.working_days}
               strongSides={["right", "bottom"]}
             />
             {onRemoveMission && <td className="w-10" />}

@@ -1,4 +1,4 @@
-"""Entry of a half day or a full day on a mission."""
+"""Entry of a quarter of a day, or a multiple of it, on a mission."""
 
 from dataclasses import dataclass
 from datetime import date
@@ -7,16 +7,23 @@ from src.modules.projects.domain.entities.project import ProjectStatus
 from src.shared.exceptions.domain_exceptions import ValidationError
 
 #: Values that can be entered. An empty cell is not an entry: it does not exist.
-ALLOWED_VALUES: tuple[float, ...] = (0.5, 1.0)
+#:
+#: The quarter — two hours on an eight-hour day — is the grain the grid holds.
+#: Halves alone cannot be made to come out right by somebody carrying half a
+#: dozen projects, which is the whole reason this list grew.
+#:
+#: All four are exactly representable in binary, so sums of them stay exact:
+#: no drift creeps into a month's total, however many cells it adds up.
+ALLOWED_VALUES: tuple[float, ...] = (0.25, 0.5, 0.75, 1.0)
 
 
 class DayValue(float):
-    """The value of an entry: a half day or a full day."""
+    """The value of an entry: a quarter of a day, or a multiple of it."""
 
     def __new__(cls, value: float) -> "DayValue":
         if float(value) not in ALLOWED_VALUES:
             raise ValidationError(
-                f"An entry is 0.5 or 1.0, not {value}.",
+                f"An entry is 0.25, 0.5, 0.75 or 1.0, not {value}.",
             )
         return super().__new__(cls, value)
 
