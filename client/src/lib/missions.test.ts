@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { assignedMissionIds, availableMissions, missionsToDeclare } from "./missions";
+import {
+  assignedMissionIds,
+  availableMissions,
+  missionsToDeclare,
+  offeredRows,
+  rowKey,
+} from "./missions";
 import type {
   ProjectListItemResponse,
   ProjectResponse,
@@ -165,5 +171,47 @@ describe("missionsToDeclare", () => {
 
   it("says nothing when one contributes to nothing", () => {
     expect(missionsToDeclare(MISSIONS, 42, [])).toEqual([]);
+  });
+});
+
+describe("someone wearing several hats on one mission", () => {
+  const watom = {
+    project: {
+      id: 7,
+      label: "Watom",
+      kind: "project",
+      is_active: true,
+    },
+    activities: [
+      { id: 700, label: "Développement", nature: "development", is_active: true },
+      { id: 701, label: "Design", nature: "design", is_active: true },
+      {
+        id: 702,
+        label: "Chefferie de projet",
+        nature: "project_management",
+        is_active: true,
+      },
+    ],
+  } as unknown as ProjectListItemResponse;
+
+  it("still offers the other trades once one is on the grid", () => {
+    // A developer standing in for the project manager declares under both on
+    // the same mission: adding one must not take the mission away.
+    const offered = offeredRows([watom], [rowKey(7, 700)]);
+
+    expect(offered.map((row) => row.label)).toEqual(["Chefferie de projet", "Design"]);
+  });
+
+  it("offers nothing once every trade is on the grid", () => {
+    const every = [rowKey(7, 700), rowKey(7, 701), rowKey(7, 702)];
+
+    expect(offeredRows([watom], every)).toEqual([]);
+  });
+
+  it("names the mission on each of its trades, so two rows read apart", () => {
+    const offered = offeredRows([watom], []);
+
+    expect(offered.every((row) => row.projectLabel === "Watom")).toBe(true);
+    expect(new Set(offered.map((row) => row.activityId)).size).toBe(3);
   });
 });
