@@ -1,15 +1,68 @@
+"use client";
+
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { PresenceMark } from "@/components/atoms/PresenceMark";
 import { UserAvatar } from "@/components/atoms/UserAvatar";
 import type { UserResponse } from "@/lib/api/generated/model";
-import { dayShown, presenceOfDay } from "@/lib/presence";
+import { dayShown, peopleOfDay } from "@/lib/presence";
 import { STRONG_RULE } from "@/lib/table-frame";
+import { useCursorTooltip } from "@/lib/use-cursor-tooltip";
 
 /** Beyond this, the avatars stop being faces and become a wall. */
 const NAMED = 8;
 
 const LINK = "cursor-pointer underline-offset-2 hover:text-slate-900 hover:underline";
+
+/**
+ * A figure that says who, when asked.
+ *
+ * Three lists printed side by side would bury the faces below, and the faces
+ * are what one came for. The names therefore wait under the cursor — without
+ * the second of hesitation the native `title` costs, which is a second too
+ * long while running along three figures — and are said outright to whoever
+ * reads with their ears: « 1 en télétravail » otherwise leaves one wondering
+ * which one, and a bubble is nothing to an ear.
+ *
+ * A place nobody is in offers nothing: an empty bubble is worse than none.
+ */
+function Place({
+  people,
+  className = "",
+  children,
+}: {
+  people: UserResponse[];
+  className?: string;
+  children: ReactNode;
+}) {
+  // The bubble belongs to the figure that opens it: it is mounted on hover and
+  // nowhere before, so three of them cost no more than one shared between them.
+  const { tooltip, follow, leave } = useCursorTooltip();
+
+  const figure = `flex items-center gap-1.5 ${className}`;
+  if (people.length === 0) return <span className={figure}>{children}</span>;
+
+  const names = people.map((one) => one.display_name).join(", ");
+
+  return (
+    <span
+      onMouseMove={(event) =>
+        // The bubble is one line by default, and a full office would run off
+        // the screen: a list of names is allowed to wrap.
+        follow(event, <span className="block max-w-xs whitespace-normal">{names}</span>)
+      }
+      onMouseLeave={leave}
+      className={`cursor-help ${figure}`}
+    >
+      {children}
+      {/* Read out after the figure it belongs to, which names the place: the
+          ear hears « 1 en télétravail Malik » in one go. */}
+      <span className="sr-only">{names}</span>
+      {tooltip}
+    </span>
+  );
+}
 
 /**
  * Who is in today, and from where.
@@ -39,13 +92,8 @@ export function TodayPresence({
   if (users.length === 0) return null;
 
   const day = dayShown(today);
-  const counted = presenceOfDay(
-    users.map((user) => user.presence),
-    day.key,
-  );
-  const onSite = users.filter(
-    (user) => (user.presence?.[day.key] ?? "ON_SITE") === "ON_SITE",
-  );
+  const { onSite, remote, away } = peopleOfDay(users, day.key);
+  const manyAway = away.length > 1 ? "s" : "";
 
   return (
     <section className={`rounded-xl border bg-white p-3 ${STRONG_RULE}`}>
@@ -74,32 +122,31 @@ export function TodayPresence({
       </header>
 
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-700">
-        <span className="flex items-center gap-1.5">
+        <Place people={onSite}>
           <PresenceMark day="ON_SITE" labelled={false} />
-          <span className="tabular-nums">{counted.onSite}</span> sur site
-        </span>
-        <span className="flex items-center gap-1.5">
+          <span className="tabular-nums">{onSite.length}</span> sur site
+        </Place>
+        <Place people={remote}>
           <PresenceMark day="REMOTE" labelled={false} />
-          <span className="tabular-nums">{counted.remote}</span> en télétravail
-        </span>
-        {counted.away > 0 && (
-          <span className="text-slate-500">
-            <span className="tabular-nums">{counted.away}</span> absent
-            {counted.away > 1 ? "s" : ""}
-          </span>
+          <span className="tabular-nums">{remote.length}</span> en télétravail
+        </Place>
+        {away.length > 0 && (
+          <Place people={away} className="text-slate-500">
+            <span className="tabular-nums">{away.length}</span> absent
+            {manyAway}
+          </Place>
         )}
       </p>
 
       {/* The faces of those in, because a figure says how many and a face says
           who — which is what one actually came to find out. */}
       {onSite.length > 0 && (
-        <ul className="mt-2.5 flex flex-wrap gap-1">
+        // Hidden from a screen reader: the figure above already names them, and
+        // names them all, where the faces stop at eight.
+        <ul aria-hidden className="mt-2.5 flex flex-wrap gap-1">
           {onSite.slice(0, NAMED).map((user) => (
             <li key={user.id}>
               <UserAvatar initials={user.initials} name={user.display_name} />
-              {/* The avatar carries a `title`, which a screen reader may not
-                  announce — and here the faces are the whole answer. */}
-              <span className="sr-only">{user.display_name}</span>
             </li>
           ))}
           {onSite.length > NAMED && (

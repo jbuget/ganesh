@@ -44,6 +44,36 @@ describe("who is in", () => {
     expect(screen.getByText(/absent/)).toHaveTextContent("1 absent");
   });
 
+  it("names the people of each place, to whoever asks the figure", async () => {
+    render(
+      <TodayPresence
+        today={WEDNESDAY}
+        users={[aUser(1, "Léa"), aUser(2, "Malik", remote), aUser(3, "Nour", away)]}
+      />,
+    );
+
+    // The bubble is what an eye reads; the figure says the names outright for
+    // an ear, since « 1 en télétravail » leaves one wondering which one.
+    await userEvent.hover(screen.getByText(/en télétravail/));
+
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Malik");
+    expect(screen.getByText(/sur site/)).toHaveTextContent("1 sur siteLéa");
+    expect(screen.getByText(/absent/)).toHaveTextContent("1 absentNour");
+  });
+
+  it("names them all, and says nothing of a place nobody is in", () => {
+    render(
+      <TodayPresence
+        today={WEDNESDAY}
+        users={[aUser(1, "Léa"), aUser(2, "Malik"), aUser(3, "Nour", remote)]}
+      />,
+    );
+
+    expect(screen.getByText("Léa, Malik")).toBeInTheDocument();
+    // Nobody away, so there is no list to offer — nor a figure to hang it on.
+    expect(screen.queryByText(/absent/)).not.toBeInTheDocument();
+  });
+
   it("shows the faces of those in, because a figure says how many, not who", () => {
     render(<TodayPresence today={WEDNESDAY} users={[aUser(1, "Léa")]} />);
 

@@ -6,7 +6,7 @@ import {
   daysOnSite,
   daysPresent,
   nextDay,
-  presenceOfDay,
+  peopleOfDay,
   sayDay,
   sayWeek,
   weekOf,
@@ -103,29 +103,32 @@ describe("the day the home screen reads", () => {
   });
 });
 
-describe("how many are where, that day", () => {
-  const week = (wednesday: "ON_SITE" | "REMOTE" | "AWAY") => ({
-    ...AT_THE_OFFICE,
-    wednesday,
-    days_on_site: 4,
-    days_present: 5,
+describe("who is where, that day", () => {
+  const someone = (wednesday: "ON_SITE" | "REMOTE" | "AWAY") => ({
+    presence: { ...AT_THE_OFFICE, wednesday, days_on_site: 4, days_present: 5 },
   });
 
-  it("counts the three places apart", () => {
-    expect(
-      presenceOfDay(
-        [week("ON_SITE"), week("REMOTE"), week("REMOTE"), week("AWAY")],
-        "wednesday",
-      ),
-    ).toEqual({ onSite: 1, remote: 2, away: 1 });
+  it("sorts the three places apart, and keeps the people", () => {
+    const lea = someone("ON_SITE");
+    const malik = someone("REMOTE");
+    const nour = someone("AWAY");
+
+    // The people rather than a tally: a figure says how many, not who.
+    expect(peopleOfDay([lea, malik, nour], "wednesday")).toEqual({
+      onSite: [lea],
+      remote: [malik],
+      away: [nour],
+    });
   });
 
   it("counts a teammate who said nothing as on site", () => {
     // The arrangement the team runs on, here as everywhere else.
-    expect(presenceOfDay([null, undefined], "monday")).toEqual({
-      onSite: 2,
-      remote: 0,
-      away: 0,
+    expect(
+      peopleOfDay([{ presence: null }, { presence: undefined }], "monday"),
+    ).toEqual({
+      onSite: [{ presence: null }, { presence: undefined }],
+      remote: [],
+      away: [],
     });
   });
 });
