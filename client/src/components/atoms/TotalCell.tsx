@@ -1,7 +1,5 @@
+import type { StrongSide } from "@/lib/table-frame";
 import { formatDecimalDays } from "@/lib/dates";
-
-/** Side of a cell carrying a strong rule rather than the grid line. */
-export type StrongSide = "right" | "bottom";
 
 interface TotalCellProps {
   value: number;

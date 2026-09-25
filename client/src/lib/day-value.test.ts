@@ -2,41 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   HOURS_IN_A_DAY,
-  cycleDayValue,
   formatHours,
   toHours,
   valueForKey,
   type DayValue,
 } from "./day-value";
-
-describe("cycleDayValue", () => {
-  it("moves from empty to a full day", () => {
-    expect(cycleDayValue(0)).toBe(1);
-  });
-
-  it("moves from a full day to a half day", () => {
-    expect(cycleDayValue(1)).toBe(0.5);
-  });
-
-  it("returns to empty after a half day", () => {
-    expect(cycleDayValue(0.5)).toBe(0);
-  });
-
-  it("loops in three clicks", () => {
-    expect(cycleDayValue(cycleDayValue(cycleDayValue(0)))).toBe(0);
-  });
-
-  /**
-   * The quarters are typed, not clicked: a cycle through five values would
-   * cost everybody a third click for the half day, which is the common case.
-   * Clicking a quarter therefore steps down to the nearest value the cycle
-   * holds, rather than trapping the cell outside it.
-   */
-  it("steps a quarter down to the nearest value the cycle holds", () => {
-    expect(cycleDayValue(0.75)).toBe(0.5);
-    expect(cycleDayValue(0.25)).toBe(0);
-  });
-});
 
 describe("toHours", () => {
   it("counts a day as eight hours", () => {

@@ -22,6 +22,16 @@
  * its own, in plain elements — reads at the same weight as every other. The
  * inner lines stay faint; strength marks an edge, it does not make a grid.
  */
+/**
+ * A side of a cell carrying the strong rule rather than the faint grid line.
+ *
+ * Here rather than on the first cell that needed it: three cells of the entry
+ * grid take it, and each keeping its own copy is how two of them end up
+ * meaning different things. An atom may read the grammar; it may not read
+ * another atom.
+ */
+export type StrongSide = "right" | "bottom";
+
 export const STRONG_RULE = "border-slate-500";
 
 export const TABLE_FRAME = [

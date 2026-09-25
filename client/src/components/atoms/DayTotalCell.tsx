@@ -1,7 +1,5 @@
+import type { StrongSide } from "@/lib/table-frame";
 import { formatHours } from "@/lib/day-value";
-
-/** Side of a cell carrying a strong rule rather than the grid line. */
-export type StrongSide = "right" | "bottom";
 
 interface DayTotalCellProps {
   value: number;

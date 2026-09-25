@@ -1,4 +1,4 @@
-import type { StrongSide } from "@/components/atoms/TotalCell";
+import type { StrongSide } from "@/lib/table-frame";
 
 interface CompletionCellProps {
   complete: number;

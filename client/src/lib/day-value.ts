@@ -8,35 +8,13 @@
  * The two units follow the two axes of the grid: a day is read across, in
  * hours; a month is read down, in days.
  *
- * This type and its cycle are business logic, not rendering: keeping them in a
- * component forced the page to import an atom for a mere type.
+ * This type and what reads it are business logic, not rendering: keeping them
+ * in a component forced the page to import an atom for a mere type.
  */
 export type DayValue = 0 | 0.25 | 0.5 | 0.75 | 1;
 
 /** A working day, in hours. What a quarter is a quarter of. */
 export const HOURS_IN_A_DAY = 8;
-
-/**
- * Empty -> full -> half -> empty. A full day is the common case.
- *
- * The quarters are typed rather than clicked, so they are not on the way
- * round: a cycle through five values would cost everybody a third click for
- * the half day, which is the one most people enter. A cell holding a quarter
- * steps down to the nearest value the cycle holds rather than being trapped
- * outside it.
- */
-const NEXT_VALUE: Record<DayValue, DayValue> = {
-  0: 1,
-  1: 0.5,
-  0.75: 0.5,
-  0.5: 0,
-  0.25: 0,
-};
-
-/** Cycles a cell's value on click. */
-export function cycleDayValue(current: DayValue): DayValue {
-  return NEXT_VALUE[current];
-}
 
 /** A number of days in hours: half a day is four of them. */
 export function toHours(value: number): number {

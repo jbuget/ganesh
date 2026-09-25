@@ -4,14 +4,14 @@ import { Trash2 } from "lucide-react";
 
 import { CompletionCell } from "@/components/atoms/CompletionCell";
 import { DayCell } from "@/components/atoms/DayCell";
-import { valueForKey, type DayValue } from "@/lib/day-value";
+import type { DayValue } from "@/lib/day-value";
 import { DayHeader } from "@/components/atoms/DayHeader";
 import { DayTotalCell } from "@/components/atoms/DayTotalCell";
 import { MissionLabel } from "@/components/atoms/MissionLabel";
 import { TotalCell } from "@/components/atoms/TotalCell";
-import { cellId, parseCellId } from "@/lib/grid-navigation";
+import { cellId } from "@/lib/grid-navigation";
 import { countCompleteDays } from "@/lib/month-completion";
-import { useGridNavigation } from "@/lib/use-grid-navigation";
+import { useGridKeys } from "@/lib/use-grid-keys";
 import type { MonthGridResponse } from "@/lib/api/generated/model";
 
 interface TimesheetGridProps {
@@ -102,32 +102,14 @@ export function TimesheetGrid({
    * nowhere to go and do nothing: there is no cursor to move through a month
    * one cannot write on.
    */
-  const keys = useGridNavigation({
-    rows: rows.map((row) => row.project_id),
-    days: grid.days.map((day) => day.day),
-    isOpen: (cell) => !readOnly && !offDays.has(cell.day),
-  });
-
-  /**
-   * One types what one reads: the cell shows « 4 » and the key is `4`.
-   *
-   * The hours are read before the arrows, and only an even one writes —
-   * anything else falls through, so the arrows, Tab and the browser's own
-   * shortcuts keep working. The cell itself is never asked: a locked one is
-   * `disabled` and fires no key event at all.
-   */
-  const onKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
-    const cell = parseCellId((event.target as HTMLElement).dataset?.cell);
-    const typed = cell ? valueForKey(event.key) : null;
-
-    if (cell && typed !== null) {
-      event.preventDefault();
-      onSetValue(cell.projectId, cell.day, typed);
-      return;
-    }
-
-    keys.onKeyDown(event);
-  };
+  const keys = useGridKeys(
+    {
+      rows: rows.map((row) => row.project_id),
+      days: grid.days.map((day) => day.day),
+      isOpen: (cell) => !readOnly && !offDays.has(cell.day),
+    },
+    (cell, value) => onSetValue(cell.projectId, cell.day, value),
+  );
 
   const completeDays = countCompleteDays(grid.days, grid.day_totals);
 
@@ -141,8 +123,12 @@ export function TimesheetGrid({
           scrolls sideways and takes the sidebar off screen. Positioning the
           table pins them back inside it. */}
       <table
+        // A grid rather than a table: its cells are walked with the arrows and
+        // written into, and `role="grid"` is what makes each `<td>` a
+        // `gridcell` to a screen reader.
+        role="grid"
         className="relative w-max border-separate border-spacing-0 border-l border-slate-500 text-slate-800"
-        onKeyDown={onKeyDown}
+        onKeyDown={keys.onKeyDown}
         onFocus={keys.onFocus}
       >
         <caption className="sr-only">Temps saisi par projet et par jour</caption>
@@ -165,11 +151,17 @@ export function TimesheetGrid({
                 label={day.label ?? null}
               />
             ))}
+            {/* The one place the grid changes unit, so it says so. A day is
+                read across in hours, a month down in days — and this column
+                is the month. Leaving it unlabelled put « 8 » and « 7,75 » on
+                the same line with nothing to tell the reader they are not
+                the same thing. */}
             <th
               scope="col"
-              className="h-11 w-14 border-t border-r border-b border-t-slate-500 border-r-slate-500 border-b-slate-300 bg-white px-2 text-xs font-medium text-slate-600"
+              aria-label="Total du mois, en jours"
+              className="h-11 w-14 border-t border-r border-b border-t-slate-500 border-r-slate-500 border-b-slate-300 bg-white px-2 text-xs font-normal text-slate-500"
             >
-              <span className="sr-only">Total du mois</span>
+              jours
             </th>
             {onRemoveMission && (
               // Outside the frame: this column carries an action, not data.
@@ -280,7 +272,6 @@ export function TimesheetGrid({
                   isReadOnly={readOnly}
                   isLastRow={closesTheTable(rowIndex)}
                   label={`${row.label} — ${day.day}`}
-                  onChange={(next) => onSetValue(row.project_id, day.day, next)}
                 />
               ))}
               <TotalCell

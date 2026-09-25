@@ -85,24 +85,31 @@ describe("TimesheetGrid", () => {
     expect(screen.getByRole("tooltip")).toHaveTextContent("7/20 jrs. estimés");
   });
 
-  it("notifies the next value when an empty cell is clicked", async () => {
+  /**
+   * A click used to cycle the value, so clicking a cell in order to type in it
+   * put an 8 — then a 16 on the day's total — every single time.
+   */
+  it("writes nothing when a cell is clicked: a click only lands the focus", async () => {
     const onSetValue = vi.fn();
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} onSetValue={onSetValue} />);
 
-    await userEvent.click(
-      screen.getByRole("button", { name: "Portail bailleurs — 2026-09-14" }),
-    );
+    const cell = screen.getByRole("gridcell", {
+      name: "Portail bailleurs — 2026-09-14",
+    });
+    await userEvent.click(cell);
 
-    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-14", 1);
+    expect(onSetValue).not.toHaveBeenCalled();
+    expect(cell).toHaveFocus();
   });
 
-  it("cycles a full day to a half day", async () => {
+  it("takes the value typed into the cell the click landed on", async () => {
     const onSetValue = vi.fn();
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} onSetValue={onSetValue} />);
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Portail bailleurs — 2026-09-15" }),
+      screen.getByRole("gridcell", { name: "Portail bailleurs — 2026-09-15" }),
     );
+    await userEvent.keyboard("4");
 
     expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-15", 0.5);
   });
@@ -121,8 +128,12 @@ describe("TimesheetGrid", () => {
   it("locks every cell when the grid only reads", () => {
     render(<TimesheetGrid {...baseProps} readOnly grid={makeGrid()} />);
 
-    const cells = screen.getAllByRole("button", { name: /Portail bailleurs/ });
-    expect(cells.every((cell) => cell.hasAttribute("disabled"))).toBe(true);
+    // Out of the tab order entirely: no focus, so no key ever reaches them.
+    const cells = screen.getAllByRole("gridcell", { name: /Portail bailleurs/ });
+    expect(cells.every((cell) => !cell.hasAttribute("tabindex"))).toBe(true);
+    expect(cells.every((cell) => cell.getAttribute("aria-readonly") === "true")).toBe(
+      true,
+    );
   });
 
   it("shows a message when the month holds no mission", () => {
@@ -224,7 +235,7 @@ describe("TimesheetGrid", () => {
     const action = screen.getByText("Retirer le projet").closest("th")!;
     expect(action.className).not.toContain("border-t");
     // The totals column does carry it: the frame stops there.
-    const totals = screen.getByText("Total du mois").closest("th")!;
+    const totals = screen.getByText("jours").closest("th")!;
     expect(totals.className).toContain("border-t-slate-500");
   });
 
@@ -343,7 +354,7 @@ describe("TimesheetGrid, moved around with the keys", () => {
     makeGrid({ rows: [...makeGrid().rows, EMPTY_ROW] } as Partial<MonthGridResponse>);
 
   function cell(label: string, day: string): HTMLElement {
-    return screen.getByRole("button", { name: `${label} — ${day}` });
+    return screen.getByRole("gridcell", { name: `${label} — ${day}` });
   }
 
   it("moves to the next day of the same mission", async () => {
@@ -416,14 +427,34 @@ describe("TimesheetGrid, moved around with the keys", () => {
     expect(cell("Portail bailleurs", "2026-09-15")).toHaveAttribute("tabindex", "0");
   });
 
-  it("enters a value from the keyboard as a click would", async () => {
+  /**
+   * A locked cell takes no focus, so no key should ever reach it. This asserts
+   * what happens if one does anyway: the grid asks whether the cell is open
+   * before writing, rather than trusting the tab order to have done its job.
+   */
+  it("refuses an hour aimed at a cell that takes no entry", () => {
+    const onSetValue = vi.fn();
+    render(
+      <TimesheetGrid
+        {...baseProps}
+        onSetValue={onSetValue}
+        grid={makeGrid({ is_writable: false })}
+      />,
+    );
+
+    fireEvent.keyDown(cell("Portail bailleurs", "2026-09-14"), { key: "4" });
+
+    expect(onSetValue).not.toHaveBeenCalled();
+  });
+
+  it("writes nothing on the space bar, which no longer stands for a value", async () => {
     const onSetValue = vi.fn();
     render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
 
     cell("Portail bailleurs", "2026-09-14").focus();
     await userEvent.keyboard(" ");
 
-    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-14", 1);
+    expect(onSetValue).not.toHaveBeenCalled();
   });
 });
 
@@ -436,7 +467,7 @@ describe("TimesheetGrid, moved around with the keys", () => {
  */
 describe("TimesheetGrid, entered from the keyboard", () => {
   function cell(label: string, day: string): HTMLElement {
-    return screen.getByRole("button", { name: `${label} — ${day}` });
+    return screen.getByRole("gridcell", { name: `${label} — ${day}` });
   }
 
   it.each([
@@ -538,6 +569,6 @@ describe("TimesheetGrid, held inside its own scroller", () => {
   it("positions the table, so its screen-reader labels cannot escape it", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
-    expect(screen.getByRole("table")).toHaveClass("relative");
+    expect(screen.getByRole("grid")).toHaveClass("relative");
   });
 });

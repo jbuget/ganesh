@@ -40,6 +40,7 @@ from src.mcp.tools import say
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.calendar.domain.services.working_days import DayKind, classify_day
 from src.modules.entries.application.dtos.set_entry_dto import SetEntryCommand
+from src.modules.entries.domain.entities.entry import ALLOWED_VALUES
 from src.modules.entries.presentation.dependencies import get_set_entry_use_case
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
@@ -49,9 +50,14 @@ from src.shared.exceptions.domain_exceptions import (
 SCOPE = ApiKeyScope.ENTRIES_WRITE
 
 #: What a grid holds: a quarter of a day, or a multiple of it — two hours on
-#: an eight-hour day. The domain refuses the rest, and saying so here says it
-#: better than a translated `ValidationError`.
-HELD = (0.25, 0.5, 0.75, 1.0)
+#: an eight-hour day.
+#:
+#: Read from the domain rather than written again here. The domain is the
+#: authority and this is only its reflection: a second list would go on
+#: refusing what the domain had come to accept, and the day it drifted nothing
+#: would say so. Only the sentence below is ours — the domain says its refusals
+#: in English, as an API does, and this is an interface.
+HELD = ALLOWED_VALUES
 
 OFF_DAYS = {
     DayKind.WEEKEND: "un week-end",
