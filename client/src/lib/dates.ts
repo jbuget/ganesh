@@ -71,42 +71,32 @@ export function weekdayInitial(isoDate: string): string {
 }
 
 /**
- * Formats a number of days inside a cell: 1 → « 1 », 0.5 → « ½ ».
- *
- * A null value shows nothing: in the grid, an empty cell means « nothing
- * entered », and filling it with zeros would make the grid unreadable.
- */
-export function formatDays(value: number): string {
-  if (value === 0) return "";
-  const full = Math.floor(value);
-  const hasHalf = value % 1 !== 0;
-  if (full === 0) return "½";
-  return hasHalf ? `${full}½` : String(full);
-}
-
-/**
  * Formats a number of days inside a total: 0 → « 0 ».
  *
  * Unlike a cell, a null total is information: « 0 j réalisé » must not
  * show up blank.
  */
 export function formatTotal(value: number): string {
-  return value === 0 ? "0" : formatDays(value);
+  return value === 0 ? "0" : formatDecimalDays(value);
 }
 
 /**
- * A number of days in decimal: 7.5 → « 7,5 », 26 → « 26 ».
+ * A number of days in decimal: 7.5 → « 7,5 », 0.25 → « 0,25 », 26 → « 26 ».
  *
- * The grid prefers « ½ », which fits a narrow cell. On a board card,
- * where what is consumed reads against a whole estimate, the decimal speaks
- * faster: « 7,5/20 » compares at a glance, « 7½/20 » does not.
+ * Two decimals, with the trailing zeros dropped. One was enough while a day
+ * was cut in halves; a quarter needs the second, and rounded to a decimal it
+ * came out « 0,3 » — a figure the register never held.
  *
  * Formatted by hand rather than through `toLocaleString`: the server render and
  * the browser must produce the same string, without depending on the locale
  * data available on either side.
  */
 export function formatDecimalDays(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1).replace(".", ",");
+  if (Number.isInteger(value)) return String(value);
+  return value
+    .toFixed(2)
+    .replace(/\.?0+$/, "")
+    .replace(".", ",");
 }
 
 /**

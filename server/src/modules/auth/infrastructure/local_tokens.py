@@ -11,7 +11,6 @@ at all if no password was set. What it issues carries the same claims Entra
 would, so nothing downstream has to know which door was used.
 """
 
-import hmac
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -19,6 +18,7 @@ from typing import Any
 import jwt
 from jwt import PyJWTError
 
+from src.modules.auth.domain.repositories.token_issuer import TokenIssuer
 from src.shared.exceptions.domain_exceptions import ForbiddenActionError
 
 ALGORITHM = "HS256"
@@ -29,33 +29,7 @@ ISSUER = "ganesh-local"
 DEFAULT_LIFETIME_SECONDS = 60 * 60 * 24
 
 
-def check_credentials(
-    login: str,
-    password: str,
-    expected_login: str | None,
-    expected_password: str | None,
-) -> bool:
-    """Whether these credentials open the door.
-
-    An unset password closes the door rather than opening it to whoever leaves
-    the field empty. The comparison takes the same time whichever character
-    differs: a password must not be guessable one letter at a time.
-
-    Both sides are compared as bytes, because `compare_digest` refuses text
-    that is not ASCII — an accented password would raise where it should
-    answer, and the 500 that follows tells whoever is trying that this
-    password is not like the others.
-    """
-    if not expected_login or not expected_password:
-        return False
-    return hmac.compare_digest(
-        login.encode("utf-8"), expected_login.encode("utf-8")
-    ) and hmac.compare_digest(
-        password.encode("utf-8"), expected_password.encode("utf-8")
-    )
-
-
-class LocalTokenService:
+class LocalTokenService(TokenIssuer):
     """Issues and verifies the tokens of the fallback door."""
 
     def __init__(self, secret_key: str, email: str) -> None:

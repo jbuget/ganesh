@@ -2,16 +2,28 @@
 
 import { Trash2 } from "lucide-react";
 
+import { CompletionCell } from "@/components/atoms/CompletionCell";
 import { DayCell } from "@/components/atoms/DayCell";
 import type { DayValue } from "@/lib/day-value";
 import { DayHeader } from "@/components/atoms/DayHeader";
 import { DayTotalCell } from "@/components/atoms/DayTotalCell";
 import { MissionLabel } from "@/components/atoms/MissionLabel";
 import { TotalCell } from "@/components/atoms/TotalCell";
+import { cellId, rowOf } from "@/lib/grid-navigation";
+import { countCompleteDays } from "@/lib/month-completion";
+import { useGridKeys } from "@/lib/use-grid-keys";
 import type { MonthGridResponse, ProjectKind } from "@/lib/api/generated/model";
 
 interface TimesheetGridProps {
   grid: MonthGridResponse;
+  /**
+   * Whether the grid only reads.
+   *
+   * Given rather than worked out from `is_writable`: a month can be open and
+   * still refuse the person looking at it — a guest reads every month of the
+   * team and declares on none.
+   */
+  readOnly: boolean;
   today: string;
   onSetValue: (
     projectId: number,
@@ -58,6 +70,7 @@ function rowName(row: DisplayRow): string {
 
 export function TimesheetGrid({
   grid,
+  readOnly,
   today,
   onSetValue,
   addingMission,
@@ -86,8 +99,6 @@ export function TimesheetGrid({
         a.label.localeCompare(b.label, "fr"),
     );
 
-  const readOnly = !grid.is_writable;
-
   /**
    * A row carrying no trade on a mission that expects one.
    *
@@ -114,9 +125,47 @@ export function TimesheetGrid({
   const isNarrow = (day: string, isOffDay: boolean) =>
     isOffDay && (totalByDate.get(day)?.total ?? 0) === 0;
 
+  const offDays = new Set(grid.days.filter((day) => day.is_off_day).map((d) => d.day));
+
+  /**
+   * The grid as the keys read it.
+   *
+   * A cell is open exactly when it takes an entry — which is the same rule the
+   * cell draws itself by. A validated month opens nothing, so the arrows have
+   * nowhere to go and do nothing: there is no cursor to move through a month
+   * one cannot write on.
+   */
+  const keys = useGridKeys(
+    {
+      rows: rows.map((row) =>
+        rowOf({ projectId: row.project_id, activityId: row.activity_id }),
+      ),
+      days: grid.days.map((day) => day.day),
+      isOpen: (cell) => !readOnly && !offDays.has(cell.day),
+    },
+    (cell, value) => onSetValue(cell.projectId, cell.activityId, cell.day, value),
+  );
+
+  const completeDays = countCompleteDays(grid.days, grid.day_totals);
+
   return (
-    <div className="max-w-full overflow-x-auto">
-      <table className="w-max border-separate border-spacing-0 border-l border-slate-500 text-slate-800">
+    <div className="max-w-full overflow-x-auto" data-grid-scroller>
+      {/* `relative` is load-bearing, not decoration. The header cells carry
+          `sr-only` labels, and Tailwind draws those `position: absolute`:
+          with no positioned ancestor they resolve against the document
+          instead of the table, escape this scroller entirely, and stretch the
+          page a couple of hundred pixels to the right. The whole window then
+          scrolls sideways and takes the sidebar off screen. Positioning the
+          table pins them back inside it. */}
+      <table
+        // A grid rather than a table: its cells are walked with the arrows and
+        // written into, and `role="grid"` is what makes each `<td>` a
+        // `gridcell` to a screen reader.
+        role="grid"
+        className="relative w-max border-separate border-spacing-0 border-l border-slate-500 text-slate-800"
+        onKeyDown={keys.onKeyDown}
+        onFocus={keys.onFocus}
+      >
         <caption className="sr-only">Temps saisi par projet et par jour</caption>
         <thead>
           <tr>
@@ -137,11 +186,17 @@ export function TimesheetGrid({
                 label={day.label ?? null}
               />
             ))}
+            {/* The one place the grid changes unit, so it says so. A day is
+                read across in hours, a month down in days — and this column
+                is the month. Leaving it unlabelled put « 8 » and « 7,75 » on
+                the same line with nothing to tell the reader they are not
+                the same thing. */}
             <th
               scope="col"
-              className="h-11 w-14 border-t border-r border-b border-t-slate-500 border-r-slate-500 border-b-slate-300 bg-white px-2 text-xs font-medium text-slate-600"
+              aria-label="Total du mois, en jours"
+              className="h-11 w-14 border-t border-r border-b border-t-slate-500 border-r-slate-500 border-b-slate-300 bg-white px-2 text-xs font-normal text-slate-500"
             >
-              <span className="sr-only">Total du mois</span>
+              jours
             </th>
             {onRemoveMission && (
               // Outside the frame: this column carries an action, not data.
@@ -160,7 +215,7 @@ export function TimesheetGrid({
             >
               Total
               <span className="ml-2 text-xs font-normal text-slate-500">
-                ({grid.working_days} jrs. ouvrés)
+                (en heures)
               </span>
             </th>
             {grid.days.map((day, dayIndex) => (
@@ -174,9 +229,9 @@ export function TimesheetGrid({
                 }
               />
             ))}
-            <TotalCell
-              value={grid.actual_total + grid.forecast_total}
-              isStrong
+            <CompletionCell
+              complete={completeDays}
+              workingDays={grid.working_days}
               strongSides={["right", "bottom"]}
             />
             {onRemoveMission && <td className="w-10" />}
@@ -245,6 +300,16 @@ export function TimesheetGrid({
               {grid.days.map((day, dayIndex) => (
                 <DayCell
                   key={day.day}
+                  cellId={cellId({
+                    projectId: row.project_id,
+                    activityId: row.activity_id,
+                    day: day.day,
+                  })}
+                  isTabStop={keys.isTabStop({
+                    projectId: row.project_id,
+                    activityId: row.activity_id,
+                    day: day.day,
+                  })}
                   isLastDay={dayIndex === grid.days.length - 1}
                   value={(row.values[day.day] ?? 0) as DayValue}
                   isOffDay={day.is_off_day}
@@ -256,9 +321,6 @@ export function TimesheetGrid({
                   // into « Développement » would otherwise give a dozen cells
                   // reading alike to anyone listening rather than looking.
                   label={`${rowName(row)} — ${day.day}`}
-                  onChange={(next) =>
-                    onSetValue(row.project_id, row.activity_id, day.day, next)
-                  }
                 />
               ))}
               <TotalCell

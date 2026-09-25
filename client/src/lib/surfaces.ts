@@ -47,6 +47,13 @@ const WORDINGS: Record<Surface, SurfaceWording> = {
     counted: "humeurs déposées ; ce qu'elles disent n'est pas lu ici",
   },
   notifications: { label: "Notifications", counted: "notifications ouvertes" },
+  reminders: {
+    label: "Rappels par mail",
+    // Two gestures share this line: choosing how often one is written to, and
+    // a manager sending a round by hand. Naming only the first made the count
+    // beside it read as wrong.
+    counted: "cadences choisies et envois déclenchés",
+  },
   presence: { label: "Présence", counted: "semaines déclarées" },
   team_admin: { label: "Gestion de l'équipe" },
   api_keys: { label: "Clés API", counted: "créations, modifications, révocations" },

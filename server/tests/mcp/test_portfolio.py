@@ -31,9 +31,11 @@ from src.modules.planning.domain.entities.roadmap import (
 from src.modules.planning.domain.entities.workload_plan import PlanBlocker
 from src.modules.planning.presentation.dependencies import get_roadmap_use_case
 from src.modules.projects.domain.entities.project import ProjectKind, ProjectStatus
-from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.entities.user import Role, User
 
-OWNER = User(id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba")
+OWNER = User(
+    id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba", role=Role.TEAMMATE
+)
 
 
 class Stub:

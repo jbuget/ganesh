@@ -4,7 +4,6 @@ import {
   dayNumber,
   firstDayOfMonth,
   formatShortDate,
-  formatDays,
   formatDecimalDays,
   formatTotal,
   formatMonth,
@@ -69,35 +68,19 @@ describe("weekdayInitial", () => {
   });
 });
 
-describe("formatDays", () => {
-  it("shows nothing for a null value", () => {
-    expect(formatDays(0)).toBe("");
-  });
-
-  it("shows a half day", () => {
-    expect(formatDays(0.5)).toBe("½");
-  });
-
-  it("shows a whole day", () => {
-    expect(formatDays(1)).toBe("1");
-  });
-
-  it("shows a total with a half day", () => {
-    expect(formatDays(3.5)).toBe("3½");
-  });
-});
-
 describe("formatTotal", () => {
   it("shows zero rather than a blank", () => {
     expect(formatTotal(0)).toBe("0");
   });
 
-  it("shows a half day as a cell does", () => {
-    expect(formatTotal(0.5)).toBe("½");
+  it("shows a half day in decimal, as the days beside it are written", () => {
+    // « ½ » went with the grid's cells, which now read in hours. A total
+    // counts days, and says so the way every other day count does.
+    expect(formatTotal(0.5)).toBe("0,5");
   });
 
   it("shows a total with a half day", () => {
-    expect(formatTotal(2.5)).toBe("2½");
+    expect(formatTotal(2.5)).toBe("2,5");
   });
 });
 
@@ -116,6 +99,26 @@ describe("formatDecimalDays", () => {
 
   it("writes a half day on its own", () => {
     expect(formatDecimalDays(0.5)).toBe("0,5");
+  });
+
+  /**
+   * A quarter of a day is 0.25, and a decimal is not enough to say it: rounded
+   * to one, it came out « 0,3 » and three quarters « 0,8 » — figures the
+   * register never held.
+   */
+  it("writes a quarter of a day whole", () => {
+    expect(formatDecimalDays(0.25)).toBe("0,25");
+    expect(formatDecimalDays(0.75)).toBe("0,75");
+    expect(formatDecimalDays(8.25)).toBe("8,25");
+  });
+
+  it("drops a trailing zero rather than writing « 8,50 »", () => {
+    expect(formatDecimalDays(8.5)).toBe("8,5");
+  });
+
+  /** An average is not a declared day: two decimals are where it stops. */
+  it("stops at two decimals for a figure that is not a quarter", () => {
+    expect(formatDecimalDays(7.333)).toBe("7,33");
   });
 });
 

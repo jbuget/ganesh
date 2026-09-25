@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { formatMonth } from "@/lib/dates";
 import { formatGeneratedAt, isQuietMonth, projectLabels } from "@/lib/gazette";
 import { useGazette } from "@/lib/use-gazette";
+import { useMayWrite } from "@/lib/use-may-write";
 
 /**
  * La Gazette: one month of the register, read back.
@@ -31,6 +32,7 @@ import { useGazette } from "@/lib/use-gazette";
  * it writes the next version beside it.
  */
 export function GazettePage() {
+  const mayWrite = useMayWrite();
   const gazette = useGazette();
   const [isConfirming, setConfirming] = useState(false);
   const monthName = formatMonth(gazette.cursor.year, gazette.cursor.month);
@@ -51,6 +53,9 @@ export function GazettePage() {
           )}
           <Button
             className="cursor-pointer"
+            // A digest is a write — it is traced, and it is kept beside the
+            // last one. A guest reads every number and asks for none.
+            hidden={!mayWrite}
             disabled={gazette.isGenerating || !digest}
             onClick={() => {
               // Asking for a month that has never been read needs no

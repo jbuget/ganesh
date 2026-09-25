@@ -16,6 +16,15 @@ interface SimulationBarProps {
   /** Whether what is on screen has drifted from what was saved. */
   hasUnsavedChanges: boolean;
   saveError: string | null;
+  /**
+   * Whether a scenario may be kept at all.
+   *
+   * Arbitrating is local — one reorders the backlog and puts people on
+   * missions to see what it would cost, and nothing of that touches the
+   * server. Keeping the question is the write, and it is the only thing a
+   * guest is short of here.
+   */
+  mayKeep: boolean;
   onOpen: (simulation: SimulationResponse | null) => void;
   onSaveAs: (name: string) => Promise<boolean>;
   onSaveOver: () => Promise<void>;
@@ -37,6 +46,7 @@ export function SimulationBar({
   isHypothesis,
   hasUnsavedChanges,
   saveError,
+  mayKeep,
   onOpen,
   onSaveAs,
   onSaveOver,
@@ -51,10 +61,10 @@ export function SimulationBar({
         simulations={simulations}
         opened={opened}
         onOpen={onOpen}
-        onDelete={onDelete}
+        onDelete={mayKeep ? onDelete : undefined}
       />
 
-      {opened && hasUnsavedChanges && (
+      {mayKeep && opened && hasUnsavedChanges && (
         <Button
           variant="outline"
           size="sm"
@@ -66,7 +76,7 @@ export function SimulationBar({
         </Button>
       )}
 
-      {isHypothesis && (
+      {mayKeep && isHypothesis && (
         <Button
           variant="outline"
           size="sm"

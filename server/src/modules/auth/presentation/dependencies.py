@@ -14,12 +14,16 @@ from src.modules.api_keys.domain.services import key_material
 from src.modules.audit_logs.infrastructure.database.repositories.audit_log_repository_impl import (
     SqlAuditLogRepository,
 )
+from src.modules.auth.application.use_cases.sign_in_locally import (
+    ExpectedCredentials,
+    SignInLocallyUseCase,
+)
 from src.modules.auth.infrastructure.entra_token_validator import EntraTokenValidator
 from src.modules.auth.infrastructure.local_tokens import LocalTokenService
 from src.modules.auth.presentation.identity import identity_from_claims
 from src.modules.users.application.dtos.user_dto import EntraIdentity
 from src.modules.users.application.use_cases.provision_user import ProvisionUserUseCase
-from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.entities.user import Role, User
 from src.modules.users.infrastructure.database.repositories.user_repository_impl import (
     SqlUserRepository,
 )
@@ -33,6 +37,24 @@ DEV_IDENTITY = EntraIdentity(
     email="j.buget@waat.fr",
     display_name="J. Buget (dev)",
 )
+
+
+def get_sign_in_locally_use_case(
+    settings: Settings = Depends(get_settings),
+) -> SignInLocallyUseCase:
+    """Wires the fallback door from the environment, and nowhere deeper.
+
+    Whether the door exists at all is read here: `auth_entra` is a setting,
+    and a use case that consulted one would be a use case that knows what a
+    setting is.
+    """
+    return SignInLocallyUseCase(
+        fallback_is_open=not settings.auth_entra,
+        expected=ExpectedCredentials(
+            login=settings.auth_login, password=settings.auth_password
+        ),
+        issuer=local_token_service(settings),
+    )
 
 
 def local_token_service(settings: Settings) -> LocalTokenService:
@@ -75,7 +97,11 @@ async def get_current_user(
 
     if not settings.require_auth:
         logger.warning("Authentication disabled: development identity.")
-        user = await provision.execute(DEV_IDENTITY)
+        # An administrator, and only here: with no door there is nobody to
+        # promote this account and nobody it could be confused with. A guest
+        # would mean a laptop on which nothing can be declared, which is the
+        # opposite of what switching authentication off is for.
+        user = await provision.execute(DEV_IDENTITY, first_role=Role.ADMIN)
         await session.commit()
         return user
 
@@ -116,6 +142,28 @@ async def get_current_user(
     return user
 
 
+async def get_contributor(
+    user: User = Depends(get_current_user),
+) -> User:
+    """Restricts a route to whoever may write into Ganesh.
+
+    A guest reads the application whole and declares nothing into it: not a
+    month, not a project, not a mise à jour, not a mood.
+
+    The door is **here** rather than in each use case because there are forty
+    of them that write, and one forgotten is a guest writing. A mutating route
+    hangs off this dependency, off `get_current_manager`, off `get_admin`, or
+    off a machine door asking for a write scope — and a test says so, the way
+    a scope opening no route is a bug the tests catch.
+    """
+    if not user.can_write():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account may read Ganesh, not write into it.",
+        )
+    return user
+
+
 async def get_current_manager(
     user: User = Depends(get_current_user),
 ) -> User:
@@ -124,5 +172,21 @@ async def get_current_manager(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This action is reserved for managers.",
+        )
+    return user
+
+
+async def get_admin(
+    user: User = Depends(get_current_user),
+) -> User:
+    """Restricts access to administrators.
+
+    The one door above the manager's, and the only one the administration
+    screen opens on.
+    """
+    if not user.can_administrate():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This action is reserved for administrators.",
         )
     return user

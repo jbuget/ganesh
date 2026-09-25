@@ -19,7 +19,7 @@ from src.modules.api_keys.domain.entities.api_key import (
     ApiKeyScope,
 )
 from src.modules.api_keys.domain.services import key_material
-from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import ForbiddenActionError
 from src.shared.utils import clock
 from tests.helpers.in_memory_repositories import (
@@ -27,7 +27,13 @@ from tests.helpers.in_memory_repositories import (
     InMemoryUserRepository,
 )
 
-OWNER = User(id=10, entra_oid="a", email="t.da@waat.fr", display_name="Toni DA RODDA")
+OWNER = User(
+    id=10,
+    entra_oid="a",
+    email="t.da@waat.fr",
+    display_name="Toni DA RODDA",
+    role=Role.TEAMMATE,
+)
 
 
 def build(
@@ -128,6 +134,7 @@ class TestTurnedAwayWithoutASayingWhy:
             email="t.da@waat.fr",
             display_name="Toni DA RODDA",
             is_active=False,
+            role=Role.TEAMMATE,
         )
         use_case, token, _ = build(owner=gone)
         assert await use_case.execute(token, CATALOG) is None

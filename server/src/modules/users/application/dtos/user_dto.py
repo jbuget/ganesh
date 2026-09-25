@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from src.modules.users.domain.entities.presence import WeekPresence
+from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.modules.users.domain.entities.user import Role
 from src.shared.enums.department import Department
 
@@ -60,3 +61,15 @@ class DeclareOwnPresenceCommand:
 
     actor_id: int
     week: WeekPresence
+
+
+@dataclass(frozen=True)
+class ChooseOwnReminderCadenceCommand:
+    """How often one wants the letter saying what is waiting.
+
+    No target here either: one says how often one's own mailbox is used, and
+    there is no colleague's it could reach.
+    """
+
+    actor_id: int
+    cadence: ReminderCadence

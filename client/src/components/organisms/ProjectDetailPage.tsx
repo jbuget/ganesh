@@ -117,7 +117,10 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
               )}
               <span>
                 {formatDecimalDays(detail.consumed_days)}
-                {project.estimated_days ? `/${project.estimated_days}` : ""} jrs.
+                {project.estimated_days
+                  ? `/${formatDecimalDays(project.estimated_days)}`
+                  : ""}{" "}
+                jrs.
                 {project.estimated_days ? " estimés" : " consommés"}
               </span>
             </p>

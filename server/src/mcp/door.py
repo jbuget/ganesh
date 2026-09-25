@@ -121,10 +121,19 @@ def answers(
     def decorate(tool: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
         @wraps(tool)
         async def guarded(*args: Any, **kwargs: Any) -> R:
-            if not current_machine().caller.key.grants(scope):
+            machine = current_machine()
+            if not machine.caller.key.grants(scope):
                 raise ToolError(
                     f"Cette clé ne porte pas la portée « {scope.value} ». "
                     "Demandez-la à un manager, dans l'écran « API »."
+                )
+            # A key never reaches further than the person who answers for it.
+            # The scope is read here rather than at the door because the door
+            # reads the envelope: which scope a call needs depends on the tool.
+            if not machine.caller.may(scope):
+                raise ToolError(
+                    "Le compte qui répond de cette clé lit Ganesh sans y "
+                    "écrire. Demandez à un manager de lui ouvrir des droits."
                 )
             try:
                 return await tool(*args, **kwargs)

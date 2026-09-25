@@ -46,7 +46,9 @@ from tests.helpers.in_memory_repositories import (
     InMemoryUserRepository,
 )
 
-OWNER = User(id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba")
+OWNER = User(
+    id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba", role=Role.TEAMMATE
+)
 MANAGER = User(
     id=2,
     entra_oid="oid-2",

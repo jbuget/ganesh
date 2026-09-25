@@ -11,6 +11,7 @@ const mood = vi.hoisted(() => ({
   today: "2026-09-23",
   days: [] as { day: string; level: string | null }[],
   savingDay: null as string | null,
+  mayAnswer: true,
   post: vi.fn(),
 }));
 const pathname = vi.hoisted(() => ({ value: "/timesheet" }));
@@ -75,6 +76,18 @@ describe("when the reminder asks", () => {
     const { result } = ask();
 
     expect(result.current.show).toBe(false);
+  });
+
+  it("says nothing to somebody who cannot answer it", () => {
+    // A guest reads the team's fortnight and posts no face of their own: a
+    // question nobody can answer is not a question.
+    mood.mayAnswer = false;
+    at(17);
+
+    const { result } = ask();
+
+    expect(result.current.show).toBe(false);
+    mood.mayAnswer = true;
   });
 
   it("says nothing once the day has been answered for", () => {

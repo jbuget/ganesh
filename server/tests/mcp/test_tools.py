@@ -51,10 +51,12 @@ from src.modules.projects.presentation.dependencies import (
     get_list_projects_use_case,
     get_project_detail_use_case,
 )
-from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
-OWNER = User(id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba")
+OWNER = User(
+    id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba", role=Role.TEAMMATE
+)
 
 
 def instant(year: int, month: int, day: int, hour: int) -> datetime:
@@ -62,7 +64,9 @@ def instant(year: int, month: int, day: int, hour: int) -> datetime:
     return datetime(year, month, day, hour, tzinfo=UTC)
 
 
-MARIE = User(id=2, entra_oid="oid-2", email="m@waat.fr", display_name="M. Ce")
+MARIE = User(
+    id=2, entra_oid="oid-2", email="m@waat.fr", display_name="M. Ce", role=Role.TEAMMATE
+)
 
 
 def a_key(*scopes: ApiKeyScope) -> ApiKey:

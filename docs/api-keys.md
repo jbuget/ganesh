@@ -72,6 +72,14 @@ This is the rule the whole design leans on.
 A key never inherits its owner's role. `get_current_manager` is unreachable by
 a key, because `get_current_user` is.
 
+It never reaches further than that owner either, and the two are not the same
+statement. Its power comes from its scopes alone — a teammate's key writes what
+a manager's key writes — but whether the person who answers for it may write at
+all is another matter: a guest's key writing would be a guest writing, through
+a door they were handed. A write scope is therefore refused to a key whose
+owner only reads, at the routes' door and at the tools', exactly as a
+deactivated owner is refused.
+
 ### Two doors, and when each is right
 
 `require_scope(scope)` opens a route to a machine **and to nobody else**. That

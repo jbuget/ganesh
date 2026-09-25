@@ -1,7 +1,6 @@
 "use client";
 
-import { cycleDayValue, type DayValue } from "@/lib/day-value";
-import { formatDays } from "@/lib/dates";
+import { formatHours, type DayValue } from "@/lib/day-value";
 
 interface DayCellProps {
   value: DayValue;
@@ -14,20 +13,37 @@ interface DayCellProps {
   isLastDay?: boolean;
   /** A non-working day shrinks to a band, unless it carries an entry. */
   isNarrow?: boolean;
+  /**
+   * How the grid names this cell, so the keys can find it back. The handler
+   * lives on the table: the cell only has to say which one it is.
+   */
+  cellId: string;
+  /**
+   * Whether this cell is the grid's one stop in the tab order. A grid holds a
+   * single one, which follows the focus — tabbing through three hundred cells
+   * to reach what comes after them is not navigation.
+   */
+  isTabStop?: boolean;
   label: string;
-  onChange: (next: DayValue) => void;
 }
 
 /**
  * A single cell of the grid.
  *
- * Borders are carried by the `<td>`, never by the button: the button would draw
- * over the rule.
+ * **The cell is the control.** There is no button inside it, because there is
+ * nothing here to press: a value is typed, not clicked. A click lands the
+ * focus and stops there — it used to cycle the value, which meant putting an
+ * 8 in every cell one clicked in order to type in it.
  *
- * Non-working days are greyed and locked, future days dimmed: the first to
- * avoid entries by mistake, the second because they are forecast and not
- * delivered. Today is marked only in the column header, so as not to clutter
- * the grid.
+ * That also settles what the cell is to a screen reader. A button that does
+ * nothing when pressed is a lie; a `gridcell` says what this is, and the
+ * arrows say how to move between them. `role="grid"` is carried by the table.
+ *
+ * Non-working days are greyed and left out of the tab order entirely, future
+ * days dimmed: the first so nothing can be entered on them, the second because
+ * they are forecast and not delivered. A locked cell takes no focus, so no key
+ * ever reaches it and there is nothing to refuse. Today is marked only in the
+ * column header, so as not to clutter the grid.
  */
 export function DayCell({
   value,
@@ -37,8 +53,9 @@ export function DayCell({
   isLastRow = false,
   isLastDay = false,
   isNarrow = false,
+  cellId,
+  isTabStop = false,
   label,
-  onChange,
 }: DayCellProps) {
   // A non-working day is never entered on. The rule is carried by the domain,
   // locking the cell is only its reflection.
@@ -53,28 +70,40 @@ export function DayCell({
 
   return (
     <td
+      // Spelled out rather than left to the `role="grid"` above: browsers and
+      // tooling do not all derive it the same way, and this is the one role
+      // that says the cell can be walked into and written in.
+      role="gridcell"
+      data-cell={cellId}
+      // No `tabIndex` at all when locked: absent is what keeps the cell out of
+      // the tab order, where -1 would still let a script focus it.
+      tabIndex={isLocked ? undefined : isTabStop ? 0 : -1}
+      aria-label={label}
+      aria-readonly={isLocked || undefined}
+      title={label}
       className={[
-        "border-r border-b p-0",
+        "h-9 border-r border-b text-center text-sm transition-colors",
+        isNarrow ? "w-2.5" : "w-9",
         isLastDay ? "border-r-slate-500" : "border-r-slate-300",
         isLastRow ? "border-b-slate-500" : "border-b-slate-300",
+        background,
+        isFuture && value > 0 ? "opacity-60" : "",
+        isLocked ? "cursor-not-allowed" : "cursor-pointer hover:bg-sky-50",
+        // The cursor of the grid, and it has to be unmistakable: this is where
+        // the next keystroke lands, on a screen of two hundred identical
+        // squares.
+        //
+        // `focus`, not `focus-visible`. The gesture is click-then-type, and
+        // focus-visible hides the ring after a click — which would leave the
+        // hand typing into a cell nothing points at.
+        //
+        // The outline is drawn inside the cell (negative offset): table cells
+        // paint in order, so an outline spilling outwards is painted over by
+        // the neighbour to its right.
+        "focus:z-10 focus:outline-2 focus:-outline-offset-2 focus:outline-sky-600",
       ].join(" ")}
     >
-      <button
-        type="button"
-        aria-label={label}
-        title={label}
-        disabled={isLocked}
-        onClick={() => onChange(cycleDayValue(value))}
-        className={[
-          "block h-9 text-sm transition-colors",
-          isNarrow ? "w-2.5" : "w-9",
-          background,
-          isFuture && value > 0 ? "opacity-60" : "",
-          isLocked ? "cursor-not-allowed" : "cursor-pointer hover:bg-sky-50",
-        ].join(" ")}
-      >
-        {formatDays(value)}
-      </button>
+      {formatHours(value)}
     </td>
   );
 }

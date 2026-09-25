@@ -30,7 +30,11 @@ import {
   todayIso,
 } from "@/lib/dates";
 import { assignedMissionIds, missionsToDeclare } from "@/lib/missions";
+import { withPendingEntries } from "@/lib/pending-entries";
 import { useQueryString, writeUrl } from "@/lib/url-state";
+import { usePendingEntries } from "@/lib/use-pending-entries";
+import { holds } from "@/lib/roles";
+import { useMayWrite } from "@/lib/use-may-write";
 
 /**
  * State and actions of a month's entry screen.
@@ -58,6 +62,7 @@ export function useTimesheetMonth() {
   const month = firstDayOfMonth(cursor.year, cursor.month);
 
   const { user: me } = useCurrentUser();
+  const mayWrite = useMayWrite();
   const { teammates } = useTeammates();
   const { missions, projects } = useProjects();
   const createProject = useCreateProject();
@@ -65,13 +70,44 @@ export function useTimesheetMonth() {
   const reopenMonth = useReopenMonth();
 
   const gridQuery = useMonthGrid(month, viewedUserId, Boolean(me?.id));
-  const grid = gridQuery.grid;
-
-  const target = viewedUserId ? { user_id: viewedUserId } : undefined;
 
   async function refresh() {
     await queryClient.invalidateQueries();
   }
+
+  const target = viewedUserId ? { user_id: viewedUserId } : undefined;
+
+  /**
+   * Clicks are answered on the spot and written once they have settled: a half
+   * day is two clicks on one cell, and one write.
+   *
+   * The cell names whose month it is in, so a write still waiting when one
+   * walks to a colleague's month goes where it was clicked.
+   */
+  const entries = usePendingEntries({
+    async write({ userId, projectId, activityId, day }, value) {
+      const whose = userId === me?.id ? undefined : { user_id: userId };
+      if (value === 0) {
+        await clearEntry({
+          project_id: projectId,
+          activity_id: activityId,
+          day,
+          ...whose,
+        });
+      } else {
+        await setEntry(
+          { project_id: projectId, activity_id: activityId, day, value },
+          whose,
+        );
+      }
+    },
+    refresh,
+  });
+
+  /** What the server holds, the cells awaiting their write laid over it. */
+  const grid = gridQuery.grid
+    ? withPendingEntries(gridQuery.grid, entries.pending, today)
+    : gridQuery.grid;
 
   /** Changing month is a navigation: going back must bring the previous one. */
   function goToMonth(next: { year: number; month: number }) {
@@ -133,8 +169,18 @@ export function useTimesheetMonth() {
      * reopening is about being a manager, whoever the month belongs to. The
      * state of the month is what tells them apart, so they never show together.
      */
-    canValidate: Boolean(grid?.is_writable) && isOwnMonth,
-    canReopen: Boolean(grid && !grid.is_writable) && me?.role === "MANAGER",
+    /**
+     * Whether this month accepts the person reading.
+     *
+     * Two things at once, and both have to hold: the month is open, and the
+     * reader is not a guest. The screen asks this rather than `is_writable`,
+     * which says what is true of the *month* — a guest reading an open month
+     * would otherwise be offered every cell of it.
+     */
+    writable: Boolean(grid?.is_writable) && mayWrite,
+
+    canValidate: Boolean(grid?.is_writable) && isOwnMonth && mayWrite,
+    canReopen: Boolean(grid && !grid.is_writable) && holds(me?.role, "MANAGER"),
 
     /** Missions the viewer contributes to, offered first when adding a row. */
     assignedIds: assignedMissionIds(missions, me?.id ?? null),
@@ -171,37 +217,24 @@ export function useTimesheetMonth() {
     },
 
     /**
-     * A null value removes the entry; any other value writes it.
+    /**
+     * Takes a cell's new value. A `0` removes the entry, any other writes it.
      *
-     * The activity is part of what names the slot: the same person may
+     * Nothing leaves at once: the write goes out when the clicking has
+     * stopped, and the grid reads the value in the meantime.
+     *
+     * The activity is part of what names the cell: the same person may
      * declare on the same mission the same day under two trades, and those
-     * are two entries rather than one overwriting the other.
+     * are two cells rather than one overwriting the other.
      */
-    async setDayValue(
+    setDayValue(
       projectId: number,
       activityId: number | null,
       day: string,
       value: DayValue,
     ) {
-      if (value === 0) {
-        await clearEntry({
-          project_id: projectId,
-          activity_id: activityId,
-          day,
-          ...target,
-        });
-      } else {
-        await setEntry(
-          {
-            project_id: projectId,
-            activity_id: activityId,
-            day,
-            value: value,
-          },
-          target,
-        );
-      }
-      await refresh();
+      if (targetUserId === null) return;
+      entries.setValue({ userId: targetUserId, projectId, activityId, day }, value);
     },
 
     /**
@@ -221,6 +254,8 @@ export function useTimesheetMonth() {
 
     /** Removes a row from the month, with the time it carries. */
     async removeMission(projectId: number, activityId: number | null) {
+      // A cell still waiting would write itself back onto a row that has gone.
+      await entries.flush();
       await removeMissionFromMonth({
         project_id: projectId,
         activity_id: activityId,
@@ -262,6 +297,9 @@ export function useTimesheetMonth() {
     },
 
     async validate() {
+      // The month closes to writes: what is waiting goes out before it does,
+      // or it would be refused and lost.
+      await entries.flush();
       await validateMonth.mutateAsync({ month });
       await refresh();
     },

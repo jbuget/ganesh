@@ -28,13 +28,15 @@ from src.modules.entries.application.dtos.set_entry_dto import SetEntryCommand
 from src.modules.entries.domain.entities.entry import Entry
 from src.modules.entries.presentation.dependencies import get_set_entry_use_case
 from src.modules.projects.domain.entities.project import ProjectStatus
-from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
     ForbiddenActionError,
 )
 
-OWNER = User(id=7, entra_oid="oid-7", email="a@waat.fr", display_name="A. Ba")
+OWNER = User(
+    id=7, entra_oid="oid-7", email="a@waat.fr", display_name="A. Ba", role=Role.TEAMMATE
+)
 
 
 class Writer:
@@ -181,16 +183,27 @@ class TestEveryRefusalIsASentence:
 
     @pytest.mark.asyncio
     async def test_a_value_the_grid_does_not_hold_is_refused_in_words(self) -> None:
-        """Half a day or a whole one. The refusal says so rather than « 422 »."""
+        """A quarter of a day, or a multiple of it. Said, rather than « 422 »."""
         writer = Writer()
         with Wired(writer), pytest.raises(ToolError) as raised:
-            await declare_time(project_id=3, day="2026-09-21", value=0.75)
+            await declare_time(project_id=3, day="2026-09-21", value=0.8)
 
-        assert "0,5" in str(raised.value)
+        assert "0,25" in str(raised.value)
         # Quoted as it was written: a refusal that rounds tells the caller
         # they wrote something they did not.
-        assert "0,75" in str(raised.value)
+        assert "0,8" in str(raised.value)
         assert writer.asked is None
+
+    @pytest.mark.asyncio
+    async def test_a_quarter_of_a_day_is_written(self) -> None:
+        """Two hours on an eight-hour day: the grain the grid now holds."""
+        writer = Writer()
+        with Wired(writer):
+            said = await declare_time(project_id=3, day="2026-09-21", value=0.25)
+
+        assert writer.asked is not None
+        assert writer.asked.value == 0.25
+        assert "0,25 jour" in said
 
     @pytest.mark.asyncio
     async def test_a_refusal_is_raised_rather_than_answered(self) -> None:

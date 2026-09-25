@@ -15,6 +15,7 @@ const jeremy: UserResponse = {
   initials: "JB",
   role: "MANAGER",
   presence: A_WEEK_ON_SITE,
+  reminder_cadence: "DAILY",
   is_active: true,
 };
 

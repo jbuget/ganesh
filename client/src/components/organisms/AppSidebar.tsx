@@ -9,7 +9,7 @@ import { UserMenu } from "@/components/atoms/UserMenu";
 import { NotificationPanel } from "@/components/organisms/NotificationPanel";
 import { Button } from "@/components/ui/button";
 import { openPalette, useShortcutHint } from "@/lib/command-palette-store";
-import { SCREENS } from "@/lib/navigation";
+import { screensFor } from "@/lib/navigation";
 import { useNavigationTrail } from "@/lib/navigation-trail";
 import { useSignOut } from "@/lib/use-sign-out";
 import { useCurrentUser } from "@/lib/api/queries";
@@ -115,7 +115,7 @@ export function AppSidebar() {
         className="min-h-0 flex-1 overflow-y-auto px-2"
       >
         <ul className="flex flex-col gap-1">
-          {SCREENS.map(({ href, label, Icon }) => {
+          {screensFor(user?.role).map(({ href, label, Icon }) => {
             const isActive = pathname === href;
             return (
               <li key={href}>

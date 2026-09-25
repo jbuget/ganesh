@@ -46,12 +46,14 @@ class AuditAction(StrEnum):
     USER_ROLE_CHANGE = "user.role_change"
     USER_IDENTITY_UPDATE = "user.identity_update"
     USER_PRESENCE_DECLARE = "user.presence_declare"
+    USER_REMINDER_CHOOSE = "user.reminder_choose"
     USER_DEACTIVATE = "user.deactivate"
     USER_ACTIVATE = "user.activate"
     API_KEY_CREATE = "api_key.create"
     API_KEY_UPDATE = "api_key.update"
     API_KEY_REVOKE = "api_key.revoke"
     GAZETTE_GENERATE = "gazette.generate"
+    REMINDER_RUN = "reminder.run"
 
 
 def _as_text(value: Any | None) -> str | None:

@@ -84,3 +84,18 @@ describe("MissionLabel", () => {
     expect(screen.getByRole("tooltip")).toHaveTextContent("0/5 jrs. estimés");
   });
 });
+
+describe("MissionLabel, with a fractional estimate", () => {
+  /**
+   * Estimates are declared in days and some of them carry a half — « 23,5 ».
+   * Shown raw it came out « 23.5 », with an English point, right beside a
+   * consumed figure written « 8,75 » with a French comma.
+   */
+  it("writes the estimate the French way, as it writes the days consumed", () => {
+    hover(renderLabel({ label: "DOE", consumedDays: 8.75, estimatedDays: 23.5 }));
+
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip).toHaveTextContent("8,75/23,5 jrs. estimés");
+    expect(tooltip.textContent).not.toContain("23.5");
+  });
+});

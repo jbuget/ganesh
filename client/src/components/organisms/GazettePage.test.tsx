@@ -16,6 +16,12 @@ const gazette = vi.hoisted(() => ({
   generateDigest: vi.fn(),
 }));
 
+// The reading of « may this person write? » is its own hook, and its own
+// tests: here it is answered yes, so that what is under test stays what the
+// file says it is.
+const mayWrite = vi.hoisted(() => ({ value: true }));
+vi.mock("@/lib/use-may-write", () => ({ useMayWrite: () => mayWrite.value }));
+
 vi.mock("@/lib/use-gazette", () => ({ useGazette: () => gazette }));
 
 function aDigest(over: Partial<DigestResponse> = {}): DigestResponse {

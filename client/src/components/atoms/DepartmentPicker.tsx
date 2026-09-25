@@ -9,6 +9,14 @@ import { DEPARTMENTS, departmentLabel } from "@/lib/departments";
 
 interface DepartmentPickerProps {
   values: Department[];
+  /**
+   * Whether the reader may change it.
+   *
+   * Editable by default: a field one cannot change is the exception, and it
+   * is the screen holding the field that knows — a guest reads every sheet of
+   * the reference list and rewrites none.
+   */
+  editable?: boolean;
   onChange: (values: Department[]) => void | Promise<void>;
 }
 
@@ -18,7 +26,11 @@ interface DepartmentPickerProps {
  * Several are possible: a tool serving landlords and customer service concerns
  * both, and steering wants to see it on both sides.
  */
-export function DepartmentPicker({ values, onChange }: DepartmentPickerProps) {
+export function DepartmentPicker({
+  values,
+  editable = true,
+  onChange,
+}: DepartmentPickerProps) {
   const [isOpen, setOpen] = useState(false);
   const chosen = new Set(values);
 
@@ -33,7 +45,8 @@ export function DepartmentPicker({ values, onChange }: DepartmentPickerProps) {
     <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label="Modifier les départements"
-        className="-mx-1 flex cursor-pointer flex-wrap items-center gap-1 rounded px-1 py-0.5 transition-colors hover:bg-slate-100"
+        disabled={!editable}
+        className={`-mx-1 flex ${editable ? "cursor-pointer" : ""} flex-wrap items-center gap-1 rounded px-1 py-0.5 transition-colors ${editable ? "hover:bg-slate-100" : ""}`}
       >
         {values.length === 0 ? (
           <span className="flex items-center gap-1 text-sm text-slate-400">

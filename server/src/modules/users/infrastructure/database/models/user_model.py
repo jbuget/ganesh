@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
 from src.modules.users.domain.entities.presence import DayPresence
+from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.modules.users.domain.entities.user import Role
 from src.shared.enums.department import Department
 
@@ -22,7 +23,7 @@ class UserModel(Base):
     display_name: Mapped[str] = mapped_column(String(255))
     role: Mapped[Role] = mapped_column(
         Enum(Role, name="user_role", native_enum=False, length=16),
-        default=Role.TEAMMATE,
+        default=Role.GUEST,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     # Nullable: accounts pre-assigned by the seed have never logged in.
@@ -39,6 +40,21 @@ class UserModel(Base):
     )
     # The handle alone, never « @lea-chen »: the domain trims it on the way in.
     github_username: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # How often the letter saying what is waiting goes out. Every day until
+    # somebody says otherwise: a reader who has never opened the setting is
+    # exactly the one the bell is failing to reach.
+    reminder_cadence: Mapped[ReminderCadence] = mapped_column(
+        Enum(ReminderCadence, name="reminder_cadence", native_enum=False, length=8),
+        nullable=False,
+        server_default=ReminderCadence.DAILY.value,
+    )
+
+    # When the last letter went out. Nullable: nobody has been written to
+    # before the first run, and a letter that failed leaves it untouched.
+    reminder_sent_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # The ordinary week. On site every day until somebody says otherwise:
     # the arrangement the team runs on, and therefore what is true of anyone

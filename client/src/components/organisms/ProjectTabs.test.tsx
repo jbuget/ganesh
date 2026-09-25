@@ -6,6 +6,12 @@ import { ProjectTabs } from "./ProjectTabs";
 import type { ProjectDetailResponse } from "@/lib/api/generated/model";
 
 /** The four facets have their own tests: the deletion is what is asked here. */
+// The reading of « may this person write? » is its own hook, and its own
+// tests: here it is answered yes, so that what is under test stays what the
+// file says it is.
+const mayWrite = vi.hoisted(() => ({ value: true }));
+vi.mock("@/lib/use-may-write", () => ({ useMayWrite: () => mayWrite.value }));
+
 vi.mock("@/components/organisms/ProjectSteeringTab", () => ({
   ProjectSteeringTab: () => <div />,
 }));
@@ -189,5 +195,33 @@ describe("ProjectTabs — cutting a project into packages", () => {
     expect(
       screen.queryByRole("button", { name: /Déclarer un sous-projet/ }),
     ).toBeNull();
+  });
+});
+
+describe("ProjectTabs, read by a guest", () => {
+  it("offers none of the gestures the menu folds", () => {
+    // Declaring, attaching, archiving, deleting: every entry of the menu
+    // writes, so the menu goes whole rather than opening on four refusals.
+    mayWrite.value = false;
+    tabs({ is_deletable: true, consumed_days: 0 });
+
+    expect(screen.queryByRole("button", { name: "Actions sur le projet" })).toBeNull();
+    mayWrite.value = true;
+  });
+
+  it("still opens every tab: a guest reads the mission whole", () => {
+    mayWrite.value = false;
+    tabs({ is_deletable: true, consumed_days: 0 });
+
+    for (const tab of [
+      "Pilotage",
+      "Mises à jour",
+      "Fichiers",
+      "Catalogue",
+      "Journal",
+    ]) {
+      expect(screen.getByRole("tab", { name: tab })).toBeInTheDocument();
+    }
+    mayWrite.value = true;
   });
 });

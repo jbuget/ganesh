@@ -20,7 +20,7 @@ from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectStatus,
 )
-from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.entities.user import Role, User
 from src.shared.enums.work_nature import WorkNature
 from src.shared.exceptions.domain_exceptions import ValidationError
 from tests.helpers.in_memory_repositories import (
@@ -30,8 +30,12 @@ from tests.helpers.in_memory_repositories import (
     InMemoryUserRepository,
 )
 
-ALICE = User(id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba")
-BOB = User(id=2, entra_oid="oid-2", email="b@waat.fr", display_name="B. Cy")
+ALICE = User(
+    id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba", role=Role.TEAMMATE
+)
+BOB = User(
+    id=2, entra_oid="oid-2", email="b@waat.fr", display_name="B. Cy", role=Role.TEAMMATE
+)
 EXTRANET = Project(id=7, label="Extranet", kind=ProjectKind.PROJECT)
 LEAVE = Project(id=9, label="Congés", kind=ProjectKind.OFF_PROJECT, status=None)
 DEV = Activity(

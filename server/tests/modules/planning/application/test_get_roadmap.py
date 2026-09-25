@@ -20,7 +20,7 @@ from src.modules.projects.domain.entities.project import (
     ProjectStatus,
 )
 from src.modules.projects.domain.entities.project_role import ProjectRole
-from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.entities.user import Role, User
 from src.shared.enums.department import Department
 from src.shared.exceptions.domain_exceptions import ValidationError
 from tests.helpers.in_memory_repositories import (
@@ -37,7 +37,9 @@ TODAY = date(2026, 9, 18)
 FROM_DAY = date(2026, 1, 1)
 TO_DAY = date(2026, 12, 31)
 
-ALICE = User(id=1, entra_oid="a", email="alice@waat.fr", display_name="Alice")
+ALICE = User(
+    id=1, entra_oid="a", email="alice@waat.fr", display_name="Alice", role=Role.TEAMMATE
+)
 
 
 def a_mission(

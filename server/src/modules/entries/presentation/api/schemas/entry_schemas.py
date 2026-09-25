@@ -15,7 +15,9 @@ class SetEntryRequest(BaseModel):
     #: work, which is declared on directly.
     activity_id: int | None = None
     day: date
-    value: float = Field(description="0.5 for a half day, 1 for a full day")
+    value: float = Field(
+        description="A quarter of a day or a multiple of it: 0.25, 0.5, 0.75 or 1"
+    )
 
 
 class AddMissionRequest(BaseModel):

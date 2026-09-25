@@ -13,7 +13,8 @@ interface SimulationPickerProps {
   /** The scenario currently open, if one is. */
   opened: SimulationResponse | null;
   onOpen: (simulation: SimulationResponse | null) => void;
-  onDelete: (simulationId: number) => void;
+  /** Left out when scenarios may be opened but not thrown away. */
+  onDelete?: (simulationId: number) => void;
 }
 
 /**
@@ -93,16 +94,19 @@ export function SimulationPicker({
                 </button>
 
                 {/* Always present, never only on hover: a control one has to
-                    go looking for is a control nobody finds. */}
-                <button
-                  type="button"
-                  aria-label={`Supprimer la simulation ${simulation.name}`}
-                  title={`Supprimer « ${simulation.name} »`}
-                  onClick={() => onDelete(simulation.id)}
-                  className="cursor-pointer rounded p-1.5 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
-                >
-                  <Trash2 className="size-4" aria-hidden />
-                </button>
+                    go looking for is a control nobody finds. Absent only when
+                    scenarios may be read and not thrown away. */}
+                {onDelete && (
+                  <button
+                    type="button"
+                    aria-label={`Supprimer la simulation ${simulation.name}`}
+                    title={`Supprimer « ${simulation.name} »`}
+                    onClick={() => onDelete(simulation.id)}
+                    className="cursor-pointer rounded p-1.5 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 className="size-4" aria-hidden />
+                  </button>
+                )}
               </li>
             );
           })}

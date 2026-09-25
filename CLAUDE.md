@@ -49,14 +49,55 @@ volume, and a key prefix is a needle for a secret scanner, not a brand.
 
 ### Roles
 
-| Action | `TEAMMATE` | `MANAGER` |
-|---|---|---|
-| Fill in one's own month, read and edit a colleague's open month | ✅ | ✅ |
-| Create / change a project, change its status | ✅ | ✅ |
-| Validate one's own month | ✅ | ✅ |
-| Reopen a validated month | ❌ | ✅ |
-| Manage teammates | ❌ | ✅ |
-| Sync to Monday (V1.1) | ❌ | ✅ |
+One ladder, four rungs, `GUEST` < `TEAMMATE` < `MANAGER` < `ADMIN`. It is one
+axis on purpose: an admin holds everything a manager holds, so no screen has to
+list two roles and forget one of them. `RANK` is read off `Role` rather than
+written down, and a rung added between two others cannot be forgotten.
+
+| Action | `GUEST` | `TEAMMATE` | `MANAGER` | `ADMIN` |
+|---|---|---|---|---|
+| Read every screen | ✅ | ✅ | ✅ | ✅ |
+| Fill in one's own month, read and edit a colleague's open month | ❌ | ✅ | ✅ | ✅ |
+| Create / change a project, change its status | ❌ | ✅ | ✅ | ✅ |
+| Validate one's own month | ❌ | ✅ | ✅ | ✅ |
+| Reopen a validated month | ❌ | ❌ | ✅ | ✅ |
+| Manage teammates | ❌ | ❌ | ✅ | ✅ |
+| Hand out a role, up to one's own | ❌ | ❌ | ✅ | ✅ |
+| Open the administration of the platform | ❌ | ❌ | ❌ | ✅ |
+| Sync to Monday (V1.1) | ❌ | ❌ | ✅ | ✅ |
+
+**A guest is what anybody is on their first sign-in**, and it is an answer
+rather than a placeholder: somebody the reference list has never heard of reads
+the application whole and declares nothing into it. The seed is the other door
+— matching by email is what preserves a role handed out before anybody logged
+in — and `make grant-role EMAIL=… ROLE=ADMIN` is the third, from a shell on the
+host, which is the only place the *first* administrator can be made.
+
+**Authentication switched off admits an administrator.** `REQUIRE_AUTH=false`
+provisions `DEV_IDENTITY`, and it does so as an admin: with no door there is
+nobody to promote that account and nothing it could be confused with, where a
+guest would mean a laptop on which nothing can be declared. That identity is a
+**constant**, not a setting — `AUTH_LOCAL_EMAIL` feeds the fallback door
+(`AUTH_ENTRA=false`), never this one, and the provisioning matches on
+`entra_oid` first, so changing an email alone would hand back the same account.
+To try another role locally, move your own with `make grant-role`.
+
+**Two bounds hold every role change**, and they live on the entity: nobody
+hands out a role above their own, and nobody moves somebody who stands above
+them. A manager therefore promotes up to manager and leaves an admin alone —
+being able to demote the one who could undo it is the same door read backwards.
+Nobody changes their own role either, for the reason nobody deactivates
+themselves.
+
+**A route that writes hangs off a door a guest cannot come through.** There are
+forty-odd of them, and checking them one by one is how one ends up forgotten:
+`get_contributor`, `get_current_manager` and `get_admin` are the three human
+doors, a machine door counts when the scope it asks for is a write scope, and
+`test_write_doors` reads the application itself to say so. A key never reaches
+further than the person who answers for it.
+
+On the client the same reading is one hook, `useMayWrite`, and the band above
+every screen says it once rather than a dozen times over.
 
 ### Business invariants
 
@@ -318,7 +359,16 @@ Modules: `users`, `projects`, `entries`, `months`, `calendar`, `audit_logs`.
   infrastructure.
 - **A use case may never call another use case.** Extract shared logic into a
   domain service.
-- **FastAPI routes never inject a repository directly** — use cases only.
+- **A FastAPI route reaches a use case, and nothing else.** Not a repository,
+  and not a domain service either: a route that called `read_wiring` straight
+  would be a route deciding what to orchestrate, and the layer that exists to
+  answer that question would have been stepped over. « Il n'y a rien à
+  orchestrer » is not an exemption — a use case with one call is still where
+  the next call will go. **`test_routes_reach_use_cases` reads the
+  application to say so**, and the two routes that answer without one of their
+  own are named in it, with the reason: the liveness probe, which must survive
+  the application being down, and `GET /users/me`, whose whole work is the
+  `ProvisionUserUseCase` its dependency already ran.
 - Always depend on the interface, never on the concrete implementation.
 
 **These rules are not declarative: they are enforced by `import-linter`**
@@ -707,6 +757,56 @@ day a second provider is actually implemented, both become worth a screen.
 generated with their facts and no chapeau.
 
 ---
+
+## Being told when Ganesh is closed
+
+The bell only reaches whoever has the application open, which is most of the
+team almost never. A letter reaches everybody else. `docs/notifications-email.md`
+is the brief; five rules hold it together:
+
+- **The problem is « not seen », not « not seen fast ».** Nobody needs to learn
+  within thirty seconds that they were mentioned, so the answer is a digest and
+  not a channel. One letter, on a cadence the reader chooses — every working
+  day, the first working day of the week, or never.
+- **It points; it does not copy.** The letter counts by kind — « 2 mentions,
+  1 mois rouvert » — and leads back to the inbox, where the detail and the read
+  state live. **Receiving a letter is not reading an inbox**: nothing of
+  `deliver()`, of the fan-out or of `read_at` is touched, and no letter ever
+  clears a bell.
+- **Nothing is said twice, and nothing is said about nothing.** A letter holds
+  what arrived after the last one and is still unread; `roundup()` answers
+  nothing rather than an empty reminder. A letter that repeats itself, or that
+  arrives saying nothing, teaches its reader to filter the one that mattered.
+- **The clock is inside the application**, in `src/scheduler/` — a third way in
+  beside the routers and the tools, held there by the same two `import-linter`
+  contracts. It claims each run in `scheduled_run`, whose primary key is the
+  lock: the number of `uvicorn` workers stops mattering, and a deploy at 9 h
+  does not re-send the round of 8 h 30. Paris time, hard-coded, as the public
+  holidays are hard-coded to France.
+- **A letter refused and nowhere to post are not the same failure.** One
+  reader's is stepped over and the round carries on; `MailerUnavailableError`
+  stops the round, is said once rather than per recipient, and **gives the run
+  back** so the next tick retries — the claim is taken before the work, so
+  without that a key refused at 8 h 30 costs the whole day. An unconfigured
+  mailer refuses for the same reason: answering « envoyée » having sent
+  nothing would move every stamp it touched, and what it announced would never
+  be announced again.
+- **A manager may send a round by hand**, from the foot of « Notifications ».
+  It answers to no clock and takes no claim — a run that respected the day's
+  claim would do nothing after the failed morning it exists for — and the
+  stamps are what keep it from writing twice. Unlike the clock's round, it is
+  traced: a letter is a channel, somebody deliberately sending one is a
+  gesture.
+- **The French of the letter is on the server**, in
+  `domain/services/reminder_letter.py`, and that is the one exception to the
+  interface owning what the reader reads: a letter has no browser in the loop.
+  It is bounded to one noun per kind, and a test asserts every
+  `NotificationKind` has one.
+
+`SMTP_HOST` and what follows it are empty by default — the contract
+`GEMINI_API_KEY` already has. Without them the clock does not start, and
+nothing breaks. `make mail-up` stands up the MailPit that plays the mail server
+on a laptop, as MinIO plays S3.
 
 ## The files a project carries
 

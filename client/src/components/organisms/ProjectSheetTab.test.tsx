@@ -54,7 +54,7 @@ function sheet(overrides: Record<string, unknown> = {}, handlers = {}) {
     removeLink: vi.fn().mockResolvedValue(undefined),
     ...handlers,
   };
-  render(<ProjectSheetTab detail={detail(overrides)} {...props} />);
+  render(<ProjectSheetTab detail={detail(overrides)} editable {...props} />);
   return props;
 }
 
@@ -195,6 +195,7 @@ describe("cancelling a field", () => {
     render(
       <div onKeyDown={onEscape}>
         <ProjectSheetTab
+          editable
           detail={detail()}
           updateFields={vi.fn().mockResolvedValue(undefined)}
           saveDescription={vi.fn().mockResolvedValue(undefined)}

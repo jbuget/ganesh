@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
 import { useTimesheetMonth } from "./use-timesheet-month";
@@ -295,5 +295,98 @@ describe("whose month is shown", () => {
     expect(
       renderHook(() => useTimesheetMonth()).result.current.viewedTeammateName,
     ).toBe(null);
+  });
+});
+
+/**
+ * Half a day is two clicks on one cell. Written as they came, the second read
+ * a cell the first had not come back to yet: one asked for half a day and got
+ * a whole one, and the grid sent two writes for the one gesture.
+ */
+describe("entering time", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** Lets the writes go out and run to the end. */
+  async function settle() {
+    await act(async () => {
+      vi.advanceTimersByTime(400);
+    });
+  }
+
+  it("sends one write for the clicks that make up one gesture", async () => {
+    const screen = month();
+
+    act(() => screen.current.setDayValue(10, 100, "2026-09-14", 1));
+    act(() => screen.current.setDayValue(10, 100, "2026-09-14", 0.5));
+    await settle();
+
+    expect(entries.setEntry).toHaveBeenCalledTimes(1);
+    expect(entries.setEntry).toHaveBeenCalledWith(
+      { project_id: 10, activity_id: 100, day: "2026-09-14", value: 0.5 },
+      undefined,
+    );
+  });
+
+  it("removes the entry when the cell comes back to empty", async () => {
+    const screen = month();
+
+    act(() => screen.current.setDayValue(10, 100, "2026-09-14", 0));
+    await settle();
+
+    expect(entries.clearEntry).toHaveBeenCalledWith({
+      project_id: 10,
+      activity_id: 100,
+      day: "2026-09-14",
+    });
+  });
+
+  /** A write still waiting must go where it was clicked, not where one is. */
+  it("writes on the month of the colleague whose cell was clicked", async () => {
+    const screen = month();
+    act(() => screen.current.viewTeammate(7));
+
+    act(() => screen.current.setDayValue(10, 100, "2026-09-14", 1));
+    act(() => screen.current.viewTeammate(1));
+    await settle();
+
+    expect(entries.setEntry).toHaveBeenCalledWith(expect.anything(), { user_id: 7 });
+  });
+
+  /**
+   * The month closes to writes: a cell still waiting would be refused, and the
+   * time declared would be lost without a word.
+   */
+  it("sends what is waiting before the month is validated", async () => {
+    const screen = month();
+    act(() => screen.current.setDayValue(10, 100, "2026-09-14", 1));
+
+    await act(async () => {
+      await screen.current.validate();
+    });
+
+    expect(entries.setEntry).toHaveBeenCalled();
+    expect(entries.setEntry.mock.invocationCallOrder[0]).toBeLessThan(
+      months.validateMonth.mock.invocationCallOrder[0],
+    );
+  });
+
+  /** A cell still waiting would write itself back onto a row that has gone. */
+  it("sends what is waiting before a mission leaves the month", async () => {
+    const screen = month();
+    act(() => screen.current.setDayValue(10, 100, "2026-09-14", 1));
+
+    await act(async () => {
+      await screen.current.removeMission(10, 100);
+    });
+
+    expect(entries.setEntry.mock.invocationCallOrder[0]).toBeLessThan(
+      entries.removeMissionFromMonth.mock.invocationCallOrder[0],
+    );
   });
 });

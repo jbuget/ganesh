@@ -119,6 +119,8 @@ export function useMoodReminder() {
 
   return {
     show:
+      // A question nobody can answer is not a question.
+      mood.mayAnswer &&
       open !== undefined &&
       open.level === null &&
       settled &&

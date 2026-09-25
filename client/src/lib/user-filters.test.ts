@@ -20,6 +20,7 @@ const teammate = (
   initials: display_name.slice(0, 2).toUpperCase(),
   role: "TEAMMATE",
   presence: A_WEEK_ON_SITE,
+  reminder_cadence: "DAILY",
   is_active: true,
   last_login_at: null,
   ...fields,
@@ -106,7 +107,7 @@ describe("readUserFilters", () => {
   });
 
   it("ignores a value it does not know rather than emptying the screen", () => {
-    const params = new URLSearchParams("role=ADMIN&state=zombie");
+    const params = new URLSearchParams("role=SORCIER&state=zombie");
 
     expect(readUserFilters(params)).toEqual(NO_USER_FILTER);
   });

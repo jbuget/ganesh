@@ -14,7 +14,14 @@ export type { SortDirection };
 
 /** The reference list columns the list can be ordered by. */
 export type SortColumn =
-  "project" | "phase" | "priority" | "category" | "build" | "run" | "goLive";
+  | "project"
+  | "phase"
+  | "priority"
+  | "category"
+  | "build"
+  | "run"
+  | "goLive"
+  | "lastUpdate";
 
 /** The column asked for, or `null` for the reference list's own order. */
 export type MissionSort = ColumnSort<SortColumn>;
@@ -29,6 +36,7 @@ const COLUMNS: SortColumn[] = [
   "build",
   "run",
   "goLive",
+  "lastUpdate",
 ];
 
 const PRIORITY_RANKS = new Map(PRIORITIES.map((p, rank) => [p.value, rank]));
@@ -54,6 +62,13 @@ const VALUES: Record<SortColumn, (m: Mission) => string | number | null> = {
   // Written down as `2026-11-15`, which compares as it reads: no date has to
   // be built to put two of them in order.
   goLive: (m) => m.project.go_live_date ?? null,
+  // An instant, not a day: two updates posted the same morning must not tie,
+  // or the list would fall back on the alphabet for missions the column can
+  // perfectly well separate. A mission nobody has ever spoken of is `null` and
+  // goes to the end — « jamais » is not « il y a très longtemps », and must
+  // not take the top of a descending sort.
+  lastUpdate: (m) =>
+    m.latest_update ? new Date(m.latest_update.published_at).getTime() : null,
 };
 
 function byLabel(a: Mission, b: Mission): number {
