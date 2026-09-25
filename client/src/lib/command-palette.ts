@@ -4,10 +4,11 @@ import type {
   AuditAction,
   ProjectListItemResponse,
   ProjectStatus,
+  Role,
   TouchedProjectResponse,
   UserResponse,
 } from "@/lib/api/generated/model";
-import { SCREENS } from "@/lib/navigation";
+import { screensFor } from "@/lib/navigation";
 import { normalise } from "@/lib/search-text";
 
 export type DestinationGroup = "recent" | "screen" | "project" | "person";
@@ -189,16 +190,24 @@ export function destinations({
   missions,
   teammates,
   touched = [],
+  role,
 }: {
   missions: ProjectListItemResponse[];
   teammates: UserResponse[];
   touched?: TouchedProjectResponse[];
+  /**
+   * The reader's rung, for the screens not everyone is shown.
+   *
+   * The palette leads where the sidebar leads: a destination one cannot open
+   * has no business being offered by a search box either.
+   */
+  role?: Role;
 }): Destination[] {
   const parents = new Map(missions.map(({ project }) => [project.id, project.label]));
 
   return [
     ...recentlyMoved(missions, touched),
-    ...SCREENS.map(({ href, label, Icon }) => ({
+    ...screensFor(role).map(({ href, label, Icon }) => ({
       key: `screen:${href}`,
       label,
       href,

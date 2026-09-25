@@ -222,7 +222,7 @@ async def test_an_invalid_value_is_rejected() -> None:
                 project_id=10,
                 activity_id=100,
                 day=DAY,
-                value=0.75,
+                value=0.8,
             )
         )
 

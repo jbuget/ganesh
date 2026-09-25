@@ -35,11 +35,15 @@ from src.modules.projects.domain.entities.project import (
     ProjectStatus,
 )
 from src.modules.projects.presentation.dependencies import get_project_detail_use_case
-from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
-ANNE = User(id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba")
-MARIE = User(id=2, entra_oid="oid-2", email="m@waat.fr", display_name="M. Ce")
+ANNE = User(
+    id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba", role=Role.TEAMMATE
+)
+MARIE = User(
+    id=2, entra_oid="oid-2", email="m@waat.fr", display_name="M. Ce", role=Role.TEAMMATE
+)
 
 WAATCHER = Project(
     id=7,

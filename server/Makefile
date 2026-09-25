@@ -1,4 +1,4 @@
-.PHONY: install lint format test test-cov archi check-schema migration migrate seed dump catalog run
+.PHONY: install lint format test test-cov archi check-schema migration migrate seed grant-role dump catalog run
 
 # Taken from the root .env when entering through `make -C server`: the
 # instance's ports stay described in a single place.
@@ -56,6 +56,13 @@ migrate:
 
 seed:
 	$(PY) -m scripts.seed
+
+# Hands a role out from a shell, which is the only place the first
+# administrator can be made: inside Ganesh, an admin is made by an admin.
+# make grant-role EMAIL=j.buget@waat.fr ROLE=ADMIN
+ROLE ?= ADMIN
+grant-role:
+	$(PY) -m scripts.grant_role $(EMAIL) $(ROLE)
 
 # Writes the reference data — the team and the missions, never what people have
 # done with them — ready to be loaded into staging or production.

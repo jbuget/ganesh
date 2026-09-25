@@ -75,6 +75,7 @@ export const DEPARTMENTS_COLUMN = "w-[180px]";
 export const DAYS_COLUMN = "w-[100px]";
 export const GO_LIVE_COLUMN = "w-[160px]";
 export const MEMBERS_COLUMN = "w-[130px]";
+export const LAST_UPDATE_COLUMN = "w-[180px]";
 
 /**
  * The columns one may put away, in the order the table draws them.
@@ -99,6 +100,7 @@ export type ColumnKey =
   | "goLive"
   | "leads"
   | "contributors"
+  | "lastUpdate"
   | "published";
 
 export interface HideableColumn {
@@ -117,6 +119,7 @@ export const HIDEABLE_COLUMNS: readonly HideableColumn[] = [
   { key: "goLive", label: "Mise en service", width: 160 },
   { key: "leads", label: "Référents", width: 130 },
   { key: "contributors", label: "Intervenants", width: 130 },
+  { key: "lastUpdate", label: "Dernière mise à jour", width: 180 },
   // The published column carries no width class: it takes what is left of the
   // table. What is left is this, and putting it away gives exactly this back.
   { key: "published", label: "Publié", width: 100 },

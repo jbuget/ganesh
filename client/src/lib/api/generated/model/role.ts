@@ -6,11 +6,18 @@
  */
 
 /**
- * What a user is allowed to do.
+ * What a user is allowed to do, from the door to the platform.
+ *
+ * The order is a fact the whole application reads: nobody hands out a role
+ * above their own, and a role is only ever changed by someone who holds at
+ * least as much. Declaring them from the least to the most empowered is
+ * therefore what makes `RANK` below say the truth.
  */
 export type Role = (typeof Role)[keyof typeof Role];
 
 export const Role = {
+  GUEST: "GUEST",
   TEAMMATE: "TEAMMATE",
   MANAGER: "MANAGER",
+  ADMIN: "ADMIN",
 } as const;

@@ -40,6 +40,7 @@ from src.mcp.tools import say
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.calendar.domain.services.working_days import DayKind, classify_day
 from src.modules.entries.application.dtos.set_entry_dto import SetEntryCommand
+from src.modules.entries.domain.entities.entry import ALLOWED_VALUES
 from src.modules.entries.presentation.dependencies import (
     get_activity_repository,
     get_set_entry_use_case,
@@ -52,9 +53,15 @@ from src.shared.exceptions.domain_exceptions import (
 
 SCOPE = ApiKeyScope.ENTRIES_WRITE
 
-#: What a grid holds: half a day, or a whole one. The domain refuses the rest,
-#: and saying so here says it better than a translated `ValidationError`.
-HELD = (0.5, 1.0)
+#: What a grid holds: a quarter of a day, or a multiple of it — two hours on
+#: an eight-hour day.
+#:
+#: Read from the domain rather than written again here. The domain is the
+#: authority and this is only its reflection: a second list would go on
+#: refusing what the domain had come to accept, and the day it drifted nothing
+#: would say so. Only the sentence below is ours — the domain says its refusals
+#: in English, as an API does, and this is an interface.
+HELD = ALLOWED_VALUES
 
 OFF_DAYS = {
     DayKind.WEEKEND: "un week-end",
@@ -68,9 +75,10 @@ async def declare_time(
 ) -> str:
     """Déclare du temps sur une activité d'un projet, pour le porteur de la clé.
 
-    Le jour se donne au format AAAA-MM-JJ, la valeur vaut 0,5 ou 1. Écrit dans
-    votre mois et dans aucun autre. L'identifiant du projet se trouve avec
-    `find_project`, qui nomme aussi ses activités.
+    Le jour se donne au format AAAA-MM-JJ, la valeur vaut 0,25, 0,5, 0,75 ou 1
+    — un quart de journée valant deux heures. Écrit dans votre mois et dans
+    aucun autre. L'identifiant du projet se trouve avec `find_project`, qui
+    nomme aussi ses activités.
 
     Un temps se déclare sur une activité du projet — « Développement »,
     « Chefferie de projet » — et non sur le projet lui-même : c'est l'activité
@@ -85,8 +93,8 @@ async def declare_time(
         )
     if value not in HELD:
         raise ToolError(
-            f"Une journée se déclare par 0,5 ou 1, jamais {say.as_given(value)}. "
-            "Une demi-journée ou une journée entière."
+            f"Une journée se déclare par 0,25, 0,5, 0,75 ou 1, jamais "
+            f"{say.as_given(value)}. Un quart de journée vaut deux heures."
         )
 
     kind = classify_day(written)

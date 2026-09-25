@@ -20,6 +20,7 @@ function aUser(
     role: "TEAMMATE",
     is_active: true,
     presence,
+    reminder_cadence: "DAILY",
   };
 }
 

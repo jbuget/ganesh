@@ -17,6 +17,14 @@ interface ContributorsPickerProps {
   role?: ProjectRole;
   /** Prompt shown when nobody is attached yet. */
   label?: string;
+  /**
+   * Whether the reader may change it.
+   *
+   * Editable by default: a field one cannot change is the exception, and it
+   * is the screen holding the field that knows — a guest reads every sheet of
+   * the reference list and rewrites none.
+   */
+  editable?: boolean;
 }
 
 /** Past this, the avatars overlap too much to stay readable. */
@@ -38,6 +46,7 @@ export function ContributorsPicker({
   onChange,
   role = "contributor",
   label = "Intervenants",
+  editable = true,
 }: ContributorsPickerProps) {
   const { teammates } = useTeammates();
   const [isOpen, setOpen] = useState(false);
@@ -71,7 +80,10 @@ export function ContributorsPicker({
     >
       <PopoverTrigger
         aria-label={`Modifier les ${label.toLowerCase()}`}
-        className="flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 -mx-1 transition-colors hover:bg-slate-100"
+        disabled={!editable}
+        className={`flex items-center gap-1 rounded px-1 py-0.5 -mx-1 transition-colors ${
+          editable ? "cursor-pointer hover:bg-slate-100" : ""
+        }`}
       >
         {contributors.length === 0 ? (
           <span className="flex items-center gap-1 text-sm text-slate-400">

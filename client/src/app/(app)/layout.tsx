@@ -7,6 +7,7 @@
 import { AppSidebar } from "@/components/organisms/AppSidebar";
 import { CommandPalette } from "@/components/organisms/CommandPalette";
 import { MoodReminder } from "@/components/organisms/MoodReminder";
+import { ReadOnlyBanner } from "@/components/organisms/ReadOnlyBanner";
 
 export default function AppLayout({
   children,
@@ -14,7 +15,12 @@ export default function AppLayout({
   return (
     <div className="flex min-h-screen">
       <AppSidebar />
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0 flex-1">
+        {/* A guest reads every screen and writes into none: the band says so
+            once, here, rather than a dozen times over. */}
+        <ReadOnlyBanner />
+        {children}
+      </div>
       {/* In the frame rather than on a screen: it is reached from every one of
           them, and its shortcut listens to the whole window. */}
       <CommandPalette />

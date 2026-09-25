@@ -42,11 +42,13 @@ from src.modules.projects.presentation.dependencies import (
     get_change_status_use_case,
     get_post_update_use_case,
 )
-from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError, ValidationError
 from src.shared.utils import clock
 
-OWNER = User(id=7, entra_oid="oid-7", email="a@waat.fr", display_name="A. Ba")
+OWNER = User(
+    id=7, entra_oid="oid-7", email="a@waat.fr", display_name="A. Ba", role=Role.TEAMMATE
+)
 
 #: Both writes, which is what a review needs.
 FULLY = [ApiKeyScope.UPDATES_WRITE, ApiKeyScope.PROJECTS_WRITE]

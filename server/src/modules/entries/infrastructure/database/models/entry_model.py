@@ -36,7 +36,7 @@ class EntryModel(Base):
             name="uq_entry_slot",
             postgresql_nulls_not_distinct=True,
         ),
-        CheckConstraint("value IN (0.5, 1.0)", name="ck_entry_value"),
+        CheckConstraint("value IN (0.25, 0.5, 0.75, 1.0)", name="ck_entry_value"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

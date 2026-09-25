@@ -8,6 +8,14 @@ interface ToggleFieldProps {
   offText: string;
   /** Why the switch cannot be turned on, if anything stands in the way. */
   blockedBy?: string | null;
+  /**
+   * Whether the reader may change it.
+   *
+   * Editable by default: a field one cannot change is the exception, and it
+   * is the screen holding the field that knows — a guest reads every sheet of
+   * the reference list and rewrites none.
+   */
+  editable?: boolean;
   onChange: (value: boolean) => void | Promise<void>;
 }
 
@@ -24,9 +32,10 @@ export function ToggleField({
   onText,
   offText,
   blockedBy,
+  editable = true,
   onChange,
 }: ToggleFieldProps) {
-  const blocked = !value && Boolean(blockedBy);
+  const blocked = !editable || (!value && Boolean(blockedBy));
 
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -37,7 +46,11 @@ export function ToggleField({
         aria-label={label}
         disabled={blocked}
         onClick={() => void onChange(!value)}
-        className="flex cursor-pointer items-center gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+        className={`flex items-center gap-2 text-sm ${
+          editable
+            ? "cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+            : ""
+        }`}
       >
         <span
           className={`relative h-4 w-7 shrink-0 rounded-full transition-colors ${

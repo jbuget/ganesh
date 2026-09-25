@@ -18,6 +18,7 @@ const teammate = (
   initials: display_name.slice(0, 2).toUpperCase(),
   role: "TEAMMATE",
   presence: A_WEEK_ON_SITE,
+  reminder_cadence: "DAILY",
   is_active: true,
   last_login_at: null,
   ...fields,

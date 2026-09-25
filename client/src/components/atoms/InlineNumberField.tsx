@@ -3,10 +3,20 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
+import { formatDecimalDays } from "@/lib/dates";
+
 interface InlineNumberFieldProps {
   value: number | null | undefined;
   suffix: string;
   label: string;
+  /**
+   * Whether the reader may change it.
+   *
+   * Editable by default: a field one cannot change is the exception, and it
+   * is the screen holding the field that knows — a guest reads every sheet of
+   * the reference list and rewrites none.
+   */
+  editable?: boolean;
   onChange: (value: number | null) => void | Promise<void>;
 }
 
@@ -20,6 +30,7 @@ export function InlineNumberField({
   value,
   suffix,
   label,
+  editable = true,
   onChange,
 }: InlineNumberFieldProps) {
   const [entry, setEntry] = useState<string | null>(null);
@@ -61,10 +72,13 @@ export function InlineNumberField({
     <button
       type="button"
       aria-label={label}
+      disabled={!editable}
       onClick={() =>
         setEntry(value === null || value === undefined ? "" : String(value))
       }
-      className="-mx-1 cursor-pointer rounded px-1 py-0.5 text-sm transition-colors hover:bg-slate-100"
+      className={`-mx-1 rounded px-1 py-0.5 text-sm transition-colors ${
+        editable ? "cursor-pointer hover:bg-slate-100" : ""
+      }`}
     >
       {value === null || value === undefined ? (
         <span className="flex items-center gap-1 text-slate-400">
@@ -73,7 +87,11 @@ export function InlineNumberField({
         </span>
       ) : (
         <span className="text-slate-700">
-          {value} {suffix}
+          {/* Written the French way at rest: an estimate of 23.5 showed as
+              « 23.5 jrs. », with an English point, next to a consumed figure
+              written « 8,75 ». Editing keeps the raw value — a number input
+              takes a point, whatever the reader's language. */}
+          {formatDecimalDays(value)} {suffix}
         </span>
       )}
     </button>

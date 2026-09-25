@@ -80,6 +80,7 @@ source_modules =
     src.modules
     src.common
     src.shared
+    src.scheduler
 forbidden_modules =
     src.mcp
 
@@ -98,3 +99,33 @@ forbidden_modules =
     src.modules.months.infrastructure
     src.modules.audit_logs.infrastructure
     src.modules.users.infrastructure
+
+# --- The clock ---------------------------------------------------------------
+# A third way in, beside the routers and the tools: they answer a request and a
+# sentence, this one answers a clock. Same shape, so the same two contracts.
+[importlinter:contract:scheduler-is-a-leaf]
+name = Nothing imports the clock but the entry point
+type = forbidden
+source_modules =
+    src.modules
+    src.common
+    src.shared
+    src.mcp
+forbidden_modules =
+    src.scheduler
+
+# It reaches a use case through the module's `dependencies`, whose whole job is
+# to build the repositories — exactly as a router does, and as a tool does.
+[importlinter:contract:scheduler-calls-use-cases]
+name = The clock names no repository of its own
+type = forbidden
+allow_indirect_imports = True
+source_modules =
+    src.scheduler
+forbidden_modules =
+    src.modules.projects.infrastructure
+    src.modules.entries.infrastructure
+    src.modules.months.infrastructure
+    src.modules.audit_logs.infrastructure
+    src.modules.users.infrastructure
+    src.modules.notifications.infrastructure

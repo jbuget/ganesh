@@ -42,6 +42,7 @@ const detail = (
 const steering = (kind: ProjectKind, category: ProjectCategory | null = null) =>
   render(
     <ProjectSteeringTab
+      editable
       detail={detail(kind, category)}
       onChange={vi.fn()}
       saveSheet={vi.fn()}

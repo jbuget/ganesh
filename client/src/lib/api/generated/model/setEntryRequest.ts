@@ -12,6 +12,6 @@ export interface SetEntryRequest {
   project_id: number;
   activity_id?: number | null;
   day: string;
-  /** 0.5 for a half day, 1 for a full day */
+  /** A quarter of a day or a multiple of it: 0.25, 0.5, 0.75 or 1 */
   value: number;
 }

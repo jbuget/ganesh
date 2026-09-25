@@ -50,7 +50,9 @@ export function formatPoints(points: number | null | undefined): string {
 }
 
 export function formatPersonDays(days: number): string {
-  return decimal(days);
+  // Two decimals: a day is declared down to the quarter, and one decimal
+  // showed 12.25 as « 12,3 » — a figure nobody declared.
+  return decimal(days, 2);
 }
 
 export function formatDelay(days: number | null | undefined): string {

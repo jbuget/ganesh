@@ -56,6 +56,7 @@ from src.modules.projects.application.use_cases.manage_activities import (
     ArchiveActivityUseCase,
     CreateActivityUseCase,
     DeleteActivityUseCase,
+    ListProjectActivitiesUseCase,
     UnarchiveActivityUseCase,
     UpdateActivityUseCase,
 )
@@ -590,3 +591,9 @@ def get_delete_activity_use_case(
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> DeleteActivityUseCase:
     return DeleteActivityUseCase(activities=activities, audit_logs=audit_logs)
+
+
+def get_list_activities_use_case(
+    activities: ActivityRepository = Depends(get_activity_repository),
+) -> ListProjectActivitiesUseCase:
+    return ListProjectActivitiesUseCase(activities=activities)

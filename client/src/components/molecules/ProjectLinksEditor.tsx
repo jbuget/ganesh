@@ -15,6 +15,13 @@ interface ProjectLinksEditorProps {
   /** `icone` a `null` : l'adresse decide, cote serveur. */
   onAdd: (label: string, url: string, icon: LinkIcon | null) => Promise<void>;
   onRemove: (linkId: number) => Promise<void>;
+  /**
+   * Whether the reader may add or withdraw a link.
+   *
+   * The links themselves always open: they are the addresses of the service,
+   * and reading a sheet means following them.
+   */
+  editable?: boolean;
 }
 
 /**
@@ -26,6 +33,7 @@ interface ProjectLinksEditorProps {
  */
 export function ProjectLinksEditor({
   links,
+  editable = true,
   onAdd,
   onRemove,
 }: ProjectLinksEditorProps) {
@@ -75,57 +83,61 @@ export function ProjectLinksEditor({
                 />
                 <span className="truncate">{link.label}</span>
               </a>
-              <button
-                type="button"
-                aria-label={`Retirer ${link.label}`}
-                onClick={() => void onRemove(link.id)}
-                // Always visible, and not only on hover: the cross must be
-                // reachable by finger as well as by mouse.
-                className="cursor-pointer rounded p-0.5 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
-              >
-                <X className="size-3.5" aria-hidden />
-              </button>
+              {editable && (
+                <button
+                  type="button"
+                  aria-label={`Retirer ${link.label}`}
+                  onClick={() => void onRemove(link.id)}
+                  // Always visible, and not only on hover: the cross must be
+                  // reachable by finger as well as by mouse.
+                  className="cursor-pointer rounded p-0.5 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
+                >
+                  <X className="size-3.5" aria-hidden />
+                </button>
+              )}
             </li>
           );
         })}
       </ul>
 
-      <Popover open={isOpen} onOpenChange={toggleExpanded}>
-        <PopoverTrigger className="flex cursor-pointer items-center gap-1 text-sm text-slate-400 transition-colors hover:text-slate-600">
-          <Plus className="size-3.5" aria-hidden />
-          Ajouter un lien
-        </PopoverTrigger>
+      {editable && (
+        <Popover open={isOpen} onOpenChange={toggleExpanded}>
+          <PopoverTrigger className="flex cursor-pointer items-center gap-1 text-sm text-slate-400 transition-colors hover:text-slate-600">
+            <Plus className="size-3.5" aria-hidden />
+            Ajouter un lien
+          </PopoverTrigger>
 
-        <PopoverContent align="start" className="w-80 gap-1.5">
-          <div className="flex gap-1.5">
-            <LinkIconPicker value={icon} onChange={setIcon} />
+          <PopoverContent align="start" className="w-80 gap-1.5">
+            <div className="flex gap-1.5">
+              <LinkIconPicker value={icon} onChange={setIcon} />
+              <Input
+                value={label}
+                onChange={(event) => setLabel(event.target.value)}
+                placeholder="Intitulé (facultatif)"
+                className="h-8 text-sm"
+              />
+            </div>
             <Input
-              value={label}
-              onChange={(event) => setLabel(event.target.value)}
-              placeholder="Intitulé (facultatif)"
+              value={url}
+              onChange={(event) => setUrl(event.target.value)}
+              placeholder="https://…"
               className="h-8 text-sm"
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && url.trim()) void add();
+              }}
             />
-          </div>
-          <Input
-            value={url}
-            onChange={(event) => setUrl(event.target.value)}
-            placeholder="https://…"
-            className="h-8 text-sm"
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && url.trim()) void add();
-            }}
-          />
-          {error && <p className="text-xs text-red-700">{error}</p>}
-          <div className="flex gap-2">
-            <Button size="sm" onClick={() => void add()} disabled={!url.trim()}>
-              Ajouter
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => toggleExpanded(false)}>
-              Annuler
-            </Button>
-          </div>
-        </PopoverContent>
-      </Popover>
+            {error && <p className="text-xs text-red-700">{error}</p>}
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => void add()} disabled={!url.trim()}>
+                Ajouter
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => toggleExpanded(false)}>
+                Annuler
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   );
 }

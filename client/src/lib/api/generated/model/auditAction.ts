@@ -41,10 +41,12 @@ export const AuditAction = {
   userrole_change: "user.role_change",
   useridentity_update: "user.identity_update",
   userpresence_declare: "user.presence_declare",
+  userreminder_choose: "user.reminder_choose",
   userdeactivate: "user.deactivate",
   useractivate: "user.activate",
   api_keycreate: "api_key.create",
   api_keyupdate: "api_key.update",
   api_keyrevoke: "api_key.revoke",
   gazettegenerate: "gazette.generate",
+  reminderrun: "reminder.run",
 } as const;

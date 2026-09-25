@@ -36,7 +36,13 @@ READER = User(
 )
 TEAM = [
     READER,
-    User(id=2, entra_oid="oid-2", email="b@waat.fr", display_name="B. Cy"),
+    User(
+        id=2,
+        entra_oid="oid-2",
+        email="b@waat.fr",
+        display_name="B. Cy",
+        role=Role.TEAMMATE,
+    ),
 ]
 
 MISSIONS = [

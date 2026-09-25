@@ -9,6 +9,14 @@ import { PHASES, phaseLabel, phaseDot } from "@/lib/board";
 
 interface PhasePickerProps {
   status: ProjectStatus | null;
+  /**
+   * Whether the reader may change it.
+   *
+   * Editable by default: a field one cannot change is the exception, and it
+   * is the screen holding the field that knows — a guest reads every sheet of
+   * the reference list and rewrites none.
+   */
+  editable?: boolean;
   onChange: (status: ProjectStatus) => void | Promise<void>;
 }
 
@@ -18,7 +26,7 @@ interface PhasePickerProps {
  * The kanban already moves a mission along by dragging it; from the sheet, one
  * corrects it without having to find its card again.
  */
-export function PhasePicker({ status, onChange }: PhasePickerProps) {
+export function PhasePicker({ status, editable = true, onChange }: PhasePickerProps) {
   const [isOpen, setOpen] = useState(false);
 
   if (status === null) {
@@ -29,7 +37,8 @@ export function PhasePicker({ status, onChange }: PhasePickerProps) {
     <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label="Changer la phase"
-        className="-mx-1 flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-sm text-slate-700 transition-colors hover:bg-slate-100"
+        disabled={!editable}
+        className={`-mx-1 flex ${editable ? "cursor-pointer" : ""} items-center gap-1.5 rounded px-1 py-0.5 text-sm text-slate-700 transition-colors ${editable ? "hover:bg-slate-100" : ""}`}
       >
         <span aria-hidden className={`size-2.5 rounded-full ${phaseDot(status)}`} />
         {phaseLabel(status)}

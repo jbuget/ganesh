@@ -29,6 +29,14 @@ interface ProjectUpdateCardProps {
   onEdit: (body: string) => Promise<void>;
   onRemove: () => Promise<void>;
   onReact: (reaction: Reaction, leaving: boolean) => Promise<void>;
+  /**
+   * Whether the reader may answer the update.
+   *
+   * Correcting and withdrawing already hang off `is_mine` — a guest has
+   * written nothing, so they were never offered. Reacting is the one gesture
+   * the thread opens to everybody, and therefore the one to close.
+   */
+  editable?: boolean;
 }
 
 /** How long a thread is given to settle before the reader is left to scroll. */
@@ -49,6 +57,7 @@ export function ProjectUpdateCard({
   onEdit,
   onRemove,
   onReact,
+  editable = true,
 }: ProjectUpdateCardProps) {
   const [editing, setEditing] = useState(false);
   const [confirmingRemoval, setConfirmingRemoval] = useState(false);
@@ -139,6 +148,7 @@ export function ProjectUpdateCard({
           <MarkdownView body={renderMentions(update.body, people)} />
           <UpdateReactions
             reactions={update.reactions ?? []}
+            editable={editable}
             onToggle={(reaction, leaving) => void onReact(reaction, leaving)}
           />
         </>

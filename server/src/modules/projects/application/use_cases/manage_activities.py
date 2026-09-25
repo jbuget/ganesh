@@ -1,5 +1,7 @@
 """Cutting a mission into the trades its days are booked under."""
 
+from dataclasses import dataclass
+
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
@@ -257,3 +259,29 @@ class DeleteActivityUseCase:
                 payload={"activity_id": activity.id},
             )
         )
+
+
+@dataclass(frozen=True)
+class ListedActivity:
+    """An activity, with what a screen has to know before withdrawing it."""
+
+    activity: Activity
+    #: Days already booked against it, across every month and everybody.
+    entries: int
+
+
+class ListProjectActivitiesUseCase:
+    """The activities a mission is cut into, archived ones included."""
+
+    def __init__(self, activities: ActivityRepository) -> None:
+        self._activities = activities
+
+    async def execute(self, project_id: int) -> list[ListedActivity]:
+        found = await self._activities.list_for_project(project_id)
+        return [
+            ListedActivity(
+                activity=activity,
+                entries=await self._activities.count_entries(activity.id or 0),
+            )
+            for activity in found
+        ]
