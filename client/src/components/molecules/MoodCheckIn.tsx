@@ -3,6 +3,7 @@
 import { MoodPicker } from "@/components/atoms/MoodPicker";
 import type { MoodLevel, OpenDayResponse } from "@/lib/api/generated/model";
 import { dayLabel, mood } from "@/lib/mood";
+import { STRONG_RULE } from "@/lib/table-frame";
 
 interface MoodCheckInProps {
   /** The days one may still answer for, the most recent first. */
@@ -31,6 +32,11 @@ interface MoodCheckInProps {
  *
  * The day sits on its own line above the faces: the block lives in the narrow
  * column, where a label and five faces side by side would not fit.
+ *
+ * Closed at the weight the whole application closes an object at, where every
+ * other block of the column takes the faint line. It is the one thing on this
+ * screen that asks something of the reader, and a question drawn like the
+ * notices around it gets read like a notice.
  */
 export function MoodCheckIn({
   days,
@@ -41,7 +47,7 @@ export function MoodCheckIn({
   if (days.length === 0) return null;
 
   return (
-    <section className="rounded-xl border border-slate-300 bg-white p-3">
+    <section className={`rounded-xl border bg-white p-3 ${STRONG_RULE}`}>
       <header className="mb-2">
         <h2 className="text-sm font-medium text-slate-700">Mon moral</h2>
         <p className="text-xs text-slate-400">

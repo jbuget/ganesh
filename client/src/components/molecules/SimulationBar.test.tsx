@@ -29,6 +29,7 @@ const KEPT: SimulationResponse[] = [
 ];
 
 const NOTHING = {
+  mayKeep: true,
   onOpen: vi.fn(),
   onSaveAs: vi.fn(async () => true),
   onSaveOver: vi.fn(async () => {}),

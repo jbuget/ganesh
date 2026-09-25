@@ -3,7 +3,7 @@
 from datetime import UTC, date, datetime
 from zoneinfo import ZoneInfo
 
-from src.shared.utils.clock import PARIS, as_instant, now, today
+from src.shared.utils.clock import PARIS, as_instant, closes, now, opens, today
 
 
 def test_now_returns_an_instant_that_says_which_zone_it_is_in() -> None:
@@ -46,3 +46,21 @@ def test_the_winter_offset_is_followed_without_being_told() -> None:
     assert as_instant(datetime(2026, 1, 20, 10, 30)) == datetime(
         2026, 1, 20, 9, 30, tzinfo=UTC
     )
+
+
+def test_a_day_opens_on_the_paris_clock() -> None:
+    """Midnight in Paris is the evening before in UTC — in summer, two hours."""
+    assert opens(date(2026, 9, 3)) == datetime(2026, 9, 2, 22, 0, tzinfo=UTC)
+
+
+def test_a_day_closes_at_its_own_last_instant() -> None:
+    """« du 3 au 3 » reads the 3rd, rather than nothing at all."""
+    assert closes(date(2026, 9, 3)) == datetime(
+        2026, 9, 3, 21, 59, 59, 999999, tzinfo=UTC
+    )
+
+
+def test_a_day_opens_before_it_closes_in_winter_too() -> None:
+    """One hour off UTC rather than two: the offset is not a constant."""
+    assert opens(date(2026, 1, 3)) == datetime(2026, 1, 2, 23, 0, tzinfo=UTC)
+    assert opens(date(2026, 1, 3)) < closes(date(2026, 1, 3))

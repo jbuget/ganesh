@@ -8,7 +8,9 @@ import {
   removeMissionFromMonth,
   setEntry,
 } from "@/lib/api/generated/entries/entries";
-import type { ProjectResponse } from "@/lib/api/generated/model";
+import type { ProjectResponse, WorkNature } from "@/lib/api/generated/model";
+import { createProjectActivity } from "@/lib/api/generated/projects/projects";
+import { workNatureLabel } from "@/lib/work-natures";
 import { useReopenMonth, useValidateMonth } from "@/lib/api/generated/months/months";
 import { useCreateProject } from "@/lib/api/generated/projects/projects";
 import {
@@ -28,7 +30,11 @@ import {
   todayIso,
 } from "@/lib/dates";
 import { assignedMissionIds, missionsToDeclare } from "@/lib/missions";
+import { withPendingEntries } from "@/lib/pending-entries";
 import { useQueryString, writeUrl } from "@/lib/url-state";
+import { usePendingEntries } from "@/lib/use-pending-entries";
+import { holds } from "@/lib/roles";
+import { useMayWrite } from "@/lib/use-may-write";
 
 /**
  * State and actions of a month's entry screen.
@@ -56,6 +62,7 @@ export function useTimesheetMonth() {
   const month = firstDayOfMonth(cursor.year, cursor.month);
 
   const { user: me } = useCurrentUser();
+  const mayWrite = useMayWrite();
   const { teammates } = useTeammates();
   const { missions, projects } = useProjects();
   const createProject = useCreateProject();
@@ -63,13 +70,44 @@ export function useTimesheetMonth() {
   const reopenMonth = useReopenMonth();
 
   const gridQuery = useMonthGrid(month, viewedUserId, Boolean(me?.id));
-  const grid = gridQuery.grid;
-
-  const target = viewedUserId ? { user_id: viewedUserId } : undefined;
 
   async function refresh() {
     await queryClient.invalidateQueries();
   }
+
+  const target = viewedUserId ? { user_id: viewedUserId } : undefined;
+
+  /**
+   * Clicks are answered on the spot and written once they have settled: a half
+   * day is two clicks on one cell, and one write.
+   *
+   * The cell names whose month it is in, so a write still waiting when one
+   * walks to a colleague's month goes where it was clicked.
+   */
+  const entries = usePendingEntries({
+    async write({ userId, projectId, activityId, day }, value) {
+      const whose = userId === me?.id ? undefined : { user_id: userId };
+      if (value === 0) {
+        await clearEntry({
+          project_id: projectId,
+          activity_id: activityId,
+          day,
+          ...whose,
+        });
+      } else {
+        await setEntry(
+          { project_id: projectId, activity_id: activityId, day, value },
+          whose,
+        );
+      }
+    },
+    refresh,
+  });
+
+  /** What the server holds, the cells awaiting their write laid over it. */
+  const grid = gridQuery.grid
+    ? withPendingEntries(gridQuery.grid, entries.pending, today)
+    : gridQuery.grid;
 
   /** Changing month is a navigation: going back must bring the previous one. */
   function goToMonth(next: { year: number; month: number }) {
@@ -82,7 +120,23 @@ export function useTimesheetMonth() {
     cursor.year === Number(today.slice(0, 4)) &&
     cursor.month === Number(today.slice(5, 7));
 
-  /** Missions already in the grid, not to be offered again. */
+  /**
+   * Rows already in the grid, not to be offered again.
+   *
+   * A row is a mission **and** an activity: the same mission shows once per
+   * trade somebody declares under, so offering it again is right as long as
+   * the trade differs.
+   */
+  const displayedRowKeys =
+    grid?.rows.map((row) => `${row.project_id}:${row.activity_id ?? ""}`) ?? [];
+
+  /**
+   * Missions with at least one row on the grid.
+   *
+   * What the reminder of assigned missions reads: it says « you are on this
+   * and have declared nothing », which is answered as soon as one of its
+   * trades carries a row — whichever one.
+   */
   const displayedProjectIds = grid?.rows.map((row) => row.project_id) ?? [];
 
   return {
@@ -93,6 +147,8 @@ export function useTimesheetMonth() {
     isLoading: gridQuery.isLoading,
     teammates,
     projects,
+    /** The reference list with its activities: what the selector offers. */
+    missions,
     /** Replays the month's queries — what a panel edit changes shows here. */
     refresh,
 
@@ -113,8 +169,18 @@ export function useTimesheetMonth() {
      * reopening is about being a manager, whoever the month belongs to. The
      * state of the month is what tells them apart, so they never show together.
      */
-    canValidate: Boolean(grid?.is_writable) && isOwnMonth,
-    canReopen: Boolean(grid && !grid.is_writable) && me?.role === "MANAGER",
+    /**
+     * Whether this month accepts the person reading.
+     *
+     * Two things at once, and both have to hold: the month is open, and the
+     * reader is not a guest. The screen asks this rather than `is_writable`,
+     * which says what is true of the *month* — a guest reading an open month
+     * would otherwise be offered every cell of it.
+     */
+    writable: Boolean(grid?.is_writable) && mayWrite,
+
+    canValidate: Boolean(grid?.is_writable) && isOwnMonth && mayWrite,
+    canReopen: Boolean(grid && !grid.is_writable) && holds(me?.role, "MANAGER"),
 
     /** Missions the viewer contributes to, offered first when adding a row. */
     assignedIds: assignedMissionIds(missions, me?.id ?? null),
@@ -132,6 +198,7 @@ export function useTimesheetMonth() {
         : [],
 
     displayedProjectIds,
+    displayedRowKeys,
 
     goToPreviousMonth() {
       goToMonth(previousMonth(cursor.year, cursor.month));
@@ -149,14 +216,25 @@ export function useTimesheetMonth() {
       });
     },
 
-    /** A null value removes the entry; any other value writes it. */
-    async setDayValue(projectId: number, day: string, value: DayValue) {
-      if (value === 0) {
-        await clearEntry({ project_id: projectId, day, ...target });
-      } else {
-        await setEntry({ project_id: projectId, day, value: value }, target);
-      }
-      await refresh();
+    /**
+    /**
+     * Takes a cell's new value. A `0` removes the entry, any other writes it.
+     *
+     * Nothing leaves at once: the write goes out when the clicking has
+     * stopped, and the grid reads the value in the meantime.
+     *
+     * The activity is part of what names the cell: the same person may
+     * declare on the same mission the same day under two trades, and those
+     * are two cells rather than one overwriting the other.
+     */
+    setDayValue(
+      projectId: number,
+      activityId: number | null,
+      day: string,
+      value: DayValue,
+    ) {
+      if (targetUserId === null) return;
+      entries.setValue({ userId: targetUserId, projectId, activityId, day }, value);
     },
 
     /**
@@ -166,29 +244,62 @@ export function useTimesheetMonth() {
      * about to work on is a gesture of its own, and it must still be there
      * after a reload.
      */
-    async addMission(projectId: number) {
-      await addMissionToMonth({ project_id: projectId, month }, target);
+    async addMission(projectId: number, activityId: number | null) {
+      await addMissionToMonth(
+        { project_id: projectId, activity_id: activityId, month },
+        target,
+      );
       await refresh();
     },
 
-    /** Removes a mission from the month, with the time it carries. */
-    async removeMission(projectId: number) {
-      await removeMissionFromMonth({ project_id: projectId, month, ...target });
+    /** Removes a row from the month, with the time it carries. */
+    async removeMission(projectId: number, activityId: number | null) {
+      // A cell still waiting would write itself back onto a row that has gone.
+      await entries.flush();
+      await removeMissionFromMonth({
+        project_id: projectId,
+        activity_id: activityId,
+        month,
+        ...target,
+      });
       await refresh();
     },
 
-    async declareProject(label: string) {
+    /**
+     * Declares a mission and puts it on the month, ready to be written in.
+     *
+     * The trade comes with it: a mission carries no time until it is cut into
+     * one, so creating it alone would land the reader on a row the API
+     * refuses every write on — which is exactly what one declares a mission
+     * from one's own month to avoid.
+     */
+    async declareProject(label: string, nature: WorkNature | null) {
       const created = await createProject.mutateAsync({
         data: { label, kind: "project", status: "exploration" },
       });
+      const projectId = mutationResult<ProjectResponse>(created).id;
+
+      const answer = await createProjectActivity(projectId, {
+        label: workNatureLabel(nature) ?? "Développement",
+        nature: nature ?? "development",
+        estimated_days: null,
+      });
+
       await addMissionToMonth(
-        { project_id: mutationResult<ProjectResponse>(created).id, month },
+        {
+          project_id: projectId,
+          activity_id: answer.status === 201 ? answer.data.id : null,
+          month,
+        },
         target,
       );
       await refresh();
     },
 
     async validate() {
+      // The month closes to writes: what is waiting goes out before it does,
+      // or it would be refused and lost.
+      await entries.flush();
       await validateMonth.mutateAsync({ month });
       await refresh();
     },

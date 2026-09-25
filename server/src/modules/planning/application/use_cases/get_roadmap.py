@@ -47,6 +47,9 @@ from src.modules.planning.domain.services.roadmap_window import (
 )
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.projects.domain.repositories.activity_repository import (
+    ActivityRepository,
+)
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -72,12 +75,14 @@ class GetRoadmapUseCase:
         self,
         projects: ProjectRepository,
         entries: EntryRepository,
+        activities: ActivityRepository,
         details: ProjectDetailRepository,
         assignees: ProjectAssigneeRepository,
         users: UserRepository,
     ) -> None:
         self._projects = projects
         self._entries = entries
+        self._activities = activities
         self._details = details
         self._assignees = assignees
         self._users = users
@@ -122,7 +127,9 @@ class GetRoadmapUseCase:
         history = await self._details.list_phases_reached_by_project()
         spans = await self._entries.span_by_project()
         consumed = await self._entries.sum_realised_by_project(now)
-        remaining = await remaining_by_mission(self._entries, missions, now)
+        remaining = await remaining_by_mission(
+            self._entries, self._activities, missions, now
+        )
 
         kept = await self._narrow(missions, by_id, filters)
         lines = [
@@ -196,7 +203,9 @@ class GetRoadmapUseCase:
         backlog = order_backlog(
             still_to_build(mission for mission in missions if mission.is_active)
         )
-        remaining = await remaining_by_mission(self._entries, backlog, today)
+        remaining = await remaining_by_mission(
+            self._entries, self._activities, backlog, today
+        )
         contributors = staffed(
             await self._assignees.list_all(ProjectRole.CONTRIBUTOR), {}
         )

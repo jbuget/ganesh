@@ -10,6 +10,7 @@
  */
 export interface AddMissionRequest {
   project_id: number;
+  activity_id?: number | null;
   /** Any day of the month aimed at */
   month: string;
 }

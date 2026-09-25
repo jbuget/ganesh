@@ -64,8 +64,8 @@ def make_user(user_id: int, role: Role, level: OrgLevel | None = None) -> User:
 def team() -> list[User]:
     return [
         make_user(MANAGER, Role.MANAGER, OrgLevel.COMOP),
-        make_user(SPONSOR, Role.REQUESTER, OrgLevel.COMEX),
-        make_user(AUTHOR, Role.REQUESTER, OrgLevel.COMOP),
+        make_user(SPONSOR, Role.GUEST, OrgLevel.COMEX),
+        make_user(AUTHOR, Role.GUEST, OrgLevel.COMOP),
     ]
 
 

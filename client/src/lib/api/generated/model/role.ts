@@ -6,15 +6,18 @@
  */
 
 /**
- * What a user is allowed to do.
+ * What a user is allowed to do, from the door to the platform.
  *
- * Declared from the least to the most: an account comes into being as a
- * requester, and a manager says afterwards who is behind it.
+ * The order is a fact the whole application reads: nobody hands out a role
+ * above their own, and a role is only ever changed by someone who holds at
+ * least as much. Declaring them from the least to the most empowered is
+ * therefore what makes `RANK` below say the truth.
  */
 export type Role = (typeof Role)[keyof typeof Role];
 
 export const Role = {
-  REQUESTER: "REQUESTER",
+  GUEST: "GUEST",
   TEAMMATE: "TEAMMATE",
   MANAGER: "MANAGER",
+  ADMIN: "ADMIN",
 } as const;

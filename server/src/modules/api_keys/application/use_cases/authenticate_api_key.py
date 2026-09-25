@@ -28,6 +28,17 @@ class MachineCaller:
         assert self.owner.id is not None
         return self.owner.id
 
+    def may(self, scope: ApiKeyScope) -> bool:
+        """A key never reaches further than the person who answers for it.
+
+        Its power comes from its scopes alone, and that is what makes it
+        independent of its owner's *role* — a teammate's key writes what a
+        manager's key writes. What it is not independent of is whether that
+        owner may write at all: a guest's key writing would be a guest
+        writing, through a door they were handed.
+        """
+        return scope.is_read or self.owner.can_write()
+
 
 class AuthenticateApiKeyUseCase:
     """Turns a bearer token into a caller, or into nothing at all.
@@ -53,6 +64,10 @@ class AuthenticateApiKeyUseCase:
         if not caller.key.grants(scope):
             raise ForbiddenActionError(
                 f"This key does not carry the scope « {scope.value} »."
+            )
+        if not caller.may(scope):
+            raise ForbiddenActionError(
+                "The owner of this key may read Ganesh, not write into it."
             )
 
         await self._stamp(caller.key)

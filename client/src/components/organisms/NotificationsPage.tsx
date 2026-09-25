@@ -3,12 +3,17 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { PageHeader } from "@/components/atoms/PageHeader";
+import { RunRemindersPanel } from "@/components/atoms/RunRemindersPanel";
 import { NotificationItem } from "@/components/molecules/NotificationItem";
 import { PageLayout } from "@/components/organisms/PageLayout";
+import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { Button } from "@/components/ui/button";
 import type { NotificationFilter } from "@/lib/api/generated/model";
+import { useOpenedMission } from "@/lib/opened-mission";
 import { STRONG_RULE } from "@/lib/table-frame";
+import { useCurrentUser } from "@/lib/api/queries";
 import { useInbox } from "@/lib/use-inbox";
+import { holds } from "@/lib/roles";
 
 const FILTERS: { value: NotificationFilter; label: string }[] = [
   { value: "all", label: "Toutes" },
@@ -25,9 +30,21 @@ const FILTERS: { value: NotificationFilter; label: string }[] = [
  * A list of sentences rather than a table: a notification is read, not
  * scanned, and columns would ask the reader to recompose the sentence
  * themselves.
+ *
+ * A line about an update opens the project beside the list rather than
+ * carrying the reader off to its page: one comes to go through what one was
+ * told, and closing the panel puts the reader back where they were, on the
+ * next line down.
+ *
+ * At the foot, and for managers alone, the one gesture that writes to the
+ * whole team: sending a round of reminder letters by hand. It is the odd one
+ * out on a page that is otherwise entirely one's own, and it is kept apart by
+ * a rule rather than moved — every other home for it would be worse.
  */
 export function NotificationsPage() {
   const inbox = useInbox();
+  const { user } = useCurrentUser();
+  const panel = useOpenedMission();
   const now = new Date();
   const first = inbox.page * inbox.pageSize;
 
@@ -99,6 +116,21 @@ export function NotificationsPage() {
           </ul>
         )}
 
+        {panel.openedMission && (
+          <ProjectPanel
+            key={`${panel.openedMission}:${panel.openTab ?? ""}:${panel.aimedAt ?? ""}`}
+            projectId={panel.openedMission}
+            tab={panel.openTab}
+            aimedAt={panel.aimedAt}
+            onClose={panel.close}
+            // Nothing on this screen reads the mission: the inbox says what
+            // one was told, and a phase changed in the panel changes none of
+            // those sentences.
+            onMissionChanged={() => {}}
+            onOpenMission={(projectId) => panel.open(projectId)}
+          />
+        )}
+
         {(inbox.page > 0 || inbox.hasMore) && (
           <div className="flex items-center justify-between gap-4">
             <p className="text-sm text-slate-500 tabular-nums">
@@ -130,6 +162,8 @@ export function NotificationsPage() {
             </div>
           </div>
         )}
+
+        {holds(user?.role, "MANAGER") && <RunRemindersPanel />}
       </div>
     </PageLayout>
   );

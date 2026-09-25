@@ -21,8 +21,12 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AuditLogPageResponse,
   ChangeRoleRequest,
+  ChooseReminderCadenceRequest,
+  DeclarePresenceRequest,
   HTTPValidationError,
+  ListUserAuditLogParams,
   ListUsersParams,
   SetActiveRequest,
   UpdateUserIdentityRequest,
@@ -522,6 +526,196 @@ export function useGetUserRecord<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export type listUserAuditLogResponse200 = {
+  data: AuditLogPageResponse;
+  status: 200;
+};
+
+export type listUserAuditLogResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listUserAuditLogResponseSuccess = listUserAuditLogResponse200 & {
+  headers: Headers;
+};
+export type listUserAuditLogResponseError = listUserAuditLogResponse422 & {
+  headers: Headers;
+};
+
+export type listUserAuditLogResponse =
+  listUserAuditLogResponseSuccess | listUserAuditLogResponseError;
+
+export const getListUserAuditLogUrl = (
+  userId: number,
+  params?: ListUserAuditLogParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/users/${userId}/audit?${stringifiedParams}`
+    : `/api/v1/users/${userId}/audit`;
+};
+
+/**
+ * Everything the register holds on a teammate, most recent first.
+ *
+ * Open to the whole team, like the record beside it and for the same reason:
+ * the register is what makes a team that may enter a colleague's month
+ * trustworthy, and a log only some may read would be a weaker promise than
+ * the one already made.
+ * @summary List User Audit Log
+ */
+export const listUserAuditLog = async (
+  userId: number,
+  params?: ListUserAuditLogParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listUserAuditLogResponse> => {
+  return bffFetcher<listUserAuditLogResponse>(getListUserAuditLogUrl(userId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListUserAuditLogQueryKey = (
+  userId: number,
+  params?: ListUserAuditLogParams,
+) => {
+  return [`/api/v1/users/${userId}/audit`, ...(params ? [params] : [])] as const;
+};
+
+export const getListUserAuditLogQueryOptions = <
+  TData = Awaited<ReturnType<typeof listUserAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  userId: number,
+  params?: ListUserAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listUserAuditLog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListUserAuditLogQueryKey(userId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listUserAuditLog>>> = ({
+    signal,
+  }) => listUserAuditLog(userId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: userId !== null && userId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listUserAuditLog>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListUserAuditLogQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listUserAuditLog>>
+>;
+export type ListUserAuditLogQueryError = HTTPValidationError;
+
+export function useListUserAuditLog<
+  TData = Awaited<ReturnType<typeof listUserAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  userId: number,
+  params: undefined | ListUserAuditLogParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listUserAuditLog>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listUserAuditLog>>,
+          TError,
+          Awaited<ReturnType<typeof listUserAuditLog>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListUserAuditLog<
+  TData = Awaited<ReturnType<typeof listUserAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  userId: number,
+  params?: ListUserAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listUserAuditLog>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listUserAuditLog>>,
+          TError,
+          Awaited<ReturnType<typeof listUserAuditLog>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListUserAuditLog<
+  TData = Awaited<ReturnType<typeof listUserAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  userId: number,
+  params?: ListUserAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listUserAuditLog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List User Audit Log
+ */
+
+export function useListUserAuditLog<
+  TData = Awaited<ReturnType<typeof listUserAuditLog>>,
+  TError = HTTPValidationError,
+>(
+  userId: number,
+  params?: ListUserAuditLogParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listUserAuditLog>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListUserAuditLogQueryOptions(userId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export type changeUserRoleResponse200 = {
   data: UserResponse;
   status: 200;
@@ -920,4 +1114,281 @@ export const useUpdateUserIdentity = <TError = HTTPValidationError, TContext = u
   TContext
 > => {
   return useMutation(getUpdateUserIdentityMutationOptions(options), queryClient);
+};
+export type declareOwnPresenceResponse200 = {
+  data: UserResponse;
+  status: 200;
+};
+
+export type declareOwnPresenceResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type declareOwnPresenceResponseSuccess = declareOwnPresenceResponse200 & {
+  headers: Headers;
+};
+export type declareOwnPresenceResponseError = declareOwnPresenceResponse422 & {
+  headers: Headers;
+};
+
+export type declareOwnPresenceResponse =
+  declareOwnPresenceResponseSuccess | declareOwnPresenceResponseError;
+
+export const getDeclareOwnPresenceUrl = () => {
+  return `/api/v1/users/me/presence`;
+};
+
+/**
+ * Says which days one works, and from where.
+ *
+ * The address carries no teammate, and that is the guarantee rather than a
+ * shorthand: there is no colleague's week this route could reach.
+ * @summary Declare Own Presence
+ */
+export const declareOwnPresence = async (
+  declarePresenceRequest: DeclarePresenceRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<declareOwnPresenceResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<declareOwnPresenceResponse>(getDeclareOwnPresenceUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(declarePresenceRequest),
+  });
+};
+
+export const getDeclareOwnPresenceMutationKey = () => ["declareOwnPresence"] as const;
+
+export const getDeclareOwnPresenceMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof declareOwnPresence>>,
+    TError,
+    DeclareOwnPresenceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof declareOwnPresence>>,
+  TError,
+  DeclareOwnPresenceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeclareOwnPresenceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof declareOwnPresence>>,
+    DeclareOwnPresenceMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return declareOwnPresence(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeclareOwnPresenceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof declareOwnPresence>>
+>;
+export type DeclareOwnPresenceMutationBody = DeclarePresenceRequest;
+export type DeclareOwnPresenceMutationError = HTTPValidationError;
+export type DeclareOwnPresenceMutationVariables = { data: DeclarePresenceRequest };
+
+/**
+ * @summary Declare Own Presence
+ */
+export const useDeclareOwnPresence = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof declareOwnPresence>>,
+      TError,
+      DeclareOwnPresenceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof declareOwnPresence>>,
+  TError,
+  DeclareOwnPresenceMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeclareOwnPresenceMutationOptions(options), queryClient);
+};
+export type chooseOwnReminderCadenceResponse200 = {
+  data: UserResponse;
+  status: 200;
+};
+
+export type chooseOwnReminderCadenceResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type chooseOwnReminderCadenceResponseSuccess =
+  chooseOwnReminderCadenceResponse200 & {
+    headers: Headers;
+  };
+export type chooseOwnReminderCadenceResponseError =
+  chooseOwnReminderCadenceResponse422 & {
+    headers: Headers;
+  };
+
+export type chooseOwnReminderCadenceResponse =
+  chooseOwnReminderCadenceResponseSuccess | chooseOwnReminderCadenceResponseError;
+
+export const getChooseOwnReminderCadenceUrl = () => {
+  return `/api/v1/users/me/reminder-cadence`;
+};
+
+/**
+ * Says how often one wants the letter naming what is waiting.
+ *
+ * The address carries no teammate, as `/me/presence` does not: there is no
+ * colleague's mailbox this route could reach.
+ * @summary Choose Own Reminder Cadence
+ */
+export const chooseOwnReminderCadence = async (
+  chooseReminderCadenceRequest: ChooseReminderCadenceRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<chooseOwnReminderCadenceResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<chooseOwnReminderCadenceResponse>(
+    getChooseOwnReminderCadenceUrl(),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(chooseReminderCadenceRequest),
+    },
+  );
+};
+
+export const getChooseOwnReminderCadenceMutationKey = () =>
+  ["chooseOwnReminderCadence"] as const;
+
+export const getChooseOwnReminderCadenceMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof chooseOwnReminderCadence>>,
+    TError,
+    ChooseOwnReminderCadenceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof chooseOwnReminderCadence>>,
+  TError,
+  ChooseOwnReminderCadenceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChooseOwnReminderCadenceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof chooseOwnReminderCadence>>,
+    ChooseOwnReminderCadenceMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return chooseOwnReminderCadence(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChooseOwnReminderCadenceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof chooseOwnReminderCadence>>
+>;
+export type ChooseOwnReminderCadenceMutationBody = ChooseReminderCadenceRequest;
+export type ChooseOwnReminderCadenceMutationError = HTTPValidationError;
+export type ChooseOwnReminderCadenceMutationVariables = {
+  data: ChooseReminderCadenceRequest;
+};
+
+/**
+ * @summary Choose Own Reminder Cadence
+ */
+export const useChooseOwnReminderCadence = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof chooseOwnReminderCadence>>,
+      TError,
+      ChooseOwnReminderCadenceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof chooseOwnReminderCadence>>,
+  TError,
+  ChooseOwnReminderCadenceMutationVariables,
+  TContext
+> => {
+  return useMutation(getChooseOwnReminderCadenceMutationOptions(options), queryClient);
 };

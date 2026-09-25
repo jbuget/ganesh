@@ -19,6 +19,7 @@ from src.modules.projects.domain.entities.service_registry import (
 from src.modules.projects.domain.entities.update_reaction import Reaction
 from src.modules.projects.domain.services.hierarchy import SubProjectPolicy
 from src.shared.enums.department import Department
+from src.shared.enums.work_nature import WorkNature
 
 
 class CreateProjectRequest(BaseModel):
@@ -127,6 +128,8 @@ class ProjectListItemResponse(BaseModel):
     project: ProjectResponse
     leads: list["BoardMemberResponse"]
     contributors: list["BoardMemberResponse"]
+    #: The trades the mission is cut into: what a day is declared under.
+    activities: list["ActivityResponse"] = []
     #: Days declared, forecast excluded.
     delivered_days: float
     #: What the mission cost, on its own.
@@ -458,3 +461,37 @@ class CatalogEntryResponse(BaseModel):
     stack: list[str]
     tags: list[str]
     depends_on: list[str]
+
+
+class ActivityResponse(BaseModel):
+    """An activity: a trade a mission's days are booked under."""
+
+    id: int
+    project_id: int
+    label: str
+    nature: WorkNature | None
+    estimated_days: float | None
+    is_active: bool
+    #: Days already booked against it, so a screen can say what withdrawing
+    #: one would leave behind.
+    entries: int = 0
+
+
+class CreateActivityRequest(BaseModel):
+    """Request to cut a new trade into a mission."""
+
+    label: str
+    nature: WorkNature | None = None
+    estimated_days: float | None = None
+
+
+class UpdateActivityRequest(BaseModel):
+    """Request to change what an activity says.
+
+    Only what is named is written, so that a screen editing the estimate
+    alone does not blank the trade beside it.
+    """
+
+    label: str | None = None
+    nature: WorkNature | None = None
+    estimated_days: float | None = None

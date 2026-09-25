@@ -31,10 +31,10 @@ class Settings(BaseSettings):
     azure_ad_tenant_id: str = ""
     azure_ad_client_id: str = ""
     require_auth: bool = True
-    # Le compte que la porte ouverte remet, en developpement. Deux publics
-    # lisent l'application — l'equipe, et qui vient seulement demander — et
-    # passer de l'un a l'autre doit tenir dans cette ligne, jamais dans un
-    # role reecrit en base. Sans effet des que REQUIRE_AUTH est vrai.
+    # Le compte que la porte ouverte remet, en developpement. Il dit lequel,
+    # jamais ce qu'il peut faire : la porte ouverte provisionne un
+    # administrateur, et `make grant-role` deplace ce compte d'un public a
+    # l'autre. Sans effet des que REQUIRE_AUTH est vrai.
     dev_email: str = "j.buget@waat.fr"
 
     # La porte de secours, le temps qu'Entra declare l'application. Entra
@@ -70,6 +70,26 @@ class Settings(BaseSettings):
     # the multipart wrapper, and the JSON of a bulk import. Caddy is told the
     # same number, and it is Caddy that actually keeps the bytes off the host.
     max_request_bytes: int = 12 * 1024 * 1024
+
+    # The letter saying what is waiting. Empty everywhere by default: with no
+    # host, nothing is sent and nothing breaks — the contract `gemini_api_key`
+    # already has. Mailgun in production, the MailPit of docker-compose on a
+    # laptop, and the same adapter reaches both.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_starttls: bool = True
+    mail_from: str = "Ganesh <notifications@ganesh.waat.tools>"
+
+    # When the letter goes out, and how often the clock looks. Paris time —
+    # hard-coded, as the public holidays are hard-coded to France.
+    reminder_send_at: str = "08:30"
+    reminder_tick_seconds: int = 300
+
+    # Where a letter points back to. The API knew no address but its own:
+    # `api_url` is where the API answers, this is where the reader reads.
+    web_url: str = "http://localhost:3000"
 
     # How often one API key may call, as a token bucket. Counted per process:
     # behind several workers the effective allowance is multiplied by their

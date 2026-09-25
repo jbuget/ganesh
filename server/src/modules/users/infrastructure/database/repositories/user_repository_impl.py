@@ -3,9 +3,21 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.modules.users.domain.entities.presence import WEEKDAYS, WeekPresence
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.modules.users.infrastructure.database.models.user_model import UserModel
+
+
+def _presence_of(model: UserModel) -> WeekPresence:
+    """The week this teammate works, on site every day until they say so."""
+    said = {day: getattr(model, f"presence_{day}") for day in WEEKDAYS}
+    return WeekPresence(**{day: value for day, value in said.items() if value})
+
+
+def _write_presence(model: UserModel, presence: WeekPresence) -> None:
+    for day in WEEKDAYS:
+        setattr(model, f"presence_{day}", getattr(presence, day))
 
 
 def to_entity(model: UserModel) -> User:
@@ -22,6 +34,9 @@ def to_entity(model: UserModel) -> User:
         department=model.department,
         github_username=model.github_username,
         org_level=model.org_level,
+        presence=_presence_of(model),
+        reminder_cadence=model.reminder_cadence,
+        reminder_sent_at=model.reminder_sent_at,
     )
 
 
@@ -69,7 +84,10 @@ class SqlUserRepository(UserRepository):
             department=user.department,
             github_username=user.github_username,
             org_level=user.org_level,
+            reminder_cadence=user.reminder_cadence,
+            reminder_sent_at=user.reminder_sent_at,
         )
+        _write_presence(model, user.presence)
         self._session.add(model)
         await self._session.flush()
         user.id = model.id
@@ -92,5 +110,8 @@ class SqlUserRepository(UserRepository):
         model.department = user.department
         model.github_username = user.github_username
         model.org_level = user.org_level
+        model.reminder_cadence = user.reminder_cadence
+        model.reminder_sent_at = user.reminder_sent_at
+        _write_presence(model, user.presence)
         await self._session.flush()
         return user

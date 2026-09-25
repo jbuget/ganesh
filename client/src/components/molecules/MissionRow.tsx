@@ -26,6 +26,7 @@ import {
   type ColumnKey,
   type HiddenColumns,
 } from "@/lib/mission-columns";
+import { formatParisDateTime } from "@/lib/instants";
 import { since } from "@/lib/relative-dates";
 
 interface MissionRowProps {
@@ -359,6 +360,23 @@ export function MissionRow({
       {shows("contributors") && (
         <TableCell>
           <MemberAvatars members={mission.contributors} />
+        </TableCell>
+      )}
+
+      {/* When the mission was last spoken of, said the way the thread says it:
+          « il y a 3 h », then the day once a week has gone by. The exact
+          instant is on hover, for whoever needs it to the minute.
+
+          A mission nobody has ever posted on leaves the cell empty rather
+          than reading « jamais »: the thread column beside the name already
+          shows nothing, and a word here would say the same thing twice. */}
+      {shows("lastUpdate") && (
+        <TableCell className="text-sm text-slate-500">
+          {latest && (
+            <span title={formatParisDateTime(latest.published_at)}>
+              {since(latest.published_at, now)}
+            </span>
+          )}
         </TableCell>
       )}
 

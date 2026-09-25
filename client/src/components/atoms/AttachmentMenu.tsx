@@ -11,7 +11,8 @@ interface AttachmentMenuProps {
   /** Shows the file at full size, in front of everything else. */
   onOpen: () => void;
   /** Asks to call it something else. What answers is a dialog. */
-  onRename: () => void;
+  /** Left out where a file may be read and not renamed. */
+  onRename?: () => void;
   /**
    * Where the file is saved from.
    *
@@ -21,7 +22,8 @@ interface AttachmentMenuProps {
    */
   downloadHref: string;
   /** Asks for it to go. What answers is a dialog. */
-  onRemove: () => void;
+  /** Left out where a file may be read and not withdrawn. */
+  onRemove?: () => void;
   /**
    * How the trigger is drawn, when the surface it sits on has its own look.
    *
@@ -76,19 +78,21 @@ export function AttachmentMenu({
             </button>
           </li>
 
-          <li>
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                onRename();
-              }}
-              className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
-            >
-              <Pencil className="size-4 shrink-0 text-slate-400" aria-hidden />
-              Renommer
-            </button>
-          </li>
+          {onRename && (
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onRename();
+                }}
+                className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
+              >
+                <Pencil className="size-4 shrink-0 text-slate-400" aria-hidden />
+                Renommer
+              </button>
+            </li>
+          )}
 
           <li>
             <a
@@ -102,19 +106,21 @@ export function AttachmentMenu({
             </a>
           </li>
 
-          <li>
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                onRemove();
-              }}
-              className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
-            >
-              <Trash2 className="size-4 shrink-0" aria-hidden />
-              Supprimer
-            </button>
-          </li>
+          {onRemove && (
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onRemove();
+                }}
+                className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
+              >
+                <Trash2 className="size-4 shrink-0" aria-hidden />
+                Supprimer
+              </button>
+            </li>
+          )}
         </ul>
       </PopoverContent>
     </Popover>

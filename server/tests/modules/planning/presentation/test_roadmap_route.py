@@ -21,6 +21,7 @@ from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.enums.department import Department
 from tests.helpers.in_memory_repositories import (
+    InMemoryActivityRepository,
     InMemoryEntryRepository,
     InMemoryProjectAssigneeRepository,
     InMemoryProjectDetailRepository,
@@ -62,6 +63,7 @@ async def client() -> AsyncIterator[AsyncClient]:
                 id=None,
                 user_id=1,
                 project_id=10,
+                activity_id=None,
                 day=date(2026, 5, 4),
                 value=DayValue(1.0),
                 status_at_entry=ProjectStatus.DEVELOPMENT,
@@ -73,6 +75,7 @@ async def client() -> AsyncIterator[AsyncClient]:
     app.dependency_overrides[get_roadmap_use_case] = lambda: GetRoadmapUseCase(
         projects=InMemoryProjectRepository([PORTAL]),
         entries=entries,
+        activities=InMemoryActivityRepository(),
         details=details,
         assignees=assignees,
         users=InMemoryUserRepository([ALICE]),

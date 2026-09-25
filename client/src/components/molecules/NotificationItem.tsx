@@ -2,17 +2,25 @@
 
 import { Check, Undo2 } from "lucide-react";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 
 import type { NotificationResponse } from "@/lib/api/generated/model";
 import { notificationSentence } from "@/lib/notifications";
 import { since } from "@/lib/relative-dates";
+import { useGoTo } from "@/lib/url-state";
 
 interface NotificationItemProps {
   notification: NotificationResponse;
   /** Passed in rather than read here, so the wording is under test. */
   now: Date;
   onToggleRead: (id: number, read: boolean) => void;
+  /** Said once the line has been followed, so the lucarne it was read in closes. */
+  onFollow?: () => void;
+}
+
+/** Whether the click is the plain one, or the one that asks for another tab. */
+function opensElsewhere(event: MouseEvent): boolean {
+  return event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
 }
 
 /**
@@ -29,8 +37,11 @@ export function NotificationItem({
   notification,
   now,
   onToggleRead,
+  onFollow,
 }: NotificationItemProps) {
+  const goTo = useGoTo();
   const said = notificationSentence(notification);
+  const href = said.href;
   const isRead = notification.read_at !== null;
 
   const subject: ReactNode = said.about ? (
@@ -62,9 +73,20 @@ export function NotificationItem({
       )}
 
       <span className="min-w-0 flex-1">
-        {said.href ? (
+        {href ? (
+          // A link, so the line can be opened in a tab of its own; followed by
+          // hand, so that it works on the screen it points at. A line about an
+          // update leads back to the inbox with a panel over it, and Next's
+          // router would move the address there without a word to what reads
+          // it.
           <Link
-            href={said.href}
+            href={href}
+            onClick={(event) => {
+              if (opensElsewhere(event)) return;
+              event.preventDefault();
+              onFollow?.();
+              goTo(href);
+            }}
             className="block cursor-pointer rounded hover:underline"
           >
             {sentence}

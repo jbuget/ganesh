@@ -2,10 +2,8 @@
 
 import pytest
 
-from src.modules.auth.infrastructure.local_tokens import (
-    LocalTokenService,
-    check_credentials,
-)
+from src.modules.auth.domain.services.credentials import check_credentials
+from src.modules.auth.infrastructure.local_tokens import LocalTokenService
 from src.shared.exceptions.domain_exceptions import ForbiddenActionError
 
 SECRET = "a development signing key, long enough by far"

@@ -17,7 +17,7 @@ METIER = User(
     entra_oid="oid-7",
     email="a.metier@waat.fr",
     display_name="A. Métier",
-    role=Role.REQUESTER,
+    role=Role.GUEST,
 )
 
 
@@ -41,5 +41,5 @@ async def test_a_requester_reads_their_own_account(client: AsyncClient) -> None:
     response = await client.get(URL)
 
     assert response.status_code == 200
-    assert response.json()["role"] == "REQUESTER"
+    assert response.json()["role"] == "GUEST"
     assert response.json()["email"] == "a.metier@waat.fr"

@@ -9,11 +9,23 @@ import { PRIORITIES, priority } from "@/lib/board";
 
 interface PriorityPickerProps {
   value: ProjectPriority | null | undefined;
+  /**
+   * Whether the reader may change it.
+   *
+   * Editable by default: a field one cannot change is the exception, and it
+   * is the screen holding the field that knows — a guest reads every sheet of
+   * the reference list and rewrites none.
+   */
+  editable?: boolean;
   onChange: (value: ProjectPriority | null) => void | Promise<void>;
 }
 
 /** A mission's urgency. One, or none. */
-export function PriorityPicker({ value, onChange }: PriorityPickerProps) {
+export function PriorityPicker({
+  value,
+  editable = true,
+  onChange,
+}: PriorityPickerProps) {
   const [isOpen, setOpen] = useState(false);
   const urgency = priority(value);
 
@@ -21,7 +33,8 @@ export function PriorityPicker({ value, onChange }: PriorityPickerProps) {
     <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label="Changer la priorité"
-        className="-mx-1 flex cursor-pointer items-center rounded px-1 py-0.5 transition-colors hover:bg-slate-100"
+        disabled={!editable}
+        className={`-mx-1 flex ${editable ? "cursor-pointer" : ""} items-center rounded px-1 py-0.5 transition-colors ${editable ? "hover:bg-slate-100" : ""}`}
       >
         {urgency ? (
           <span className="flex items-center gap-1.5 text-sm text-slate-700">

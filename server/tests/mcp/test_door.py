@@ -44,13 +44,15 @@ from src.modules.projects.domain.entities.project import (
     ProjectStatus,
 )
 from src.modules.projects.presentation.dependencies import get_list_projects_use_case
-from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
     InMemoryApiKeyRepository,
     InMemoryUserRepository,
 )
 
-OWNER = User(id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba")
+OWNER = User(
+    id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba", role=Role.TEAMMATE
+)
 
 URL = "/mcp/"
 HEADERS = {

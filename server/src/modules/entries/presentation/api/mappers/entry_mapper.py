@@ -13,7 +13,10 @@ from src.modules.entries.presentation.api.schemas.entry_schemas import (
 
 def to_entry_response(entry: Entry) -> EntryResponse:
     return EntryResponse(
-        project_id=entry.project_id, day=entry.day, value=float(entry.value)
+        project_id=entry.project_id,
+        activity_id=entry.activity_id,
+        day=entry.day,
+        value=float(entry.value),
     )
 
 
@@ -33,6 +36,8 @@ def to_month_grid_response(grid: MonthGrid) -> MonthGridResponse:
         rows=[
             GridRowResponse(
                 project_id=row.project_id,
+                activity_id=row.activity_id,
+                project_label=row.project_label,
                 label=row.label,
                 kind=row.kind,
                 estimated_days=row.estimated_days,

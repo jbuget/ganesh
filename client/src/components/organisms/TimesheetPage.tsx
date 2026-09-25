@@ -35,6 +35,7 @@ export function TimesheetPage() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [toRemove, setToRemove] = useState<{
     id: number;
+    activityId: number | null;
     label: string;
     total: number;
   } | null>(null);
@@ -43,13 +44,20 @@ export function TimesheetPage() {
    * An empty row goes without ceremony: there is nothing to lose. As soon as it
    * carries time, what will be erased is announced before it happens.
    */
-  function askToRemove(projectId: number) {
-    const line = grid?.rows.find((row) => row.project_id === projectId);
+  function askToRemove(projectId: number, activityId: number | null) {
+    const line = grid?.rows.find(
+      (row) => row.project_id === projectId && row.activity_id === activityId,
+    );
     if (!line || line.total === 0) {
-      void month.removeMission(projectId);
+      void month.removeMission(projectId, activityId);
       return;
     }
-    setToRemove({ id: projectId, label: line.label, total: line.total });
+    setToRemove({
+      id: projectId,
+      activityId,
+      label: line.label,
+      total: line.total,
+    });
   }
 
   return (
@@ -70,13 +78,16 @@ export function TimesheetPage() {
     >
       {/* Before the month it speaks of: what the team put one on is read first,
           and the reminder never passes for a row of the grid. */}
-      {grid?.is_writable && (
+      {month.writable && (
         <AssignedMissionsCallout
           missions={month.missionsToDeclare.map((mission) => ({
-            id: mission.id,
-            label: mission.label,
+            id: mission.projectId,
+            label: mission.projectLabel,
+            activities: mission.activities,
           }))}
-          onAdd={(projectId) => void month.addMission(projectId)}
+          onAdd={(projectId, activityId) =>
+            void month.addMission(projectId, activityId)
+          }
         />
       )}
 
@@ -175,17 +186,20 @@ export function TimesheetPage() {
       {grid && (
         <TimesheetGrid
           grid={grid}
+          readOnly={!month.writable}
           today={month.today}
           onSetValue={month.setDayValue}
-          onRemoveMission={grid.is_writable ? askToRemove : undefined}
+          onRemoveMission={month.writable ? askToRemove : undefined}
           onOpenMission={(projectId) => panel.open(projectId)}
           addingMission={
-            grid.is_writable ? (
+            month.writable ? (
               <MissionSelector
-                projects={month.projects}
-                excludedIds={month.displayedProjectIds}
+                missions={month.missions}
+                excludedKeys={month.displayedRowKeys}
                 assignedIds={month.assignedIds}
-                onSelect={(projectId) => void month.addMission(projectId)}
+                onSelect={(projectId, activityId) =>
+                  void month.addMission(projectId, activityId)
+                }
                 onDeclareNew={() => setDeclareOpen(true)}
               />
             ) : null
@@ -200,13 +214,14 @@ export function TimesheetPage() {
           label={toRemove.label}
           total={toRemove.total}
           onConfirm={async () => {
-            await month.removeMission(toRemove.id);
+            await month.removeMission(toRemove.id, toRemove.activityId);
             setToRemove(null);
           }}
         />
       )}
 
       <DeclareProjectDialog
+        asksForTrade
         open={declareOpen}
         onOpenChange={setDeclareOpen}
         onConfirm={month.declareProject}

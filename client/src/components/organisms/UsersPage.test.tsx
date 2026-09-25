@@ -28,6 +28,9 @@ const USERS = [
 const state = vi.hoisted(() => ({
   isLoading: false,
   isManager: false,
+  // The screen asks the hook what it may hand out, rather than reading a
+  // boolean: the stub answers the way `assignableRoles` does.
+  rolesAssignableTo: vi.fn(() => [] as string[]),
   users: [] as Record<string, unknown>[],
   visible: 2,
   total: 2,
@@ -171,6 +174,7 @@ describe("UsersPage", () => {
   it("does not offer a teammate changing a role", () => {
     panel.openedUser = 2;
     state.isManager = false;
+    state.rolesAssignableTo = vi.fn(() => []);
     render(<UsersPage />);
 
     expect(screen.queryByRole("button", { name: /Changer le rôle/ })).toBeNull();
@@ -192,6 +196,7 @@ describe("UsersPage", () => {
   it("lets a manager change the role from the panel", () => {
     panel.openedUser = 2;
     state.isManager = true;
+    state.rolesAssignableTo = vi.fn(() => ["GUEST", "TEAMMATE", "MANAGER"]);
     render(<UsersPage />);
 
     expect(screen.getByRole("button", { name: /Changer le rôle/ })).toBeInTheDocument();

@@ -3,6 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { RequestResponse, UserResponse } from "@/lib/api/generated/model";
+import { A_WEEK_ON_SITE } from "@/lib/presence";
 import { EVERY_REQUEST } from "@/lib/request-filters";
 
 import { RequestsPage } from "./RequestsPage";
@@ -14,6 +15,8 @@ const MANAGER: UserResponse = {
   initials: "JB",
   role: "MANAGER",
   is_active: true,
+  presence: A_WEEK_ON_SITE,
+  reminder_cadence: "DAILY",
 };
 
 const HANDED: RequestResponse = {

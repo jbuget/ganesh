@@ -27,6 +27,16 @@ vi.mock("@/components/organisms/CommandPalette", () => ({
   CommandPalette: () => null,
 }));
 
+// Both reach for a server of their own; what the frame is tested on is which
+// of them it hangs, not what they draw.
+vi.mock("@/components/organisms/ReadOnlyBanner", () => ({
+  ReadOnlyBanner: () => null,
+}));
+
+vi.mock("@/components/organisms/MoodReminder", () => ({
+  MoodReminder: () => <p>Le rappel du moral</p>,
+}));
+
 function draw() {
   render(
     <AppFrame>
@@ -52,7 +62,7 @@ describe("AppFrame", () => {
   });
 
   it("opens no door to whoever only comes to ask for something", () => {
-    user.current = { id: 7, role: "REQUESTER" };
+    user.current = { id: 7, role: "GUEST" };
     pathname.current = "/requests";
 
     draw();
@@ -61,8 +71,20 @@ describe("AppFrame", () => {
     expect(screen.getByText("L'écran")).toBeInTheDocument();
   });
 
-  it("sends a requester back to their own screen", () => {
-    user.current = { id: 7, role: "REQUESTER" };
+  it("asks nobody for their mood but the team", () => {
+    // The moods are a mirror the team holds up to itself. Somebody who only
+    // ever comes to ask for something is not in it, and would be answering
+    // about an afternoon they did not spend here.
+    user.current = { id: 7, role: "GUEST" };
+    pathname.current = "/requests";
+
+    draw();
+
+    expect(screen.queryByText("Le rappel du moral")).toBeNull();
+  });
+
+  it("sends a guest back to their own screen", () => {
+    user.current = { id: 7, role: "GUEST" };
     pathname.current = "/timesheet";
 
     draw();

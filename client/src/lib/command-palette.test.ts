@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { destinations, gestureLabel, grouped, matching } from "./command-palette";
-import { SCREENS } from "@/lib/navigation";
+import { screensFor } from "@/lib/navigation";
 import type {
   AuditAction,
   ProjectListItemResponse,
@@ -134,9 +134,12 @@ describe("matching", () => {
     const found = matching(all, "");
 
     expect(found.every((one) => one.group === "screen")).toBe(true);
-    // Read from the list of screens rather than written down: a screen added
-    // to the application reaches the palette on its own.
-    expect(found).toHaveLength(SCREENS.length);
+    // Counted from the navigation rather than written down: a screen added
+    // reaches the palette by itself, and a count kept here by hand would
+    // fail for the one reason that is not a bug. The reader's rung decides
+    // which ones, as it does in the sidebar — no role given here, so the
+    // reserved ones are out.
+    expect(found).toHaveLength(screensFor(undefined).length);
   });
 
   it("ignores the case and the accents", () => {

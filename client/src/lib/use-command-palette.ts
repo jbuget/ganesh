@@ -1,9 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-import { useProjects, useTeammates, useTouchedProjects } from "@/lib/api/queries";
+import {
+  useCurrentUser,
+  useProjects,
+  useTeammates,
+  useTouchedProjects,
+} from "@/lib/api/queries";
 import {
   destinations,
   grouped,
@@ -13,7 +17,7 @@ import {
   type Section,
 } from "@/lib/command-palette";
 import { closePalette, usePaletteOpen } from "@/lib/command-palette-store";
-import { goToAddress } from "@/lib/url-state";
+import { useGoTo } from "@/lib/url-state";
 
 /** What the palette knows, and what it can be asked to do. */
 export interface CommandPalette {
@@ -45,7 +49,7 @@ export interface CommandPalette {
  */
 export function useCommandPalette(): CommandPalette {
   const open = usePaletteOpen();
-  const router = useRouter();
+  const goTo = useGoTo();
 
   // Archived projects included: the palette is the only place one is reached
   // without first going to a screen and undoing a filter.
@@ -53,13 +57,15 @@ export function useCommandPalette(): CommandPalette {
   const { teammates } = useTeammates(false, open);
   // What the register saw move, which no mission carries the date of.
   const { touched } = useTouchedProjects(TOUCHED_ASKED_FOR, open);
+  // The palette leads where the sidebar leads, and no further.
+  const { user: me } = useCurrentUser();
 
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
 
   const all = useMemo(
-    () => destinations({ missions, teammates, touched }),
-    [missions, teammates, touched],
+    () => destinations({ missions, teammates, touched, role: me?.role }),
+    [missions, teammates, touched, me?.role],
   );
   const sections = useMemo(() => grouped(matching(all, query)), [all, query]);
   // The sections read one after the other give back the ranked order: that is
@@ -99,17 +105,7 @@ export function useCommandPalette(): CommandPalette {
     go(destination: Destination | undefined) {
       if (!destination) return;
       closePalette();
-
-      const here = `${window.location.pathname}${window.location.search}`;
-      if (destination.href === here) return;
-
-      // The screen one is already standing on does not mount again, and Next's
-      // router would move the address without a word to what reads it.
-      if (destination.href.split("?")[0] === window.location.pathname) {
-        goToAddress(destination.href);
-      } else {
-        router.push(destination.href);
-      }
+      goTo(destination.href);
     },
   };
 }

@@ -22,7 +22,9 @@ function makeGrid(overrides: Partial<MonthGridResponse> = {}): MonthGridResponse
     rows: [
       {
         project_id: 10,
-        label: "Portail bailleurs",
+        activity_id: 100,
+        label: "Développement",
+        project_label: "Portail bailleurs",
         kind: "project",
         estimated_days: 20,
         values: { "2026-09-15": 1, "2026-09-25": 1 },
@@ -48,7 +50,10 @@ function makeGrid(overrides: Partial<MonthGridResponse> = {}): MonthGridResponse
 /** A mission put on the month, with nothing entered on it yet. */
 const EMPTY_ROW: GridRowResponse = {
   project_id: 11,
+  // Off-project work is declared on directly: it carries no activity.
+  activity_id: null,
   label: "Absences",
+  project_label: "Absences",
   kind: "off_project",
   estimated_days: null,
   values: {},
@@ -60,6 +65,7 @@ const EMPTY_ROW: GridRowResponse = {
 
 const baseProps = {
   today: TODAY,
+  readOnly: false,
   onSetValue: vi.fn(),
 };
 
@@ -68,7 +74,7 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     expect(
-      screen.getByRole("rowheader", { name: /Portail bailleurs/ }),
+      screen.getByRole("rowheader", { name: /Portail bailleurs\s*Développement/ }),
     ).toBeInTheDocument();
   });
 
@@ -76,7 +82,7 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     // The ratio lives in the mission's tooltip, which follows the cursor.
-    fireEvent.mouseMove(screen.getByText("Portail bailleurs"), {
+    fireEvent.mouseMove(screen.getByText("Développement"), {
       clientX: 50,
       clientY: 80,
     });
@@ -84,26 +90,35 @@ describe("TimesheetGrid", () => {
     expect(screen.getByRole("tooltip")).toHaveTextContent("7/20 jrs. estimés");
   });
 
-  it("notifies the next value when an empty cell is clicked", async () => {
+  /**
+   * A click used to cycle the value, so clicking a cell in order to type in it
+   * put an 8 — then a 16 on the day's total — every single time.
+   */
+  it("writes nothing when a cell is clicked: a click only lands the focus", async () => {
     const onSetValue = vi.fn();
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} onSetValue={onSetValue} />);
 
-    await userEvent.click(
-      screen.getByRole("button", { name: "Portail bailleurs — 2026-09-14" }),
-    );
+    const cell = screen.getByRole("gridcell", {
+      name: "Portail bailleurs — Développement — 2026-09-14",
+    });
+    await userEvent.click(cell);
 
-    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-14", 1);
+    expect(onSetValue).not.toHaveBeenCalled();
+    expect(cell).toHaveFocus();
   });
 
-  it("cycles a full day to a half day", async () => {
+  it("takes the value typed into the cell the click landed on", async () => {
     const onSetValue = vi.fn();
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} onSetValue={onSetValue} />);
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Portail bailleurs — 2026-09-15" }),
+      screen.getByRole("gridcell", {
+        name: "Portail bailleurs — Développement — 2026-09-15",
+      }),
     );
+    await userEvent.keyboard("4");
 
-    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-15", 0.5);
+    expect(onSetValue).toHaveBeenCalledWith(10, 100, "2026-09-15", 0.5);
   });
 
   it("shows a mission put on the month with nothing entered on it", () => {
@@ -117,11 +132,17 @@ describe("TimesheetGrid", () => {
     expect(screen.getByRole("rowheader", { name: /Absences/ })).toBeInTheDocument();
   });
 
-  it("locks every cell when the month is validated", () => {
-    render(<TimesheetGrid {...baseProps} grid={makeGrid({ is_writable: false })} />);
+  it("locks every cell when the grid only reads", () => {
+    render(<TimesheetGrid {...baseProps} readOnly grid={makeGrid()} />);
 
-    const cells = screen.getAllByRole("button", { name: /Portail bailleurs/ });
-    expect(cells.every((cell) => cell.hasAttribute("disabled"))).toBe(true);
+    // Out of the tab order entirely: no focus, so no key ever reaches them.
+    const cells = screen.getAllByRole("gridcell", {
+      name: /Portail bailleurs — Développement/,
+    });
+    expect(cells.every((cell) => !cell.hasAttribute("tabindex"))).toBe(true);
+    expect(cells.every((cell) => cell.getAttribute("aria-readonly") === "true")).toBe(
+      true,
+    );
   });
 
   it("shows a message when the month holds no mission", () => {
@@ -135,12 +156,7 @@ describe("TimesheetGrid", () => {
    * gesture the grid refuses.
    */
   it("states emptiness rather than inviting to add on a validated month", () => {
-    render(
-      <TimesheetGrid
-        {...baseProps}
-        grid={makeGrid({ rows: [], is_writable: false })}
-      />,
-    );
+    render(<TimesheetGrid {...baseProps} readOnly grid={makeGrid({ rows: [] })} />);
 
     expect(
       screen.getByText(/Aucun projet n'a été déclaré sur ce mois/),
@@ -188,7 +204,9 @@ describe("TimesheetGrid", () => {
     const cells = within(lines.at(-1)!).getAllByRole("rowheader");
     expect(cells[0].className).toContain("border-b-slate-500");
     // The mission before no longer closes anything: a light rule separates it.
-    const mission = screen.getByRole("rowheader", { name: /Portail bailleurs/ });
+    const mission = screen.getByRole("rowheader", {
+      name: /Portail bailleurs\s*Développement/,
+    });
     expect(mission.className).toContain("border-b-slate-300");
   });
 
@@ -215,9 +233,11 @@ describe("TimesheetGrid", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Retirer Portail bailleurs" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Retirer Portail bailleurs — Développement" }),
+    );
 
-    expect(onRemoveMission).toHaveBeenCalledWith(10);
+    expect(onRemoveMission).toHaveBeenCalledWith(10, 100);
   });
 
   it("stops the top rule at the last data column", () => {
@@ -228,12 +248,12 @@ describe("TimesheetGrid", () => {
     const action = screen.getByText("Retirer le projet").closest("th")!;
     expect(action.className).not.toContain("border-t");
     // The totals column does carry it: the frame stops there.
-    const totals = screen.getByText("Total du mois").closest("th")!;
+    const totals = screen.getByText("jours").closest("th")!;
     expect(totals.className).toContain("border-t-slate-500");
   });
 
-  it("offers no removal when the month is closed", () => {
-    render(<TimesheetGrid {...baseProps} grid={makeGrid({ is_writable: false })} />);
+  it("offers no removal when the grid only reads", () => {
+    render(<TimesheetGrid {...baseProps} readOnly grid={makeGrid()} />);
 
     expect(screen.queryByRole("button", { name: /^Retirer/ })).toBeNull();
   });
@@ -269,7 +289,7 @@ describe("TimesheetGrid", () => {
   it("shows one total per day", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
-    const footer = screen.getByRole("row", { name: /jrs\. ouvrés/ });
+    const footer = screen.getByRole("row", { name: /en heures/ });
     expect(within(footer).getAllByRole("cell").at(-1)).toHaveTextContent("2");
   });
 
@@ -278,7 +298,7 @@ describe("TimesheetGrid", () => {
 
     const rows = screen.getAllByRole("row");
     expect(rows[0]).toHaveTextContent("Projet");
-    expect(rows[1]).toHaveTextContent("22 jrs. ouvrés");
+    expect(rows[1]).toHaveTextContent("Total");
     expect(rows[2]).toHaveTextContent("Portail bailleurs");
   });
 
@@ -290,7 +310,7 @@ describe("TimesheetGrid", () => {
     } as Partial<MonthGridResponse>);
     render(<TimesheetGrid {...baseProps} grid={grid} />);
 
-    const totalRow = screen.getByRole("row", { name: /jrs\. ouvrés/ });
+    const totalRow = screen.getByRole("row", { name: /en heures/ });
     expect(within(totalRow).getAllByRole("cell")[0].className).toContain(
       "bg-emerald-100",
     );
@@ -304,7 +324,7 @@ describe("TimesheetGrid", () => {
     } as Partial<MonthGridResponse>);
     render(<TimesheetGrid {...baseProps} grid={grid} />);
 
-    const totalRow = screen.getByRole("row", { name: /jrs\. ouvrés/ });
+    const totalRow = screen.getByRole("row", { name: /en heures/ });
     expect(within(totalRow).getAllByRole("cell")[0]).toHaveAttribute(
       "data-alert",
       "true",
@@ -318,7 +338,7 @@ describe("TimesheetGrid", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Ouvrir Portail bailleurs" }),
+      screen.getByRole("button", { name: "Ouvrir Portail bailleurs — Développement" }),
     );
 
     expect(onOpenMission).toHaveBeenCalledWith(10);
@@ -328,7 +348,251 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     expect(
-      screen.queryByRole("button", { name: "Ouvrir Portail bailleurs" }),
+      screen.queryByRole("button", {
+        name: "Ouvrir Portail bailleurs — Développement",
+      }),
     ).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * Moving around with the keys.
+ *
+ * A month with a dozen missions on it is a few hundred cells: reaching one of
+ * them with the mouse is most of what filling a month in costs. These tests
+ * are on the grid rather than on the cell, because what is being asserted is
+ * where the focus lands — which only the grid knows.
+ */
+describe("TimesheetGrid, moved around with the keys", () => {
+  /** Two missions, so that moving down has somewhere to go. */
+  const twoRows = () =>
+    makeGrid({ rows: [...makeGrid().rows, EMPTY_ROW] } as Partial<MonthGridResponse>);
+
+  function cell(label: string, day: string): HTMLElement {
+    return screen.getByRole("gridcell", { name: `${label} — ${day}` });
+  }
+
+  it("moves to the next day of the same mission", async () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    cell("Portail bailleurs — Développement", "2026-09-14").focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    expect(cell("Portail bailleurs — Développement", "2026-09-15")).toHaveFocus();
+  });
+
+  it("steps over a non-working day rather than stopping on it", async () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    cell("Portail bailleurs — Développement", "2026-09-16").focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    // 19/09 is a weekend: the focus carries on to the next working day.
+    expect(cell("Portail bailleurs — Développement", "2026-09-25")).toHaveFocus();
+  });
+
+  it("moves to the same day of the mission below, and back up", async () => {
+    render(<TimesheetGrid {...baseProps} grid={twoRows()} />);
+
+    // The rows are drawn in alphabetical order: « Absences » sits above.
+    cell("Absences", "2026-09-15").focus();
+    await userEvent.keyboard("{ArrowDown}");
+    expect(cell("Portail bailleurs — Développement", "2026-09-15")).toHaveFocus();
+
+    await userEvent.keyboard("{ArrowUp}");
+    expect(cell("Absences", "2026-09-15")).toHaveFocus();
+  });
+
+  it("stays put at the end of a row: the grid does not wrap", async () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    const last = cell("Portail bailleurs — Développement", "2026-09-25");
+    last.focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    expect(last).toHaveFocus();
+  });
+
+  it("goes to the first and the last day of the row", async () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    cell("Portail bailleurs — Développement", "2026-09-15").focus();
+    await userEvent.keyboard("{End}");
+    expect(cell("Portail bailleurs — Développement", "2026-09-25")).toHaveFocus();
+
+    await userEvent.keyboard("{Home}");
+    expect(cell("Portail bailleurs — Développement", "2026-09-14")).toHaveFocus();
+  });
+
+  /**
+   * One stop for the whole grid, as a grid widget has: tabbing through three
+   * hundred cells to reach what is after them is not navigation.
+   */
+  it("holds a single tab stop, which follows the focus", async () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    const first = cell("Portail bailleurs — Développement", "2026-09-14");
+    expect(first).toHaveAttribute("tabindex", "0");
+    expect(cell("Portail bailleurs — Développement", "2026-09-15")).toHaveAttribute(
+      "tabindex",
+      "-1",
+    );
+
+    first.focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    expect(first).toHaveAttribute("tabindex", "-1");
+    expect(cell("Portail bailleurs — Développement", "2026-09-15")).toHaveAttribute(
+      "tabindex",
+      "0",
+    );
+  });
+
+  /**
+   * A locked cell takes no focus, so no key should ever reach it. This asserts
+   * what happens if one does anyway: the grid asks whether the cell is open
+   * before writing, rather than trusting the tab order to have done its job.
+   */
+  it("refuses an hour aimed at a cell that takes no entry", () => {
+    const onSetValue = vi.fn();
+    render(
+      <TimesheetGrid
+        {...baseProps}
+        onSetValue={onSetValue}
+        readOnly
+        grid={makeGrid()}
+      />,
+    );
+
+    fireEvent.keyDown(cell("Portail bailleurs — Développement", "2026-09-14"), {
+      key: "4",
+    });
+
+    expect(onSetValue).not.toHaveBeenCalled();
+  });
+
+  it("writes nothing on the space bar, which no longer stands for a value", async () => {
+    const onSetValue = vi.fn();
+    render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
+
+    cell("Portail bailleurs — Développement", "2026-09-14").focus();
+    await userEvent.keyboard(" ");
+
+    expect(onSetValue).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Entering a day two hours at a time.
+ *
+ * The cell shows hours and takes the same key: what is stored stays a
+ * fraction of a day, which is what the domain and every screen built on it
+ * count in.
+ */
+describe("TimesheetGrid, entered from the keyboard", () => {
+  function cell(label: string, day: string): HTMLElement {
+    return screen.getByRole("gridcell", { name: `${label} — ${day}` });
+  }
+
+  it.each([
+    ["2", 0.25],
+    ["4", 0.5],
+    ["6", 0.75],
+    ["8", 1],
+  ])("writes %s hours as %s of a day", async (key, value) => {
+    const onSetValue = vi.fn();
+    render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
+
+    cell("Portail bailleurs — Développement", "2026-09-14").focus();
+    await userEvent.keyboard(key);
+
+    expect(onSetValue).toHaveBeenCalledWith(10, 100, "2026-09-14", value);
+  });
+
+  it("empties the cell on a zero", async () => {
+    const onSetValue = vi.fn();
+    render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
+
+    cell("Portail bailleurs — Développement", "2026-09-15").focus();
+    await userEvent.keyboard("0");
+
+    expect(onSetValue).toHaveBeenCalledWith(10, 100, "2026-09-15", 0);
+  });
+
+  it("writes nothing for an hour the day does not divide into", async () => {
+    const onSetValue = vi.fn();
+    render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
+
+    cell("Portail bailleurs — Développement", "2026-09-14").focus();
+    await userEvent.keyboard("3");
+
+    expect(onSetValue).not.toHaveBeenCalled();
+  });
+
+  it("leaves the arrows alone: typing must not cost navigation", async () => {
+    const onSetValue = vi.fn();
+    render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
+
+    cell("Portail bailleurs — Développement", "2026-09-14").focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    expect(cell("Portail bailleurs — Développement", "2026-09-15")).toHaveFocus();
+    expect(onSetValue).not.toHaveBeenCalled();
+  });
+
+  it("shows a day's total in hours, under the cells it adds up", () => {
+    const grid = makeGrid({
+      day_totals: [{ day: "2026-09-15", total: 1, exceeds_capacity: false }],
+      days: [{ day: "2026-09-15", kind: "working", label: null, is_off_day: false }],
+      rows: [],
+    } as Partial<MonthGridResponse>);
+    render(<TimesheetGrid {...baseProps} grid={grid} />);
+
+    const totalRow = screen.getByRole("row", { name: /en heures/ });
+    expect(within(totalRow).getAllByRole("cell")[0]).toHaveTextContent("8");
+  });
+
+  /**
+   * The corner is a count, not a total: « 23 » declared can hide two empty
+   * days and two counted twice, and a month is validated on what is filled in.
+   */
+  it("counts the days filled in at the corner of the grid", () => {
+    const grid = makeGrid({
+      days: [
+        { day: "2026-09-14", kind: "working", label: null, is_off_day: false },
+        { day: "2026-09-15", kind: "working", label: null, is_off_day: false },
+        { day: "2026-09-16", kind: "working", label: null, is_off_day: false },
+      ],
+      day_totals: [
+        { day: "2026-09-14", total: 1, exceeds_capacity: false },
+        { day: "2026-09-15", total: 0.75, exceeds_capacity: false },
+        { day: "2026-09-16", total: 1, exceeds_capacity: false },
+      ],
+      working_days: 22,
+      rows: [],
+    } as Partial<MonthGridResponse>);
+    render(<TimesheetGrid {...baseProps} grid={grid} />);
+
+    const totalRow = screen.getByRole("row", { name: /en heures/ });
+    const cells = within(totalRow).getAllByRole("cell");
+    expect(cells[cells.length - 1]).toHaveTextContent("2/22");
+  });
+});
+
+describe("TimesheetGrid, held inside its own scroller", () => {
+  /**
+   * A regression test on a class name, which is unusual — but the defect it
+   * guards is a layout one, and jsdom computes no layout.
+   *
+   * The header cells carry `sr-only` labels, drawn `position: absolute`. With
+   * no positioned ancestor they resolve against the document rather than the
+   * table, escape the scroller, and stretch the page a couple of hundred
+   * pixels to the right: reaching the end of a month then scrolled the whole
+   * window sideways and took the sidebar off screen.
+   */
+  it("positions the table, so its screen-reader labels cannot escape it", () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    expect(screen.getByRole("grid")).toHaveClass("relative");
   });
 });

@@ -190,3 +190,21 @@ class TestWhoCarriesTheWork:
 
     def test_it_may_staff_a_mission_nobody_was_on(self) -> None:
         assert staffed({}, {10: [1]})[10] == [1]
+
+
+class TestTheBacklogDoesNotAskTheBoard:
+    """What the plan holds is decided by the phase, not by the board.
+
+    The two answer alike today, and that is precisely why the question is
+    worth asking of the phase: a plan that reads a screen follows whatever
+    that screen is later made to draw.
+    """
+
+    def test_what_the_board_draws_does_not_decide_what_the_plan_holds(
+        self,
+    ) -> None:
+        mission = a_mission(20)
+
+        assert mission.appears_on_board is True
+        assert mission.carries_a_phase is True
+        assert ids(still_to_build([mission])) == [20]

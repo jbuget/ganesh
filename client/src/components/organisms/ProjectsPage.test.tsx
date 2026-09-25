@@ -7,6 +7,7 @@ import { ProjectsPage } from "./ProjectsPage";
 const state = vi.hoisted(() => ({
   isLoading: false,
   isManager: false,
+  mayWrite: true,
   tree: [] as unknown[],
   visible: 0,
   total: 0,
@@ -145,5 +146,23 @@ describe("the columns one puts away", () => {
     expect(
       within(screen.getByRole("table")).getByText("Catégorie"),
     ).toBeInTheDocument();
+  });
+});
+
+describe("ProjectsPage, read by a guest", () => {
+  it("offers no way to add to the reference list", () => {
+    state.mayWrite = false;
+    render(<ProjectsPage />);
+
+    expect(screen.queryByRole("button", { name: "Déclarer un projet" })).toBeNull();
+    state.mayWrite = true;
+  });
+
+  it("still offers the export: reading the list out is reading it", () => {
+    state.mayWrite = false;
+    render(<ProjectsPage />);
+
+    expect(screen.getByRole("button", { name: /Exporter/ })).toBeInTheDocument();
+    state.mayWrite = true;
   });
 });

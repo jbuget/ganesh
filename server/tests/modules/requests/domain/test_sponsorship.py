@@ -14,7 +14,7 @@ def make_user(level: OrgLevel | None = OrgLevel.COMEX, is_active: bool = True) -
         entra_oid="oid-3",
         email="c.direction@waat.fr",
         display_name="C. Direction",
-        role=Role.REQUESTER,
+        role=Role.GUEST,
         is_active=is_active,
         org_level=level,
     )

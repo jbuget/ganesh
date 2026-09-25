@@ -201,6 +201,16 @@ class Project:
             raise ValidationError("A published mission must carry a service type.")
 
     @property
+    def carries_a_phase(self) -> bool:
+        """Whether the mission goes through the phases the board follows.
+
+        What the plan asks of a mission, where it used to ask the board. The
+        two answer alike today; they are not the same question, and the plan
+        has no business depending on what a screen happens to draw.
+        """
+        return not self.is_off_project
+
+    @property
     def is_off_project(self) -> bool:
         return self.kind is ProjectKind.OFF_PROJECT
 

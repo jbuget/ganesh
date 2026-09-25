@@ -39,6 +39,7 @@ from src.modules.planning.infrastructure.database.models import (  # noqa: F401,
     simulation_model,
 )
 from src.modules.projects.infrastructure.database.models import (  # noqa: F401, E402
+    activity_model,
     project_assignee_model,
     project_attachment_model,
     project_detail_models,
@@ -52,6 +53,10 @@ from src.modules.requests.infrastructure.database.models import (  # noqa: F401,
 from src.modules.users.infrastructure.database.models import (  # noqa: F401, E402
     user_model,
 )
+
+# The clock's own ledger: not a business module, but a table all the same, and
+# one autogenerate would not see without this.
+from src.scheduler import claim  # noqa: F401, E402
 
 config = context.config
 if not config.get_main_option("sqlalchemy.url", None):

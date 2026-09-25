@@ -1,6 +1,7 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import { LogOut, UserRound } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -19,7 +20,9 @@ interface UserMenuProps {
  *
  * The foot of the sidebar already shows the name: the menu adds what one only
  * looks up in doubt — the exact address, the role that opens or closes actions
- * — and the one command that goes nowhere else.
+ * — and the two things that go nowhere else. « Mon profil » is here rather
+ * than in the navigation above, which lists functions of the product: a
+ * personal setting read beside « Projets » would pass for one.
  */
 export function UserMenu({ user, onSignOut, collapsed = false }: UserMenuProps) {
   const [isOpen, setOpen] = useState(false);
@@ -41,7 +44,11 @@ export function UserMenu({ user, onSignOut, collapsed = false }: UserMenuProps) 
         </span>
         <span className={collapsed ? "sr-only" : "min-w-0 text-left"}>
           <span className="block truncate text-sm">{user.display_name}</span>
-          {user.role === "MANAGER" && (
+          {/* The ordinary role goes unsaid; every other one is worth
+              reading under the name — a guest needs to know they are one, and
+              a manager which hat they are wearing. A display rule, not a
+              right: nothing here decides what anybody may do. */}
+          {user.role !== "TEAMMATE" && (
             <span className="block text-xs text-slate-500">{roleLabel(user.role)}</span>
           )}
         </span>
@@ -58,6 +65,15 @@ export function UserMenu({ user, onSignOut, collapsed = false }: UserMenuProps) 
         </p>
 
         <div className="border-t border-slate-200 p-1">
+          <Link
+            href="/profile"
+            onClick={() => setOpen(false)}
+            className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-slate-100"
+          >
+            <UserRound className="size-4 shrink-0 text-slate-500" aria-hidden />
+            Mon profil
+          </Link>
+
           <button
             type="button"
             onClick={() => {

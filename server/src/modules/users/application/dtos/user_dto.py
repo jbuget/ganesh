@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from src.modules.users.domain.entities.presence import WeekPresence
+from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.modules.users.domain.entities.user import Role
 from src.shared.enums.department import Department
 from src.shared.enums.org_level import OrgLevel
@@ -49,3 +51,27 @@ class UpdateUserIdentityCommand:
     department: Department | None
     github_username: str | None
     org_level: OrgLevel | None
+
+
+@dataclass(frozen=True)
+class DeclareOwnPresenceCommand:
+    """One's ordinary week: which days one works, and from where.
+
+    There is no target to write down: the command names the actor alone, so
+    there is no colleague's week it could reach by mistake.
+    """
+
+    actor_id: int
+    week: WeekPresence
+
+
+@dataclass(frozen=True)
+class ChooseOwnReminderCadenceCommand:
+    """How often one wants the letter saying what is waiting.
+
+    No target here either: one says how often one's own mailbox is used, and
+    there is no colleague's it could reach.
+    """
+
+    actor_id: int
+    cadence: ReminderCadence

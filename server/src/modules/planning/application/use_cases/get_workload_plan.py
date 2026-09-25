@@ -30,6 +30,9 @@ from src.modules.planning.domain.services.horizon import (
 from src.modules.planning.domain.services.plan_summary import summarise
 from src.modules.planning.domain.services.projection import project_workload
 from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.projects.domain.repositories.activity_repository import (
+    ActivityRepository,
+)
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -48,11 +51,13 @@ class GetWorkloadPlanUseCase:
         self,
         projects: ProjectRepository,
         entries: EntryRepository,
+        activities: ActivityRepository,
         assignees: ProjectAssigneeRepository,
         users: UserRepository,
     ) -> None:
         self._projects = projects
         self._entries = entries
+        self._activities = activities
         self._assignees = assignees
         self._users = users
 
@@ -76,7 +81,9 @@ class GetWorkloadPlanUseCase:
             still_to_build(await self._projects.list_all()), order or []
         )
 
-        remaining = await remaining_by_mission(self._entries, backlog, start)
+        remaining = await remaining_by_mission(
+            self._entries, self._activities, backlog, start
+        )
         contributors = staffed(
             await self._assignees.list_all(ProjectRole.CONTRIBUTOR), staffing or {}
         )

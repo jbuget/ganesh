@@ -1,9 +1,9 @@
 """Request routes.
 
-The one corner of the application a requester reaches. Every route here
-depends on `get_signed_in_user` rather than on `get_current_user`: the door of
-the application turns a requester away, and these say, one at a time and on
-purpose, that they are meant for them too.
+The one corner of the application a guest reaches. Every route here depends on
+`get_asker` rather than on `get_current_user`: the door of the application
+turns a guest away, and these say, one at a time and on purpose, that they are
+meant for them too.
 
 What each of them lets anybody do is not decided here: the request itself
 says who may write it, hand it over or take it back, and the route only
@@ -23,10 +23,7 @@ from src.modules.audit_logs.presentation.api.mappers.audit_log_mapper import (
 from src.modules.audit_logs.presentation.api.schemas.audit_log_schemas import (
     AuditLogPageResponse,
 )
-from src.modules.auth.presentation.dependencies import (
-    get_current_user,
-    get_signed_in_user,
-)
+from src.modules.auth.presentation.dependencies import get_asker, get_current_user
 from src.modules.requests.application.dtos.request_dto import (
     ConvertRequestCommand,
     DecideRequestCommand,
@@ -97,7 +94,7 @@ router = APIRouter(prefix="/requests", tags=["requests"])
 )
 async def file_request(
     payload: FileRequestRequest,
-    current_user: User = Depends(get_signed_in_user),
+    current_user: User = Depends(get_asker),
     use_case: FileRequestUseCase = Depends(get_file_request_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> RequestResponse:
@@ -121,7 +118,7 @@ async def file_request(
     "/mine", response_model=list[RequestResponse], operation_id="listMyRequests"
 )
 async def list_my_requests(
-    current_user: User = Depends(get_signed_in_user),
+    current_user: User = Depends(get_asker),
     use_case: ListMyRequestsUseCase = Depends(get_my_requests_use_case),
 ) -> list[RequestResponse]:
     """Everything one filed, drafts included: they are all theirs."""
@@ -134,7 +131,7 @@ async def list_my_requests(
 
 @router.get("", response_model=list[RequestResponse], operation_id="listRequests")
 async def list_requests(
-    current_user: User = Depends(get_signed_in_user),
+    current_user: User = Depends(get_asker),
     use_case: ListRequestsUseCase = Depends(get_requests_use_case),
 ) -> list[RequestResponse]:
     """What the team reads: everything handed over, plus one's own drafts."""
@@ -151,7 +148,7 @@ async def list_requests(
     operation_id="listRequestSponsors",
 )
 async def list_sponsors(
-    _: User = Depends(get_signed_in_user),
+    _: User = Depends(get_asker),
     use_case: ListSponsorsUseCase = Depends(get_sponsors_use_case),
 ) -> list[RequestPersonResponse]:
     """The members of the COMEX a need may be carried to."""
@@ -161,7 +158,7 @@ async def list_sponsors(
 @router.get("/{request_id}", response_model=RequestResponse, operation_id="getRequest")
 async def get_request(
     request_id: int,
-    current_user: User = Depends(get_signed_in_user),
+    current_user: User = Depends(get_asker),
     use_case: GetRequestUseCase = Depends(get_request_use_case),
 ) -> RequestResponse:
     """One request: its author's, or the team's once it has been handed over."""
@@ -175,7 +172,7 @@ async def get_request(
 async def fill_in_request(
     request_id: int,
     payload: FillInRequestRequest,
-    current_user: User = Depends(get_signed_in_user),
+    current_user: User = Depends(get_asker),
     use_case: FillInRequestUseCase = Depends(get_fill_in_request_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> RequestResponse:
@@ -207,7 +204,7 @@ async def fill_in_request(
 )
 async def submit_request(
     request_id: int,
-    current_user: User = Depends(get_signed_in_user),
+    current_user: User = Depends(get_asker),
     use_case: SubmitRequestUseCase = Depends(get_submit_request_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> RequestResponse:
@@ -225,7 +222,7 @@ async def submit_request(
 )
 async def withdraw_request(
     request_id: int,
-    current_user: User = Depends(get_signed_in_user),
+    current_user: User = Depends(get_asker),
     use_case: WithdrawRequestUseCase = Depends(get_withdraw_request_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> RequestResponse:
@@ -243,7 +240,7 @@ async def withdraw_request(
 )
 async def delete_request(
     request_id: int,
-    current_user: User = Depends(get_signed_in_user),
+    current_user: User = Depends(get_asker),
     use_case: DeleteRequestUseCase = Depends(get_delete_request_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -262,7 +259,7 @@ async def delete_request(
 async def decide_request(
     request_id: int,
     payload: DecideRequestRequest,
-    current_user: User = Depends(get_signed_in_user),
+    current_user: User = Depends(get_asker),
     use_case: DecideRequestUseCase = Depends(get_decide_request_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> RequestResponse:
@@ -288,7 +285,7 @@ async def decide_request(
 async def convert_request(
     request_id: int,
     payload: ConvertRequestRequest,
-    current_user: User = Depends(get_signed_in_user),
+    current_user: User = Depends(get_asker),
     use_case: ConvertRequestUseCase = Depends(get_convert_request_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> RequestResponse:
@@ -321,7 +318,7 @@ async def list_request_audit_log(
     """Everything that happened to the need, most recent first.
 
     The team's reading, and the one route of this module that says so by
-    asking for the door of the application: what a requester has to know of
+    asking for the door of the application: what a guest has to know of
     their own need — where it stands, and why — their screen already tells
     them, and a list of gestures would say it a second time in a colder
     voice.

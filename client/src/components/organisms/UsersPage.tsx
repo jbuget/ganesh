@@ -3,13 +3,16 @@
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { UserFilters } from "@/components/molecules/UserFilters";
 import { PageLayout } from "@/components/organisms/PageLayout";
+import { PresenceTable } from "@/components/organisms/PresenceTable";
 import { UserPanel } from "@/components/organisms/UserPanel";
 import { UsersTable } from "@/components/organisms/UsersTable";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOpenedUser } from "@/lib/opened-user";
 import { useUserFilters } from "@/lib/use-user-filters";
 import { withRequesters } from "@/lib/user-filters";
 import { useUserSort } from "@/lib/use-user-sort";
 import { useUsersScreen } from "@/lib/use-users";
+import { type UsersView, useUsersView } from "@/lib/use-users-view";
 
 /**
  * The list of teammates.
@@ -22,6 +25,12 @@ import { useUsersScreen } from "@/lib/use-users";
  *
  * The page holds the question — the criteria, the order, what to say when
  * nothing comes back — and hands the answer to the table.
+ *
+ * Two readings of the same list, hence two tabs. « Comptes » compares people:
+ * who they are, what they may do, when they last came by. « Présence » reads
+ * the week across: who is in on Thursday, and how many will be on site. The
+ * criteria hold over both — a name searched stays searched when one changes
+ * tab.
  */
 export function UsersPage() {
   // Criteria and order live in the address, as on the mission reference list:
@@ -32,6 +41,7 @@ export function UsersPage() {
   const screen = useUsersScreen(filters, sorted);
   const panel = useOpenedUser();
   const opened = panel.openedUser ? screen.find(panel.openedUser) : null;
+  const { view, show } = useUsersView();
 
   return (
     <PageLayout
@@ -67,7 +77,7 @@ export function UsersPage() {
       <div className="max-w-[1050px]">
         {screen.isLoading && <p className="text-sm text-slate-500">Chargement…</p>}
 
-        {/* An empty list is answered here and not by the table: the reason is
+        {/* An empty list is answered here and not by the tables: the reason is
             the page's — a filter that keeps nobody, or a team yet to sign in. */}
         {!screen.isLoading && screen.users.length === 0 && (
           <p className="py-8 text-center text-sm text-slate-500">
@@ -78,25 +88,49 @@ export function UsersPage() {
         )}
 
         {screen.users.length > 0 && (
-          <UsersTable
-            users={screen.users}
-            sorted={sorted}
-            onSort={sortBy}
-            now={screen.now}
-            onOpen={panel.open}
-          />
+          <Tabs value={view} onValueChange={(next) => show(next as UsersView)}>
+            <TabsList>
+              <TabsTrigger value="comptes" className="cursor-pointer">
+                Comptes
+              </TabsTrigger>
+              <TabsTrigger value="presence" className="cursor-pointer">
+                Présence
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="comptes" className="mt-4">
+              <UsersTable
+                users={screen.users}
+                sorted={sorted}
+                onSort={sortBy}
+                now={screen.now}
+                onOpen={panel.open}
+              />
+            </TabsContent>
+
+            <TabsContent value="presence" className="mt-4">
+              <PresenceTable
+                users={screen.users}
+                sorted={sorted}
+                onSort={sortBy}
+                onOpen={panel.open}
+              />
+            </TabsContent>
+          </Tabs>
         )}
       </div>
 
       {opened && (
         <UserPanel
           user={opened}
-          roleModifiable={screen.isManager}
+          assignableRoles={screen.rolesAssignableTo(opened)}
           canChangeStatus={screen.isManager && opened.id !== screen.meId}
           editable={screen.isManager}
           onChangeRole={screen.changeRole}
           onSetActive={screen.setActive}
           onUpdateIdentity={screen.updateIdentity}
+          isMe={opened.id === screen.meId}
+          onDeclarePresence={screen.declareOwnPresence}
           now={screen.now}
           onClose={panel.close}
         />

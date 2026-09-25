@@ -16,6 +16,7 @@ from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.enums.department import Department
 from tests.helpers.in_memory_repositories import (
+    InMemoryActivityRepository,
     InMemoryEntryRepository,
     InMemoryProjectAssigneeRepository,
     InMemoryProjectDetailRepository,
@@ -51,6 +52,7 @@ def entry(day: date, value: float = 1.0) -> Entry:
         id=None,
         user_id=1,
         project_id=10,
+        activity_id=None,
         day=day,
         value=DayValue(value),
         status_at_entry=ProjectStatus.SCOPING,
@@ -66,6 +68,7 @@ def build(
 ):
     return ListProjectsUseCase(
         projects=InMemoryProjectRepository(projects or [PORTAIL]),
+        activities=InMemoryActivityRepository(),
         entries=InMemoryEntryRepository(entries or []),
         assignees=InMemoryProjectAssigneeRepository(assignments or {}),
         users=InMemoryUserRepository([ALICE, NINO]),

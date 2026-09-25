@@ -103,22 +103,22 @@ export function filterUsers(
  * Chen, and no others — so the figure is what one more click would actually
  * bring.
  */
-export function hiddenRequesters(users: UserResponse[], filters: UserFilters): number {
-  if (filters.roles.includes("REQUESTER")) return 0;
-  return filterUsers(users, { ...filters, roles: ["REQUESTER"] }).length;
+export function hiddenGuests(users: UserResponse[], filters: UserFilters): number {
+  if (filters.roles.includes("GUEST")) return 0;
+  return filterUsers(users, { ...filters, roles: ["GUEST"] }).length;
 }
 
 /**
  * The same question, asked with the requesters in sight.
  *
  * The empty role criterion means « the team », so it is written out before
- * the requesters are added to it: setting « REQUESTER » alone would show them
+ * the requesters are added to it: setting « GUEST » alone would show them
  * *instead of* the team, which is not what somebody clicking « afficher »
  * asked for.
  */
 export function withRequesters(filters: UserFilters): UserFilters {
   const shown = filters.roles.length > 0 ? filters.roles : TEAM_ROLES;
-  return { ...filters, roles: [...shown, "REQUESTER"] };
+  return { ...filters, roles: [...shown, "GUEST"] };
 }
 
 const PARAMETERS = { name: "name", role: "role", state: "state" } as const;

@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import {
   changeUserRole,
+  declareOwnPresence,
   setUserActive,
   updateUserIdentity,
 } from "@/lib/api/generated/users/users";
@@ -13,13 +14,15 @@ import type {
   UserResponse,
 } from "@/lib/api/generated/model";
 import { useCurrentUser, useTeammates } from "@/lib/api/queries";
+import type { WeekPresence } from "@/lib/presence";
 import {
   NO_USER_FILTER,
   filterUsers,
-  hiddenRequesters,
+  hiddenGuests,
   type UserFilters,
 } from "@/lib/user-filters";
 import { NO_USER_SORT, sortUsers, type UserSort } from "@/lib/user-sort";
+import { assignableRoles, holds } from "@/lib/roles";
 
 /**
  * State and actions of the teammates screen.
@@ -44,7 +47,17 @@ export function useUsersScreen(
 
   return {
     isLoading,
-    isManager: me?.role === "MANAGER",
+    isManager: holds(me?.role, "MANAGER"),
+
+    /**
+     * The roles one may hand a given account.
+     *
+     * Read here rather than in the screen, so that the panel opened from
+     * « Accueil » and the one opened from « Utilisateurs » cannot disagree
+     * about what a manager is allowed to do.
+     */
+    rolesAssignableTo: (target: UserResponse) => assignableRoles(me, target),
+
     // Nobody cuts off their own access: the account would be turned away on
     // the next request, and no one could reopen it from inside.
     meId: me?.id,
@@ -73,7 +86,7 @@ export function useUsersScreen(
      * at WAAT signs in through the same tenant, and a list showing fifteen
      * rows out of three hundred owes them that much.
      */
-    hidden: hiddenRequesters(teammates, filters),
+    hidden: hiddenGuests(teammates, filters),
 
     /** The teammate a panel is opened on, deactivated or not. */
     find: (userId: number) =>
@@ -99,6 +112,17 @@ export function useUsersScreen(
         org_level: user.org_level ?? null,
         ...change,
       });
+      await queryClient.invalidateQueries();
+    },
+
+    /**
+     * One's own week, and nobody else's.
+     *
+     * The route carries no teammate: there is no colleague's week this could
+     * reach by mistake, which is the guarantee rather than a shorthand.
+     */
+    async declareOwnPresence(week: WeekPresence) {
+      await declareOwnPresence(week);
       await queryClient.invalidateQueries();
     },
 

@@ -33,7 +33,13 @@ from tests.helpers.in_memory_repositories import (
     InMemoryUserRepository,
 )
 
-OWNER = User(id=10, entra_oid="a", email="t.da@waat.fr", display_name="Toni DA RODDA")
+OWNER = User(
+    id=10,
+    entra_oid="a",
+    email="t.da@waat.fr",
+    display_name="Toni DA RODDA",
+    role=Role.TEAMMATE,
+)
 MANAGER = User(
     id=20,
     entra_oid="b",
@@ -47,6 +53,7 @@ GONE = User(
     email="x@waat.fr",
     display_name="Ancien",
     is_active=False,
+    role=Role.TEAMMATE,
 )
 
 

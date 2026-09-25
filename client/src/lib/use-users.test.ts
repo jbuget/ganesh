@@ -6,6 +6,7 @@ import { NO_USER_FILTER } from "@/lib/user-filters";
 import { NO_USER_SORT } from "@/lib/user-sort";
 
 import { useUsersScreen } from "./use-users";
+import { A_WEEK_ON_SITE } from "@/lib/presence";
 
 const teammate = (
   display_name: string,
@@ -16,6 +17,8 @@ const teammate = (
   display_name,
   initials: display_name.slice(0, 2).toUpperCase(),
   role: "TEAMMATE",
+  presence: A_WEEK_ON_SITE,
+  reminder_cadence: "DAILY",
   is_active: true,
   last_login_at: null,
   ...fields,

@@ -22,6 +22,16 @@
  * its own, in plain elements — reads at the same weight as every other. The
  * inner lines stay faint; strength marks an edge, it does not make a grid.
  */
+/**
+ * A side of a cell carrying the strong rule rather than the faint grid line.
+ *
+ * Here rather than on the first cell that needed it: three cells of the entry
+ * grid take it, and each keeping its own copy is how two of them end up
+ * meaning different things. An atom may read the grammar; it may not read
+ * another atom.
+ */
+export type StrongSide = "right" | "bottom";
+
 export const STRONG_RULE = "border-slate-500";
 
 export const TABLE_FRAME = [
@@ -35,6 +45,12 @@ export const TABLE_FRAME = [
   // The last row closes the table, and carries the strong rule rather than the
   // line that separates two rows.
   "[&_tbody_tr:last-child_td]:border-b-slate-500",
+  // A footer carries a total, not one more row: the frame goes round it, and
+  // the rule above it breaks the reading in two rather than separating two
+  // lines. Tables without one are untouched.
+  "[&_tfoot_td]:border-b [&_tfoot_td]:border-b-slate-500",
+  "[&_tfoot_td:first-child]:border-l [&_tfoot_td:first-child]:border-l-slate-500",
+  "[&_tfoot_td:last-child]:border-r [&_tfoot_td:last-child]:border-r-slate-500",
 ].join(" ");
 
 /**
@@ -103,3 +119,29 @@ export const TABLE_LINES = [
   "[&_tbody_td]:border-b [&_tbody_td]:border-b-slate-200",
   "[&_tbody_tr:last-child_td]:border-b-0",
 ].join(" ");
+
+/**
+ * The width of the column that names the row.
+ *
+ * Fixed, and the same in every table, because the tables of one screen are
+ * read one after the other: the teammates' accounts and their week are two
+ * readings of one list, and a name column that changed width between two tabs
+ * makes the whole page shift under the reader for no reason at all.
+ */
+export const NAMING_COLUMN = "w-[300px]";
+
+/**
+ * The cell that names the row: white, off the tinted row, one step behind it
+ * on hover.
+ *
+ * Held here rather than written out in each table for the same reason as the
+ * frame around them: two tables that read alike must not be able to drift
+ * apart, and a padding or a gap typed twice eventually is.
+ */
+export const NAMING_CELL = `bg-white py-2 group-hover:bg-slate-50 ${STRONG_SEPARATOR}`;
+
+/** What sits inside it: a mark, then the name, always spaced the same. */
+export const NAMING_CONTENT = "flex items-center gap-2.5";
+
+/** The name itself, which opens the row — and gives the keyboard the same way in. */
+export const NAMING_BUTTON = "min-w-0 cursor-pointer truncate text-left font-medium";

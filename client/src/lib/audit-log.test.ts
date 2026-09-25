@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { auditSentence, groupAuditByDay } from "@/lib/audit-log";
-import type { AuditAction, AuditLogEntryResponse } from "@/lib/api/generated/model";
+import { AuditAction } from "@/lib/api/generated/model";
+import type { AuditLogEntryResponse } from "@/lib/api/generated/model";
 
 const LIN = { id: 1, display_name: "Lin Chen", initials: "LC" };
 const NINO = { id: 2, display_name: "Nino Garo", initials: "NG" };
@@ -367,7 +368,10 @@ describe("auditSentence", () => {
   });
 
   it("says something rather than nothing for an action it does not know", () => {
-    expect(auditSentence(entry("user.role_change")).action).toBe(
+    // Nothing the register writes lands here any more — the test below says
+    // so. What is left is a gesture added to the API and not yet to this
+    // file, which must read as a line rather than as a blank.
+    expect(auditSentence(entry("project.burn" as AuditAction)).action).toBe(
       "a effectué une action",
     );
   });
@@ -439,6 +443,21 @@ describe("auditSentence", () => {
         "a converti la demande en projet",
       );
     });
+  });
+
+  /**
+   * Read across the whole register, every gesture is met. « a effectué une
+   * action » on a screen one opens to find out what happened says nothing,
+   * and a wording nobody wrote is invisible until somebody reports it.
+   */
+  it("has a wording for every gesture the register writes", () => {
+    const unsaid = Object.values(AuditAction).filter(
+      (action) =>
+        auditSentence(entry(action), { read: "all" }).action ===
+        "a effectué une action",
+    );
+
+    expect(unsaid).toEqual([]);
   });
 });
 
@@ -547,5 +566,103 @@ describe("auditSentence, read within a month", () => {
         { read: "month" },
       ).action,
     ).toBe("a retiré le projet");
+  });
+});
+
+/**
+ * Gestures no mission ever carries, and which therefore never reached a
+ * « Journal » tab. Read across the whole register, they are most of what a
+ * month of tidying-up is made of — and a line reading « a effectué une
+ * action » is a line nobody can use.
+ */
+describe("auditSentence, across the whole register", () => {
+  it("names the project a deletion took away", () => {
+    // The row cannot name it: `project_id` is null once the mission is gone.
+    // What it was called travels on the line, and nowhere else.
+    expect(
+      auditSentence(entry("project.delete", { old_value: "Portail adhérents" }), {
+        read: "all",
+      }),
+    ).toEqual({ action: "a supprimé le projet « Portail adhérents »" });
+  });
+
+  it("says a role change in the words the team picks it in", () => {
+    expect(
+      auditSentence(
+        entry("user.role_change", {
+          target_user: NINO,
+          old_value: "TEAMMATE",
+          new_value: "MANAGER",
+        }),
+        { read: "all" },
+      ),
+    ).toEqual({
+      action: "a changé le rôle de Nino Garo",
+      from: "Collaborateur",
+      to: "Manager",
+    });
+  });
+
+  it("tells an account closed from one reopened", () => {
+    expect(
+      auditSentence(entry("user.deactivate", { target_user: NINO }), { read: "all" }),
+    ).toEqual({ action: "a désactivé le compte de Nino Garo" });
+    expect(
+      auditSentence(entry("user.activate", { target_user: NINO }), { read: "all" }),
+    ).toEqual({ action: "a réactivé le compte de Nino Garo" });
+  });
+
+  it("says whose fiche was edited", () => {
+    expect(
+      auditSentence(entry("user.identity_update", { target_user: NINO }), {
+        read: "all",
+      }),
+    ).toEqual({ action: "a modifié la fiche de Nino Garo" });
+  });
+
+  /** The secret is never in the log; what identifies the key is. */
+  it("names an API key by the only part of it the log holds", () => {
+    expect(
+      auditSentence(entry("api_key.create", { new_value: "jns_abcd…wxyz" }), {
+        read: "all",
+      }),
+    ).toEqual({ action: "a créé la clé d'API jns_abcd…wxyz" });
+    expect(
+      auditSentence(entry("api_key.revoke", { old_value: "jns_abcd…wxyz" }), {
+        read: "all",
+      }),
+    ).toEqual({ action: "a révoqué la clé d'API jns_abcd…wxyz" });
+  });
+
+  it("shows what moved on an API key", () => {
+    expect(
+      auditSentence(
+        entry("api_key.update", {
+          field: "name",
+          old_value: "CI",
+          new_value: "CI — déploiement",
+        }),
+        { read: "all" },
+      ),
+    ).toEqual({
+      action: "a modifié une clé d'API",
+      from: "CI",
+      to: "CI — déploiement",
+    });
+  });
+
+  it("dates a gazette by the month it tells", () => {
+    expect(
+      auditSentence(entry("gazette.generate", { day: "2026-09-01" }), { read: "all" }),
+    ).toEqual({ action: "a généré La Gazette de septembre 2026" });
+  });
+
+  /** Read across everything, a month gesture has to say which month. */
+  it("names the month a validation locked", () => {
+    expect(
+      auditSentence(entry("month.validate", { target_user: LIN, day: "2026-09-01" }), {
+        read: "all",
+      }),
+    ).toEqual({ action: "a validé son mois de septembre 2026" });
   });
 });

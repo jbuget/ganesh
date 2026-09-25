@@ -17,6 +17,10 @@ interface ProjectUpdatesTabProps {
   onChange?: () => void | Promise<void>;
   /** Puts the cursor in the composer as soon as it opens. */
   focusComposer?: boolean;
+  /** The update the visit was about, when a notification named one. */
+  aimedAt?: number | null;
+  /** Whether the reader may add to the thread, or only read it. */
+  editable?: boolean;
 }
 
 /**
@@ -30,6 +34,8 @@ export function ProjectUpdatesTab({
   now,
   onChange,
   focusComposer = false,
+  aimedAt = null,
+  editable = true,
 }: ProjectUpdatesTabProps) {
   const thread = useProjectUpdates(projectId, onChange);
   // An image pasted here is a file of the project like any other: the
@@ -57,46 +63,50 @@ export function ProjectUpdatesTab({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <RichTextEditor
-          key={composerKey}
-          value=""
-          placeholder="Rédigez une mise à jour…"
-          mentionable={teammates}
-          autoFocus={focusComposer}
-          onImageDrop={files.upload}
-          onChange={setBody}
-          onSubmit={() => {
-            if (body.trim()) void publish();
-          }}
-        />
-        {files.error && <p className="text-xs text-red-700">{files.error}</p>}
+      {editable && (
+        <div className="space-y-2">
+          <RichTextEditor
+            key={composerKey}
+            value=""
+            placeholder="Rédigez une mise à jour…"
+            mentionable={teammates}
+            autoFocus={focusComposer}
+            onImageDrop={files.upload}
+            onChange={setBody}
+            onSubmit={() => {
+              if (body.trim()) void publish();
+            }}
+          />
+          {files.error && <p className="text-xs text-red-700">{files.error}</p>}
 
-        {body.trim() && (
-          <div className="flex items-center gap-2">
-            <Button size="sm" disabled={busy} onClick={() => void publish()}>
-              Publier
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                setBody("");
-                setComposerKey((key) => key + 1);
-              }}
-            >
-              Annuler
-            </Button>
-            <span className="text-xs text-slate-400">⌘↵ pour publier</span>
-          </div>
-        )}
-      </div>
+          {body.trim() && (
+            <div className="flex items-center gap-2">
+              <Button size="sm" disabled={busy} onClick={() => void publish()}>
+                Publier
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setBody("");
+                  setComposerKey((key) => key + 1);
+                }}
+              >
+                Annuler
+              </Button>
+              <span className="text-xs text-slate-400">⌘↵ pour publier</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {thread.thread === null && <p className="text-sm text-slate-400">Chargement…</p>}
 
       {thread.thread?.length === 0 && (
         <p className="py-6 text-center text-sm text-slate-400">
-          Aucune mise à jour. Racontez où en est le projet.
+          {editable
+            ? "Aucune mise à jour. Racontez où en est le projet."
+            : "Aucune mise à jour."}
         </p>
       )}
 
@@ -107,6 +117,8 @@ export function ProjectUpdatesTab({
             update={update}
             now={now}
             people={teammates}
+            aimed={update.id === aimedAt}
+            editable={editable}
             onEdit={(body) => thread.edit(update.id, body)}
             onRemove={() => thread.remove(update.id)}
             onReact={(reaction, leaving) => thread.react(update.id, reaction, leaving)}

@@ -17,16 +17,27 @@ class UserMissionRepository(ABC):
     """
 
     @abstractmethod
-    async def list_for_month(self, user_id: int, month: date) -> list[int]:
-        """Ids of the missions put on this month."""
+    async def list_for_month(
+        self, user_id: int, month: date
+    ) -> list[tuple[int, int | None]]:
+        """The rows put on this month, as (mission, activity) pairs.
+
+        The activity is what names a row, so it is part of what identifies
+        one: the same mission appears once per trade somebody declares under.
+        It is null for off-project work, which is a row on its own.
+        """
         ...
 
     @abstractmethod
-    async def add(self, user_id: int, project_id: int, month: date) -> None:
-        """Puts a mission on a month. No effect if it is already there."""
+    async def add(
+        self, user_id: int, project_id: int, activity_id: int | None, month: date
+    ) -> None:
+        """Puts a row on a month. No effect if it is already there."""
         ...
 
     @abstractmethod
-    async def remove(self, user_id: int, project_id: int, month: date) -> None:
-        """Takes a mission off a month. No effect if it was not there."""
+    async def remove(
+        self, user_id: int, project_id: int, activity_id: int | None, month: date
+    ) -> None:
+        """Takes a row off a month. No effect if it was not there."""
         ...

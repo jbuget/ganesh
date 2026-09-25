@@ -4,9 +4,56 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from src.modules.users.domain.entities.presence import DayPresence, WeekPresence
+from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.modules.users.domain.entities.user import Role
 from src.shared.enums.department import Department
 from src.shared.enums.org_level import OrgLevel
+
+
+class WeekPresenceResponse(BaseModel):
+    """An ordinary week: five days, each one somewhere."""
+
+    monday: DayPresence
+    tuesday: DayPresence
+    wednesday: DayPresence
+    thursday: DayPresence
+    friday: DayPresence
+    #: Counted here rather than by each screen: two views counting the office
+    #: themselves would eventually count it differently.
+    days_on_site: int
+    days_present: int
+
+
+class DeclarePresenceRequest(BaseModel):
+    """Saying one's own ordinary week. The five days travel together."""
+
+    monday: DayPresence = DayPresence.ON_SITE
+    tuesday: DayPresence = DayPresence.ON_SITE
+    wednesday: DayPresence = DayPresence.ON_SITE
+    thursday: DayPresence = DayPresence.ON_SITE
+    friday: DayPresence = DayPresence.ON_SITE
+
+    def to_week(self) -> WeekPresence:
+        return WeekPresence(
+            monday=self.monday,
+            tuesday=self.tuesday,
+            wednesday=self.wednesday,
+            thursday=self.thursday,
+            friday=self.friday,
+        )
+
+
+def to_presence_response(week: WeekPresence) -> WeekPresenceResponse:
+    return WeekPresenceResponse(
+        monday=week.monday,
+        tuesday=week.tuesday,
+        wednesday=week.wednesday,
+        thursday=week.thursday,
+        friday=week.friday,
+        days_on_site=week.days_on_site,
+        days_present=week.days_present,
+    )
 
 
 class UserResponse(BaseModel):
@@ -30,6 +77,11 @@ class UserResponse(BaseModel):
     github_username: str | None = None
     #: Null for everyone nobody had a reason to place.
     org_level: OrgLevel | None = None
+    #: The ordinary week. On site every day until somebody says otherwise.
+    presence: WeekPresenceResponse
+    #: How often the letter saying what is waiting goes out. Every day until
+    #: this teammate says otherwise.
+    reminder_cadence: ReminderCadence
 
 
 class ChangeRoleRequest(BaseModel):
@@ -55,3 +107,9 @@ class UpdateUserIdentityRequest(BaseModel):
     department: Department | None = None
     github_username: str | None = Field(default=None, max_length=255)
     org_level: OrgLevel | None = None
+
+
+class ChooseReminderCadenceRequest(BaseModel):
+    """How often one wants the letter saying what is waiting."""
+
+    cadence: ReminderCadence

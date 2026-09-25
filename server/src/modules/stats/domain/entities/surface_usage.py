@@ -52,6 +52,8 @@ class Surface(StrEnum):
     GAZETTE = "gazette"
     MOOD = "mood"
     NOTIFICATIONS = "notifications"
+    REMINDERS = "reminders"
+    PRESENCE = "presence"
     TEAM_ADMIN = "team_admin"
     API_KEYS = "api_keys"
     MACHINE_ACCESS = "machine_access"
@@ -93,6 +95,14 @@ SURFACE_OF: dict[AuditAction, Surface] = {
     AuditAction.PROJECT_CREATE: Surface.PROJECT_REGISTRY,
     AuditAction.PROJECT_UPDATE: Surface.PROJECT_REGISTRY,
     AuditAction.PROJECT_DELETE: Surface.PROJECT_REGISTRY,
+    # Cutting a mission into the trades its days are booked under. Part of
+    # keeping the list rather than a surface of its own: one goes to the same
+    # screen to declare a mission and to say what it is made of.
+    AuditAction.ACTIVITY_CREATE: Surface.PROJECT_REGISTRY,
+    AuditAction.ACTIVITY_UPDATE: Surface.PROJECT_REGISTRY,
+    AuditAction.ACTIVITY_ARCHIVE: Surface.PROJECT_REGISTRY,
+    AuditAction.ACTIVITY_UNARCHIVE: Surface.PROJECT_REGISTRY,
+    AuditAction.ACTIVITY_DELETE: Surface.PROJECT_REGISTRY,
     # Moving the work along, from the board or from the sheet.
     AuditAction.PROJECT_STATUS_CHANGE: Surface.PHASE_PROGRESS,
     # Saying who is expected on what.
@@ -115,6 +125,20 @@ SURFACE_OF: dict[AuditAction, Surface] = {
     AuditAction.SIMULATION_DELETE: Surface.PLANNING,
     # Reading the month back.
     AuditAction.GAZETTE_GENERATE: Surface.GAZETTE,
+    # Saying which days one works, and from where. A line of its own: it is
+    # declared by everyone for themselves, and folded into team
+    # administration it would read as a busy month at the manager's desk.
+    AuditAction.USER_PRESENCE_DECLARE: Surface.PRESENCE,
+    # Saying how often one is written to. A line of its own rather than one
+    # shared with « Notifications », which counts notifications opened: mixing
+    # a setting somebody changed into a figure of what people read would give
+    # a number answering neither question. Zero here is a reading too — it
+    # says the default is what everybody is still on.
+    AuditAction.USER_REMINDER_CHOOSE: Surface.REMINDERS,
+    # A manager sending the round by hand. Beside the cadence rather than on a
+    # line of its own: both are gestures on the same channel, and a surface
+    # split in two would read as two functions where there is one.
+    AuditAction.REMINDER_RUN: Surface.REMINDERS,
     # Holding the team.
     AuditAction.USER_CREATE: Surface.TEAM_ADMIN,
     AuditAction.USER_ROLE_CHANGE: Surface.TEAM_ADMIN,

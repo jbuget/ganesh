@@ -5,9 +5,11 @@ import { useEffect } from "react";
 
 import { AppSidebar } from "@/components/organisms/AppSidebar";
 import { CommandPalette } from "@/components/organisms/CommandPalette";
+import { MoodReminder } from "@/components/organisms/MoodReminder";
+import { ReadOnlyBanner } from "@/components/organisms/ReadOnlyBanner";
 import { useCurrentUser } from "@/lib/api/queries";
 
-/** The one screen a requester reaches. */
+/** The one screen a guest reaches. */
 const REQUESTS = "/requests";
 
 /**
@@ -27,8 +29,8 @@ export function AppFrame({ children }: Readonly<{ children: React.ReactNode }>) 
   const { user, isLoading } = useCurrentUser();
   const pathname = usePathname();
   const router = useRouter();
-  const isRequester = user?.role === "REQUESTER";
-  const astray = isRequester && pathname !== REQUESTS;
+  const isGuest = user?.role === "GUEST";
+  const astray = isGuest && pathname !== REQUESTS;
 
   useEffect(() => {
     // `replace` rather than `push`: the address they typed is not a place to
@@ -38,17 +40,27 @@ export function AppFrame({ children }: Readonly<{ children: React.ReactNode }>) 
 
   if (isLoading || !user) return null;
 
-  if (isRequester) {
+  if (isGuest) {
     return <div className="min-h-screen">{astray ? null : children}</div>;
   }
 
   return (
     <div className="flex min-h-screen">
       <AppSidebar />
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0 flex-1">
+        {/* Whoever may not write reads the band once, here, rather than a
+            dozen times over — and never a guest, who never comes this far. */}
+        <ReadOnlyBanner />
+        {children}
+      </div>
       {/* In the frame rather than on a screen: it is reached from every one of
           them, and its shortcut listens to the whole window. */}
       <CommandPalette />
+      {/* In the frame for the opposite reason: it is not reached at all. It
+          comes to whoever is there at the end of the afternoon, whatever they
+          happen to be reading — which is what spares « Moral de l'équipe »
+          from having to ask the question itself. */}
+      <MoodReminder />
     </div>
   );
 }

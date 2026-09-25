@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
-from src.modules.auth.presentation.dependencies import get_current_user
+from src.modules.auth.presentation.dependencies import get_contributor, get_current_user
 from src.modules.moods.application.dtos.mood_dtos import (
     ClearMoodCommand,
     SetMoodCommand,
@@ -55,7 +55,7 @@ async def get_my_moods(
 @router.put("", response_model=MoodResponse, operation_id="setMood")
 async def set_mood(
     payload: SetMoodRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: SetMoodUseCase = Depends(get_set_mood_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> MoodResponse:
@@ -84,7 +84,7 @@ async def get_team_moods(
 )
 async def clear_mood(
     day: date,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_contributor),
     use_case: ClearMoodUseCase = Depends(get_clear_mood_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:

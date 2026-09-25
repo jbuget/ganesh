@@ -5,9 +5,13 @@ from datetime import date, timedelta
 
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.projects.application.dtos.last_update import LastUpdate
+from src.modules.projects.domain.entities.activity import Activity
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.projects.domain.repositories.activity_repository import (
+    ActivityRepository,
+)
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -21,6 +25,7 @@ from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
 from src.modules.projects.domain.services.deletion import can_be_deleted
+from src.modules.projects.domain.services.estimates import estimate_of
 from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.projects.domain.services.project_cost import (
     NO_COST,
@@ -56,6 +61,10 @@ class ListedProject:
     links: list[ProjectLink] = field(default_factory=list)
     #: The departments the mission serves, in the order they are declared.
     departments: list[Department] = field(default_factory=list)
+    #: The trades the mission is cut into — what a day is booked under, and
+    #: what carries the budget. Served with the list rather than fetched per
+    #: mission: the entry grid offers them all at once.
+    activities: list[Activity] = field(default_factory=list)
     #: Live updates in the follow-up thread.
     comments: int = 0
     #: The latest of them, to announce the thread without opening it.
@@ -73,6 +82,7 @@ class ListProjectsUseCase:
     def __init__(
         self,
         projects: ProjectRepository,
+        activities: ActivityRepository,
         entries: EntryRepository,
         assignees: ProjectAssigneeRepository,
         users: UserRepository,
@@ -80,6 +90,7 @@ class ListProjectsUseCase:
         details: ProjectDetailRepository,
     ) -> None:
         self._projects = projects
+        self._activities = activities
         self._entries = entries
         self._assignees = assignees
         self._users = users
@@ -107,6 +118,12 @@ class ListProjectsUseCase:
                 children[mission.parent_id] = children.get(mission.parent_id, 0) + 1
 
         costs = await self._costs(all_missions, day)
+        # The trades every mission is cut into, read in one query: the entry
+        # grid offers them all at once, and asking per mission would put the
+        # count of the list into the count of the queries.
+        activities = await self._activities.list_for_projects(
+            [m.id for m in all_missions if m.id is not None]
+        )
 
         # Archived projects included: a work package outlives the archiving of
         # its project, and goes on reading with the axis of that project.
@@ -144,6 +161,7 @@ class ListProjectsUseCase:
                 delivered_days=delivered.get(mission.id or 0, 0.0),
                 links=links.get(mission.id or 0, []),
                 departments=departments.get(mission.id or 0, []),
+                activities=activities.get(mission.id or 0, []),
                 cost=costs.own.get(mission.id or 0, NO_COST),
                 tree_cost=costs.tree.get(mission.id or 0, NO_COST),
                 comments=comments.get(mission.id or 0, 0),
@@ -164,12 +182,19 @@ class ListProjectsUseCase:
             today, since=today - timedelta(days=RUN_WINDOW_DAYS)
         )
         live_since = await self._details.list_dates_reached(ProjectStatus.OPERATIONS)
+        # The budget lives on the activities now; the mission reads their sum,
+        # and reads nothing at all while one of them is left unbudgeted.
+        activities = await self._activities.list_for_projects(
+            [mission.id for mission in missions if mission.id is not None]
+        )
 
         own = {
             mission.id: split_delivered(
                 by_status.get(mission.id or 0, {}),
                 recent.get(mission.id or 0, {}),
-                estimated_days=mission.estimated_days,
+                estimated_days=estimate_of(
+                    activities.get(mission.id or 0, []), own=mission.estimated_days
+                ),
                 in_run_since=live_since.get(mission.id or 0),
             )
             for mission in missions

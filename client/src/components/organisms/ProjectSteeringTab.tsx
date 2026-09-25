@@ -7,12 +7,13 @@ import Link from "next/link";
 import { CategoryMark } from "@/components/atoms/CategoryMark";
 import { CategoryPicker } from "@/components/atoms/CategoryPicker";
 import { DepartmentPicker } from "@/components/atoms/DepartmentPicker";
-import { InlineNumberField } from "@/components/atoms/InlineNumberField";
 import { ContributorsPicker } from "@/components/atoms/ContributorsPicker";
 import { PhasePicker } from "@/components/atoms/PhasePicker";
 import { PriorityPicker } from "@/components/atoms/PriorityPicker";
 import { SheetRow } from "@/components/atoms/SheetRow";
 import { SheetSectionTitle } from "@/components/atoms/SheetSectionTitle";
+import { ProjectActivities } from "@/components/molecules/ProjectActivities";
+import { useProjectActivities } from "@/lib/use-project-activities";
 import { ProjectContributions } from "@/components/molecules/ProjectContributions";
 import { ProjectSubProjects } from "@/components/molecules/ProjectSubProjects";
 import type {
@@ -31,6 +32,14 @@ interface ProjectSteeringTabProps {
     businessContacts: string | null,
   ) => Promise<void>;
   changePhase: (status: ProjectStatus) => Promise<void>;
+  /**
+   * Whether the mission may be steered from here.
+   *
+   * The whole tab hangs off it rather than each field: steering is one thing
+   * one may or may not do, and a sheet half open would be a sheet nobody can
+   * read the rights of.
+   */
+  editable: boolean;
   updateFields: (fields: {
     category?: ProjectCategory | null;
     priority?: ProjectPriority | null;
@@ -86,6 +95,7 @@ export function ProjectSteeringTab({
   onChange,
   saveSheet,
   changePhase,
+  editable,
   updateFields,
   addSubProject,
 }: ProjectSteeringTabProps) {
@@ -93,6 +103,9 @@ export function ProjectSteeringTab({
   // copy to resynchronise on every reload.
   const [draft, setDraft] = useState<string | null>(null);
   const { project } = detail;
+  // The mission's estimate follows from these, so every write replays the
+  // sheet: the ratio shown above must never lag behind the budgets below.
+  const activities = useProjectActivities(project.id, onChange);
   const contacts = draft ?? project.business_contacts ?? "";
 
   return (
@@ -102,12 +115,17 @@ export function ProjectSteeringTab({
 
         <div className="divide-y divide-slate-100">
           <SheetRow title="Phase">
-            <PhasePicker status={project.status} onChange={changePhase} />
+            <PhasePicker
+              status={project.status}
+              editable={editable}
+              onChange={changePhase}
+            />
           </SheetRow>
 
           <SheetRow title="Priorité">
             <PriorityPicker
               value={project.priority}
+              editable={editable}
               onChange={(priority) => updateFields({ priority })}
             />
           </SheetRow>
@@ -121,6 +139,7 @@ export function ProjectSteeringTab({
             ) : (
               <CategoryPicker
                 value={project.category}
+                editable={editable}
                 onChange={(category) => updateFields({ category })}
               />
             )}
@@ -129,16 +148,8 @@ export function ProjectSteeringTab({
           <SheetRow title="Départements">
             <DepartmentPicker
               values={detail.departments}
+              editable={editable}
               onChange={(values) => saveSheet(values, contacts.trim() || null)}
-            />
-          </SheetRow>
-
-          <SheetRow title="Estimé (build)">
-            <InlineNumberField
-              value={project.estimated_days}
-              suffix="jrs."
-              label="Estimer"
-              onChange={(estimated_days) => updateFields({ estimated_days })}
             />
           </SheetRow>
 
@@ -148,6 +159,7 @@ export function ProjectSteeringTab({
               contributors={detail.leads}
               role="lead"
               label="Référents"
+              editable={editable}
               onChange={onChange}
             />
           </SheetRow>
@@ -157,6 +169,7 @@ export function ProjectSteeringTab({
               projectId={project.id}
               contributors={detail.contributors}
               label="Intervenants"
+              editable={editable}
               onChange={onChange}
             />
           </SheetRow>
@@ -167,6 +180,7 @@ export function ProjectSteeringTab({
               value={contacts}
               placeholder="Qui appeler côté métier…"
               aria-label="Contacts métier"
+              readOnly={!editable}
               onChange={(event) => setDraft(event.target.value)}
               // Saved on leaving the field: nothing is written on every keystroke.
               onBlur={() => {
@@ -177,7 +191,11 @@ export function ProjectSteeringTab({
               onKeyDown={(event) => {
                 if (event.key === "Enter") event.currentTarget.blur();
               }}
-              className="-mx-1 w-full rounded px-1 py-0.5 text-sm transition-colors hover:bg-slate-100 focus:bg-white focus:ring-1 focus:ring-slate-400 focus:outline-none"
+              className={`-mx-1 w-full rounded px-1 py-0.5 text-sm transition-colors focus:outline-none ${
+                editable
+                  ? "hover:bg-slate-100 focus:bg-white focus:ring-1 focus:ring-slate-400"
+                  : ""
+              }`}
             />
           </SheetRow>
         </div>
@@ -189,7 +207,28 @@ export function ProjectSteeringTab({
       {project.kind === "project" && (
         <section className="space-y-2">
           <SheetSectionTitle>Sous-projets</SheetSectionTitle>
-          <ProjectSubProjects subProjects={detail.sub_projects} onAdd={addSubProject} />
+          <ProjectSubProjects
+            subProjects={detail.sub_projects}
+            onAdd={editable ? addSubProject : undefined}
+          />
+        </section>
+      )}
+
+      {/* Off-project work is declared on directly — absences carry neither
+          estimate nor trade — so it is not offered the section rather than
+          offering a gesture the server would refuse. */}
+      {project.kind !== "off_project" && (
+        <section className="space-y-2">
+          <SheetSectionTitle>Activités</SheetSectionTitle>
+          <ProjectActivities
+            activities={activities.activities}
+            editable={editable}
+            onAdd={activities.add}
+            onChange={activities.change}
+            onArchive={activities.archive}
+            onRemove={activities.remove}
+            onUnarchive={activities.unarchive}
+          />
         </section>
       )}
 

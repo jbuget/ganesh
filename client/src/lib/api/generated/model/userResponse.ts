@@ -6,7 +6,9 @@
  */
 import type { Department } from "./department";
 import type { OrgLevel } from "./orgLevel";
+import type { ReminderCadence } from "./reminderCadence";
 import type { Role } from "./role";
+import type { WeekPresenceResponse } from "./weekPresenceResponse";
 
 /**
  * A teammate.
@@ -24,4 +26,6 @@ export interface UserResponse {
   department?: Department | null;
   github_username?: string | null;
   org_level?: OrgLevel | null;
+  presence: WeekPresenceResponse;
+  reminder_cadence: ReminderCadence;
 }

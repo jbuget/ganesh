@@ -4,6 +4,7 @@
  * Ganesh API
  * OpenAPI spec version: 0.1.0
  */
+import type { ActivityResponse } from "./activityResponse";
 import type { BoardMemberResponse } from "./boardMemberResponse";
 import type { Department } from "./department";
 import type { LastUpdateResponse } from "./lastUpdateResponse";
@@ -18,6 +19,7 @@ export interface ProjectListItemResponse {
   project: ProjectResponse;
   leads: BoardMemberResponse[];
   contributors: BoardMemberResponse[];
+  activities?: ActivityResponse[];
   delivered_days: number;
   cost: ProjectCostResponse;
   tree_cost: ProjectCostResponse;

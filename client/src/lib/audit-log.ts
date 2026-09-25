@@ -3,11 +3,13 @@ import type {
   ProjectCategory,
   ProjectPriority,
   ProjectStatus,
+  Role,
 } from "@/lib/api/generated/model";
 import { category, phaseLabel, priority } from "@/lib/board";
 import { formatDecimalDays, formatMonthOf, formatSpelledDate } from "@/lib/dates";
 import { departmentLabel } from "@/lib/departments";
 import { parisDay } from "@/lib/instants";
+import { roleLabel } from "@/lib/roles";
 import { CRITICALITIES, SERVICE_LINKS, SERVICE_TYPES } from "@/lib/service-sheet";
 
 /**
@@ -26,9 +28,14 @@ import { CRITICALITIES, SERVICE_LINKS, SERVICE_TYPES } from "@/lib/service-sheet
  * month's: each screen already says one thing, and a sentence repeating it
  * pushes out what the reader actually came for. A mission's page says which
  * mission; a month's says whose month and which one.
+ *
+ * « all » is the register read across, where the screen says nothing: every
+ * gesture has to name what it was about. It is also the only reading that
+ * meets the gestures no mission carries — a role changed, a key minted, a
+ * gazette generated — which is why they are said here at all.
  */
 export interface AuditReading {
-  read: "project" | "month" | "request";
+  read: "project" | "month" | "request" | "all";
 }
 
 const ON_A_MISSION: AuditReading = { read: "project" };
@@ -44,6 +51,17 @@ export interface AuditSentence {
 
 /** Nothing recorded on that side — an axis that was blank, a date not yet set. */
 const NOTHING = "—";
+
+/**
+ * A role said the way the team picks it, not the way the column stores it.
+ *
+ * `ROLES` in this module is the other kind of role — leading or contributing
+ * to a mission. What the picker offers is read through its own helper, which
+ * is also what the « Utilisateurs » screen says.
+ */
+function roleWording(raw: string | null): string {
+  return raw === null ? NOTHING : roleLabel(raw as Role);
+}
 
 /** Fields whose French name reads straight after « a modifié ». */
 const FIELD_LABELS: Record<string, string> = {
@@ -197,7 +215,7 @@ function fieldSentence(entry: AuditLogEntryResponse): AuditSentence {
   // The id of a project says nothing to a reader, and looking up its name would
   // mean a request per line: the gesture is named, the mission is not.
   // A link is named rather than counted: « les liens » moving says nothing,
-  // and the address is too long for the column the log stores it in.
+  // and the name is what the screen showed it under.
   if (field === "links")
     return {
       action:
@@ -326,14 +344,103 @@ export function auditSentence(
     case "user.create":
       return { action: "a rejoint Ganesh" };
 
+    // What a mission never carries, and a month neither: these reach a log
+    // only where the whole register is read.
+    case "user.role_change":
+      return {
+        action: `a changé le rôle de ${who}`,
+        from: roleWording(before),
+        to: roleWording(after),
+      };
+
+    case "user.deactivate":
+      return { action: `a désactivé le compte de ${who}` };
+
+    case "user.activate":
+      return { action: `a réactivé le compte de ${who}` };
+
+    // Which fields moved is in the payload, which no screen reads: what the
+    // line says is whose sheet was touched, and when.
+    case "user.identity_update":
+      return { action: `a modifié la fiche de ${who}` };
+
+    // Which days, and from where, is in the payload and read on the team's
+    // presence board. The line says that the week moved, never why it did:
+    // that is nobody's to record.
+    case "user.presence_declare":
+      return { action: "a déclaré sa semaine" };
+
+    // Which cadence is in the payload and read on one's own profile. The line
+    // says that somebody chose, never what a letter then said: a channel
+    // leaves no trace, only the gesture that opened or closed it.
+    case "user.reminder_choose":
+      return { action: "a choisi sa fréquence de rappel" };
+
+    // A manager sending the round by hand — the morning the clock got it
+    // wrong, or a first letter before trusting the whole thing to a schedule.
+    // How many letters went out is in the payload, which no screen reads: the
+    // manager was told on the spot, and the line says the campaign was run.
+    case "reminder.run":
+      return { action: "a lancé les rappels par e-mail" };
+
+    // A key is named by its masked public part — the only piece of it the
+    // register holds, the secret having never been written anywhere.
+    case "api_key.create":
+      return { action: `a créé la clé d'API ${after ?? ""}`.trimEnd() };
+
+    case "api_key.revoke":
+      return { action: `a révoqué la clé d'API ${before ?? ""}`.trimEnd() };
+
+    case "api_key.update":
+      return {
+        action: "a modifié une clé d'API",
+        from: before ?? NOTHING,
+        to: after ?? NOTHING,
+      };
+
+    case "gazette.generate":
+      return {
+        action: `a généré La Gazette de ${entry.day ? formatMonthOf(entry.day) : "un mois"}`,
+      };
+
     case "project.create":
       return { action: "a créé le projet" };
 
+    // The only gesture whose mission the line cannot name: `project_id` is
+    // null the moment the row goes. What it was called travels on the line,
+    // and nowhere else — so it is said here rather than left to the row.
     case "project.delete":
-      return { action: "a supprimé le projet" };
+      return {
+        action: `a supprimé le projet${before ? ` « ${before} »` : ""}`,
+      };
 
     case "project.status_change":
       return { action: "a changé la phase", ...movement("status", before, after) };
+
+    // What a mission is cut into. The line names the activity rather than the
+    // mission, which the heading above it already says.
+    case "activity.create":
+      return {
+        action: `a ajouté l'activité${after ? ` « ${after} »` : ""}`,
+      };
+
+    case "activity.update":
+      return { action: "a modifié une activité", ...movement("", before, after) };
+
+    case "activity.archive":
+      return {
+        action: `a archivé l'activité${before ? ` « ${before} »` : ""}`,
+      };
+
+    case "activity.delete":
+      return {
+        action: `a supprimé l'activité${before ? ` « ${before} »` : ""}`,
+      };
+
+    case "activity.unarchive":
+      return {
+        action: `a rouvert l'activité${after ? ` « ${after} »` : ""}`,
+      };
 
     case "project.update":
       return fieldSentence(entry);

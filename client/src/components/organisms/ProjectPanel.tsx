@@ -13,6 +13,8 @@ interface ProjectPanelProps {
   projectId: number;
   /** What to open on: the sheet by default, the thread when that is what was aimed at. */
   tab?: string | null;
+  /** The update the visit was about, when a notification named one. */
+  aimedAt?: number | null;
   onClose: () => void;
   /** Tells the board: a phase changed here moves a card there. */
   onMissionChanged: () => void | Promise<void>;
@@ -33,6 +35,7 @@ interface ProjectPanelProps {
 export function ProjectPanel({
   projectId,
   tab,
+  aimedAt,
   onClose,
   onMissionChanged,
   onOpenMission,
@@ -82,6 +85,7 @@ export function ProjectPanel({
           <ProjectTabs
             detail={detail}
             initialTab={tab}
+            aimedAt={aimedAt}
             onChange={sheet.reload}
             saveSheet={sheet.saveSheet}
             saveDescription={sheet.saveDescription}

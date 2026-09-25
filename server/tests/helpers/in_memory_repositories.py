@@ -8,14 +8,18 @@ from collections.abc import Collection, Sequence
 from dataclasses import replace
 from datetime import date, datetime
 
-from src.modules.activity.domain.repositories.activity_repository import (
-    ActivityRepository,
+from src.modules.activity_summary.domain.repositories.activity_summary_repository import (
+    ActivitySummaryRepository,
     DeclaredDays,
     MissionRecord,
 )
 from src.modules.api_keys.domain.entities.api_key import ApiKey
 from src.modules.api_keys.domain.repositories.api_key_repository import ApiKeyRepository
-from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
+from src.modules.audit_logs.domain.entities.audit_log import (
+    AuditAction,
+    AuditLog,
+    AuditLogFilter,
+)
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
@@ -43,6 +47,7 @@ from src.modules.planning.domain.entities.simulation import Simulation
 from src.modules.planning.domain.repositories.simulation_repository import (
     SimulationRepository,
 )
+from src.modules.projects.domain.entities.activity import Activity
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectCategory,
@@ -56,6 +61,9 @@ from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.projects.domain.entities.update_reaction import (
     Reaction,
     UpdateReaction,
+)
+from src.modules.projects.domain.repositories.activity_repository import (
+    ActivityRepository,
 )
 from src.modules.projects.domain.repositories.attachment_store import AttachmentStore
 from src.modules.projects.domain.repositories.project_assignee_repository import (
@@ -162,6 +170,62 @@ class InMemoryProjectRepository(ProjectRepository):
         self._projects.pop(project_id, None)
 
 
+class InMemoryActivityRepository(ActivityRepository):
+    def __init__(
+        self,
+        activities: list[Activity] | None = None,
+        entries: list[Entry] | None = None,
+    ) -> None:
+        self._activities: dict[int, Activity] = {}
+        self._next_id = 1
+        for activity in activities or []:
+            # Two activities handed over without an id must not land on the
+            # same key: the second would silently replace the first.
+            if activity.id is None:
+                activity.id = self._next_id
+            self._activities[activity.id] = activity
+            self._next_id = max(self._next_id, activity.id + 1)
+        #: Shared with the entry double where a test hands both the same list,
+        #: so that counting days does not need a repository of its own.
+        self._entries = entries if entries is not None else []
+
+    async def add(self, activity: Activity) -> Activity:
+        activity.id = self._next_id
+        self._next_id += 1
+        self._activities[activity.id] = activity
+        return activity
+
+    async def get_by_id(self, activity_id: int) -> Activity | None:
+        return self._activities.get(activity_id)
+
+    async def update(self, activity: Activity) -> Activity:
+        if activity.id is not None:
+            self._activities[activity.id] = activity
+        return activity
+
+    async def list_for_project(self, project_id: int) -> list[Activity]:
+        return sorted(
+            (a for a in self._activities.values() if a.project_id == project_id),
+            key=lambda a: a.label,
+        )
+
+    async def list_for_projects(
+        self, project_ids: Sequence[int]
+    ) -> dict[int, list[Activity]]:
+        wanted = set(project_ids)
+        grouped: dict[int, list[Activity]] = {}
+        for activity in sorted(self._activities.values(), key=lambda a: a.label):
+            if activity.project_id in wanted:
+                grouped.setdefault(activity.project_id, []).append(activity)
+        return grouped
+
+    async def delete(self, activity_id: int) -> None:
+        self._activities.pop(activity_id, None)
+
+    async def count_entries(self, activity_id: int) -> int:
+        return sum(1 for e in self._entries if e.activity_id == activity_id)
+
+
 class InMemoryApiKeyRepository(ApiKeyRepository):
     def __init__(self, keys: list[ApiKey] | None = None) -> None:
         self._keys: dict[int, ApiKey] = {}
@@ -200,12 +264,17 @@ class InMemoryEntryRepository(EntryRepository):
         self._entries: list[Entry] = list(entries or [])
         self._next_id = 1
 
-    async def get(self, user_id: int, project_id: int, day: date) -> Entry | None:
+    async def get(
+        self, user_id: int, project_id: int, activity_id: int | None, day: date
+    ) -> Entry | None:
         return next(
             (
                 e
                 for e in self._entries
-                if e.user_id == user_id and e.project_id == project_id and e.day == day
+                if e.user_id == user_id
+                and e.project_id == project_id
+                and e.activity_id == activity_id
+                and e.day == day
             ),
             None,
         )
@@ -301,7 +370,9 @@ class InMemoryEntryRepository(EntryRepository):
         )
 
     async def upsert(self, entry: Entry) -> Entry:
-        existing = await self.get(entry.user_id, entry.project_id, entry.day)
+        existing = await self.get(
+            entry.user_id, entry.project_id, entry.activity_id, entry.day
+        )
         if existing is not None:
             self._entries.remove(existing)
             entry.id = existing.id
@@ -311,8 +382,10 @@ class InMemoryEntryRepository(EntryRepository):
         self._entries.append(entry)
         return entry
 
-    async def delete(self, user_id: int, project_id: int, day: date) -> None:
-        existing = await self.get(user_id, project_id, day)
+    async def delete(
+        self, user_id: int, project_id: int, activity_id: int | None, day: date
+    ) -> None:
+        existing = await self.get(user_id, project_id, activity_id, day)
         if existing is not None:
             self._entries.remove(existing)
 
@@ -378,6 +451,25 @@ class InMemoryAuditLogRepository(AuditLogRepository):
     async def count_for_user_month(self, target_user_id: int, month: date) -> int:
         return len(self._for_user_month(target_user_id, month))
 
+    def _for_user(self, user_id: int) -> list[AuditLog]:
+        return sorted(
+            (
+                log
+                for log in self.logs
+                if log.actor_id == user_id or log.target_user_id == user_id
+            ),
+            key=lambda log: (log.at, log.id or 0),
+            reverse=True,
+        )
+
+    async def list_for_user(
+        self, user_id: int, limit: int, offset: int
+    ) -> list[AuditLog]:
+        return self._for_user(user_id)[offset : offset + limit]
+
+    async def count_for_user(self, user_id: int) -> int:
+        return len(self._for_user(user_id))
+
     def _for_project(self, project_id: int) -> list[AuditLog]:
         return sorted(
             (log for log in self.logs if log.project_id == project_id),
@@ -408,20 +500,23 @@ class InMemoryAuditLogRepository(AuditLogRepository):
     async def count_for_request(self, request_id: int) -> int:
         return len(self._for_request(request_id))
 
-    def _all(self, since: datetime | None) -> list[AuditLog]:
+    def _all(self, kept: AuditLogFilter | None) -> list[AuditLog]:
+        # The criteria are answered by the filter itself rather than rewritten
+        # here: this register and the real one must not be able to disagree
+        # about what a reader asked for.
         return sorted(
-            (log for log in self.logs if since is None or log.at >= since),
+            (log for log in self.logs if kept is None or kept.holds(log)),
             key=lambda log: (log.at, log.id or 0),
             reverse=True,
         )
 
     async def list_all(
-        self, limit: int, offset: int, since: datetime | None = None
+        self, limit: int, offset: int, kept: AuditLogFilter | None = None
     ) -> list[AuditLog]:
-        return self._all(since)[offset : offset + limit]
+        return self._all(kept)[offset : offset + limit]
 
-    async def count_all(self, since: datetime | None = None) -> int:
-        return len(self._all(since))
+    async def count_all(self, kept: AuditLogFilter | None = None) -> int:
+        return len(self._all(kept))
 
     async def list_between(
         self,
@@ -709,7 +804,7 @@ class InMemoryAttachmentStore(AttachmentStore):
         self.types.pop(key, None)
 
 
-class InMemoryActivityRepository(ActivityRepository):
+class InMemoryActivitySummaryRepository(ActivitySummaryRepository):
     """What the Synthèse d'activité reads, held in memory.
 
     Rows are handed in already grouped, as the database would return them:
@@ -885,24 +980,38 @@ class InMemorySimulationRepository(SimulationRepository):
 
 
 class InMemoryUserMissionRepository(UserMissionRepository):
-    def __init__(self, rows: list[tuple[int, int, date]] | None = None) -> None:
-        self._rows: set[tuple[int, int, date]] = {
-            (user_id, project_id, first_day_of(month))
-            for user_id, project_id, month in rows or []
+    def __init__(
+        self, rows: list[tuple[int, int, int | None, date]] | None = None
+    ) -> None:
+        self._rows: set[tuple[int, int, int | None, date]] = {
+            (user_id, project_id, activity_id, first_day_of(month))
+            for user_id, project_id, activity_id, month in rows or []
         }
 
-    async def list_for_month(self, user_id: int, month: date) -> list[int]:
+    async def list_for_month(
+        self, user_id: int, month: date
+    ) -> list[tuple[int, int | None]]:
         return [
-            project_id
-            for row_user, project_id, row_month in sorted(self._rows)
+            (project_id, activity_id)
+            # Sorted on a key that never compares None to an int: a month
+            # holding both an activity row and an off-project one would
+            # otherwise raise rather than answer.
+            for row_user, project_id, activity_id, row_month in sorted(
+                self._rows,
+                key=lambda r: (r[0], r[1], r[2] is not None, r[2] or 0, r[3]),
+            )
             if row_user == user_id and row_month == first_day_of(month)
         ]
 
-    async def add(self, user_id: int, project_id: int, month: date) -> None:
-        self._rows.add((user_id, project_id, first_day_of(month)))
+    async def add(
+        self, user_id: int, project_id: int, activity_id: int | None, month: date
+    ) -> None:
+        self._rows.add((user_id, project_id, activity_id, first_day_of(month)))
 
-    async def remove(self, user_id: int, project_id: int, month: date) -> None:
-        self._rows.discard((user_id, project_id, first_day_of(month)))
+    async def remove(
+        self, user_id: int, project_id: int, activity_id: int | None, month: date
+    ) -> None:
+        self._rows.discard((user_id, project_id, activity_id, first_day_of(month)))
 
 
 class InMemoryMoodRepository(MoodRepository):
@@ -997,6 +1106,16 @@ class InMemoryNotificationRepository(NotificationRepository):
         self, recipient_id: int, unread_only: bool, limit: int, offset: int
     ) -> list[Notification]:
         return self._mine(recipient_id, unread_only)[offset : offset + limit]
+
+    async def list_waiting_since(
+        self, recipient_id: int, since: datetime | None
+    ) -> list[Notification]:
+        waiting = [
+            notification
+            for notification in self._mine(recipient_id, unread_only=True)
+            if since is None or notification.at > since
+        ]
+        return list(reversed(waiting))
 
     async def count_for(self, recipient_id: int, unread_only: bool) -> int:
         return len(self._mine(recipient_id, unread_only))

@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import StrEnum
 
+from src.modules.users.domain.entities.presence import WeekPresence
+from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.shared.enums.department import Department
 from src.shared.enums.org_level import OrgLevel
 
@@ -34,18 +36,29 @@ def _handle(value: str | None) -> str | None:
 
 
 class Role(StrEnum):
-    """What a user is allowed to do.
+    """What a user is allowed to do, from the door to the platform.
 
-    Declared from the least to the most: an account comes into being as a
-    requester, and a manager says afterwards who is behind it.
+    The order is a fact the whole application reads: nobody hands out a role
+    above their own, and a role is only ever changed by someone who holds at
+    least as much. Declaring them from the least to the most empowered is
+    therefore what makes `RANK` below say the truth.
     """
 
-    #: Someone who comes to express a need, and does nothing else here. The
-    #: whole company signs in through the same Entra tenant, so this is what
-    #: an unknown identity gets: a role that opens nothing on its own.
-    REQUESTER = "REQUESTER"
+    #: Whoever has just signed in and nothing more. The whole company comes
+    #: through the same Entra tenant, so this is what being recognised at the
+    #: door gets one: a role that opens nothing but one's own needs, until
+    #: somebody says who they are on the team.
+    GUEST = "GUEST"
     TEAMMATE = "TEAMMATE"
     MANAGER = "MANAGER"
+    #: A manager, plus the platform itself: the administration screen, and the
+    #: one role a manager cannot hand out.
+    ADMIN = "ADMIN"
+
+
+#: Where each role stands on the ladder. Written from `Role` rather than by
+#: hand, so a role added between two others cannot be forgotten here.
+RANK: dict[Role, int] = {Role(role): position for position, role in enumerate(Role)}
 
 
 @dataclass
@@ -56,7 +69,9 @@ class User:
     entra_oid: str
     email: str
     display_name: str
-    role: Role = Role.REQUESTER
+    #: A guest until somebody says otherwise: what is true of an account
+    #: nobody has declared, not a placeholder standing in for an answer.
+    role: Role = Role.GUEST
     is_active: bool = field(default=True)
     last_login_at: datetime | None = None
     #: Civil name, told apart from the display name Entra provides: « L. Chen »
@@ -72,6 +87,19 @@ class User:
     #: Where this person stands in the company. Left unsaid for most: it is
     #: filled in for whoever has to be told apart — a sponsor of needs, today.
     org_level: OrgLevel | None = None
+    #: The ordinary week: which days one works, and from where. On site every
+    #: day until somebody says otherwise — the arrangement the team runs on,
+    #: so it is what is true of anyone who has said nothing, not a placeholder
+    #: standing in for an answer.
+    presence: WeekPresence = field(default_factory=WeekPresence)
+    #: How often this teammate wants the letter saying what is waiting. Every
+    #: day until they say otherwise: somebody who has never opened the setting
+    #: is precisely the reader the bell is failing to reach.
+    reminder_cadence: ReminderCadence = ReminderCadence.DAILY
+    #: When the last letter actually went out. `None` until the first one
+    #: does — and a letter that failed leaves it where it was, so the next run
+    #: considers the same window again. That is the only retry there is.
+    reminder_sent_at: datetime | None = None
 
     def __post_init__(self) -> None:
         self.email = self.email.strip().lower()
@@ -111,16 +139,44 @@ class User:
 
     @property
     def is_manager(self) -> bool:
-        return self.role is Role.MANAGER
+        """Whether this account reaches as far as a manager does.
+
+        An admin does: the ladder is one axis, and a role above manager holds
+        everything a manager holds. Reading it as « the role is MANAGER »
+        would mean every screen listing both, and one of them forgetting to.
+        """
+        return self.holds(Role.MANAGER)
 
     @property
-    def is_requester(self) -> bool:
+    def is_admin(self) -> bool:
+        return self.role is Role.ADMIN
+
+    def holds(self, role: Role) -> bool:
+        """Whether this account stands at `role` on the ladder, or above."""
+        return RANK[self.role] >= RANK[role]
+
+    def can_write(self) -> bool:
+        """Whether this account may enter anything at all.
+
+        A guest reads the application whole and writes nothing into it: a
+        month, a project, a mise à jour, a mood. The rule is one line here so
+        that every use case that writes asks the same question, and the day a
+        role is added nobody has to remember which side of it it falls on.
+        """
+        return self.is_active and not self.is_guest
+
+    def can_administrate(self) -> bool:
+        """Only an admin opens the administration of the platform."""
+        return self.is_active and self.is_admin
+
+    @property
+    def is_guest(self) -> bool:
         """Whether this account only ever comes to ask for something.
 
         It is the one thing the door reads: every screen of the application is
-        closed to a requester, and the requests open themselves to them.
+        closed to a guest, and the requests open themselves to them.
         """
-        return self.role is Role.REQUESTER
+        return self.role is Role.GUEST
 
     def can_reopen_month(self) -> bool:
         """Only a manager can reopen a validated month."""
@@ -139,13 +195,68 @@ class User:
         """
         return self.is_active and self.is_manager
 
+    def can_change_role_of(self, target: "User", role: Role) -> bool:
+        """Tells whether this user may move `target` to `role`.
+
+        Two bounds, read the same way: nobody hands out a role above their
+        own, and nobody moves someone who stands above them. A manager
+        therefore promotes up to manager and leaves an admin alone — being
+        able to demote the one who could undo it is the same door read
+        backwards.
+
+        Nobody changes their own role either, for the reason nobody
+        deactivates themselves: an admin demoting themselves would leave the
+        platform short of an administrator, with no way back in from inside.
+        """
+        if not self.can_manage_teammates() or target.id == self.id:
+            return False
+        return self.holds(role) and self.holds(target.role)
+
     def can_edit_open_months(self) -> bool:
         """Anyone on the team may edit an open month, a colleague's included.
 
-        A requester holds no month: they declare no time, and the grid is not
-        a screen they ever reach.
+        A guest holds no month: they declare no time, and the grid is not a
+        screen they ever reach.
         """
-        return self.is_active and not self.is_requester
+        return self.can_write()
+
+    def can_declare_own_presence(self) -> bool:
+        """Everyone says their own week, and nobody else's.
+
+        No manager's business: where somebody works from is a fact about them,
+        and relaying it would only put a delay between the fact and the board
+        the team reads.
+        """
+        return self.can_write()
+
+    def can_choose_own_reminder(self) -> bool:
+        """Everyone says how often they are written to, and nobody else does.
+
+        No manager's business, for the same reason a declared week is not: how
+        often somebody wants their mailbox used is a fact about them.
+        """
+        return self.can_write()
+
+    def choose_reminder_cadence(self, cadence: ReminderCadence) -> None:
+        """Takes down how often this teammate wants to be written to."""
+        self.reminder_cadence = cadence
+
+    def stamp_reminder(self, at: datetime) -> None:
+        """Takes down that a letter went out, so the next one starts after it.
+
+        Called once a letter has actually been handed over, never before: a
+        stamp moved on a letter that failed would lose what it announced.
+        """
+        self.reminder_sent_at = at
+
+    def can_run_reminders(self) -> bool:
+        """Only a manager sends the round by hand.
+
+        It writes to the whole team at once, which is a gesture nobody should
+        be able to make by wandering into a screen — and the one reason it
+        exists is to repair a morning the clock got wrong.
+        """
+        return self.is_active and self.is_manager
 
     def can_deactivate(self, target: "User") -> bool:
         """Tells whether this manager may cut `target` off.

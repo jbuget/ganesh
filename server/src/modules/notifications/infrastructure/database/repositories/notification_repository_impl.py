@@ -121,6 +121,19 @@ class SqlNotificationRepository(NotificationRepository):
         )
         return [to_entity(model) for model in result.scalars().all()]
 
+    async def list_waiting_since(
+        self, recipient_id: int, since: datetime | None
+    ) -> list[Notification]:
+        statement = select(NotificationModel).where(
+            self._mine(recipient_id, unread_only=True)
+        )
+        if since is not None:
+            statement = statement.where(NotificationModel.at > since)
+        result = await self._session.execute(
+            statement.order_by(NotificationModel.at.asc(), NotificationModel.id.asc())
+        )
+        return [to_entity(model) for model in result.scalars().all()]
+
     async def count_for(self, recipient_id: int, unread_only: bool) -> int:
         result = await self._session.execute(
             select(func.count())

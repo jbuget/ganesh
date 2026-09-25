@@ -49,23 +49,74 @@ volume, and a key prefix is a needle for a secret scanner, not a brand.
 
 ### Roles
 
-| Action | `REQUESTER` | `TEAMMATE` | `MANAGER` |
-|---|---|---|---|
-| Express a need, and read one's own | ✅ | ✅ | ✅ |
-| Fill in one's own month, read and edit a colleague's open month | ❌ | ✅ | ✅ |
-| Create / change a project, change its status | ❌ | ✅ | ✅ |
-| Validate one's own month | ❌ | ✅ | ✅ |
-| Read the needs the company expressed | ❌ | ✅ | ✅ |
-| Arbitrate a need, and make a mission of it | ❌ | ❌ | ✅ |
-| Reopen a validated month | ❌ | ❌ | ✅ |
-| Manage teammates | ❌ | ❌ | ✅ |
-| Sync to Monday (V1.1) | ❌ | ❌ | ✅ |
+One ladder, four rungs, `GUEST` < `TEAMMATE` < `MANAGER` < `ADMIN`. It is one
+axis on purpose: an admin holds everything a manager holds, so no screen has to
+list two roles and forget one of them. `RANK` is read off `Role` rather than
+written down, and a rung added between two others cannot be forgotten.
 
-**`REQUESTER` is what an unknown identity gets**, and it opens nothing: the
-whole company signs in through the same Entra tenant, so being recognised at
-the door says nothing about belonging to the team. A manager promotes the
-account the day they say whose it is — which means a new teammate has nothing
-until somebody fills in their sheet, and that is deliberate.
+| Action | `GUEST` | `TEAMMATE` | `MANAGER` | `ADMIN` |
+|---|---|---|---|---|
+| Express a need, and read one's own | ✅ | ✅ | ✅ | ✅ |
+| Read every other screen | ❌ | ✅ | ✅ | ✅ |
+| Fill in one's own month, read and edit a colleague's open month | ❌ | ✅ | ✅ | ✅ |
+| Create / change a project, change its status | ❌ | ✅ | ✅ | ✅ |
+| Validate one's own month | ❌ | ✅ | ✅ | ✅ |
+| Read the needs the company expressed | ❌ | ✅ | ✅ | ✅ |
+| Arbitrate a need, and make a mission of it | ❌ | ❌ | ✅ | ✅ |
+| Reopen a validated month | ❌ | ❌ | ✅ | ✅ |
+| Manage teammates | ❌ | ❌ | ✅ | ✅ |
+| Hand out a role, up to one's own | ❌ | ❌ | ✅ | ✅ |
+| Open the administration of the platform | ❌ | ❌ | ❌ | ✅ |
+| Sync to Monday (V1.1) | ❌ | ❌ | ✅ | ✅ |
+
+**A guest is what anybody is on their first sign-in**, and it is an answer
+rather than a placeholder: the whole company comes through the same Entra
+tenant, so being recognised at the door says nothing about belonging to the
+team. A guest reaches « Mes demandes » and nothing else — no sidebar, no
+palette, no way through to the team's month, its board or its plan — and the
+API says the same on its side: the routes of the recueil open themselves to
+them one at a time, the way a route opens itself to a machine. A manager
+promotes the account the day they say whose it is, which means a new teammate
+has nothing until somebody fills in their sheet, and that is deliberate. The
+seed is the other door — matching by email is what preserves a role handed out
+before anybody logged in — and `make grant-role EMAIL=… ROLE=ADMIN` is the third, from a shell on the
+host, which is the only place the *first* administrator can be made.
+
+**Authentication switched off admits an administrator.** `REQUIRE_AUTH=false`
+provisions the identity `DEV_EMAIL` names, and it does so as an admin: with no
+door there is nobody to promote that account and nothing it could be confused
+with, where a guest would mean a laptop on which nothing can be declared.
+`DEV_EMAIL` says **which** account the open door hands over, never what it may
+do — it is how one signs in as a colleague without rewriting a role in the
+database, and the id it draws follows the address so two development accounts
+are never taken for one another. `AUTH_LOCAL_EMAIL` feeds the fallback door
+(`AUTH_ENTRA=false`), never this one, and the provisioning matches on
+`entra_oid` first, so changing an email alone would hand back the same account.
+To read the application as the other audience — somebody who only ever comes to
+ask for something — move that account with `make grant-role EMAIL=… ROLE=GUEST`;
+the same command brings it back.
+
+**Two bounds hold every role change**, and they live on the entity: nobody
+hands out a role above their own, and nobody moves somebody who stands above
+them. A manager therefore promotes up to manager and leaves an admin alone —
+being able to demote the one who could undo it is the same door read backwards.
+Nobody changes their own role either, for the reason nobody deactivates
+themselves.
+
+**A route that writes hangs off a door a guest cannot come through.** A guest
+is already turned away at `get_current_user`, so `get_contributor` is where a
+rung between guest and teammate would land the day there is one. There are
+forty-odd of them, and checking them one by one is how one ends up forgotten:
+`get_contributor`, `get_current_manager` and `get_admin` are the three human
+doors, a machine door counts when the scope it asks for is a write scope, and
+`test_write_doors` reads the application itself to say so. A key never reaches
+further than the person who answers for it.
+
+On the client the same reading is one hook, `useMayWrite`, and the band above
+every screen says it once rather than a dozen times over. Which screen one is
+in at all is `AppFrame`'s: it draws nothing until it knows who is there, since
+a sidebar shown for a moment and taken back would be a list of doors somebody
+was never meant to see.
 
 ### Business invariants
 
@@ -73,6 +124,10 @@ These rules are tested **at the domain level**, independently of the API and of
 the UI:
 
 - An entry is `0.5` or `1.0`, never anything else.
+- **A project or a work package is declared on through one of its activities,
+  never directly.** Off-project work is the exception and is declared on as
+  itself: absences carry neither estimate nor trade, and an activity for them
+  would be one more click for nothing.
 - **No entry is possible on a non-working day** (weekend or French public
   holiday). The domain carries the rule and the API refuses the write: locking
   the cell on the client is only its reflection.
@@ -86,6 +141,9 @@ the UI:
   synced.
 - A project cut into work packages cannot leave the reference list without
   saying what becomes of them.
+- **The estimate lives on the activity, never on the mission.** A mission
+  reads the sum of what its trades are budgeted at, and reads nothing at all
+  while one of them is left unbudgeted.
 - Every action that matters is traced in `audit_log`.
 
 ### What the log holds
@@ -106,6 +164,12 @@ the question one opens it with. Length is met by paging, never by filtering.
   vocabulary and the interface says it in French, in
   `client/src/lib/audit-log.ts` — under test, because a log nobody can read is
   not one.
+- **Le panneau d'un collaborateur lit les deux côtés de son id** — ce qu'il a
+  fait et ce qu'on lui a fait. Un journal qui ne tiendrait que ses propres
+  gestes laisserait dehors le jour où son rôle a changé ; un qui ne tiendrait
+  que les changements subis laisserait dehors le mois qu'il a rempli pour un
+  collègue. Chaque ligne y nomme son projet, comme le registre lu en travers :
+  le panneau est une personne, pas un projet.
 - **Three things are deliberately outside it**, and adding them would be a
   decision, not a fix: the rank of a card within a kanban column, which
   decides nothing and would bury everything else; every sign-in, which is
@@ -140,6 +204,58 @@ say, and the rules that keep it cheap.
   nothing left to react to. The signs already left go with the text.
 - One takes back one's own sign and nobody else's — the command names its
   actor and there is no id to pass for somebody else.
+
+### The trades a mission is cut into
+
+An estimate is counted in build days. The moment a chef de projet books
+against the mission, those days come off the same figure and the ratio turns
+red on a mission whose development is perfectly in the clear. The activity is
+what fixes it: a mission is cut into the trades its days are booked under, and
+each carries the budget for its own.
+
+- **A day is booked against an activity, never against the mission.** That is
+  the whole point of the level, and the domain refuses the write rather than
+  trusting a screen to lock the cell. A mission carrying no activity cannot be
+  declared on at all, and the sheet says so.
+- **The estimate descends with it.** Mission and work package hold none of
+  their own any more; they sum. One trade left unbudgeted leaves the mission
+  unestimated rather than summing what happens to be filled in — a ratio drawn
+  from half a budget announces an overrun nobody measured, in red, on a screen
+  people steer by.
+- **An activity carrying days is archived, never deleted.** A validated
+  month is immutable, and deleting would empty cells inside one without
+  anybody reopening it — the days would go without a trace from a month
+  somebody signed off. Deleting is for the trade added by mistake that never
+  carried anything, exactly as a mission is only deletable while it never
+  held time. The API refuses rather than leaving it to a screen.
+- **One trade, once per mission.** Two « Développement » would split the
+  budget across two lines nobody can tell apart, and leave whoever fills in a
+  month choosing between two rows saying exactly the same. Held by the domain
+  and by a partial unique index, `is_active` being what the index is partial
+  on: an archived activity no longer holds the place, which is how a budget is
+  started over without losing the days booked against the old line.
+- **The list therefore reads three levels**: a project, its work packages, and
+  under either of them the activities. It stops there. A work package carries
+  activities and never another package.
+- **An activity holds nothing that steers.** No phase, no urgency, no
+  strategic axis, no catalogue entry — it reads all of it from the mission
+  above. The entity has no field for any of them rather than a rule refusing
+  each one, which is why it is a table of its own rather than a fourth
+  `ProjectKind`: an entity defined by what it does not carry is in the wrong
+  place.
+- **It never reaches the Kanban.** The board steers missions; one card per
+  trade would bury the dozen that decide something. The reference list is
+  where a mission is unfolded into its trades.
+- **`WorkNature` is closed, and it names a hat rather than an act** —
+  développement, design, chefferie de projet, delivery. Here a developer also
+  does the ops and a designer does both UX and UI: naming the act would leave
+  a developer's day on Terraform undecidable. It answers « en tant que quoi »,
+  never « sur quoi », and nothing in the domain branches on it — it is read,
+  never computed with. Adding one is a decision about the organisation, so it
+  lives in the domain beside `Department` rather than in a table somebody can
+  extend between two meetings.
+- What the reprise took over carries no trade: nobody ever declared which one
+  those days were spent under, and filling one in would invent it.
 
 ### Leaving the reference list
 
@@ -262,7 +378,16 @@ Modules: `users`, `projects`, `entries`, `months`, `calendar`, `audit_logs`.
   infrastructure.
 - **A use case may never call another use case.** Extract shared logic into a
   domain service.
-- **FastAPI routes never inject a repository directly** — use cases only.
+- **A FastAPI route reaches a use case, and nothing else.** Not a repository,
+  and not a domain service either: a route that called `read_wiring` straight
+  would be a route deciding what to orchestrate, and the layer that exists to
+  answer that question would have been stepped over. « Il n'y a rien à
+  orchestrer » is not an exemption — a use case with one call is still where
+  the next call will go. **`test_routes_reach_use_cases` reads the
+  application to say so**, and the two routes that answer without one of their
+  own are named in it, with the reason: the liveness probe, which must survive
+  the application being down, and `GET /users/me`, whose whole work is the
+  `ProvisionUserUseCase` its dependency already ran.
 - Always depend on the interface, never on the concrete implementation.
 
 **These rules are not declarative: they are enforced by `import-linter`**
@@ -597,11 +722,14 @@ may do, and all of which a `ProjectStatus` would have had to pretend to.
   weighed, since one comes to that screen to answer.
 
 **Whoever only ever comes to ask for something sees « Mes demandes » and
-nothing else.** `get_current_user` turns a requester away, so every screen of
-the application stays the team's; the routes of the requests open themselves
-to them one at a time, the way a route opens itself to a machine. The one
-exception is `GET /users/me`: a screen has to know whose account it is
-drawing.
+nothing else.** That person is a `GUEST` — the bottom rung of the one ladder,
+and what anybody is on their first sign-in. `get_current_user` turns them
+away, so every screen of the application stays the team's; the routes of the
+requests open themselves to them through `get_asker`, one at a time, the way a
+route opens itself to a machine. That door is named rather than left to
+`get_signed_in_user` so that `test_write_doors` can read it: the recueil is
+the one thing a guest writes. The one exception is `GET /users/me`: a screen
+has to know whose account it is drawing.
 
 Two things are deliberately out of V1, and adding either would be a decision:
 **no exchange on a request** — a manager goes and asks the person, which is
@@ -707,6 +835,56 @@ day a second provider is actually implemented, both become worth a screen.
 generated with their facts and no chapeau.
 
 ---
+
+## Being told when Ganesh is closed
+
+The bell only reaches whoever has the application open, which is most of the
+team almost never. A letter reaches everybody else. `docs/notifications-email.md`
+is the brief; five rules hold it together:
+
+- **The problem is « not seen », not « not seen fast ».** Nobody needs to learn
+  within thirty seconds that they were mentioned, so the answer is a digest and
+  not a channel. One letter, on a cadence the reader chooses — every working
+  day, the first working day of the week, or never.
+- **It points; it does not copy.** The letter counts by kind — « 2 mentions,
+  1 mois rouvert » — and leads back to the inbox, where the detail and the read
+  state live. **Receiving a letter is not reading an inbox**: nothing of
+  `deliver()`, of the fan-out or of `read_at` is touched, and no letter ever
+  clears a bell.
+- **Nothing is said twice, and nothing is said about nothing.** A letter holds
+  what arrived after the last one and is still unread; `roundup()` answers
+  nothing rather than an empty reminder. A letter that repeats itself, or that
+  arrives saying nothing, teaches its reader to filter the one that mattered.
+- **The clock is inside the application**, in `src/scheduler/` — a third way in
+  beside the routers and the tools, held there by the same two `import-linter`
+  contracts. It claims each run in `scheduled_run`, whose primary key is the
+  lock: the number of `uvicorn` workers stops mattering, and a deploy at 9 h
+  does not re-send the round of 8 h 30. Paris time, hard-coded, as the public
+  holidays are hard-coded to France.
+- **A letter refused and nowhere to post are not the same failure.** One
+  reader's is stepped over and the round carries on; `MailerUnavailableError`
+  stops the round, is said once rather than per recipient, and **gives the run
+  back** so the next tick retries — the claim is taken before the work, so
+  without that a key refused at 8 h 30 costs the whole day. An unconfigured
+  mailer refuses for the same reason: answering « envoyée » having sent
+  nothing would move every stamp it touched, and what it announced would never
+  be announced again.
+- **A manager may send a round by hand**, from the foot of « Notifications ».
+  It answers to no clock and takes no claim — a run that respected the day's
+  claim would do nothing after the failed morning it exists for — and the
+  stamps are what keep it from writing twice. Unlike the clock's round, it is
+  traced: a letter is a channel, somebody deliberately sending one is a
+  gesture.
+- **The French of the letter is on the server**, in
+  `domain/services/reminder_letter.py`, and that is the one exception to the
+  interface owning what the reader reads: a letter has no browser in the loop.
+  It is bounded to one noun per kind, and a test asserts every
+  `NotificationKind` has one.
+
+`SMTP_HOST` and what follows it are empty by default — the contract
+`GEMINI_API_KEY` already has. Without them the clock does not start, and
+nothing breaks. `make mail-up` stands up the MailPit that plays the mail server
+on a laptop, as MinIO plays S3.
 
 ## The files a project carries
 

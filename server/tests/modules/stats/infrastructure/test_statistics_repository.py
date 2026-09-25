@@ -108,6 +108,7 @@ async def an_entry(
             id=None,
             user_id=user_id,
             project_id=project_id,
+            activity_id=None,
             day=day,
             value=DayValue(value),
             status_at_entry=status,
@@ -295,7 +296,13 @@ async def test_only_the_months_asked_for_are_counted_as_validated(
     for user_id in (ada, grace):
         month = Month(user_id=user_id, month=august)
         month.validate(
-            by=User(id=user_id, entra_oid="x", email="x@x", display_name="x")
+            by=User(
+                id=user_id,
+                entra_oid="x",
+                email="x@x",
+                display_name="x",
+                role=Role.TEAMMATE,
+            )
         )
         await months.save(month)
     await months.save(Month(user_id=ada, month=date(2026, 9, 1)))

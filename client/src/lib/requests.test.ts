@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { RequestState, type RequestResponse } from "@/lib/api/generated/model";
 import type { UserResponse } from "@/lib/api/generated/model";
+import { A_WEEK_ON_SITE } from "@/lib/presence";
 import {
   REQUEST_STATES,
   mayArbitrate,
@@ -83,6 +84,8 @@ describe("who may weigh a need", () => {
     initials: "JB",
     role: "MANAGER",
     is_active: true,
+    presence: A_WEEK_ON_SITE,
+    reminder_cadence: "DAILY",
   };
   const handed = { ...REQUEST, state: "submitted" as const };
 

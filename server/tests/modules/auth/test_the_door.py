@@ -32,10 +32,10 @@ def test_a_deactivated_account_is_turned_away() -> None:
     assert refusal.value.status_code == 403
 
 
-def test_a_requester_is_turned_away() -> None:
+def test_a_guest_is_turned_away() -> None:
     """The door opens on the application; the requests open their own."""
     with pytest.raises(HTTPException) as refusal:
-        admit(make_user(Role.REQUESTER))
+        admit(make_user(Role.GUEST))
 
     assert refusal.value.status_code == 403
 
@@ -44,8 +44,8 @@ def test_the_open_door_hands_over_the_account_it_is_told_to() -> None:
     """Development only, and the whole point of it.
 
     Two audiences read this application: passing from one to the other must
-    take one line of configuration, never a role rewritten in the database —
-    a requester reaches no route that could promote them back.
+    take one line of configuration, and `make grant-role` moves the account
+    the open door hands over from one audience to the other.
     """
     assert dev_identity("a.metier@waat.fr").email == "a.metier@waat.fr"
 

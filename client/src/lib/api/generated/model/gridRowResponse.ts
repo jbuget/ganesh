@@ -8,11 +8,13 @@ import type { GridRowResponseValues } from "./gridRowResponseValues";
 import type { ProjectKind } from "./projectKind";
 
 /**
- * One grid row: a mission and its entries.
+ * One grid row: an activity of a mission, or off-project work itself.
  */
 export interface GridRowResponse {
   project_id: number;
+  activity_id: number | null;
   label: string;
+  project_label: string;
   kind: ProjectKind;
   estimated_days: number | null;
   values: GridRowResponseValues;

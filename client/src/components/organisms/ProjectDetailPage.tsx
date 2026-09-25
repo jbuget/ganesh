@@ -1,8 +1,10 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 
 import { EditableTitle } from "@/components/atoms/EditableTitle";
 import { ParentMissionLink } from "@/components/atoms/ParentMissionLink";
@@ -55,11 +57,17 @@ function BackLink({ wayBack }: { wayBack: WayBack }) {
  */
 export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   // With nothing behind — a link shared, a new tab — the reference list is
   // where a sheet is found again, archived missions included, which the board
   // does not show.
   const wayBack = useWayBack({ href: "/projects", label: "Projets" });
-  const sheet = useProjectDetail(projectId);
+  // Unlike the panel, the full page does not sit on top of the screen it came
+  // from: nothing here can name the one to read again. Every write therefore
+  // empties the cache whole — a mission deleted from its own page must not
+  // still be in the reference list on the way back.
+  const forgetCache = useCallback(() => queryClient.invalidateQueries(), [queryClient]);
+  const sheet = useProjectDetail(projectId, forgetCache);
   const detail = sheet.detail;
 
   if (sheet.notFound) {
@@ -109,7 +117,10 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
               )}
               <span>
                 {formatDecimalDays(detail.consumed_days)}
-                {project.estimated_days ? `/${project.estimated_days}` : ""} jrs.
+                {project.estimated_days
+                  ? `/${formatDecimalDays(project.estimated_days)}`
+                  : ""}{" "}
+                jrs.
                 {project.estimated_days ? " estimés" : " consommés"}
               </span>
             </p>

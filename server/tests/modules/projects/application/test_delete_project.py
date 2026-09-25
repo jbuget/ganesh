@@ -18,6 +18,10 @@ from src.modules.projects.domain.entities.project import (
 )
 from src.modules.projects.domain.entities.project_attachment import ProjectAttachment
 from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.projects.domain.entities.service_registry import (
+    Criticality,
+    ServiceType,
+)
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
@@ -53,11 +57,27 @@ def project(id_: int = 10, kind: ProjectKind = ProjectKind.PROJECT) -> Project:
     )
 
 
+def published(id_: int = 10) -> Project:
+    """A mission the catalogue draws a card for, at a public address."""
+    return Project(
+        id=id_,
+        label=f"Mission {id_}",
+        kind=ProjectKind.PROJECT,
+        status=ProjectStatus.SCOPING,
+        is_published=True,
+        slug=f"mission-{id_}",
+        summary="Ce que le service rend.",
+        criticality=Criticality.STANDARD,
+        service_type=ServiceType.FULLSTACK,
+    )
+
+
 def entry(project_id: int) -> Entry:
     return Entry(
         id=None,
         user_id=1,
         project_id=project_id,
+        activity_id=None,
         day=date(2026, 9, 15),
         value=DayValue(1.0),
         status_at_entry=ProjectStatus.SCOPING,
@@ -145,6 +165,16 @@ async def test_time_on_another_mission_does_not_block() -> None:
     await use_case.execute(DeleteProjectCommand(actor_id=1, project_id=10))
 
     assert await repo.get_by_id(10) is None
+
+
+async def test_a_published_mission_is_refused() -> None:
+    """Its card would leave waat.tools without anybody deciding it."""
+    use_case, repo, _, _, _ = build([published()])
+
+    with pytest.raises(ForbiddenActionError, match="unpublish"):
+        await use_case.execute(DeleteProjectCommand(actor_id=1, project_id=10))
+
+    assert await repo.get_by_id(10) is not None
 
 
 async def test_an_unknown_mission_is_rejected() -> None:

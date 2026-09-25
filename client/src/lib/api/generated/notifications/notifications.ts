@@ -25,6 +25,8 @@ import type {
   ListNotificationsParams,
   NotificationFeedResponse,
   ReadStateResponse,
+  RunRemindersRequest,
+  RunRemindersResponse,
   SetReadStateRequest,
 } from "../model";
 
@@ -360,4 +362,149 @@ export const useSetNotificationsReadState = <
   TContext
 > => {
   return useMutation(getSetNotificationsReadStateMutationOptions(options), queryClient);
+};
+export type runRemindersResponse200 = {
+  data: RunRemindersResponse;
+  status: 200;
+};
+
+export type runRemindersResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type runRemindersResponseSuccess = runRemindersResponse200 & {
+  headers: Headers;
+};
+export type runRemindersResponseError = runRemindersResponse422 & {
+  headers: Headers;
+};
+
+export type runRemindersResponse =
+  runRemindersResponseSuccess | runRemindersResponseError;
+
+export const getRunRemindersUrl = () => {
+  return `/api/v1/notifications/reminders/run`;
+};
+
+/**
+ * Sends a round by hand. Managers only, and traced.
+ *
+ * The clock sends the round once a working day and gives it back when there
+ * was nowhere to post. This is the other way in: the morning the clock got
+ * wrong, and the only way to see a real letter before trusting the whole
+ * thing to a schedule.
+ *
+ * It answers to no clock — no send time, no working day — and takes no
+ * claim: a run that respected the day's claim would do nothing at all after
+ * a failed morning, which is the one moment it exists for. Nothing is sent
+ * twice for that: `reminder_sent_at` moves as each letter goes, so a second
+ * press writes only to whoever has something new.
+ *
+ * Raises 403 for anybody but a manager, and 503 when there is nowhere to
+ * post at all — which is the answer worth having when one is testing the
+ * configuration.
+ * @summary Run Reminders
+ */
+export const runReminders = async (
+  runRemindersRequest: RunRemindersRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<runRemindersResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<runRemindersResponse>(getRunRemindersUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(runRemindersRequest),
+  });
+};
+
+export const getRunRemindersMutationKey = () => ["runReminders"] as const;
+
+export const getRunRemindersMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof runReminders>>,
+    TError,
+    RunRemindersMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof runReminders>>,
+  TError,
+  RunRemindersMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRunRemindersMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof runReminders>>,
+    RunRemindersMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return runReminders(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RunRemindersMutationResult = NonNullable<
+  Awaited<ReturnType<typeof runReminders>>
+>;
+export type RunRemindersMutationBody = RunRemindersRequest;
+export type RunRemindersMutationError = HTTPValidationError;
+export type RunRemindersMutationVariables = { data: RunRemindersRequest };
+
+/**
+ * @summary Run Reminders
+ */
+export const useRunReminders = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof runReminders>>,
+      TError,
+      RunRemindersMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof runReminders>>,
+  TError,
+  RunRemindersMutationVariables,
+  TContext
+> => {
+  return useMutation(getRunRemindersMutationOptions(options), queryClient);
 };

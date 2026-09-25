@@ -97,8 +97,14 @@ def agreeing(count: float, word: str) -> str:
 
 
 def number(count: float) -> str:
-    """A count on its own, halves included: « 9 », « 1,5 »."""
-    return f"{count:.1f}".replace(".0", "").replace(".", ",")
+    """A count on its own, quarters included: « 9 », « 1,5 », « 0,25 ».
+
+    Two decimals rather than one, and the trailing zeros dropped. Rounded to a
+    decimal, a quarter came out « 0,2 » and three quarters « 0,8 » — figures
+    the register never held, said back to whoever asked for one.
+    """
+    written = f"{count:.2f}".rstrip("0").rstrip(".")
+    return written.replace(".", ",")
 
 
 def as_given(value: float) -> str:

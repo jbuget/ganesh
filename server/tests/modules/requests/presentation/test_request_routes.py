@@ -75,7 +75,7 @@ METIER = User(
     display_name="A. Métier",
     first_name="Anne",
     last_name="Métier",
-    role=Role.REQUESTER,
+    role=Role.GUEST,
     org_level=OrgLevel.COMOP,
 )
 DIRECTION = User(
@@ -83,7 +83,7 @@ DIRECTION = User(
     entra_oid="oid-3",
     email="c.direction@waat.fr",
     display_name="C. Direction",
-    role=Role.REQUESTER,
+    role=Role.GUEST,
     org_level=OrgLevel.COMEX,
 )
 MANAGER = User(

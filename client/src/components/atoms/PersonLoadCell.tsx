@@ -57,7 +57,10 @@ export function PersonLoadCell({
           isOverloaded ? "font-semibold text-red-600" : "text-slate-600",
         ].join(" ")}
       >
-        {taken > 0 ? formatDecimalDays(Math.round(taken * 10) / 10) : ""}
+        {/* Rounded to the hundredth, not the tenth: a quarter of a day is
+            0.25, and the tenth showed it as « 0,3 » — a figure nobody
+            declared. The tooltip above carries the exact split. */}
+        {taken > 0 ? formatDecimalDays(Math.round(taken * 100) / 100) : ""}
       </span>
 
       <div className="flex h-1 w-full overflow-hidden rounded-full bg-slate-200">

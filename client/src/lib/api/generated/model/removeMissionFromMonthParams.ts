@@ -12,6 +12,10 @@ export type RemoveMissionFromMonthParams = {
    */
   month: string;
   /**
+   * Activity the row stands for; omitted off-project.
+   */
+  activity_id?: number | null;
+  /**
    * Teammate whose month is changed.
    */
   user_id?: number | null;

@@ -6,19 +6,38 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.database import get_db
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.api_keys.presentation.dependencies import Caller, open_to_machines
+from src.modules.audit_logs.application.use_cases.list_user_audit_log import (
+    ListUserAuditLogUseCase,
+)
+from src.modules.audit_logs.presentation.api.mappers.audit_log_mapper import (
+    to_audit_log_page_response,
+)
+from src.modules.audit_logs.presentation.api.schemas.audit_log_schemas import (
+    AuditLogPageResponse,
+)
+from src.modules.audit_logs.presentation.dependencies import get_user_audit_log_use_case
 from src.modules.auth.presentation.dependencies import (
+    get_contributor,
     get_current_manager,
     get_current_user,
     get_signed_in_user,
 )
 from src.modules.users.application.dtos.user_dto import (
     ChangeRoleCommand,
+    ChooseOwnReminderCadenceCommand,
+    DeclareOwnPresenceCommand,
     SetUserActiveCommand,
     UpdateUserIdentityCommand,
 )
 from src.modules.users.application.dtos.user_record_dto import GetUserRecordQuery
 from src.modules.users.application.use_cases.change_user_role import (
     ChangeUserRoleUseCase,
+)
+from src.modules.users.application.use_cases.choose_own_reminder_cadence import (
+    ChooseOwnReminderCadenceUseCase,
+)
+from src.modules.users.application.use_cases.declare_own_presence import (
+    DeclareOwnPresenceUseCase,
 )
 from src.modules.users.application.use_cases.get_user_record import GetUserRecordUseCase
 from src.modules.users.application.use_cases.list_users import ListUsersUseCase
@@ -36,12 +55,16 @@ from src.modules.users.presentation.api.schemas.user_record_schemas import (
 )
 from src.modules.users.presentation.api.schemas.user_schemas import (
     ChangeRoleRequest,
+    ChooseReminderCadenceRequest,
+    DeclarePresenceRequest,
     SetActiveRequest,
     UpdateUserIdentityRequest,
     UserResponse,
 )
 from src.modules.users.presentation.dependencies import (
     get_change_role_use_case,
+    get_choose_own_reminder_cadence_use_case,
+    get_declare_own_presence_use_case,
     get_list_users_use_case,
     get_set_user_active_use_case,
     get_update_user_identity_use_case,
@@ -60,10 +83,10 @@ directory_reader = open_to_machines(ApiKeyScope.USERS_READ)
 async def get_me(current_user: User = Depends(get_signed_in_user)) -> UserResponse:
     """Who is signed in, as provisioned from Entra.
 
-    The one route of this module open to a requester, and it has to be: it is
-    how the screen learns whose account it is drawing, and a requester who
-    could not read their own name would be shown a blank page rather than
-    their needs. It hands back that account and never another.
+    The one route of this module open to a guest, and it has to be: it is
+    how the screen learns whose account it is drawing, and somebody who could
+    not read their own name would be shown a blank page rather than their
+    needs. It hands back that account and never another.
     """
     return to_user_response(current_user)
 
@@ -98,6 +121,30 @@ async def get_user_record(
     """
     record = await use_case.execute(GetUserRecordQuery(user_id=user_id))
     return to_user_record_response(record)
+
+
+@router.get(
+    "/{user_id}/audit",
+    response_model=AuditLogPageResponse,
+    operation_id="listUserAuditLog",
+)
+async def list_user_audit_log(
+    user_id: int,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    _: User = Depends(get_current_user),
+    use_case: ListUserAuditLogUseCase = Depends(get_user_audit_log_use_case),
+) -> AuditLogPageResponse:
+    """Everything the register holds on a teammate, most recent first.
+
+    Open to the whole team, like the record beside it and for the same reason:
+    the register is what makes a team that may enter a colleague's month
+    trustworthy, and a log only some may read would be a weaker promise than
+    the one already made.
+    """
+    return to_audit_log_page_response(
+        await use_case.execute(user_id=user_id, limit=limit, offset=offset)
+    )
 
 
 @router.patch(
@@ -165,6 +212,58 @@ async def update_identity(
             department=payload.department,
             github_username=payload.github_username,
             org_level=payload.org_level,
+        )
+    )
+    await session.commit()
+    return to_user_response(user)
+
+
+@router.put(
+    "/me/presence",
+    response_model=UserResponse,
+    operation_id="declareOwnPresence",
+)
+async def declare_own_presence(
+    payload: DeclarePresenceRequest,
+    current_user: User = Depends(get_contributor),
+    use_case: DeclareOwnPresenceUseCase = Depends(get_declare_own_presence_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> UserResponse:
+    """Says which days one works, and from where.
+
+    The address carries no teammate, and that is the guarantee rather than a
+    shorthand: there is no colleague's week this route could reach.
+    """
+    assert current_user.id is not None
+    user = await use_case.execute(
+        DeclareOwnPresenceCommand(actor_id=current_user.id, week=payload.to_week())
+    )
+    await session.commit()
+    return to_user_response(user)
+
+
+@router.put(
+    "/me/reminder-cadence",
+    response_model=UserResponse,
+    operation_id="chooseOwnReminderCadence",
+)
+async def choose_own_reminder_cadence(
+    payload: ChooseReminderCadenceRequest,
+    current_user: User = Depends(get_contributor),
+    use_case: ChooseOwnReminderCadenceUseCase = Depends(
+        get_choose_own_reminder_cadence_use_case
+    ),
+    session: AsyncSession = Depends(get_db),
+) -> UserResponse:
+    """Says how often one wants the letter naming what is waiting.
+
+    The address carries no teammate, as `/me/presence` does not: there is no
+    colleague's mailbox this route could reach.
+    """
+    assert current_user.id is not None
+    user = await use_case.execute(
+        ChooseOwnReminderCadenceCommand(
+            actor_id=current_user.id, cadence=payload.cadence
         )
     )
     await session.commit()

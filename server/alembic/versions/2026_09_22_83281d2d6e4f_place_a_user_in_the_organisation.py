@@ -9,7 +9,7 @@ It says nothing about rights: those come from the role, and the two columns
 are independent on purpose.
 
 Revision ID: 83281d2d6e4f
-Revises: 65fbd74cd1f0
+Revises: 649a063ff287
 Create Date: 2026-09-22 23:16:37.699449
 
 """
@@ -21,7 +21,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "83281d2d6e4f"
-down_revision: str | None = "778dd60ebd85"
+down_revision: str | None = "649a063ff287"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

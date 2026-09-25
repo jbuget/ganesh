@@ -64,8 +64,8 @@ def build(projects: list[Project] | None = None):
     users = InMemoryUserRepository(
         [
             make_user(MANAGER, Role.MANAGER, OrgLevel.COMOP),
-            make_user(SPONSOR, Role.REQUESTER, OrgLevel.COMEX),
-            make_user(AUTHOR, Role.REQUESTER, OrgLevel.COMOP),
+            make_user(SPONSOR, Role.GUEST, OrgLevel.COMEX),
+            make_user(AUTHOR, Role.GUEST, OrgLevel.COMOP),
         ]
     )
     store = InMemoryRequestRepository()

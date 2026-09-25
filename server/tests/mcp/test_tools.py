@@ -51,10 +51,12 @@ from src.modules.projects.presentation.dependencies import (
     get_list_projects_use_case,
     get_project_detail_use_case,
 )
-from src.modules.users.domain.entities.user import User
+from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
-OWNER = User(id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba")
+OWNER = User(
+    id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba", role=Role.TEAMMATE
+)
 
 
 def instant(year: int, month: int, day: int, hour: int) -> datetime:
@@ -62,7 +64,9 @@ def instant(year: int, month: int, day: int, hour: int) -> datetime:
     return datetime(year, month, day, hour, tzinfo=UTC)
 
 
-MARIE = User(id=2, entra_oid="oid-2", email="m@waat.fr", display_name="M. Ce")
+MARIE = User(
+    id=2, entra_oid="oid-2", email="m@waat.fr", display_name="M. Ce", role=Role.TEAMMATE
+)
 
 
 def a_key(*scopes: ApiKeyScope) -> ApiKey:
@@ -221,7 +225,9 @@ class TestMyMonth:
     async def test_it_weighs_what_is_declared_against_the_working_days(self) -> None:
         row = GridRow(
             project_id=7,
-            label="WAATcher",
+            activity_id=70,
+            label="Développement",
+            project_label="WAATcher",
             kind=ProjectKind.PROJECT,
             estimated_days=None,
             actual_total=9.0,
@@ -383,7 +389,9 @@ class TestMyMonthReadsAsFrench:
     async def test_a_single_day_agrees_in_the_singular(self) -> None:
         row = GridRow(
             project_id=7,
-            label="WAATcher",
+            activity_id=70,
+            label="Développement",
+            project_label="WAATcher",
             kind=ProjectKind.PROJECT,
             estimated_days=None,
             actual_total=1.0,
@@ -407,6 +415,8 @@ class TestMyMonthReadsAsFrench:
         """A row at zero is a mission opened and not filled. It says nothing."""
         empty = GridRow(
             project_id=8,
+            activity_id=None,
+            project_label="WAATcher",
             label="ACHATS",
             kind=ProjectKind.PROJECT,
             estimated_days=None,

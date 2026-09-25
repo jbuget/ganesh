@@ -65,7 +65,7 @@ def build(users: list[User] | None = None):
     )
 
 
-async def test_an_unknown_identity_creates_a_requester() -> None:
+async def test_an_unknown_identity_creates_a_guest() -> None:
     """The whole company signs in through Entra; the team is named by hand.
 
     An account therefore comes into being with the role that opens the least,
@@ -78,7 +78,7 @@ async def test_an_unknown_identity_creates_a_requester() -> None:
     )
 
     assert user.id is not None
-    assert user.role is Role.REQUESTER
+    assert user.role is Role.GUEST
     assert len(await repo.list_all()) == 1
 
 
@@ -131,7 +131,7 @@ async def test_a_declared_sponsor_is_claimed_rather_than_duplicated() -> None:
         display_name="Claire Direction",
         first_name="Claire",
         last_name="Direction",
-        role=Role.REQUESTER,
+        role=Role.GUEST,
         org_level=OrgLevel.COMEX,
     )
     provision, _, repo, _, _, _ = build([declared])
@@ -149,7 +149,7 @@ async def test_a_declared_sponsor_is_claimed_rather_than_duplicated() -> None:
     assert user.id == 1
     assert len(await repo.list_all()) == 1
     assert user.org_level is OrgLevel.COMEX
-    assert user.role is Role.REQUESTER
+    assert user.role is Role.GUEST
     # Entra names the account, and the civil name given on declaring them is
     # what the team keeps reading.
     assert user.display_name == "C. Direction"
@@ -170,7 +170,7 @@ async def test_a_sponsor_declared_at_another_address_is_a_second_account() -> No
         entra_oid=None,
         email="c.direction@waat.fr",
         display_name="Claire Direction",
-        role=Role.REQUESTER,
+        role=Role.GUEST,
         org_level=OrgLevel.COMEX,
     )
     provision, _, repo, _, _, _ = build([declared])
@@ -428,3 +428,82 @@ async def test_a_teammate_hears_their_account_come_back() -> None:
         NotificationKind.USER_DEACTIVATED,
         NotificationKind.USER_ACTIVATED,
     ]
+
+
+def make_admin() -> User:
+    return User(
+        id=3,
+        entra_oid="oid-admin",
+        email="a.root@waat.fr",
+        display_name="A. Root",
+        role=Role.ADMIN,
+    )
+
+
+async def test_a_manager_cannot_hand_out_the_admin_role() -> None:
+    """Nobody hands out more than they hold."""
+    _, change_role, repo, _, _, _ = build([make_manager(), make_teammate()])
+
+    with pytest.raises(ForbiddenActionError):
+        await change_role.execute(
+            ChangeRoleCommand(actor_id=1, target_user_id=2, role=Role.ADMIN)
+        )
+
+    target = await repo.get_by_id(2)
+    assert target is not None and target.role is Role.TEAMMATE
+
+
+async def test_a_manager_cannot_demote_an_admin() -> None:
+    _, change_role, repo, _, _, _ = build([make_manager(), make_admin()])
+
+    with pytest.raises(ForbiddenActionError):
+        await change_role.execute(
+            ChangeRoleCommand(actor_id=1, target_user_id=3, role=Role.TEAMMATE)
+        )
+
+    target = await repo.get_by_id(3)
+    assert target is not None and target.role is Role.ADMIN
+
+
+async def test_an_admin_promotes_a_guest_all_the_way() -> None:
+    guest = User(
+        id=2,
+        entra_oid="oid-guest",
+        email="n.garo@waat.fr",
+        display_name="N. Garo",
+        role=Role.GUEST,
+    )
+    _, change_role, repo, _, _, _ = build([make_admin(), guest])
+
+    await change_role.execute(
+        ChangeRoleCommand(actor_id=3, target_user_id=2, role=Role.ADMIN)
+    )
+
+    target = await repo.get_by_id(2)
+    assert target is not None and target.role is Role.ADMIN
+
+
+async def test_a_guest_promotes_nobody() -> None:
+    guest = User(
+        id=3,
+        entra_oid="oid-guest",
+        email="n.garo@waat.fr",
+        display_name="N. Garo",
+        role=Role.GUEST,
+    )
+    _, change_role, _, _, _, _ = build([guest, make_teammate()])
+
+    with pytest.raises(ForbiddenActionError):
+        await change_role.execute(
+            ChangeRoleCommand(actor_id=3, target_user_id=2, role=Role.MANAGER)
+        )
+
+
+async def test_nobody_changes_their_own_role() -> None:
+    """The reason nobody deactivates themselves, read on the other axis."""
+    _, change_role, _, _, _, _ = build([make_admin()])
+
+    with pytest.raises(ForbiddenActionError):
+        await change_role.execute(
+            ChangeRoleCommand(actor_id=3, target_user_id=3, role=Role.TEAMMATE)
+        )

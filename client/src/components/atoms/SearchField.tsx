@@ -3,6 +3,7 @@
 import { Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+import { SEARCH_FIELD, SEARCH_ICON } from "@/lib/search-field";
 
 interface SearchFieldProps {
   value: string;
@@ -23,27 +24,21 @@ interface SearchFieldProps {
  * Every keystroke is passed on, with no confirmation: one narrows a list by
  * typing and reads the result as it goes, rather than typing then submitting.
  *
- * The magnifier is decorative — the field already says what it is — and lets
- * the click through to the field behind it.
- *
- * Its border is the one the filter criteria beside it carry, and not the
- * primitive's lighter default: a search field and a criterion sit on the same
- * bar and do the same job — a shade between them reads as two kinds of control.
+ * How it is drawn is written in `lib/search-field.ts`, with the field a long
+ * criterion carries in its own panel: the two do the same job and must not be
+ * able to drift apart.
  */
 export function SearchField({ value, onChange, label }: SearchFieldProps) {
   return (
     <div className="relative">
-      <Search
-        className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-slate-400"
-        aria-hidden
-      />
+      <Search className={SEARCH_ICON} aria-hidden />
       <Input
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={label}
         aria-label={label}
-        className="h-9 w-64 border-slate-300 bg-white pl-8 hover:border-slate-400"
+        className={`w-64 ${SEARCH_FIELD}`}
       />
     </div>
   );

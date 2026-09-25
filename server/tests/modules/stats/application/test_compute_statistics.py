@@ -35,8 +35,20 @@ TODAY = date(2026, 9, 17)
 JUNE = date(2026, 6, 4)
 
 TEAM = [
-    User(id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba"),
-    User(id=2, entra_oid="oid-2", email="b@waat.fr", display_name="B. Cy"),
+    User(
+        id=1,
+        entra_oid="oid-1",
+        email="a@waat.fr",
+        display_name="A. Ba",
+        role=Role.TEAMMATE,
+    ),
+    User(
+        id=2,
+        entra_oid="oid-2",
+        email="b@waat.fr",
+        display_name="B. Cy",
+        role=Role.TEAMMATE,
+    ),
     User(
         id=3,
         entra_oid="oid-3",
@@ -87,6 +99,7 @@ class TestCoverage:
                 email="d@waat.fr",
                 display_name="D. Ef",
                 is_active=False,
+                role=Role.TEAMMATE,
             ),
         ]
         stats = await run(team=team, declared_by_day={TODAY: 12.0})
