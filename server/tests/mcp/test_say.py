@@ -17,6 +17,17 @@ class TestDays:
     def test_a_half_stays_singular(self) -> None:
         assert say.days(0.5) == "0,5 jour"
 
+
+def test_a_quarter_of_a_day_is_said_whole() -> None:
+    """The grid holds quarters, so a sentence has to be able to say one.
+
+    Rounded to a decimal, 0,25 came out « 0,2 » and 0,75 « 0,8 »: a figure
+    the register never held, said back to whoever asked for it.
+    """
+    assert say.days(0.25) == "0,25 jour"
+    assert say.days(0.75) == "0,75 jour"
+    assert say.days(2.25) == "2,25 jours"
+
     def test_one_and_a_half_stays_singular(self) -> None:
         assert say.days(1.5) == "1,5 jour"
 

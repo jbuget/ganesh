@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { valueForKey, type DayValue } from "@/lib/day-value";
 import {
   cellId,
   isNavigationKey,
@@ -12,8 +13,16 @@ import {
   type NavigableGrid,
 } from "@/lib/grid-navigation";
 
+/** Writes one cell: what the grid does with an hour somebody typed. */
+export type WriteCell = (cell: GridCell, value: DayValue) => void;
+
 /**
- * The keys wired to the entry grid.
+ * Everything the keys do to the entry grid: move the focus, and write.
+ *
+ * Both live here rather than half here and half in the component, because
+ * they are one decision taken on one key press — an hour writes, an arrow
+ * moves, anything else is left to the browser — and splitting that decision
+ * across two files is how a key ends up doing both or neither.
  *
  * **One handler on the table, not one per cell.** A month with a dozen
  * missions on it is a few hundred cells; hanging a handler and a ref on each
@@ -26,7 +35,7 @@ import {
  * so it is kept in a ref as well: the handlers are made once and still read
  * the grid as it stands, the way `usePendingEntries` keeps its writes.
  */
-export function useGridNavigation(grid: NavigableGrid) {
+export function useGridKeys(grid: NavigableGrid, write: WriteCell) {
   // Where the hand last was, which is where Tab comes back to.
   const [cursor, setCursor] = useState<GridCell | null>(null);
 
@@ -35,11 +44,30 @@ export function useGridNavigation(grid: NavigableGrid) {
     held.current = grid;
   });
 
-  const onKeyDown = useCallback((event: React.KeyboardEvent<HTMLElement>) => {
-    if (!isNavigationKey(event.key)) return;
+  const writing = useRef(write);
+  useEffect(() => {
+    writing.current = write;
+  });
 
+  const onKeyDown = useCallback((event: React.KeyboardEvent<HTMLElement>) => {
     const from = parseCellId((event.target as HTMLElement).dataset?.cell);
     if (!from) return;
+
+    // The hours are read before the arrows. One types what one reads: the cell
+    // shows « 4 » and the key is `4`. An odd hour is refused rather than
+    // rounded, and falls through to the browser like any other key.
+    const typed = valueForKey(event.key);
+    if (typed !== null) {
+      // Asked rather than assumed. A locked cell holds no `tabIndex` and so
+      // takes no focus, which is what normally keeps the keys off it — but a
+      // write is not something to let the tab order guarantee on its own.
+      if (!held.current.isOpen(from)) return;
+      event.preventDefault();
+      writing.current(from, typed);
+      return;
+    }
+
+    if (!isNavigationKey(event.key)) return;
 
     const to = nextCell(held.current, from, event.key);
     if (!to) return;

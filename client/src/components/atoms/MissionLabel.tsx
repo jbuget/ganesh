@@ -28,7 +28,8 @@ export function MissionLabel({
       <span className="font-medium">{label}</span>
       {estimatedDays !== null && (
         <span className="ml-2 text-slate-300">
-          {formatDecimalDays(consumedDays)}/{estimatedDays} jrs. estimés
+          {formatDecimalDays(consumedDays)}/{formatDecimalDays(estimatedDays)} jrs.
+          estimés
         </span>
       )}
     </>

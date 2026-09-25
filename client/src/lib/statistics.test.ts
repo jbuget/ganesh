@@ -81,6 +81,16 @@ describe("formatPersonDays", () => {
   it("drops a trailing zero", () => {
     expect(formatPersonDays(142)).toBe("142");
   });
+
+  /**
+   * The grid holds quarters, and a sum of them lands on one: rounded to a
+   * decimal, « 12,25 j » was shown as « 12,3 j » across the whole Synthèse
+   * d'activité.
+   */
+  it("keeps a quarter of a day whole", () => {
+    expect(formatPersonDays(12.25)).toBe("12,25");
+    expect(formatPersonDays(0.75)).toBe("0,75");
+  });
 });
 
 describe("formatDelay", () => {

@@ -25,7 +25,7 @@ class EntryModel(Base):
     __tablename__ = "entries"
     __table_args__ = (
         UniqueConstraint("user_id", "project_id", "day", name="uq_entry_slot"),
-        CheckConstraint("value IN (0.5, 1.0)", name="ck_entry_value"),
+        CheckConstraint("value IN (0.25, 0.5, 0.75, 1.0)", name="ck_entry_value"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
