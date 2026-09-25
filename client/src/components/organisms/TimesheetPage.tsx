@@ -80,11 +80,10 @@ export function TimesheetPage() {
           and the reminder never passes for a row of the grid. */}
       {grid?.is_writable && (
         <AssignedMissionsCallout
-          missions={month.missionsToDeclare.map((row) => ({
-            id: row.projectId,
-            activityId: row.activityId,
-            label: row.label,
-            mission: row.projectLabel,
+          missions={month.missionsToDeclare.map((mission) => ({
+            id: mission.projectId,
+            label: mission.projectLabel,
+            activities: mission.activities,
           }))}
           onAdd={(projectId, activityId) =>
             void month.addMission(projectId, activityId)

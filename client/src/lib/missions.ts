@@ -74,21 +74,40 @@ export function availableMissions(
  * not the same thing as « not entered yet », and the grid must keep saying what
  * was declared and nothing else.
  */
+/** A mission one contributes to, with the trades it may be declared under. */
+export interface MissionToDeclare {
+  projectId: number;
+  projectLabel: string;
+  /** Its open trades. Empty when nobody has cut the mission up yet. */
+  activities: { id: number; label: string }[];
+}
+
 export function missionsToDeclare(
   missions: ProjectListItemResponse[],
   userId: number | null,
   displayedProjectIds: number[],
-): OfferedRow[] {
+): MissionToDeclare[] {
   const assigned = assignedMissionIds(missions, userId);
-  const silent = missions.filter(
-    (mission) =>
-      assigned.includes(mission.project.id) &&
-      !displayedProjectIds.includes(mission.project.id),
-  );
 
-  // One line per trade, because a trade is what a day is declared under: the
-  // reminder has to offer something one can actually write on.
-  return offeredRows(silent, []);
+  // Named by mission rather than by trade: the reminder says « you are on
+  // this and have declared nothing », which is a fact about the mission. A
+  // mission cut into three trades is one line here, not three repeating its
+  // name — which trade is asked for at the moment of adding, and only when
+  // there is actually a choice to make.
+  return missions
+    .filter(
+      (mission) =>
+        mission.project.is_active &&
+        assigned.includes(mission.project.id) &&
+        !displayedProjectIds.includes(mission.project.id),
+    )
+    .map((mission) => ({
+      projectId: mission.project.id,
+      projectLabel: mission.project.label,
+      activities: (mission.activities ?? [])
+        .filter((activity) => activity.is_active)
+        .map((activity) => ({ id: activity.id, label: activity.label })),
+    }));
 }
 
 /** A row one may add to the grid: a mission, and the trade it is booked under. */

@@ -1,24 +1,28 @@
 "use client";
 
 import { Plus, UserRoundCheck } from "lucide-react";
+import { useState } from "react";
+
+import { ChooseActivityDialog } from "@/components/atoms/ChooseActivityDialog";
 
 /**
- * A line the reminder offers: a mission, and the trade to declare under.
+ * A mission the reminder names, with the trades it may be declared under.
  *
- * The trade rather than the mission alone, because a day is declared under an
- * activity: a button adding the mission would offer something the API refuses.
+ * One line per mission rather than per trade: the reminder says « you are on
+ * this and have declared nothing », which is a fact about the mission. A
+ * mission cut into three would otherwise repeat its name three times. Which
+ * trade is asked at the moment of adding, and only when there is a choice.
  */
 interface AssignedMission {
   id: number;
-  activityId: number | null;
   label: string;
-  /** The mission above it, shown so two « Développement » read apart. */
-  mission: string;
+  /** Its open trades. Empty when nobody has cut the mission up yet. */
+  activities: { id: number; label: string }[];
 }
 
 interface AssignedMissionsCalloutProps {
   missions: AssignedMission[];
-  onAdd: (projectId: number, activityId: number | null) => void;
+  onAdd: (projectId: number, activityId: number) => void | Promise<void>;
 }
 
 /**
@@ -49,6 +53,8 @@ export function AssignedMissionsCallout({
   missions,
   onAdd,
 }: AssignedMissionsCalloutProps) {
+  const [choosing, setChoosing] = useState<AssignedMission | null>(null);
+
   if (missions.length === 0) return null;
 
   return (
@@ -65,21 +71,47 @@ export function AssignedMissionsCallout({
 
       <ul className="flex flex-wrap gap-1.5">
         {missions.map((mission) => (
-          <li key={`${mission.id}:${mission.activityId ?? ""}`}>
+          <li key={mission.id}>
             <button
               type="button"
-              aria-label={`Ajouter ${mission.mission} — ${mission.label}`}
-              onClick={() => onAdd(mission.id, mission.activityId)}
-              className="flex cursor-pointer items-center gap-1 rounded-md border border-amber-300 bg-white px-2 py-1 text-xs text-amber-900 transition-colors hover:border-amber-400 hover:bg-amber-100"
+              aria-label={`Ajouter ${mission.label}`}
+              disabled={mission.activities.length === 0}
+              title={
+                mission.activities.length === 0
+                  ? "Ce projet ne porte aucune activité : personne ne peut y déclarer de temps."
+                  : undefined
+              }
+              onClick={() => {
+                // Asked only when there is something to ask: a mission
+                // carrying a single trade is added straight away, because a
+                // dialog offering one button takes a click for nothing.
+                if (mission.activities.length === 1) {
+                  void onAdd(mission.id, mission.activities[0].id);
+                } else {
+                  setChoosing(mission);
+                }
+              }}
+              className="flex cursor-pointer items-center gap-1 rounded-md border border-amber-300 bg-white px-2 py-1 text-xs text-amber-900 transition-colors hover:border-amber-400 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus className="size-3 shrink-0 text-amber-500" aria-hidden />
-              {mission.activityId === null
-                ? mission.label
-                : `${mission.mission} · ${mission.label}`}
+              {mission.label}
             </button>
           </li>
         ))}
       </ul>
+
+      {choosing && (
+        <ChooseActivityDialog
+          open
+          onOpenChange={(isOpen) => !isOpen && setChoosing(null)}
+          mission={choosing.label}
+          activities={choosing.activities}
+          onChoose={async (activityId) => {
+            await onAdd(choosing.id, activityId);
+            setChoosing(null);
+          }}
+        />
+      )}
     </aside>
   );
 }
