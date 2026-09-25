@@ -11,6 +11,21 @@ import type {
 // The pickers ask the server for the team; steering itself does not.
 vi.mock("@/lib/api/queries", () => ({ useTeammates: () => ({ teammates: [] }) }));
 
+// The sheet reads what the mission is cut into as soon as it opens. Left
+// alone, the call reaches a relative URL that no test server answers — which
+// passes on a machine where the API happens to be running, and nowhere else.
+vi.mock("@/lib/use-project-activities", () => ({
+  useProjectActivities: () => ({
+    activities: [],
+    isLoading: false,
+    add: vi.fn(),
+    change: vi.fn(),
+    archive: vi.fn(),
+    remove: vi.fn(),
+    unarchive: vi.fn(),
+  }),
+}));
+
 const detail = (
   kind: ProjectKind,
   category: ProjectCategory | null = null,
