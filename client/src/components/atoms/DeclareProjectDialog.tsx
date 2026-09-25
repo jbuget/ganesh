@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { ProjectKind } from "@/lib/api/generated/model";
+import type { ProjectKind, WorkNature } from "@/lib/api/generated/model";
+import { WORK_NATURES } from "@/lib/work-natures";
 
 /**
  * What each kind is called on the screen that declares it.
@@ -43,7 +44,16 @@ const WORDING = {
 interface DeclareProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (label: string) => Promise<void>;
+  onConfirm: (label: string, nature: WorkNature | null) => Promise<void>;
+  /**
+   * Whether to ask which trade the time will be declared under.
+   *
+   * Asked only where the mission is declared in order to be worked on right
+   * away — from one's own month. A mission carries no time until it is cut
+   * into trades, so declaring one from there without saying which would land
+   * the reader on a row they cannot write in.
+   */
+  asksForTrade?: boolean;
   /**
    * What is being declared; a project unless said otherwise.
    *
@@ -59,9 +69,11 @@ export function DeclareProjectDialog({
   onOpenChange,
   onConfirm,
   kind = "project",
+  asksForTrade = false,
 }: DeclareProjectDialogProps) {
   const words = WORDING[kind];
   const [label, setLabel] = useState("");
+  const [nature, setNature] = useState<WorkNature>("development");
   const [busy, setBusy] = useState(false);
 
   const isValid = label.trim().length > 0;
@@ -70,7 +82,7 @@ export function DeclareProjectDialog({
     if (!isValid) return;
     setBusy(true);
     try {
-      await onConfirm(label.trim());
+      await onConfirm(label.trim(), asksForTrade ? nature : null);
       setLabel("");
       onOpenChange(false);
     } finally {
@@ -99,6 +111,30 @@ export function DeclareProjectDialog({
             }}
           />
         </div>
+
+        {asksForTrade && (
+          <div className="grid gap-2">
+            <Label htmlFor="project-trade">Votre activité sur ce projet</Label>
+            <div className="flex flex-wrap gap-1.5" id="project-trade">
+              {WORK_NATURES.map((trade) => (
+                <button
+                  key={trade.value}
+                  type="button"
+                  aria-pressed={nature === trade.value}
+                  onClick={() => setNature(trade.value)}
+                  className={[
+                    "cursor-pointer rounded-md border px-2 py-1 text-xs transition-colors",
+                    nature === trade.value
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50",
+                  ].join(" ")}
+                >
+                  {trade.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <DialogFooter>
           <Button

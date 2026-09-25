@@ -12,6 +12,10 @@ const entries = vi.hoisted(() => ({
 const projects = vi.hoisted(() => ({
   useCreateProject: () => ({ mutateAsync: projects.createProject }),
   createProject: vi.fn(),
+  createProjectActivity: vi.fn(async () => ({
+    status: 201,
+    data: { id: 420 },
+  })),
 }));
 const queries = vi.hoisted(() => ({
   grid: { rows: [] as unknown[], is_writable: true } as
@@ -85,11 +89,19 @@ describe("useTimesheetMonth", () => {
   it("puts a freshly declared project on the month right away", async () => {
     const screen = month();
 
-    await screen.current.declareProject("Portail");
+    await screen.current.declareProject("Portail", "delivery");
 
     expect(projects.createProject).toHaveBeenCalled();
+    // Cut into the trade that was asked for, and the row points at it: a
+    // mission carrying none is a row the API refuses every write on, which
+    // is exactly what declaring from one's own month exists to avoid.
+    expect(projects.createProjectActivity).toHaveBeenCalledWith(42, {
+      label: "Delivery",
+      nature: "delivery",
+      estimated_days: null,
+    });
     expect(entries.addMissionToMonth).toHaveBeenCalledWith(
-      { project_id: 42, month: screen.current.month },
+      { project_id: 42, activity_id: 420, month: screen.current.month },
       undefined,
     );
   });

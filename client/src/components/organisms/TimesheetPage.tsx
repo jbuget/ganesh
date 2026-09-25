@@ -220,6 +220,7 @@ export function TimesheetPage() {
       )}
 
       <DeclareProjectDialog
+        asksForTrade
         open={declareOpen}
         onOpenChange={setDeclareOpen}
         onConfirm={month.declareProject}

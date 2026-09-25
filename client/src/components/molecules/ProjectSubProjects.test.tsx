@@ -65,7 +65,7 @@ describe("ProjectSubProjects", () => {
 
     await add("Reprise de données");
 
-    expect(onAdd).toHaveBeenCalledWith("Reprise de données");
+    expect(onAdd).toHaveBeenCalledWith("Reprise de données", null);
   });
 
   it("offers attaching one when none is attached yet", async () => {
@@ -73,7 +73,7 @@ describe("ProjectSubProjects", () => {
 
     await add("Authentification");
 
-    expect(onAdd).toHaveBeenCalledWith("Authentification");
+    expect(onAdd).toHaveBeenCalledWith("Authentification", null);
   });
 
   it("refuses to attach a nameless sub-project", async () => {

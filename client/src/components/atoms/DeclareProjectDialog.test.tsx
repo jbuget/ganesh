@@ -15,7 +15,7 @@ describe("DeclareProjectDialog", () => {
     );
     await userEvent.click(screen.getByRole("button", { name: "Déclarer" }));
 
-    expect(confirm).toHaveBeenCalledWith("Refonte extranet");
+    expect(confirm).toHaveBeenCalledWith("Refonte extranet", null);
   });
 
   it("refuses to declare anything without a name", async () => {

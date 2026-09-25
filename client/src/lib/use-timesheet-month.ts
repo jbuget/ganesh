@@ -8,7 +8,9 @@ import {
   removeMissionFromMonth,
   setEntry,
 } from "@/lib/api/generated/entries/entries";
-import type { ProjectResponse } from "@/lib/api/generated/model";
+import type { ProjectResponse, WorkNature } from "@/lib/api/generated/model";
+import { createProjectActivity } from "@/lib/api/generated/projects/projects";
+import { workNatureLabel } from "@/lib/work-natures";
 import { useReopenMonth, useValidateMonth } from "@/lib/api/generated/months/months";
 import { useCreateProject } from "@/lib/api/generated/projects/projects";
 import {
@@ -228,12 +230,32 @@ export function useTimesheetMonth() {
       await refresh();
     },
 
-    async declareProject(label: string) {
+    /**
+     * Declares a mission and puts it on the month, ready to be written in.
+     *
+     * The trade comes with it: a mission carries no time until it is cut into
+     * one, so creating it alone would land the reader on a row the API
+     * refuses every write on — which is exactly what one declares a mission
+     * from one's own month to avoid.
+     */
+    async declareProject(label: string, nature: WorkNature | null) {
       const created = await createProject.mutateAsync({
         data: { label, kind: "project", status: "exploration" },
       });
+      const projectId = mutationResult<ProjectResponse>(created).id;
+
+      const answer = await createProjectActivity(projectId, {
+        label: workNatureLabel(nature) ?? "Développement",
+        nature: nature ?? "development",
+        estimated_days: null,
+      });
+
       await addMissionToMonth(
-        { project_id: mutationResult<ProjectResponse>(created).id, month },
+        {
+          project_id: projectId,
+          activity_id: answer.status === 201 ? answer.data.id : null,
+          month,
+        },
         target,
       );
       await refresh();

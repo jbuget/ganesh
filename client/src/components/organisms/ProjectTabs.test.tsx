@@ -163,7 +163,7 @@ describe("ProjectTabs — cutting a project into packages", () => {
     );
     await userEvent.click(screen.getByRole("button", { name: "Déclarer" }));
 
-    expect(addSubProject).toHaveBeenCalledWith("Reprise de données");
+    expect(addSubProject).toHaveBeenCalledWith("Reprise de données", null);
   });
 
   /** The hierarchy stops at two levels, and off-project work carries nothing. */
