@@ -8,6 +8,7 @@ const baseProps = {
   isOffDay: false,
   isFuture: false,
   isReadOnly: false,
+  cellId: "10:2026-09-15",
   label: "15 septembre",
 };
 
@@ -86,5 +87,31 @@ describe("DayCell", () => {
     renderInRow(<DayCell {...baseProps} value={1} onChange={vi.fn()} />);
 
     expect(screen.getByRole("button", { name: "15 septembre" })).toBeInTheDocument();
+  });
+});
+
+describe("DayCell, reached with the keys", () => {
+  it("says which cell it is, so the grid can find it back", () => {
+    renderInRow(<DayCell {...baseProps} value={0} onChange={vi.fn()} />);
+
+    expect(screen.getByRole("button")).toHaveAttribute("data-cell", "10:2026-09-15");
+  });
+
+  it("stays out of the tab order unless it is the grid's stop", () => {
+    const { rerender } = renderInRow(
+      <DayCell {...baseProps} value={0} onChange={vi.fn()} />,
+    );
+    expect(screen.getByRole("button")).toHaveAttribute("tabindex", "-1");
+
+    rerender(
+      <table>
+        <tbody>
+          <tr>
+            <DayCell {...baseProps} isTabStop value={0} onChange={vi.fn()} />
+          </tr>
+        </tbody>
+      </table>,
+    );
+    expect(screen.getByRole("button")).toHaveAttribute("tabindex", "0");
   });
 });

@@ -328,3 +328,101 @@ describe("TimesheetGrid", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+/**
+ * Moving around with the keys.
+ *
+ * A month with a dozen missions on it is a few hundred cells: reaching one of
+ * them with the mouse is most of what filling a month in costs. These tests
+ * are on the grid rather than on the cell, because what is being asserted is
+ * where the focus lands — which only the grid knows.
+ */
+describe("TimesheetGrid, moved around with the keys", () => {
+  /** Two missions, so that moving down has somewhere to go. */
+  const twoRows = () =>
+    makeGrid({ rows: [...makeGrid().rows, EMPTY_ROW] } as Partial<MonthGridResponse>);
+
+  function cell(label: string, day: string): HTMLElement {
+    return screen.getByRole("button", { name: `${label} — ${day}` });
+  }
+
+  it("moves to the next day of the same mission", async () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    cell("Portail bailleurs", "2026-09-14").focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    expect(cell("Portail bailleurs", "2026-09-15")).toHaveFocus();
+  });
+
+  it("steps over a non-working day rather than stopping on it", async () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    cell("Portail bailleurs", "2026-09-16").focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    // 19/09 is a weekend: the focus carries on to the next working day.
+    expect(cell("Portail bailleurs", "2026-09-25")).toHaveFocus();
+  });
+
+  it("moves to the same day of the mission below, and back up", async () => {
+    render(<TimesheetGrid {...baseProps} grid={twoRows()} />);
+
+    // The rows are drawn in alphabetical order: « Absences » sits above.
+    cell("Absences", "2026-09-15").focus();
+    await userEvent.keyboard("{ArrowDown}");
+    expect(cell("Portail bailleurs", "2026-09-15")).toHaveFocus();
+
+    await userEvent.keyboard("{ArrowUp}");
+    expect(cell("Absences", "2026-09-15")).toHaveFocus();
+  });
+
+  it("stays put at the end of a row: the grid does not wrap", async () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    const last = cell("Portail bailleurs", "2026-09-25");
+    last.focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    expect(last).toHaveFocus();
+  });
+
+  it("goes to the first and the last day of the row", async () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    cell("Portail bailleurs", "2026-09-15").focus();
+    await userEvent.keyboard("{End}");
+    expect(cell("Portail bailleurs", "2026-09-25")).toHaveFocus();
+
+    await userEvent.keyboard("{Home}");
+    expect(cell("Portail bailleurs", "2026-09-14")).toHaveFocus();
+  });
+
+  /**
+   * One stop for the whole grid, as a grid widget has: tabbing through three
+   * hundred cells to reach what is after them is not navigation.
+   */
+  it("holds a single tab stop, which follows the focus", async () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    const first = cell("Portail bailleurs", "2026-09-14");
+    expect(first).toHaveAttribute("tabindex", "0");
+    expect(cell("Portail bailleurs", "2026-09-15")).toHaveAttribute("tabindex", "-1");
+
+    first.focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    expect(first).toHaveAttribute("tabindex", "-1");
+    expect(cell("Portail bailleurs", "2026-09-15")).toHaveAttribute("tabindex", "0");
+  });
+
+  it("enters a value from the keyboard as a click would", async () => {
+    const onSetValue = vi.fn();
+    render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
+
+    cell("Portail bailleurs", "2026-09-14").focus();
+    await userEvent.keyboard(" ");
+
+    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-14", 1);
+  });
+});
