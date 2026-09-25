@@ -29,7 +29,7 @@ interrupting anybody — and without a channel that has to be live.
 | What goes out | **One letter summing up what is waiting**, never one per notification |
 | How often | **The reader chooses**: every day, every week, or never |
 | Where the choice is made | A **profile page**, reached from one's own name at the foot of the sidebar |
-| Default | **Every day.** « Never » by default would fix nothing |
+| Default | **Nothing.** A mailbox is used once its owner has asked |
 | What it contains | One line per kind, with a count, and one link to the inbox |
 | What it repeats | **Nothing.** Only what arrived since the last letter |
 | Transport | **SMTP**, behind a `Mailer` port. Mailgun today, anything tomorrow |
@@ -122,11 +122,27 @@ Three values, in the domain, on the user:
 leave by writing a mail rule, and then nobody knows they left. An opt-out one
 can read is worth more than a silence one cannot.
 
-**The default is `DAILY`**, including for everybody already provisioned. A
-default of `NEVER` would fix nothing: nobody goes looking for a setting they
-have not felt the need for. This is a feature that arrives in people's
-mailboxes unasked, so — as for `team_mood` — **tell the team before it starts
-arriving**, not after.
+**The default is `NEVER`**, and it was `DAILY` when this shipped. The argument
+for `DAILY` was that nobody goes looking for a setting they have not felt the
+need for, so a silent default would close no gap at all. It is a real
+argument, and it was weighed against a plainer one: a mailbox belongs to its
+owner, and writing to it on the strength of an answer nobody gave is exactly
+what gets a sender filtered — silently, permanently, taking the letter that
+mattered down with the rest. Ganesh asks first. The migration
+`ask_before_writing_to_anybody` moved every existing row to `NEVER` for the
+same reason: they all carried `DAILY` because nobody had been asked.
+
+The gap `DAILY` was there to close is still open, and it is closed by telling
+the team the setting exists — as for `team_mood` — rather than by helping
+oneself to their mailbox.
+
+**A guest is never written to**, whatever their row carries. `is_written_to()`
+on the entity holds it, beside the suspended account whose letter would lead
+back to a door that is closed. The one notification that ever reaches a guest
+is their own promotion, and `can_choose_own_reminder()` gives them no way of
+turning a letter down — written to, with no way out, is the one combination
+this whole feature exists to avoid. The rule sits on the entity rather than in
+the round so that a second way of sending meets the same wall.
 
 The choice is made on a profile page of one's own, reached from the menu
 behind one's name at the foot of the sidebar. The route carries no teammate,

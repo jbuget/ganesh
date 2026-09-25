@@ -48,13 +48,13 @@ class UserModel(Base):
         nullable=True,
     )
 
-    # How often the letter saying what is waiting goes out. Every day until
-    # somebody says otherwise: a reader who has never opened the setting is
-    # exactly the one the bell is failing to reach.
+    # How often the letter saying what is waiting goes out. Nothing until
+    # somebody asks for it: a mailbox is theirs, and an account that has never
+    # opened the setting has asked for nothing.
     reminder_cadence: Mapped[ReminderCadence] = mapped_column(
         Enum(ReminderCadence, name="reminder_cadence", native_enum=False, length=8),
         nullable=False,
-        server_default=ReminderCadence.DAILY.value,
+        server_default=ReminderCadence.NEVER.value,
     )
 
     # When the last letter went out. Nullable: nobody has been written to

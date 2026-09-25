@@ -85,7 +85,8 @@ export function ProfilePage() {
               <h2 className="text-sm font-semibold">Rappels par e-mail</h2>
               <p className="text-sm text-slate-500">
                 La cloche ne prévient que si Ganesh est ouvert. Un e-mail récapitule ce
-                qui vous attend, sans jamais reprendre ce que vous avez déjà lu.
+                qui vous attend, sans jamais reprendre ce que vous avez déjà lu. Vous
+                n&apos;en recevez aucun tant que vous ne l&apos;avez pas demandé.
               </p>
             </div>
 

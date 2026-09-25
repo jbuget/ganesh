@@ -845,7 +845,13 @@ is the brief; five rules hold it together:
 - **The problem is « not seen », not « not seen fast ».** Nobody needs to learn
   within thirty seconds that they were mentioned, so the answer is a digest and
   not a channel. One letter, on a cadence the reader chooses — every working
-  day, the first working day of the week, or never.
+  day, the first working day of the week, or never, which is where every
+  account starts: a mailbox belongs to its owner, and Ganesh writes to it once
+  asked. **A guest is never written to at all**, whatever their row carries —
+  the one thing that ever rings for them is their own promotion, and they are
+  given no setting to turn a letter down with. `is_written_to()` holds both
+  rules on the entity, beside the suspended account whose letter would lead
+  back to a closed door.
 - **It points; it does not copy.** The letter counts by kind — « 2 mentions,
   1 mois rouvert » — and leads back to the inbox, where the detail and the read
   state live. **Receiving a letter is not reading an inbox**: nothing of

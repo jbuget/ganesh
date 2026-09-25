@@ -10,7 +10,11 @@ from src.shared.enums.department import Department
 from src.shared.enums.org_level import OrgLevel
 
 
-def make_user(role: Role = Role.TEAMMATE, is_active: bool = True) -> User:
+def make_user(
+    role: Role = Role.TEAMMATE,
+    is_active: bool = True,
+    cadence: ReminderCadence = ReminderCadence.NEVER,
+) -> User:
     return User(
         id=None,
         entra_oid="oid-1",
@@ -18,6 +22,7 @@ def make_user(role: Role = Role.TEAMMATE, is_active: bool = True) -> User:
         display_name="D. Dehe",
         role=role,
         is_active=is_active,
+        reminder_cadence=cadence,
     )
 
 
@@ -285,10 +290,35 @@ def test_a_level_nobody_has_said_reads_as_unknown() -> None:
     assert make_user().org_level is None
 
 
-def test_a_letter_comes_every_day_until_somebody_says_otherwise() -> None:
-    # Not a stand-in for an answer nobody gave: a reader who has said nothing
-    # is a reader the bell is not reaching, which is the whole point.
-    assert make_user().reminder_cadence is ReminderCadence.DAILY
+def test_no_letter_goes_out_until_somebody_asks_for_one() -> None:
+    # Silence until asked. Writing to somebody who never asked for it is how
+    # a rule gets written in a mail client — silent, permanent, and it takes
+    # down the one letter that mattered along with the rest.
+    assert make_user().reminder_cadence is ReminderCadence.NEVER
+    assert make_user().is_written_to() is False
+
+
+@pytest.mark.parametrize("cadence", [ReminderCadence.DAILY, ReminderCadence.WEEKLY])
+def test_whoever_asked_for_a_letter_is_written_to(cadence: ReminderCadence) -> None:
+    assert make_user(cadence=cadence).is_written_to() is True
+
+
+def test_a_guest_is_never_written_to_whatever_their_row_carries() -> None:
+    """Somebody who declares nothing into Ganesh is not somebody one writes to.
+
+    A promotion rings in their inbox, and it is the only thing that ever
+    does; a letter announcing it would reach an address that asked for
+    nothing. The rule is on the entity rather than in the round, so a second
+    way of sending meets the same wall.
+    """
+    assert make_user(Role.GUEST, cadence=ReminderCadence.DAILY).is_written_to() is False
+
+
+def test_a_suspended_account_is_not_written_to() -> None:
+    # The letter leads back to a door that is closed.
+    suspended = make_user(is_active=False, cadence=ReminderCadence.DAILY)
+
+    assert suspended.is_written_to() is False
 
 
 def test_everyone_chooses_how_often_they_are_written_to() -> None:

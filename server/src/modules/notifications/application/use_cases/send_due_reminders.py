@@ -62,6 +62,10 @@ class SendDueRemindersUseCase:
     ) -> int:
         """Writes to everybody on this cadence. Returns how many letters went.
 
+        Whom it skips is the entity's answer, not this one's: `is_written_to`
+        holds the accounts a letter is never owed to — a guest, a suspended
+        account — so that a second way of sending meets the same wall.
+
         One reader's failure is not another's: a refused address, a mailbox
         that is full, and the round carries on. The stamp of whoever was not
         written to stays where it was, so the next run considers the same
@@ -87,7 +91,9 @@ class SendDueRemindersUseCase:
         sent = 0
         try:
             for reader in await self._users.list_all():
-                if reader.id is None or reader.reminder_cadence is not cadence:
+                if reader.id is None or not reader.is_written_to():
+                    continue
+                if reader.reminder_cadence is not cadence:
                     continue
                 if await self._write_to(reader, now):
                     sent += 1
