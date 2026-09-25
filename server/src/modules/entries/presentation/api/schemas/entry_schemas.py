@@ -99,6 +99,10 @@ class ExportedEntryResponse(BaseModel):
     user_label: str
     project_id: int
     project_label: str
+    #: The trade the day was booked under. Null on off-project work, and on
+    #: what predates the activities.
+    activity_id: int | None
+    activity_label: str
 
 
 class EntriesExportResponse(BaseModel):

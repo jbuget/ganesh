@@ -111,6 +111,8 @@ async def export_entries(
                 user_label=entry.user_label,
                 project_id=entry.project_id,
                 project_label=entry.project_label,
+                activity_id=entry.activity_id,
+                activity_label=entry.activity_label,
             )
             for entry in entries
         ],

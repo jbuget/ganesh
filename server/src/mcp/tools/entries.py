@@ -15,6 +15,7 @@ from src.mcp.tools import say
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.entries.application.use_cases.get_month_grid import (
     GetMonthGridQuery,
+    GridRow,
     MonthGrid,
 )
 from src.modules.entries.presentation.dependencies import get_month_grid_use_case
@@ -80,7 +81,7 @@ def _read(grid: MonthGrid, asked: date) -> str:
     if filled:
         lines.append(
             "Répartition : "
-            + say.listed([f"{row.label} {say.days(row.total)}" for row in filled])
+            + say.listed([f"{_named(row)} {say.days(row.total)}" for row in filled])
             + "."
         )
 
@@ -108,3 +109,15 @@ def _empty_working_days(grid: MonthGrid) -> list[date]:
         for moment in grid.days
         if not moment.is_off_day and moment.day not in filled
     ]
+
+
+def _named(row: GridRow) -> str:
+    """What a row is called out loud: the mission, then the trade under it.
+
+    The trade alone would read « Développement 3 jours » on a month spread
+    over four missions, which answers nothing: every row of every mission is
+    called that. Off-project work names itself and is not repeated.
+    """
+    if row.activity_id is None:
+        return row.label
+    return f"{row.project_label} ({row.label})"

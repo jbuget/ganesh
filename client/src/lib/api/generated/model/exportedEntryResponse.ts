@@ -20,4 +20,6 @@ export interface ExportedEntryResponse {
   user_label: string;
   project_id: number;
   project_label: string;
+  activity_id: number | null;
+  activity_label: string;
 }

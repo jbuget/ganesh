@@ -212,7 +212,10 @@ def get_remove_mission_use_case(
 
 def get_export_entries_use_case(
     entries: EntryRepository = Depends(get_entry_repository),
+    activities: ActivityRepository = Depends(get_activity_repository),
     users: UserRepository = Depends(get_user_repository),
     projects: ProjectRepository = Depends(get_project_repository),
 ) -> ExportEntriesUseCase:
-    return ExportEntriesUseCase(entries=entries, users=users, projects=projects)
+    return ExportEntriesUseCase(
+        entries=entries, activities=activities, users=users, projects=projects
+    )
