@@ -438,7 +438,8 @@ describe("TimesheetGrid, moved around with the keys", () => {
       <TimesheetGrid
         {...baseProps}
         onSetValue={onSetValue}
-        grid={makeGrid({ is_writable: false })}
+        readOnly
+        grid={makeGrid()}
       />,
     );
 
