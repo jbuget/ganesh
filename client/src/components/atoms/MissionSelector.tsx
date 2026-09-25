@@ -2,6 +2,7 @@
 
 import { ChevronRight } from "lucide-react";
 import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 import { missionAnswers, offeredMissions, type OfferedMission } from "@/lib/missions";
@@ -72,7 +73,11 @@ function TradePanel({
       ? anchor.right + PANEL_GAP
       : anchor.left - PANEL_WIDTH - PANEL_GAP;
 
-  return (
+  // Rendered on the body rather than inside the popup: Base UI places the
+  // popup with a transform, which makes a containing block, and a fixed
+  // child anchors to that instead of to the viewport — landing the panel
+  // off screen, which is exactly what it did.
+  return createPortal(
     <div
       role="group"
       aria-label={`Activités de ${mission.projectLabel}`}
@@ -92,7 +97,8 @@ function TradePanel({
           {activity.label}
         </button>
       ))}
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -224,13 +230,18 @@ export function MissionSelector({
                       })
                     }
                   >
-                    <span className="truncate">{mission.label}</span>
-                    {mission.value.activities.length > 1 && (
-                      <ChevronRight
-                        className="ml-auto size-3.5 shrink-0 text-muted-foreground"
-                        aria-hidden
-                      />
-                    )}
+                    {/* The item wraps its children in a span that is both
+                        flex-1 and truncate, so a chevron set beside the label
+                        falls to the next line: the row lays itself out. */}
+                    <span className="flex w-full items-center gap-1.5">
+                      <span className="min-w-0 flex-1 truncate">{mission.label}</span>
+                      {mission.value.activities.length > 1 && (
+                        <ChevronRight
+                          className="size-3.5 shrink-0 text-muted-foreground"
+                          aria-hidden
+                        />
+                      )}
+                    </span>
                   </ComboboxItem>
                 )}
               </ComboboxCollection>
