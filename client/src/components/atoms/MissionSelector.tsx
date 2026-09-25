@@ -145,9 +145,15 @@ export function MissionSelector({
     anchor: DOMRect;
   } | null>(null);
 
-  /** Shows a mission's trades, hung off the list wherever it sits. */
-  function show(mission: OfferedMission) {
-    const anchor = list.current?.getBoundingClientRect();
+  /**
+   * Shows a mission's trades, level with the row they belong to.
+   *
+   * `from` is the row pointed at; without one — the choice having been made
+   * by keyboard — the panel opens level with the top of the list, so that
+   * Enter on a mission carrying several trades still opens them.
+   */
+  function show(mission: OfferedMission, from?: HTMLElement) {
+    const anchor = (from ?? list.current)?.getBoundingClientRect();
     if (anchor) setOpened({ mission, anchor });
   }
 
@@ -218,7 +224,7 @@ export function MissionSelector({
         <span className="truncate">+ Ajouter un projet…</span>
       </ComboboxTrigger>
 
-      <ComboboxContent className="min-w-80" aria-label="Ajouter un projet">
+      <ComboboxContent className="max-h-72 min-w-80" aria-label="Ajouter un projet">
         <ComboboxInput placeholder="Rechercher un projet…" />
 
         <ComboboxEmpty>Aucun projet ne correspond.</ComboboxEmpty>
@@ -232,7 +238,7 @@ export function MissionSelector({
                   <ComboboxItem
                     key={mission.value.projectId}
                     value={mission}
-                    onMouseEnter={() => show(mission.value)}
+                    onMouseEnter={(event) => show(mission.value, event.currentTarget)}
                   >
                     {/* The item wraps its children in a span that is both
                         flex-1 and truncate, so a chevron set beside the label
