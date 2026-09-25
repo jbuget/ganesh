@@ -111,92 +111,80 @@ export function missionsToDeclare(
     }));
 }
 
-/** A row one may add to the grid: a mission, and the trade it is booked under. */
-export interface OfferedRow {
-  projectId: number;
-  activityId: number | null;
-  /** What names the row: the activity, or the mission when it carries none. */
-  label: string;
-  /** The mission above it, shown beside the label so two « Développement »
-   *  never read as the same line. */
-  projectLabel: string;
-  kind: ProjectResponse["kind"];
-}
-
 /** The key a displayed row is recognised by: a mission **and** a trade. */
 export function rowKey(projectId: number, activityId: number | null): string {
   return `${projectId}:${activityId ?? ""}`;
 }
 
+/** A mission the selector offers, with the trades still free on the month. */
+export interface OfferedMission {
+  projectId: number;
+  projectLabel: string;
+  kind: ProjectResponse["kind"];
+  /**
+   * Its trades not yet on the month. Empty for off-project work, which is
+   * added as itself and carries none.
+   */
+  activities: { id: number; label: string }[];
+}
+
 /**
- * What the selector may offer, one line per trade.
+ * What the selector lists: missions, not trades.
  *
- * A mission is declared on through one of its activities, so it is the
- * activities that are offered — never the mission itself, which the API
- * would refuse. Off-project work is the exception and stands for itself.
+ * One searches for a mission — that is the name one knows — and chooses the
+ * trade once the mission is found. Listing the pairs flat made every row read
+ * « Développement » and buried the name being looked for.
  *
- * A mission carrying no activity yet offers nothing: there is nothing to
- * declare on until somebody cuts it up, and offering a line the write would
- * refuse is worse than offering none.
+ * A mission whose every trade is already on the month drops out: there is
+ * nothing left to add under it. So does one nobody has cut up, because a
+ * mission carrying no activity cannot be declared on at all.
  */
-export function offeredRows(
+export function offeredMissions(
   missions: ProjectListItemResponse[],
   displayedRowKeys: string[],
-): OfferedRow[] {
-  const rows: OfferedRow[] = [];
+): OfferedMission[] {
+  const offered: OfferedMission[] = [];
 
   for (const mission of missions) {
     const project = mission.project;
     if (!project.is_active) continue;
 
     if (project.kind === "off_project") {
-      rows.push({
-        projectId: project.id,
-        activityId: null,
-        label: project.label,
-        projectLabel: project.label,
-        kind: project.kind,
-      });
+      if (!displayedRowKeys.includes(rowKey(project.id, null))) {
+        offered.push({
+          projectId: project.id,
+          projectLabel: project.label,
+          kind: project.kind,
+          activities: [],
+        });
+      }
       continue;
     }
 
-    for (const activity of mission.activities ?? []) {
-      if (!activity.is_active) continue;
-      rows.push({
-        projectId: project.id,
-        activityId: activity.id,
-        label: activity.label,
-        projectLabel: project.label,
-        kind: project.kind,
-      });
-    }
+    const free = (mission.activities ?? [])
+      .filter(
+        (activity) =>
+          activity.is_active &&
+          !displayedRowKeys.includes(rowKey(project.id, activity.id)),
+      )
+      .map((activity) => ({ id: activity.id, label: activity.label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    if (free.length === 0) continue;
+
+    offered.push({
+      projectId: project.id,
+      projectLabel: project.label,
+      kind: project.kind,
+      activities: free,
+    });
   }
 
-  return rows
-    .filter((row) => !displayedRowKeys.includes(rowKey(row.projectId, row.activityId)))
-    .sort(
-      (a, b) =>
-        a.projectLabel.localeCompare(b.projectLabel) || a.label.localeCompare(b.label),
-    );
+  return offered.sort((a, b) => a.projectLabel.localeCompare(b.projectLabel));
 }
 
-/** What the selector searches through: the mission and the trade, together. */
-export function searchableRow(row: OfferedRow): string {
-  return row.activityId === null ? row.label : `${row.projectLabel} ${row.label}`;
-}
-
-/**
- * Whether a row answers what is being typed.
- *
- * Read without case or accents, as every other search in the application is:
- * a search answering differently on two screens is two searches, and the
- * reader has no way of knowing which one they are using.
- *
- * It looks through the mission's name as well as the trade's. Matching the
- * trade alone found nothing for « Contrôle », every row being called
- * « Développement » or « Chefferie de projet ».
- */
-export function rowAnswers(row: OfferedRow, query: string): boolean {
+/** Whether a mission answers what is being typed, without case or accents. */
+export function missionAnswers(mission: OfferedMission, query: string): boolean {
   const asked = normalise(query.trim());
-  return asked === "" || normalise(searchableRow(row)).includes(asked);
+  return asked === "" || normalise(mission.projectLabel).includes(asked);
 }

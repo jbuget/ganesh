@@ -1,14 +1,10 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
-import {
-  offeredRows,
-  rowAnswers,
-  searchableRow,
-  type OfferedRow,
-} from "@/lib/missions";
+import { missionAnswers, offeredMissions, type OfferedMission } from "@/lib/missions";
 import {
   Combobox,
   ComboboxCollection,
@@ -33,12 +29,10 @@ interface MissionSelectorProps {
   disabled?: boolean;
 }
 
-/** An offered row: `value` / `label` is the shape Base UI can read. */
+/** An offered mission, in the shape Base UI reads. */
 interface MissionItem {
-  value: OfferedRow;
+  value: OfferedMission;
   label: string;
-  /** The mission above it, so two « Développement » never read alike. */
-  hint: string;
 }
 
 interface MissionGroup {
@@ -46,25 +40,24 @@ interface MissionGroup {
   items: MissionItem[];
 }
 
-const asItems = (rows: OfferedRow[]): MissionItem[] =>
-  rows.map((row) => ({
-    value: row,
-    label: row.label,
-    hint: row.activityId === null ? "" : row.projectLabel,
-  }));
+const asItems = (missions: OfferedMission[]): MissionItem[] =>
+  missions.map((mission) => ({ value: mission, label: mission.projectLabel }));
 
 /**
- * Adding a mission to the grid, from the last row of the table.
+ * Adding a row to the grid, in two moves: the mission, then the trade.
  *
- * Missions already there are taken out of the list: no two rows for the same
- * mission.
+ * One searches for a mission — that is the name one knows — and chooses the
+ * trade once it is found. Offering the pairs flat made every line read
+ * « Développement » or « Delivery » and buried the name being looked for,
+ * which is the one thing anybody types here.
  *
- * The reference list runs to dozens of projects and work packages: the search
- * field at the top of the menu saves scanning the whole list for the one being
- * looked for, and « Mes missions » puts the handful one actually works on
- * within reach without searching at all. « Declarer un nouveau projet » stays at the foot of the
- * menu, outside the filter: it is precisely when no mission matches that one
- * needs it.
+ * The trades open beside the mission rather than under it: a mission carries
+ * two or three, and folding them into the list would put back the flat list
+ * this exists to replace. A mission carrying a single free trade is added by
+ * clicking it — there is nothing to choose.
+ *
+ * What is already on the month is out of the list: no two rows for the same
+ * mission and trade, and a mission whose every trade is taken drops out.
  */
 export function MissionSelector({
   missions,
@@ -74,19 +67,21 @@ export function MissionSelector({
   onDeclareNew,
   disabled = false,
 }: MissionSelectorProps) {
-  const offered = offeredRows(missions, excludedKeys);
+  const [isOpen, setOpen] = useState(false);
+  const [opened, setOpened] = useState<OfferedMission | null>(null);
+
+  const offered = offeredMissions(missions, excludedKeys);
   const mine = offered.filter(
-    (row) => row.kind !== "off_project" && assignedIds.includes(row.projectId),
+    (mission) =>
+      mission.kind !== "off_project" && assignedIds.includes(mission.projectId),
   );
   const projectMissions = offered.filter(
-    (row) => row.kind !== "off_project" && !assignedIds.includes(row.projectId),
+    (mission) =>
+      mission.kind !== "off_project" && !assignedIds.includes(mission.projectId),
   );
-  const offProject = offered.filter((row) => row.kind === "off_project");
-  const [isOpen, setOpen] = useState(false);
+  const offProject = offered.filter((mission) => mission.kind === "off_project");
 
   const groups: MissionGroup[] = [];
-  // First, and named after what ties them to the reader: these are the
-  // projects the team put them on.
   if (mine.length > 0) {
     groups.push({ value: "Mes projets", items: asItems(mine) });
   }
@@ -97,23 +92,42 @@ export function MissionSelector({
     groups.push({ value: "Hors projet", items: asItems(offProject) });
   }
 
+  /**
+   * Adds the mission, or opens its trades when there is a choice.
+   *
+   * Off-project work is declared on directly and carries none, so it is added
+   * as itself.
+   */
+  function choose(mission: OfferedMission) {
+    if (mission.activities.length === 0) {
+      setOpen(false);
+      onSelect(mission.projectId, null);
+      return;
+    }
+    if (mission.activities.length === 1) {
+      setOpen(false);
+      onSelect(mission.projectId, mission.activities[0].id);
+      return;
+    }
+    setOpened(mission);
+  }
+
   return (
     <Combobox
       items={groups}
-      // The search looks through the mission's name as well as the trade's,
-      // without case or accents. Left to itself the filter matched the
-      // item's label alone — the trade — so typing « Contrôle » found
-      // nothing, every row being called « Développement » or « Delivery ».
-      itemToStringLabel={(item: MissionItem) => searchableRow(item.value)}
-      filter={(item: MissionItem, query: string) => rowAnswers(item.value, query)}
+      // The search reads the mission's name, without case or accents: it is
+      // what one types, and the trades are chosen once it is found.
+      itemToStringLabel={(item: MissionItem) => item.value.projectLabel}
+      filter={(item: MissionItem, query: string) => missionAnswers(item.value, query)}
       value={null}
       open={isOpen}
-      onOpenChange={setOpen}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setOpened(null);
+      }}
       disabled={disabled}
       onValueChange={(mission) => {
-        if (!mission) return;
-        const row = (mission as MissionItem).value;
-        onSelect(row.projectId, row.activityId);
+        if (mission) choose((mission as MissionItem).value);
       }}
     >
       <ComboboxTrigger
@@ -128,28 +142,56 @@ export function MissionSelector({
 
         <ComboboxEmpty>Aucun projet ne correspond.</ComboboxEmpty>
 
-        <ComboboxList>
-          {(group: MissionGroup) => (
-            <ComboboxGroup key={group.value} items={group.items}>
-              <ComboboxGroupLabel>{group.value}</ComboboxGroupLabel>
-              <ComboboxCollection>
-                {(mission: MissionItem) => (
-                  <ComboboxItem
-                    key={`${mission.value.projectId}:${mission.value.activityId ?? ""}`}
-                    value={mission}
-                  >
-                    <span className="truncate">{mission.label}</span>
-                    {mission.hint ? (
-                      <span className="ml-2 shrink-0 text-xs text-muted-foreground">
-                        {mission.hint}
-                      </span>
-                    ) : null}
-                  </ComboboxItem>
-                )}
-              </ComboboxCollection>
-            </ComboboxGroup>
+        <div className="flex min-h-0">
+          <ComboboxList className="min-w-0 flex-1">
+            {(group: MissionGroup) => (
+              <ComboboxGroup key={group.value} items={group.items}>
+                <ComboboxGroupLabel>{group.value}</ComboboxGroupLabel>
+                <ComboboxCollection>
+                  {(mission: MissionItem) => (
+                    <ComboboxItem
+                      key={mission.value.projectId}
+                      value={mission}
+                      onMouseEnter={() => setOpened(mission.value)}
+                    >
+                      <span className="truncate">{mission.label}</span>
+                      {mission.value.activities.length > 1 && (
+                        <ChevronRight
+                          className="ml-auto size-3.5 shrink-0 text-muted-foreground"
+                          aria-hidden
+                        />
+                      )}
+                    </ComboboxItem>
+                  )}
+                </ComboboxCollection>
+              </ComboboxGroup>
+            )}
+          </ComboboxList>
+
+          {opened && opened.activities.length > 1 && (
+            <div
+              className="w-48 shrink-0 border-l border-border p-1"
+              aria-label={`Activités de ${opened.projectLabel}`}
+            >
+              <p className="truncate px-1.5 py-1 text-xs text-muted-foreground">
+                {opened.projectLabel}
+              </p>
+              {opened.activities.map((activity) => (
+                <button
+                  key={activity.id}
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    onSelect(opened.projectId, activity.id);
+                  }}
+                  className="w-full cursor-pointer truncate rounded-md px-1.5 py-1 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  {activity.label}
+                </button>
+              ))}
+            </div>
           )}
-        </ComboboxList>
+        </div>
 
         <div className="shrink-0 border-t border-border p-1">
           <button
@@ -160,7 +202,7 @@ export function MissionSelector({
             }}
             className="w-full cursor-pointer rounded-md px-1.5 py-1 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
           >
-            Déclarer un nouveau projet…
+            + Déclarer un nouveau projet…
           </button>
         </div>
       </ComboboxContent>
