@@ -89,6 +89,18 @@ export function DayCell({
         background,
         isFuture && value > 0 ? "opacity-60" : "",
         isLocked ? "cursor-not-allowed" : "cursor-pointer hover:bg-sky-50",
+        // The cursor of the grid, and it has to be unmistakable: this is where
+        // the next keystroke lands, on a screen of two hundred identical
+        // squares.
+        //
+        // `focus`, not `focus-visible`. The gesture is click-then-type, and
+        // focus-visible hides the ring after a click — which would leave the
+        // hand typing into a cell nothing points at.
+        //
+        // The outline is drawn inside the cell (negative offset): table cells
+        // paint in order, so an outline spilling outwards is painted over by
+        // the neighbour to its right.
+        "focus:z-10 focus:outline-2 focus:-outline-offset-2 focus:outline-sky-600",
       ].join(" ")}
     >
       {formatHours(value)}

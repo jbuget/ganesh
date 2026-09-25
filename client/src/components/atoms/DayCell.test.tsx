@@ -113,6 +113,24 @@ describe("DayCell, when it takes no entry", () => {
 });
 
 describe("DayCell, reached with the keys", () => {
+  /**
+   * Asserted on class names, as the table's own `relative` is: jsdom computes
+   * no layout and no styles. What matters is checked in a browser — but this
+   * catches the ring being dropped by an edit that was about something else.
+   *
+   * `focus` rather than `focus-visible`: the gesture is click-then-type, and
+   * focus-visible drops the ring after a click, leaving the hand typing into
+   * a cell nothing points at.
+   */
+  it("shows where the next keystroke will land", () => {
+    renderInRow(<DayCell {...baseProps} value={0} />);
+
+    const cell = screen.getByRole("gridcell");
+    expect(cell).toHaveClass("focus:outline-2");
+    expect(cell).toHaveClass("focus:outline-sky-600");
+    expect(cell.className).not.toContain("focus-visible:outline");
+  });
+
   it("says which cell it is, so the grid can find it back", () => {
     renderInRow(<DayCell {...baseProps} value={0} />);
 
