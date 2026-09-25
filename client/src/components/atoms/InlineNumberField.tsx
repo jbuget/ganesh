@@ -3,6 +3,8 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
+import { formatDecimalDays } from "@/lib/dates";
+
 interface InlineNumberFieldProps {
   value: number | null | undefined;
   suffix: string;
@@ -85,7 +87,11 @@ export function InlineNumberField({
         </span>
       ) : (
         <span className="text-slate-700">
-          {value} {suffix}
+          {/* Written the French way at rest: an estimate of 23.5 showed as
+              « 23.5 jrs. », with an English point, next to a consumed figure
+              written « 8,75 ». Editing keeps the raw value — a number input
+              takes a point, whatever the reader's language. */}
+          {formatDecimalDays(value)} {suffix}
         </span>
       )}
     </button>

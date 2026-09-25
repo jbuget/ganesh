@@ -155,7 +155,7 @@ export function ProjectCard({
 
       <p className={`mt-2.5 text-xs tabular-nums ${SHADES[state]}`}>
         {project.estimated_days
-          ? `${formatDecimalDays(card.build_days)}/${project.estimated_days} jrs. estimés`
+          ? `${formatDecimalDays(card.build_days)}/${formatDecimalDays(project.estimated_days)} jrs. estimés`
           : `${formatDecimalDays(card.consumed_days)} jrs. consommés`}
       </p>
 
