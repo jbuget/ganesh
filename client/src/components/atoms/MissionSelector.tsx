@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
 import { missionAnswers, offeredMissions, type OfferedMission } from "@/lib/missions";
@@ -43,6 +43,59 @@ interface MissionGroup {
 const asItems = (missions: OfferedMission[]): MissionItem[] =>
   missions.map((mission) => ({ value: mission, label: mission.projectLabel }));
 
+//: How far the panel sits from the row it hangs off, and how wide it is.
+const PANEL_GAP = 4;
+const PANEL_WIDTH = 208;
+
+/**
+ * The trades of the mission under the cursor, in a cadre of their own.
+ *
+ * Anchored on the row rather than made a column of the list: a panel beside
+ * the list reads as one more part of the mission one is pointing at, where a
+ * second cadre reads as what it is — a submenu of the row it opens from.
+ *
+ * It flips to the left of the list when the right would run off the screen,
+ * which is what happens on a narrow window with the grid scrolled across.
+ */
+function TradePanel({
+  mission,
+  anchor,
+  onChoose,
+}: {
+  mission: OfferedMission;
+  anchor: DOMRect;
+  onChoose: (activityId: number) => void;
+}) {
+  const room = window.innerWidth - anchor.right - PANEL_GAP;
+  const left =
+    room >= PANEL_WIDTH
+      ? anchor.right + PANEL_GAP
+      : anchor.left - PANEL_WIDTH - PANEL_GAP;
+
+  return (
+    <div
+      role="group"
+      aria-label={`Activités de ${mission.projectLabel}`}
+      style={{ top: anchor.top, left, width: PANEL_WIDTH }}
+      className="fixed z-50 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md"
+    >
+      <p className="truncate px-1.5 py-1 text-xs text-muted-foreground">
+        {mission.projectLabel}
+      </p>
+      {mission.activities.map((activity) => (
+        <button
+          key={activity.id}
+          type="button"
+          onClick={() => onChoose(activity.id)}
+          className="w-full cursor-pointer truncate rounded-md px-1.5 py-1 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          {activity.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /**
  * Adding a row to the grid, in two moves: the mission, then the trade.
  *
@@ -67,8 +120,16 @@ export function MissionSelector({
   onDeclareNew,
   disabled = false,
 }: MissionSelectorProps) {
+  const list = useRef<HTMLDivElement>(null);
   const [isOpen, setOpen] = useState(false);
-  const [opened, setOpened] = useState<OfferedMission | null>(null);
+  //: The mission whose trades are shown, and the row they hang off. The row's
+  //: place is kept so the panel can be anchored on it rather than made a
+  //: column of the list: a second cadre reads as a submenu, which is what it
+  //: is, where a column read as part of the mission one was pointing at.
+  const [opened, setOpened] = useState<{
+    mission: OfferedMission;
+    anchor: DOMRect;
+  } | null>(null);
 
   const offered = offeredMissions(missions, excludedKeys);
   const mine = offered.filter(
@@ -109,7 +170,12 @@ export function MissionSelector({
       onSelect(mission.projectId, mission.activities[0].id);
       return;
     }
-    setOpened(mission);
+    // Chosen by keyboard there is no cursor to hang the panel off, so it
+    // opens against the list itself: without this, pressing Enter on a
+    // mission carrying several trades would do nothing at all.
+    const anchor = list.current?.getBoundingClientRect();
+    if (!anchor) return;
+    setOpened((shown) => ({ mission, anchor: shown?.anchor ?? anchor }));
   }
 
   return (
@@ -142,56 +208,46 @@ export function MissionSelector({
 
         <ComboboxEmpty>Aucun projet ne correspond.</ComboboxEmpty>
 
-        <div className="flex min-h-0">
-          <ComboboxList className="min-w-0 flex-1">
-            {(group: MissionGroup) => (
-              <ComboboxGroup key={group.value} items={group.items}>
-                <ComboboxGroupLabel>{group.value}</ComboboxGroupLabel>
-                <ComboboxCollection>
-                  {(mission: MissionItem) => (
-                    <ComboboxItem
-                      key={mission.value.projectId}
-                      value={mission}
-                      onMouseEnter={() => setOpened(mission.value)}
-                    >
-                      <span className="truncate">{mission.label}</span>
-                      {mission.value.activities.length > 1 && (
-                        <ChevronRight
-                          className="ml-auto size-3.5 shrink-0 text-muted-foreground"
-                          aria-hidden
-                        />
-                      )}
-                    </ComboboxItem>
-                  )}
-                </ComboboxCollection>
-              </ComboboxGroup>
-            )}
-          </ComboboxList>
-
-          {opened && opened.activities.length > 1 && (
-            <div
-              className="w-48 shrink-0 border-l border-border p-1"
-              aria-label={`Activités de ${opened.projectLabel}`}
-            >
-              <p className="truncate px-1.5 py-1 text-xs text-muted-foreground">
-                {opened.projectLabel}
-              </p>
-              {opened.activities.map((activity) => (
-                <button
-                  key={activity.id}
-                  type="button"
-                  onClick={() => {
-                    setOpen(false);
-                    onSelect(opened.projectId, activity.id);
-                  }}
-                  className="w-full cursor-pointer truncate rounded-md px-1.5 py-1 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
-                >
-                  {activity.label}
-                </button>
-              ))}
-            </div>
+        <ComboboxList ref={list}>
+          {(group: MissionGroup) => (
+            <ComboboxGroup key={group.value} items={group.items}>
+              <ComboboxGroupLabel>{group.value}</ComboboxGroupLabel>
+              <ComboboxCollection>
+                {(mission: MissionItem) => (
+                  <ComboboxItem
+                    key={mission.value.projectId}
+                    value={mission}
+                    onMouseEnter={(event) =>
+                      setOpened({
+                        mission: mission.value,
+                        anchor: event.currentTarget.getBoundingClientRect(),
+                      })
+                    }
+                  >
+                    <span className="truncate">{mission.label}</span>
+                    {mission.value.activities.length > 1 && (
+                      <ChevronRight
+                        className="ml-auto size-3.5 shrink-0 text-muted-foreground"
+                        aria-hidden
+                      />
+                    )}
+                  </ComboboxItem>
+                )}
+              </ComboboxCollection>
+            </ComboboxGroup>
           )}
-        </div>
+        </ComboboxList>
+
+        {opened && opened.mission.activities.length > 1 && (
+          <TradePanel
+            mission={opened.mission}
+            anchor={opened.anchor}
+            onChoose={(activityId) => {
+              setOpen(false);
+              onSelect(opened.mission.projectId, activityId);
+            }}
+          />
+        )}
 
         <div className="shrink-0 border-t border-border p-1">
           <button
