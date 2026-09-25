@@ -29,6 +29,10 @@ interface SurfaceWording {
 const WORDINGS: Record<Surface, SurfaceWording> = {
   time_entry: { label: "Saisie des temps" },
   month_closing: { label: "Clôture des mois", counted: "validations et réouvertures" },
+  requests: {
+    label: "Recueil de besoins",
+    counted: "dépôts, soumissions, arbitrages et conversions",
+  },
   project_registry: { label: "Référentiel de projets" },
   phase_progress: {
     label: "Avancement des phases",

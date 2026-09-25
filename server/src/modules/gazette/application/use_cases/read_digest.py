@@ -16,6 +16,9 @@ from src.modules.gazette.domain.services.month_window import first_day
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.requests.domain.repositories.request_repository import (
+    RequestRepository,
+)
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
@@ -37,11 +40,13 @@ class ReadDigestUseCase:
         projects: ProjectRepository,
         audit_logs: AuditLogRepository,
         digests: DigestRepository,
+        requests: RequestRepository,
     ) -> None:
         self._users = users
         self._projects = projects
         self._audit_logs = audit_logs
         self._digests = digests
+        self._requests = requests
 
     async def execute(self, query: ReadDigestQuery) -> DigestView:
         month = first_day(query.month)
@@ -65,7 +70,11 @@ class ReadDigestUseCase:
         # page load, and its prose kept by nobody.
         return DigestView(
             brief=await gather_brief(
-                month, self._audit_logs, self._projects, self._users
+                month,
+                self._audit_logs,
+                self._projects,
+                self._users,
+                self._requests,
             )
         )
 

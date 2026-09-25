@@ -53,6 +53,13 @@ class AuditAction(StrEnum):
     API_KEY_UPDATE = "api_key.update"
     API_KEY_REVOKE = "api_key.revoke"
     GAZETTE_GENERATE = "gazette.generate"
+    REQUEST_CREATE = "request.create"
+    REQUEST_UPDATE = "request.update"
+    REQUEST_SUBMIT = "request.submit"
+    REQUEST_WITHDRAW = "request.withdraw"
+    REQUEST_DELETE = "request.delete"
+    REQUEST_DECIDE = "request.decide"
+    REQUEST_CONVERT = "request.convert"
     REMINDER_RUN = "reminder.run"
 
 
@@ -69,6 +76,10 @@ class AuditLog:
     at: datetime = field(default_factory=clock.now)
     target_user_id: int | None = None
     project_id: int | None = None
+    #: The need a line is about. A conversion carries both this and the
+    #: project it gave birth to: that one line is what the mission's journal
+    #: reads to say where it came from.
+    request_id: int | None = None
     day: date | None = None
     old_value: str | None = None
     new_value: str | None = None

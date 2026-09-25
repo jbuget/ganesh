@@ -7,6 +7,7 @@ from enum import StrEnum
 from src.modules.users.domain.entities.presence import WeekPresence
 from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.shared.enums.department import Department
+from src.shared.enums.org_level import OrgLevel
 
 #: Below this, a fresh login is not worth a write to the database.
 #:
@@ -43,9 +44,10 @@ class Role(StrEnum):
     therefore what makes `RANK` below say the truth.
     """
 
-    #: Whoever has just signed in for the first time, and nothing more. They
-    #: read the application whole and write nothing into it, until somebody
-    #: says who they are on the team.
+    #: Whoever has just signed in and nothing more. The whole company comes
+    #: through the same Entra tenant, so this is what being recognised at the
+    #: door gets one: a role that opens nothing but one's own needs, until
+    #: somebody says who they are on the team.
     GUEST = "GUEST"
     TEAMMATE = "TEAMMATE"
     MANAGER = "MANAGER"
@@ -82,6 +84,9 @@ class User:
     #: The handle alone — « lea-chen », never « @lea-chen » nor a full URL:
     #: it is what the profile address is built from.
     github_username: str | None = None
+    #: Where this person stands in the company. Left unsaid for most: it is
+    #: filled in for whoever has to be told apart — a sponsor of needs, today.
+    org_level: OrgLevel | None = None
     #: The ordinary week: which days one works, and from where. On site every
     #: day until somebody says otherwise — the arrangement the team runs on,
     #: so it is what is true of anyone who has said nothing, not a placeholder
@@ -108,16 +113,18 @@ class User:
         last_name: str | None,
         department: Department | None,
         github_username: str | None,
+        org_level: OrgLevel | None,
     ) -> None:
         """Gives away who this teammate is, and where they work.
 
-        The four go together: the sheet is written as a whole, and a field
+        The five go together: the sheet is written as a whole, and a field
         left out is a field one has decided to empty.
         """
         self.first_name = _trimmed(first_name)
         self.last_name = _trimmed(last_name)
         self.department = department
         self.github_username = _handle(github_username)
+        self.org_level = org_level
 
     @property
     def label(self) -> str:
@@ -156,11 +163,20 @@ class User:
         that every use case that writes asks the same question, and the day a
         role is added nobody has to remember which side of it it falls on.
         """
-        return self.is_active and self.role is not Role.GUEST
+        return self.is_active and not self.is_guest
 
     def can_administrate(self) -> bool:
         """Only an admin opens the administration of the platform."""
         return self.is_active and self.is_admin
+
+    @property
+    def is_guest(self) -> bool:
+        """Whether this account only ever comes to ask for something.
+
+        It is the one thing the door reads: every screen of the application is
+        closed to a guest, and the requests open themselves to them.
+        """
+        return self.role is Role.GUEST
 
     def can_reopen_month(self) -> bool:
         """Only a manager can reopen a validated month."""
@@ -168,6 +184,15 @@ class User:
 
     def can_manage_teammates(self) -> bool:
         """Managing teammates is reserved for managers."""
+        return self.is_active and self.is_manager
+
+    def can_arbitrate_requests(self) -> bool:
+        """Weighing what the company asks for is reserved for managers.
+
+        Whether this particular manager may weigh this particular request is
+        another question, and the request answers it: nobody arbitrates what
+        they asked for or what they carry.
+        """
         return self.is_active and self.is_manager
 
     def can_change_role_of(self, target: "User", role: Role) -> bool:
@@ -188,7 +213,11 @@ class User:
         return self.holds(role) and self.holds(target.role)
 
     def can_edit_open_months(self) -> bool:
-        """Anyone may edit an open month, a colleague's included."""
+        """Anyone on the team may edit an open month, a colleague's included.
+
+        A guest holds no month: they declare no time, and the grid is not a
+        screen they ever reach.
+        """
         return self.can_write()
 
     def can_declare_own_presence(self) -> bool:

@@ -56,6 +56,14 @@ class AuditLogRepository(ABC):
     async def count_for_project(self, project_id: int) -> int: ...
 
     @abstractmethod
+    async def list_for_request(
+        self, request_id: int, limit: int, offset: int
+    ) -> list[AuditLog]: ...
+
+    @abstractmethod
+    async def count_for_request(self, request_id: int) -> int: ...
+
+    @abstractmethod
     async def list_all(
         self, limit: int, offset: int, kept: AuditLogFilter | None = None
     ) -> list[AuditLog]:

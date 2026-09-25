@@ -32,6 +32,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryDigestRepository,
     InMemoryProjectRepository,
+    InMemoryRequestRepository,
     InMemoryUserRepository,
 )
 from tests.helpers.instants import paris
@@ -84,7 +85,11 @@ def sign_in(writer: ProseWriter | None = None) -> Screen:
 
     app.dependency_overrides[get_current_user] = lambda: LEA
     app.dependency_overrides[get_read_digest_use_case] = lambda: ReadDigestUseCase(
-        users=users, projects=projects, audit_logs=audit_logs, digests=digests
+        users=users,
+        projects=projects,
+        audit_logs=audit_logs,
+        digests=digests,
+        requests=InMemoryRequestRepository(),
     )
     app.dependency_overrides[get_generate_digest_use_case] = (
         lambda: GenerateDigestUseCase(
@@ -92,6 +97,7 @@ def sign_in(writer: ProseWriter | None = None) -> Screen:
             projects=projects,
             audit_logs=audit_logs,
             digests=digests,
+            requests=InMemoryRequestRepository(),
             writer=writer or StubProseWriter(),
         )
     )

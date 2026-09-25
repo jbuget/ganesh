@@ -48,5 +48,12 @@ export const AuditAction = {
   api_keyupdate: "api_key.update",
   api_keyrevoke: "api_key.revoke",
   gazettegenerate: "gazette.generate",
+  requestcreate: "request.create",
+  requestupdate: "request.update",
+  requestsubmit: "request.submit",
+  requestwithdraw: "request.withdraw",
+  requestdelete: "request.delete",
+  requestdecide: "request.decide",
+  requestconvert: "request.convert",
   reminderrun: "reminder.run",
 } as const;

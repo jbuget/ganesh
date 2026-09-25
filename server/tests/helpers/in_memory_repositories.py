@@ -84,6 +84,10 @@ from src.modules.projects.domain.repositories.project_update_repository import (
 from src.modules.projects.domain.repositories.update_reaction_repository import (
     UpdateReactionRepository,
 )
+from src.modules.requests.domain.entities.request import Request
+from src.modules.requests.domain.repositories.request_repository import (
+    RequestRepository,
+)
 from src.modules.stats.domain.entities.surface_usage import Surface, Tally, Trace
 from src.modules.stats.domain.repositories.statistics_repository import (
     StatisticsRepository,
@@ -480,6 +484,21 @@ class InMemoryAuditLogRepository(AuditLogRepository):
 
     async def count_for_project(self, project_id: int) -> int:
         return len(self._for_project(project_id))
+
+    def _for_request(self, request_id: int) -> list[AuditLog]:
+        return sorted(
+            (log for log in self.logs if log.request_id == request_id),
+            key=lambda log: (log.at, log.id or 0),
+            reverse=True,
+        )
+
+    async def list_for_request(
+        self, request_id: int, limit: int, offset: int
+    ) -> list[AuditLog]:
+        return self._for_request(request_id)[offset : offset + limit]
+
+    async def count_for_request(self, request_id: int) -> int:
+        return len(self._for_request(request_id))
 
     def _all(self, kept: AuditLogFilter | None) -> list[AuditLog]:
         # The criteria are answered by the filter itself rather than rewritten
@@ -1159,3 +1178,46 @@ class InMemoryDigestRepository(DigestRepository):
         stored = replace(digest, id=len(self.digests) + 1)
         self.digests.append(stored)
         return stored
+
+
+class InMemoryRequestRepository(RequestRepository):
+    def __init__(self, requests: list[Request] | None = None) -> None:
+        self._requests: dict[int, Request] = {}
+        self._next_id = 1
+        for request in requests or []:
+            self._requests[request.id or self._next_id] = request
+            self._next_id = max(self._next_id, (request.id or 0) + 1)
+
+    async def get_by_id(self, request_id: int) -> Request | None:
+        return self._requests.get(request_id)
+
+    async def list_for_requester(self, requester_id: int) -> list[Request]:
+        return [
+            request
+            for request in self._requests.values()
+            if request.requester_id == requester_id
+        ]
+
+    async def list_all(self) -> list[Request]:
+        return list(self._requests.values())
+
+    async def list_readable_by(self, viewer_id: int) -> list[Request]:
+        return [
+            request
+            for request in self._requests.values()
+            if not request.is_draft or request.requester_id == viewer_id
+        ]
+
+    async def add(self, request: Request) -> Request:
+        request.id = self._next_id
+        self._next_id += 1
+        self._requests[request.id] = request
+        return request
+
+    async def update(self, request: Request) -> Request:
+        if request.id is not None:
+            self._requests[request.id] = request
+        return request
+
+    async def delete(self, request_id: int) -> None:
+        self._requests.pop(request_id, None)

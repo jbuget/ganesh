@@ -22,6 +22,7 @@ export interface NotificationResponse {
   kind: NotificationKind;
   actor: NotificationPersonResponse | null;
   project: NotificationProjectResponse | null;
+  request_id?: number | null;
   day: string | null;
   count: number;
   read_at: string | null;

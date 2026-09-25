@@ -20,6 +20,7 @@ from src.modules.auth.presentation.dependencies import (
     get_contributor,
     get_current_manager,
     get_current_user,
+    get_signed_in_user,
 )
 from src.modules.users.application.dtos.user_dto import (
     ChangeRoleCommand,
@@ -79,8 +80,14 @@ directory_reader = open_to_machines(ApiKeyScope.USERS_READ)
 
 
 @router.get("/me", response_model=UserResponse, operation_id="getMe")
-async def get_me(current_user: User = Depends(get_current_user)) -> UserResponse:
-    """The current user, as provisioned from Entra."""
+async def get_me(current_user: User = Depends(get_signed_in_user)) -> UserResponse:
+    """Who is signed in, as provisioned from Entra.
+
+    The one route of this module open to a guest, and it has to be: it is
+    how the screen learns whose account it is drawing, and somebody who could
+    not read their own name would be shown a blank page rather than their
+    needs. It hands back that account and never another.
+    """
     return to_user_response(current_user)
 
 
@@ -204,6 +211,7 @@ async def update_identity(
             last_name=payload.last_name,
             department=payload.department,
             github_username=payload.github_username,
+            org_level=payload.org_level,
         )
     )
     await session.commit()

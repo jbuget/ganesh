@@ -15,7 +15,12 @@ import type {
 } from "@/lib/api/generated/model";
 import { useCurrentUser, useTeammates } from "@/lib/api/queries";
 import type { WeekPresence } from "@/lib/presence";
-import { NO_USER_FILTER, filterUsers, type UserFilters } from "@/lib/user-filters";
+import {
+  NO_USER_FILTER,
+  filterUsers,
+  hiddenGuests,
+  type UserFilters,
+} from "@/lib/user-filters";
 import { NO_USER_SORT, sortUsers, type UserSort } from "@/lib/user-sort";
 import { assignableRoles, holds } from "@/lib/roles";
 
@@ -74,6 +79,15 @@ export function useUsersScreen(
     visible: kept.length,
     total: filterUsers(teammates, { ...NO_USER_FILTER, states: filters.states }).length,
 
+    /**
+     * How many requesters the list is keeping out of sight.
+     *
+     * The screen says it rather than leaving the reader to wonder: everybody
+     * at WAAT signs in through the same tenant, and a list showing fifteen
+     * rows out of three hundred owes them that much.
+     */
+    hidden: hiddenGuests(teammates, filters),
+
     /** The teammate a panel is opened on, deactivated or not. */
     find: (userId: number) =>
       teammates.find((teammate) => teammate.id === userId) ?? null,
@@ -86,8 +100,8 @@ export function useUsersScreen(
     /**
      * Who a teammate is, where they work, and where one finds them on GitHub.
      *
-     * The four fields go to the API together — what is left out is emptied —
-     * so a change to one carries the other three as they stand.
+     * The five fields go to the API together — what is left out is emptied —
+     * so a change to one carries the other four as they stand.
      */
     async updateIdentity(user: UserResponse, change: UpdateUserIdentityRequest) {
       await updateUserIdentity(user.id, {
@@ -95,6 +109,7 @@ export function useUsersScreen(
         last_name: user.last_name ?? null,
         department: user.department ?? null,
         github_username: user.github_username ?? null,
+        org_level: user.org_level ?? null,
         ...change,
       });
       await queryClient.invalidateQueries();

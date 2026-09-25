@@ -9,6 +9,7 @@ import { UsersTable } from "@/components/organisms/UsersTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOpenedUser } from "@/lib/opened-user";
 import { useUserFilters } from "@/lib/use-user-filters";
+import { withRequesters } from "@/lib/user-filters";
 import { useUserSort } from "@/lib/use-user-sort";
 import { useUsersScreen } from "@/lib/use-users";
 import { type UsersView, useUsersView } from "@/lib/use-users-view";
@@ -66,6 +67,8 @@ export function UsersPage() {
             onClear={clear}
             visible={screen.visible}
             total={screen.total}
+            hidden={screen.hidden}
+            onShowRequesters={() => set(withRequesters(filters))}
           />
         </>
       }

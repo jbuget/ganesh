@@ -21,6 +21,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryDigestRepository,
     InMemoryProjectRepository,
+    InMemoryRequestRepository,
     InMemoryUserRepository,
 )
 from tests.helpers.instants import paris
@@ -66,6 +67,7 @@ def a_reader() -> (
         projects=InMemoryProjectRepository([a_project()]),
         audit_logs=audit_logs,
         digests=digests,
+        requests=InMemoryRequestRepository(),
     )
     return use_case, digests, audit_logs
 

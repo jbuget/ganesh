@@ -18,6 +18,7 @@ from src.modules.users.application.use_cases.change_user_role import (
 from src.modules.users.application.use_cases.provision_user import ProvisionUserUseCase
 from src.modules.users.application.use_cases.set_user_active import SetUserActiveUseCase
 from src.modules.users.domain.entities.user import Role, User
+from src.shared.enums.org_level import OrgLevel
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
     ForbiddenActionError,
@@ -65,10 +66,10 @@ def build(users: list[User] | None = None):
 
 
 async def test_an_unknown_identity_creates_a_guest() -> None:
-    """Signing in gets one through the door, and no further.
+    """The whole company signs in through Entra; the team is named by hand.
 
-    Somebody the reference list has never heard of reads the application and
-    declares nothing into it, until a manager says who they are on the team.
+    An account therefore comes into being with the role that opens the least,
+    and a manager promotes it the day they say who is behind it.
     """
     provision, _, repo, _, _, _ = build()
 
@@ -112,6 +113,79 @@ async def test_a_seeded_user_keeps_their_role_on_first_login() -> None:
     assert user.id == 1
     assert user.role is Role.MANAGER
     assert user.entra_oid == "oid-real"
+
+
+async def test_a_declared_sponsor_is_claimed_rather_than_duplicated() -> None:
+    """The way the COMEX exists before it has ever signed in.
+
+    A member is declared by the seed, with no Entra id, so that they are in
+    the sponsor picker on the day the recueil opens. Their first sign-in
+    claims that account: the level they were declared with is what makes them
+    a sponsor, and a second account would leave the needs they carry pointing
+    at somebody who cannot sign in.
+    """
+    declared = User(
+        id=1,
+        entra_oid=None,
+        email="c.direction@waat.fr",
+        display_name="Claire Direction",
+        first_name="Claire",
+        last_name="Direction",
+        role=Role.GUEST,
+        org_level=OrgLevel.COMEX,
+    )
+    provision, _, repo, _, _, _ = build([declared])
+
+    user = await provision.execute(
+        EntraIdentity(
+            oid="oid-comex",
+            # The case Entra sends it in changes nothing: the address is
+            # matched in lowercase, which is how it is stored.
+            email="C.Direction@waat.fr",
+            display_name="C. Direction",
+        )
+    )
+
+    assert user.id == 1
+    assert len(await repo.list_all()) == 1
+    assert user.org_level is OrgLevel.COMEX
+    assert user.role is Role.GUEST
+    # Entra names the account, and the civil name given on declaring them is
+    # what the team keeps reading.
+    assert user.display_name == "C. Direction"
+    assert user.label == "Claire Direction"
+
+
+async def test_a_sponsor_declared_at_another_address_is_a_second_account() -> None:
+    """The one way the declaration misses, said out loud.
+
+    Matching goes by the address and nothing else: declared at an address
+    Entra does not send, the person signs in as somebody new — a requester
+    with no level — and the account carrying the needs stays unclaimed, in
+    the picker, unable to sign in. The seed's `previous_emails` is what mends
+    it, and the address is what to get right the first time.
+    """
+    declared = User(
+        id=1,
+        entra_oid=None,
+        email="c.direction@waat.fr",
+        display_name="Claire Direction",
+        role=Role.GUEST,
+        org_level=OrgLevel.COMEX,
+    )
+    provision, _, repo, _, _, _ = build([declared])
+
+    user = await provision.execute(
+        EntraIdentity(
+            oid="oid-comex",
+            email="claire.direction@waat.fr",
+            display_name="C. Direction",
+        )
+    )
+
+    assert user.id != 1
+    assert user.org_level is None
+    assert len(await repo.list_all()) == 2
 
 
 async def test_a_manager_promotes_a_teammate() -> None:

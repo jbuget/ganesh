@@ -31,12 +31,24 @@ from src.shared.exceptions.domain_exceptions import ForbiddenActionError
 
 logger = logging.getLogger(__name__)
 
-#: Identity used when authentication is switched off in development.
-DEV_IDENTITY = EntraIdentity(
-    oid="dev-local",
-    email="j.buget@waat.fr",
-    display_name="J. Buget (dev)",
-)
+
+def dev_identity(email: str) -> EntraIdentity:
+    """The identity the open door hands over, in development.
+
+    Which account it is comes from `DEV_EMAIL`, so that one signs in as a
+    teammate or as a colleague by editing one line and restarting. The account
+    comes into being as an administrator, as every account the open door hands
+    over does; `make grant-role` is what moves it to another audience.
+
+    The id is drawn from the address rather than fixed. A fixed one would
+    match whichever account was provisioned first and quietly hand over
+    somebody else's.
+    """
+    return EntraIdentity(
+        oid=f"dev-{email}",
+        email=email,
+        display_name=f"{email.split('@')[0]} (dev)",
+    )
 
 
 def get_sign_in_locally_use_case(
@@ -69,12 +81,40 @@ def local_token_service(settings: Settings) -> LocalTokenService:
     )
 
 
-async def get_current_user(
+def admit(user: User) -> User:
+    """The door: who walks into the application, and who is turned away.
+
+    Written apart from the dependency that calls it so that it can be read —
+    and tested — for what it is: the one place the application says who it is
+    for.
+    """
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account is deactivated.",
+        )
+    # A guest is recognised at the door and goes no further: every screen
+    # of the application leans on this dependency, and therefore stays the
+    # team's. The requests open themselves to them, one route at a time, the
+    # way a route opens itself to a machine.
+    if user.is_guest:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account may only reach the requests.",
+        )
+    return user
+
+
+async def get_signed_in_user(
     authorization: str | None = Header(default=None),
     session: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> User:
-    """Resolves the current user, provisioning them if need be.
+    """Resolves whoever is signed in, provisioning them if need be.
+
+    Anybody with an Entra identity, guests included — which is why almost no
+    route depends on it. What it is for is the handful of routes that a guest
+    must reach, and they say so by asking for it.
 
     With `REQUIRE_AUTH=false`, a development identity is used: it allows work
     without having declared the redirect URI on the Entra side. This mode must
@@ -96,12 +136,15 @@ async def get_current_user(
     )
 
     if not settings.require_auth:
-        logger.warning("Authentication disabled: development identity.")
+        logger.warning("Authentication disabled: signed in as %s.", settings.dev_email)
         # An administrator, and only here: with no door there is nobody to
         # promote this account and nobody it could be confused with. A guest
         # would mean a laptop on which nothing can be declared, which is the
-        # opposite of what switching authentication off is for.
-        user = await provision.execute(DEV_IDENTITY, first_role=Role.ADMIN)
+        # opposite of what switching authentication off is for. To be the
+        # other audience instead, move that account with `make grant-role`.
+        user = await provision.execute(
+            dev_identity(settings.dev_email), first_role=Role.ADMIN
+        )
         await session.commit()
         return user
 
@@ -133,7 +176,29 @@ async def get_current_user(
 
     user = await provision.execute(identity)
     await session.commit()
+    return user
 
+
+async def get_current_user(
+    user: User = Depends(get_signed_in_user),
+) -> User:
+    """The user every screen of the application is read by: a team member."""
+    return admit(user)
+
+
+async def get_asker(
+    user: User = Depends(get_signed_in_user),
+) -> User:
+    """The one door a guest comes through: the recueil, and nothing else.
+
+    It is to a guest what `get_contributor` is to the team — the door a route
+    that writes hangs off, named so that `test_write_doors` can read it. Every
+    route of the recueil asks for it, and no other route may: a route that
+    wanted a guest to reach it would be a route reopening the application.
+
+    A deactivated account is turned back here as everywhere else. Access cut
+    off is access cut off, whichever audience one belongs to.
+    """
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -147,11 +212,13 @@ async def get_contributor(
 ) -> User:
     """Restricts a route to whoever may write into Ganesh.
 
-    A guest reads the application whole and declares nothing into it: not a
-    month, not a project, not a mise à jour, not a mood.
+    A guest never comes this far — `get_current_user` turns them away at the
+    door — so what this one holds back is a deactivated account, and it is
+    where a rung between guest and teammate would land the day there is one.
 
     The door is **here** rather than in each use case because there are forty
-    of them that write, and one forgotten is a guest writing. A mutating route
+    of them that write, and one forgotten is somebody writing who may not. A
+    mutating route
     hangs off this dependency, off `get_current_manager`, off `get_admin`, or
     off a machine door asking for a write scope — and a test says so, the way
     a scope opening no route is a bug the tests catch.

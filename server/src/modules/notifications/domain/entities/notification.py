@@ -47,6 +47,10 @@ class NotificationKind(StrEnum):
     # Someone is talking to me.
     UPDATE_MENTION = "update.mention"
 
+    # What the company is asking for. Managers alone are told: they are the
+    # ones who weigh it, and a need waiting on nobody is a need that sleeps.
+    REQUEST_SUBMITTED = "request.submitted"
+
     @property
     def accumulates(self) -> bool:
         """Whether a repeat of the same gesture folds into the waiting line.
@@ -73,6 +77,7 @@ class Notification:
     actor_id: int
     at: datetime = field(default_factory=datetime.now)
     project_id: int | None = None
+    request_id: int | None = None
     day: date | None = None
     payload: dict[str, Any] | None = None
     count: int = 1

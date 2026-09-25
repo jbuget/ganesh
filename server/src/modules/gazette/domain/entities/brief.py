@@ -25,6 +25,11 @@ class Tally:
     phase_changes: int = 0
     news_posted: int = 0
     months_validated: int = 0
+    #: What the company asked for, and what became a mission. Two figures
+    #: rather than one: what is asked and what is built are two facts, and a
+    #: month that filed six and built none says something either alone hides.
+    requests_filed: int = 0
+    requests_converted: int = 0
 
 
 @dataclass(frozen=True)

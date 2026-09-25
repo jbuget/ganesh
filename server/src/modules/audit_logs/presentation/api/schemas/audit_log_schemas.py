@@ -44,6 +44,10 @@ class AuditLogEntryResponse(BaseModel):
     day: date | None
     #: Which field moved, for the gestures that change a mission field by field.
     field: str | None
+    #: Why a need was arbitrated the way it was. Read back here because an
+    #: arbitration is played again as often as it has to be: the sheet only
+    #: ever carries the last reason, and the ones before it live here.
+    note: str | None
     old_value: str | None
     new_value: str | None
 

@@ -111,6 +111,18 @@ export const ACTION_FAMILIES: ActionFamily[] = [
     ],
   },
   {
+    label: "Demandes",
+    actions: [
+      { value: "request.create", label: "Dépôt" },
+      { value: "request.update", label: "Modification" },
+      { value: "request.submit", label: "Soumission" },
+      { value: "request.withdraw", label: "Reprise" },
+      { value: "request.decide", label: "Arbitrage" },
+      { value: "request.convert", label: "Conversion en projet" },
+      { value: "request.delete", label: "Suppression" },
+    ],
+  },
+  {
     label: "Clés d'API",
     actions: [
       { value: "api_key.create", label: "Création" },

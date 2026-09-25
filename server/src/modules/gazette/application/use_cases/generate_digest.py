@@ -18,6 +18,9 @@ from src.modules.gazette.domain.services.month_window import first_day
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.requests.domain.repositories.request_repository import (
+    RequestRepository,
+)
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 from src.shared.utils import clock
@@ -40,12 +43,14 @@ class GenerateDigestUseCase:
         projects: ProjectRepository,
         audit_logs: AuditLogRepository,
         digests: DigestRepository,
+        requests: RequestRepository,
         writer: ProseWriter,
     ) -> None:
         self._users = users
         self._projects = projects
         self._audit_logs = audit_logs
         self._digests = digests
+        self._requests = requests
         self._writer = writer
 
     async def execute(
@@ -56,7 +61,9 @@ class GenerateDigestUseCase:
             raise EntityNotFoundError("The user cannot be found.")
 
         month = first_day(command.month)
-        brief = await gather_brief(month, self._audit_logs, self._projects, self._users)
+        brief = await gather_brief(
+            month, self._audit_logs, self._projects, self._users, self._requests
+        )
         generated_at = at or clock.now()
 
         digest = await self._digests.add(

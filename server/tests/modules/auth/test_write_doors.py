@@ -1,8 +1,8 @@
-"""Every route that writes hangs off a door a guest cannot come through.
+"""Every route that writes hangs off a named door.
 
 The same reading `test_open_to_machines` does of the scopes, done of the
-doors: a guest reads Ganesh whole and declares nothing into it, and there are
-forty-odd mutating routes. Checking them one by one is how one of them ends up
+doors: a guest reaches the recueil and nothing else, declares nothing into
+the rest of Ganesh, and there are forty-odd mutating routes. Checking them one by one is how one of them ends up
 forgotten — so the door is read off the application itself, and a route added
 without one fails here rather than in production.
 """
@@ -18,13 +18,16 @@ from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 
 #: What a mutating route may hang off.
 #:
-#: Three human doors — whoever may write, a manager, an administrator — and
-#: the machine door, which is checked further below: it is only a door for a
-#: write when the scope it asks for is a write scope.
+#: Three human doors — whoever may write, a manager, an administrator — the
+#: recueil's, which is the one thing a guest writes and is why it is named
+#: rather than left to `get_signed_in_user`, and the machine door, checked
+#: further below: it is only a door for a write when the scope it asks for is
+#: a write scope.
 WRITE_DOORS = {
     "get_contributor",
     "get_current_manager",
     "get_admin",
+    "get_asker",
 }
 MACHINE_DOOR = "teammate_or_machine"
 

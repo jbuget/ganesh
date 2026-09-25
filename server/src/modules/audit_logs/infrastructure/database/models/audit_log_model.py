@@ -31,6 +31,9 @@ class AuditLogModel(Base):
     project_id: Mapped[int | None] = mapped_column(
         ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True
     )
+    request_id: Mapped[int | None] = mapped_column(
+        ForeignKey("requests.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     day: Mapped[date | None] = mapped_column(Date, nullable=True)
     #: What a field moved from and to, as it was typed. Held without a width:
     #: a documentation address, a summary or a list of scopes all run past any

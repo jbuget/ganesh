@@ -44,7 +44,7 @@ from src.modules.api_keys.infrastructure.rate_limit.in_memory_rate_limit_store i
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
-from src.modules.auth.presentation.dependencies import get_current_user
+from src.modules.auth.presentation.dependencies import admit, get_signed_in_user
 
 # Declared once, in the entries module, and imported from there by projects and
 # users alike: one provider per repository, whatever module asks for it.
@@ -266,16 +266,20 @@ async def teammate_or_machine(
     `get_current_user` does to turn a key away. A teammate's token never
     touches the key path, and a key never touches the Entra path.
 
-    `get_current_user` is **called** rather than declared. FastAPI resolves
-    every declared dependency, so a key would be refused by the human door
-    before the machine one was ever consulted. This wrapper is the seam that
-    survives that: it is a dependency in its own right, so a test stands a
-    teammate at the door without having to stand down the whole door.
+    The door is **called** rather than declared. FastAPI resolves every
+    declared dependency, so a key would be refused by the human door before
+    the machine one was ever consulted. This wrapper is the seam that survives
+    that: it is a dependency in its own right, so a test stands a teammate at
+    the door without having to stand down the whole door.
+
+    Called in two steps, exactly as `get_current_user` declares them: whoever
+    signed in is resolved, then admitted — a guest is turned away here as
+    everywhere else, and a route open to machines stays the team's.
     """
     token = bearer_token(authorization)
     if token is not None and key_material.looks_like_ours(token):
         return None
-    return await get_current_user(authorization, session, settings)
+    return admit(await get_signed_in_user(authorization, session, settings))
 
 
 def open_to_machines(

@@ -71,6 +71,14 @@ class MachineStampedAuditLog(AuditLogRepository):
     async def count_for_project(self, project_id: int) -> int:
         return await self._inner.count_for_project(project_id)
 
+    async def list_for_request(
+        self, request_id: int, limit: int, offset: int
+    ) -> list[AuditLog]:
+        return await self._inner.list_for_request(request_id, limit, offset)
+
+    async def count_for_request(self, request_id: int) -> int:
+        return await self._inner.count_for_request(request_id)
+
     async def list_all(
         self, limit: int, offset: int, kept: AuditLogFilter | None = None
     ) -> list[AuditLog]:

@@ -29,6 +29,8 @@ def to_json(brief: Brief) -> dict[str, Any]:
             "phase_changes": brief.tally.phase_changes,
             "news_posted": brief.tally.news_posted,
             "months_validated": brief.tally.months_validated,
+            "requests_filed": brief.tally.requests_filed,
+            "requests_converted": brief.tally.requests_converted,
         },
         "movements": [
             {
@@ -65,6 +67,11 @@ def from_json(month: date, payload: dict[str, Any]) -> Brief:
             phase_changes=tally.get("phase_changes", 0),
             news_posted=tally.get("news_posted", 0),
             months_validated=tally.get("months_validated", 0),
+            # A numéro written before the recueil existed says nothing of it,
+            # and reads back as a month that asked for nothing — which is
+            # exactly what it was.
+            requests_filed=tally.get("requests_filed", 0),
+            requests_converted=tally.get("requests_converted", 0),
         ),
         movements=[_movement(row) for row in payload.get("movements") or []],
         highlights=[_highlight(row) for row in payload.get("highlights") or []],

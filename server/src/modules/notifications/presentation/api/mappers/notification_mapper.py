@@ -31,6 +31,7 @@ def to_notification_response(signed: SignedNotification) -> NotificationResponse
                 initials=initials(signed.actor.label),
             )
         ),
+        request_id=line.request_id,
         project=(
             None
             if signed.project is None or signed.project.id is None

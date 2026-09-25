@@ -9,6 +9,7 @@ from src.modules.users.application.use_cases.update_user_identity import (
 )
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.enums.department import Department
+from src.shared.enums.org_level import OrgLevel
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
     ForbiddenActionError,
@@ -53,6 +54,7 @@ def command(**overrides) -> UpdateUserIdentityCommand:
         "last_name": "Chen",
         "department": Department.CUSTOMER_SERVICE,
         "github_username": "lea-chen",
+        "org_level": OrgLevel.COMOP,
     }
     fields.update(overrides)
     return UpdateUserIdentityCommand(**fields)
@@ -73,11 +75,19 @@ async def test_a_manager_gives_away_who_a_teammate_is() -> None:
 async def test_what_is_left_blank_is_emptied() -> None:
     """The sheet is written whole: an emptied field is a decision, not a gap."""
     teammate = make_teammate()
-    teammate.set_identity("Léa", "Chen", Department.CUSTOMER_SERVICE, "lea-chen")
+    teammate.set_identity(
+        "Léa", "Chen", Department.CUSTOMER_SERVICE, "lea-chen", OrgLevel.COMOP
+    )
     use_case, repo, _ = build([make_manager(), teammate])
 
     await use_case.execute(
-        command(first_name=None, last_name=None, department=None, github_username=None)
+        command(
+            first_name=None,
+            last_name=None,
+            department=None,
+            github_username=None,
+            org_level=None,
+        )
     )
 
     stored = await repo.get_by_id(2)
@@ -86,6 +96,7 @@ async def test_what_is_left_blank_is_emptied() -> None:
     assert stored.last_name is None
     assert stored.department is None
     assert stored.github_username is None
+    assert stored.org_level is None
 
 
 async def test_a_teammate_cannot_rewrite_a_colleague() -> None:
@@ -123,4 +134,5 @@ async def test_the_change_is_traced() -> None:
         "last_name": "Chen",
         "department": "customer_service",
         "github_username": "lea-chen",
+        "org_level": "comop",
     }

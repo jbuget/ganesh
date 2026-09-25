@@ -8,6 +8,7 @@ import type {
   TallyResponse,
 } from "@/lib/api/generated/model";
 import {
+  chapterKey,
   chapterLine,
   chapterTitle,
   emphasiseProjects,
@@ -35,6 +36,7 @@ function movement(fields: Partial<MovementResponse>): MovementResponse {
 
 function chapter(fields: Partial<ChapterResponse>): ChapterResponse {
   return {
+    of: "project",
     project_id: 7,
     label: "Ganesh",
     movements: [],
@@ -58,6 +60,8 @@ const NOTHING: TallyResponse = {
   phase_changes: 0,
   news_posted: 0,
   months_validated: 0,
+  requests_filed: 0,
+  requests_converted: 0,
 };
 
 describe("movementSentence", () => {
@@ -454,5 +458,50 @@ describe("chapterLine", () => {
         chapter({ project_id: null, label: null }),
       ),
     ).toBe("Sam a rejoint l'équipe");
+  });
+});
+
+describe("what the company asked for", () => {
+  it("says every fact of a need, agreeing with it", () => {
+    // « une demande » is feminine, and nothing but opening the screen would
+    // catch a « a été accepté ».
+    const said = (kind: MovementResponse["kind"]) =>
+      movementPredicate(movement({ kind }));
+
+    expect(said("request_filed")).toBe("a été déposée");
+    expect(said("request_accepted")).toBe("a été acceptée");
+    expect(said("request_rejected")).toBe("a été refusée");
+    expect(said("request_deferred")).toBe("a été reportée à plus tard");
+    expect(said("request_converted")).toBe("est devenue un projet");
+  });
+
+  it("tells its chapter from the team's, which carries no project either", () => {
+    // Keyed on the project alone, the two opened and closed together.
+    const needs = chapter({ of: "requests", project_id: null, label: null });
+    const team = chapter({ of: "team", project_id: null, label: null });
+
+    expect(chapterKey(needs)).not.toBe(chapterKey(team));
+    expect(chapterKey(chapter({ of: "project", project_id: 7 }))).toBe("project:7");
+  });
+
+  it("gathers them under a heading of their own", () => {
+    // A need is not a mission: the whole feature rests on not confusing them.
+    expect(
+      chapterTitle(chapter({ of: "requests", project_id: null, label: null })),
+    ).toBe("Les demandes");
+    expect(chapterTitle(chapter({ of: "team", project_id: null, label: null }))).toBe(
+      "L'équipe",
+    );
+  });
+
+  it("counts what was asked apart from what was built", () => {
+    const lines = tallyLines({
+      ...NOTHING,
+      requests_filed: 6,
+      requests_converted: 1,
+    });
+
+    expect(lines).toContainEqual({ label: "demandes déposées", value: 6 });
+    expect(lines).toContainEqual({ label: "demande devenue un projet", value: 1 });
   });
 });

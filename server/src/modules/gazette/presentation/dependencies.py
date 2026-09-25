@@ -27,6 +27,12 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.infrastructure.database.repositories.project_repository_impl import (
     SqlProjectRepository,
 )
+from src.modules.requests.domain.repositories.request_repository import (
+    RequestRepository,
+)
+from src.modules.requests.infrastructure.database.repositories.request_repository_impl import (
+    SqlRequestRepository,
+)
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.modules.users.infrastructure.database.repositories.user_repository_impl import (
     SqlUserRepository,
@@ -66,14 +72,25 @@ def get_prose_writer(settings: Settings = Depends(get_settings)) -> ProseWriter:
     )
 
 
+def get_request_repository(
+    session: AsyncSession = Depends(get_db),
+) -> RequestRepository:
+    return SqlRequestRepository(session)
+
+
 def get_read_digest_use_case(
     users: UserRepository = Depends(get_user_repository),
     projects: ProjectRepository = Depends(get_project_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
     digests: DigestRepository = Depends(get_digest_repository),
+    requests: RequestRepository = Depends(get_request_repository),
 ) -> ReadDigestUseCase:
     return ReadDigestUseCase(
-        users=users, projects=projects, audit_logs=audit_logs, digests=digests
+        users=users,
+        projects=projects,
+        audit_logs=audit_logs,
+        digests=digests,
+        requests=requests,
     )
 
 
@@ -82,6 +99,7 @@ def get_generate_digest_use_case(
     projects: ProjectRepository = Depends(get_project_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
     digests: DigestRepository = Depends(get_digest_repository),
+    requests: RequestRepository = Depends(get_request_repository),
     writer: ProseWriter = Depends(get_prose_writer),
 ) -> GenerateDigestUseCase:
     return GenerateDigestUseCase(
@@ -89,5 +107,6 @@ def get_generate_digest_use_case(
         projects=projects,
         audit_logs=audit_logs,
         digests=digests,
+        requests=requests,
         writer=writer,
     )

@@ -19,6 +19,7 @@ export type Surface = (typeof Surface)[keyof typeof Surface];
 export const Surface = {
   time_entry: "time_entry",
   month_closing: "month_closing",
+  requests: "requests",
   project_registry: "project_registry",
   phase_progress: "phase_progress",
   assignment: "assignment",

@@ -42,11 +42,14 @@ def _to_tally(tally: Tally) -> TallyResponse:
         phase_changes=tally.phase_changes,
         news_posted=tally.news_posted,
         months_validated=tally.months_validated,
+        requests_filed=tally.requests_filed,
+        requests_converted=tally.requests_converted,
     )
 
 
 def _to_chapter(chapter: Chapter) -> ChapterResponse:
     return ChapterResponse(
+        of=chapter.of,
         project_id=chapter.project_id,
         label=chapter.label,
         movements=[_to_movement(movement) for movement in chapter.movements],

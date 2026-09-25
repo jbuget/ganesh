@@ -29,6 +29,18 @@ class MovementKind(StrEnum):
     #: apart here because it is the one steering reads before all the others.
     WENT_LIVE = "went_live"
     NEWS_POSTED = "news_posted"
+
+    # What the company asked for, and what was decided of it. A draft makes
+    # none of these: a need nobody handed over has been asked of nobody.
+    REQUEST_FILED = "request_filed"
+    REQUEST_ACCEPTED = "request_accepted"
+    REQUEST_REJECTED = "request_rejected"
+    REQUEST_DEFERRED = "request_deferred"
+    #: A need that became a mission. Told in the mission's own chapter: it is
+    #: the day that project started, and a chapter of needs would say it away
+    #: from the story it opens.
+    REQUEST_CONVERTED = "request_converted"
+
     TEAMMATE_JOINED = "teammate_joined"
     TEAMMATE_LEFT = "teammate_left"
     TEAMMATE_RETURNED = "teammate_returned"

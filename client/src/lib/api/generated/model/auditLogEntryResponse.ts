@@ -24,6 +24,7 @@ export interface AuditLogEntryResponse {
   project: AuditProjectResponse | null;
   day: string | null;
   field: string | null;
+  note: string | null;
   old_value: string | null;
   new_value: string | null;
 }

@@ -13,6 +13,7 @@ from src.modules.gazette.domain.entities.brief import Brief, Tally
 from src.modules.gazette.domain.entities.movement import Movement, MovementKind
 from src.modules.gazette.domain.services.saliency import find_highlights
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
+from src.modules.requests.domain.entities.request import RequestState
 
 #: The phases in their nominal order, which is what tells a mission moving on
 #: from one going back.
@@ -31,8 +32,22 @@ READ_ACTIONS = frozenset(
         AuditAction.USER_DEACTIVATE,
         AuditAction.USER_ACTIVATE,
         AuditAction.MONTH_VALIDATE,
+        # What the company asked for. Not the draft, not the sheet being
+        # written, not a need taken back: what a month owes its readers is
+        # what reached the team, and what was decided of it.
+        AuditAction.REQUEST_SUBMIT,
+        AuditAction.REQUEST_DECIDE,
+        AuditAction.REQUEST_CONVERT,
     }
 )
+
+#: What arbitrating said, as a movement. A decision the register spells in a
+#: way this does not know is no movement: the gazette prints what it can name.
+_DECISIONS = {
+    RequestState.ACCEPTED: MovementKind.REQUEST_ACCEPTED,
+    RequestState.REJECTED: MovementKind.REQUEST_REJECTED,
+    RequestState.DEFERRED: MovementKind.REQUEST_DEFERRED,
+}
 
 #: Field changes the gazette reads. Everything else a mission carries — its
 #: label, its estimate, its links — changes without steering anything, and a
@@ -46,17 +61,19 @@ def build_brief(
     logs: Sequence[AuditLog],
     projects: Mapping[int, Project],
     people: Mapping[int, str],
+    needs: Mapping[int, str],
 ) -> Brief:
     """One month of the register, read back as movements, figures and facts.
 
     The logs are those of the month, in any order. The missions are the
     reference list as it stands — archived ones included, or a mission that
-    left during the month could no longer be named.
+    left during the month could no longer be named. The needs are read the
+    same way, and for the same reason.
     """
     movements = [
         movement
         for log in sorted(logs, key=lambda log: log.at)
-        if (movement := _read(log, projects, people)) is not None
+        if (movement := _read(log, projects, people, needs)) is not None
     ]
     return Brief(
         month=month,
@@ -67,7 +84,10 @@ def build_brief(
 
 
 def _read(
-    log: AuditLog, projects: Mapping[int, Project], people: Mapping[int, str]
+    log: AuditLog,
+    projects: Mapping[int, Project],
+    people: Mapping[int, str],
+    needs: Mapping[int, str],
 ) -> Movement | None:
     """The movement one log line makes, or nothing if it makes none."""
     if log.action is AuditAction.PROJECT_CREATE:
@@ -84,7 +104,38 @@ def _read(
         return _phase_move(log, projects)
     if log.action is AuditAction.PROJECT_UPDATE:
         return _field_change(log, projects)
+    if log.action is AuditAction.REQUEST_SUBMIT:
+        return _about_need(MovementKind.REQUEST_FILED, log, needs)
+    if log.action is AuditAction.REQUEST_CONVERT:
+        return _about_need(MovementKind.REQUEST_CONVERTED, log, needs)
+    if log.action is AuditAction.REQUEST_DECIDE:
+        return _decision(log, needs)
     return None
+
+
+def _decision(log: AuditLog, needs: Mapping[int, str]) -> Movement | None:
+    """What was decided of a need, told apart by what was decided."""
+    if log.new_value is None:
+        return None
+    try:
+        said = RequestState(log.new_value)
+    except ValueError:
+        return None
+    kind = _DECISIONS.get(said)
+    return None if kind is None else _about_need(kind, log, needs)
+
+
+def _about_need(
+    kind: MovementKind, log: AuditLog, needs: Mapping[int, str]
+) -> Movement | None:
+    """A need, named as it was filed.
+
+    It carries no `project_id`, the conversion included: a need is not a
+    mission, and telling the day it became one inside the mission's own
+    chapter would open that story one line before it starts.
+    """
+    title = needs.get(log.request_id) if log.request_id is not None else None
+    return None if title is None else Movement(kind=kind, at=log.at, subject=title)
 
 
 def _field_change(log: AuditLog, projects: Mapping[int, Project]) -> Movement | None:
@@ -226,6 +277,8 @@ def _count(logs: Sequence[AuditLog], movements: Sequence[Movement]) -> Tally:
         ),
         news_posted=kinds.count(MovementKind.NEWS_POSTED),
         months_validated=_months_closed(logs),
+        requests_filed=kinds.count(MovementKind.REQUEST_FILED),
+        requests_converted=kinds.count(MovementKind.REQUEST_CONVERTED),
     )
 
 

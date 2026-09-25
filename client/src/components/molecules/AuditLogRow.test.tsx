@@ -17,6 +17,7 @@ function entry(over: Partial<AuditLogEntryResponse> = {}): AuditLogEntryResponse
     project: null,
     day: null,
     field: null,
+    note: null,
     old_value: null,
     new_value: null,
     ...over,

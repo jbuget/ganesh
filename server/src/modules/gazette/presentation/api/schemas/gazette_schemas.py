@@ -10,6 +10,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
+from src.modules.gazette.domain.entities.chapter import ChapterOf
 from src.modules.gazette.domain.entities.highlight import HighlightKind, Tone
 from src.modules.gazette.domain.entities.movement import MovementKind
 from src.modules.projects.domain.entities.project import ProjectStatus
@@ -23,6 +24,8 @@ class TallyResponse(BaseModel):
     phase_changes: int
     news_posted: int
     months_validated: int
+    requests_filed: int
+    requests_converted: int
 
 
 class MovementResponse(BaseModel):
@@ -40,9 +43,13 @@ class MovementResponse(BaseModel):
 class ChapterResponse(BaseModel):
     """One project's month, its work packages' facts told among its own."""
 
-    #: Nothing when the chapter gathers what was about no project — somebody
-    #: joining the team, or leaving it. What such a chapter is called is for
-    #: the reading side to say, in French.
+    #: What the chapter gathers: a project's month, the needs the company
+    #: expressed, or who joined and left. Two chapters carry no project, and
+    #: this is what tells them apart.
+    of: ChapterOf
+    #: Nothing when the chapter gathers what was about no project — a need
+    #: expressed, somebody joining the team. What such a chapter is called is
+    #: for the reading side to say, in French.
     project_id: int | None
     label: str | None
     #: Everything that happened to the project and to its packages, in the

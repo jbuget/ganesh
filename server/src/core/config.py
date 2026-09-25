@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     azure_ad_tenant_id: str = ""
     azure_ad_client_id: str = ""
     require_auth: bool = True
+    # Le compte que la porte ouverte remet, en developpement. Il dit lequel,
+    # jamais ce qu'il peut faire : la porte ouverte provisionne un
+    # administrateur, et `make grant-role` deplace ce compte d'un public a
+    # l'autre. Sans effet des que REQUIRE_AUTH est vrai.
+    dev_email: str = "j.buget@waat.fr"
 
     # La porte de secours, le temps qu'Entra declare l'application. Entra
     # eteint, un seul compte entre, avec le mot de passe donne ici. Sans mot

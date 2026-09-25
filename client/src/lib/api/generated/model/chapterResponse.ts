@@ -4,12 +4,14 @@
  * Ganesh API
  * OpenAPI spec version: 0.1.0
  */
+import type { ChapterOf } from "./chapterOf";
 import type { MovementResponse } from "./movementResponse";
 
 /**
  * One project's month, its work packages' facts told among its own.
  */
 export interface ChapterResponse {
+  of: ChapterOf;
   project_id: number | null;
   label: string | null;
   movements: MovementResponse[];

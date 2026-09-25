@@ -16,6 +16,7 @@ import type {
   UserResponse,
 } from "@/lib/api/generated/model";
 import { DEPARTMENTS } from "@/lib/departments";
+import { ORG_LEVELS } from "@/lib/org-levels";
 import { formatParisDateTime } from "@/lib/instants";
 import { type WeekPresence, weekOf } from "@/lib/presence";
 import { since } from "@/lib/relative-dates";
@@ -118,6 +119,21 @@ export function UserIdentityTab({
           label="Département"
           editable={editable}
           onChange={(department) => onUpdateIdentity(user, { department })}
+        />
+      </SheetRow>
+
+      <SheetRow title="Niveau">
+        {/* Where the person sits in the company, beside where they work.
+            Left blank for most: it is filled in for whoever has to be told
+            apart, which today means the COMEX a need is carried to. It says
+            nothing about what they may do here — the role below does, and
+            the two never agree with each other. */}
+        <OptionPicker
+          value={user.org_level}
+          options={ORG_LEVELS}
+          label="Niveau"
+          editable={editable}
+          onChange={(org_level) => onUpdateIdentity(user, { org_level })}
         />
       </SheetRow>
 

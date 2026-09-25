@@ -34,6 +34,7 @@ def to_entity(model: AuditLogModel) -> AuditLog:
         at=model.at,
         target_user_id=model.target_user_id,
         project_id=model.project_id,
+        request_id=model.request_id,
         day=model.day,
         old_value=model.old_value,
         new_value=model.new_value,
@@ -54,6 +55,7 @@ class SqlAuditLogRepository(AuditLogRepository):
             at=log.at,
             target_user_id=log.target_user_id,
             project_id=log.project_id,
+            request_id=log.request_id,
             day=log.day,
             old_value=log.old_value,
             new_value=log.new_value,
@@ -144,6 +146,28 @@ class SqlAuditLogRepository(AuditLogRepository):
             .where(AuditLogModel.project_id == project_id)
         )
         return result.scalar_one()
+
+    async def list_for_request(
+        self, request_id: int, limit: int, offset: int
+    ) -> list[AuditLog]:
+        # Same tie-break as a mission's log: one gesture writing several lines
+        # must not shuffle them between two reads.
+        result = await self._session.execute(
+            select(AuditLogModel)
+            .where(AuditLogModel.request_id == request_id)
+            .order_by(AuditLogModel.at.desc(), AuditLogModel.id.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return [to_entity(model) for model in result.scalars().all()]
+
+    async def count_for_request(self, request_id: int) -> int:
+        result = await self._session.execute(
+            select(func.count())
+            .select_from(AuditLogModel)
+            .where(AuditLogModel.request_id == request_id)
+        )
+        return int(result.scalar_one())
 
     @staticmethod
     def _narrow(query: ReadT, kept: AuditLogFilter | None) -> ReadT:

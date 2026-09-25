@@ -5,6 +5,7 @@ import {
   FolderKanban,
   GanttChartSquare,
   Home,
+  Inbox,
   KanbanSquare,
   KeyRound,
   Milestone,
@@ -48,6 +49,9 @@ export const SCREENS: readonly Screen[] = [
   { href: "/timesheet", label: "Saisie des temps", Icon: CalendarDays },
   { href: "/kanban", label: "Kanban", Icon: KanbanSquare },
   { href: "/projects", label: "Projets", Icon: FolderKanban },
+  // Between the projects and what is read of them: a need is what a mission
+  // is born of, and it is kept out of the reference list until it is.
+  { href: "/requests", label: "Demandes", Icon: Inbox },
   { href: "/activity-summary", label: "Synthèse d'activité", Icon: TableProperties },
   { href: "/planning", label: "Planification", Icon: GanttChartSquare },
   { href: "/roadmap", label: "Feuille de route", Icon: Milestone },

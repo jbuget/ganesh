@@ -14,4 +14,6 @@ export interface TallyResponse {
   phase_changes: number;
   news_posted: number;
   months_validated: number;
+  requests_filed: number;
+  requests_converted: number;
 }

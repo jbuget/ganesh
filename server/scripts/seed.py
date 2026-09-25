@@ -60,6 +60,7 @@ from src.modules.projects.infrastructure.database.models.project_update_model im
 from src.modules.users.domain.entities.user import Role
 from src.modules.users.infrastructure.database.models.user_model import UserModel
 from src.shared.enums.department import Department
+from src.shared.enums.org_level import OrgLevel
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("seed")
@@ -88,6 +89,11 @@ class Teammate:
     department: Department = Department.INFORMATION_SYSTEMS
     #: Their handle on GitHub, which is where their contributions are found.
     github_username: str | None = None
+    #: Where they sit in the company. Said here for whoever has to be told
+    #: apart before they ever sign in — the members of the COMEX a need is
+    #: carried to have to be in the picker on the day the recueil opens, and
+    #: an account nobody can create from a screen has to come from somewhere.
+    org_level: OrgLevel | None = None
     #: Addresses this person was handed before: an account is found by its
     #: email, so a typo corrected in the list alone would create a second
     #: account beside the first rather than putting it right.
@@ -126,6 +132,9 @@ def load_team() -> list[Teammate]:
                 row.get("department", Department.INFORMATION_SYSTEMS.value)
             ),
             github_username=row.get("github_username"),
+            org_level=(
+                OrgLevel(row["org_level"]) if row.get("org_level") else None
+            ),
             previous_emails=tuple(row.get("previous_emails", ())),
         )
         for row in rows
@@ -313,6 +322,7 @@ async def seed_users(team: list[Teammate]) -> tuple[int, int]:
                         last_name=teammate.last_name,
                         department=teammate.department,
                         github_username=teammate.github_username,
+                        org_level=teammate.org_level,
                     )
                 )
                 created += 1
@@ -320,8 +330,9 @@ async def seed_users(team: list[Teammate]) -> tuple[int, int]:
 
             # The role and the access are left alone: they are given out from
             # the screen, and this script has no business taking them back.
-            # The handle is only ever added: a list that says nothing about
-            # someone's GitHub account does not say they have none.
+            # The handle and the level are only ever added: a list that says
+            # nothing about someone's GitHub account, or about where they sit,
+            # does not say they have neither.
             drifted = (
                 account.first_name != teammate.first_name
                 or account.last_name != teammate.last_name
@@ -330,6 +341,10 @@ async def seed_users(team: list[Teammate]) -> tuple[int, int]:
                     teammate.github_username is not None
                     and account.github_username != teammate.github_username
                 )
+                or (
+                    teammate.org_level is not None
+                    and account.org_level is not teammate.org_level
+                )
             )
             if drifted:
                 account.first_name = teammate.first_name
@@ -337,6 +352,8 @@ async def seed_users(team: list[Teammate]) -> tuple[int, int]:
                 account.department = teammate.department
                 if teammate.github_username is not None:
                     account.github_username = teammate.github_username
+                if teammate.org_level is not None:
+                    account.org_level = teammate.org_level
                 updated += 1
 
         await session.commit()

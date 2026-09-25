@@ -65,6 +65,7 @@ async def test_a_manager_writes_the_sheet_of_a_teammate(client: AsyncClient) -> 
             "last_name": "Chen",
             "department": "customer_service",
             "github_username": "lea-chen",
+            "org_level": "comex",
         },
     )
 
@@ -74,6 +75,7 @@ async def test_a_manager_writes_the_sheet_of_a_teammate(client: AsyncClient) -> 
     assert body["last_name"] == "Chen"
     assert body["department"] == "customer_service"
     assert body["github_username"] == "lea-chen"
+    assert body["org_level"] == "comex"
 
 
 async def test_a_sheet_may_be_emptied(client: AsyncClient) -> None:
@@ -90,6 +92,7 @@ async def test_a_sheet_may_be_emptied(client: AsyncClient) -> None:
     assert response.status_code == 200
     assert response.json()["department"] is None
     assert response.json()["github_username"] is None
+    assert response.json()["org_level"] is None
 
 
 async def test_a_department_outside_the_list_is_refused(client: AsyncClient) -> None:

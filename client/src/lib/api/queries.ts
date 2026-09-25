@@ -21,6 +21,8 @@ import type {
   PeriodRange,
   PlatformResponse,
   ProjectListItemResponse,
+  RequestPersonResponse,
+  RequestResponse,
   StatisticsResponse,
   TeamMoodsResponse,
   TouchedProjectResponse,
@@ -34,6 +36,11 @@ import { useGetActivitySummary } from "@/lib/api/generated/activity-summary/acti
 import { useReadPlatform } from "@/lib/api/generated/admin/admin";
 import { useGetStatistics } from "@/lib/api/generated/stats/stats";
 import { useListProjects } from "@/lib/api/generated/projects/projects";
+import {
+  useListMyRequests,
+  useListRequestSponsors,
+  useListRequests,
+} from "@/lib/api/generated/requests/requests";
 import {
   useGetMe,
   useGetUserRecord,
@@ -212,4 +219,38 @@ export function useNotifications(
 export function useDigest(month: string, version: number | null) {
   const query = useGetDigest({ month, ...(version === null ? {} : { version }) });
   return { ...query, digest: successOf<DigestResponse>(query.data) };
+}
+
+/**
+ * The needs one filed oneself, drafts included.
+ *
+ * The only list a requester ever reads: the team's own is another route, shut
+ * to them.
+ */
+export function useMyRequests() {
+  const query = useListMyRequests();
+  return { ...query, requests: successOf<RequestResponse[]>(query.data) ?? [] };
+}
+
+/**
+ * The members of the COMEX a need may be carried to.
+ *
+ * A route of the requests rather than the team list: whoever files a need
+ * reaches no list of teammates, and a name and an identifier are all the
+ * picker needs of them.
+ */
+export function useRequestSponsors() {
+  const query = useListRequestSponsors();
+  return { ...query, sponsors: successOf<RequestPersonResponse[]>(query.data) ?? [] };
+}
+
+/**
+ * The needs the team reads: everything handed over, plus one's own drafts.
+ *
+ * Narrowed in the browser rather than on the server: the whole company files
+ * a few dozen a year, and every criterion then answers as one types.
+ */
+export function useRequests() {
+  const query = useListRequests();
+  return { ...query, requests: successOf<RequestResponse[]>(query.data) ?? [] };
 }

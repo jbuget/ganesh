@@ -56,10 +56,13 @@ written down, and a rung added between two others cannot be forgotten.
 
 | Action | `GUEST` | `TEAMMATE` | `MANAGER` | `ADMIN` |
 |---|---|---|---|---|
-| Read every screen | ✅ | ✅ | ✅ | ✅ |
+| Express a need, and read one's own | ✅ | ✅ | ✅ | ✅ |
+| Read every other screen | ❌ | ✅ | ✅ | ✅ |
 | Fill in one's own month, read and edit a colleague's open month | ❌ | ✅ | ✅ | ✅ |
 | Create / change a project, change its status | ❌ | ✅ | ✅ | ✅ |
 | Validate one's own month | ❌ | ✅ | ✅ | ✅ |
+| Read the needs the company expressed | ❌ | ✅ | ✅ | ✅ |
+| Arbitrate a need, and make a mission of it | ❌ | ❌ | ✅ | ✅ |
 | Reopen a validated month | ❌ | ❌ | ✅ | ✅ |
 | Manage teammates | ❌ | ❌ | ✅ | ✅ |
 | Hand out a role, up to one's own | ❌ | ❌ | ✅ | ✅ |
@@ -67,20 +70,31 @@ written down, and a rung added between two others cannot be forgotten.
 | Sync to Monday (V1.1) | ❌ | ❌ | ✅ | ✅ |
 
 **A guest is what anybody is on their first sign-in**, and it is an answer
-rather than a placeholder: somebody the reference list has never heard of reads
-the application whole and declares nothing into it. The seed is the other door
-— matching by email is what preserves a role handed out before anybody logged
-in — and `make grant-role EMAIL=… ROLE=ADMIN` is the third, from a shell on the
+rather than a placeholder: the whole company comes through the same Entra
+tenant, so being recognised at the door says nothing about belonging to the
+team. A guest reaches « Mes demandes » and nothing else — no sidebar, no
+palette, no way through to the team's month, its board or its plan — and the
+API says the same on its side: the routes of the recueil open themselves to
+them one at a time, the way a route opens itself to a machine. A manager
+promotes the account the day they say whose it is, which means a new teammate
+has nothing until somebody fills in their sheet, and that is deliberate. The
+seed is the other door — matching by email is what preserves a role handed out
+before anybody logged in — and `make grant-role EMAIL=… ROLE=ADMIN` is the third, from a shell on the
 host, which is the only place the *first* administrator can be made.
 
 **Authentication switched off admits an administrator.** `REQUIRE_AUTH=false`
-provisions `DEV_IDENTITY`, and it does so as an admin: with no door there is
-nobody to promote that account and nothing it could be confused with, where a
-guest would mean a laptop on which nothing can be declared. That identity is a
-**constant**, not a setting — `AUTH_LOCAL_EMAIL` feeds the fallback door
+provisions the identity `DEV_EMAIL` names, and it does so as an admin: with no
+door there is nobody to promote that account and nothing it could be confused
+with, where a guest would mean a laptop on which nothing can be declared.
+`DEV_EMAIL` says **which** account the open door hands over, never what it may
+do — it is how one signs in as a colleague without rewriting a role in the
+database, and the id it draws follows the address so two development accounts
+are never taken for one another. `AUTH_LOCAL_EMAIL` feeds the fallback door
 (`AUTH_ENTRA=false`), never this one, and the provisioning matches on
 `entra_oid` first, so changing an email alone would hand back the same account.
-To try another role locally, move your own with `make grant-role`.
+To read the application as the other audience — somebody who only ever comes to
+ask for something — move that account with `make grant-role EMAIL=… ROLE=GUEST`;
+the same command brings it back.
 
 **Two bounds hold every role change**, and they live on the entity: nobody
 hands out a role above their own, and nobody moves somebody who stands above
@@ -89,7 +103,9 @@ being able to demote the one who could undo it is the same door read backwards.
 Nobody changes their own role either, for the reason nobody deactivates
 themselves.
 
-**A route that writes hangs off a door a guest cannot come through.** There are
+**A route that writes hangs off a door a guest cannot come through.** A guest
+is already turned away at `get_current_user`, so `get_contributor` is where a
+rung between guest and teammate would land the day there is one. There are
 forty-odd of them, and checking them one by one is how one ends up forgotten:
 `get_contributor`, `get_current_manager` and `get_admin` are the three human
 doors, a machine door counts when the scope it asks for is a write scope, and
@@ -97,7 +113,10 @@ doors, a machine door counts when the scope it asks for is a write scope, and
 further than the person who answers for it.
 
 On the client the same reading is one hook, `useMayWrite`, and the band above
-every screen says it once rather than a dozen times over.
+every screen says it once rather than a dozen times over. Which screen one is
+in at all is `AppFrame`'s: it draws nothing until it knows who is there, since
+a sidebar shown for a moment and taken back would be a list of doors somebody
+was never meant to see.
 
 ### Business invariants
 
@@ -670,6 +689,55 @@ to both. Inside the tab, « Rattachement » gathers what the service hangs from
 
 ---
 
+## Le recueil de besoins
+
+WAAT is organised in COMEX, COMOP and everybody else, and a need reaches the
+COMEX through one of its members. Ganesh holds that: anybody signing in may
+describe a need, names the member of the COMEX who carries it, and the team
+weighs it. A mission is born of what is accepted, and of nothing else.
+
+**A request is not a mission, and lives outside the reference list.** No time
+is booked against it, it appears on no board and in no plan. It may be
+refused, left to sleep, or picked up a year later — none of which a mission
+may do, and all of which a `ProjectStatus` would have had to pretend to.
+
+- **Only its author writes it, and only while it is a draft.** Submitting asks
+  for three things — the problem, who lives with it, what would change — and
+  refuses without them. Once handed over the sheet stops moving: the decision
+  bears on a text that has stopped changing, and taking it back to a draft is
+  what reopens it.
+- **Nobody weighs what they asked for, or what they carry.** The request turns
+  away its author and its sponsors, managers included; the role says who may
+  arbitrate at all, and the request says which of them may arbitrate *this*.
+- **A refusal says why**, and so does a « plus tard » — a « non » with no
+  reason attached comes back word for word three months later. An arbitration
+  is played again as often as it has to be, until something is actually built.
+- **Converting carries what the need said** — the title, the departments, and
+  a sheet written out of the problem, the people and the expected result — and
+  never what the team declares: the axis, the urgency, the estimate. It writes
+  one log line carrying both identifiers, which is what lets a mission's
+  journal say where it came from. `CONVERTED` is the end of the road.
+- **The team's list is read through the eyes of one reader**: everything handed
+  over, plus that person's own drafts. It opens on what is waiting to be
+  weighed, since one comes to that screen to answer.
+
+**Whoever only ever comes to ask for something sees « Mes demandes » and
+nothing else.** That person is a `GUEST` — the bottom rung of the one ladder,
+and what anybody is on their first sign-in. `get_current_user` turns them
+away, so every screen of the application stays the team's; the routes of the
+requests open themselves to them through `get_asker`, one at a time, the way a
+route opens itself to a machine. That door is named rather than left to
+`get_signed_in_user` so that `test_write_doors` can read it: the recueil is
+the one thing a guest writes. The one exception is `GET /users/me`: a screen
+has to know whose account it is drawing.
+
+Two things are deliberately out of V1, and adding either would be a decision:
+**no exchange on a request** — a manager goes and asks the person, which is
+the point — and **no notification to the requester**, who has no bell, and
+reads the decision and its motive on their own screen. The COMEX is named
+rather than convened: marking somebody COMEX puts them in the sponsor picker,
+and asks nothing of them in the application.
+
 ## La Gazette
 
 The register is written into all day long and, until now, only ever read one
@@ -691,6 +759,16 @@ whole design, and it is enforced rather than asked for politely:
   happened.
 - **Nothing is invented.** A log line whose mission was deleted cannot be named
   and is not printed. A phase the register never recorded is not supplied.
+
+**What the company asked for has a chapter of its own.** A need is not a
+mission — the whole recueil rests on not confusing the two — so its month is
+told apart from the projects': what was handed over, what was accepted,
+refused or put off, and what became a mission. That last one stays with the
+needs rather than opening the project's chapter one line before its story
+starts. A draft makes no movement: a need nobody handed over has been asked
+of nobody. And the tally counts what was asked apart from what was built,
+because a month that filed six and built none says something either figure
+alone hides.
 
 **A digest is never rewritten.** Asking for a month again writes the next
 version beside the last; the screen reads the highest and the picker opens the

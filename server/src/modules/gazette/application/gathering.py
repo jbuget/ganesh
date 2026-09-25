@@ -16,6 +16,9 @@ from src.modules.gazette.domain.services.month_window import bounds, first_day
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.requests.domain.repositories.request_repository import (
+    RequestRepository,
+)
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
 
@@ -24,6 +27,7 @@ async def gather_brief(
     audit_logs: AuditLogRepository,
     projects: ProjectRepository,
     users: UserRepository,
+    requests: RequestRepository,
 ) -> Brief:
     """One month of the register, read out of store and named."""
     start, end = bounds(month)
@@ -35,10 +39,14 @@ async def gather_brief(
     # September is in September's numéro.
     missions = await projects.list_all(include_inactive=True)
     team = await users.list_all(include_inactive=True)
+    # Every need, drafts included: naming one costs a title, and a draft
+    # makes no movement anyway.
+    needs = await requests.list_all()
 
     return build_brief(
         month=first_day(month),
         logs=logs,
         projects={p.id: p for p in missions if p.id is not None},
         people={u.id: u.display_name for u in team if u.id is not None},
+        needs={r.id: r.title for r in needs if r.id is not None},
     )

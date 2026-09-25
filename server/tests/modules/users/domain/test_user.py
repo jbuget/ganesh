@@ -7,6 +7,7 @@ import pytest
 from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.enums.department import Department
+from src.shared.enums.org_level import OrgLevel
 
 
 def make_user(role: Role = Role.TEAMMATE, is_active: bool = True) -> User:
@@ -42,8 +43,46 @@ def test_any_active_user_can_edit_an_open_month_of_anyone(role: Role) -> None:
     assert make_user(role).can_edit_open_months() is True
 
 
+def test_a_requester_belongs_to_no_month() -> None:
+    """Someone who only expresses needs declares no time, their own included."""
+    assert make_user(Role.GUEST).can_edit_open_months() is False
+
+
+def test_a_requester_manages_nobody_and_reopens_nothing() -> None:
+    requester = make_user(Role.GUEST)
+
+    assert requester.can_manage_teammates() is False
+    assert requester.can_reopen_month() is False
+
+
+@pytest.mark.parametrize("role", [Role.TEAMMATE, Role.MANAGER])
+def test_the_team_is_told_apart_from_whoever_only_asks(role: Role) -> None:
+    assert make_user(role).is_guest is False
+    assert make_user(Role.GUEST).is_guest is True
+
+
+def test_an_account_opens_nothing_until_somebody_says_who_it_is() -> None:
+    """The default role is the one that may do the least."""
+    user = User(
+        id=None,
+        entra_oid="oid-fresh",
+        email="fresh@waat.fr",
+        display_name="Fresh",
+    )
+
+    assert user.role is Role.GUEST
+
+
 def test_a_deactivated_user_can_no_longer_edit_anything() -> None:
     assert make_user(is_active=False).can_edit_open_months() is False
+
+
+def test_a_teammate_arbitrates_nothing() -> None:
+    assert make_user(Role.TEAMMATE).can_arbitrate_requests() is False
+
+
+def test_a_manager_arbitrates_what_the_company_asks_for() -> None:
+    assert make_user(Role.MANAGER).can_arbitrate_requests() is True
 
 
 def test_email_is_normalised_to_lowercase() -> None:
@@ -135,6 +174,7 @@ def test_a_civil_name_is_trimmed() -> None:
         last_name=" Chen ",
         department=None,
         github_username=None,
+        org_level=None,
     )
 
     assert user.first_name == "Léa"
@@ -145,7 +185,11 @@ def test_a_blank_name_reads_as_unknown_rather_than_empty() -> None:
     """« » and « nothing » say the same thing; the database should say it once."""
     user = make_user()
     user.set_identity(
-        first_name="   ", last_name="", department=None, github_username=None
+        first_name="   ",
+        last_name="",
+        department=None,
+        github_username=None,
+        org_level=None,
     )
 
     assert user.first_name is None
@@ -159,6 +203,7 @@ def test_a_teammate_belongs_to_one_department() -> None:
         last_name="Chen",
         department=Department.CUSTOMER_SERVICE,
         github_username=None,
+        org_level=None,
     )
 
     assert user.department is Department.CUSTOMER_SERVICE
@@ -167,7 +212,11 @@ def test_a_teammate_belongs_to_one_department() -> None:
 def test_the_name_one_reads_is_the_civil_one_once_it_is_known() -> None:
     user = make_user()
     user.set_identity(
-        first_name="Léa", last_name="Chen", department=None, github_username=None
+        first_name="Léa",
+        last_name="Chen",
+        department=None,
+        github_username=None,
+        org_level=None,
     )
 
     assert user.label == "Léa Chen"
@@ -176,7 +225,11 @@ def test_the_name_one_reads_is_the_civil_one_once_it_is_known() -> None:
 def test_a_half_known_name_is_still_better_than_the_account_one() -> None:
     user = make_user()
     user.set_identity(
-        first_name="Léa", last_name=None, department=None, github_username=None
+        first_name="Léa",
+        last_name=None,
+        department=None,
+        github_username=None,
+        org_level=None,
     )
 
     assert user.label == "Léa"
@@ -191,7 +244,11 @@ def test_a_github_handle_is_kept_as_the_handle_alone() -> None:
     """« @lea-chen » is how one writes a handle; « lea-chen » is what it is."""
     user = make_user()
     user.set_identity(
-        first_name=None, last_name=None, department=None, github_username=" @lea-chen "
+        first_name=None,
+        last_name=None,
+        department=None,
+        github_username=" @lea-chen ",
+        org_level=None,
     )
 
     assert user.github_username == "lea-chen"
@@ -200,10 +257,32 @@ def test_a_github_handle_is_kept_as_the_handle_alone() -> None:
 def test_a_blank_github_handle_reads_as_unknown() -> None:
     user = make_user()
     user.set_identity(
-        first_name=None, last_name=None, department=None, github_username="  "
+        first_name=None,
+        last_name=None,
+        department=None,
+        github_username="  ",
+        org_level=None,
     )
 
     assert user.github_username is None
+
+
+def test_a_teammate_sits_somewhere_in_the_organisation() -> None:
+    user = make_user()
+    user.set_identity(
+        first_name="Léa",
+        last_name="Chen",
+        department=Department.CUSTOMER_SERVICE,
+        github_username=None,
+        org_level=OrgLevel.COMEX,
+    )
+
+    assert user.org_level is OrgLevel.COMEX
+
+
+def test_a_level_nobody_has_said_reads_as_unknown() -> None:
+    """Three hundred people sign in; nobody qualifies them one by one."""
+    assert make_user().org_level is None
 
 
 def test_a_letter_comes_every_day_until_somebody_says_otherwise() -> None:

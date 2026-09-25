@@ -9,10 +9,11 @@ import {
   type UserFilters as Criteria,
 } from "@/lib/user-filters";
 
-const bar = (over: Partial<Criteria> = {}) => {
+const bar = (over: Partial<Criteria> = {}, hidden = 0) => {
   const filters = { ...NO_USER_FILTER, ...over };
   const onChange = vi.fn();
   const onClear = vi.fn();
+  const onShowRequesters = vi.fn();
   render(
     <UserFilters
       filters={filters}
@@ -21,9 +22,11 @@ const bar = (over: Partial<Criteria> = {}) => {
       onClear={onClear}
       visible={3}
       total={12}
+      hidden={hidden}
+      onShowRequesters={onShowRequesters}
     />,
   );
-  return { onChange, onClear };
+  return { onChange, onClear, onShowRequesters };
 };
 
 describe("UserFilters", () => {
@@ -76,5 +79,41 @@ describe("UserFilters", () => {
     await userEvent.click(screen.getByRole("button", { name: /Effacer/ }));
 
     expect(onClear).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("what the list is not showing", () => {
+  it("says how many requesters it keeps out of sight", () => {
+    // Fifteen rows out of three hundred, with nothing said, is what makes
+    // somebody look for an account they were never shown.
+    bar({}, 312);
+
+    expect(
+      screen.getByRole("button", { name: "Afficher les 312 demandeurs" }),
+    ).toBeInTheDocument();
+  });
+
+  it("agrees when there is only one", () => {
+    bar({}, 1);
+
+    expect(
+      screen.getByRole("button", { name: "Afficher le demandeur" }),
+    ).toBeInTheDocument();
+  });
+
+  it("says nothing when there is nothing to say", () => {
+    bar({}, 0);
+
+    expect(screen.queryByRole("button", { name: /demandeur/ })).toBeNull();
+  });
+
+  it("brings them into the list on a click", async () => {
+    const { onShowRequesters } = bar({}, 312);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Afficher les 312 demandeurs" }),
+    );
+
+    expect(onShowRequesters).toHaveBeenCalled();
   });
 });

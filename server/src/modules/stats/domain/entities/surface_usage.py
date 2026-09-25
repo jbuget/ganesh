@@ -39,6 +39,10 @@ class Surface(StrEnum):
 
     TIME_ENTRY = "time_entry"
     MONTH_CLOSING = "month_closing"
+    #: What the company asks for, before the list one keeps of it. Filing and
+    #: weighing share a line: the question the table answers is whether the
+    #: recueil serves at all, and one without the other means it does not.
+    REQUESTS = "requests"
     PROJECT_REGISTRY = "project_registry"
     PHASE_PROGRESS = "phase_progress"
     ASSIGNMENT = "assignment"
@@ -79,6 +83,14 @@ SURFACE_OF: dict[AuditAction, Surface] = {
     # Closing it, and opening it again.
     AuditAction.MONTH_VALIDATE: Surface.MONTH_CLOSING,
     AuditAction.MONTH_REOPEN: Surface.MONTH_CLOSING,
+    # Expressing a need, and weighing it.
+    AuditAction.REQUEST_CREATE: Surface.REQUESTS,
+    AuditAction.REQUEST_UPDATE: Surface.REQUESTS,
+    AuditAction.REQUEST_SUBMIT: Surface.REQUESTS,
+    AuditAction.REQUEST_WITHDRAW: Surface.REQUESTS,
+    AuditAction.REQUEST_DELETE: Surface.REQUESTS,
+    AuditAction.REQUEST_DECIDE: Surface.REQUESTS,
+    AuditAction.REQUEST_CONVERT: Surface.REQUESTS,
     # Keeping the reference list.
     AuditAction.PROJECT_CREATE: Surface.PROJECT_REGISTRY,
     AuditAction.PROJECT_UPDATE: Surface.PROJECT_REGISTRY,

@@ -10,8 +10,8 @@ import type { Role } from "@/lib/api/generated/model";
 export const ROLES: { value: Role; label: string; description: string }[] = [
   {
     value: "GUEST",
-    label: "Invité",
-    description: "Lit l'application sans rien y saisir.",
+    label: "Demandeur",
+    description: "Dépose une demande, et ne voit rien d'autre de l'application.",
   },
   {
     value: "TEAMMATE",

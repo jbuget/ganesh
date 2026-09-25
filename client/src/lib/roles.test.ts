@@ -4,7 +4,7 @@ import { assignableRoles, canWrite, holds, roleLabel } from "@/lib/roles";
 
 describe("roleLabel", () => {
   it("names every rung of the ladder in French", () => {
-    expect(roleLabel("GUEST")).toBe("Invité");
+    expect(roleLabel("GUEST")).toBe("Demandeur");
     expect(roleLabel("TEAMMATE")).toBe("Collaborateur");
     expect(roleLabel("MANAGER")).toBe("Manager");
     expect(roleLabel("ADMIN")).toBe("Administrateur");
