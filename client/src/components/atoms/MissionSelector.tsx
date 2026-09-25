@@ -51,12 +51,16 @@ const PANEL_WIDTH = 208;
 /**
  * The trades of the mission under the cursor, in a cadre of their own.
  *
- * Anchored on the row rather than made a column of the list: a panel beside
- * the list reads as one more part of the mission one is pointing at, where a
- * second cadre reads as what it is — a submenu of the row it opens from.
+ * A cadre of its own rather than a column of the list: a column read as one
+ * more part of the mission being pointed at.
  *
- * It flips to the left of the list when the right would run off the screen,
- * which is what happens on a narrow window with the grid scrolled across.
+ * It hangs off the list, at its top, rather than off the row under the
+ * cursor: following the row made it jump about as one ran down the list, and
+ * carried it high up the screen on the first entries. Opening always in the
+ * same place, just under the selector, it is where the eye already is.
+ *
+ * It flips to the left when the right would run off the screen, which is what
+ * happens on a narrow window with the grid scrolled across.
  */
 function TradePanel({
   mission,
@@ -132,10 +136,20 @@ export function MissionSelector({
   //: place is kept so the panel can be anchored on it rather than made a
   //: column of the list: a second cadre reads as a submenu, which is what it
   //: is, where a column read as part of the mission one was pointing at.
+  //: The mission whose trades are shown, with the place the list occupied
+  //: when it opened. Measured in the handler rather than read from the ref
+  //: while rendering, which React forbids — and which would be a stale
+  //: reading anyway.
   const [opened, setOpened] = useState<{
     mission: OfferedMission;
     anchor: DOMRect;
   } | null>(null);
+
+  /** Shows a mission's trades, hung off the list wherever it sits. */
+  function show(mission: OfferedMission) {
+    const anchor = list.current?.getBoundingClientRect();
+    if (anchor) setOpened({ mission, anchor });
+  }
 
   const offered = offeredMissions(missions, excludedKeys);
   const mine = offered.filter(
@@ -176,12 +190,7 @@ export function MissionSelector({
       onSelect(mission.projectId, mission.activities[0].id);
       return;
     }
-    // Chosen by keyboard there is no cursor to hang the panel off, so it
-    // opens against the list itself: without this, pressing Enter on a
-    // mission carrying several trades would do nothing at all.
-    const anchor = list.current?.getBoundingClientRect();
-    if (!anchor) return;
-    setOpened((shown) => ({ mission, anchor: shown?.anchor ?? anchor }));
+    show(mission);
   }
 
   return (
@@ -223,12 +232,7 @@ export function MissionSelector({
                   <ComboboxItem
                     key={mission.value.projectId}
                     value={mission}
-                    onMouseEnter={(event) =>
-                      setOpened({
-                        mission: mission.value,
-                        anchor: event.currentTarget.getBoundingClientRect(),
-                      })
-                    }
+                    onMouseEnter={() => show(mission.value)}
                   >
                     {/* The item wraps its children in a span that is both
                         flex-1 and truncate, so a chevron set beside the label
