@@ -153,6 +153,17 @@ class TestWhoIsWrittenTo:
         assert await use_case.execute(ReminderCadence.NEVER, now=WEDNESDAY) == 0
         assert isinstance(post, CollectingMailer) and post.sent == []
 
+    async def test_a_guest_is_not_written_to(self) -> None:
+        # The one thing that ever rings for a guest is their own promotion.
+        # A letter announcing it would reach somebody who declares nothing
+        # into Ganesh and who is given no way of saying no.
+        guest = a_reader(2, "l.chen@waat.fr")
+        guest.role = Role.GUEST
+        use_case, _, post, _, _ = build([guest], [waiting_for(2)])
+
+        assert await use_case.execute(ReminderCadence.DAILY, now=WEDNESDAY) == 0
+        assert isinstance(post, CollectingMailer) and post.sent == []
+
     async def test_a_deactivated_account_is_not_written_to(self) -> None:
         use_case, _, post, _, _ = build(
             [a_reader(2, "l.chen@waat.fr", is_active=False)], [waiting_for(2)]

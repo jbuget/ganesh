@@ -92,10 +92,12 @@ class User:
     #: so it is what is true of anyone who has said nothing, not a placeholder
     #: standing in for an answer.
     presence: WeekPresence = field(default_factory=WeekPresence)
-    #: How often this teammate wants the letter saying what is waiting. Every
-    #: day until they say otherwise: somebody who has never opened the setting
-    #: is precisely the reader the bell is failing to reach.
-    reminder_cadence: ReminderCadence = ReminderCadence.DAILY
+    #: How often this teammate wants the letter saying what is waiting.
+    #: Nothing until they ask for it: a mailbox is somebody else's, and using
+    #: it on the strength of an answer nobody gave is how a rule gets written
+    #: in a mail client — silent, permanent, and it takes down the one letter
+    #: that mattered along with the rest. The bell still rings for everybody.
+    reminder_cadence: ReminderCadence = ReminderCadence.NEVER
     #: When the last letter actually went out. `None` until the first one
     #: does — and a letter that failed leaves it where it was, so the next run
     #: considers the same window again. That is the only retry there is.
@@ -240,6 +242,22 @@ class User:
     def choose_reminder_cadence(self, cadence: ReminderCadence) -> None:
         """Takes down how often this teammate wants to be written to."""
         self.reminder_cadence = cadence
+
+    def is_written_to(self) -> bool:
+        """Whether a letter is owed to this account at all.
+
+        Two accounts are never written to, whatever their row carries. A
+        guest, who declares nothing into Ganesh and is told about nothing but
+        their own account: the one thing that ever rings for them is their own
+        promotion, and they are given no setting to turn a letter down with.
+        And a suspended account, since a letter leading back to a door that is
+        closed is noise.
+
+        Asked here rather than in the round, so that a second way of sending —
+        a script, a tool — cannot quietly write to somebody this one would
+        have left alone.
+        """
+        return self.can_write() and self.reminder_cadence.wants_mail
 
     def stamp_reminder(self, at: datetime) -> None:
         """Takes down that a letter went out, so the next one starts after it.
