@@ -3,7 +3,12 @@
 import { useState } from "react";
 
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
-import { offeredRows, type OfferedRow } from "@/lib/missions";
+import {
+  offeredRows,
+  rowAnswers,
+  searchableRow,
+  type OfferedRow,
+} from "@/lib/missions";
 import {
   Combobox,
   ComboboxCollection,
@@ -95,6 +100,12 @@ export function MissionSelector({
   return (
     <Combobox
       items={groups}
+      // The search looks through the mission's name as well as the trade's,
+      // without case or accents. Left to itself the filter matched the
+      // item's label alone — the trade — so typing « Contrôle » found
+      // nothing, every row being called « Développement » or « Delivery ».
+      itemToStringLabel={(item: MissionItem) => searchableRow(item.value)}
+      filter={(item: MissionItem, query: string) => rowAnswers(item.value, query)}
       value={null}
       open={isOpen}
       onOpenChange={setOpen}

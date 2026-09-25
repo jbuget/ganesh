@@ -1,3 +1,4 @@
+import { normalise } from "@/lib/search-text";
 import type {
   ProjectListItemResponse,
   ProjectResponse,
@@ -177,4 +178,25 @@ export function offeredRows(
       (a, b) =>
         a.projectLabel.localeCompare(b.projectLabel) || a.label.localeCompare(b.label),
     );
+}
+
+/** What the selector searches through: the mission and the trade, together. */
+export function searchableRow(row: OfferedRow): string {
+  return row.activityId === null ? row.label : `${row.projectLabel} ${row.label}`;
+}
+
+/**
+ * Whether a row answers what is being typed.
+ *
+ * Read without case or accents, as every other search in the application is:
+ * a search answering differently on two screens is two searches, and the
+ * reader has no way of knowing which one they are using.
+ *
+ * It looks through the mission's name as well as the trade's. Matching the
+ * trade alone found nothing for « Contrôle », every row being called
+ * « Développement » or « Chefferie de projet ».
+ */
+export function rowAnswers(row: OfferedRow, query: string): boolean {
+  const asked = normalise(query.trim());
+  return asked === "" || normalise(searchableRow(row)).includes(asked);
 }

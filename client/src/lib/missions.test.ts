@@ -5,7 +5,10 @@ import {
   availableMissions,
   missionsToDeclare,
   offeredRows,
+  rowAnswers,
   rowKey,
+  searchableRow,
+  type OfferedRow,
 } from "./missions";
 import type {
   ProjectListItemResponse,
@@ -213,5 +216,56 @@ describe("someone wearing several hats on one mission", () => {
 
     expect(offered.every((row) => row.projectLabel === "Watom")).toBe(true);
     expect(new Set(offered.map((row) => row.activityId)).size).toBe(3);
+  });
+});
+
+describe("what the selector searches through", () => {
+  const row = {
+    projectId: 1,
+    activityId: 100,
+    label: "Chefferie de projet",
+    projectLabel: "Contrôle de la longueur du câblage posé",
+    kind: "project",
+  } as OfferedRow;
+
+  const offProject = {
+    projectId: 2,
+    activityId: null,
+    label: "Absences",
+    projectLabel: "Absences",
+    kind: "off_project",
+  } as OfferedRow;
+
+  it("finds a mission by its name, not only by its trade", () => {
+    // Every row is called « Développement » or « Chefferie de projet »:
+    // searching the trade alone answers nothing useful.
+    expect(rowAnswers(row, "Contrôle")).toBe(true);
+  });
+
+  it("ignores accents, as every other search in the application does", () => {
+    expect(rowAnswers(row, "Controle")).toBe(true);
+    expect(rowAnswers(row, "cablage")).toBe(true);
+  });
+
+  it("ignores case", () => {
+    expect(rowAnswers(row, "CONTRÔLE")).toBe(true);
+  });
+
+  it("still finds a row by its trade", () => {
+    expect(rowAnswers(row, "chefferie")).toBe(true);
+  });
+
+  it("says no to what neither name carries", () => {
+    expect(rowAnswers(row, "extranet")).toBe(false);
+  });
+
+  it("answers everything to an empty query", () => {
+    expect(rowAnswers(row, "   ")).toBe(true);
+  });
+
+  it("does not repeat itself on off-project work", () => {
+    // Its trade and its mission are the same word; « Absences Absences »
+    // would be what the reader sees the search match against.
+    expect(searchableRow(offProject)).toBe("Absences");
   });
 });
