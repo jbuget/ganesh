@@ -111,10 +111,18 @@ export function NewRequestDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            className="cursor-pointer"
+            onClick={() => onOpenChange(false)}
+          >
             Annuler
           </Button>
-          <Button onClick={() => void confirm()} disabled={!isValid || busy}>
+          <Button
+            className="cursor-pointer"
+            onClick={() => void confirm()}
+            disabled={!isValid || busy}
+          >
             Créer
           </Button>
         </DialogFooter>

@@ -29,7 +29,7 @@ export interface RequestFilters {
  *
  * What was refused, or built, is read by asking for it: those are settled.
  */
-export const WAITING: RequestState[] = ["submitted", "deferred", "accepted"];
+const WAITING: RequestState[] = ["submitted", "deferred", "accepted"];
 
 export const NO_REQUEST_FILTER: RequestFilters = {
   search: "",
