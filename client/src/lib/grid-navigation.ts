@@ -21,6 +21,14 @@
 /** One cell of the grid: a mission, a day. */
 export interface GridCell {
   projectId: number;
+  /**
+   * The trade the cell is declared under. Null on off-project work.
+   *
+   * Part of what names a cell: a mission cut into two trades holds two rows,
+   * and an id that left the trade out would make the arrow keys jump between
+   * them as though they were one.
+   */
+  activityId: number | null;
   day: string;
 }
 
@@ -51,21 +59,30 @@ export function isNavigationKey(key: string): key is NavigationKey {
  * enough to know which cell was left and to find the one to land on.
  */
 export function cellId(cell: GridCell): string {
-  return `${cell.projectId}:${cell.day}`;
+  return `${cell.projectId}:${cell.activityId ?? ""}:${cell.day}`;
 }
 
 /** The cell a `data-cell` names, or `null` when it names nothing. */
 export function parseCellId(id: string | undefined): GridCell | null {
   if (!id) return null;
-  const [projectId, day] = id.split(":");
+  const [projectId, activityId, day] = id.split(":");
   const parsed = Number(projectId);
-  return Number.isNaN(parsed) || !day ? null : { projectId: parsed, day };
+  if (Number.isNaN(parsed) || !day) return null;
+  return {
+    projectId: parsed,
+    activityId: activityId === "" ? null : Number(activityId),
+    day,
+  };
 }
 
 /** The grid as moving around it needs to know it: its axes, and what is open. */
 export interface NavigableGrid {
-  /** Mission ids, in the order the rows are drawn. */
-  rows: number[];
+  /**
+   * The rows, in the order they are drawn, each named by its mission and the
+   * trade under it: a mission cut into two trades draws two rows, and naming
+   * them by the mission alone would have the arrows treat them as one.
+   */
+  rows: string[];
   /** Days, in the order the columns are drawn. */
   days: string[];
   /** Whether a cell can take the focus, which is to say whether it takes an entry. */
@@ -84,7 +101,7 @@ export function nextCell(
   from: GridCell,
   key: NavigationKey,
 ): GridCell | null {
-  const rowIndex = grid.rows.indexOf(from.projectId);
+  const rowIndex = grid.rows.indexOf(rowOf(from));
   const dayIndex = grid.days.indexOf(from.day);
   if (rowIndex === -1 || dayIndex === -1) return null;
 
@@ -112,7 +129,7 @@ function alongRow(
   step: 1 | -1,
 ): GridCell | null {
   for (let index = dayIndex; index >= 0 && index < grid.days.length; index += step) {
-    const cell = { projectId: grid.rows[rowIndex], day: grid.days[index] };
+    const cell = { ...cellOfRow(grid.rows[rowIndex]), day: grid.days[index] };
     if (grid.isOpen(cell)) return cell;
   }
   return null;
@@ -126,7 +143,7 @@ function downColumn(
   step: 1 | -1,
 ): GridCell | null {
   for (let index = rowIndex; index >= 0 && index < grid.rows.length; index += step) {
-    const cell = { projectId: grid.rows[index], day: grid.days[dayIndex] };
+    const cell = { ...cellOfRow(grid.rows[index]), day: grid.days[dayIndex] };
     if (grid.isOpen(cell)) return cell;
   }
   return null;
@@ -148,16 +165,30 @@ export function tabStop(grid: NavigableGrid, cursor: GridCell | null): GridCell 
 }
 
 function holds(grid: NavigableGrid, cell: GridCell): boolean {
-  return grid.rows.includes(cell.projectId) && grid.days.includes(cell.day);
+  return grid.rows.includes(rowOf(cell)) && grid.days.includes(cell.day);
 }
 
 /** The first cell one may write on, read row by row. `null` when none is. */
 function firstOpen(grid: NavigableGrid): GridCell | null {
-  for (const projectId of grid.rows) {
+  for (const row of grid.rows) {
     for (const day of grid.days) {
-      const cell = { projectId, day };
+      const cell = { ...cellOfRow(row), day };
       if (grid.isOpen(cell)) return cell;
     }
   }
   return null;
+}
+
+/** The row a cell belongs to: its mission, and the trade under it. */
+export function rowOf(cell: Pick<GridCell, "projectId" | "activityId">): string {
+  return `${cell.projectId}:${cell.activityId ?? ""}`;
+}
+
+/** The mission and trade a row name carries. */
+function cellOfRow(row: string): Pick<GridCell, "projectId" | "activityId"> {
+  const [projectId, activityId] = row.split(":");
+  return {
+    projectId: Number(projectId),
+    activityId: activityId === "" ? null : Number(activityId),
+  };
 }

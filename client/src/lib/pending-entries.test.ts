@@ -35,7 +35,7 @@ function grid(overrides: Partial<MonthGridResponse> = {}): MonthGridResponse {
   } as MonthGridResponse;
 }
 
-const cell = { userId: 1, projectId: 10, day: "2026-09-14" };
+const cell = { userId: 1, projectId: 10, activityId: null, day: "2026-09-14" };
 
 describe("the key a waiting cell is held under", () => {
   it("reads back the cell it names", () => {

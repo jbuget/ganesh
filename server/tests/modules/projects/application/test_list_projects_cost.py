@@ -5,16 +5,20 @@ the two readings must not be confused: a ratio while it is built, a pace once
 it lives.
 """
 
+from dataclasses import replace
 from datetime import date, timedelta
 
 from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.projects.application.use_cases.list_projects import ListProjectsUseCase
+from src.modules.projects.domain.entities.activity import Activity
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectKind,
     ProjectStatus,
 )
+from src.shared.enums.work_nature import WorkNature
 from tests.helpers.in_memory_repositories import (
+    InMemoryActivityRepository,
     InMemoryEntryRepository,
     InMemoryProjectAssigneeRepository,
     InMemoryProjectDetailRepository,
@@ -58,6 +62,7 @@ def days_spent(
             id=None,
             user_id=1,
             project_id=project_id,
+            activity_id=None,
             day=ending - timedelta(days=offset),
             value=DayValue(1.0),
             status_at_entry=status,
@@ -70,6 +75,7 @@ async def listed(
     entries: list[Entry],
     missions: list[Project] | None = None,
     live_since: dict[int, date] | None = None,
+    activities: list[Activity] | None = None,
 ):
     details = InMemoryProjectDetailRepository()
     for project_id, day in (live_since or {}).items():
@@ -77,6 +83,7 @@ async def listed(
 
     use_case = ListProjectsUseCase(
         projects=InMemoryProjectRepository(missions or [PORTAIL]),
+        activities=InMemoryActivityRepository(activities or []),
         entries=InMemoryEntryRepository(entries),
         assignees=InMemoryProjectAssigneeRepository({}),
         users=InMemoryUserRepository([]),
@@ -186,3 +193,50 @@ async def test_a_forecast_is_not_a_cost() -> None:
     )
 
     assert par_id[10].cost.run_days == 0.0
+
+
+def a_trade(
+    estimated_days: float | None, label: str = "Développement", project_id: int = 10
+) -> Activity:
+    return Activity(
+        id=None,
+        project_id=project_id,
+        label=label,
+        nature=WorkNature.DEVELOPMENT,
+        estimated_days=estimated_days,
+    )
+
+
+class TestTheEstimateIsReadFromTheTrades:
+    """After the reprise a mission holds no estimate of its own: the budget
+    lives on its activities, and the mission reads their sum."""
+
+    async def test_a_mission_reads_the_sum_of_what_its_trades_are_budgeted_at(
+        self,
+    ) -> None:
+        par_id = await listed(
+            [],
+            missions=[replace(PORTAIL, estimated_days=None)],
+            activities=[a_trade(15.0), a_trade(5.0, label="Chefferie de projet")],
+        )
+
+        assert par_id[10].cost.estimated_days == 20.0
+
+    async def test_one_trade_left_unbudgeted_leaves_the_mission_unestimated(
+        self,
+    ) -> None:
+        """A ratio drawn from half a budget turns red on a screen people steer
+        by, and announces an overrun nobody measured."""
+        par_id = await listed(
+            [],
+            missions=[replace(PORTAIL, estimated_days=None)],
+            activities=[a_trade(15.0), a_trade(None, label="Chefferie de projet")],
+        )
+
+        assert par_id[10].cost.estimated_days is None
+        assert par_id[10].cost.has_overrun is False
+
+    async def test_a_mission_nobody_cut_up_still_reads_its_own_estimate(self) -> None:
+        par_id = await listed([], missions=[PORTAIL])
+
+        assert par_id[10].cost.estimated_days == PORTAIL.estimated_days

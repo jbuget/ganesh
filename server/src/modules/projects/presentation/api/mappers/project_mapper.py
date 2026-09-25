@@ -11,11 +11,13 @@ from src.modules.projects.application.use_cases.project_attachments import (
     SignedAttachment,
 )
 from src.modules.projects.application.use_cases.project_updates import SignedUpdate
+from src.modules.projects.domain.entities.activity import Activity
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.services.phase_history import transition_label
 from src.modules.projects.domain.services.project_cost import ProjectCost
 from src.modules.projects.presentation.api.schemas.project_schemas import (
+    ActivityResponse,
     BoardCardResponse,
     BoardColumnResponse,
     BoardMemberResponse,
@@ -139,6 +141,7 @@ def to_listed_project_response(
         comments=listed.comments,
         latest_update=to_latest_update(listed.latest_update),
         departments=listed.departments,
+        activities=[to_activity_response(a) for a in listed.activities],
     )
 
 
@@ -310,4 +313,17 @@ def to_catalog_entry_response(entry: CatalogEntry) -> CatalogEntryResponse:
         stack=entry.stack,
         tags=entry.tags,
         depends_on=entry.depends_on,
+    )
+
+
+def to_activity_response(activity: Activity, entries: int = 0) -> ActivityResponse:
+    """An activity as the screens read it."""
+    return ActivityResponse(
+        id=activity.id or 0,
+        project_id=activity.project_id,
+        label=activity.label,
+        nature=activity.nature,
+        estimated_days=activity.estimated_days,
+        is_active=activity.is_active,
+        entries=entries,
     )

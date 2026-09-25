@@ -6,7 +6,12 @@ import { pendingKey, type PendingCell } from "@/lib/pending-entries";
 import { usePendingEntries } from "./use-pending-entries";
 
 const SETTLE = 400;
-const cell: PendingCell = { userId: 1, projectId: 10, day: "2026-09-14" };
+const cell: PendingCell = {
+  userId: 1,
+  projectId: 10,
+  activityId: null,
+  day: "2026-09-14",
+};
 
 let write: Mock<(cell: PendingCell, value: DayValue) => Promise<void>>;
 let refresh: Mock<() => Promise<void>>;

@@ -10,6 +10,7 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 )
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.entries.presentation.dependencies import (
+    get_activity_repository,
     get_audit_log_repository,
     get_entry_repository,
     get_project_repository,
@@ -51,6 +52,14 @@ from src.modules.projects.application.use_cases.import_projects import (
     ImportProjectsUseCase,
 )
 from src.modules.projects.application.use_cases.list_projects import ListProjectsUseCase
+from src.modules.projects.application.use_cases.manage_activities import (
+    ArchiveActivityUseCase,
+    CreateActivityUseCase,
+    DeleteActivityUseCase,
+    ListProjectActivitiesUseCase,
+    UnarchiveActivityUseCase,
+    UpdateActivityUseCase,
+)
 from src.modules.projects.application.use_cases.move_project import MoveProjectUseCase
 from src.modules.projects.application.use_cases.project_attachments import (
     DownloadProjectAttachmentUseCase,
@@ -78,6 +87,9 @@ from src.modules.projects.application.use_cases.update_project_detail import (
 )
 from src.modules.projects.application.use_cases.update_project_registry import (
     UpdateProjectRegistryUseCase,
+)
+from src.modules.projects.domain.repositories.activity_repository import (
+    ActivityRepository,
 )
 from src.modules.projects.domain.repositories.attachment_store import AttachmentStore
 from src.modules.projects.domain.repositories.project_assignee_repository import (
@@ -190,6 +202,7 @@ def get_change_status_use_case(
 
 def get_list_projects_use_case(
     projects: ProjectRepository = Depends(get_project_repository),
+    activities: ActivityRepository = Depends(get_activity_repository),
     entries: EntryRepository = Depends(get_entry_repository),
     assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
     users: UserRepository = Depends(get_user_repository),
@@ -198,6 +211,7 @@ def get_list_projects_use_case(
 ) -> ListProjectsUseCase:
     return ListProjectsUseCase(
         projects=projects,
+        activities=activities,
         entries=entries,
         assignees=assignees,
         users=users,
@@ -539,3 +553,47 @@ def get_rename_attachment_use_case(
     return RenameProjectAttachmentUseCase(
         attachments=attachments, store=store, audit_logs=audit_logs
     )
+
+
+def get_create_activity_use_case(
+    projects: ProjectRepository = Depends(get_project_repository),
+    activities: ActivityRepository = Depends(get_activity_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> CreateActivityUseCase:
+    return CreateActivityUseCase(
+        projects=projects, activities=activities, audit_logs=audit_logs
+    )
+
+
+def get_update_activity_use_case(
+    activities: ActivityRepository = Depends(get_activity_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> UpdateActivityUseCase:
+    return UpdateActivityUseCase(activities=activities, audit_logs=audit_logs)
+
+
+def get_archive_activity_use_case(
+    activities: ActivityRepository = Depends(get_activity_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> ArchiveActivityUseCase:
+    return ArchiveActivityUseCase(activities=activities, audit_logs=audit_logs)
+
+
+def get_unarchive_activity_use_case(
+    activities: ActivityRepository = Depends(get_activity_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> UnarchiveActivityUseCase:
+    return UnarchiveActivityUseCase(activities=activities, audit_logs=audit_logs)
+
+
+def get_delete_activity_use_case(
+    activities: ActivityRepository = Depends(get_activity_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> DeleteActivityUseCase:
+    return DeleteActivityUseCase(activities=activities, audit_logs=audit_logs)
+
+
+def get_list_activities_use_case(
+    activities: ActivityRepository = Depends(get_activity_repository),
+) -> ListProjectActivitiesUseCase:
+    return ListProjectActivitiesUseCase(activities=activities)

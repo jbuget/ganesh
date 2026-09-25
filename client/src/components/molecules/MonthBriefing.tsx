@@ -18,7 +18,12 @@ interface MonthBriefingProps {
   /** Working days already past with nothing on them. */
   daysMissing: string[];
   /** Missions one contributes to with nothing declared this month. */
-  missionsToDeclare: { id: number; label: string }[];
+  /**
+   * The trades left to declare on. Named by their mission here, and folded
+   * to one mention each: the sentence says what one works on, not how it is
+   * cut up.
+   */
+  missionsToDeclare: { projectId: number; projectLabel: string }[];
 }
 
 /**
@@ -51,6 +56,11 @@ export function MonthBriefing({
     monthsToSettle.length === 0 &&
     daysMissing.length === 0 &&
     missionsToDeclare.length === 0;
+
+  // A mission cut into three trades is one mission to mention, not three.
+  const namedOnce = [
+    ...new Map(missionsToDeclare.map((row) => [row.projectId, row])).values(),
+  ];
 
   return (
     <section className="rounded-lg border border-slate-300 bg-white p-4">
@@ -139,10 +149,12 @@ export function MonthBriefing({
               }
             >
               Vous intervenez sur{" "}
-              {missionsToDeclare.map((mission, rank) => (
-                <span key={mission.id}>
-                  {rank > 0 && (rank === missionsToDeclare.length - 1 ? " et " : ", ")}
-                  <span className="font-medium text-slate-900">{mission.label}</span>
+              {namedOnce.map((mission, rank) => (
+                <span key={mission.projectId}>
+                  {rank > 0 && (rank === namedOnce.length - 1 ? " et " : ", ")}
+                  <span className="font-medium text-slate-900">
+                    {mission.projectLabel}
+                  </span>
                 </span>
               ))}{" "}
               sans y avoir saisi de temps.

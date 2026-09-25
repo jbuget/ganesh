@@ -108,6 +108,7 @@ async def an_entry(
             id=None,
             user_id=user_id,
             project_id=project_id,
+            activity_id=None,
             day=day,
             value=DayValue(value),
             status_at_entry=status,

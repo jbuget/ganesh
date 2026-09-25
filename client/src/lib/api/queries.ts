@@ -30,7 +30,7 @@ import type {
 import { useGetMyMoods, useGetTeamMoods } from "@/lib/api/generated/moods/moods";
 import { useListNotifications } from "@/lib/api/generated/notifications/notifications";
 import type { NotificationFilter } from "@/lib/api/generated/model";
-import { useGetActivity } from "@/lib/api/generated/activity/activity";
+import { useGetActivitySummary } from "@/lib/api/generated/activity-summary/activity-summary";
 import { useReadPlatform } from "@/lib/api/generated/admin/admin";
 import { useGetStatistics } from "@/lib/api/generated/stats/stats";
 import { useListProjects } from "@/lib/api/generated/projects/projects";
@@ -148,7 +148,7 @@ export function useStatistics(range: PeriodRange) {
 
 /** Who did what over a window, and on what. */
 export function useActivitySummary(range: PeriodRange) {
-  const query = useGetActivity({ range });
+  const query = useGetActivitySummary({ range });
   return { ...query, summary: successOf<ActivitySummaryResponse>(query.data) };
 }
 

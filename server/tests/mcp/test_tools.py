@@ -225,7 +225,9 @@ class TestMyMonth:
     async def test_it_weighs_what_is_declared_against_the_working_days(self) -> None:
         row = GridRow(
             project_id=7,
-            label="WAATcher",
+            activity_id=70,
+            label="Développement",
+            project_label="WAATcher",
             kind=ProjectKind.PROJECT,
             estimated_days=None,
             actual_total=9.0,
@@ -387,7 +389,9 @@ class TestMyMonthReadsAsFrench:
     async def test_a_single_day_agrees_in_the_singular(self) -> None:
         row = GridRow(
             project_id=7,
-            label="WAATcher",
+            activity_id=70,
+            label="Développement",
+            project_label="WAATcher",
             kind=ProjectKind.PROJECT,
             estimated_days=None,
             actual_total=1.0,
@@ -411,6 +415,8 @@ class TestMyMonthReadsAsFrench:
         """A row at zero is a mission opened and not filled. It says nothing."""
         empty = GridRow(
             project_id=8,
+            activity_id=None,
+            project_label="WAATcher",
             label="ACHATS",
             kind=ProjectKind.PROJECT,
             estimated_days=None,

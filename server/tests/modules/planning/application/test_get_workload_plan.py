@@ -19,6 +19,7 @@ from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import ValidationError
 from tests.helpers.in_memory_repositories import (
+    InMemoryActivityRepository,
     InMemoryEntryRepository,
     InMemoryProjectAssigneeRepository,
     InMemoryProjectRepository,
@@ -68,6 +69,7 @@ def entries_on(
             id=None,
             user_id=user_id,
             project_id=project_id,
+            activity_id=None,
             day=day,
             value=DayValue(value),
             status_at_entry=ProjectStatus.DEVELOPMENT,
@@ -92,6 +94,7 @@ def a_use_case(
     return GetWorkloadPlanUseCase(
         projects=InMemoryProjectRepository(missions),
         entries=InMemoryEntryRepository(entries or []),
+        activities=InMemoryActivityRepository(),
         assignees=InMemoryProjectAssigneeRepository(assignments),
         users=InMemoryUserRepository(users if users is not None else [ALICE, BOB]),
     )

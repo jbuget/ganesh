@@ -9,10 +9,10 @@ import { DayHeader } from "@/components/atoms/DayHeader";
 import { DayTotalCell } from "@/components/atoms/DayTotalCell";
 import { MissionLabel } from "@/components/atoms/MissionLabel";
 import { TotalCell } from "@/components/atoms/TotalCell";
-import { cellId } from "@/lib/grid-navigation";
+import { cellId, rowOf } from "@/lib/grid-navigation";
 import { countCompleteDays } from "@/lib/month-completion";
 import { useGridKeys } from "@/lib/use-grid-keys";
-import type { MonthGridResponse } from "@/lib/api/generated/model";
+import type { MonthGridResponse, ProjectKind } from "@/lib/api/generated/model";
 
 interface TimesheetGridProps {
   grid: MonthGridResponse;
@@ -25,11 +25,16 @@ interface TimesheetGridProps {
    */
   readOnly: boolean;
   today: string;
-  onSetValue: (projectId: number, day: string, value: DayValue) => void;
+  onSetValue: (
+    projectId: number,
+    activityId: number | null,
+    day: string,
+    value: DayValue,
+  ) => void;
   /** Mission picker, housed in the last row. Absent when the month is closed. */
   addingMission?: React.ReactNode;
   /** Removing a mission. Absent when the month is closed. */
-  onRemoveMission?: (projectId: number) => void;
+  onRemoveMission?: (projectId: number, activityId: number | null) => void;
   /**
    * Opening a mission in the side panel. Available whatever the month's state:
    * reading a mission's sheet is not writing on it.
@@ -39,7 +44,11 @@ interface TimesheetGridProps {
 
 interface DisplayRow {
   project_id: number;
+  activity_id: number | null;
+  kind: ProjectKind;
   label: string;
+  /** The mission above the row, so two « Développement » never read alike. */
+  project_label: string;
   estimated_days: number | null;
   values: Record<string, number>;
   actual_total: number;
@@ -54,6 +63,11 @@ interface DisplayRow {
  * A mission put on the month holds its row with nothing on it: the grid reads
  * what was lined up as much as what was entered.
  */
+/** What names a row out loud: the mission, then the trade under it. */
+function rowName(row: DisplayRow): string {
+  return row.activity_id === null ? row.label : `${row.project_label} — ${row.label}`;
+}
+
 export function TimesheetGrid({
   grid,
   readOnly,
@@ -66,7 +80,10 @@ export function TimesheetGrid({
   const rows: DisplayRow[] = grid.rows
     .map((row) => ({
       project_id: row.project_id,
+      activity_id: row.activity_id ?? null,
+      kind: row.kind,
       label: row.label,
+      project_label: row.project_label,
       estimated_days: row.estimated_days ?? null,
       values: row.values as Record<string, number>,
       actual_total: row.actual_total,
@@ -74,8 +91,24 @@ export function TimesheetGrid({
       total: row.total,
       total_consumed_days: row.total_consumed_days,
     }))
-    .sort((a, b) => a.label.localeCompare(b.label, "fr"));
+    // Grouped by mission, then by trade: the grid reads as the list of
+    // missions one works on, each cut into what one does on it.
+    .sort(
+      (a, b) =>
+        a.project_label.localeCompare(b.project_label, "fr") ||
+        a.label.localeCompare(b.label, "fr"),
+    );
 
+  /**
+   * A row carrying no trade on a mission that expects one.
+   *
+   * It can only be a leftover: everything is declared under an activity now,
+   * off-project work aside. Nothing can be written on it — the API refuses —
+   * so it reads as what it is, a past left unattributed, rather than looking
+   * like a row one may click.
+   */
+  const isUnattributed = (row: DisplayRow): boolean =>
+    row.activity_id === null && row.kind !== "off_project";
   const totalByDate = new Map(grid.day_totals.map((total) => [total.day, total]));
 
   /**
@@ -104,11 +137,13 @@ export function TimesheetGrid({
    */
   const keys = useGridKeys(
     {
-      rows: rows.map((row) => row.project_id),
+      rows: rows.map((row) =>
+        rowOf({ projectId: row.project_id, activityId: row.activity_id }),
+      ),
       days: grid.days.map((day) => day.day),
       isOpen: (cell) => !readOnly && !offDays.has(cell.day),
     },
-    (cell, value) => onSetValue(cell.projectId, cell.day, value),
+    (cell, value) => onSetValue(cell.projectId, cell.activityId, cell.day, value),
   );
 
   const completeDays = countCompleteDays(grid.days, grid.day_totals);
@@ -136,7 +171,7 @@ export function TimesheetGrid({
           <tr>
             <th
               scope="col"
-              className="sticky left-0 z-10 h-11 w-56 border-t border-r border-b border-t-slate-500 border-r-slate-500 border-b-slate-300 bg-white px-3 text-left text-xs font-medium text-slate-600"
+              className="sticky left-0 z-10 h-11 w-72 border-t border-r border-b border-t-slate-500 border-r-slate-500 border-b-slate-300 bg-white px-3 text-left text-xs font-medium text-slate-600"
             >
               <span className="sr-only">Projet</span>
             </th>
@@ -222,11 +257,11 @@ export function TimesheetGrid({
             </tr>
           )}
           {rows.map((row, rowIndex) => (
-            <tr key={row.project_id}>
+            <tr key={`${row.project_id}:${row.activity_id ?? ""}`}>
               <th
                 scope="row"
                 className={[
-                  "sticky left-0 z-10 w-56 border-r border-b border-r-slate-500 bg-white px-3 py-1.5 text-left text-sm font-normal",
+                  "sticky left-0 z-10 w-72 border-r border-b border-r-slate-500 bg-white px-3 py-1.5 text-left text-sm font-normal",
                   closesTheTable(rowIndex)
                     ? "border-b-slate-500"
                     : "border-b-slate-300",
@@ -238,12 +273,15 @@ export function TimesheetGrid({
                 {onOpenMission ? (
                   <button
                     type="button"
-                    aria-label={`Ouvrir ${row.label}`}
+                    aria-label={`Ouvrir ${rowName(row)}`}
                     onClick={() => onOpenMission(row.project_id)}
                     className="flex w-full min-w-0 cursor-pointer text-left hover:underline"
                   >
                     <MissionLabel
                       label={row.label}
+                      mission={row.project_label}
+                      isUnderItsMission={row.activity_id !== null}
+                      isUnattributed={isUnattributed(row)}
                       consumedDays={row.total_consumed_days}
                       estimatedDays={row.estimated_days}
                     />
@@ -251,6 +289,9 @@ export function TimesheetGrid({
                 ) : (
                   <MissionLabel
                     label={row.label}
+                    mission={row.project_label}
+                    isUnderItsMission={row.activity_id !== null}
+                    isUnattributed={isUnattributed(row)}
                     consumedDays={row.total_consumed_days}
                     estimatedDays={row.estimated_days}
                   />
@@ -259,9 +300,14 @@ export function TimesheetGrid({
               {grid.days.map((day, dayIndex) => (
                 <DayCell
                   key={day.day}
-                  cellId={cellId({ projectId: row.project_id, day: day.day })}
+                  cellId={cellId({
+                    projectId: row.project_id,
+                    activityId: row.activity_id,
+                    day: day.day,
+                  })}
                   isTabStop={keys.isTabStop({
                     projectId: row.project_id,
+                    activityId: row.activity_id,
                     day: day.day,
                   })}
                   isLastDay={dayIndex === grid.days.length - 1}
@@ -269,9 +315,12 @@ export function TimesheetGrid({
                   isOffDay={day.is_off_day}
                   isNarrow={isNarrow(day.day, day.is_off_day)}
                   isFuture={day.day > today}
-                  isReadOnly={readOnly}
+                  isReadOnly={readOnly || isUnattributed(row)}
                   isLastRow={closesTheTable(rowIndex)}
-                  label={`${row.label} — ${day.day}`}
+                  // The mission is part of the name: a dozen missions cut
+                  // into « Développement » would otherwise give a dozen cells
+                  // reading alike to anyone listening rather than looking.
+                  label={`${rowName(row)} — ${day.day}`}
                 />
               ))}
               <TotalCell
@@ -283,8 +332,8 @@ export function TimesheetGrid({
                 <td className="w-10 pl-2 align-middle">
                   <button
                     type="button"
-                    aria-label={`Retirer ${row.label}`}
-                    onClick={() => onRemoveMission(row.project_id)}
+                    aria-label={`Retirer ${rowName(row)}`}
+                    onClick={() => onRemoveMission(row.project_id, row.activity_id)}
                     className="cursor-pointer rounded p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
                   >
                     <Trash2 className="size-4" aria-hidden />
@@ -298,7 +347,7 @@ export function TimesheetGrid({
               <th
                 scope="row"
                 // Closes the table at the bottom, as the last mission did.
-                className="sticky left-0 z-10 w-56 border-r border-b border-r-slate-500 border-b-slate-500 bg-white px-3 py-1.5 text-left font-normal"
+                className="sticky left-0 z-10 w-72 border-r border-b border-r-slate-500 border-b-slate-500 bg-white px-3 py-1.5 text-left font-normal"
               >
                 {addingMission}
               </th>

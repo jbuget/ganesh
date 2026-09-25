@@ -83,6 +83,14 @@ SURFACE_OF: dict[AuditAction, Surface] = {
     AuditAction.PROJECT_CREATE: Surface.PROJECT_REGISTRY,
     AuditAction.PROJECT_UPDATE: Surface.PROJECT_REGISTRY,
     AuditAction.PROJECT_DELETE: Surface.PROJECT_REGISTRY,
+    # Cutting a mission into the trades its days are booked under. Part of
+    # keeping the list rather than a surface of its own: one goes to the same
+    # screen to declare a mission and to say what it is made of.
+    AuditAction.ACTIVITY_CREATE: Surface.PROJECT_REGISTRY,
+    AuditAction.ACTIVITY_UPDATE: Surface.PROJECT_REGISTRY,
+    AuditAction.ACTIVITY_ARCHIVE: Surface.PROJECT_REGISTRY,
+    AuditAction.ACTIVITY_UNARCHIVE: Surface.PROJECT_REGISTRY,
+    AuditAction.ACTIVITY_DELETE: Surface.PROJECT_REGISTRY,
     # Moving the work along, from the board or from the sheet.
     AuditAction.PROJECT_STATUS_CHANGE: Surface.PHASE_PROGRESS,
     # Saying who is expected on what.

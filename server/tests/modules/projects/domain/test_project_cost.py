@@ -174,3 +174,62 @@ class TestRollUp:
         assert roll_up(costs, parents={1: None, 2: 1})[1].in_run_since == date(
             2026, 6, 1
         )
+
+
+class TestTheRollUpReachesEveryLevel:
+    """The list has three levels, and the days have to climb all of them.
+
+    An activity hangs under a work package which hangs under a project. Adding
+    each child to its parent in one pass is not enough: the package would have
+    to be added to the project after it has absorbed its activities, never
+    before, or the days booked at the bottom never reach the top.
+    """
+
+    def test_days_climb_from_an_activity_up_to_the_project(self) -> None:
+        costs = {
+            1: a_cost(build=1.0),  # the project
+            2: a_cost(build=2.0),  # its work package
+            3: a_cost(build=4.0),  # an activity of the package
+        }
+
+        total = roll_up(costs, parents={1: None, 2: 1, 3: 2})
+
+        assert total[3].build_days == 4.0
+        assert total[2].build_days == 6.0
+        assert total[1].build_days == 7.0
+
+    def test_the_order_the_tree_is_given_in_changes_nothing(self) -> None:
+        """A mapping has no order to rely on, so the climb must not need one."""
+        costs = {1: a_cost(build=1.0), 2: a_cost(build=2.0), 3: a_cost(build=4.0)}
+
+        deepest_first = roll_up(costs, parents={3: 2, 2: 1, 1: None})
+        shallowest_first = roll_up(costs, parents={1: None, 2: 1, 3: 2})
+
+        assert deepest_first[1].build_days == shallowest_first[1].build_days == 7.0
+
+    def test_estimates_climb_the_whole_way_too(self) -> None:
+        costs = {
+            1: a_cost(estimated=None),
+            2: a_cost(estimated=None),
+            3: a_cost(estimated=10.0),
+            4: a_cost(estimated=5.0),
+        }
+
+        total = roll_up(costs, parents={1: None, 2: 1, 3: 2, 4: 2})
+
+        assert total[2].estimated_days == 15.0
+        assert total[1].estimated_days == 15.0
+
+    def test_a_tree_that_names_a_parent_it_does_not_hold_still_reads(self) -> None:
+        """A filtered list hands over children whose parent is not in it."""
+        costs = {3: a_cost(build=4.0)}
+
+        assert roll_up(costs, parents={3: 99})[3].build_days == 4.0
+
+    def test_a_cycle_does_not_spin_for_ever(self) -> None:
+        """Nothing should ever write one, and nothing should hang if it does."""
+        costs = {1: a_cost(build=1.0), 2: a_cost(build=2.0)}
+
+        total = roll_up(costs, parents={1: 2, 2: 1})
+
+        assert set(total) == {1, 2}

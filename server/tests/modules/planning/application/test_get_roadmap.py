@@ -24,6 +24,7 @@ from src.modules.users.domain.entities.user import Role, User
 from src.shared.enums.department import Department
 from src.shared.exceptions.domain_exceptions import ValidationError
 from tests.helpers.in_memory_repositories import (
+    InMemoryActivityRepository,
     InMemoryEntryRepository,
     InMemoryProjectAssigneeRepository,
     InMemoryProjectDetailRepository,
@@ -73,6 +74,7 @@ def entries_on(project_id: int, days: list[date]) -> list[Entry]:
             id=None,
             user_id=1,
             project_id=project_id,
+            activity_id=None,
             day=day,
             value=DayValue(1.0),
             status_at_entry=ProjectStatus.DEVELOPMENT,
@@ -107,6 +109,7 @@ async def read(
     use_case = GetRoadmapUseCase(
         projects=InMemoryProjectRepository(missions),
         entries=InMemoryEntryRepository(entries or []),
+        activities=InMemoryActivityRepository(),
         details=details,
         assignees=assignees,
         users=InMemoryUserRepository([ALICE]),

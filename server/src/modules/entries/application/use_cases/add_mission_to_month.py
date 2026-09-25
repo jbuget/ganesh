@@ -67,7 +67,10 @@ class AddMissionToMonthUseCase:
         )
 
         await self._user_missions.add(
-            command.target_user_id, command.project_id, command.month
+            command.target_user_id,
+            command.project_id,
+            command.activity_id,
+            command.month,
         )
         await self._audit_logs.add(
             AuditLog.month_project_add(

@@ -11,7 +11,13 @@ class EntryRepository(ABC):
     """Persistence contract for entries."""
 
     @abstractmethod
-    async def get(self, user_id: int, project_id: int, day: date) -> Entry | None: ...
+    async def get(
+        self, user_id: int, project_id: int, activity_id: int | None, day: date
+    ) -> Entry | None:
+        """One slot of the grid. The activity is part of what names it: the
+        same person may declare on the same mission the same day under two
+        trades, and those are two entries, not one overwriting the other."""
+        ...
 
     @abstractmethod
     async def list_for_month(self, user_id: int, month: date) -> list[Entry]: ...
@@ -109,4 +115,6 @@ class EntryRepository(ABC):
     async def upsert(self, entry: Entry) -> Entry: ...
 
     @abstractmethod
-    async def delete(self, user_id: int, project_id: int, day: date) -> None: ...
+    async def delete(
+        self, user_id: int, project_id: int, activity_id: int | None, day: date
+    ) -> None: ...

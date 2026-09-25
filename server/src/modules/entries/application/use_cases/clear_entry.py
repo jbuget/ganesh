@@ -52,14 +52,20 @@ class ClearEntryUseCase:
         )
 
         existing = await self._entries.get(
-            command.target_user_id, command.project_id, command.day
+            command.target_user_id,
+            command.project_id,
+            command.activity_id,
+            command.day,
         )
         if existing is None:
             # The entry cycle passes through empty: finding nothing is normal.
             return
 
         await self._entries.delete(
-            command.target_user_id, command.project_id, command.day
+            command.target_user_id,
+            command.project_id,
+            command.activity_id,
+            command.day,
         )
         await self._audit_logs.add(
             AuditLog.entry_clear(

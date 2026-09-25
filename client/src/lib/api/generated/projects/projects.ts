@@ -21,6 +21,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  ActivityResponse,
   AddLinkRequest,
   ArchiveProjectRequest,
   AssignMemberParams,
@@ -30,6 +31,7 @@ import type {
   BodyUploadProjectAttachment,
   CatalogEntryResponse,
   ChangeStatusRequest,
+  CreateActivityRequest,
   CreateProjectRequest,
   DownloadProjectAttachmentParams,
   GetBoardParams,
@@ -49,6 +51,7 @@ import type {
   Reaction,
   RenameAttachmentRequest,
   UnassignMemberParams,
+  UpdateActivityRequest,
   UpdateDescriptionRequest,
   UpdateProjectDetailRequest,
   UpdateProjectRegistryRequest,
@@ -4708,4 +4711,822 @@ export const useRenameProjectAttachment = <
   TContext
 > => {
   return useMutation(getRenameProjectAttachmentMutationOptions(options), queryClient);
+};
+export type listProjectActivitiesResponse200 = {
+  data: ActivityResponse[];
+  status: 200;
+};
+
+export type listProjectActivitiesResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listProjectActivitiesResponseSuccess = listProjectActivitiesResponse200 & {
+  headers: Headers;
+};
+export type listProjectActivitiesResponseError = listProjectActivitiesResponse422 & {
+  headers: Headers;
+};
+
+export type listProjectActivitiesResponse =
+  listProjectActivitiesResponseSuccess | listProjectActivitiesResponseError;
+
+export const getListProjectActivitiesUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/activities`;
+};
+
+/**
+ * The activities of a mission, archived ones included.
+ * @summary List Project Activities
+ */
+export const listProjectActivities = async (
+  projectId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listProjectActivitiesResponse> => {
+  return bffFetcher<listProjectActivitiesResponse>(
+    getListProjectActivitiesUrl(projectId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListProjectActivitiesQueryKey = (projectId: number) => {
+  return [`/api/v1/projects/${projectId}/activities`] as const;
+};
+
+export const getListProjectActivitiesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listProjectActivities>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectActivities>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListProjectActivitiesQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectActivities>>> = ({
+    signal,
+  }) => listProjectActivities(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listProjectActivities>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListProjectActivitiesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listProjectActivities>>
+>;
+export type ListProjectActivitiesQueryError = HTTPValidationError;
+
+export function useListProjectActivities<
+  TData = Awaited<ReturnType<typeof listProjectActivities>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectActivities>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectActivities>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectActivities>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListProjectActivities<
+  TData = Awaited<ReturnType<typeof listProjectActivities>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectActivities>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectActivities>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectActivities>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjectActivities<
+  TData = Awaited<ReturnType<typeof listProjectActivities>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectActivities>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Project Activities
+ */
+
+export function useListProjectActivities<
+  TData = Awaited<ReturnType<typeof listProjectActivities>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectActivities>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListProjectActivitiesQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createProjectActivityResponse201 = {
+  data: ActivityResponse;
+  status: 201;
+};
+
+export type createProjectActivityResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type createProjectActivityResponseSuccess = createProjectActivityResponse201 & {
+  headers: Headers;
+};
+export type createProjectActivityResponseError = createProjectActivityResponse422 & {
+  headers: Headers;
+};
+
+export type createProjectActivityResponse =
+  createProjectActivityResponseSuccess | createProjectActivityResponseError;
+
+export const getCreateProjectActivityUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/activities`;
+};
+
+/**
+ * Cuts a new trade into a mission.
+ * @summary Create Project Activity
+ */
+export const createProjectActivity = async (
+  projectId: number,
+  createActivityRequest: CreateActivityRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<createProjectActivityResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<createProjectActivityResponse>(
+    getCreateProjectActivityUrl(projectId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(createActivityRequest),
+    },
+  );
+};
+
+export const getCreateProjectActivityMutationKey = () =>
+  ["createProjectActivity"] as const;
+
+export const getCreateProjectActivityMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createProjectActivity>>,
+    TError,
+    CreateProjectActivityMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createProjectActivity>>,
+  TError,
+  CreateProjectActivityMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateProjectActivityMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createProjectActivity>>,
+    CreateProjectActivityMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return createProjectActivity(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateProjectActivityMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createProjectActivity>>
+>;
+export type CreateProjectActivityMutationBody = CreateActivityRequest;
+export type CreateProjectActivityMutationError = HTTPValidationError;
+export type CreateProjectActivityMutationVariables = {
+  projectId: number;
+  data: CreateActivityRequest;
+};
+
+/**
+ * @summary Create Project Activity
+ */
+export const useCreateProjectActivity = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createProjectActivity>>,
+      TError,
+      CreateProjectActivityMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createProjectActivity>>,
+  TError,
+  CreateProjectActivityMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateProjectActivityMutationOptions(options), queryClient);
+};
+export type updateProjectActivityResponse200 = {
+  data: ActivityResponse;
+  status: 200;
+};
+
+export type updateProjectActivityResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type updateProjectActivityResponseSuccess = updateProjectActivityResponse200 & {
+  headers: Headers;
+};
+export type updateProjectActivityResponseError = updateProjectActivityResponse422 & {
+  headers: Headers;
+};
+
+export type updateProjectActivityResponse =
+  updateProjectActivityResponseSuccess | updateProjectActivityResponseError;
+
+export const getUpdateProjectActivityUrl = (projectId: number, activityId: number) => {
+  return `/api/v1/projects/${projectId}/activities/${activityId}`;
+};
+
+/**
+ * Changes what an activity says — its label, its trade, its budget.
+ * @summary Update Project Activity
+ */
+export const updateProjectActivity = async (
+  projectId: number,
+  activityId: number,
+  updateActivityRequest: UpdateActivityRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<updateProjectActivityResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<updateProjectActivityResponse>(
+    getUpdateProjectActivityUrl(projectId, activityId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(updateActivityRequest),
+    },
+  );
+};
+
+export const getUpdateProjectActivityMutationKey = () =>
+  ["updateProjectActivity"] as const;
+
+export const getUpdateProjectActivityMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateProjectActivity>>,
+    TError,
+    UpdateProjectActivityMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateProjectActivity>>,
+  TError,
+  UpdateProjectActivityMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateProjectActivityMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateProjectActivity>>,
+    UpdateProjectActivityMutationVariables
+  > = (props) => {
+    const { projectId, activityId, data } = props ?? {};
+
+    return updateProjectActivity(projectId, activityId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateProjectActivityMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateProjectActivity>>
+>;
+export type UpdateProjectActivityMutationBody = UpdateActivityRequest;
+export type UpdateProjectActivityMutationError = HTTPValidationError;
+export type UpdateProjectActivityMutationVariables = {
+  projectId: number;
+  activityId: number;
+  data: UpdateActivityRequest;
+};
+
+/**
+ * @summary Update Project Activity
+ */
+export const useUpdateProjectActivity = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateProjectActivity>>,
+      TError,
+      UpdateProjectActivityMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateProjectActivity>>,
+  TError,
+  UpdateProjectActivityMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateProjectActivityMutationOptions(options), queryClient);
+};
+export type deleteProjectActivityResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteProjectActivityResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type deleteProjectActivityResponseSuccess = deleteProjectActivityResponse204 & {
+  headers: Headers;
+};
+export type deleteProjectActivityResponseError = deleteProjectActivityResponse422 & {
+  headers: Headers;
+};
+
+export type deleteProjectActivityResponse =
+  deleteProjectActivityResponseSuccess | deleteProjectActivityResponseError;
+
+export const getDeleteProjectActivityUrl = (projectId: number, activityId: number) => {
+  return `/api/v1/projects/${projectId}/activities/${activityId}`;
+};
+
+/**
+ * Removes an activity nobody ever declared on.
+ *
+ * One carrying days is archived instead, and the API refuses rather than
+ * leaving it to a screen: a validated month is immutable, and deleting
+ * would empty cells inside one without anybody reopening it.
+ * @summary Delete Project Activity
+ */
+export const deleteProjectActivity = async (
+  projectId: number,
+  activityId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<deleteProjectActivityResponse> => {
+  return bffFetcher<deleteProjectActivityResponse>(
+    getDeleteProjectActivityUrl(projectId, activityId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getDeleteProjectActivityMutationKey = () =>
+  ["deleteProjectActivity"] as const;
+
+export const getDeleteProjectActivityMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteProjectActivity>>,
+    TError,
+    DeleteProjectActivityMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteProjectActivity>>,
+  TError,
+  DeleteProjectActivityMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteProjectActivityMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteProjectActivity>>,
+    DeleteProjectActivityMutationVariables
+  > = (props) => {
+    const { projectId, activityId } = props ?? {};
+
+    return deleteProjectActivity(projectId, activityId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteProjectActivityMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteProjectActivity>>
+>;
+
+export type DeleteProjectActivityMutationError = HTTPValidationError;
+export type DeleteProjectActivityMutationVariables = {
+  projectId: number;
+  activityId: number;
+};
+
+/**
+ * @summary Delete Project Activity
+ */
+export const useDeleteProjectActivity = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteProjectActivity>>,
+      TError,
+      DeleteProjectActivityMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteProjectActivity>>,
+  TError,
+  DeleteProjectActivityMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteProjectActivityMutationOptions(options), queryClient);
+};
+export type archiveProjectActivityResponse200 = {
+  data: ActivityResponse;
+  status: 200;
+};
+
+export type archiveProjectActivityResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type archiveProjectActivityResponseSuccess =
+  archiveProjectActivityResponse200 & {
+    headers: Headers;
+  };
+export type archiveProjectActivityResponseError = archiveProjectActivityResponse422 & {
+  headers: Headers;
+};
+
+export type archiveProjectActivityResponse =
+  archiveProjectActivityResponseSuccess | archiveProjectActivityResponseError;
+
+export const getArchiveProjectActivityUrl = (projectId: number, activityId: number) => {
+  return `/api/v1/projects/${projectId}/activities/${activityId}/archive`;
+};
+
+/**
+ * Takes an activity out of what a month can be declared on.
+ *
+ * A gesture of its own rather than a field of the PATCH, as archiving a
+ * mission is: days already booked stay readable and only the list one can
+ * still declare on shrinks.
+ * @summary Archive Project Activity
+ */
+export const archiveProjectActivity = async (
+  projectId: number,
+  activityId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<archiveProjectActivityResponse> => {
+  return bffFetcher<archiveProjectActivityResponse>(
+    getArchiveProjectActivityUrl(projectId, activityId),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getArchiveProjectActivityMutationKey = () =>
+  ["archiveProjectActivity"] as const;
+
+export const getArchiveProjectActivityMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof archiveProjectActivity>>,
+    TError,
+    ArchiveProjectActivityMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof archiveProjectActivity>>,
+  TError,
+  ArchiveProjectActivityMutationVariables,
+  TContext
+> => {
+  const mutationKey = getArchiveProjectActivityMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof archiveProjectActivity>>,
+    ArchiveProjectActivityMutationVariables
+  > = (props) => {
+    const { projectId, activityId } = props ?? {};
+
+    return archiveProjectActivity(projectId, activityId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ArchiveProjectActivityMutationResult = NonNullable<
+  Awaited<ReturnType<typeof archiveProjectActivity>>
+>;
+
+export type ArchiveProjectActivityMutationError = HTTPValidationError;
+export type ArchiveProjectActivityMutationVariables = {
+  projectId: number;
+  activityId: number;
+};
+
+/**
+ * @summary Archive Project Activity
+ */
+export const useArchiveProjectActivity = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof archiveProjectActivity>>,
+      TError,
+      ArchiveProjectActivityMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof archiveProjectActivity>>,
+  TError,
+  ArchiveProjectActivityMutationVariables,
+  TContext
+> => {
+  return useMutation(getArchiveProjectActivityMutationOptions(options), queryClient);
+};
+export type unarchiveProjectActivityResponse200 = {
+  data: ActivityResponse;
+  status: 200;
+};
+
+export type unarchiveProjectActivityResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type unarchiveProjectActivityResponseSuccess =
+  unarchiveProjectActivityResponse200 & {
+    headers: Headers;
+  };
+export type unarchiveProjectActivityResponseError =
+  unarchiveProjectActivityResponse422 & {
+    headers: Headers;
+  };
+
+export type unarchiveProjectActivityResponse =
+  unarchiveProjectActivityResponseSuccess | unarchiveProjectActivityResponseError;
+
+export const getUnarchiveProjectActivityUrl = (
+  projectId: number,
+  activityId: number,
+) => {
+  return `/api/v1/projects/${projectId}/activities/${activityId}/unarchive`;
+};
+
+/**
+ * Puts an activity back among what can be declared on.
+ * @summary Unarchive Project Activity
+ */
+export const unarchiveProjectActivity = async (
+  projectId: number,
+  activityId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<unarchiveProjectActivityResponse> => {
+  return bffFetcher<unarchiveProjectActivityResponse>(
+    getUnarchiveProjectActivityUrl(projectId, activityId),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getUnarchiveProjectActivityMutationKey = () =>
+  ["unarchiveProjectActivity"] as const;
+
+export const getUnarchiveProjectActivityMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof unarchiveProjectActivity>>,
+    TError,
+    UnarchiveProjectActivityMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof unarchiveProjectActivity>>,
+  TError,
+  UnarchiveProjectActivityMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUnarchiveProjectActivityMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof unarchiveProjectActivity>>,
+    UnarchiveProjectActivityMutationVariables
+  > = (props) => {
+    const { projectId, activityId } = props ?? {};
+
+    return unarchiveProjectActivity(projectId, activityId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UnarchiveProjectActivityMutationResult = NonNullable<
+  Awaited<ReturnType<typeof unarchiveProjectActivity>>
+>;
+
+export type UnarchiveProjectActivityMutationError = HTTPValidationError;
+export type UnarchiveProjectActivityMutationVariables = {
+  projectId: number;
+  activityId: number;
+};
+
+/**
+ * @summary Unarchive Project Activity
+ */
+export const useUnarchiveProjectActivity = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof unarchiveProjectActivity>>,
+      TError,
+      UnarchiveProjectActivityMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof unarchiveProjectActivity>>,
+  TError,
+  UnarchiveProjectActivityMutationVariables,
+  TContext
+> => {
+  return useMutation(getUnarchiveProjectActivityMutationOptions(options), queryClient);
 };

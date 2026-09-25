@@ -8,7 +8,9 @@ import {
   removeMissionFromMonth,
   setEntry,
 } from "@/lib/api/generated/entries/entries";
-import type { ProjectResponse } from "@/lib/api/generated/model";
+import type { ProjectResponse, WorkNature } from "@/lib/api/generated/model";
+import { createProjectActivity } from "@/lib/api/generated/projects/projects";
+import { workNatureLabel } from "@/lib/work-natures";
 import { useReopenMonth, useValidateMonth } from "@/lib/api/generated/months/months";
 import { useCreateProject } from "@/lib/api/generated/projects/projects";
 import {
@@ -83,12 +85,20 @@ export function useTimesheetMonth() {
    * walks to a colleague's month goes where it was clicked.
    */
   const entries = usePendingEntries({
-    async write({ userId, projectId, day }, value) {
+    async write({ userId, projectId, activityId, day }, value) {
       const whose = userId === me?.id ? undefined : { user_id: userId };
       if (value === 0) {
-        await clearEntry({ project_id: projectId, day, ...whose });
+        await clearEntry({
+          project_id: projectId,
+          activity_id: activityId,
+          day,
+          ...whose,
+        });
       } else {
-        await setEntry({ project_id: projectId, day, value }, whose);
+        await setEntry(
+          { project_id: projectId, activity_id: activityId, day, value },
+          whose,
+        );
       }
     },
     refresh,
@@ -110,7 +120,23 @@ export function useTimesheetMonth() {
     cursor.year === Number(today.slice(0, 4)) &&
     cursor.month === Number(today.slice(5, 7));
 
-  /** Missions already in the grid, not to be offered again. */
+  /**
+   * Rows already in the grid, not to be offered again.
+   *
+   * A row is a mission **and** an activity: the same mission shows once per
+   * trade somebody declares under, so offering it again is right as long as
+   * the trade differs.
+   */
+  const displayedRowKeys =
+    grid?.rows.map((row) => `${row.project_id}:${row.activity_id ?? ""}`) ?? [];
+
+  /**
+   * Missions with at least one row on the grid.
+   *
+   * What the reminder of assigned missions reads: it says « you are on this
+   * and have declared nothing », which is answered as soon as one of its
+   * trades carries a row — whichever one.
+   */
   const displayedProjectIds = grid?.rows.map((row) => row.project_id) ?? [];
 
   return {
@@ -121,6 +147,8 @@ export function useTimesheetMonth() {
     isLoading: gridQuery.isLoading,
     teammates,
     projects,
+    /** The reference list with its activities: what the selector offers. */
+    missions,
     /** Replays the month's queries — what a panel edit changes shows here. */
     refresh,
 
@@ -170,6 +198,7 @@ export function useTimesheetMonth() {
         : [],
 
     displayedProjectIds,
+    displayedRowKeys,
 
     goToPreviousMonth() {
       goToMonth(previousMonth(cursor.year, cursor.month));
@@ -188,14 +217,24 @@ export function useTimesheetMonth() {
     },
 
     /**
+    /**
      * Takes a cell's new value. A `0` removes the entry, any other writes it.
      *
-     * Nothing leaves at once: the write goes out when the clicking has stopped,
-     * and the grid reads the value in the meantime.
+     * Nothing leaves at once: the write goes out when the clicking has
+     * stopped, and the grid reads the value in the meantime.
+     *
+     * The activity is part of what names the cell: the same person may
+     * declare on the same mission the same day under two trades, and those
+     * are two cells rather than one overwriting the other.
      */
-    setDayValue(projectId: number, day: string, value: DayValue) {
+    setDayValue(
+      projectId: number,
+      activityId: number | null,
+      day: string,
+      value: DayValue,
+    ) {
       if (targetUserId === null) return;
-      entries.setValue({ userId: targetUserId, projectId, day }, value);
+      entries.setValue({ userId: targetUserId, projectId, activityId, day }, value);
     },
 
     /**
@@ -205,25 +244,53 @@ export function useTimesheetMonth() {
      * about to work on is a gesture of its own, and it must still be there
      * after a reload.
      */
-    async addMission(projectId: number) {
-      await addMissionToMonth({ project_id: projectId, month }, target);
+    async addMission(projectId: number, activityId: number | null) {
+      await addMissionToMonth(
+        { project_id: projectId, activity_id: activityId, month },
+        target,
+      );
       await refresh();
     },
 
-    /** Removes a mission from the month, with the time it carries. */
-    async removeMission(projectId: number) {
+    /** Removes a row from the month, with the time it carries. */
+    async removeMission(projectId: number, activityId: number | null) {
       // A cell still waiting would write itself back onto a row that has gone.
       await entries.flush();
-      await removeMissionFromMonth({ project_id: projectId, month, ...target });
+      await removeMissionFromMonth({
+        project_id: projectId,
+        activity_id: activityId,
+        month,
+        ...target,
+      });
       await refresh();
     },
 
-    async declareProject(label: string) {
+    /**
+     * Declares a mission and puts it on the month, ready to be written in.
+     *
+     * The trade comes with it: a mission carries no time until it is cut into
+     * one, so creating it alone would land the reader on a row the API
+     * refuses every write on — which is exactly what one declares a mission
+     * from one's own month to avoid.
+     */
+    async declareProject(label: string, nature: WorkNature | null) {
       const created = await createProject.mutateAsync({
         data: { label, kind: "project", status: "exploration" },
       });
+      const projectId = mutationResult<ProjectResponse>(created).id;
+
+      const answer = await createProjectActivity(projectId, {
+        label: workNatureLabel(nature) ?? "Développement",
+        nature: nature ?? "development",
+        estimated_days: null,
+      });
+
       await addMissionToMonth(
-        { project_id: mutationResult<ProjectResponse>(created).id, month },
+        {
+          project_id: projectId,
+          activity_id: answer.status === 201 ? answer.data.id : null,
+          month,
+        },
         target,
       );
       await refresh();

@@ -22,7 +22,9 @@ function makeGrid(overrides: Partial<MonthGridResponse> = {}): MonthGridResponse
     rows: [
       {
         project_id: 10,
-        label: "Portail bailleurs",
+        activity_id: 100,
+        label: "Développement",
+        project_label: "Portail bailleurs",
         kind: "project",
         estimated_days: 20,
         values: { "2026-09-15": 1, "2026-09-25": 1 },
@@ -48,7 +50,10 @@ function makeGrid(overrides: Partial<MonthGridResponse> = {}): MonthGridResponse
 /** A mission put on the month, with nothing entered on it yet. */
 const EMPTY_ROW: GridRowResponse = {
   project_id: 11,
+  // Off-project work is declared on directly: it carries no activity.
+  activity_id: null,
   label: "Absences",
+  project_label: "Absences",
   kind: "off_project",
   estimated_days: null,
   values: {},
@@ -69,7 +74,7 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     expect(
-      screen.getByRole("rowheader", { name: /Portail bailleurs/ }),
+      screen.getByRole("rowheader", { name: /Portail bailleurs\s*Développement/ }),
     ).toBeInTheDocument();
   });
 
@@ -77,7 +82,7 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     // The ratio lives in the mission's tooltip, which follows the cursor.
-    fireEvent.mouseMove(screen.getByText("Portail bailleurs"), {
+    fireEvent.mouseMove(screen.getByText("Développement"), {
       clientX: 50,
       clientY: 80,
     });
@@ -94,7 +99,7 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} onSetValue={onSetValue} />);
 
     const cell = screen.getByRole("gridcell", {
-      name: "Portail bailleurs — 2026-09-14",
+      name: "Portail bailleurs — Développement — 2026-09-14",
     });
     await userEvent.click(cell);
 
@@ -107,11 +112,13 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} onSetValue={onSetValue} />);
 
     await userEvent.click(
-      screen.getByRole("gridcell", { name: "Portail bailleurs — 2026-09-15" }),
+      screen.getByRole("gridcell", {
+        name: "Portail bailleurs — Développement — 2026-09-15",
+      }),
     );
     await userEvent.keyboard("4");
 
-    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-15", 0.5);
+    expect(onSetValue).toHaveBeenCalledWith(10, 100, "2026-09-15", 0.5);
   });
 
   it("shows a mission put on the month with nothing entered on it", () => {
@@ -129,7 +136,9 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} readOnly grid={makeGrid()} />);
 
     // Out of the tab order entirely: no focus, so no key ever reaches them.
-    const cells = screen.getAllByRole("gridcell", { name: /Portail bailleurs/ });
+    const cells = screen.getAllByRole("gridcell", {
+      name: /Portail bailleurs — Développement/,
+    });
     expect(cells.every((cell) => !cell.hasAttribute("tabindex"))).toBe(true);
     expect(cells.every((cell) => cell.getAttribute("aria-readonly") === "true")).toBe(
       true,
@@ -195,7 +204,9 @@ describe("TimesheetGrid", () => {
     const cells = within(lines.at(-1)!).getAllByRole("rowheader");
     expect(cells[0].className).toContain("border-b-slate-500");
     // The mission before no longer closes anything: a light rule separates it.
-    const mission = screen.getByRole("rowheader", { name: /Portail bailleurs/ });
+    const mission = screen.getByRole("rowheader", {
+      name: /Portail bailleurs\s*Développement/,
+    });
     expect(mission.className).toContain("border-b-slate-300");
   });
 
@@ -222,9 +233,11 @@ describe("TimesheetGrid", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Retirer Portail bailleurs" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Retirer Portail bailleurs — Développement" }),
+    );
 
-    expect(onRemoveMission).toHaveBeenCalledWith(10);
+    expect(onRemoveMission).toHaveBeenCalledWith(10, 100);
   });
 
   it("stops the top rule at the last data column", () => {
@@ -325,7 +338,7 @@ describe("TimesheetGrid", () => {
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Ouvrir Portail bailleurs" }),
+      screen.getByRole("button", { name: "Ouvrir Portail bailleurs — Développement" }),
     );
 
     expect(onOpenMission).toHaveBeenCalledWith(10);
@@ -335,7 +348,9 @@ describe("TimesheetGrid", () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
     expect(
-      screen.queryByRole("button", { name: "Ouvrir Portail bailleurs" }),
+      screen.queryByRole("button", {
+        name: "Ouvrir Portail bailleurs — Développement",
+      }),
     ).not.toBeInTheDocument();
   });
 });
@@ -360,20 +375,20 @@ describe("TimesheetGrid, moved around with the keys", () => {
   it("moves to the next day of the same mission", async () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
-    cell("Portail bailleurs", "2026-09-14").focus();
+    cell("Portail bailleurs — Développement", "2026-09-14").focus();
     await userEvent.keyboard("{ArrowRight}");
 
-    expect(cell("Portail bailleurs", "2026-09-15")).toHaveFocus();
+    expect(cell("Portail bailleurs — Développement", "2026-09-15")).toHaveFocus();
   });
 
   it("steps over a non-working day rather than stopping on it", async () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
-    cell("Portail bailleurs", "2026-09-16").focus();
+    cell("Portail bailleurs — Développement", "2026-09-16").focus();
     await userEvent.keyboard("{ArrowRight}");
 
     // 19/09 is a weekend: the focus carries on to the next working day.
-    expect(cell("Portail bailleurs", "2026-09-25")).toHaveFocus();
+    expect(cell("Portail bailleurs — Développement", "2026-09-25")).toHaveFocus();
   });
 
   it("moves to the same day of the mission below, and back up", async () => {
@@ -382,7 +397,7 @@ describe("TimesheetGrid, moved around with the keys", () => {
     // The rows are drawn in alphabetical order: « Absences » sits above.
     cell("Absences", "2026-09-15").focus();
     await userEvent.keyboard("{ArrowDown}");
-    expect(cell("Portail bailleurs", "2026-09-15")).toHaveFocus();
+    expect(cell("Portail bailleurs — Développement", "2026-09-15")).toHaveFocus();
 
     await userEvent.keyboard("{ArrowUp}");
     expect(cell("Absences", "2026-09-15")).toHaveFocus();
@@ -391,7 +406,7 @@ describe("TimesheetGrid, moved around with the keys", () => {
   it("stays put at the end of a row: the grid does not wrap", async () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
-    const last = cell("Portail bailleurs", "2026-09-25");
+    const last = cell("Portail bailleurs — Développement", "2026-09-25");
     last.focus();
     await userEvent.keyboard("{ArrowRight}");
 
@@ -401,12 +416,12 @@ describe("TimesheetGrid, moved around with the keys", () => {
   it("goes to the first and the last day of the row", async () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
-    cell("Portail bailleurs", "2026-09-15").focus();
+    cell("Portail bailleurs — Développement", "2026-09-15").focus();
     await userEvent.keyboard("{End}");
-    expect(cell("Portail bailleurs", "2026-09-25")).toHaveFocus();
+    expect(cell("Portail bailleurs — Développement", "2026-09-25")).toHaveFocus();
 
     await userEvent.keyboard("{Home}");
-    expect(cell("Portail bailleurs", "2026-09-14")).toHaveFocus();
+    expect(cell("Portail bailleurs — Développement", "2026-09-14")).toHaveFocus();
   });
 
   /**
@@ -416,15 +431,21 @@ describe("TimesheetGrid, moved around with the keys", () => {
   it("holds a single tab stop, which follows the focus", async () => {
     render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
 
-    const first = cell("Portail bailleurs", "2026-09-14");
+    const first = cell("Portail bailleurs — Développement", "2026-09-14");
     expect(first).toHaveAttribute("tabindex", "0");
-    expect(cell("Portail bailleurs", "2026-09-15")).toHaveAttribute("tabindex", "-1");
+    expect(cell("Portail bailleurs — Développement", "2026-09-15")).toHaveAttribute(
+      "tabindex",
+      "-1",
+    );
 
     first.focus();
     await userEvent.keyboard("{ArrowRight}");
 
     expect(first).toHaveAttribute("tabindex", "-1");
-    expect(cell("Portail bailleurs", "2026-09-15")).toHaveAttribute("tabindex", "0");
+    expect(cell("Portail bailleurs — Développement", "2026-09-15")).toHaveAttribute(
+      "tabindex",
+      "0",
+    );
   });
 
   /**
@@ -443,7 +464,9 @@ describe("TimesheetGrid, moved around with the keys", () => {
       />,
     );
 
-    fireEvent.keyDown(cell("Portail bailleurs", "2026-09-14"), { key: "4" });
+    fireEvent.keyDown(cell("Portail bailleurs — Développement", "2026-09-14"), {
+      key: "4",
+    });
 
     expect(onSetValue).not.toHaveBeenCalled();
   });
@@ -452,7 +475,7 @@ describe("TimesheetGrid, moved around with the keys", () => {
     const onSetValue = vi.fn();
     render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
 
-    cell("Portail bailleurs", "2026-09-14").focus();
+    cell("Portail bailleurs — Développement", "2026-09-14").focus();
     await userEvent.keyboard(" ");
 
     expect(onSetValue).not.toHaveBeenCalled();
@@ -480,27 +503,27 @@ describe("TimesheetGrid, entered from the keyboard", () => {
     const onSetValue = vi.fn();
     render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
 
-    cell("Portail bailleurs", "2026-09-14").focus();
+    cell("Portail bailleurs — Développement", "2026-09-14").focus();
     await userEvent.keyboard(key);
 
-    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-14", value);
+    expect(onSetValue).toHaveBeenCalledWith(10, 100, "2026-09-14", value);
   });
 
   it("empties the cell on a zero", async () => {
     const onSetValue = vi.fn();
     render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
 
-    cell("Portail bailleurs", "2026-09-15").focus();
+    cell("Portail bailleurs — Développement", "2026-09-15").focus();
     await userEvent.keyboard("0");
 
-    expect(onSetValue).toHaveBeenCalledWith(10, "2026-09-15", 0);
+    expect(onSetValue).toHaveBeenCalledWith(10, 100, "2026-09-15", 0);
   });
 
   it("writes nothing for an hour the day does not divide into", async () => {
     const onSetValue = vi.fn();
     render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
 
-    cell("Portail bailleurs", "2026-09-14").focus();
+    cell("Portail bailleurs — Développement", "2026-09-14").focus();
     await userEvent.keyboard("3");
 
     expect(onSetValue).not.toHaveBeenCalled();
@@ -510,10 +533,10 @@ describe("TimesheetGrid, entered from the keyboard", () => {
     const onSetValue = vi.fn();
     render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
 
-    cell("Portail bailleurs", "2026-09-14").focus();
+    cell("Portail bailleurs — Développement", "2026-09-14").focus();
     await userEvent.keyboard("{ArrowRight}");
 
-    expect(cell("Portail bailleurs", "2026-09-15")).toHaveFocus();
+    expect(cell("Portail bailleurs — Développement", "2026-09-15")).toHaveFocus();
     expect(onSetValue).not.toHaveBeenCalled();
   });
 

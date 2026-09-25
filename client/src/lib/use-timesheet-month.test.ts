@@ -12,6 +12,10 @@ const entries = vi.hoisted(() => ({
 const projects = vi.hoisted(() => ({
   useCreateProject: () => ({ mutateAsync: projects.createProject }),
   createProject: vi.fn(),
+  createProjectActivity: vi.fn(async () => ({
+    status: 201,
+    data: { id: 420 },
+  })),
 }));
 const queries = vi.hoisted(() => ({
   grid: { rows: [] as unknown[], is_writable: true } as
@@ -63,10 +67,10 @@ describe("useTimesheetMonth", () => {
   it("puts a mission on the month server-side, before any time is entered", async () => {
     const screen = month();
 
-    await screen.current.addMission(10);
+    await screen.current.addMission(10, 100);
 
     expect(entries.addMissionToMonth).toHaveBeenCalledWith(
-      { project_id: 10, month: screen.current.month },
+      { project_id: 10, activity_id: 100, month: screen.current.month },
       undefined,
     );
   });
@@ -75,7 +79,7 @@ describe("useTimesheetMonth", () => {
     const screen = month();
     act(() => screen.current.viewTeammate(7));
 
-    await screen.current.addMission(10);
+    await screen.current.addMission(10, 100);
 
     expect(entries.addMissionToMonth).toHaveBeenCalledWith(expect.anything(), {
       user_id: 7,
@@ -85,11 +89,19 @@ describe("useTimesheetMonth", () => {
   it("puts a freshly declared project on the month right away", async () => {
     const screen = month();
 
-    await screen.current.declareProject("Portail");
+    await screen.current.declareProject("Portail", "delivery");
 
     expect(projects.createProject).toHaveBeenCalled();
+    // Cut into the trade that was asked for, and the row points at it: a
+    // mission carrying none is a row the API refuses every write on, which
+    // is exactly what declaring from one's own month exists to avoid.
+    expect(projects.createProjectActivity).toHaveBeenCalledWith(42, {
+      label: "Delivery",
+      nature: "delivery",
+      estimated_days: null,
+    });
     expect(entries.addMissionToMonth).toHaveBeenCalledWith(
-      { project_id: 42, month: screen.current.month },
+      { project_id: 42, activity_id: 420, month: screen.current.month },
       undefined,
     );
   });
@@ -101,10 +113,11 @@ describe("useTimesheetMonth", () => {
   it("takes a mission off the month server-side, even an empty one", async () => {
     const screen = month();
 
-    await screen.current.removeMission(10);
+    await screen.current.removeMission(10, 100);
 
     expect(entries.removeMissionFromMonth).toHaveBeenCalledWith({
       project_id: 10,
+      activity_id: 100,
       month: screen.current.month,
     });
   });
@@ -309,13 +322,13 @@ describe("entering time", () => {
   it("sends one write for the clicks that make up one gesture", async () => {
     const screen = month();
 
-    act(() => screen.current.setDayValue(10, "2026-09-14", 1));
-    act(() => screen.current.setDayValue(10, "2026-09-14", 0.5));
+    act(() => screen.current.setDayValue(10, 100, "2026-09-14", 1));
+    act(() => screen.current.setDayValue(10, 100, "2026-09-14", 0.5));
     await settle();
 
     expect(entries.setEntry).toHaveBeenCalledTimes(1);
     expect(entries.setEntry).toHaveBeenCalledWith(
-      { project_id: 10, day: "2026-09-14", value: 0.5 },
+      { project_id: 10, activity_id: 100, day: "2026-09-14", value: 0.5 },
       undefined,
     );
   });
@@ -323,11 +336,12 @@ describe("entering time", () => {
   it("removes the entry when the cell comes back to empty", async () => {
     const screen = month();
 
-    act(() => screen.current.setDayValue(10, "2026-09-14", 0));
+    act(() => screen.current.setDayValue(10, 100, "2026-09-14", 0));
     await settle();
 
     expect(entries.clearEntry).toHaveBeenCalledWith({
       project_id: 10,
+      activity_id: 100,
       day: "2026-09-14",
     });
   });
@@ -337,7 +351,7 @@ describe("entering time", () => {
     const screen = month();
     act(() => screen.current.viewTeammate(7));
 
-    act(() => screen.current.setDayValue(10, "2026-09-14", 1));
+    act(() => screen.current.setDayValue(10, 100, "2026-09-14", 1));
     act(() => screen.current.viewTeammate(1));
     await settle();
 
@@ -350,7 +364,7 @@ describe("entering time", () => {
    */
   it("sends what is waiting before the month is validated", async () => {
     const screen = month();
-    act(() => screen.current.setDayValue(10, "2026-09-14", 1));
+    act(() => screen.current.setDayValue(10, 100, "2026-09-14", 1));
 
     await act(async () => {
       await screen.current.validate();
@@ -365,10 +379,10 @@ describe("entering time", () => {
   /** A cell still waiting would write itself back onto a row that has gone. */
   it("sends what is waiting before a mission leaves the month", async () => {
     const screen = month();
-    act(() => screen.current.setDayValue(10, "2026-09-14", 1));
+    act(() => screen.current.setDayValue(10, 100, "2026-09-14", 1));
 
     await act(async () => {
-      await screen.current.removeMission(10);
+      await screen.current.removeMission(10, 100);
     });
 
     expect(entries.setEntry.mock.invocationCallOrder[0]).toBeLessThan(

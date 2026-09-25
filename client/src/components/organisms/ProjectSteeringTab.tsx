@@ -7,12 +7,13 @@ import Link from "next/link";
 import { CategoryMark } from "@/components/atoms/CategoryMark";
 import { CategoryPicker } from "@/components/atoms/CategoryPicker";
 import { DepartmentPicker } from "@/components/atoms/DepartmentPicker";
-import { InlineNumberField } from "@/components/atoms/InlineNumberField";
 import { ContributorsPicker } from "@/components/atoms/ContributorsPicker";
 import { PhasePicker } from "@/components/atoms/PhasePicker";
 import { PriorityPicker } from "@/components/atoms/PriorityPicker";
 import { SheetRow } from "@/components/atoms/SheetRow";
 import { SheetSectionTitle } from "@/components/atoms/SheetSectionTitle";
+import { ProjectActivities } from "@/components/molecules/ProjectActivities";
+import { useProjectActivities } from "@/lib/use-project-activities";
 import { ProjectContributions } from "@/components/molecules/ProjectContributions";
 import { ProjectSubProjects } from "@/components/molecules/ProjectSubProjects";
 import type {
@@ -102,6 +103,9 @@ export function ProjectSteeringTab({
   // copy to resynchronise on every reload.
   const [draft, setDraft] = useState<string | null>(null);
   const { project } = detail;
+  // The mission's estimate follows from these, so every write replays the
+  // sheet: the ratio shown above must never lag behind the budgets below.
+  const activities = useProjectActivities(project.id, onChange);
   const contacts = draft ?? project.business_contacts ?? "";
 
   return (
@@ -146,16 +150,6 @@ export function ProjectSteeringTab({
               values={detail.departments}
               editable={editable}
               onChange={(values) => saveSheet(values, contacts.trim() || null)}
-            />
-          </SheetRow>
-
-          <SheetRow title="Estimé (build)">
-            <InlineNumberField
-              value={project.estimated_days}
-              suffix="jrs."
-              label="Estimer"
-              editable={editable}
-              onChange={(estimated_days) => updateFields({ estimated_days })}
             />
           </SheetRow>
 
@@ -216,6 +210,24 @@ export function ProjectSteeringTab({
           <ProjectSubProjects
             subProjects={detail.sub_projects}
             onAdd={editable ? addSubProject : undefined}
+          />
+        </section>
+      )}
+
+      {/* Off-project work is declared on directly — absences carry neither
+          estimate nor trade — so it is not offered the section rather than
+          offering a gesture the server would refuse. */}
+      {project.kind !== "off_project" && (
+        <section className="space-y-2">
+          <SheetSectionTitle>Activités</SheetSectionTitle>
+          <ProjectActivities
+            activities={activities.activities}
+            editable={editable}
+            onAdd={activities.add}
+            onChange={activities.change}
+            onArchive={activities.archive}
+            onRemove={activities.remove}
+            onUnarchive={activities.unarchive}
           />
         </section>
       )}

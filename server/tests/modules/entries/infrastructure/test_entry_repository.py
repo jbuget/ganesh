@@ -58,13 +58,14 @@ async def test_an_entry_is_persisted_and_read_back(db_session: AsyncSession) -> 
             id=None,
             user_id=user_id,
             project_id=project_id,
+            activity_id=None,
             day=DAY,
             value=DayValue(0.5),
             status_at_entry=ProjectStatus.DEVELOPMENT,
         )
     )
 
-    saved = await repo.get(user_id, project_id, DAY)
+    saved = await repo.get(user_id, project_id, None, DAY)
     assert saved is not None
     assert saved.value == 0.5
     assert saved.status_at_entry is ProjectStatus.DEVELOPMENT
@@ -80,6 +81,7 @@ async def test_upserting_twice_keeps_a_single_row(db_session: AsyncSession) -> N
                 id=None,
                 user_id=user_id,
                 project_id=project_id,
+                activity_id=None,
                 day=DAY,
                 value=DayValue(value),
                 status_at_entry=ProjectStatus.DEVELOPMENT,
@@ -100,6 +102,7 @@ async def test_listing_a_month_excludes_other_months(db_session: AsyncSession) -
                 id=None,
                 user_id=user_id,
                 project_id=project_id,
+                activity_id=None,
                 day=day,
                 value=DayValue(1.0),
                 status_at_entry=ProjectStatus.DEVELOPMENT,
@@ -119,15 +122,16 @@ async def test_deleting_an_entry_removes_it(db_session: AsyncSession) -> None:
             id=None,
             user_id=user_id,
             project_id=project_id,
+            activity_id=None,
             day=DAY,
             value=DayValue(1.0),
             status_at_entry=None,
         )
     )
 
-    await repo.delete(user_id, project_id, DAY)
+    await repo.delete(user_id, project_id, None, DAY)
 
-    assert await repo.get(user_id, project_id, DAY) is None
+    assert await repo.get(user_id, project_id, None, DAY) is None
 
 
 async def test_the_captured_phase_survives_a_project_status_change(
@@ -142,6 +146,7 @@ async def test_the_captured_phase_survives_a_project_status_change(
             id=None,
             user_id=user_id,
             project_id=project_id,
+            activity_id=None,
             day=DAY,
             value=DayValue(1.0),
             status_at_entry=ProjectStatus.SCOPING,
@@ -153,7 +158,7 @@ async def test_the_captured_phase_survives_a_project_status_change(
     project.change_status(ProjectStatus.OPERATIONS)
     await projects.update(project)
 
-    saved = await entries.get(user_id, project_id, DAY)
+    saved = await entries.get(user_id, project_id, None, DAY)
     assert saved is not None
     assert saved.status_at_entry is ProjectStatus.SCOPING
 
@@ -171,6 +176,7 @@ async def test_forecasts_are_summed_per_mission_apart_from_delivered_days(
                 id=None,
                 user_id=user_id,
                 project_id=project_id,
+                activity_id=None,
                 day=day,
                 value=DayValue(value),
                 status_at_entry=ProjectStatus.DEVELOPMENT,
@@ -193,6 +199,7 @@ async def test_a_diary_is_read_day_by_day_over_a_window(
                 id=None,
                 user_id=user_id,
                 project_id=project_id,
+                activity_id=None,
                 day=day,
                 value=DayValue(0.5),
                 status_at_entry=ProjectStatus.DEVELOPMENT,
@@ -216,6 +223,7 @@ async def test_the_span_of_a_mission_runs_from_its_first_declared_day_to_its_las
                 id=None,
                 user_id=user_id,
                 project_id=project_id,
+                activity_id=None,
                 day=day,
                 value=DayValue(1.0),
                 status_at_entry=ProjectStatus.DEVELOPMENT,

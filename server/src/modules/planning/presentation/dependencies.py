@@ -9,6 +9,7 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 )
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.entries.presentation.dependencies import (
+    get_activity_repository,
     get_audit_log_repository,
     get_entry_repository,
     get_project_repository,
@@ -30,6 +31,9 @@ from src.modules.planning.domain.repositories.simulation_repository import (
 from src.modules.planning.infrastructure.database.repositories.simulation_repository_impl import (
     SqlSimulationRepository,
 )
+from src.modules.projects.domain.repositories.activity_repository import (
+    ActivityRepository,
+)
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -49,17 +53,23 @@ from src.modules.users.domain.repositories.user_repository import UserRepository
 def get_workload_plan_use_case(
     projects: ProjectRepository = Depends(get_project_repository),
     entries: EntryRepository = Depends(get_entry_repository),
+    activities: ActivityRepository = Depends(get_activity_repository),
     assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
     users: UserRepository = Depends(get_user_repository),
 ) -> GetWorkloadPlanUseCase:
     return GetWorkloadPlanUseCase(
-        projects=projects, entries=entries, assignees=assignees, users=users
+        projects=projects,
+        entries=entries,
+        activities=activities,
+        assignees=assignees,
+        users=users,
     )
 
 
 def get_roadmap_use_case(
     projects: ProjectRepository = Depends(get_project_repository),
     entries: EntryRepository = Depends(get_entry_repository),
+    activities: ActivityRepository = Depends(get_activity_repository),
     details: ProjectDetailRepository = Depends(get_project_detail_repository),
     assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
     users: UserRepository = Depends(get_user_repository),
@@ -67,6 +77,7 @@ def get_roadmap_use_case(
     return GetRoadmapUseCase(
         projects=projects,
         entries=entries,
+        activities=activities,
         details=details,
         assignees=assignees,
         users=users,

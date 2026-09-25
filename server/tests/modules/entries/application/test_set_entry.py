@@ -9,18 +9,21 @@ from src.modules.entries.application.use_cases.set_entry import SetEntryUseCase
 from src.modules.months.domain.entities.month import Month
 from src.modules.notifications.domain.entities.notification import NotificationKind
 from src.modules.notifications.domain.services.delivery import NotificationDelivery
+from src.modules.projects.domain.entities.activity import Activity
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectKind,
     ProjectStatus,
 )
 from src.modules.users.domain.entities.user import Role, User
+from src.shared.enums.work_nature import WorkNature
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
     ForbiddenActionError,
     ValidationError,
 )
 from tests.helpers.in_memory_repositories import (
+    InMemoryActivityRepository,
     InMemoryAuditLogRepository,
     InMemoryEntryRepository,
     InMemoryMonthRepository,
@@ -49,12 +52,20 @@ PROJECT = Project(
     kind=ProjectKind.PROJECT,
     status=ProjectStatus.SCOPING,
 )
+#: A project is declared on through one of its activities, never directly.
+DEV = Activity(
+    id=100,
+    project_id=10,
+    label="Développement",
+    nature=WorkNature.DEVELOPMENT,
+)
 DAY = date(2026, 9, 15)
 
 
 def build(months: list[Month] | None = None):
     users = InMemoryUserRepository([ALICE, BOB])
     projects = InMemoryProjectRepository([PROJECT])
+    activities = InMemoryActivityRepository([DEV])
     entries = InMemoryEntryRepository()
     month_repo = InMemoryMonthRepository(months or [])
     audit = InMemoryAuditLogRepository()
@@ -62,6 +73,7 @@ def build(months: list[Month] | None = None):
     use_case = SetEntryUseCase(
         users=users,
         projects=projects,
+        activities=activities,
         entries=entries,
         months=month_repo,
         audit_logs=audit,
@@ -74,10 +86,17 @@ async def test_a_user_records_time_on_their_own_month() -> None:
     use_case, entries, _, _, _ = build()
 
     await use_case.execute(
-        SetEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY, value=0.5)
+        SetEntryCommand(
+            actor_id=1,
+            target_user_id=1,
+            project_id=10,
+            activity_id=100,
+            day=DAY,
+            value=0.5,
+        )
     )
 
-    saved = await entries.get(1, 10, DAY)
+    saved = await entries.get(1, 10, 100, DAY)
     assert saved is not None
     assert saved.value == 0.5
 
@@ -86,10 +105,17 @@ async def test_the_entry_captures_the_current_project_phase() -> None:
     use_case, entries, _, _, _ = build()
 
     await use_case.execute(
-        SetEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY, value=1.0)
+        SetEntryCommand(
+            actor_id=1,
+            target_user_id=1,
+            project_id=10,
+            activity_id=100,
+            day=DAY,
+            value=1.0,
+        )
     )
 
-    saved = await entries.get(1, 10, DAY)
+    saved = await entries.get(1, 10, 100, DAY)
     assert saved is not None
     assert saved.status_at_entry is ProjectStatus.SCOPING
 
@@ -99,10 +125,17 @@ async def test_a_user_can_record_time_on_a_colleague_open_month() -> None:
     use_case, entries, _, _, _ = build()
 
     await use_case.execute(
-        SetEntryCommand(actor_id=1, target_user_id=2, project_id=10, day=DAY, value=1.0)
+        SetEntryCommand(
+            actor_id=1,
+            target_user_id=2,
+            project_id=10,
+            activity_id=100,
+            day=DAY,
+            value=1.0,
+        )
     )
 
-    assert await entries.get(2, 10, DAY) is not None
+    assert await entries.get(2, 10, 100, DAY) is not None
 
 
 async def test_writing_to_a_validated_month_is_rejected() -> None:
@@ -113,11 +146,16 @@ async def test_writing_to_a_validated_month_is_rejected() -> None:
     with pytest.raises(ForbiddenActionError):
         await use_case.execute(
             SetEntryCommand(
-                actor_id=1, target_user_id=1, project_id=10, day=DAY, value=1.0
+                actor_id=1,
+                target_user_id=1,
+                project_id=10,
+                activity_id=100,
+                day=DAY,
+                value=1.0,
             )
         )
 
-    assert await entries.get(1, 10, DAY) is None
+    assert await entries.get(1, 10, 100, DAY) is None
 
 
 async def test_a_saturday_is_rejected() -> None:
@@ -130,12 +168,13 @@ async def test_a_saturday_is_rejected() -> None:
                 actor_id=1,
                 target_user_id=1,
                 project_id=10,
+                activity_id=100,
                 day=date(2026, 9, 12),
                 value=1.0,
             )
         )
 
-    assert await entries.get(1, 10, date(2026, 9, 12)) is None
+    assert await entries.get(1, 10, 100, date(2026, 9, 12)) is None
 
 
 async def test_a_public_holiday_is_rejected() -> None:
@@ -147,6 +186,7 @@ async def test_a_public_holiday_is_rejected() -> None:
                 actor_id=1,
                 target_user_id=1,
                 project_id=10,
+                activity_id=100,
                 day=date(2026, 5, 1),
                 value=1.0,
             )
@@ -162,6 +202,7 @@ async def test_a_rejected_day_leaves_no_trace_in_the_audit_log() -> None:
                 actor_id=1,
                 target_user_id=1,
                 project_id=10,
+                activity_id=100,
                 day=date(2026, 9, 13),
                 value=1.0,
             )
@@ -176,7 +217,12 @@ async def test_an_invalid_value_is_rejected() -> None:
     with pytest.raises(ValidationError):
         await use_case.execute(
             SetEntryCommand(
-                actor_id=1, target_user_id=1, project_id=10, day=DAY, value=0.8
+                actor_id=1,
+                target_user_id=1,
+                project_id=10,
+                activity_id=100,
+                day=DAY,
+                value=0.8,
             )
         )
 
@@ -187,7 +233,12 @@ async def test_an_unknown_project_is_rejected() -> None:
     with pytest.raises(EntityNotFoundError):
         await use_case.execute(
             SetEntryCommand(
-                actor_id=1, target_user_id=1, project_id=999, day=DAY, value=1.0
+                actor_id=1,
+                target_user_id=1,
+                project_id=999,
+                activity_id=None,
+                day=DAY,
+                value=1.0,
             )
         )
 
@@ -195,15 +246,22 @@ async def test_an_unknown_project_is_rejected() -> None:
 async def test_setting_a_value_twice_overwrites_it() -> None:
     use_case, entries, _, _, _ = build()
     command = SetEntryCommand(
-        actor_id=1, target_user_id=1, project_id=10, day=DAY, value=0.5
+        actor_id=1, target_user_id=1, project_id=10, activity_id=100, day=DAY, value=0.5
     )
     await use_case.execute(command)
 
     await use_case.execute(
-        SetEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY, value=1.0)
+        SetEntryCommand(
+            actor_id=1,
+            target_user_id=1,
+            project_id=10,
+            activity_id=100,
+            day=DAY,
+            value=1.0,
+        )
     )
 
-    saved = await entries.get(1, 10, DAY)
+    saved = await entries.get(1, 10, 100, DAY)
     assert saved is not None
     assert saved.value == 1.0
     assert len(await entries.list_for_month(1, DAY)) == 1
@@ -213,7 +271,14 @@ async def test_every_entry_is_traced() -> None:
     use_case, _, audit, _, _ = build()
 
     await use_case.execute(
-        SetEntryCommand(actor_id=1, target_user_id=2, project_id=10, day=DAY, value=1.0)
+        SetEntryCommand(
+            actor_id=1,
+            target_user_id=2,
+            project_id=10,
+            activity_id=100,
+            day=DAY,
+            value=1.0,
+        )
     )
 
     assert len(audit.logs) == 1
@@ -227,12 +292,19 @@ async def test_every_entry_is_traced() -> None:
 async def test_overwriting_traces_the_previous_value() -> None:
     use_case, _, audit, _, _ = build()
     base = SetEntryCommand(
-        actor_id=1, target_user_id=1, project_id=10, day=DAY, value=0.5
+        actor_id=1, target_user_id=1, project_id=10, activity_id=100, day=DAY, value=0.5
     )
     await use_case.execute(base)
 
     await use_case.execute(
-        SetEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY, value=1.0)
+        SetEntryCommand(
+            actor_id=1,
+            target_user_id=1,
+            project_id=10,
+            activity_id=100,
+            day=DAY,
+            value=1.0,
+        )
     )
 
     assert audit.logs[-1].old_value == "0.5"
@@ -243,7 +315,14 @@ async def test_recording_time_opens_the_month_implicitly() -> None:
     use_case, _, _, months, _ = build()
 
     await use_case.execute(
-        SetEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY, value=1.0)
+        SetEntryCommand(
+            actor_id=1,
+            target_user_id=1,
+            project_id=10,
+            activity_id=100,
+            day=DAY,
+            value=1.0,
+        )
     )
 
     month = await months.get(1, date(2026, 9, 1))
@@ -259,7 +338,12 @@ async def test_an_inactive_user_cannot_record_time() -> None:
         with pytest.raises(ForbiddenActionError):
             await use_case.execute(
                 SetEntryCommand(
-                    actor_id=1, target_user_id=1, project_id=10, day=DAY, value=1.0
+                    actor_id=1,
+                    target_user_id=1,
+                    project_id=10,
+                    activity_id=100,
+                    day=DAY,
+                    value=1.0,
                 )
             )
     finally:
@@ -270,7 +354,14 @@ async def test_writing_on_a_colleagues_month_tells_them() -> None:
     use_case, _, _, _, inbox = build()
 
     await use_case.execute(
-        SetEntryCommand(actor_id=2, target_user_id=1, project_id=10, day=DAY, value=0.5)
+        SetEntryCommand(
+            actor_id=2,
+            target_user_id=1,
+            project_id=10,
+            activity_id=100,
+            day=DAY,
+            value=0.5,
+        )
     )
 
     [told] = inbox.notifications
@@ -287,7 +378,12 @@ async def test_a_month_filled_in_cell_by_cell_rings_once() -> None:
     for day in (date(2026, 9, 15), date(2026, 9, 16), date(2026, 9, 17)):
         await use_case.execute(
             SetEntryCommand(
-                actor_id=2, target_user_id=1, project_id=10, day=day, value=0.5
+                actor_id=2,
+                target_user_id=1,
+                project_id=10,
+                activity_id=100,
+                day=day,
+                value=0.5,
             )
         )
 
@@ -299,7 +395,126 @@ async def test_writing_on_ones_own_month_rings_nowhere() -> None:
     use_case, _, _, _, inbox = build()
 
     await use_case.execute(
-        SetEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY, value=0.5)
+        SetEntryCommand(
+            actor_id=1,
+            target_user_id=1,
+            project_id=10,
+            activity_id=100,
+            day=DAY,
+            value=0.5,
+        )
     )
 
     assert inbox.notifications == []
+
+
+class TestATimeIsBookedUnderATrade:
+    """What the activity changes at the moment of writing."""
+
+    async def test_the_entry_remembers_the_activity_it_was_booked_under(
+        self,
+    ) -> None:
+        use_case, entries, _, _, _ = build()
+
+        await use_case.execute(
+            SetEntryCommand(
+                actor_id=1,
+                target_user_id=1,
+                project_id=10,
+                activity_id=100,
+                day=DAY,
+                value=1.0,
+            )
+        )
+
+        saved = await entries.get(1, 10, 100, DAY)
+        assert saved is not None
+        assert saved.activity_id == 100
+
+    async def test_a_mission_cannot_be_declared_on_directly(self) -> None:
+        use_case, entries, _, _, _ = build()
+
+        with pytest.raises(ValidationError, match="under one of its activities"):
+            await use_case.execute(
+                SetEntryCommand(
+                    actor_id=1,
+                    target_user_id=1,
+                    project_id=10,
+                    activity_id=None,
+                    day=DAY,
+                    value=1.0,
+                )
+            )
+
+        assert await entries.get(1, 10, None, DAY) is None
+
+    async def test_an_activity_nobody_can_find_is_refused(self) -> None:
+        """Not read as « none »: the two mean opposite things, and taking one
+        for the other would book a day against an activity just withdrawn."""
+        use_case, _, _, _, _ = build()
+
+        with pytest.raises(EntityNotFoundError):
+            await use_case.execute(
+                SetEntryCommand(
+                    actor_id=1,
+                    target_user_id=1,
+                    project_id=10,
+                    activity_id=9999,
+                    day=DAY,
+                    value=1.0,
+                )
+            )
+
+    async def test_a_refused_entry_leaves_no_trace_in_the_audit_log(self) -> None:
+        use_case, _, audit, _, _ = build()
+
+        with pytest.raises(ValidationError):
+            await use_case.execute(
+                SetEntryCommand(
+                    actor_id=1,
+                    target_user_id=1,
+                    project_id=10,
+                    activity_id=None,
+                    day=DAY,
+                    value=1.0,
+                )
+            )
+
+        assert audit.logs == []
+
+    async def test_two_trades_hold_the_same_day_on_the_same_mission(self) -> None:
+        """David stands in for the project manager for a fortnight: half his
+        day is development, the other half chefferie, on the one mission."""
+        users = InMemoryUserRepository([ALICE, BOB])
+        chefferie = Activity(
+            id=101,
+            project_id=10,
+            label="Chefferie de projet",
+            nature=WorkNature.PROJECT_MANAGEMENT,
+        )
+        entries = InMemoryEntryRepository()
+        use_case = SetEntryUseCase(
+            users=users,
+            projects=InMemoryProjectRepository([PROJECT]),
+            activities=InMemoryActivityRepository([DEV, chefferie]),
+            entries=entries,
+            months=InMemoryMonthRepository([]),
+            audit_logs=InMemoryAuditLogRepository(),
+            notifications=NotificationDelivery(InMemoryNotificationRepository()),
+        )
+
+        for activity_id in (100, 101):
+            await use_case.execute(
+                SetEntryCommand(
+                    actor_id=1,
+                    target_user_id=1,
+                    project_id=10,
+                    activity_id=activity_id,
+                    day=DAY,
+                    value=0.5,
+                )
+            )
+
+        both = await entries.list_for_month(1, DAY)
+        assert sorted(e.activity_id or 0 for e in both) == [100, 101]
+        assert sum(float(e.value) for e in both) == 1.0

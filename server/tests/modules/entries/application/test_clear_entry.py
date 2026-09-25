@@ -13,17 +13,20 @@ from src.modules.entries.application.use_cases.set_entry import SetEntryUseCase
 from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.months.domain.entities.month import Month
 from src.modules.notifications.domain.services.delivery import NotificationDelivery
+from src.modules.projects.domain.entities.activity import Activity
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectKind,
     ProjectStatus,
 )
 from src.modules.users.domain.entities.user import Role, User
+from src.shared.enums.work_nature import WorkNature
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
     ForbiddenActionError,
 )
 from tests.helpers.in_memory_repositories import (
+    InMemoryActivityRepository,
     InMemoryAuditLogRepository,
     InMemoryEntryRepository,
     InMemoryMonthRepository,
@@ -45,6 +48,15 @@ PROJECT = Project(
 DAY = date(2026, 9, 15)
 
 
+#: A project is declared on through one of its activities, never directly.
+DEV = Activity(
+    id=100,
+    project_id=10,
+    label="Développement",
+    nature=WorkNature.DEVELOPMENT,
+)
+
+
 def build(entries: list[Entry] | None = None, months: list[Month] | None = None):
     users = InMemoryUserRepository([ALICE])
     entry_repo = InMemoryEntryRepository(entries or [])
@@ -60,6 +72,7 @@ def build(entries: list[Entry] | None = None, months: list[Month] | None = None)
     set_entry = SetEntryUseCase(
         users=users,
         projects=InMemoryProjectRepository([PROJECT]),
+        activities=InMemoryActivityRepository([DEV]),
         entries=entry_repo,
         months=month_repo,
         audit_logs=audit,
@@ -73,6 +86,7 @@ def an_entry(day: date = DAY, value: float = 1.0) -> Entry:
         id=1,
         user_id=1,
         project_id=10,
+        activity_id=100,
         day=day,
         value=DayValue(value),
         status_at_entry=ProjectStatus.SCOPING,
@@ -83,10 +97,12 @@ async def test_an_entry_is_removed() -> None:
     clear, _, entries, _ = build([an_entry()])
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
+        ClearEntryCommand(
+            actor_id=1, target_user_id=1, project_id=10, activity_id=100, day=DAY
+        )
     )
 
-    assert await entries.get(1, 10, DAY) is None
+    assert await entries.get(1, 10, 100, DAY) is None
 
 
 async def test_clearing_an_empty_cell_is_harmless() -> None:
@@ -94,17 +110,21 @@ async def test_clearing_an_empty_cell_is_harmless() -> None:
     clear, _, entries, _ = build()
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
+        ClearEntryCommand(
+            actor_id=1, target_user_id=1, project_id=10, activity_id=100, day=DAY
+        )
     )
 
-    assert await entries.get(1, 10, DAY) is None
+    assert await entries.get(1, 10, 100, DAY) is None
 
 
 async def test_removal_is_traced_with_the_previous_value() -> None:
     clear, _, _, audit = build([an_entry(value=0.5)])
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
+        ClearEntryCommand(
+            actor_id=1, target_user_id=1, project_id=10, activity_id=100, day=DAY
+        )
     )
 
     log = audit.logs[-1]
@@ -116,7 +136,9 @@ async def test_clearing_an_empty_cell_leaves_no_trace() -> None:
     clear, _, _, audit = build()
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
+        ClearEntryCommand(
+            actor_id=1, target_user_id=1, project_id=10, activity_id=100, day=DAY
+        )
     )
 
     assert audit.logs == []
@@ -129,10 +151,12 @@ async def test_a_validated_month_refuses_removal() -> None:
 
     with pytest.raises(ForbiddenActionError):
         await clear.execute(
-            ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
+            ClearEntryCommand(
+                actor_id=1, target_user_id=1, project_id=10, activity_id=100, day=DAY
+            )
         )
 
-    assert await entries.get(1, 10, DAY) is not None
+    assert await entries.get(1, 10, 100, DAY) is not None
 
 
 async def test_an_unknown_actor_is_rejected() -> None:
@@ -140,7 +164,9 @@ async def test_an_unknown_actor_is_rejected() -> None:
 
     with pytest.raises(EntityNotFoundError):
         await clear.execute(
-            ClearEntryCommand(actor_id=99, target_user_id=1, project_id=10, day=DAY)
+            ClearEntryCommand(
+                actor_id=99, target_user_id=1, project_id=10, activity_id=100, day=DAY
+            )
         )
 
 
@@ -150,10 +176,12 @@ async def test_a_non_working_day_can_still_be_cleaned_up() -> None:
     clear, _, entries, _ = build([an_entry(day=saturday)])
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=saturday)
+        ClearEntryCommand(
+            actor_id=1, target_user_id=1, project_id=10, activity_id=100, day=saturday
+        )
     )
 
-    assert await entries.get(1, 10, saturday) is None
+    assert await entries.get(1, 10, 100, saturday) is None
 
 
 async def test_a_full_cycle_returns_the_cell_to_empty() -> None:
@@ -162,12 +190,19 @@ async def test_a_full_cycle_returns_the_cell_to_empty() -> None:
     for value in (0.5, 1.0):
         await set_entry.execute(
             SetEntryCommand(
-                actor_id=1, target_user_id=1, project_id=10, day=DAY, value=value
+                actor_id=1,
+                target_user_id=1,
+                project_id=10,
+                activity_id=100,
+                day=DAY,
+                value=value,
             )
         )
 
     await clear.execute(
-        ClearEntryCommand(actor_id=1, target_user_id=1, project_id=10, day=DAY)
+        ClearEntryCommand(
+            actor_id=1, target_user_id=1, project_id=10, activity_id=100, day=DAY
+        )
     )
 
-    assert await entries.get(1, 10, DAY) is None
+    assert await entries.get(1, 10, 100, DAY) is None

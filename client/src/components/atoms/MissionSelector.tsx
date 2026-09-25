@@ -2,8 +2,13 @@
 
 import { useState } from "react";
 
-import type { ProjectResponse } from "@/lib/api/generated/model";
-import { availableMissions } from "@/lib/missions";
+import type { ProjectListItemResponse } from "@/lib/api/generated/model";
+import {
+  offeredRows,
+  rowAnswers,
+  searchableRow,
+  type OfferedRow,
+} from "@/lib/missions";
 import {
   Combobox,
   ComboboxCollection,
@@ -18,19 +23,22 @@ import {
 } from "@/components/ui/combobox";
 
 interface MissionSelectorProps {
-  projects: ProjectResponse[];
-  excludedIds: number[];
+  missions: ProjectListItemResponse[];
+  /** Rows already on the grid, as « mission:activity » keys. */
+  excludedKeys: string[];
   /** Missions the user contributes to, offered first. */
   assignedIds: number[];
-  onSelect: (projectId: number) => void;
+  onSelect: (projectId: number, activityId: number | null) => void;
   onDeclareNew: () => void;
   disabled?: boolean;
 }
 
-/** An offered mission: `value` / `label` is the shape Base UI can read. */
+/** An offered row: `value` / `label` is the shape Base UI can read. */
 interface MissionItem {
-  value: number;
+  value: OfferedRow;
   label: string;
+  /** The mission above it, so two « Développement » never read alike. */
+  hint: string;
 }
 
 interface MissionGroup {
@@ -38,8 +46,12 @@ interface MissionGroup {
   items: MissionItem[];
 }
 
-const asItems = (projects: ProjectResponse[]): MissionItem[] =>
-  projects.map((project) => ({ value: project.id, label: project.label }));
+const asItems = (rows: OfferedRow[]): MissionItem[] =>
+  rows.map((row) => ({
+    value: row,
+    label: row.label,
+    hint: row.activityId === null ? "" : row.projectLabel,
+  }));
 
 /**
  * Adding a mission to the grid, from the last row of the table.
@@ -55,18 +67,21 @@ const asItems = (projects: ProjectResponse[]): MissionItem[] =>
  * needs it.
  */
 export function MissionSelector({
-  projects,
-  excludedIds,
+  missions,
+  excludedKeys,
   assignedIds,
   onSelect,
   onDeclareNew,
   disabled = false,
 }: MissionSelectorProps) {
-  const { mine, projectMissions, offProject } = availableMissions(
-    projects,
-    excludedIds,
-    assignedIds,
+  const offered = offeredRows(missions, excludedKeys);
+  const mine = offered.filter(
+    (row) => row.kind !== "off_project" && assignedIds.includes(row.projectId),
   );
+  const projectMissions = offered.filter(
+    (row) => row.kind !== "off_project" && !assignedIds.includes(row.projectId),
+  );
+  const offProject = offered.filter((row) => row.kind === "off_project");
   const [isOpen, setOpen] = useState(false);
 
   const groups: MissionGroup[] = [];
@@ -85,12 +100,20 @@ export function MissionSelector({
   return (
     <Combobox
       items={groups}
+      // The search looks through the mission's name as well as the trade's,
+      // without case or accents. Left to itself the filter matched the
+      // item's label alone — the trade — so typing « Contrôle » found
+      // nothing, every row being called « Développement » or « Delivery ».
+      itemToStringLabel={(item: MissionItem) => searchableRow(item.value)}
+      filter={(item: MissionItem, query: string) => rowAnswers(item.value, query)}
       value={null}
       open={isOpen}
       onOpenChange={setOpen}
       disabled={disabled}
       onValueChange={(mission) => {
-        if (mission) onSelect((mission as MissionItem).value);
+        if (!mission) return;
+        const row = (mission as MissionItem).value;
+        onSelect(row.projectId, row.activityId);
       }}
     >
       <ComboboxTrigger
@@ -111,8 +134,16 @@ export function MissionSelector({
               <ComboboxGroupLabel>{group.value}</ComboboxGroupLabel>
               <ComboboxCollection>
                 {(mission: MissionItem) => (
-                  <ComboboxItem key={mission.value} value={mission}>
-                    {mission.label}
+                  <ComboboxItem
+                    key={`${mission.value.projectId}:${mission.value.activityId ?? ""}`}
+                    value={mission}
+                  >
+                    <span className="truncate">{mission.label}</span>
+                    {mission.hint ? (
+                      <span className="ml-2 shrink-0 text-xs text-muted-foreground">
+                        {mission.hint}
+                      </span>
+                    ) : null}
                   </ComboboxItem>
                 )}
               </ComboboxCollection>

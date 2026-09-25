@@ -5,8 +5,12 @@ import userEvent from "@testing-library/user-event";
 import { AssignedMissionsCallout } from "./AssignedMissionsCallout";
 
 const MISSIONS = [
-  { id: 1, label: "Portail bailleurs" },
-  { id: 3, label: "Lot 1" },
+  {
+    id: 1,
+    label: "Portail bailleurs",
+    activities: [{ id: 100, label: "Développement" }],
+  },
+  { id: 3, label: "Lot 1", activities: [{ id: 300, label: "Développement" }] },
 ];
 
 describe("AssignedMissionsCallout", () => {
@@ -32,7 +36,9 @@ describe("AssignedMissionsCallout", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Ajouter Lot 1" }));
 
-    expect(onAdd).toHaveBeenCalledWith(3);
+    // A single trade is added straight away: a dialog offering one button
+    // takes a click from the reader for nothing.
+    expect(onAdd).toHaveBeenCalledWith(3, 300);
   });
 
   it("says nothing when there is nothing to add", () => {
@@ -41,5 +47,41 @@ describe("AssignedMissionsCallout", () => {
     );
 
     expect(container).toBeEmptyDOMElement();
+  });
+  it("asks which trade when the mission carries several", async () => {
+    const onAdd = vi.fn();
+    render(
+      <AssignedMissionsCallout
+        missions={[
+          {
+            id: 7,
+            label: "Watom",
+            activities: [
+              { id: 700, label: "Développement" },
+              { id: 701, label: "Chefferie de projet" },
+            ],
+          },
+        ]}
+        onAdd={onAdd}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Ajouter Watom" }));
+    expect(onAdd).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: "Chefferie de projet" }));
+
+    expect(onAdd).toHaveBeenCalledWith(7, 701);
+  });
+
+  it("offers nothing on a mission nobody has cut up", () => {
+    render(
+      <AssignedMissionsCallout
+        missions={[{ id: 9, label: "Neuf", activities: [] }]}
+        onAdd={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Ajouter Neuf" })).toBeDisabled();
   });
 });

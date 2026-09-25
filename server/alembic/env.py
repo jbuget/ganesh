@@ -39,6 +39,7 @@ from src.modules.planning.infrastructure.database.models import (  # noqa: F401,
     simulation_model,
 )
 from src.modules.projects.infrastructure.database.models import (  # noqa: F401, E402
+    activity_model,
     project_assignee_model,
     project_attachment_model,
     project_detail_models,

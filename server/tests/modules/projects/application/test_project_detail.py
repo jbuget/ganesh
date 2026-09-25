@@ -59,6 +59,7 @@ def entry(user_id: int, day: date, value: float = 1.0) -> Entry:
         id=None,
         user_id=user_id,
         project_id=10,
+        activity_id=None,
         day=day,
         value=DayValue(value),
         status_at_entry=ProjectStatus.DEVELOPMENT,

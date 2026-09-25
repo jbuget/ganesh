@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { assignedMissionIds, availableMissions, missionsToDeclare } from "./missions";
+import {
+  assignedMissionIds,
+  availableMissions,
+  missionsToDeclare,
+  offeredRows,
+  rowAnswers,
+  rowKey,
+  searchableRow,
+  type OfferedRow,
+} from "./missions";
 import type {
   ProjectListItemResponse,
   ProjectResponse,
@@ -86,6 +95,22 @@ const listed = (
 ): ProjectListItemResponse =>
   ({
     project,
+    // A mission is declared on through its activities, so a mission carrying
+    // none offers nothing — every fixture needs one to be offered at all.
+    activities:
+      project.kind === "off_project"
+        ? []
+        : [
+            {
+              id: project.id * 100,
+              project_id: project.id,
+              label: "Développement",
+              nature: "development",
+              estimated_days: null,
+              is_active: true,
+              entries: 0,
+            },
+          ],
     contributors: contributors.map((id) => ({
       id,
       display_name: `U${id}`,
@@ -137,7 +162,8 @@ describe("availableMissions", () => {
 
 describe("missionsToDeclare", () => {
   it("names what one contributes to with nothing declared on it", () => {
-    expect(missionsToDeclare(MISSIONS, 7, []).map((p) => p.label)).toEqual([
+    // One line per trade, because that is what a day is declared under.
+    expect(missionsToDeclare(MISSIONS, 7, []).map((row) => row.projectLabel)).toEqual([
       "Portail bailleurs",
     ]);
   });
@@ -148,5 +174,98 @@ describe("missionsToDeclare", () => {
 
   it("says nothing when one contributes to nothing", () => {
     expect(missionsToDeclare(MISSIONS, 42, [])).toEqual([]);
+  });
+});
+
+describe("someone wearing several hats on one mission", () => {
+  const watom = {
+    project: {
+      id: 7,
+      label: "Watom",
+      kind: "project",
+      is_active: true,
+    },
+    activities: [
+      { id: 700, label: "Développement", nature: "development", is_active: true },
+      { id: 701, label: "Design", nature: "design", is_active: true },
+      {
+        id: 702,
+        label: "Chefferie de projet",
+        nature: "project_management",
+        is_active: true,
+      },
+    ],
+  } as unknown as ProjectListItemResponse;
+
+  it("still offers the other trades once one is on the grid", () => {
+    // A developer standing in for the project manager declares under both on
+    // the same mission: adding one must not take the mission away.
+    const offered = offeredRows([watom], [rowKey(7, 700)]);
+
+    expect(offered.map((row) => row.label)).toEqual(["Chefferie de projet", "Design"]);
+  });
+
+  it("offers nothing once every trade is on the grid", () => {
+    const every = [rowKey(7, 700), rowKey(7, 701), rowKey(7, 702)];
+
+    expect(offeredRows([watom], every)).toEqual([]);
+  });
+
+  it("names the mission on each of its trades, so two rows read apart", () => {
+    const offered = offeredRows([watom], []);
+
+    expect(offered.every((row) => row.projectLabel === "Watom")).toBe(true);
+    expect(new Set(offered.map((row) => row.activityId)).size).toBe(3);
+  });
+});
+
+describe("what the selector searches through", () => {
+  const row = {
+    projectId: 1,
+    activityId: 100,
+    label: "Chefferie de projet",
+    projectLabel: "Contrôle de la longueur du câblage posé",
+    kind: "project",
+  } as OfferedRow;
+
+  const offProject = {
+    projectId: 2,
+    activityId: null,
+    label: "Absences",
+    projectLabel: "Absences",
+    kind: "off_project",
+  } as OfferedRow;
+
+  it("finds a mission by its name, not only by its trade", () => {
+    // Every row is called « Développement » or « Chefferie de projet »:
+    // searching the trade alone answers nothing useful.
+    expect(rowAnswers(row, "Contrôle")).toBe(true);
+  });
+
+  it("ignores accents, as every other search in the application does", () => {
+    expect(rowAnswers(row, "Controle")).toBe(true);
+    expect(rowAnswers(row, "cablage")).toBe(true);
+  });
+
+  it("ignores case", () => {
+    expect(rowAnswers(row, "CONTRÔLE")).toBe(true);
+  });
+
+  it("still finds a row by its trade", () => {
+    expect(rowAnswers(row, "chefferie")).toBe(true);
+  });
+
+  it("says no to what neither name carries", () => {
+    expect(rowAnswers(row, "extranet")).toBe(false);
+  });
+
+  it("answers everything to an empty query", () => {
+    expect(rowAnswers(row, "   ")).toBe(true);
+  });
+
+  it("does not repeat itself on off-project work", () => {
+    // Its trade and its mission are the same word; « Absences Absences »
+    // would be what the reader sees the search match against.
+    expect(searchableRow(offProject)).toBe("Absences");
   });
 });

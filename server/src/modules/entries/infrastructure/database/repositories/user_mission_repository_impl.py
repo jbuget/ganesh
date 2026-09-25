@@ -26,46 +26,60 @@ class SqlUserMissionRepository(UserMissionRepository):
         self._session = session
 
     async def _get_model(
-        self, user_id: int, project_id: int, month: date
+        self, user_id: int, project_id: int, activity_id: int | None, month: date
     ) -> UserMissionModel | None:
         result = await self._session.execute(
             select(UserMissionModel).where(
                 and_(
                     UserMissionModel.user_id == user_id,
                     UserMissionModel.project_id == project_id,
+                    # `is_` rather than `==`: null equals nothing in SQL, and
+                    # an off-project row would never be found again.
+                    (
+                        UserMissionModel.activity_id.is_(None)
+                        if activity_id is None
+                        else UserMissionModel.activity_id == activity_id
+                    ),
                     UserMissionModel.month == first_day_of(month),
                 )
             )
         )
         return result.scalar_one_or_none()
 
-    async def list_for_month(self, user_id: int, month: date) -> list[int]:
+    async def list_for_month(
+        self, user_id: int, month: date
+    ) -> list[tuple[int, int | None]]:
         result = await self._session.execute(
-            select(UserMissionModel.project_id)
+            select(UserMissionModel.project_id, UserMissionModel.activity_id)
             .where(
                 and_(
                     UserMissionModel.user_id == user_id,
                     UserMissionModel.month == first_day_of(month),
                 )
             )
-            .order_by(UserMissionModel.project_id)
+            .order_by(UserMissionModel.project_id, UserMissionModel.activity_id)
         )
-        return list(result.scalars().all())
+        return [tuple(row) for row in result.all()]
 
-    async def add(self, user_id: int, project_id: int, month: date) -> None:
-        if await self._get_model(user_id, project_id, month) is not None:
+    async def add(
+        self, user_id: int, project_id: int, activity_id: int | None, month: date
+    ) -> None:
+        if await self._get_model(user_id, project_id, activity_id, month) is not None:
             return
         self._session.add(
             UserMissionModel(
                 user_id=user_id,
                 project_id=project_id,
+                activity_id=activity_id,
                 month=first_day_of(month),
             )
         )
         await self._session.flush()
 
-    async def remove(self, user_id: int, project_id: int, month: date) -> None:
-        model = await self._get_model(user_id, project_id, month)
+    async def remove(
+        self, user_id: int, project_id: int, activity_id: int | None, month: date
+    ) -> None:
+        model = await self._get_model(user_id, project_id, activity_id, month)
         if model is not None:
             await self._session.delete(model)
             await self._session.flush()

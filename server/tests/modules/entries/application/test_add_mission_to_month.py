@@ -67,7 +67,11 @@ def build_with_audit(months: list[Month] | None = None):
 
 def a_command(project_id: int = 10, actor_id: int = 1) -> AddMissionCommand:
     return AddMissionCommand(
-        actor_id=actor_id, target_user_id=1, project_id=project_id, month=MONTH
+        actor_id=actor_id,
+        target_user_id=1,
+        project_id=project_id,
+        activity_id=None,
+        month=MONTH,
     )
 
 
@@ -76,7 +80,7 @@ async def test_the_mission_is_put_on_the_month() -> None:
 
     await use_case.execute(a_command())
 
-    assert await rows.list_for_month(1, MONTH) == [10]
+    assert await rows.list_for_month(1, MONTH) == [(10, None)]
 
 
 async def test_any_day_of_the_month_puts_the_mission_on_that_month() -> None:
@@ -85,11 +89,15 @@ async def test_any_day_of_the_month_puts_the_mission_on_that_month() -> None:
 
     await use_case.execute(
         AddMissionCommand(
-            actor_id=1, target_user_id=1, project_id=10, month=date(2026, 9, 24)
+            actor_id=1,
+            target_user_id=1,
+            project_id=10,
+            activity_id=None,
+            month=date(2026, 9, 24),
         )
     )
 
-    assert await rows.list_for_month(1, MONTH) == [10]
+    assert await rows.list_for_month(1, MONTH) == [(10, None)]
 
 
 async def test_adding_the_same_mission_twice_leaves_one_row() -> None:
@@ -98,7 +106,7 @@ async def test_adding_the_same_mission_twice_leaves_one_row() -> None:
     await use_case.execute(a_command())
     await use_case.execute(a_command())
 
-    assert await rows.list_for_month(1, MONTH) == [10]
+    assert await rows.list_for_month(1, MONTH) == [(10, None)]
 
 
 async def test_a_validated_month_refuses_a_new_mission() -> None:
@@ -147,7 +155,13 @@ async def test_a_deactivated_actor_is_refused() -> None:
 
     with pytest.raises(ForbiddenActionError):
         await use_case.execute(
-            AddMissionCommand(actor_id=2, target_user_id=1, project_id=10, month=MONTH)
+            AddMissionCommand(
+                actor_id=2,
+                target_user_id=1,
+                project_id=10,
+                activity_id=None,
+                month=MONTH,
+            )
         )
 
 
@@ -172,7 +186,11 @@ async def test_the_trace_names_the_month_by_its_first_day() -> None:
 
     await use_case.execute(
         AddMissionCommand(
-            actor_id=1, target_user_id=1, project_id=10, month=date(2026, 9, 23)
+            actor_id=1,
+            target_user_id=1,
+            project_id=10,
+            activity_id=None,
+            month=date(2026, 9, 23),
         )
     )
 

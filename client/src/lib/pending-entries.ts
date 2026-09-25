@@ -16,6 +16,14 @@ export type PendingEntries = Record<string, DayValue>;
 export interface PendingCell {
   userId: number;
   projectId: number;
+  /**
+   * The trade the cell is declared under. Null on off-project work.
+   *
+   * Part of what names the cell: two trades of one mission hold two cells on
+   * the same day, and a key that left the trade out would have the second
+   * click overwrite the first — the very thing this queue exists to prevent.
+   */
+  activityId: number | null;
   day: string;
 }
 
@@ -27,14 +35,24 @@ export interface PendingCell {
  * and a value read or written under the wrong name is a day declared for
  * somebody else.
  */
-export function pendingKey({ userId, projectId, day }: PendingCell): string {
-  return `${userId}:${projectId}:${day}`;
+export function pendingKey({
+  userId,
+  projectId,
+  activityId,
+  day,
+}: PendingCell): string {
+  return `${userId}:${projectId}:${activityId ?? ""}:${day}`;
 }
 
 /** The cell a key names. */
 export function pendingCell(key: string): PendingCell {
-  const [userId, projectId, day] = key.split(":");
-  return { userId: Number(userId), projectId: Number(projectId), day };
+  const [userId, projectId, activityId, day] = key.split(":");
+  return {
+    userId: Number(userId),
+    projectId: Number(projectId),
+    activityId: activityId === "" ? null : Number(activityId),
+    day,
+  };
 }
 
 /** Days are halves: summing them in floats is what gives 0.30000000000000004. */
@@ -72,7 +90,11 @@ export function withPendingEntries(
   let forecastDelta = 0;
 
   const rows = grid.rows.map((row) => {
-    const here = cells.filter((cell) => cell.projectId === row.project_id);
+    const here = cells.filter(
+      (cell) =>
+        cell.projectId === row.project_id &&
+        cell.activityId === (row.activity_id ?? null),
+    );
     if (here.length === 0) return row;
 
     const values = { ...row.values };
