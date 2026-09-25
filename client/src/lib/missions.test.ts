@@ -4,11 +4,10 @@ import {
   assignedMissionIds,
   availableMissions,
   missionsToDeclare,
-  offeredRows,
-  rowAnswers,
+  missionAnswers,
+  offeredMissions,
   rowKey,
-  searchableRow,
-  type OfferedRow,
+  type OfferedMission,
 } from "./missions";
 import type {
   ProjectListItemResponse,
@@ -177,14 +176,9 @@ describe("missionsToDeclare", () => {
   });
 });
 
-describe("someone wearing several hats on one mission", () => {
+describe("what the selector offers", () => {
   const watom = {
-    project: {
-      id: 7,
-      label: "Watom",
-      kind: "project",
-      is_active: true,
-    },
+    project: { id: 7, label: "Watom", kind: "project", is_active: true },
     activities: [
       { id: 700, label: "Développement", nature: "development", is_active: true },
       { id: 701, label: "Design", nature: "design", is_active: true },
@@ -197,75 +191,110 @@ describe("someone wearing several hats on one mission", () => {
     ],
   } as unknown as ProjectListItemResponse;
 
-  it("still offers the other trades once one is on the grid", () => {
-    // A developer standing in for the project manager declares under both on
-    // the same mission: adding one must not take the mission away.
-    const offered = offeredRows([watom], [rowKey(7, 700)]);
+  const leave = {
+    project: { id: 9, label: "Congés", kind: "off_project", is_active: true },
+    activities: [],
+  } as unknown as ProjectListItemResponse;
 
-    expect(offered.map((row) => row.label)).toEqual(["Chefferie de projet", "Design"]);
+  it("lists missions, not the pairs", () => {
+    const offered = offeredMissions([watom], []);
+
+    expect(offered).toHaveLength(1);
+    expect(offered[0].projectLabel).toBe("Watom");
+    expect(offered[0].activities.map((a) => a.label)).toEqual([
+      "Chefferie de projet",
+      "Design",
+      "Développement",
+    ]);
   });
 
-  it("offers nothing once every trade is on the grid", () => {
+  it("drops the trades already on the month, keeping the mission", () => {
+    // A developer standing in for the project manager: one trade taken must
+    // not take the mission away.
+    const offered = offeredMissions([watom], [rowKey(7, 700)]);
+
+    expect(offered[0].activities.map((a) => a.label)).toEqual([
+      "Chefferie de projet",
+      "Design",
+    ]);
+  });
+
+  it("drops the mission once every trade is taken", () => {
     const every = [rowKey(7, 700), rowKey(7, 701), rowKey(7, 702)];
 
-    expect(offeredRows([watom], every)).toEqual([]);
+    expect(offeredMissions([watom], every)).toEqual([]);
   });
 
-  it("names the mission on each of its trades, so two rows read apart", () => {
-    const offered = offeredRows([watom], []);
+  it("drops a mission nobody has cut up: nothing can be declared on it", () => {
+    const bare = {
+      project: { id: 8, label: "Neuf", kind: "project", is_active: true },
+      activities: [],
+    } as unknown as ProjectListItemResponse;
 
-    expect(offered.every((row) => row.projectLabel === "Watom")).toBe(true);
-    expect(new Set(offered.map((row) => row.activityId)).size).toBe(3);
+    expect(offeredMissions([bare], [])).toEqual([]);
+  });
+
+  it("offers off-project work as itself, carrying no trade", () => {
+    const offered = offeredMissions([leave], []);
+
+    expect(offered[0].activities).toEqual([]);
+    expect(offered[0].kind).toBe("off_project");
+  });
+
+  it("drops off-project work once it is on the month", () => {
+    expect(offeredMissions([leave], [rowKey(9, null)])).toEqual([]);
+  });
+
+  it("leaves an archived mission out", () => {
+    const archived = {
+      project: { id: 10, label: "Ancien", kind: "project", is_active: false },
+      activities: [{ id: 1000, label: "Développement", is_active: true }],
+    } as unknown as ProjectListItemResponse;
+
+    expect(offeredMissions([archived], [])).toEqual([]);
+  });
+
+  it("leaves an archived trade out", () => {
+    const withArchived = {
+      project: { id: 11, label: "Mixte", kind: "project", is_active: true },
+      activities: [
+        { id: 1100, label: "Développement", is_active: true },
+        { id: 1101, label: "Design", is_active: false },
+      ],
+    } as unknown as ProjectListItemResponse;
+
+    expect(
+      offeredMissions([withArchived], [])[0].activities.map((a) => a.label),
+    ).toEqual(["Développement"]);
   });
 });
 
-describe("what the selector searches through", () => {
-  const row = {
+describe("what the search reads", () => {
+  const mission = {
     projectId: 1,
-    activityId: 100,
-    label: "Chefferie de projet",
     projectLabel: "Contrôle de la longueur du câblage posé",
     kind: "project",
-  } as OfferedRow;
+    activities: [{ id: 100, label: "Chefferie de projet" }],
+  } as OfferedMission;
 
-  const offProject = {
-    projectId: 2,
-    activityId: null,
-    label: "Absences",
-    projectLabel: "Absences",
-    kind: "off_project",
-  } as OfferedRow;
-
-  it("finds a mission by its name, not only by its trade", () => {
-    // Every row is called « Développement » or « Chefferie de projet »:
-    // searching the trade alone answers nothing useful.
-    expect(rowAnswers(row, "Contrôle")).toBe(true);
+  it("finds a mission by its name, which is what one types", () => {
+    expect(missionAnswers(mission, "Contrôle")).toBe(true);
   });
 
   it("ignores accents, as every other search in the application does", () => {
-    expect(rowAnswers(row, "Controle")).toBe(true);
-    expect(rowAnswers(row, "cablage")).toBe(true);
+    expect(missionAnswers(mission, "Controle")).toBe(true);
+    expect(missionAnswers(mission, "cablage")).toBe(true);
   });
 
   it("ignores case", () => {
-    expect(rowAnswers(row, "CONTRÔLE")).toBe(true);
+    expect(missionAnswers(mission, "CONTRÔLE")).toBe(true);
   });
 
-  it("still finds a row by its trade", () => {
-    expect(rowAnswers(row, "chefferie")).toBe(true);
-  });
-
-  it("says no to what neither name carries", () => {
-    expect(rowAnswers(row, "extranet")).toBe(false);
+  it("says no to what the name does not carry", () => {
+    expect(missionAnswers(mission, "extranet")).toBe(false);
   });
 
   it("answers everything to an empty query", () => {
-    expect(rowAnswers(row, "   ")).toBe(true);
-  });
-
-  it("does not repeat itself on off-project work", () => {
-    // Its trade and its mission are the same word; « Absences Absences »
-    // would be what the reader sees the search match against.
-    expect(searchableRow(offProject)).toBe("Absences");
+    expect(missionAnswers(mission, "   ")).toBe(true);
   });
 });
