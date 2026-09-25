@@ -128,21 +128,29 @@ export function dayShown(today: Date): DayShown {
     : { ...WEEKDAYS[0], isToday: false };
 }
 
-export interface PresenceOfDay {
-  onSite: number;
-  remote: number;
-  away: number;
+export interface PeopleOfDay<T> {
+  onSite: T[];
+  remote: T[];
+  away: T[];
 }
 
-/** How many are where, that day, out of a list already reduced to the team. */
-export function presenceOfDay(
-  weeks: (WeekPresenceResponse | null | undefined)[],
+/**
+ * Who is where, that day, out of a list already reduced to the team.
+ *
+ * The people and not a tally, because a figure says how many and the question
+ * one opens the screen with is « qui ». The count is the length of the list,
+ * so the two can never say different things.
+ */
+export function peopleOfDay<T extends { presence?: WeekPresenceResponse | null }>(
+  people: T[],
   day: Weekday["key"],
-): PresenceOfDay {
-  const days = weeks.map((week) => week?.[day] ?? "ON_SITE");
+): PeopleOfDay<T> {
+  const placed = (place: DayPresence) =>
+    people.filter((one) => (one.presence?.[day] ?? "ON_SITE") === place);
+
   return {
-    onSite: days.filter((one) => one === "ON_SITE").length,
-    remote: days.filter((one) => one === "REMOTE").length,
-    away: days.filter((one) => one === "AWAY").length,
+    onSite: placed("ON_SITE"),
+    remote: placed("REMOTE"),
+    away: placed("AWAY"),
   };
 }
