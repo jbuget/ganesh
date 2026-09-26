@@ -43,6 +43,7 @@ interface ProjectTabsProps {
     fields: SheetFields & {
       category?: ProjectCategory | null;
       estimated_days?: number | null;
+      go_live_date?: string | null;
     },
   ) => Promise<void>;
   saveRegistry: (registry: {
@@ -230,6 +231,7 @@ export function ProjectTabs({
       <TabsContent value="steering">
         <ProjectSteeringTab
           detail={detail}
+          now={now}
           editable={mayWrite}
           onChange={onChange}
           saveSheet={saveSheet}

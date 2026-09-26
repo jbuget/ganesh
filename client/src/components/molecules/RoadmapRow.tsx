@@ -74,8 +74,10 @@ export function RoadmapRow({ mission, from, to, onOpen, onDate }: RoadmapRowProp
 
       {/* The date does not open the mission: it is the one act this screen
           carries, and a click meant for it must not be swallowed by the row. */}
+      {/* The size is set here: a column of dates read at a glance is tighter
+          than the same field on the single line of a sheet. */}
       <div
-        className="w-36 shrink-0 pr-3"
+        className="w-36 shrink-0 pr-3 text-xs"
         onClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => event.stopPropagation()}
         role="presentation"

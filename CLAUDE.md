@@ -610,7 +610,22 @@ and saves the question as a simulation. Services in operations are out of it —
 portfolio, delivered services included, over a rolling window. It is shown
 rather than arbitrated: to a committee, to a department. Where the plan reads
 `go_live_date` only to work out a delay, the roadmap makes the announced date
-its subject — and is the one place it can be posted.
+its subject: a whole column of them, so that a day is committed to against
+every other day rather than in isolation.
+
+**The date is also posted from the project itself**, on the « Pilotage » tab,
+where one arrives already looking at the project one wants to date. Two
+screens, one gesture: both mount `TargetDateField` and both `PATCH` the same
+field, so neither can grow a rule the other has not got.
+
+**« En retard » and « écart » are two different readings, and they stay
+apart.** The reference list and the sheet say a day has simply gone by, and
+`isGoLiveLate` says it for both — a project in operations is never late, and
+one nobody dated cannot be. The roadmap says something else and harder: how
+far the projection lands from the day announced, which needs an estimate to
+exist at all. A project with no estimate is therefore « en retard » on its
+sheet and counted in no écart on the roadmap. That is not a contradiction —
+the two answer different questions — but a screen must never mix them.
 
 The window rolls rather than following the calendar, and that is a decision
 about where the width of the screen goes. A civil year read in September
@@ -647,9 +662,11 @@ Three rules the drawing rests on:
   time declared — that is the line steering has to see, and the tally above
   says how many there are before anybody reads a bar.
 
-Gestures do not cross: reordering and staffing belong to Planification,
-posting a date belongs to the roadmap. Two screens answering the same gesture
-end up contradicting each other.
+Gestures do not cross: reordering and staffing belong to Planification, and
+nothing of what is arbitrated there is posted. A date put down on a simulation
+would be a supposition leaving the screen as a commitment — which is the one
+thing the drawing is built to prevent. The roadmap and the project's own sheet
+post the announced date, and they do it with the same field.
 
 ## The service catalogue
 

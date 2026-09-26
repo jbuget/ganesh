@@ -1,5 +1,6 @@
 import type { ProjectStatus } from "@/lib/api/generated/model";
 import { formatSpelledDate } from "@/lib/dates";
+import { isGoLiveLate } from "@/lib/go-live";
 
 interface GoLiveDateProps {
   /** The day the team announced. Null while none has been posted. */
@@ -8,15 +9,6 @@ interface GoLiveDateProps {
   status: ProjectStatus | null | undefined;
   /** One reference day for the whole table, so two rows never disagree. */
   today: Date;
-}
-
-/** The day, as the announced dates are written: `2026-11-15`. */
-function isoDay(day: Date): string {
-  return [
-    day.getFullYear(),
-    String(day.getMonth() + 1).padStart(2, "0"),
-    String(day.getDate()).padStart(2, "0"),
-  ].join("-");
 }
 
 /**
@@ -28,13 +20,14 @@ function isoDay(day: Date): string {
  *
  * Lateness is said in words as well as in colour: the row already carries
  * three coloured marks, and a fourth signal a colour-blind reader could not
- * see would be no signal at all. A service in operations is never late,
- * whatever its date says: it has landed.
+ * see would be no signal at all. When it is late is `isGoLiveLate`'s to say,
+ * and not this component's: the sheet of a project shows the same date, and
+ * the two must not be able to disagree.
  */
 export function GoLiveDate({ date, status, today }: GoLiveDateProps) {
   if (!date) return null;
 
-  const isLate = status !== "operations" && date.slice(0, 10) < isoDay(today);
+  const isLate = isGoLiveLate(date, status, today);
 
   return (
     <span className="flex items-baseline gap-1.5">

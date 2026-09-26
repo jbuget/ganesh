@@ -9,9 +9,11 @@ import { CategoryPicker } from "@/components/atoms/CategoryPicker";
 import { DepartmentPicker } from "@/components/atoms/DepartmentPicker";
 import { ContributorsPicker } from "@/components/atoms/ContributorsPicker";
 import { PhasePicker } from "@/components/atoms/PhasePicker";
+import { PhaseTimeline } from "@/components/atoms/PhaseTimeline";
 import { PriorityPicker } from "@/components/atoms/PriorityPicker";
 import { SheetRow } from "@/components/atoms/SheetRow";
 import { SheetSectionTitle } from "@/components/atoms/SheetSectionTitle";
+import { TargetDateField } from "@/components/atoms/TargetDateField";
 import { ProjectActivities } from "@/components/molecules/ProjectActivities";
 import { useProjectActivities } from "@/lib/use-project-activities";
 import { ProjectContributions } from "@/components/molecules/ProjectContributions";
@@ -26,6 +28,14 @@ import type {
 
 interface ProjectSteeringTabProps {
   detail: ProjectDetailResponse;
+  /**
+   * The reference day of the visit, frozen by the tabs above.
+   *
+   * Handed down rather than read here: « en retard » must not be able to
+   * change under the reader's eyes, and two dates on one sheet must be read
+   * against the same day.
+   */
+  now: Date;
   onChange: () => void | Promise<void>;
   saveSheet: (
     departments: Department[],
@@ -44,6 +54,7 @@ interface ProjectSteeringTabProps {
     category?: ProjectCategory | null;
     priority?: ProjectPriority | null;
     estimated_days?: number | null;
+    go_live_date?: string | null;
   }) => Promise<void>;
   addSubProject: (label: string) => Promise<void>;
 }
@@ -92,6 +103,7 @@ function InheritedCategory({
  */
 export function ProjectSteeringTab({
   detail,
+  now,
   onChange,
   saveSheet,
   changePhase,
@@ -120,6 +132,23 @@ export function ProjectSteeringTab({
               editable={editable}
               onChange={changePhase}
             />
+          </SheetRow>
+
+          {/* Read right after the phase: where the mission stands, then the
+              day it is announced for. The reference list and the roadmap show
+              the same date, and `isGoLiveLate` is what keeps the three from
+              disagreeing about whether that day has gone by. */}
+          <SheetRow title="Mise en service">
+            <span className="text-sm">
+              <TargetDateField
+                value={project.go_live_date}
+                missionLabel={project.label}
+                status={project.status}
+                today={now}
+                editable={editable}
+                onChange={(go_live_date) => updateFields({ go_live_date })}
+              />
+            </span>
           </SheetRow>
 
           <SheetRow title="Priorité">
@@ -199,6 +228,15 @@ export function ProjectSteeringTab({
             />
           </SheetRow>
         </div>
+      </section>
+
+      {/* How the mission got where it stands, under where it stands. The
+          register has recorded every crossing since the phases existed; a
+          project it never followed says so rather than showing an empty
+          list. */}
+      <section className="space-y-2">
+        <SheetSectionTitle>Étapes franchies</SheetSectionTitle>
+        <PhaseTimeline phases={detail.phases} />
       </section>
 
       {/* The hierarchy stops at two levels, and off-project work carries

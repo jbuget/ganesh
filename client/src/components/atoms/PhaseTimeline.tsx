@@ -18,7 +18,7 @@ export function PhaseTimeline({ phases }: PhaseTimelineProps) {
   }
 
   return (
-    <ol className="space-y-1.5">
+    <ol aria-label="Étapes franchies" className="space-y-1.5">
       {phases.map((phase) => (
         <li key={phase.status} className="flex items-center gap-2 text-sm">
           <span
