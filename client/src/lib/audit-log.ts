@@ -442,6 +442,21 @@ export function auditSentence(
         action: `a rouvert l'activité${after ? ` « ${after} »` : ""}`,
       };
 
+    // The dates a mission answers for. As with an activity, the line names
+    // the milestone rather than the mission, which the heading already says.
+    case "milestone.create":
+      return {
+        action: `a ajouté le jalon${after ? ` « ${after} »` : ""}`,
+      };
+
+    case "milestone.update":
+      return { action: "a modifié un jalon", ...movement("", before, after) };
+
+    case "milestone.delete":
+      return {
+        action: `a supprimé le jalon${before ? ` « ${before} »` : ""}`,
+      };
+
     case "project.update":
       return fieldSentence(entry);
 

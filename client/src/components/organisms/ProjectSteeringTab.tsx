@@ -17,6 +17,8 @@ import { TargetDateField } from "@/components/atoms/TargetDateField";
 import { ProjectActivities } from "@/components/molecules/ProjectActivities";
 import { useProjectActivities } from "@/lib/use-project-activities";
 import { ProjectContributions } from "@/components/molecules/ProjectContributions";
+import { ProjectMilestones } from "@/components/molecules/ProjectMilestones";
+import { useProjectMilestones } from "@/lib/use-project-milestones";
 import { ProjectSubProjects } from "@/components/molecules/ProjectSubProjects";
 import type {
   Department,
@@ -118,6 +120,8 @@ export function ProjectSteeringTab({
   // The mission's estimate follows from these, so every write replays the
   // sheet: the ratio shown above must never lag behind the budgets below.
   const activities = useProjectActivities(project.id, onChange);
+  // The dates the team posts, beside the ones the register stamps on its own.
+  const milestones = useProjectMilestones(project.id);
   const contacts = draft ?? project.business_contacts ?? "";
 
   return (
@@ -230,15 +234,6 @@ export function ProjectSteeringTab({
         </div>
       </section>
 
-      {/* How the mission got where it stands, under where it stands. The
-          register has recorded every crossing since the phases existed; a
-          project it never followed says so rather than showing an empty
-          list. */}
-      <section className="space-y-2">
-        <SheetSectionTitle>Étapes franchies</SheetSectionTitle>
-        <PhaseTimeline phases={detail.phases} />
-      </section>
-
       {/* The hierarchy stops at two levels, and off-project work carries
           nothing: a mission that cannot be a parent is not offered the
           section, rather than offering a move the server would refuse. */}
@@ -248,6 +243,33 @@ export function ProjectSteeringTab({
           <ProjectSubProjects
             subProjects={detail.sub_projects}
             onAdd={editable ? addSubProject : undefined}
+          />
+        </section>
+      )}
+
+      {/* How the mission got where it stands, under where it stands. The
+          register has recorded every crossing since the phases existed; a
+          project it never followed says so rather than showing an empty
+          list. */}
+      <section className="space-y-2">
+        <SheetSectionTitle>Étapes franchies</SheetSectionTitle>
+        <PhaseTimeline phases={detail.phases} />
+      </section>
+
+      {/* The days the team answers for, under the ones the register
+          stamped on its own. Off-project work steers nothing and is announced
+          to nobody: it is not offered the section rather than offering a
+          gesture the server would refuse. */}
+      {project.kind !== "off_project" && (
+        <section className="space-y-2">
+          <SheetSectionTitle>Jalons</SheetSectionTitle>
+          <ProjectMilestones
+            milestones={milestones.milestones}
+            now={now}
+            editable={editable}
+            onAdd={milestones.add}
+            onChange={milestones.change}
+            onRemove={milestones.remove}
           />
         </section>
       )}

@@ -477,6 +477,37 @@ class ActivityResponse(BaseModel):
     entries: int = 0
 
 
+class MilestoneResponse(BaseModel):
+    """A milestone: a day a mission is expected at, and the day it got there."""
+
+    id: int
+    project_id: int
+    label: str
+    expected_on: date
+    reached_on: date | None
+
+
+class CreateMilestoneRequest(BaseModel):
+    """Request to post a date on a mission."""
+
+    label: str
+    expected_on: date
+    reached_on: date | None = None
+
+
+class UpdateMilestoneRequest(BaseModel):
+    """Request to change what a milestone says.
+
+    Only what is named is written, so that marking one reached does not blank
+    the label beside it — and so that naming `reached_on` as null is how a
+    milestone crossed by mistake is put back.
+    """
+
+    label: str | None = None
+    expected_on: date | None = None
+    reached_on: date | None = None
+
+
 class CreateActivityRequest(BaseModel):
     """Request to cut a new trade into a mission."""
 

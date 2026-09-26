@@ -22,6 +22,7 @@ export const Surface = {
   requests: "requests",
   project_registry: "project_registry",
   phase_progress: "phase_progress",
+  milestones: "milestones",
   assignment: "assignment",
   project_updates: "project_updates",
   project_files: "project_files",

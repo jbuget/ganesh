@@ -15,6 +15,16 @@ vi.mock("@/lib/api/queries", () => ({ useTeammates: () => ({ teammates: [] }) })
 // The sheet reads what the mission is cut into as soon as it opens. Left
 // alone, the call reaches a relative URL that no test server answers — which
 // passes on a machine where the API happens to be running, and nowhere else.
+vi.mock("@/lib/use-project-milestones", () => ({
+  useProjectMilestones: () => ({
+    milestones: [],
+    isLoading: false,
+    add: vi.fn(),
+    change: vi.fn(),
+    remove: vi.fn(),
+  }),
+}));
+
 vi.mock("@/lib/use-project-activities", () => ({
   useProjectActivities: () => ({
     activities: [],
@@ -214,5 +224,30 @@ describe("the phases a project has been through", () => {
     steering("project");
 
     expect(screen.getByText("Aucun passage enregistré")).toBeInTheDocument();
+  });
+});
+
+describe("the dates a project answers for", () => {
+  it("are posted from the sheet, beside the phases the register stamps", () => {
+    steering("project");
+
+    expect(screen.getByText("Jalons")).toBeInTheDocument();
+  });
+
+  /**
+   * Off-project work steers nothing and is announced to nobody: an absence
+   * has no day it answers for, and the server refuses to post one.
+   */
+  it("are not offered on off-project work", () => {
+    steering("off_project");
+
+    expect(screen.queryByText("Jalons")).toBeNull();
+  });
+
+  /** A work package is delivered on its own day, so it carries its own. */
+  it("are offered on a work package", () => {
+    steering("work_package");
+
+    expect(screen.getByText("Jalons")).toBeInTheDocument();
   });
 });

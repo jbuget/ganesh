@@ -60,6 +60,12 @@ from src.modules.projects.application.use_cases.manage_activities import (
     UnarchiveActivityUseCase,
     UpdateActivityUseCase,
 )
+from src.modules.projects.application.use_cases.manage_milestones import (
+    CreateMilestoneUseCase,
+    DeleteMilestoneUseCase,
+    ListProjectMilestonesUseCase,
+    UpdateMilestoneUseCase,
+)
 from src.modules.projects.application.use_cases.move_project import MoveProjectUseCase
 from src.modules.projects.application.use_cases.project_attachments import (
     DownloadProjectAttachmentUseCase,
@@ -92,6 +98,9 @@ from src.modules.projects.domain.repositories.activity_repository import (
     ActivityRepository,
 )
 from src.modules.projects.domain.repositories.attachment_store import AttachmentStore
+from src.modules.projects.domain.repositories.milestone_repository import (
+    MilestoneRepository,
+)
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -109,6 +118,9 @@ from src.modules.projects.domain.repositories.project_update_repository import (
 )
 from src.modules.projects.domain.repositories.update_reaction_repository import (
     UpdateReactionRepository,
+)
+from src.modules.projects.infrastructure.database.repositories.milestone_repository_impl import (
+    SqlMilestoneRepository,
 )
 from src.modules.projects.infrastructure.database.repositories.project_assignee_repository_impl import (
     SqlProjectAssigneeRepository,
@@ -153,6 +165,12 @@ def get_update_reaction_repository(
     session: AsyncSession = Depends(get_db),
 ) -> UpdateReactionRepository:
     return SqlUpdateReactionRepository(session)
+
+
+def get_milestone_repository(
+    session: AsyncSession = Depends(get_db),
+) -> MilestoneRepository:
+    return SqlMilestoneRepository(session)
 
 
 def get_project_attachment_repository(
@@ -597,3 +615,33 @@ def get_list_activities_use_case(
     activities: ActivityRepository = Depends(get_activity_repository),
 ) -> ListProjectActivitiesUseCase:
     return ListProjectActivitiesUseCase(activities=activities)
+
+
+def get_create_milestone_use_case(
+    projects: ProjectRepository = Depends(get_project_repository),
+    milestones: MilestoneRepository = Depends(get_milestone_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> CreateMilestoneUseCase:
+    return CreateMilestoneUseCase(
+        projects=projects, milestones=milestones, audit_logs=audit_logs
+    )
+
+
+def get_update_milestone_use_case(
+    milestones: MilestoneRepository = Depends(get_milestone_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> UpdateMilestoneUseCase:
+    return UpdateMilestoneUseCase(milestones=milestones, audit_logs=audit_logs)
+
+
+def get_delete_milestone_use_case(
+    milestones: MilestoneRepository = Depends(get_milestone_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> DeleteMilestoneUseCase:
+    return DeleteMilestoneUseCase(milestones=milestones, audit_logs=audit_logs)
+
+
+def get_list_milestones_use_case(
+    milestones: MilestoneRepository = Depends(get_milestone_repository),
+) -> ListProjectMilestonesUseCase:
+    return ListProjectMilestonesUseCase(milestones=milestones)

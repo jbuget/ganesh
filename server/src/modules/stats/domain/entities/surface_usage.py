@@ -45,6 +45,10 @@ class Surface(StrEnum):
     REQUESTS = "requests"
     PROJECT_REGISTRY = "project_registry"
     PHASE_PROGRESS = "phase_progress"
+    #: The dates a mission answers for. A line of its own rather than a
+    #: corner of the reference list: posting a date is a new gesture, and
+    #: whether it is made at all is the whole question the table answers.
+    MILESTONES = "milestones"
     ASSIGNMENT = "assignment"
     PROJECT_UPDATES = "project_updates"
     PROJECT_FILES = "project_files"
@@ -105,6 +109,10 @@ SURFACE_OF: dict[AuditAction, Surface] = {
     AuditAction.ACTIVITY_DELETE: Surface.PROJECT_REGISTRY,
     # Moving the work along, from the board or from the sheet.
     AuditAction.PROJECT_STATUS_CHANGE: Surface.PHASE_PROGRESS,
+    # Posting the days a mission answers for, and crossing them off.
+    AuditAction.MILESTONE_CREATE: Surface.MILESTONES,
+    AuditAction.MILESTONE_UPDATE: Surface.MILESTONES,
+    AuditAction.MILESTONE_DELETE: Surface.MILESTONES,
     # Saying who is expected on what.
     AuditAction.PROJECT_ASSIGN: Surface.ASSIGNMENT,
     AuditAction.PROJECT_UNASSIGN: Surface.ASSIGNMENT,

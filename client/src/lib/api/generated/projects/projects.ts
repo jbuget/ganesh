@@ -32,6 +32,7 @@ import type {
   CatalogEntryResponse,
   ChangeStatusRequest,
   CreateActivityRequest,
+  CreateMilestoneRequest,
   CreateProjectRequest,
   DownloadProjectAttachmentParams,
   GetBoardParams,
@@ -40,6 +41,7 @@ import type {
   ImportReportResponse,
   ListProjectAuditLogParams,
   ListProjectsParams,
+  MilestoneResponse,
   MoveProjectRequest,
   PostUpdateRequest,
   ProjectAttachmentResponse,
@@ -53,6 +55,7 @@ import type {
   UnassignMemberParams,
   UpdateActivityRequest,
   UpdateDescriptionRequest,
+  UpdateMilestoneRequest,
   UpdateProjectDetailRequest,
   UpdateProjectRegistryRequest,
   UpdateProjectRequest,
@@ -5529,4 +5532,584 @@ export const useUnarchiveProjectActivity = <
   TContext
 > => {
   return useMutation(getUnarchiveProjectActivityMutationOptions(options), queryClient);
+};
+export type listProjectMilestonesResponse200 = {
+  data: MilestoneResponse[];
+  status: 200;
+};
+
+export type listProjectMilestonesResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listProjectMilestonesResponseSuccess = listProjectMilestonesResponse200 & {
+  headers: Headers;
+};
+export type listProjectMilestonesResponseError = listProjectMilestonesResponse422 & {
+  headers: Headers;
+};
+
+export type listProjectMilestonesResponse =
+  listProjectMilestonesResponseSuccess | listProjectMilestonesResponseError;
+
+export const getListProjectMilestonesUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/milestones`;
+};
+
+/**
+ * The milestones of a mission, in the order they happen.
+ * @summary List Project Milestones
+ */
+export const listProjectMilestones = async (
+  projectId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listProjectMilestonesResponse> => {
+  return bffFetcher<listProjectMilestonesResponse>(
+    getListProjectMilestonesUrl(projectId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListProjectMilestonesQueryKey = (projectId: number) => {
+  return [`/api/v1/projects/${projectId}/milestones`] as const;
+};
+
+export const getListProjectMilestonesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listProjectMilestones>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectMilestones>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListProjectMilestonesQueryKey(projectId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectMilestones>>> = ({
+    signal,
+  }) => listProjectMilestones(projectId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: projectId !== null && projectId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listProjectMilestones>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListProjectMilestonesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listProjectMilestones>>
+>;
+export type ListProjectMilestonesQueryError = HTTPValidationError;
+
+export function useListProjectMilestones<
+  TData = Awaited<ReturnType<typeof listProjectMilestones>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectMilestones>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectMilestones>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectMilestones>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListProjectMilestones<
+  TData = Awaited<ReturnType<typeof listProjectMilestones>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectMilestones>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProjectMilestones>>,
+          TError,
+          Awaited<ReturnType<typeof listProjectMilestones>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListProjectMilestones<
+  TData = Awaited<ReturnType<typeof listProjectMilestones>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectMilestones>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Project Milestones
+ */
+
+export function useListProjectMilestones<
+  TData = Awaited<ReturnType<typeof listProjectMilestones>>,
+  TError = HTTPValidationError,
+>(
+  projectId: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listProjectMilestones>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListProjectMilestonesQueryOptions(projectId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createProjectMilestoneResponse201 = {
+  data: MilestoneResponse;
+  status: 201;
+};
+
+export type createProjectMilestoneResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type createProjectMilestoneResponseSuccess =
+  createProjectMilestoneResponse201 & {
+    headers: Headers;
+  };
+export type createProjectMilestoneResponseError = createProjectMilestoneResponse422 & {
+  headers: Headers;
+};
+
+export type createProjectMilestoneResponse =
+  createProjectMilestoneResponseSuccess | createProjectMilestoneResponseError;
+
+export const getCreateProjectMilestoneUrl = (projectId: number) => {
+  return `/api/v1/projects/${projectId}/milestones`;
+};
+
+/**
+ * Posts a date on a mission.
+ * @summary Create Project Milestone
+ */
+export const createProjectMilestone = async (
+  projectId: number,
+  createMilestoneRequest: CreateMilestoneRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<createProjectMilestoneResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<createProjectMilestoneResponse>(
+    getCreateProjectMilestoneUrl(projectId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(createMilestoneRequest),
+    },
+  );
+};
+
+export const getCreateProjectMilestoneMutationKey = () =>
+  ["createProjectMilestone"] as const;
+
+export const getCreateProjectMilestoneMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createProjectMilestone>>,
+    TError,
+    CreateProjectMilestoneMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createProjectMilestone>>,
+  TError,
+  CreateProjectMilestoneMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateProjectMilestoneMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createProjectMilestone>>,
+    CreateProjectMilestoneMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return createProjectMilestone(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateProjectMilestoneMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createProjectMilestone>>
+>;
+export type CreateProjectMilestoneMutationBody = CreateMilestoneRequest;
+export type CreateProjectMilestoneMutationError = HTTPValidationError;
+export type CreateProjectMilestoneMutationVariables = {
+  projectId: number;
+  data: CreateMilestoneRequest;
+};
+
+/**
+ * @summary Create Project Milestone
+ */
+export const useCreateProjectMilestone = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createProjectMilestone>>,
+      TError,
+      CreateProjectMilestoneMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createProjectMilestone>>,
+  TError,
+  CreateProjectMilestoneMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateProjectMilestoneMutationOptions(options), queryClient);
+};
+export type updateProjectMilestoneResponse200 = {
+  data: MilestoneResponse;
+  status: 200;
+};
+
+export type updateProjectMilestoneResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type updateProjectMilestoneResponseSuccess =
+  updateProjectMilestoneResponse200 & {
+    headers: Headers;
+  };
+export type updateProjectMilestoneResponseError = updateProjectMilestoneResponse422 & {
+  headers: Headers;
+};
+
+export type updateProjectMilestoneResponse =
+  updateProjectMilestoneResponseSuccess | updateProjectMilestoneResponseError;
+
+export const getUpdateProjectMilestoneUrl = (
+  projectId: number,
+  milestoneId: number,
+) => {
+  return `/api/v1/projects/${projectId}/milestones/${milestoneId}`;
+};
+
+/**
+ * Changes what a milestone says — its label, its days.
+ * @summary Update Project Milestone
+ */
+export const updateProjectMilestone = async (
+  projectId: number,
+  milestoneId: number,
+  updateMilestoneRequest: UpdateMilestoneRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<updateProjectMilestoneResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<updateProjectMilestoneResponse>(
+    getUpdateProjectMilestoneUrl(projectId, milestoneId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(updateMilestoneRequest),
+    },
+  );
+};
+
+export const getUpdateProjectMilestoneMutationKey = () =>
+  ["updateProjectMilestone"] as const;
+
+export const getUpdateProjectMilestoneMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateProjectMilestone>>,
+    TError,
+    UpdateProjectMilestoneMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateProjectMilestone>>,
+  TError,
+  UpdateProjectMilestoneMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateProjectMilestoneMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateProjectMilestone>>,
+    UpdateProjectMilestoneMutationVariables
+  > = (props) => {
+    const { projectId, milestoneId, data } = props ?? {};
+
+    return updateProjectMilestone(projectId, milestoneId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateProjectMilestoneMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateProjectMilestone>>
+>;
+export type UpdateProjectMilestoneMutationBody = UpdateMilestoneRequest;
+export type UpdateProjectMilestoneMutationError = HTTPValidationError;
+export type UpdateProjectMilestoneMutationVariables = {
+  projectId: number;
+  milestoneId: number;
+  data: UpdateMilestoneRequest;
+};
+
+/**
+ * @summary Update Project Milestone
+ */
+export const useUpdateProjectMilestone = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateProjectMilestone>>,
+      TError,
+      UpdateProjectMilestoneMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateProjectMilestone>>,
+  TError,
+  UpdateProjectMilestoneMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateProjectMilestoneMutationOptions(options), queryClient);
+};
+export type deleteProjectMilestoneResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteProjectMilestoneResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type deleteProjectMilestoneResponseSuccess =
+  deleteProjectMilestoneResponse204 & {
+    headers: Headers;
+  };
+export type deleteProjectMilestoneResponseError = deleteProjectMilestoneResponse422 & {
+  headers: Headers;
+};
+
+export type deleteProjectMilestoneResponse =
+  deleteProjectMilestoneResponseSuccess | deleteProjectMilestoneResponseError;
+
+export const getDeleteProjectMilestoneUrl = (
+  projectId: number,
+  milestoneId: number,
+) => {
+  return `/api/v1/projects/${projectId}/milestones/${milestoneId}`;
+};
+
+/**
+ * Withdraws a date from a mission.
+ *
+ * Deleted outright, unlike an activity: nothing is ever booked against a
+ * date, so its going empties no month and loses no declared day.
+ * @summary Delete Project Milestone
+ */
+export const deleteProjectMilestone = async (
+  projectId: number,
+  milestoneId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<deleteProjectMilestoneResponse> => {
+  return bffFetcher<deleteProjectMilestoneResponse>(
+    getDeleteProjectMilestoneUrl(projectId, milestoneId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getDeleteProjectMilestoneMutationKey = () =>
+  ["deleteProjectMilestone"] as const;
+
+export const getDeleteProjectMilestoneMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteProjectMilestone>>,
+    TError,
+    DeleteProjectMilestoneMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteProjectMilestone>>,
+  TError,
+  DeleteProjectMilestoneMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteProjectMilestoneMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteProjectMilestone>>,
+    DeleteProjectMilestoneMutationVariables
+  > = (props) => {
+    const { projectId, milestoneId } = props ?? {};
+
+    return deleteProjectMilestone(projectId, milestoneId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteProjectMilestoneMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteProjectMilestone>>
+>;
+
+export type DeleteProjectMilestoneMutationError = HTTPValidationError;
+export type DeleteProjectMilestoneMutationVariables = {
+  projectId: number;
+  milestoneId: number;
+};
+
+/**
+ * @summary Delete Project Milestone
+ */
+export const useDeleteProjectMilestone = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteProjectMilestone>>,
+      TError,
+      DeleteProjectMilestoneMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteProjectMilestone>>,
+  TError,
+  DeleteProjectMilestoneMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteProjectMilestoneMutationOptions(options), queryClient);
 };

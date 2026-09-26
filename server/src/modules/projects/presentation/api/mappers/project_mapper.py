@@ -12,6 +12,7 @@ from src.modules.projects.application.use_cases.project_attachments import (
 )
 from src.modules.projects.application.use_cases.project_updates import SignedUpdate
 from src.modules.projects.domain.entities.activity import Activity
+from src.modules.projects.domain.entities.milestone import Milestone
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.services.phase_history import transition_label
@@ -25,6 +26,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     CatalogEntryResponse,
     CatalogLinkResponse,
     LastUpdateResponse,
+    MilestoneResponse,
     MissionRefResponse,
     MonthlyShareResponse,
     ParentResponse,
@@ -313,6 +315,17 @@ def to_catalog_entry_response(entry: CatalogEntry) -> CatalogEntryResponse:
         stack=entry.stack,
         tags=entry.tags,
         depends_on=entry.depends_on,
+    )
+
+
+def to_milestone_response(milestone: Milestone) -> MilestoneResponse:
+    """A milestone as the sheet reads it."""
+    return MilestoneResponse(
+        id=milestone.id or 0,
+        project_id=milestone.project_id,
+        label=milestone.label,
+        expected_on=milestone.expected_on,
+        reached_on=milestone.reached_on,
     )
 
 

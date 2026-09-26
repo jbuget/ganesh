@@ -48,6 +48,7 @@ from src.modules.planning.domain.repositories.simulation_repository import (
     SimulationRepository,
 )
 from src.modules.projects.domain.entities.activity import Activity
+from src.modules.projects.domain.entities.milestone import Milestone
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectCategory,
@@ -66,6 +67,9 @@ from src.modules.projects.domain.repositories.activity_repository import (
     ActivityRepository,
 )
 from src.modules.projects.domain.repositories.attachment_store import AttachmentStore
+from src.modules.projects.domain.repositories.milestone_repository import (
+    MilestoneRepository,
+)
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -224,6 +228,42 @@ class InMemoryActivityRepository(ActivityRepository):
 
     async def count_entries(self, activity_id: int) -> int:
         return sum(1 for e in self._entries if e.activity_id == activity_id)
+
+
+class InMemoryMilestoneRepository(MilestoneRepository):
+    def __init__(self, milestones: list[Milestone] | None = None) -> None:
+        self._milestones: dict[int, Milestone] = {}
+        self._next_id = 1
+        for milestone in milestones or []:
+            # Two milestones handed over without an id must not land on the
+            # same key: the second would silently replace the first.
+            if milestone.id is None:
+                milestone.id = self._next_id
+            self._milestones[milestone.id] = milestone
+            self._next_id = max(self._next_id, milestone.id + 1)
+
+    async def add(self, milestone: Milestone) -> Milestone:
+        milestone.id = self._next_id
+        self._next_id += 1
+        self._milestones[milestone.id] = milestone
+        return milestone
+
+    async def get_by_id(self, milestone_id: int) -> Milestone | None:
+        return self._milestones.get(milestone_id)
+
+    async def update(self, milestone: Milestone) -> Milestone:
+        if milestone.id is not None:
+            self._milestones[milestone.id] = milestone
+        return milestone
+
+    async def list_for_project(self, project_id: int) -> list[Milestone]:
+        return sorted(
+            (m for m in self._milestones.values() if m.project_id == project_id),
+            key=lambda m: (m.expected_on, m.id or 0),
+        )
+
+    async def delete(self, milestone_id: int) -> None:
+        self._milestones.pop(milestone_id, None)
 
 
 class InMemoryApiKeyRepository(ApiKeyRepository):

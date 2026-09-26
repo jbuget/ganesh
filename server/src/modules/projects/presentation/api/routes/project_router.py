@@ -52,6 +52,11 @@ from src.modules.projects.application.dtos.attachment_dto import (
     RenameAttachmentCommand,
     UploadAttachmentCommand,
 )
+from src.modules.projects.application.dtos.milestone_dto import (
+    CreateMilestoneCommand,
+    DeleteMilestoneCommand,
+    UpdateMilestoneCommand,
+)
 from src.modules.projects.application.dtos.project_dto import (
     ArchiveProjectCommand,
     AttachProjectCommand,
@@ -111,6 +116,12 @@ from src.modules.projects.application.use_cases.manage_activities import (
     UnarchiveActivityUseCase,
     UpdateActivityUseCase,
 )
+from src.modules.projects.application.use_cases.manage_milestones import (
+    CreateMilestoneUseCase,
+    DeleteMilestoneUseCase,
+    ListProjectMilestonesUseCase,
+    UpdateMilestoneUseCase,
+)
 from src.modules.projects.application.use_cases.move_project import MoveProjectUseCase
 from src.modules.projects.application.use_cases.project_attachments import (
     DownloadProjectAttachmentUseCase,
@@ -157,6 +168,7 @@ from src.modules.projects.presentation.api.mappers.project_mapper import (
     to_board_response,
     to_catalog_entry_response,
     to_listed_project_response,
+    to_milestone_response,
     to_project_attachment_response,
     to_project_detail_response,
     to_project_response,
@@ -171,9 +183,11 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     CatalogEntryResponse,
     ChangeStatusRequest,
     CreateActivityRequest,
+    CreateMilestoneRequest,
     CreateProjectRequest,
     ImportProjectsRequest,
     ImportReportResponse,
+    MilestoneResponse,
     MoveProjectRequest,
     PostUpdateRequest,
     ProjectAttachmentResponse,
@@ -185,6 +199,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     RenameAttachmentRequest,
     UpdateActivityRequest,
     UpdateDescriptionRequest,
+    UpdateMilestoneRequest,
     UpdateProjectDetailRequest,
     UpdateProjectRegistryRequest,
     UpdateProjectRequest,
@@ -198,8 +213,10 @@ from src.modules.projects.presentation.dependencies import (
     get_board_use_case,
     get_change_status_use_case,
     get_create_activity_use_case,
+    get_create_milestone_use_case,
     get_create_project_use_case,
     get_delete_activity_use_case,
+    get_delete_milestone_use_case,
     get_delete_project_use_case,
     get_detach_project_use_case,
     get_download_attachment_use_case,
@@ -208,6 +225,7 @@ from src.modules.projects.presentation.dependencies import (
     get_import_projects_use_case,
     get_list_activities_use_case,
     get_list_attachments_use_case,
+    get_list_milestones_use_case,
     get_list_projects_use_case,
     get_list_updates_use_case,
     get_move_project_use_case,
@@ -223,6 +241,7 @@ from src.modules.projects.presentation.dependencies import (
     get_unassign_member_use_case,
     get_update_activity_use_case,
     get_update_description_use_case,
+    get_update_milestone_use_case,
     get_update_project_detail_use_case,
     get_update_project_registry_use_case,
     get_update_project_use_case,
@@ -1194,6 +1213,112 @@ async def delete_project_activity(
     """
     await use_case.execute(
         DeleteActivityCommand(actor_id=caller.actor_id, activity_id=activity_id)
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# --- Milestones ---------------------------------------------------------
+# The dates a mission answers for: the day each is announced, and the day it
+# actually happened. They hang under the mission in the URL for the same
+# reason activities do — there is no milestone to reach without naming what
+# it is a milestone of.
+
+
+@router.get(
+    "/{project_id}/milestones",
+    response_model=list[MilestoneResponse],
+    operation_id="listProjectMilestones",
+)
+async def list_project_milestones(
+    project_id: int,
+    use_case: ListProjectMilestonesUseCase = Depends(get_list_milestones_use_case),
+    _: User = Depends(get_current_user),
+) -> list[MilestoneResponse]:
+    """The milestones of a mission, in the order they happen."""
+    listed = await use_case.execute(project_id)
+    return [to_milestone_response(one) for one in listed]
+
+
+@router.post(
+    "/{project_id}/milestones",
+    response_model=MilestoneResponse,
+    status_code=201,
+    operation_id="createProjectMilestone",
+)
+async def create_project_milestone(
+    project_id: int,
+    payload: CreateMilestoneRequest,
+    caller: Caller = Depends(projects_writer),
+    use_case: CreateMilestoneUseCase = Depends(get_create_milestone_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> MilestoneResponse:
+    """Posts a date on a mission."""
+    milestone = await use_case.execute(
+        CreateMilestoneCommand(
+            actor_id=caller.actor_id,
+            project_id=project_id,
+            label=payload.label,
+            expected_on=payload.expected_on,
+            reached_on=payload.reached_on,
+        )
+    )
+    await session.commit()
+    return to_milestone_response(milestone)
+
+
+@router.patch(
+    "/{project_id}/milestones/{milestone_id}",
+    response_model=MilestoneResponse,
+    operation_id="updateProjectMilestone",
+)
+async def update_project_milestone(
+    project_id: int,
+    milestone_id: int,
+    payload: UpdateMilestoneRequest,
+    request: Request,
+    caller: Caller = Depends(projects_writer),
+    use_case: UpdateMilestoneUseCase = Depends(get_update_milestone_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> MilestoneResponse:
+    """Changes what a milestone says — its label, its days."""
+    named = await request.json()
+    milestone = await use_case.execute(
+        UpdateMilestoneCommand(
+            actor_id=caller.actor_id,
+            milestone_id=milestone_id,
+            label=payload.label,
+            expected_on=payload.expected_on,
+            reached_on=payload.reached_on,
+            # Told apart from « leave as is » by having been named at all:
+            # naming it as null is how a milestone crossed by mistake is put
+            # back, and editing the label alone must not do that by itself.
+            sets_reached_on="reached_on" in named,
+        )
+    )
+    await session.commit()
+    return to_milestone_response(milestone)
+
+
+@router.delete(
+    "/{project_id}/milestones/{milestone_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="deleteProjectMilestone",
+)
+async def delete_project_milestone(
+    project_id: int,
+    milestone_id: int,
+    caller: Caller = Depends(projects_writer),
+    use_case: DeleteMilestoneUseCase = Depends(get_delete_milestone_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Withdraws a date from a mission.
+
+    Deleted outright, unlike an activity: nothing is ever booked against a
+    date, so its going empties no month and loses no declared day.
+    """
+    await use_case.execute(
+        DeleteMilestoneCommand(actor_id=caller.actor_id, milestone_id=milestone_id)
     )
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

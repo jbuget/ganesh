@@ -392,6 +392,40 @@ describe("auditSentence", () => {
     });
   });
 
+  describe("the dates a mission answers for", () => {
+    it("names the milestone rather than the mission the heading already says", () => {
+      expect(
+        auditSentence(entry("milestone.create", { new_value: "Livraison du lot 1" }))
+          .action,
+      ).toBe("a ajouté le jalon « Livraison du lot 1 »");
+
+      expect(
+        auditSentence(entry("milestone.delete", { old_value: "Livraison du lot 1" }))
+          .action,
+      ).toBe("a supprimé le jalon « Livraison du lot 1 »");
+    });
+
+    /**
+     * What a milestone said before and after, in one line each: the date
+     * moved and the day it was reached are the whole of what changes, and a
+     * sentence saying « a modifié un jalon » alone would say nothing.
+     */
+    it("shows both sides of a milestone that moved", () => {
+      expect(
+        auditSentence(
+          entry("milestone.update", {
+            old_value: "Livraison · prévu le 12/05/2026 · non atteint",
+            new_value: "Livraison · prévu le 30/06/2026 · non atteint",
+          }),
+        ),
+      ).toEqual({
+        action: "a modifié un jalon",
+        from: "Livraison · prévu le 12/05/2026 · non atteint",
+        to: "Livraison · prévu le 30/06/2026 · non atteint",
+      });
+    });
+  });
+
   describe("what happens to a need", () => {
     it("names each gesture of the recueil", () => {
       const said = (action: AuditAction, over = {}) =>

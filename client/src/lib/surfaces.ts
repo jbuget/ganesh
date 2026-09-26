@@ -38,6 +38,10 @@ const WORDINGS: Record<Surface, SurfaceWording> = {
     label: "Avancement des phases",
     counted: "depuis le Kanban ou depuis la fiche",
   },
+  milestones: {
+    label: "Jalons",
+    counted: "dates posées, déplacées et atteintes",
+  },
   assignment: { label: "Affectation des contributeurs" },
   project_updates: { label: "Actualités de projet" },
   project_files: {

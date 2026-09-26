@@ -71,6 +71,14 @@ export const ACTION_FAMILIES: ActionFamily[] = [
     ],
   },
   {
+    label: "Jalons",
+    actions: [
+      { value: "milestone.create", label: "Création" },
+      { value: "milestone.update", label: "Modification" },
+      { value: "milestone.delete", label: "Suppression" },
+    ],
+  },
+  {
     label: "Temps déclaré",
     actions: [
       { value: "entry.set", label: "Déclaration" },
