@@ -68,6 +68,7 @@ export * from "./exportedEntryResponse";
 export * from "./exportEntriesParams";
 export * from "./fileRequestRequest";
 export * from "./fillInRequestRequest";
+export * from "./flaggedUpdateResponse";
 export * from "./freshnessResponse";
 export * from "./generateDigestRequest";
 export * from "./getActivityParams";

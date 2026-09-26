@@ -4,6 +4,7 @@ from datetime import date
 
 from src.modules.projects.application.dtos.last_update import LastUpdate
 from src.modules.projects.application.use_cases.export_catalog import CatalogEntry
+from src.modules.projects.application.use_cases.flagged_updates import FlaggedUpdate
 from src.modules.projects.application.use_cases.get_board import Board
 from src.modules.projects.application.use_cases.get_project_detail import ProjectDetail
 from src.modules.projects.application.use_cases.list_projects import ListedProject
@@ -24,6 +25,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     BoardResponse,
     CatalogEntryResponse,
     CatalogLinkResponse,
+    FlaggedUpdateResponse,
     LastUpdateResponse,
     MissionRefResponse,
     MonthlyShareResponse,
@@ -256,6 +258,36 @@ def to_project_update_response(
             )
             for one in signed.reactions
         ],
+        is_flagged=signed.update.is_flagged,
+        flagged_by=signed.raised_by.label if signed.raised_by else None,
+        flagged_at=signed.update.flagged_at if signed.update.is_flagged else None,
+    )
+
+
+def to_flagged_update_response(flagged: FlaggedUpdate) -> FlaggedUpdateResponse:
+    """One line of the agenda, named on both sides."""
+    assert flagged.update.id is not None
+    assert flagged.project.id is not None
+    assert flagged.author.id is not None
+    assert flagged.raised_by.id is not None
+    assert flagged.update.flagged_at is not None
+    return FlaggedUpdateResponse(
+        update_id=flagged.update.id,
+        project_id=flagged.project.id,
+        project_label=flagged.project.label,
+        body=flagged.update.body,
+        author=BoardMemberResponse(
+            id=flagged.author.id,
+            display_name=flagged.author.label,
+            initials=initials(flagged.author.label),
+        ),
+        published_at=flagged.update.published_at,
+        raised_by=BoardMemberResponse(
+            id=flagged.raised_by.id,
+            display_name=flagged.raised_by.label,
+            initials=initials(flagged.raised_by.label),
+        ),
+        flagged_at=flagged.update.flagged_at,
     )
 
 

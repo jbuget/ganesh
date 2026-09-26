@@ -711,6 +711,12 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
             latest[update.project_id] = update
         return latest
 
+    async def list_flagged(self) -> list[ProjectUpdate]:
+        return sorted(
+            (u for u in self._updates if u.is_flagged),
+            key=lambda u: (u.flagged_at or datetime.min, u.id or 0),
+        )
+
     async def update(self, update: ProjectUpdate) -> ProjectUpdate:
         return update
 

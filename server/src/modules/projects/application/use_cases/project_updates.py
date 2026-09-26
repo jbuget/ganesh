@@ -58,6 +58,8 @@ class SignedUpdate:
     update: ProjectUpdate
     author: User
     reactions: list[SignedReaction] = field(default_factory=list)
+    #: Who put it on the agenda of the next revue, while it is waiting there.
+    raised_by: User | None = None
 
 
 class _UpdateUseCase:
@@ -276,6 +278,7 @@ class ListProjectUpdatesUseCase:
                     )
                     for one in tally(left.get(update.id or 0, []))
                 ],
+                raised_by=(users.get(update.flagged_by) if update.is_flagged else None),
             )
             for update in thread
             if update.author_id in users

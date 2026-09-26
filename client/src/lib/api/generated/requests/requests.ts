@@ -1552,7 +1552,7 @@ export const getListRequestAuditLogUrl = (
  * Everything that happened to the need, most recent first.
  *
  * The team's reading, and the one route of this module that says so by
- * asking for the door of the application: what a requester has to know of
+ * asking for the door of the application: what a guest has to know of
  * their own need — where it stands, and why — their screen already tells
  * them, and a list of gestures would say it a second time in a colder
  * voice.

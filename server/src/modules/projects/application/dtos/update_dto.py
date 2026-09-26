@@ -42,3 +42,16 @@ class ReactCommand:
     actor_id: int
     update_id: int
     reaction: Reaction
+
+
+@dataclass(frozen=True)
+class FlagUpdateCommand:
+    """Putting an update on the agenda of the next revue, or taking it off.
+
+    The same command carries both gestures, as the reaction's does: neither
+    names anybody but its own actor, because neither is done on behalf of
+    somebody else.
+    """
+
+    actor_id: int
+    update_id: int

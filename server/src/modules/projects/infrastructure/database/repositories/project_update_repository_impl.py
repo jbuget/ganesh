@@ -21,6 +21,10 @@ def _to_entity(model: ProjectUpdateModel) -> ProjectUpdate:
         published_at=model.published_at,
         edited_at=model.edited_at,
         deleted_at=model.deleted_at,
+        flagged_at=model.flagged_at,
+        flagged_by=model.flagged_by,
+        cleared_at=model.cleared_at,
+        cleared_by=model.cleared_by,
     )
 
 
@@ -71,6 +75,19 @@ class SqlProjectUpdateRepository(ProjectUpdateRepository):
         result = await self._session.execute(live)
         return {model.project_id: _to_entity(model) for model in result.scalars().all()}
 
+    async def list_flagged(self) -> list[ProjectUpdate]:
+        # Raised and not yet lowered. Nothing filters out withdrawn messages:
+        # removing one lowers its mark, so the entity has already answered.
+        result = await self._session.execute(
+            select(ProjectUpdateModel)
+            .where(
+                ProjectUpdateModel.flagged_at.is_not(None),
+                ProjectUpdateModel.cleared_at.is_(None),
+            )
+            .order_by(ProjectUpdateModel.flagged_at, ProjectUpdateModel.id)
+        )
+        return [_to_entity(model) for model in result.scalars().all()]
+
     async def authors_for_project(self, project_id: int) -> set[int]:
         result = await self._session.execute(
             select(ProjectUpdateModel.author_id).where(
@@ -98,5 +115,9 @@ class SqlProjectUpdateRepository(ProjectUpdateRepository):
         model.body = update.body
         model.edited_at = update.edited_at
         model.deleted_at = update.deleted_at
+        model.flagged_at = update.flagged_at
+        model.flagged_by = update.flagged_by
+        model.cleared_at = update.cleared_at
+        model.cleared_by = update.cleared_by
         await self._session.flush()
         return update

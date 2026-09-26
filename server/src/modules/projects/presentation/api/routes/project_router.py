@@ -67,6 +67,7 @@ from src.modules.projects.application.dtos.project_dto import (
 )
 from src.modules.projects.application.dtos.update_dto import (
     EditUpdateCommand,
+    FlagUpdateCommand,
     PostUpdateCommand,
     ReactCommand,
     RemoveUpdateCommand,
@@ -94,6 +95,11 @@ from src.modules.projects.application.use_cases.delete_project import (
 )
 from src.modules.projects.application.use_cases.export_catalog import (
     ExportCatalogUseCase,
+)
+from src.modules.projects.application.use_cases.flagged_updates import (
+    ClearUpdateFlagUseCase,
+    FlagUpdateUseCase,
+    ListFlaggedUpdatesUseCase,
 )
 from src.modules.projects.application.use_cases.get_board import GetBoardUseCase
 from src.modules.projects.application.use_cases.get_project_detail import (
@@ -156,6 +162,7 @@ from src.modules.projects.presentation.api.mappers.project_mapper import (
     to_activity_response,
     to_board_response,
     to_catalog_entry_response,
+    to_flagged_update_response,
     to_listed_project_response,
     to_project_attachment_response,
     to_project_detail_response,
@@ -172,6 +179,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     ChangeStatusRequest,
     CreateActivityRequest,
     CreateProjectRequest,
+    FlaggedUpdateResponse,
     ImportProjectsRequest,
     ImportReportResponse,
     MoveProjectRequest,
@@ -197,6 +205,7 @@ from src.modules.projects.presentation.dependencies import (
     get_attach_project_use_case,
     get_board_use_case,
     get_change_status_use_case,
+    get_clear_update_flag_use_case,
     get_create_activity_use_case,
     get_create_project_use_case,
     get_delete_activity_use_case,
@@ -205,9 +214,11 @@ from src.modules.projects.presentation.dependencies import (
     get_download_attachment_use_case,
     get_edit_update_use_case,
     get_export_catalog_use_case,
+    get_flag_update_use_case,
     get_import_projects_use_case,
     get_list_activities_use_case,
     get_list_attachments_use_case,
+    get_list_flagged_updates_use_case,
     get_list_projects_use_case,
     get_list_updates_use_case,
     get_move_project_use_case,
@@ -497,6 +508,23 @@ async def export_catalog(
     `get_current_user`, which turns keys away.
     """
     return [to_catalog_entry_response(entry) for entry in await use_case.execute()]
+
+
+@router.get(
+    "/flagged-updates",
+    response_model=list[FlaggedUpdateResponse],
+    operation_id="listFlaggedUpdates",
+)
+async def list_flagged_updates(
+    _: User = Depends(get_current_user),
+    use_case: ListFlaggedUpdatesUseCase = Depends(get_list_flagged_updates_use_case),
+) -> list[FlaggedUpdateResponse]:
+    """What the next revue has to discuss, the longest wait first.
+
+    Across every mission, and flat: one opens a revue on one list, and
+    gathering a project's lines under its name is the screen's business.
+    """
+    return [to_flagged_update_response(one) for one in await use_case.execute()]
 
 
 @router.get("/board", response_model=BoardResponse, operation_id="getBoard")
@@ -840,6 +868,56 @@ async def remove_project_update(
     assert current_user.id is not None
     await use_case.execute(
         RemoveUpdateCommand(actor_id=current_user.id, update_id=update_id)
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/{project_id}/updates/{update_id}/flag",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="flagProjectUpdate",
+)
+async def flag_project_update(
+    project_id: int,
+    update_id: int,
+    current_user: User = Depends(get_contributor),
+    use_case: FlagUpdateUseCase = Depends(get_flag_update_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Puts an update on the agenda of the next revue.
+
+    Anybody on the team may, the author included: it is a reader noticing
+    that something has to be said out loud. Raising it twice changes nothing.
+    """
+    assert current_user.id is not None
+    await use_case.execute(
+        FlagUpdateCommand(actor_id=current_user.id, update_id=update_id)
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete(
+    "/{project_id}/updates/{update_id}/flag",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="clearProjectUpdateFlag",
+)
+async def clear_project_update_flag(
+    project_id: int,
+    update_id: int,
+    current_user: User = Depends(get_contributor),
+    use_case: ClearUpdateFlagUseCase = Depends(get_clear_update_flag_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Takes it off the agenda, the revue having read it.
+
+    A gesture of the meeting rather than of whoever raised it, so anybody may.
+    Lowering what was never raised changes nothing.
+    """
+    assert current_user.id is not None
+    await use_case.execute(
+        FlagUpdateCommand(actor_id=current_user.id, update_id=update_id)
     )
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

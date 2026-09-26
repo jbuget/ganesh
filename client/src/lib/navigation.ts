@@ -2,6 +2,7 @@ import {
   CalendarDays,
   ChartNoAxesColumn,
   Cog,
+  Flag,
   FolderKanban,
   GanttChartSquare,
   Home,
@@ -48,6 +49,9 @@ export const SCREENS: readonly Screen[] = [
   { href: "/", label: "Accueil", Icon: Home },
   { href: "/timesheet", label: "Saisie des temps", Icon: CalendarDays },
   { href: "/kanban", label: "Kanban", Icon: KanbanSquare },
+  // Beside the board rather than beside the projects: it is read when the
+  // revue opens, on the screen the revue is held on.
+  { href: "/agenda", label: "À discuter", Icon: Flag },
   { href: "/projects", label: "Projets", Icon: FolderKanban },
   // Between the projects and what is read of them: a need is what a mission
   // is born of, and it is kept out of the reference list until it is.

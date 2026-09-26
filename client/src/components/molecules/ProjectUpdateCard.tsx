@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
+import { Flag, FlagOff, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { DeleteUpdateDialog } from "@/components/atoms/DeleteUpdateDialog";
@@ -30,6 +30,15 @@ interface ProjectUpdateCardProps {
   onRemove: () => Promise<void>;
   onReact: (reaction: Reaction, leaving: boolean) => Promise<void>;
   /**
+   * Puts the update on the agenda of the next revue, or takes it off.
+   *
+   * `true` raises it, `false` lowers it. Offered to anybody who may write,
+   * the author included: it is a reader noticing that something has to be
+   * said out loud, and reserving it to whoever wrote the words would miss
+   * exactly that.
+   */
+  onFlag?: (raising: boolean) => Promise<void> | void;
+  /**
    * Whether the reader may answer the update.
    *
    * Correcting and withdrawing already hang off `is_mine` — a guest has
@@ -57,6 +66,7 @@ export function ProjectUpdateCard({
   onEdit,
   onRemove,
   onReact,
+  onFlag,
   editable = true,
 }: ProjectUpdateCardProps) {
   const [editing, setEditing] = useState(false);
@@ -109,24 +119,70 @@ export function ProjectUpdateCard({
           {update.edited_at && !update.is_deleted && " · modifiée"}
         </span>
 
-        {update.is_mine && !update.is_deleted && !editing && (
+        {update.is_flagged && (
+          // Named rather than counted: on a thread of twenty, « qui » is what
+          // tells whether the question has already been answered in person.
+          <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800">
+            <Flag className="size-3" aria-hidden />À discuter en revue
+            {update.flagged_by && (
+              <span className="font-normal text-amber-700">· {update.flagged_by}</span>
+            )}
+          </span>
+        )}
+
+        {!update.is_deleted && !editing && (
           <span className="ml-auto flex items-center gap-0.5">
-            <button
-              type="button"
-              aria-label="Modifier la mise à jour"
-              onClick={() => setEditing(true)}
-              className="cursor-pointer rounded p-1 text-slate-300 transition-colors hover:bg-slate-100 hover:text-slate-600"
-            >
-              <Pencil className="size-3.5" aria-hidden />
-            </button>
-            <button
-              type="button"
-              aria-label="Supprimer la mise à jour"
-              onClick={() => setConfirmingRemoval(true)}
-              className="cursor-pointer rounded p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
-            >
-              <Trash2 className="size-3.5" aria-hidden />
-            </button>
+            {onFlag && editable && (
+              <button
+                type="button"
+                aria-label={
+                  update.is_flagged
+                    ? "Retirer de l'ordre du jour de la revue"
+                    : "Signaler à discuter en revue"
+                }
+                title={
+                  update.is_flagged
+                    ? "Retirer de l'ordre du jour de la revue"
+                    : "Signaler à discuter en revue"
+                }
+                onClick={() => void onFlag(!update.is_flagged)}
+                className={`cursor-pointer rounded p-1 transition-colors ${
+                  update.is_flagged
+                    ? "text-amber-600 hover:bg-amber-50 hover:text-amber-800"
+                    : "text-slate-300 hover:bg-amber-50 hover:text-amber-700"
+                }`}
+              >
+                {update.is_flagged ? (
+                  <FlagOff className="size-3.5" aria-hidden />
+                ) : (
+                  <Flag className="size-3.5" aria-hidden />
+                )}
+              </button>
+            )}
+
+            {/* Correcting and withdrawing stay the author's, where raising is
+                anybody's: one answers for one's own words, and the whole team
+                answers for what gets discussed. */}
+            {update.is_mine && (
+              <>
+                <button
+                  type="button"
+                  aria-label="Modifier la mise à jour"
+                  onClick={() => setEditing(true)}
+                  className="cursor-pointer rounded p-1 text-slate-300 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                >
+                  <Pencil className="size-3.5" aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Supprimer la mise à jour"
+                  onClick={() => setConfirmingRemoval(true)}
+                  className="cursor-pointer rounded p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 className="size-3.5" aria-hidden />
+                </button>
+              </>
+            )}
           </span>
         )}
       </header>

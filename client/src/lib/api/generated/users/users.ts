@@ -82,10 +82,10 @@ export const getGetMeUrl = () => {
 /**
  * Who is signed in, as provisioned from Entra.
  *
- * The one route of this module open to a requester, and it has to be: it is
- * how the screen learns whose account it is drawing, and a requester who
- * could not read their own name would be shown a blank page rather than
- * their needs. It hands back that account and never another.
+ * The one route of this module open to a guest, and it has to be: it is
+ * how the screen learns whose account it is drawing, and somebody who could
+ * not read their own name would be shown a blank page rather than their
+ * needs. It hands back that account and never another.
  * @summary Get Me
  */
 export const getMe = async (

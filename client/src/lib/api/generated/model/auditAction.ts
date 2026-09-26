@@ -31,6 +31,8 @@ export const AuditAction = {
   updatepost: "update.post",
   updateedit: "update.edit",
   updateremove: "update.remove",
+  updateflag: "update.flag",
+  updateclear: "update.clear",
   attachmentadd: "attachment.add",
   attachmentrename: "attachment.rename",
   attachmentremove: "attachment.remove",

@@ -46,6 +46,15 @@ class ProjectUpdateRepository(ABC):
         ...
 
     @abstractmethod
+    async def list_flagged(self) -> list[ProjectUpdate]:
+        """Everything waiting to be discussed, the longest wait first.
+
+        Across every mission: a revue opens one list, not one thread per
+        project. Withdrawn messages carry no mark — removing one lowers it.
+        """
+        ...
+
+    @abstractmethod
     async def add(self, update: ProjectUpdate) -> ProjectUpdate: ...
 
     @abstractmethod

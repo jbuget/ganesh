@@ -4,8 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 
 import type { Reaction, ProjectUpdateResponse } from "@/lib/api/generated/model";
 import {
+  clearProjectUpdateFlag,
   editProjectUpdate,
   listProjectUpdates,
+  flagProjectUpdate,
   postProjectUpdate,
   reactToProjectUpdate,
   removeProjectUpdate,
@@ -72,6 +74,20 @@ export function useProjectUpdates(
      * message, so the reference list and the kanban have nothing to learn from
      * it.
      */
+    /**
+     * Puts an update on the agenda of the next revue, or takes it off.
+     *
+     * The thread alone is read back: the mark changes no count and no latest
+     * message. The agenda screen reads it from the server, which is where the
+     * order of the list is decided.
+     */
+    async flag(updateId: number, raising: boolean) {
+      await (raising
+        ? flagProjectUpdate(projectId, updateId)
+        : clearProjectUpdateFlag(projectId, updateId));
+      await reload();
+    },
+
     async react(updateId: number, reaction: Reaction, leaving: boolean) {
       await (leaving
         ? reactToProjectUpdate(projectId, updateId, reaction)
