@@ -58,7 +58,7 @@ describe("AssignedMissionsCallout", () => {
             label: "Watom",
             activities: [
               { id: 700, label: "Développement" },
-              { id: 701, label: "Chefferie de projet" },
+              { id: 701, label: "Pilotage" },
             ],
           },
         ]}
@@ -69,7 +69,7 @@ describe("AssignedMissionsCallout", () => {
     await userEvent.click(screen.getByRole("button", { name: "Ajouter Watom" }));
     expect(onAdd).not.toHaveBeenCalled();
 
-    await userEvent.click(screen.getByRole("button", { name: "Chefferie de projet" }));
+    await userEvent.click(screen.getByRole("button", { name: "Pilotage" }));
 
     expect(onAdd).toHaveBeenCalledWith(7, 701);
   });

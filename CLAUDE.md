@@ -289,9 +289,13 @@ each carries the budget for its own.
   trade would bury the dozen that decide something. The reference list is
   where a mission is unfolded into its trades.
 - **`WorkNature` is closed, and it names a hat rather than an act** —
-  développement, design, chefferie de projet, delivery. Here a developer also
-  does the ops and a designer does both UX and UI: naming the act would leave
-  a developer's day on Terraform undecidable. It answers « en tant que quoi »,
+  développement, design, pilotage. Here a developer also does the ops, a
+  designer does both UX and UI, and whoever steers carries the chefferie, the
+  delivery and the coaching at once: naming the act would leave a developer's
+  day on Terraform undecidable. « Chefferie de projet » and « Delivery » were
+  two of them until it became plain that the same people wore both: they are
+  one trade now, « Pilotage », and the days booked under either were merged
+  onto it. It answers « en tant que quoi »,
   never « sur quoi », and nothing in the domain branches on it — it is read,
   never computed with. Adding one is a decision about the organisation, so it
   lives in the domain beside `Department` rather than in a table somebody can

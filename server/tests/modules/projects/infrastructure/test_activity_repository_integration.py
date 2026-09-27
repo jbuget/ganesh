@@ -72,14 +72,14 @@ async def test_an_activity_is_read_back_as_it_was_written(
     written = await _activity(
         db_session,
         edit,
-        "Chefferie de projet",
+        "Pilotage",
         nature=WorkNature.PROJECT_MANAGEMENT,
         estimated_days=12.5,
     )
     read = await SqlActivityRepository(db_session).get_by_id(written.id or 0)
 
     assert read is not None
-    assert read.label == "Chefferie de projet"
+    assert read.label == "Pilotage"
     assert read.nature is WorkNature.PROJECT_MANAGEMENT
     assert read.estimated_days == 12.5
     assert read.project_id == edit
@@ -109,13 +109,11 @@ async def test_the_activities_of_one_mission_come_back_in_label_order(
     edit = await _mission(db_session, "Edit")
     await _activity(db_session, edit, "Développement")
     # A different trade, because one mission carries each only once.
-    await _activity(
-        db_session, edit, "Chefferie de projet", nature=WorkNature.PROJECT_MANAGEMENT
-    )
+    await _activity(db_session, edit, "Pilotage", nature=WorkNature.PROJECT_MANAGEMENT)
 
     activities = await SqlActivityRepository(db_session).list_for_project(edit)
 
-    assert [a.label for a in activities] == ["Chefferie de projet", "Développement"]
+    assert [a.label for a in activities] == ["Développement", "Pilotage"]
 
 
 async def test_several_missions_are_grouped_in_one_query(
@@ -125,7 +123,7 @@ async def test_several_missions_are_grouped_in_one_query(
     watom = await _mission(db_session, "Watom")
     await _activity(db_session, edit, "Développement")
     await _activity(db_session, watom, "Développement")
-    await _activity(db_session, watom, "Delivery", nature=WorkNature.DELIVERY)
+    await _activity(db_session, watom, "Pilotage", nature=WorkNature.PROJECT_MANAGEMENT)
 
     grouped = await SqlActivityRepository(db_session).list_for_projects([edit, watom])
 

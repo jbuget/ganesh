@@ -26,5 +26,4 @@ export const WorkNature = {
   development: "development",
   design: "design",
   project_management: "project_management",
-  delivery: "delivery",
 } as const;

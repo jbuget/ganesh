@@ -489,7 +489,7 @@ class TestATimeIsBookedUnderATrade:
         chefferie = Activity(
             id=101,
             project_id=10,
-            label="Chefferie de projet",
+            label="Pilotage",
             nature=WorkNature.PROJECT_MANAGEMENT,
         )
         entries = InMemoryEntryRepository()

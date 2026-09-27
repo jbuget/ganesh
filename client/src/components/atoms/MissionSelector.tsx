@@ -48,7 +48,7 @@ const asItems = (missions: OfferedMission[]): MissionItem[] =>
  *
  * One searches for a mission — that is the name one knows — and is asked for
  * the trade once it is found. Offering the pairs flat made every line read
- * « Développement » or « Delivery » and buried the name being looked for,
+ * « Développement » or « Pilotage » and buried the name being looked for,
  * which is the one thing anybody types here.
  *
  * **The trade is asked outside the list, in the dialog the reminder already

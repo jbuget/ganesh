@@ -81,7 +81,7 @@ async def declare_time(
     nomme aussi ses activités.
 
     Un temps se déclare sur une activité du projet — « Développement »,
-    « Chefferie de projet » — et non sur le projet lui-même : c'est l'activité
+    « Pilotage » — et non sur le projet lui-même : c'est l'activité
     qui porte le budget du métier sous lequel la journée est passée. Seul le
     hors-projet, absences et formation, se déclare en direct.
     """

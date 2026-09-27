@@ -61,7 +61,7 @@ class TestCuttingAMissionUp:
             CreateActivityCommand(
                 actor_id=1,
                 project_id=10,
-                label="Chefferie de projet",
+                label="Pilotage",
                 nature=WorkNature.PROJECT_MANAGEMENT,
                 estimated_days=5.0,
             )

@@ -107,7 +107,7 @@ describe("what the selector offers", () => {
       { id: 701, label: "Design", nature: "design", is_active: true },
       {
         id: 702,
-        label: "Chefferie de projet",
+        label: "Pilotage",
         nature: "project_management",
         is_active: true,
       },
@@ -125,9 +125,9 @@ describe("what the selector offers", () => {
     expect(offered).toHaveLength(1);
     expect(offered[0].projectLabel).toBe("Watom");
     expect(offered[0].activities.map((a) => a.label)).toEqual([
-      "Chefferie de projet",
       "Design",
       "Développement",
+      "Pilotage",
     ]);
   });
 
@@ -136,10 +136,7 @@ describe("what the selector offers", () => {
     // not take the mission away.
     const offered = offeredMissions([watom], [rowKey(7, 700)]);
 
-    expect(offered[0].activities.map((a) => a.label)).toEqual([
-      "Chefferie de projet",
-      "Design",
-    ]);
+    expect(offered[0].activities.map((a) => a.label)).toEqual(["Design", "Pilotage"]);
   });
 
   it("drops the mission once every trade is taken", () => {
@@ -215,7 +212,7 @@ describe("what the search reads", () => {
     projectId: 1,
     projectLabel: "Contrôle de la longueur du câblage posé",
     kind: "project",
-    activities: [{ id: 100, label: "Chefferie de projet" }],
+    activities: [{ id: 100, label: "Pilotage" }],
   } as OfferedMission;
 
   it("finds a mission by its name, which is what one types", () => {
