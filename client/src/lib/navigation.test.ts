@@ -48,7 +48,24 @@ describe("bandsFor", () => {
     }
   });
 
-  it("holds the bands in the order the screens are read in", () => {
+  it("gives every screen of the bar a band that is actually drawn", () => {
+    const drawn = new Set<string>(bandsFor("ADMIN").map((band) => band.band));
+
+    for (const screen of SCREENS) {
+      if (screen.band === "aside") continue;
+      expect(drawn.has(screen.band)).toBe(true);
+    }
+  });
+
+  it("draws each band once, wherever its screens sit in the list", () => {
+    // Grouping the runs as they came would draw « Équipe » twice the day
+    // somebody adds a teammates screen at the end of the list.
+    const drawn = bandsFor("ADMIN").map((band) => band.band);
+
+    expect(new Set(drawn).size).toBe(drawn.length);
+  });
+
+  it("holds the bands in the order the bar reads them", () => {
     expect(bands("ADMIN")).toEqual([
       "work",
       "portfolio",

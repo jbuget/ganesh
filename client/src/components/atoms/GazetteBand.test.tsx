@@ -42,7 +42,10 @@ describe("GazetteBand", () => {
 
   it("shows the chapeau when a model has written one", () => {
     render(
-      <GazetteBand cursor={cursor} digest={digest({ prose: "Le mois a été calme." })} />,
+      <GazetteBand
+        cursor={cursor}
+        digest={digest({ prose: "Le mois a été calme." })}
+      />,
     );
 
     expect(screen.getByText("Le mois a été calme.")).toBeInTheDocument();

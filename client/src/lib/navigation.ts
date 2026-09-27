@@ -38,18 +38,21 @@ import { holds } from "@/lib/roles";
 export type Band = "work" | "portfolio" | "steering" | "team" | "platform" | "aside";
 
 /**
- * What each band is called above its tabs.
+ * The bands, in the order the bar reads them, and what each is called.
  *
- * The first carries none: what one does every morning needs no heading, and a
+ * One list rather than an order beside a table of names: two of them would
+ * drift, and the day they disagreed one band would be drawn nameless.
+ *
+ * The first carries no heading: what one does every morning needs none, and a
  * title above the very first tab would push « Accueil » down for nothing.
  */
-const BAND_LABELS: Record<Exclude<Band, "aside">, string | null> = {
-  work: null,
-  portfolio: "Portefeuille",
-  steering: "Pilotage",
-  team: "Équipe",
-  platform: "Plateforme",
-};
+const BANDS: readonly { band: Exclude<Band, "aside">; label: string | null }[] = [
+  { band: "work", label: null },
+  { band: "portfolio", label: "Portefeuille" },
+  { band: "steering", label: "Pilotage" },
+  { band: "team", label: "Équipe" },
+  { band: "platform", label: "Plateforme" },
+];
 
 export interface Screen {
   href: string;
@@ -101,7 +104,12 @@ export const SCREENS: readonly Screen[] = [
     Icon: TableProperties,
     band: "steering",
   },
-  { href: "/planning", label: "Planification", Icon: GanttChartSquare, band: "steering" },
+  {
+    href: "/planning",
+    label: "Planification",
+    Icon: GanttChartSquare,
+    band: "steering",
+  },
   { href: "/roadmap", label: "Feuille de route", Icon: Milestone, band: "steering" },
 
   // Off the bar, and read from the home screen instead: it tells the month of
@@ -157,25 +165,25 @@ export interface NavBand {
 /**
  * The bar a given role reads, banded.
  *
- * Built from `SCREENS` in its own order rather than from a second list, so a
- * screen can never be in one and missing from the other. A band whose every
- * screen is out of reach — « Plateforme » would be, were « Administration »
- * alone in it — is not drawn: a heading over nothing is worse than no heading.
+ * The tabs come from `SCREENS` rather than from a second list, so a screen can
+ * never be in one and missing from the other; `BANDS` decides the order the
+ * bands are read in, and `SCREENS` the order of the tabs inside each.
+ *
+ * A screen finds its band wherever it happens to sit in the list, which is the
+ * point: grouping the runs as they came would draw « Équipe » twice the day
+ * somebody adds a teammates screen at the end, and a bar with two headings of
+ * the same name is a bar nobody trusts.
+ *
+ * A band whose every screen is out of reach — « Plateforme » would be, were
+ * « Administration » alone in it — is not drawn: a heading over nothing is
+ * worse than no heading.
  */
 export function bandsFor(role: Role | undefined): readonly NavBand[] {
-  const bands: NavBand[] = [];
+  const shown = screensFor(role);
 
-  for (const screen of screensFor(role)) {
-    if (screen.band === "aside") continue;
-    const last = bands.at(-1);
-    if (last?.band === screen.band) last.screens = [...last.screens, screen];
-    else
-      bands.push({
-        band: screen.band,
-        label: BAND_LABELS[screen.band],
-        screens: [screen],
-      });
-  }
-
-  return bands;
+  return BANDS.map(({ band, label }) => ({
+    band,
+    label,
+    screens: shown.filter((screen) => screen.band === band),
+  })).filter((band) => band.screens.length > 0);
 }

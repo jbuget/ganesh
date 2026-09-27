@@ -197,9 +197,9 @@ describe("HomePage", () => {
     expect(screen.getByText("Le mois a été calme.")).toBeInTheDocument();
     // The order is the reading: the month of the whole company, and then the
     // news of one's own projects.
-    expect(
-      band.compareDocumentPosition(screen.getByText("Quoi de neuf")),
-    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(band.compareDocumentPosition(screen.getByText("Quoi de neuf"))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
   });
 
   it("shows no band while the digest is still travelling", () => {
