@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
@@ -49,6 +49,10 @@ vi.mock("@/lib/use-inbox", () => ({
 }));
 
 describe("AppSidebar", () => {
+  // The fold is kept in `localStorage`, which outlives a render: without this,
+  // a test that folds the bar hands the next one a bar already folded.
+  beforeEach(() => window.localStorage.clear());
+
   it("offers to fold the bar", () => {
     render(<AppSidebar />);
 
@@ -64,8 +68,11 @@ describe("AppSidebar", () => {
       screen.getByRole("button", { name: "Replier la barre latérale" }),
     );
 
-    // The labels disappear to the eye, never from the accessibility tree.
+    // The labels disappear to the eye, never from the accessibility tree —
+    // and so do the band headings, which become a rule that keeps its name.
     expect(screen.getByRole("link", { name: /Saisie des temps/ })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Pilotage" })).toBeNull();
+    expect(screen.getByRole("separator", { name: "Pilotage" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Déplier la barre latérale" }),
     ).toHaveAttribute("aria-pressed", "true");
@@ -82,12 +89,32 @@ describe("AppSidebar", () => {
     expect(screen.getByRole("link", { name: /Utilisateurs/ })).toBeInTheDocument();
   });
 
-  it("closes the navigation with « Statistiques »", () => {
+  it("sorts the tabs into named bands rather than one flat list", () => {
+    render(<AppSidebar />);
+
+    // What one does every morning opens the bar and carries no heading: a
+    // title above the very first tab would push « Accueil » down for nothing.
+    expect(screen.getByRole("heading", { name: "Portefeuille" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Pilotage" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Équipe" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Plateforme" })).toBeInTheDocument();
+  });
+
+  it("closes the navigation with what holds the application up", () => {
     render(<AppSidebar />);
 
     const labels = screen.getAllByRole("link").map((link) => link.textContent);
 
-    expect(labels.at(-1)).toMatch(/Statistiques/);
+    // A manager sees no « Administration »: the band closes on « API / MCP ».
+    expect(labels.at(-1)).toMatch(/API \/ MCP/);
+  });
+
+  // The bar lists what the team opens; La Gazette is read from the home
+  // screen instead, and the palette is what still leads to it.
+  it("leaves La Gazette off the bar", () => {
+    render(<AppSidebar />);
+
+    expect(screen.queryByRole("link", { name: /La Gazette/ })).toBeNull();
   });
 
   it("opens the navigation with « Accueil », which holds the root", () => {

@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useCurrentUser, useMonthGrid, useProjects } from "@/lib/api/queries";
-import { firstDayOfMonth, previousMonth, todayIso } from "@/lib/dates";
+import { currentMonth, firstDayOfMonth, previousMonth, todayIso } from "@/lib/dates";
 import {
   daysMissingEntry,
   latestUpdates,
@@ -28,10 +28,7 @@ const FEED_LENGTH = 8;
  */
 export function useHome() {
   const today = todayIso();
-  const cursor = {
-    year: Number(today.slice(0, 4)),
-    month: Number(today.slice(5, 7)),
-  };
+  const cursor = currentMonth();
   const previous = previousMonth(cursor.year, cursor.month);
   const beforeThat = previousMonth(previous.year, previous.month);
   const oldest = previousMonth(beforeThat.year, beforeThat.month);

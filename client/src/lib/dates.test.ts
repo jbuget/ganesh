@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
+  currentMonth,
   dayNumber,
   firstDayOfMonth,
   formatShortDate,
@@ -149,5 +150,27 @@ describe("monthParam / parseMonthParam", () => {
     expect(parseMonthParam("septembre")).toBeNull();
     expect(parseMonthParam("2026-13")).toBeNull();
     expect(parseMonthParam("2026-00")).toBeNull();
+  });
+});
+
+describe("currentMonth", () => {
+  it("reads the month off the local clock", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-27T10:00:00"));
+
+    expect(currentMonth()).toEqual({ year: 2026, month: 9 });
+
+    vi.useRealTimers();
+  });
+
+  it("still reads the month the evening the clocks would roll it over in UTC", () => {
+    // `toISOString` works in UTC: past 22:00 in Paris it already answers the
+    // next day, which on the last evening of a month is the next month.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-30T23:30:00"));
+
+    expect(currentMonth()).toEqual({ year: 2026, month: 9 });
+
+    vi.useRealTimers();
   });
 });

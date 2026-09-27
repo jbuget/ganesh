@@ -32,9 +32,13 @@ const home = vi.hoisted(() => ({
 const mood = vi.hoisted(() => ({
   state: {} as Record<string, unknown>,
 }));
+const gazette = vi.hoisted(() => ({
+  state: { cursor: { year: 2026, month: 9 }, digest: null } as Record<string, unknown>,
+}));
 
 vi.mock("@/lib/use-home", () => ({ useHome: () => home.state }));
 vi.mock("@/lib/use-mood", () => ({ useMood: () => mood.state }));
+vi.mock("@/lib/use-gazette-band", () => ({ useGazetteBand: () => gazette.state }));
 // The presence block reads the team, and the panel writes to it; the screen
 // is tested without a QueryClient around it, as every other block here is.
 vi.mock("@/lib/use-users", () => ({
@@ -65,7 +69,14 @@ vi.mock("@/lib/opened-mission", () => ({
 function show(
   overrides: Record<string, unknown> = {},
   moodOverrides: Record<string, unknown> = {},
+  gazetteOverrides: Record<string, unknown> = {},
 ) {
+  gazette.state = {
+    cursor: { year: 2026, month: 9 },
+    digest: null,
+    isLoading: false,
+    ...gazetteOverrides,
+  };
   mood.state = {
     isLoading: false,
     days: [],
@@ -175,5 +186,34 @@ describe("HomePage", () => {
 
     expect(screen.getByText("Chargement…")).toBeInTheDocument();
     expect(screen.getByText("Mon moral")).toBeInTheDocument();
+  });
+
+  it("hands La Gazette over from above « Quoi de neuf »", () => {
+    show({}, {}, { digest: { prose: "Le mois a été calme.", chapters: [] } });
+
+    const band = screen.getByRole("link", { name: /La Gazette/ });
+
+    expect(band).toHaveAttribute("href", "/gazette");
+    expect(screen.getByText("Le mois a été calme.")).toBeInTheDocument();
+    // The order is the reading: the month of the whole company, and then the
+    // news of one's own projects.
+    expect(band.compareDocumentPosition(screen.getByText("Quoi de neuf"))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it("shows no band while the digest is still travelling", () => {
+    show({}, {}, { digest: null, isLoading: true });
+
+    expect(screen.queryByRole("link", { name: /La Gazette/ })).toBeNull();
+  });
+
+  // It carries its own query, as the mood does: four month grids must not
+  // hold back a band reading one digest.
+  it("shows La Gazette even while the months load", () => {
+    show({ isLoading: true }, {}, { digest: { prose: "Calme.", chapters: [] } });
+
+    expect(screen.getByText("Chargement…")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /La Gazette/ })).toBeInTheDocument();
   });
 });

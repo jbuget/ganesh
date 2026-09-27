@@ -22,6 +22,7 @@ import {
 } from "@/lib/api/queries";
 import type { DayValue } from "@/lib/day-value";
 import {
+  currentMonth,
   firstDayOfMonth,
   monthParam,
   nextMonth,
@@ -49,10 +50,7 @@ export function useTimesheetMonth() {
   // link. Absent, it is the month running — which is what one comes for.
   const query = useQueryString();
   const params = new URLSearchParams(query);
-  const cursor = parseMonthParam(params.get("month")) ?? {
-    year: Number(today.slice(0, 4)),
-    month: Number(today.slice(5, 7)),
-  };
+  const cursor = parseMonthParam(params.get("month")) ?? currentMonth();
   // The teammate being looked at lives in the address too, and under the same
   // name as on the teammate list: a colleague's month is reached by a link —
   // from their panel, from a reminder — and must survive a reload.
@@ -116,9 +114,8 @@ export function useTimesheetMonth() {
 
   const isOwnMonth = viewedUserId === null || viewedUserId === me?.id;
   const targetUserId = viewedUserId ?? me?.id ?? null;
-  const isCurrentMonth =
-    cursor.year === Number(today.slice(0, 4)) &&
-    cursor.month === Number(today.slice(5, 7));
+  const running = currentMonth();
+  const isCurrentMonth = cursor.year === running.year && cursor.month === running.month;
 
   /**
    * Rows already in the grid, not to be offered again.

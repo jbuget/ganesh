@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { SCREENS, screensFor } from "@/lib/navigation";
+import { SCREENS, bandsFor, screensFor } from "@/lib/navigation";
 
 const hrefs = (role: Parameters<typeof screensFor>[0]) =>
   screensFor(role).map((screen) => screen.href);
@@ -27,5 +27,79 @@ describe("screensFor", () => {
 
   it("is the whole list for an admin", () => {
     expect(screensFor("ADMIN")).toHaveLength(SCREENS.length);
+  });
+});
+
+describe("bandsFor", () => {
+  const bands = (role: Parameters<typeof bandsFor>[0]) =>
+    bandsFor(role).map((band) => band.band);
+
+  it("opens on what one does every morning, under no heading", () => {
+    const first = bandsFor("MANAGER")[0];
+
+    expect(first.band).toBe("work");
+    expect(first.label).toBeNull();
+    expect(first.screens.map((screen) => screen.href)).toEqual(["/", "/timesheet"]);
+  });
+
+  it("names every other band", () => {
+    for (const band of bandsFor("ADMIN").slice(1)) {
+      expect(band.label).not.toBeNull();
+    }
+  });
+
+  it("gives every screen of the bar a band that is actually drawn", () => {
+    const drawn = new Set<string>(bandsFor("ADMIN").map((band) => band.band));
+
+    for (const screen of SCREENS) {
+      if (screen.band === "aside") continue;
+      expect(drawn.has(screen.band)).toBe(true);
+    }
+  });
+
+  it("draws each band once, wherever its screens sit in the list", () => {
+    // Grouping the runs as they came would draw « Équipe » twice the day
+    // somebody adds a teammates screen at the end of the list.
+    const drawn = bandsFor("ADMIN").map((band) => band.band);
+
+    expect(new Set(drawn).size).toBe(drawn.length);
+  });
+
+  it("holds the bands in the order the bar reads them", () => {
+    expect(bands("ADMIN")).toEqual([
+      "work",
+      "portfolio",
+      "steering",
+      "team",
+      "platform",
+    ]);
+  });
+
+  it("keeps a screen out of the bar without taking it out of the application", () => {
+    const listed = bandsFor("ADMIN").flatMap((band) =>
+      band.screens.map((screen) => screen.href),
+    );
+
+    // Read from where it belongs — the home screen — rather than listed every
+    // day beside screens one opens hourly. The palette still leads to it.
+    expect(listed).not.toContain("/gazette");
+    expect(hrefs("ADMIN")).toContain("/gazette");
+  });
+
+  it("opens the team band on the mirror, before the list", () => {
+    const team = bandsFor("MANAGER").find((band) => band.band === "team");
+
+    // How the team is, and then who it is made of.
+    expect(team?.screens.map((screen) => screen.href)).toEqual(["/mood", "/users"]);
+  });
+
+  it("shows the administration to nobody else, in the band that holds it", () => {
+    const platform = (role: Parameters<typeof bandsFor>[0]) =>
+      bandsFor(role)
+        .find((band) => band.band === "platform")
+        ?.screens.map((screen) => screen.href);
+
+    expect(platform("MANAGER")).toEqual(["/logs", "/stats", "/api-mcp"]);
+    expect(platform("ADMIN")).toEqual(["/logs", "/stats", "/api-mcp", "/admin"]);
   });
 });
