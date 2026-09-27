@@ -6,12 +6,12 @@ import { useGenerateDigest } from "@/lib/api/generated/gazette/gazette";
 import type { DigestResponse } from "@/lib/api/generated/model";
 import { mutationResult, useDigest } from "@/lib/api/queries";
 import {
+  currentMonth,
   firstDayOfMonth,
   monthParam,
   nextMonth,
   parseMonthParam,
   previousMonth,
-  todayIso,
 } from "@/lib/dates";
 import { useQueryString, writeUrl } from "@/lib/url-state";
 
@@ -22,16 +22,12 @@ import { useQueryString, writeUrl } from "@/lib/url-state";
  * a fresh one — so the component carries nothing but the rendering.
  */
 export function useGazette() {
-  const today = todayIso();
   // The month and the version live in the address: a digest is something one
   // sends a link to, and the link has to open on what its sender was reading.
   // Absent, the month is the one running.
   const query = useQueryString();
   const params = new URLSearchParams(query);
-  const cursor = parseMonthParam(params.get("month")) ?? {
-    year: Number(today.slice(0, 4)),
-    month: Number(today.slice(5, 7)),
-  };
+  const cursor = parseMonthParam(params.get("month")) ?? currentMonth();
   const asked = Number(params.get("version")) || null;
 
   const month = firstDayOfMonth(cursor.year, cursor.month);

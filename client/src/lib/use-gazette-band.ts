@@ -1,7 +1,7 @@
 "use client";
 
 import { useDigest } from "@/lib/api/queries";
-import { firstDayOfMonth, todayIso, type MonthCursor } from "@/lib/dates";
+import { currentMonth, firstDayOfMonth } from "@/lib/dates";
 
 /**
  * The month La Gazette is at, for the band on the home screen.
@@ -17,11 +17,7 @@ import { firstDayOfMonth, todayIso, type MonthCursor } from "@/lib/dates";
  * would be that screen, badly.
  */
 export function useGazetteBand() {
-  const today = todayIso();
-  const cursor: MonthCursor = {
-    year: Number(today.slice(0, 4)),
-    month: Number(today.slice(5, 7)),
-  };
+  const cursor = currentMonth();
 
   const { digest, isLoading } = useDigest(
     firstDayOfMonth(cursor.year, cursor.month),

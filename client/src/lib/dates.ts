@@ -177,6 +177,19 @@ export function todayIso(): string {
   return isoDay(new Date());
 }
 
+/**
+ * The month running, read off the local clock.
+ *
+ * Four screens fell back on it and each cut the day apart itself; a fifth was
+ * one too many. Through `todayIso`, so the fallback is the same day the grid
+ * dims by — `toISOString` works in UTC and would roll the month over an
+ * evening early, on the one night of the year it matters.
+ */
+export function currentMonth(): MonthCursor {
+  const today = todayIso();
+  return { year: Number(today.slice(0, 4)), month: Number(today.slice(5, 7)) };
+}
+
 /** A month as an address carries it: « 2026-08 ». */
 export function monthParam(cursor: MonthCursor): string {
   return `${cursor.year}-${String(cursor.month).padStart(2, "0")}`;
