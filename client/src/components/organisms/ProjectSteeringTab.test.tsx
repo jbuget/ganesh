@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import { ProjectSteeringTab } from "./ProjectSteeringTab";
 import type {
@@ -43,6 +44,7 @@ const detail = (
       priority: null,
       business_contacts: null,
       description: null,
+      go_live_date: null,
     },
     departments: [],
     links: [],
@@ -149,5 +151,21 @@ describe("who is on a mission", () => {
     expect(
       screen.getByRole("button", { name: "Modifier les intervenants actuels" }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("the day a mission goes live", () => {
+  it("is posted from the sheet, under the phase", async () => {
+    const updateFields = vi.fn();
+    steering("project", null, updateFields);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Date annoncée pour Portail" }),
+    );
+    const field = screen.getByLabelText("Date annoncée pour Portail");
+    await userEvent.type(field, "2026-11-15");
+    fireEvent.blur(field);
+
+    expect(updateFields).toHaveBeenCalledWith({ go_live_date: "2026-11-15" });
   });
 });

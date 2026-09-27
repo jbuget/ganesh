@@ -677,7 +677,12 @@ and saves the question as a simulation. Services in operations are out of it —
 portfolio, delivered services included, over a rolling window. It is shown
 rather than arbitrated: to a committee, to a department. Where the plan reads
 `go_live_date` only to work out a delay, the roadmap makes the announced date
-its subject — and is the one place it can be posted.
+its subject — and is the one place it can be *posted against the others*, a
+commitment being taken next to every other commitment rather than alone. The
+day itself is also read and changed on the mission's own sheet, under its
+phase: moving a mission into « Recette » and knowing when it goes live are one
+minute's work, and sending somebody to another screen for the second half of
+it is how a date stops being posted at all.
 
 The window rolls rather than following the calendar, and that is a decision
 about where the width of the screen goes. A civil year read in September
@@ -714,9 +719,11 @@ Three rules the drawing rests on:
   time declared — that is the line steering has to see, and the tally above
   says how many there are before anybody reads a bar.
 
-Gestures do not cross: reordering and staffing belong to Planification,
-posting a date belongs to the roadmap. Two screens answering the same gesture
-end up contradicting each other.
+Gestures do not cross: reordering and staffing belong to Planification, and
+the roadmap is the only place a date is arbitrated against the rest of the
+portfolio. Two screens answering the same gesture end up contradicting each
+other — which is why the mission's sheet writes the same field rather than a
+second one of its own.
 
 ## The service catalogue
 
@@ -727,9 +734,9 @@ named after what it feeds rather than after the form it shows: one goes there
 to publish a service, not to admire a sheet.
 
 The line between the two tabs of a mission is what one is doing there:
-**Pilotage steers the mission, Catalogue publishes the service.** Phase,
-priority, departments, the people on it and cost steer; address, summary,
-links, stack and criticality publish. A field belongs to one side or the other, never
+**Pilotage steers the mission, Catalogue publishes the service.** Phase, day
+of go-live, priority, departments, the people on it and cost steer; address,
+summary, links, stack and criticality publish. A field belongs to one side or the other, never
 to both. Inside the tab, « Rattachement » gathers what the service hangs from
 — its team, its channel, its tags — and no section repeats the tab's own name.
 

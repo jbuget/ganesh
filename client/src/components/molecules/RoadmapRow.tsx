@@ -81,6 +81,7 @@ export function RoadmapRow({ mission, from, to, onOpen, onDate }: RoadmapRowProp
         role="presentation"
       >
         <TargetDateField
+          dense
           value={mission.target_date}
           missionLabel={mission.label}
           onChange={(target) => onDate(mission.project_id, target)}

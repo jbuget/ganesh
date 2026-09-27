@@ -99,6 +99,7 @@ export function useProjectDetail(
         category?: ProjectCategory | null;
         priority?: ProjectPriority | null;
         estimated_days?: number | null;
+        go_live_date?: string | null;
       },
     ) {
       await updateProject(projectId, fields);

@@ -111,8 +111,8 @@ export function RequestSheet({ request, editable, onChange }: RequestSheetProps)
         <SheetRow title="Échéance souhaitée">
           {/* Words rather than a day: a wish is « avant la clôture annuelle »
               far more often than a date, and asking for one would have people
-              invent a precision nobody meant. Posting a date is the roadmap's
-              business, and nowhere else. */}
+              invent a precision nobody meant. A day is posted on a mission,
+              never on what is still being asked for. */}
           <InlineTextField
             value={request.desired_timing}
             label="Échéance souhaitée"
