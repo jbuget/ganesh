@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 import {
   addMissionToMonth,
@@ -35,6 +36,23 @@ import { useQueryString, writeUrl } from "@/lib/url-state";
 import { usePendingEntries } from "@/lib/use-pending-entries";
 import { holds } from "@/lib/roles";
 import { useMayWrite } from "@/lib/use-may-write";
+
+/**
+ * The activity a row stands for, named only when there is one.
+ *
+ * Off-project work carries no trade — an absence is declared on as itself —
+ * and neither does a row left over from before the trades existed: both read
+ * `null` here. Named all the same, the parameter travels in the address as
+ * the four letters « null », which the API refuses for an integer: the row
+ * comes back untouched and nothing says why. Left out, it reads exactly as
+ * the route describes it — omitted off-project.
+ *
+ * Only the two gestures that name it in the address go through here. What
+ * writes a value says it in a body, where `null` is `null`.
+ */
+function theActivity(activityId: number | null): { activity_id?: number } {
+  return activityId === null ? {} : { activity_id: activityId };
+}
 
 /**
  * State and actions of a month's entry screen.
@@ -77,6 +95,12 @@ export function useTimesheetMonth() {
 
   const target = viewedUserId ? { user_id: viewedUserId } : undefined;
 
+  // What the last removal refused to do, in French, or nothing. Held here
+  // rather than raised: the grid has nowhere to catch an exception, and a
+  // rejection let go is exactly how a refused removal came to look like a
+  // click that never landed.
+  const [removalFailure, setRemovalFailure] = useState<string | null>(null);
+
   /**
    * Clicks are answered on the spot and written once they have settled: a half
    * day is two clicks on one cell, and one write.
@@ -90,7 +114,7 @@ export function useTimesheetMonth() {
       if (value === 0) {
         await clearEntry({
           project_id: projectId,
-          activity_id: activityId,
+          ...theActivity(activityId),
           day,
           ...whose,
         });
@@ -145,6 +169,8 @@ export function useTimesheetMonth() {
     month,
     grid,
     isLoading: gridQuery.isLoading,
+    /** Why the last removal did not go through, or nothing. */
+    removalFailure,
     teammates,
     projects,
     /** The reference list with its activities: what the selector offers. */
@@ -252,16 +278,29 @@ export function useTimesheetMonth() {
       await refresh();
     },
 
-    /** Removes a row from the month, with the time it carries. */
+    /**
+     * Removes a row from the month, with the time it carries.
+     *
+     * A refusal is held and said rather than raised: the gesture is explicit,
+     * and a row that quietly stays put reads as a click that never landed.
+     */
     async removeMission(projectId: number, activityId: number | null) {
       // A cell still waiting would write itself back onto a row that has gone.
       await entries.flush();
-      await removeMissionFromMonth({
-        project_id: projectId,
-        activity_id: activityId,
-        month,
-        ...target,
-      });
+      setRemovalFailure(null);
+      try {
+        await removeMissionFromMonth({
+          project_id: projectId,
+          ...theActivity(activityId),
+          month,
+          ...target,
+        });
+      } catch {
+        setRemovalFailure(
+          "Le retrait n'a pas abouti : le projet est toujours sur le mois.",
+        );
+        return;
+      }
       await refresh();
     },
 

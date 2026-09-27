@@ -121,6 +121,49 @@ describe("useTimesheetMonth", () => {
       month: screen.current.month,
     });
   });
+
+  /**
+   * Off-project work carries no trade, and neither does a row left over from
+   * before the trades existed: both read `null`. Named all the same, the
+   * parameter travels as the four letters « null », which the API refuses for
+   * an integer — the row would come back untouched with nothing said.
+   */
+  it("leaves the activity unnamed where the row carries none", async () => {
+    const screen = month();
+
+    await screen.current.removeMission(10, null);
+
+    expect(entries.removeMissionFromMonth).toHaveBeenCalledWith({
+      project_id: 10,
+      month: screen.current.month,
+    });
+  });
+
+  /** A refusal the screen says, rather than a row that quietly stays put. */
+  it("says the removal did not go through, instead of losing it", async () => {
+    entries.removeMissionFromMonth.mockRejectedValueOnce(new Error("422"));
+    const screen = month();
+
+    await act(async () => {
+      await screen.current.removeMission(10, null);
+    });
+
+    expect(screen.current.removalFailure).toMatch(/toujours sur le mois/);
+  });
+
+  it("forgets the last refusal as soon as one is attempted again", async () => {
+    entries.removeMissionFromMonth.mockRejectedValueOnce(new Error("422"));
+    const screen = month();
+    await act(async () => {
+      await screen.current.removeMission(10, null);
+    });
+
+    await act(async () => {
+      await screen.current.removeMission(10, null);
+    });
+
+    expect(screen.current.removalFailure).toBeNull();
+  });
 });
 
 describe("the month in the address", () => {
@@ -342,6 +385,20 @@ describe("entering time", () => {
     expect(entries.clearEntry).toHaveBeenCalledWith({
       project_id: 10,
       activity_id: 100,
+      day: "2026-09-14",
+    });
+  });
+
+  /** Same as the removal: « null » in the address is refused, and the cell
+      would come back filled with nothing said. */
+  it("leaves the activity unnamed when emptying a cell that carries none", async () => {
+    const screen = month();
+
+    act(() => screen.current.setDayValue(10, null, "2026-09-14", 0));
+    await settle();
+
+    expect(entries.clearEntry).toHaveBeenCalledWith({
+      project_id: 10,
       day: "2026-09-14",
     });
   });

@@ -171,6 +171,14 @@ export function TimesheetPage() {
         </p>
       )}
 
+      {/* A refused removal is said where the row still is: the grid is just
+          below, and the row the click did not take off is in it. */}
+      {month.removalFailure && (
+        <p className="mb-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
+          {month.removalFailure}
+        </p>
+      )}
+
       {/* Whoever can undo the lock is not told that someone else must: the
           sentence follows what the reader can actually do about it. */}
       {grid && !grid.is_writable && (
