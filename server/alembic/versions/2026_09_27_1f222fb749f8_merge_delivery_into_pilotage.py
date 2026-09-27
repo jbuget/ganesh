@@ -26,7 +26,7 @@ cannot be told from the other's once they sit on the same line, and splitting
 them again would invent them.
 
 Revision ID: 1f222fb749f8
-Revises: 3d593733eb0e
+Revises: c49cb1aaee7e
 Create Date: 2026-09-27 10:37:31.086930
 
 """
@@ -36,7 +36,7 @@ from collections.abc import Sequence
 from alembic import op
 
 revision: str = "1f222fb749f8"
-down_revision: str | None = "3d593733eb0e"
+down_revision: str | None = "c49cb1aaee7e"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
