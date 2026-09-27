@@ -25,6 +25,7 @@ import {
   NO_HIDDEN_COLUMN,
   PHASE_COLUMN,
   PRIORITY_COLUMN,
+  REVIEW_COLUMN,
   STRONG_SEPARATOR,
   THREAD_COLUMN,
   tableWidth,
@@ -133,6 +134,12 @@ export function MissionsTable({
                 left-hand one separates two columns, and so starts below their
                 titles. */}
               <TableHead className={`${THREAD_COLUMN} ${STRONG_SEPARATOR}`} />
+              {/* What is waiting to be discussed does not sort: the « Revue »
+                filter already keeps those rows alone, and an order on a
+                column of marks would say no more than it does. */}
+              {shows("review") && (
+                <TableHead className={REVIEW_COLUMN}>Revue</TableHead>
+              )}
               {shows("phase") && (
                 <SortableColumnHeader
                   column="phase"

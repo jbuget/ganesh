@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import { MissionRow } from "./MissionRow";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
+import { hiddenColumns } from "@/lib/mission-columns";
 
 const NOW = new Date("2026-09-17T12:00:00Z");
 
@@ -686,5 +687,44 @@ describe("MissionRow — the service catalogue", () => {
     );
 
     expect(screen.queryByText("Publié")).toBeNull();
+  });
+});
+
+/**
+ * What is waiting to be discussed has a column, not a corner of the thread's
+ * cell: two marks squeezed into one untitled column spilled onto the phase of
+ * the row, and the review is a reading one puts away like any other.
+ */
+describe("MissionRow — the review mark", () => {
+  const flagged = (count: number) =>
+    ({ ...mission({}), flagged_updates: count }) as ProjectListItemResponse;
+
+  it("marks what is waiting to be discussed", () => {
+    line(
+      <MissionRow
+        mission={flagged(2)}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "2 mises à jour à discuter" }),
+    ).toBeInTheDocument();
+  });
+
+  it("puts the mark away with its column", () => {
+    line(
+      <MissionRow
+        mission={flagged(2)}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+        hidden={hiddenColumns(["review"])}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: /à discuter/ })).toBeNull();
   });
 });

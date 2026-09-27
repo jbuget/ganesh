@@ -37,7 +37,17 @@ export const NAME_COLUMN = "sticky left-0 w-[400px] min-w-[400px]";
 export const LEFT_MARGIN =
   "before:absolute before:inset-y-0 before:right-[calc(100%+1px)] before:z-10 before:w-6 before:bg-slate-50";
 
-export const THREAD_COLUMN = "sticky left-[400px] w-12 min-w-12";
+/**
+ * The column the update thread reads in, beside the name.
+ *
+ * It holds one mark — the count of updates and its icon — and is cut to it at
+ * two figures, « 20 💬 », which is what a thread reaches. Nothing holds a
+ * cell's content in: narrower than what it shows, it spills its icon over the
+ * strong rule and onto the phase of the row, which is what 48 px did. The
+ * figure is written out here and counted into `PINNED_WIDTH` below; the two
+ * read together, and change together.
+ */
+export const THREAD_COLUMN = "sticky left-[400px] w-16 min-w-16";
 
 /**
  * The line that detaches the name from the thread.
@@ -68,6 +78,17 @@ export { STRONG_SEPARATOR } from "@/lib/table-frame";
  * The last one gets none: it absorbs what remains when the screen is wider
  * than the table, so that no fixed column stretches.
  */
+/**
+ * What is waiting to be discussed, in a column of its own.
+ *
+ * It was a second mark in the thread's cell, where the two spilled onto the
+ * next column, and where a reader could not put it away: the review is a
+ * reading one comes to the list for on a Monday morning and ranges the rest of
+ * the week. It stays first of the columns that scroll, against the thread it
+ * is derived from — at the far end it would be off screen, which is no place
+ * for the mark one scans the list by.
+ */
+export const REVIEW_COLUMN = "w-[80px]";
 export const PHASE_COLUMN = "w-[150px]";
 export const PRIORITY_COLUMN = "w-[120px]";
 export const CATEGORY_COLUMN = "w-[210px]";
@@ -91,6 +112,7 @@ export const LAST_UPDATE_COLUMN = "w-[180px]";
  * together, and change together.
  */
 export type ColumnKey =
+  | "review"
   | "phase"
   | "priority"
   | "category"
@@ -110,6 +132,7 @@ export interface HideableColumn {
 }
 
 export const HIDEABLE_COLUMNS: readonly HideableColumn[] = [
+  { key: "review", label: "Revue", width: 80 },
   { key: "phase", label: "Phase", width: 150 },
   { key: "priority", label: "Priorité", width: 120 },
   { key: "category", label: "Catégorie", width: 210 },
@@ -126,7 +149,7 @@ export const HIDEABLE_COLUMNS: readonly HideableColumn[] = [
 ];
 
 /** The name and the thread, which no choice ever takes away. */
-const PINNED_WIDTH = 448;
+const PINNED_WIDTH = 464;
 
 export type HiddenColumns = ReadonlySet<ColumnKey>;
 

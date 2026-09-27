@@ -285,15 +285,21 @@ export function MissionRow({
       <TableCell
         className={[THREAD_COLUMN, STRONG_SEPARATOR, pinned, "text-right"].join(" ")}
       >
-        {/* Beside the count, in the same cell: both read the same thread,
-            and the mark is why one would open it. */}
-        <ReviewFlag count={mission.flagged_updates ?? 0} onOpen={onOpenThread} />
         <UpdatesCounter
           count={mission.comments}
           preview={preview}
           onOpen={onOpenThread}
         />
       </TableCell>
+
+      {/* What is waiting to be discussed, against the thread it is derived
+          from. It had been a second mark in the cell beside, where the two
+          spilled onto the phase and where nobody could put it away. */}
+      {shows("review") && (
+        <TableCell>
+          <ReviewFlag count={mission.flagged_updates ?? 0} onOpen={onOpenThread} />
+        </TableCell>
+      )}
 
       {shows("phase") && (
         <TableCell>
