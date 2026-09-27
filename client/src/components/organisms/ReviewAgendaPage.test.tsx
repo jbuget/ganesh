@@ -95,7 +95,24 @@ describe("ReviewAgendaPage", () => {
     render(<ReviewAgendaPage />);
     await userEvent.click(screen.getByRole("button", { name: "Portail" }));
 
-    expect(panel.open).toHaveBeenCalledWith(10);
+    expect(panel.open).toHaveBeenCalledWith(10, "updates", 1);
+  });
+
+  /**
+   * On the thread, and aimed at the line that has waited longest: that is
+   * what one comes to read, and without a line aimed at, the cursor goes to
+   * the composer and scrolls it out of sight.
+   */
+  it("opens on the thread, aimed at the oldest line of the chapter", async () => {
+    agenda.chapters = [
+      chapter({ items: [raised({ update_id: 7 }), raised({ update_id: 9 })] }),
+    ];
+    agenda.waiting = 2;
+
+    render(<ReviewAgendaPage />);
+    await userEvent.click(screen.getByRole("button", { name: "Portail" }));
+
+    expect(panel.open).toHaveBeenCalledWith(10, "updates", 7);
   });
 
   it("agrees in the singular on one line and one project", () => {

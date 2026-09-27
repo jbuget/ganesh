@@ -71,10 +71,21 @@ export function ReviewAgendaPage() {
               <h2 className="flex items-baseline gap-2 border-b border-slate-300 pb-1">
                 {/* Le panneau plutôt que la page : on prépare une revue en
                     parcourant la liste, et quitter l'écran pour chaque projet
-                    ferait perdre à chaque fois où l'on en était. */}
+                    ferait perdre à chaque fois où l'on en était.
+
+                    Sur le fil, et visé sur la première ligne du chapitre —
+                    celle qui a le plus attendu. C'est ce qu'on vient lire, et
+                    sans ligne visée le curseur file au composeur, qui la
+                    ferait défiler hors de vue. */}
                 <button
                   type="button"
-                  onClick={() => panel.open(chapter.projectId)}
+                  onClick={() =>
+                    panel.open(
+                      chapter.projectId,
+                      "updates",
+                      chapter.items[0]?.update_id,
+                    )
+                  }
                   className="cursor-pointer text-sm font-medium text-slate-900 hover:underline"
                 >
                   {chapter.label}
