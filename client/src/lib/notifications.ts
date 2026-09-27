@@ -139,6 +139,10 @@ const WORDINGS: Record<
     what: "vous a mentionné dans une mise à jour sur",
     about: projectLabel(line),
   }),
+  "update.replied": (line) => ({
+    what: "a répondu à une mise à jour sur",
+    about: projectLabel(line),
+  }),
   // The title travels on the line: what is waiting is read from the bell,
   // without having to open it — and it still reads if the need is withdrawn.
   "request.submitted": (line) => ({
@@ -154,7 +158,11 @@ function repeats(line: NotificationResponse): string | undefined {
 }
 
 /** The kinds that speak of one line of a thread, rather than of a mission. */
-const ABOUT_AN_UPDATE: NotificationKind[] = ["project.update_posted", "update.mention"];
+const ABOUT_AN_UPDATE: NotificationKind[] = [
+  "project.update_posted",
+  "update.mention",
+  "update.replied",
+];
 
 /**
  * Where a line leads.

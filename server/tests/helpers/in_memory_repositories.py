@@ -48,6 +48,7 @@ from src.modules.planning.domain.repositories.simulation_repository import (
     SimulationRepository,
 )
 from src.modules.projects.domain.entities.activity import Activity
+from src.modules.projects.domain.entities.comment_reaction import CommentReaction
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectCategory,
@@ -58,6 +59,7 @@ from src.modules.projects.domain.entities.project_attachment import ProjectAttac
 from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
+from src.modules.projects.domain.entities.update_comment import UpdateComment
 from src.modules.projects.domain.entities.update_reaction import (
     Reaction,
     UpdateReaction,
@@ -66,6 +68,9 @@ from src.modules.projects.domain.repositories.activity_repository import (
     ActivityRepository,
 )
 from src.modules.projects.domain.repositories.attachment_store import AttachmentStore
+from src.modules.projects.domain.repositories.comment_reaction_repository import (
+    CommentReactionRepository,
+)
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -80,6 +85,9 @@ from src.modules.projects.domain.repositories.project_repository import (
 )
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
+)
+from src.modules.projects.domain.repositories.update_comment_repository import (
+    UpdateCommentRepository,
 )
 from src.modules.projects.domain.repositories.update_reaction_repository import (
     UpdateReactionRepository,
@@ -757,6 +765,86 @@ class InMemoryUpdateReactionRepository(UpdateReactionRepository):
             for one in self.reactions
             if not (
                 one.update_id == update_id
+                and one.user_id == user_id
+                and one.reaction == reaction
+            )
+        ]
+
+
+class InMemoryUpdateCommentRepository(UpdateCommentRepository):
+    def __init__(self, updates: InMemoryProjectUpdateRepository | None = None) -> None:
+        self.comments: list[UpdateComment] = []
+        self._next_id = 1
+        # Which mission a reply belongs to is read through the update it
+        # answers, as the SQL repository reads it through a join.
+        self._updates = updates
+
+    async def get(self, comment_id: int) -> UpdateComment | None:
+        return next((c for c in self.comments if c.id == comment_id), None)
+
+    async def list_for_updates(
+        self, update_ids: Sequence[int]
+    ) -> dict[int, list[UpdateComment]]:
+        by_update: dict[int, list[UpdateComment]] = {}
+        for one in sorted(self.comments, key=lambda c: (c.published_at, c.id or 0)):
+            if one.update_id in update_ids:
+                by_update.setdefault(one.update_id, []).append(one)
+        return by_update
+
+    async def list_for_project(self, project_id: int) -> list[UpdateComment]:
+        if self._updates is None:
+            return []
+        theirs = {
+            update.id for update in await self._updates.list_for_project(project_id)
+        }
+        return [one for one in self.comments if one.update_id in theirs]
+
+    async def authors_for_update(self, update_id: int) -> list[int]:
+        seen: list[int] = []
+        for one in sorted(self.comments, key=lambda c: (c.published_at, c.id or 0)):
+            if one.update_id == update_id and one.author_id not in seen:
+                seen.append(one.author_id)
+        return seen
+
+    async def add(self, comment: UpdateComment) -> UpdateComment:
+        comment.id = self._next_id
+        self._next_id += 1
+        self.comments.append(comment)
+        return comment
+
+    async def update(self, comment: UpdateComment) -> UpdateComment:
+        return comment
+
+
+class InMemoryCommentReactionRepository(CommentReactionRepository):
+    def __init__(self) -> None:
+        self.reactions: list[CommentReaction] = []
+
+    async def list_for_comments(
+        self, comment_ids: Sequence[int]
+    ) -> dict[int, list[CommentReaction]]:
+        by_comment: dict[int, list[CommentReaction]] = {}
+        for one in sorted(self.reactions, key=lambda r: r.at):
+            if one.comment_id in comment_ids:
+                by_comment.setdefault(one.comment_id, []).append(one)
+        return by_comment
+
+    async def add(self, reaction: CommentReaction) -> None:
+        already = any(
+            one.comment_id == reaction.comment_id
+            and one.user_id == reaction.user_id
+            and one.reaction == reaction.reaction
+            for one in self.reactions
+        )
+        if not already:
+            self.reactions.append(reaction)
+
+    async def remove(self, comment_id: int, user_id: int, reaction: Reaction) -> None:
+        self.reactions = [
+            one
+            for one in self.reactions
+            if not (
+                one.comment_id == comment_id
                 and one.user_id == user_id
                 and one.reaction == reaction
             )

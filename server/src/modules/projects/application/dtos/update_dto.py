@@ -55,3 +55,42 @@ class FlagUpdateCommand:
 
     actor_id: int
     update_id: int
+
+
+@dataclass(frozen=True)
+class PostCommentCommand:
+    """Answering an update, under it."""
+
+    actor_id: int
+    update_id: int
+    body: str
+
+
+@dataclass(frozen=True)
+class EditCommentCommand:
+    """Correcting a reply already written."""
+
+    actor_id: int
+    comment_id: int
+    body: str
+
+
+@dataclass(frozen=True)
+class RemoveCommentCommand:
+    """Withdrawing a reply. It keeps its place in the conversation."""
+
+    actor_id: int
+    comment_id: int
+
+
+@dataclass(frozen=True)
+class ReactToCommentCommand:
+    """Leaving a sign under a reply, or taking it back.
+
+    The same command carries both gestures, as `ReactCommand` does above it,
+    and names nobody but its own actor.
+    """
+
+    actor_id: int
+    comment_id: int
+    reaction: Reaction

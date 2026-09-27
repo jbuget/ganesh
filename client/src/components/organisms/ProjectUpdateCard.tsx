@@ -1,13 +1,13 @@
 "use client";
 
-import { Flag, FlagOff, Pencil, Trash2 } from "lucide-react";
+import { CornerDownRight, Flag, FlagOff, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { DeleteUpdateDialog } from "@/components/atoms/DeleteUpdateDialog";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
-import { RichTextEditor } from "@/components/atoms/RichTextEditor";
 import { UpdateReactions } from "@/components/atoms/UpdateReactions";
-import { Button } from "@/components/ui/button";
+import { MessageComposer } from "@/components/molecules/MessageComposer";
+import { UpdateCommentCard } from "@/components/organisms/UpdateCommentCard";
 import type { Reaction, ProjectUpdateResponse } from "@/lib/api/generated/model";
 import { renderMentions, type MentionablePerson } from "@/lib/mentions";
 import { since } from "@/lib/relative-dates";
@@ -29,6 +29,22 @@ interface ProjectUpdateCardProps {
   onEdit: (body: string) => Promise<void>;
   onRemove: () => Promise<void>;
   onReact: (reaction: Reaction, leaving: boolean) => Promise<void>;
+  /** Answers the update, under it. */
+  onReply: (body: string) => Promise<void>;
+  onEditComment: (commentId: number, body: string) => Promise<void>;
+  onRemoveComment: (commentId: number) => Promise<void>;
+  onReactToComment: (
+    commentId: number,
+    reaction: Reaction,
+    leaving: boolean,
+  ) => Promise<void>;
+  /**
+   * Where an image pasted into a reply is put down.
+   *
+   * One stock: a file dropped in a conversation is a file of the project like
+   * any other, and the « Fichiers » tab lists it beside the rest.
+   */
+  onImageDrop?: (file: File) => Promise<string>;
   /**
    * Puts the update on the agenda of the next revue, or takes it off.
    *
@@ -73,11 +89,18 @@ export function ProjectUpdateCard({
   onEdit,
   onRemove,
   onReact,
+  onReply,
+  onEditComment,
+  onRemoveComment,
+  onReactToComment,
+  onImageDrop,
   onFlag,
   editable = true,
 }: ProjectUpdateCardProps) {
   const [editing, setEditing] = useState(false);
   const [confirmingRemoval, setConfirmingRemoval] = useState(false);
+  const [answering, setAnswering] = useState(false);
+  const conversation = update.comments ?? [];
   const card = useRef<HTMLElement>(null);
 
   // The thread loads after the panel opens, and the update aimed at may be the
@@ -191,11 +214,12 @@ export function ProjectUpdateCard({
       {update.is_deleted ? (
         <p className="text-sm text-slate-400 italic">Message supprimé</p>
       ) : editing ? (
-        <Correction
+        <MessageComposer
           value={update.body}
           people={people}
+          confirm="Enregistrer"
           onCancel={() => setEditing(false)}
-          onSave={async (body) => {
+          onConfirm={async (body) => {
             await onEdit(body);
             setEditing(false);
           }}
@@ -211,6 +235,59 @@ export function ProjectUpdateCard({
         </>
       )}
 
+      {conversation.length > 0 && (
+        // Off the update by a rule and an indent: what was said about a
+        // subject reads as hanging from it, not as more of it.
+        <div className="mt-3 space-y-3 border-l-2 border-slate-200 pl-3">
+          {conversation.map((comment) => (
+            <UpdateCommentCard
+              key={comment.id}
+              comment={comment}
+              now={now}
+              people={people}
+              editable={editable}
+              onEdit={(body) => onEditComment(comment.id, body)}
+              onRemove={() => onRemoveComment(comment.id)}
+              onReact={(reaction, leaving) =>
+                onReactToComment(comment.id, reaction, leaving)
+              }
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Answering a withdrawn update is refused by the domain: there is
+          nothing left to answer, and the replies already written stay. */}
+      {editable && !update.is_deleted && !editing && (
+        // The same rule as the conversation above, drawn in nothing: what
+        // one is about to write lines up with what is already there.
+        <div className="mt-2 border-l-2 border-transparent pl-3">
+          {answering ? (
+            <MessageComposer
+              people={people}
+              placeholder="Répondez, et mentionnez quelqu'un avec @"
+              confirm="Répondre"
+              autoFocus
+              onImageDrop={onImageDrop}
+              onCancel={() => setAnswering(false)}
+              onConfirm={async (body) => {
+                await onReply(body);
+                setAnswering(false);
+              }}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setAnswering(true)}
+              className="inline-flex cursor-pointer items-center gap-1 rounded px-1 py-0.5 text-xs text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
+            >
+              <CornerDownRight className="size-3.5" aria-hidden />
+              Répondre
+            </button>
+          )}
+        </div>
+      )}
+
       <DeleteUpdateDialog
         open={confirmingRemoval}
         onOpenChange={setConfirmingRemoval}
@@ -220,39 +297,5 @@ export function ProjectUpdateCard({
         }}
       />
     </article>
-  );
-}
-
-/** Correcting an update, in place in the thread. */
-function Correction({
-  value,
-  people,
-  onSave,
-  onCancel,
-}: {
-  value: string;
-  people: MentionablePerson[];
-  onSave: (body: string) => Promise<void>;
-  onCancel: () => void;
-}) {
-  const [body, setBody] = useState(value);
-
-  return (
-    <div className="space-y-2">
-      <RichTextEditor
-        value={value}
-        mentionable={people}
-        onChange={setBody}
-        onSubmit={() => void onSave(body)}
-      />
-      <div className="flex items-center gap-2">
-        <Button size="sm" disabled={!body.trim()} onClick={() => void onSave(body)}>
-          Enregistrer
-        </Button>
-        <Button size="sm" variant="ghost" onClick={onCancel}>
-          Annuler
-        </Button>
-      </div>
-    </div>
   );
 }

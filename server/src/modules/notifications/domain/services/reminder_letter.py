@@ -58,6 +58,7 @@ WORDINGS: dict[NotificationKind, Wording] = {
         "clé d'API révoquée", "clés d'API révoquées"
     ),
     NotificationKind.UPDATE_MENTION: Wording("mention", "mentions"),
+    NotificationKind.UPDATE_REPLIED: Wording("réponse", "réponses"),
     NotificationKind.REQUEST_SUBMITTED: Wording("demande soumise", "demandes soumises"),
 }
 

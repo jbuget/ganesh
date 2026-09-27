@@ -15,6 +15,14 @@ interface DeleteUpdateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void | Promise<void>;
+  /**
+   * Whether what is being withdrawn is a reply rather than an update.
+   *
+   * The same gesture with the same consequences, so the same dialog: only
+   * the two nouns move. Two dialogs saying the same thing would be two
+   * chances to word the warning differently.
+   */
+  reply?: boolean;
 }
 
 /**
@@ -33,16 +41,19 @@ export function DeleteUpdateDialog({
   open,
   onOpenChange,
   onConfirm,
+  reply = false,
 }: DeleteUpdateDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Supprimer cette mise à jour ?</AlertDialogTitle>
+          <AlertDialogTitle>
+            {reply ? "Supprimer cette réponse ?" : "Supprimer cette mise à jour ?"}
+          </AlertDialogTitle>
           <AlertDialogDescription>
             Son texte et les réactions qu&apos;elle a reçues seront perdus
-            définitivement. Elle gardera sa place dans le fil, marquée « Message
-            supprimé ».
+            définitivement. Elle gardera sa place dans{" "}
+            {reply ? "la conversation" : "le fil"}, marquée « Message supprimé ».
           </AlertDialogDescription>
         </AlertDialogHeader>
 

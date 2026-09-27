@@ -2,11 +2,28 @@
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Protocol
 
-from src.modules.projects.domain.entities.update_reaction import (
-    Reaction,
-    UpdateReaction,
-)
+from src.modules.projects.domain.entities.update_reaction import Reaction
+
+
+class Sign(Protocol):
+    """What it takes to be counted in a bar: a sign, who left it, and when.
+
+    What it was left *under* is the one thing the tally never asks: an update
+    and a comment are read the same way, and a bar drawn twice over would be
+    two chances to draw it differently.
+    """
+
+    @property
+    def reaction(self) -> Reaction: ...
+
+    @property
+    def user_id(self) -> int: ...
+
+    @property
+    def at(self) -> datetime: ...
 
 
 @dataclass(frozen=True)
@@ -25,14 +42,14 @@ class ReactionTally:
         return len(self.user_ids)
 
 
-def tally(reactions: Iterable[UpdateReaction]) -> list[ReactionTally]:
+def tally(reactions: Iterable[Sign]) -> list[ReactionTally]:
     """Gathers reactions by sign, in the order the set declares.
 
     Always the same order, whoever reacted first: a bar that reshuffled itself
     as people came could not be read at a glance. Within one sign, the order is
     the order people came.
     """
-    by_sign: dict[Reaction, list[UpdateReaction]] = {}
+    by_sign: dict[Reaction, list[Sign]] = {}
     for one in reactions:
         by_sign.setdefault(one.reaction, []).append(one)
 

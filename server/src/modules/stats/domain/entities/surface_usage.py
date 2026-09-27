@@ -117,6 +117,12 @@ SURFACE_OF: dict[AuditAction, Surface] = {
     # property of the words, and it is opened and answered where they are.
     AuditAction.UPDATE_FLAG: Surface.PROJECT_UPDATES,
     AuditAction.UPDATE_CLEAR: Surface.PROJECT_UPDATES,
+    # Answering under an update. The thread's surface too: whether people
+    # answer one another is what makes the tab a conversation rather than a
+    # noticeboard, and splitting it off would ask the same question twice.
+    AuditAction.COMMENT_POST: Surface.PROJECT_UPDATES,
+    AuditAction.COMMENT_EDIT: Surface.PROJECT_UPDATES,
+    AuditAction.COMMENT_REMOVE: Surface.PROJECT_UPDATES,
     # What a project carries besides words. A line of its own rather than one
     # shared with the thread: an image pasted into an update and a report
     # dropped on the tab are the same gesture on the same store, and the

@@ -46,6 +46,10 @@ class NotificationKind(StrEnum):
 
     # Someone is talking to me.
     UPDATE_MENTION = "update.mention"
+    # Somebody answered under an update I wrote, or under one I had
+    # already answered. Being in a conversation is what puts one here;
+    # being on the mission is what `project.update_posted` is for.
+    UPDATE_REPLIED = "update.replied"
 
     # What the company is asking for. Managers alone are told: they are the
     # ones who weigh it, and a need waiting on nobody is a need that sleeps.

@@ -5,13 +5,15 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { BoardMemberResponse } from "./boardMemberResponse";
-import type { UpdateCommentResponse } from "./updateCommentResponse";
 import type { UpdateReactionResponse } from "./updateReactionResponse";
 
 /**
- * One update from the follow-up thread.
+ * One reply written under an update.
+ *
+ * Flatter than what it hangs from: a reply carries no flag for the revue
+ * and nothing the board reads — those belong to the update it answers.
  */
-export interface ProjectUpdateResponse {
+export interface UpdateCommentResponse {
   id: number;
   author: BoardMemberResponse;
   body: string;
@@ -20,8 +22,4 @@ export interface ProjectUpdateResponse {
   is_deleted: boolean;
   is_mine: boolean;
   reactions?: UpdateReactionResponse[];
-  is_flagged?: boolean;
-  flagged_by?: string | null;
-  flagged_at?: string | null;
-  comments?: UpdateCommentResponse[];
 }

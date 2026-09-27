@@ -23,7 +23,9 @@ from src.modules.projects.presentation.dependencies import (
 )
 from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
+    InMemoryCommentReactionRepository,
     InMemoryProjectUpdateRepository,
+    InMemoryUpdateCommentRepository,
     InMemoryUpdateReactionRepository,
     InMemoryUserRepository,
 )
@@ -76,7 +78,11 @@ async def sign_in(as_who: User = NINO) -> tuple[AsyncClient, ProjectUpdate]:
     )
     app.dependency_overrides[get_list_updates_use_case] = (
         lambda: ListProjectUpdatesUseCase(
-            updates, InMemoryUserRepository([ALICE, NINO]), reactions
+            updates,
+            InMemoryUserRepository([ALICE, NINO]),
+            reactions,
+            InMemoryUpdateCommentRepository(updates),
+            InMemoryCommentReactionRepository(),
         )
     )
     return (

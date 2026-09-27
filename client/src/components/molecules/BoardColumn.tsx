@@ -14,6 +14,8 @@ interface BoardColumnProps {
   now: Date;
   onContributorsChange?: () => void | Promise<void>;
   onOpen?: (projectId: number) => void;
+  /** Opens a mission on its thread, with the composer ready. */
+  onOpenThread?: (projectId: number) => void;
   /** The board is filtered: cards can be read, but no longer arranged. */
   frozen?: boolean;
 }
@@ -34,6 +36,7 @@ export function BoardColumn({
   now,
   onContributorsChange,
   onOpen,
+  onOpenThread,
   frozen,
 }: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
@@ -78,6 +81,7 @@ export function BoardColumn({
               now={now}
               onContributorsChange={onContributorsChange}
               onOpen={onOpen}
+              onOpenThread={onOpenThread}
               frozen={frozen}
             />
           ))}

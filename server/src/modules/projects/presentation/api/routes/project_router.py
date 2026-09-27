@@ -66,10 +66,14 @@ from src.modules.projects.application.dtos.project_dto import (
     UpdateProjectCommand,
 )
 from src.modules.projects.application.dtos.update_dto import (
+    EditCommentCommand,
     EditUpdateCommand,
     FlagUpdateCommand,
+    PostCommentCommand,
     PostUpdateCommand,
     ReactCommand,
+    ReactToCommentCommand,
+    RemoveCommentCommand,
     RemoveUpdateCommand,
 )
 from src.modules.projects.application.use_cases.archive_project import (
@@ -133,6 +137,13 @@ from src.modules.projects.application.use_cases.project_updates import (
     RemoveProjectUpdateUseCase,
     WithdrawReactionUseCase,
 )
+from src.modules.projects.application.use_cases.update_comments import (
+    EditCommentUseCase,
+    PostCommentUseCase,
+    ReactToCommentUseCase,
+    RemoveCommentUseCase,
+    WithdrawCommentReactionUseCase,
+)
 from src.modules.projects.application.use_cases.update_project import (
     UpdateProjectUseCase,
 )
@@ -168,6 +179,7 @@ from src.modules.projects.presentation.api.mappers.project_mapper import (
     to_project_detail_response,
     to_project_response,
     to_project_update_response,
+    to_update_comment_response,
 )
 from src.modules.projects.presentation.api.schemas.project_schemas import (
     ActivityResponse,
@@ -183,6 +195,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     ImportProjectsRequest,
     ImportReportResponse,
     MoveProjectRequest,
+    PostCommentRequest,
     PostUpdateRequest,
     ProjectAttachmentResponse,
     ProjectDetailResponse,
@@ -192,6 +205,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     ProjectUpdateResponse,
     RenameAttachmentRequest,
     UpdateActivityRequest,
+    UpdateCommentResponse,
     UpdateDescriptionRequest,
     UpdateProjectDetailRequest,
     UpdateProjectRegistryRequest,
@@ -212,6 +226,7 @@ from src.modules.projects.presentation.dependencies import (
     get_delete_project_use_case,
     get_detach_project_use_case,
     get_download_attachment_use_case,
+    get_edit_comment_use_case,
     get_edit_update_use_case,
     get_export_catalog_use_case,
     get_flag_update_use_case,
@@ -222,10 +237,13 @@ from src.modules.projects.presentation.dependencies import (
     get_list_projects_use_case,
     get_list_updates_use_case,
     get_move_project_use_case,
+    get_post_comment_use_case,
     get_post_update_use_case,
     get_project_detail_use_case,
+    get_react_to_comment_use_case,
     get_react_to_update_use_case,
     get_remove_attachment_use_case,
+    get_remove_comment_use_case,
     get_remove_project_link_use_case,
     get_remove_update_use_case,
     get_rename_attachment_use_case,
@@ -238,6 +256,7 @@ from src.modules.projects.presentation.dependencies import (
     get_update_project_registry_use_case,
     get_update_project_use_case,
     get_upload_attachment_use_case,
+    get_withdraw_comment_reaction_use_case,
     get_withdraw_reaction_use_case,
 )
 from src.modules.users.domain.entities.user import User
@@ -962,6 +981,141 @@ async def withdraw_project_update_reaction(
     assert current_user.id is not None
     await use_case.execute(
         ReactCommand(actor_id=current_user.id, update_id=update_id, reaction=reaction)
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/{project_id}/updates/{update_id}/comments",
+    response_model=UpdateCommentResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="postUpdateComment",
+)
+async def post_update_comment(
+    project_id: int,
+    update_id: int,
+    payload: PostCommentRequest,
+    current_user: User = Depends(get_contributor),
+    use_case: PostCommentUseCase = Depends(get_post_comment_use_case),
+    list_updates: ListProjectUpdatesUseCase = Depends(get_list_updates_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> UpdateCommentResponse:
+    """Answers an update, under it.
+
+    Human-only, where posting an update is also a machine's: a tool posts what
+    it has to say on the mission and does not join a conversation.
+    """
+    assert current_user.id is not None
+    comment = await use_case.execute(
+        PostCommentCommand(
+            actor_id=current_user.id, update_id=update_id, body=payload.body
+        )
+    )
+    await session.commit()
+    signed = next(
+        one
+        for update in await list_updates.execute(project_id)
+        for one in update.comments
+        if one.comment.id == comment.id
+    )
+    return to_update_comment_response(signed, current_user.id)
+
+
+@router.put(
+    "/{project_id}/updates/{update_id}/comments/{comment_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="editUpdateComment",
+)
+async def edit_update_comment(
+    project_id: int,
+    update_id: int,
+    comment_id: int,
+    payload: PostCommentRequest,
+    current_user: User = Depends(get_contributor),
+    use_case: EditCommentUseCase = Depends(get_edit_comment_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Corrects a reply. Only its author may."""
+    assert current_user.id is not None
+    await use_case.execute(
+        EditCommentCommand(
+            actor_id=current_user.id, comment_id=comment_id, body=payload.body
+        )
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete(
+    "/{project_id}/updates/{update_id}/comments/{comment_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="removeUpdateComment",
+)
+async def remove_update_comment(
+    project_id: int,
+    update_id: int,
+    comment_id: int,
+    current_user: User = Depends(get_contributor),
+    use_case: RemoveCommentUseCase = Depends(get_remove_comment_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Withdraws a reply. It keeps its place in the conversation."""
+    assert current_user.id is not None
+    await use_case.execute(
+        RemoveCommentCommand(actor_id=current_user.id, comment_id=comment_id)
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.put(
+    "/{project_id}/updates/{update_id}/comments/{comment_id}/reactions/{reaction}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="reactToUpdateComment",
+)
+async def react_to_update_comment(
+    project_id: int,
+    update_id: int,
+    comment_id: int,
+    reaction: Reaction,
+    current_user: User = Depends(get_contributor),
+    use_case: ReactToCommentUseCase = Depends(get_react_to_comment_use_case),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Leaves a sign under a reply. Leaving it twice changes nothing."""
+    assert current_user.id is not None
+    await use_case.execute(
+        ReactToCommentCommand(
+            actor_id=current_user.id, comment_id=comment_id, reaction=reaction
+        )
+    )
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete(
+    "/{project_id}/updates/{update_id}/comments/{comment_id}/reactions/{reaction}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="withdrawUpdateCommentReaction",
+)
+async def withdraw_update_comment_reaction(
+    project_id: int,
+    update_id: int,
+    comment_id: int,
+    reaction: Reaction,
+    current_user: User = Depends(get_contributor),
+    use_case: WithdrawCommentReactionUseCase = Depends(
+        get_withdraw_comment_reaction_use_case
+    ),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Takes one's own sign back. Taking back one never left changes nothing."""
+    assert current_user.id is not None
+    await use_case.execute(
+        ReactToCommentCommand(
+            actor_id=current_user.id, comment_id=comment_id, reaction=reaction
+        )
     )
     await session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

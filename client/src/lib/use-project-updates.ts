@@ -6,12 +6,17 @@ import type { Reaction, ProjectUpdateResponse } from "@/lib/api/generated/model"
 import {
   clearProjectUpdateFlag,
   editProjectUpdate,
+  editUpdateComment,
   listProjectUpdates,
   flagProjectUpdate,
   postProjectUpdate,
+  postUpdateComment,
   reactToProjectUpdate,
+  reactToUpdateComment,
   removeProjectUpdate,
+  removeUpdateComment,
   withdrawProjectUpdateReaction,
+  withdrawUpdateCommentReaction,
 } from "@/lib/api/generated/projects/projects";
 
 /**
@@ -94,6 +99,41 @@ export function useProjectUpdates(
       await (leaving
         ? reactToProjectUpdate(projectId, updateId, reaction)
         : withdrawProjectUpdateReaction(projectId, updateId, reaction));
+      await reload();
+    },
+
+    /**
+     * Answering an update, and the three gestures on the answer.
+     *
+     * The thread alone is read back, and the screen one came from is not
+     * told: the reference list and the kanban announce how many updates a
+     * mission carries and what its latest one says, and a reply changes
+     * neither.
+     */
+    async reply(updateId: number, body: string) {
+      await postUpdateComment(projectId, updateId, { body });
+      await reload();
+    },
+
+    async editReply(updateId: number, commentId: number, body: string) {
+      await editUpdateComment(projectId, updateId, commentId, { body });
+      await reload();
+    },
+
+    async removeReply(updateId: number, commentId: number) {
+      await removeUpdateComment(projectId, updateId, commentId);
+      await reload();
+    },
+
+    async reactToReply(
+      updateId: number,
+      commentId: number,
+      reaction: Reaction,
+      leaving: boolean,
+    ) {
+      await (leaving
+        ? reactToUpdateComment(projectId, updateId, commentId, reaction)
+        : withdrawUpdateCommentReaction(projectId, updateId, commentId, reaction));
       await reload();
     },
   };

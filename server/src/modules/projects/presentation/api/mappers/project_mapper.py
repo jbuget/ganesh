@@ -11,7 +11,11 @@ from src.modules.projects.application.use_cases.list_projects import ListedProje
 from src.modules.projects.application.use_cases.project_attachments import (
     SignedAttachment,
 )
-from src.modules.projects.application.use_cases.project_updates import SignedUpdate
+from src.modules.projects.application.use_cases.project_updates import (
+    SignedComment,
+    SignedReaction,
+    SignedUpdate,
+)
 from src.modules.projects.domain.entities.activity import Activity
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_link import ProjectLink
@@ -39,6 +43,7 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     ProjectListItemResponse,
     ProjectResponse,
     ProjectUpdateResponse,
+    UpdateCommentResponse,
     UpdateReactionResponse,
 )
 from src.modules.users.domain.entities.user import User
@@ -236,33 +241,63 @@ def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
     )
 
 
+def _signer(author: User) -> BoardMemberResponse:
+    """How the thread names whoever wrote a line of it."""
+    assert author.id is not None
+    return BoardMemberResponse(
+        id=author.id, display_name=author.label, initials=initials(author.label)
+    )
+
+
+def _bar(
+    reactions: list[SignedReaction], reader_id: int
+) -> list[UpdateReactionResponse]:
+    """The signs left under one message, drawn the same way everywhere."""
+    return [
+        UpdateReactionResponse(
+            reaction=one.reaction,
+            people=[who.label for who in one.people],
+            is_mine=any(who.id == reader_id for who in one.people),
+        )
+        for one in reactions
+    ]
+
+
+def to_update_comment_response(
+    signed: SignedComment, reader_id: int
+) -> UpdateCommentResponse:
+    assert signed.comment.id is not None
+    return UpdateCommentResponse(
+        id=signed.comment.id,
+        author=_signer(signed.author),
+        body=signed.comment.body,
+        published_at=signed.comment.published_at,
+        edited_at=signed.comment.edited_at,
+        is_deleted=signed.comment.is_deleted,
+        is_mine=signed.comment.author_id == reader_id,
+        reactions=_bar(signed.reactions, reader_id),
+    )
+
+
 def to_project_update_response(
     signed: SignedUpdate, reader_id: int
 ) -> ProjectUpdateResponse:
     assert signed.update.id is not None and signed.author.id is not None
     return ProjectUpdateResponse(
         id=signed.update.id,
-        author=BoardMemberResponse(
-            id=signed.author.id,
-            display_name=signed.author.label,
-            initials=initials(signed.author.label),
-        ),
+        author=_signer(signed.author),
         body=signed.update.body,
         published_at=signed.update.published_at,
         edited_at=signed.update.edited_at,
         is_deleted=signed.update.is_deleted,
         is_mine=signed.update.author_id == reader_id,
-        reactions=[
-            UpdateReactionResponse(
-                reaction=one.reaction,
-                people=[who.label for who in one.people],
-                is_mine=any(who.id == reader_id for who in one.people),
-            )
-            for one in signed.reactions
-        ],
+        reactions=_bar(signed.reactions, reader_id),
         is_flagged=signed.update.is_flagged,
         flagged_by=signed.raised_by.label if signed.raised_by else None,
         flagged_at=signed.update.flagged_at if signed.update.is_flagged else None,
+        comments=[
+            to_update_comment_response(one, reader_id) for one in signed.comments
+        ],
     )
 
 

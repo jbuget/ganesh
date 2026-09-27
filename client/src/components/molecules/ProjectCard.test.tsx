@@ -252,6 +252,82 @@ describe("opening the mission", () => {
     expect(document.querySelector("svg.lucide-grip-vertical")).toBeNull();
   });
 
+  it("opens the thread from the bubble, not the sheet", () => {
+    const onOpen = vi.fn();
+    const onOpenThread = vi.fn();
+    render(
+      <ProjectCard
+        now={NOW}
+        card={card({ comments: 2 })}
+        onOpen={onOpen}
+        onOpenThread={onOpenThread}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "2 commentaires" }));
+
+    expect(onOpenThread).toHaveBeenCalledWith(1);
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it("opens the thread from a bubble nobody has written in", () => {
+    // One clicks it precisely to be the first to say something.
+    const onOpenThread = vi.fn();
+    render(
+      <ProjectCard
+        now={NOW}
+        card={card()}
+        onOpen={vi.fn()}
+        onOpenThread={onOpenThread}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Aucun commentaire" }));
+
+    expect(onOpenThread).toHaveBeenCalledWith(1);
+  });
+
+  it("opens the thread from the review flag too", () => {
+    const onOpenThread = vi.fn();
+    render(
+      <ProjectCard
+        now={NOW}
+        card={card({ flagged_updates: 2 })}
+        onOpen={vi.fn()}
+        onOpenThread={onOpenThread}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "2 mises à jour à discuter" }));
+
+    expect(onOpenThread).toHaveBeenCalledWith(1);
+  });
+
+  it("leads nowhere from a board that opens nothing", () => {
+    render(<ProjectCard now={NOW} card={card({ comments: 2 })} onOpen={vi.fn()} />);
+
+    expect(
+      screen.queryByRole("button", { name: "2 commentaires" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("opens no thread while the card follows the cursor", () => {
+    const onOpenThread = vi.fn();
+    render(
+      <ProjectCard
+        now={NOW}
+        card={card({ comments: 2 })}
+        onOpenThread={onOpenThread}
+        isDragging
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: "2 commentaires" }),
+    ).not.toBeInTheDocument();
+    expect(onOpenThread).not.toHaveBeenCalled();
+  });
+
   it("opens nothing while the card follows the cursor", () => {
     // The copy following the mouse stands for a gesture under way, not a target.
     const onOpen = vi.fn();

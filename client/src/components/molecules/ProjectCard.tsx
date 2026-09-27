@@ -39,6 +39,14 @@ interface ProjectCardProps {
   onContributorsChange?: () => void | Promise<void>;
   /** Opens the mission beside the board. */
   onOpen?: (projectId: number) => void;
+  /**
+   * Opens the mission on its thread, with the composer ready.
+   *
+   * The bubble and the flag both read the thread, so both lead there: one
+   * clicks the bubble to answer, and the flag to see what is waiting. The
+   * rest of the card opens the sheet, as before.
+   */
+  onOpenThread?: (projectId: number) => void;
 }
 
 /** A mission on the board. */
@@ -49,6 +57,7 @@ export function ProjectCard({
   isDragging,
   onContributorsChange,
   onOpen,
+  onOpenThread,
 }: ProjectCardProps) {
   const { project, parent } = card;
   const archived = !project.is_active;
@@ -56,6 +65,9 @@ export function ProjectCard({
   // years is not late because it is still running.
   const state = progress(card.build_days, project.estimated_days);
   const latest = card.latest_update;
+  // Nothing opens from the copy following the cursor: a click released after
+  // a drag must not open a panel.
+  const thread = isDragging ? undefined : onOpenThread;
 
   // The latest message in full and formatted, as in the reference list: the
   // card says how many messages the thread carries, the preview says whether
@@ -97,7 +109,10 @@ export function ProjectCard({
       ].join(" ")}
     >
       <div className="flex items-start gap-1.5">
-        <ReviewFlag count={card.flagged_updates ?? 0} />
+        <ReviewFlag
+          count={card.flagged_updates ?? 0}
+          onOpen={thread && (() => thread(project.id))}
+        />
         <h3
           className={`min-w-0 flex-1 text-sm font-medium ${
             archived ? "text-slate-500" : "text-slate-900"
@@ -197,6 +212,7 @@ export function ProjectCard({
             // The copy following the cursor announces nothing: a bubble opened
             // under the card mid-drag would hide where it lands.
             preview={isDragging ? undefined : preview}
+            onOpen={thread && (() => thread(project.id))}
           />
           <CardCounter
             icon={SquareStack}

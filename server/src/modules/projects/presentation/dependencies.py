@@ -81,6 +81,13 @@ from src.modules.projects.application.use_cases.project_updates import (
     RemoveProjectUpdateUseCase,
     WithdrawReactionUseCase,
 )
+from src.modules.projects.application.use_cases.update_comments import (
+    EditCommentUseCase,
+    PostCommentUseCase,
+    ReactToCommentUseCase,
+    RemoveCommentUseCase,
+    WithdrawCommentReactionUseCase,
+)
 from src.modules.projects.application.use_cases.update_project import (
     UpdateProjectUseCase,
 )
@@ -97,6 +104,9 @@ from src.modules.projects.domain.repositories.activity_repository import (
     ActivityRepository,
 )
 from src.modules.projects.domain.repositories.attachment_store import AttachmentStore
+from src.modules.projects.domain.repositories.comment_reaction_repository import (
+    CommentReactionRepository,
+)
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -112,8 +122,14 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
+from src.modules.projects.domain.repositories.update_comment_repository import (
+    UpdateCommentRepository,
+)
 from src.modules.projects.domain.repositories.update_reaction_repository import (
     UpdateReactionRepository,
+)
+from src.modules.projects.infrastructure.database.repositories.comment_reaction_repository_impl import (
+    SqlCommentReactionRepository,
 )
 from src.modules.projects.infrastructure.database.repositories.project_assignee_repository_impl import (
     SqlProjectAssigneeRepository,
@@ -126,6 +142,9 @@ from src.modules.projects.infrastructure.database.repositories.project_detail_re
 )
 from src.modules.projects.infrastructure.database.repositories.project_update_repository_impl import (
     SqlProjectUpdateRepository,
+)
+from src.modules.projects.infrastructure.database.repositories.update_comment_repository_impl import (
+    SqlUpdateCommentRepository,
 )
 from src.modules.projects.infrastructure.database.repositories.update_reaction_repository_impl import (
     SqlUpdateReactionRepository,
@@ -158,6 +177,18 @@ def get_update_reaction_repository(
     session: AsyncSession = Depends(get_db),
 ) -> UpdateReactionRepository:
     return SqlUpdateReactionRepository(session)
+
+
+def get_update_comment_repository(
+    session: AsyncSession = Depends(get_db),
+) -> UpdateCommentRepository:
+    return SqlUpdateCommentRepository(session)
+
+
+def get_comment_reaction_repository(
+    session: AsyncSession = Depends(get_db),
+) -> CommentReactionRepository:
+    return SqlCommentReactionRepository(session)
 
 
 def get_project_attachment_repository(
@@ -480,8 +511,65 @@ def get_list_updates_use_case(
     updates: ProjectUpdateRepository = Depends(get_project_update_repository),
     users: UserRepository = Depends(get_user_repository),
     reactions: UpdateReactionRepository = Depends(get_update_reaction_repository),
+    comments: UpdateCommentRepository = Depends(get_update_comment_repository),
+    comment_reactions: CommentReactionRepository = Depends(
+        get_comment_reaction_repository
+    ),
 ) -> ListProjectUpdatesUseCase:
-    return ListProjectUpdatesUseCase(updates=updates, users=users, reactions=reactions)
+    return ListProjectUpdatesUseCase(
+        updates=updates,
+        users=users,
+        reactions=reactions,
+        comments=comments,
+        comment_reactions=comment_reactions,
+    )
+
+
+def _conversation_write(
+    updates: ProjectUpdateRepository = Depends(get_project_update_repository),
+    comments: UpdateCommentRepository = Depends(get_update_comment_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> dict[str, object]:
+    """What the writes on a reply share.
+
+    Shorter than what an update's writes take: a reply tells the conversation
+    about itself and never the mission, so there is no assignee list to read.
+    """
+    return {"updates": updates, "comments": comments, "audit_logs": audit_logs}
+
+
+def get_post_comment_use_case(
+    repositories: dict[str, object] = Depends(_conversation_write),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
+) -> PostCommentUseCase:
+    return PostCommentUseCase(
+        notifications=notifications, **repositories  # type: ignore[arg-type]
+    )
+
+
+def get_edit_comment_use_case(
+    repositories: dict[str, object] = Depends(_conversation_write),
+) -> EditCommentUseCase:
+    return EditCommentUseCase(**repositories)  # type: ignore[arg-type]
+
+
+def get_remove_comment_use_case(
+    repositories: dict[str, object] = Depends(_conversation_write),
+) -> RemoveCommentUseCase:
+    return RemoveCommentUseCase(**repositories)  # type: ignore[arg-type]
+
+
+def get_react_to_comment_use_case(
+    comments: UpdateCommentRepository = Depends(get_update_comment_repository),
+    reactions: CommentReactionRepository = Depends(get_comment_reaction_repository),
+) -> ReactToCommentUseCase:
+    return ReactToCommentUseCase(comments=comments, reactions=reactions)
+
+
+def get_withdraw_comment_reaction_use_case(
+    reactions: CommentReactionRepository = Depends(get_comment_reaction_repository),
+) -> WithdrawCommentReactionUseCase:
+    return WithdrawCommentReactionUseCase(reactions=reactions)
 
 
 def get_react_to_update_use_case(
@@ -554,10 +642,11 @@ def get_list_attachments_use_case(
         get_project_attachment_repository
     ),
     updates: ProjectUpdateRepository = Depends(get_project_update_repository),
+    comments: UpdateCommentRepository = Depends(get_update_comment_repository),
     users: UserRepository = Depends(get_user_repository),
 ) -> ListProjectAttachmentsUseCase:
     return ListProjectAttachmentsUseCase(
-        attachments=attachments, updates=updates, users=users
+        attachments=attachments, updates=updates, comments=comments, users=users
     )
 
 

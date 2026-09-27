@@ -30,10 +30,12 @@ from src.shared.exceptions.domain_exceptions import (
 )
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
+    InMemoryCommentReactionRepository,
     InMemoryNotificationRepository,
     InMemoryProjectAssigneeRepository,
     InMemoryProjectRepository,
     InMemoryProjectUpdateRepository,
+    InMemoryUpdateCommentRepository,
     InMemoryUpdateReactionRepository,
     InMemoryUserRepository,
 )
@@ -82,7 +84,11 @@ def build(assigned: dict | None = None):
         EditProjectUpdateUseCase(**deps, assignees=assignees, notifications=delivery),
         RemoveProjectUpdateUseCase(**deps, assignees=assignees, notifications=delivery),
         ListProjectUpdatesUseCase(
-            updates=updates, users=deps["users"], reactions=reactions
+            updates=updates,
+            users=deps["users"],
+            reactions=reactions,
+            comments=InMemoryUpdateCommentRepository(updates),
+            comment_reactions=InMemoryCommentReactionRepository(),
         ),
         audit,
         inbox,

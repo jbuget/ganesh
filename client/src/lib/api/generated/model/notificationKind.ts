@@ -28,5 +28,6 @@ export const NotificationKind = {
   api_keycreated: "api_key.created",
   api_keyrevoked: "api_key.revoked",
   updatemention: "update.mention",
+  updatereplied: "update.replied",
   requestsubmitted: "request.submitted",
 } as const;

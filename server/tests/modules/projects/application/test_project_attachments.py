@@ -31,6 +31,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryProjectAttachmentRepository,
     InMemoryProjectRepository,
     InMemoryProjectUpdateRepository,
+    InMemoryUpdateCommentRepository,
     InMemoryUserRepository,
 )
 
@@ -75,6 +76,7 @@ def build():
         ListProjectAttachmentsUseCase(
             attachments=attachments,
             updates=updates,
+            comments=InMemoryUpdateCommentRepository(updates),
             users=InMemoryUserRepository([ALICE, NINO]),
         ),
         DownloadProjectAttachmentUseCase(attachments=attachments, store=store),

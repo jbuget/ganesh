@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { RichTextEditor } from "@/components/atoms/RichTextEditor";
-import { ProjectUpdateCard } from "@/components/molecules/ProjectUpdateCard";
+import { ProjectUpdateCard } from "@/components/organisms/ProjectUpdateCard";
 import { Button } from "@/components/ui/button";
 import { useTeammates } from "@/lib/api/queries";
 import { useProjectAttachments } from "@/lib/use-project-attachments";
@@ -123,6 +123,15 @@ export function ProjectUpdatesTab({
             onRemove={() => thread.remove(update.id)}
             onFlag={(raising) => thread.flag(update.id, raising)}
             onReact={(reaction, leaving) => thread.react(update.id, reaction, leaving)}
+            onReply={(body) => thread.reply(update.id, body)}
+            onEditComment={(commentId, body) =>
+              thread.editReply(update.id, commentId, body)
+            }
+            onRemoveComment={(commentId) => thread.removeReply(update.id, commentId)}
+            onReactToComment={(commentId, reaction, leaving) =>
+              thread.reactToReply(update.id, commentId, reaction, leaving)
+            }
+            onImageDrop={files.upload}
           />
         ))}
       </div>
