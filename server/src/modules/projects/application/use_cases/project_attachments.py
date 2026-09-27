@@ -23,6 +23,9 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
+from src.modules.projects.domain.repositories.update_comment_repository import (
+    UpdateCommentRepository,
+)
 from src.modules.projects.domain.services.attachment_references import referenced_ids
 from src.modules.projects.domain.services.storage_keys import key_for
 from src.modules.users.domain.entities.user import User
@@ -187,10 +190,12 @@ class ListProjectAttachmentsUseCase:
         self,
         attachments: ProjectAttachmentRepository,
         updates: ProjectUpdateRepository,
+        comments: UpdateCommentRepository,
         users: UserRepository,
     ) -> None:
         self._attachments = attachments
         self._updates = updates
+        self._comments = comments
         self._users = users
 
     async def execute(self, project_id: int) -> list[SignedAttachment]:
@@ -211,10 +216,18 @@ class ListProjectAttachmentsUseCase:
         ]
 
     async def _shown_in_updates(self, project_id: int) -> dict[int | None, int]:
-        """How many updates of the mission display each file."""
+        """How many messages of the mission's thread display each file.
+
+        Replies count as much as the updates they hang under: an image
+        pasted into an answer leaves the same hole when the file goes.
+        """
         counts: dict[int | None, int] = {}
-        for update in await self._updates.list_for_project(project_id):
-            for attachment_id in referenced_ids(update.body):
+        bodies = [
+            *(one.body for one in await self._updates.list_for_project(project_id)),
+            *(one.body for one in await self._comments.list_for_project(project_id)),
+        ]
+        for body in bodies:
+            for attachment_id in referenced_ids(body):
                 counts[attachment_id] = counts.get(attachment_id, 0) + 1
         return counts
 

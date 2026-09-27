@@ -3,18 +3,17 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from src.modules.projects.domain.entities.thread_message import ThreadMessage
+from src.modules.projects.domain.entities.update_comment import UpdateComment
 from src.modules.projects.domain.entities.update_reaction import (
     Reaction,
     UpdateReaction,
 )
-from src.shared.exceptions.domain_exceptions import (
-    ForbiddenActionError,
-    ValidationError,
-)
+from src.shared.exceptions.domain_exceptions import ForbiddenActionError
 
 
 @dataclass
-class ProjectUpdate:
+class ProjectUpdate(ThreadMessage):
     """What someone comes to say about how a mission is going.
 
     An update is not erased but marked deleted: the thread keeps its order and
@@ -23,13 +22,7 @@ class ProjectUpdate:
     answers for their own words.
     """
 
-    id: int | None
     project_id: int
-    author_id: int
-    body: str
-    published_at: datetime
-    edited_at: datetime | None = None
-    deleted_at: datetime | None = None
     #: When somebody said this deserved discussing at the next revue, and who.
     #: Cleared in the meeting: a mark nobody ever lowers stops meaning anything
     #: once every thread carries one.
@@ -38,16 +31,8 @@ class ProjectUpdate:
     cleared_at: datetime | None = None
     cleared_by: int | None = None
 
-    def __post_init__(self) -> None:
-        if self.deleted_at is not None:
-            return
-        self.body = self.body.strip()
-        if not self.body:
-            raise ValidationError("An update cannot be empty.")
-
-    @property
-    def is_deleted(self) -> bool:
-        return self.deleted_at is not None
+    NOUN = "update"
+    A_NOUN = "an update"
 
     @property
     def is_flagged(self) -> bool:
@@ -57,21 +42,6 @@ class ProjectUpdate:
         behind, which is what lets the same subject be raised again.
         """
         return self.flagged_at is not None and self.cleared_at is None
-
-    def _require_author(self, by: int) -> None:
-        if by != self.author_id:
-            raise ForbiddenActionError("Only the author of an update may change it.")
-
-    def rewrite(self, body: str, by: int, at: datetime) -> None:
-        self._require_author(by)
-        if self.is_deleted:
-            raise ForbiddenActionError("A deleted update cannot be rewritten.")
-
-        new_one = body.strip()
-        if not new_one:
-            raise ValidationError("An update cannot be empty.")
-        self.body = new_one
-        self.edited_at = at
 
     def react(self, who: int, reaction: Reaction, at: datetime) -> UpdateReaction:
         """Answers without writing.
@@ -84,6 +54,25 @@ class ProjectUpdate:
             raise ForbiddenActionError("A withdrawn update cannot be reacted to.")
         assert self.id is not None
         return UpdateReaction(update_id=self.id, user_id=who, reaction=reaction, at=at)
+
+    def reply(self, who: int, body: str, at: datetime) -> UpdateComment:
+        """Answers it in the thread, under it rather than beside it.
+
+        Anyone who may write may answer, the author included: a follow-up
+        thread is a conversation, not a right of reply. A withdrawn update is
+        refused — there is nothing left to answer, and the replies already
+        written keep their place under it.
+        """
+        if self.is_deleted:
+            raise ForbiddenActionError("A withdrawn update cannot be answered.")
+        assert self.id is not None
+        return UpdateComment(
+            id=None,
+            update_id=self.id,
+            author_id=who,
+            body=body,
+            published_at=at,
+        )
 
     def flag(self, by: int, at: datetime) -> None:
         """Puts it on the agenda of the next revue.
@@ -115,13 +104,10 @@ class ProjectUpdate:
         self.cleared_by = by
 
     def remove(self, by: int, at: datetime) -> None:
-        self._require_author(by)
-        if self.is_deleted:
-            # Already withdrawn: the first date is the one that counts.
-            return
-        self.deleted_at = at
-        self.body = ""
+        super().remove(by, at)
         # Nothing left to discuss: the words the mark pointed at are gone.
+        # Lowering a mark that is already down changes nothing, which is what
+        # makes withdrawing twice a no-op here too.
         self.flagged_at = None
         self.flagged_by = None
         self.cleared_at = None

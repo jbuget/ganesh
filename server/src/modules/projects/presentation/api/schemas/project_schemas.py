@@ -375,6 +375,24 @@ class UpdateReactionResponse(BaseModel):
     is_mine: bool
 
 
+class UpdateCommentResponse(BaseModel):
+    """One reply written under an update.
+
+    Flatter than what it hangs from: a reply carries no flag for the revue
+    and nothing the board reads — those belong to the update it answers.
+    """
+
+    id: int
+    author: BoardMemberResponse
+    body: str
+    published_at: datetime
+    edited_at: datetime | None
+    is_deleted: bool
+    #: True if the current reader may correct or withdraw it.
+    is_mine: bool
+    reactions: list[UpdateReactionResponse] = []
+
+
 class ProjectUpdateResponse(BaseModel):
     """One update from the follow-up thread."""
 
@@ -393,6 +411,8 @@ class ProjectUpdateResponse(BaseModel):
     #: while nothing is waiting.
     flagged_by: str | None = None
     flagged_at: datetime | None = None
+    #: What was answered under it, oldest first.
+    comments: list[UpdateCommentResponse] = []
 
 
 class FlaggedUpdateResponse(BaseModel):
@@ -414,6 +434,12 @@ class FlaggedUpdateResponse(BaseModel):
 
 class PostUpdateRequest(BaseModel):
     """Posting or correcting an update."""
+
+    body: str = Field(min_length=1)
+
+
+class PostCommentRequest(BaseModel):
+    """Answering an update, or correcting one's answer."""
 
     body: str = Field(min_length=1)
 

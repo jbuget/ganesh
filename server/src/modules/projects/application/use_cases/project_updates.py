@@ -1,5 +1,6 @@
 """A mission's follow-up thread: post, correct, withdraw, read."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -18,7 +19,11 @@ from src.modules.projects.application.dtos.update_dto import (
 )
 from src.modules.projects.application.use_cases.project_audience import people_on
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
+from src.modules.projects.domain.entities.update_comment import UpdateComment
 from src.modules.projects.domain.entities.update_reaction import Reaction
+from src.modules.projects.domain.repositories.comment_reaction_repository import (
+    CommentReactionRepository,
+)
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -28,11 +33,14 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
+from src.modules.projects.domain.repositories.update_comment_repository import (
+    UpdateCommentRepository,
+)
 from src.modules.projects.domain.repositories.update_reaction_repository import (
     UpdateReactionRepository,
 )
 from src.modules.projects.domain.services.mentions import mentioned_ids
-from src.modules.projects.domain.services.reaction_tally import tally
+from src.modules.projects.domain.services.reaction_tally import Sign, tally
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
@@ -51,6 +59,33 @@ class SignedReaction:
     people: tuple[User, ...]
 
 
+def _signed(
+    left: Sequence[Sign], users: dict[int | None, User]
+) -> list[SignedReaction]:
+    """The bar of signs under one message, named rather than counted.
+
+    Whoever has since left the register is simply not named. The same
+    reading serves an update and a reply: a bar drawn twice over would be
+    two chances to draw it differently.
+    """
+    return [
+        SignedReaction(
+            reaction=one.reaction,
+            people=tuple(users[who] for who in one.user_ids if who in users),
+        )
+        for one in tally(left)
+    ]
+
+
+@dataclass
+class SignedComment:
+    """A reply, who wrote it, and what it was answered without words."""
+
+    comment: UpdateComment
+    author: User
+    reactions: list[SignedReaction] = field(default_factory=list)
+
+
 @dataclass
 class SignedUpdate:
     """An update, who wrote it, and what it was answered without words."""
@@ -60,6 +95,9 @@ class SignedUpdate:
     reactions: list[SignedReaction] = field(default_factory=list)
     #: Who put it on the agenda of the next revue, while it is waiting there.
     raised_by: User | None = None
+    #: What was answered under it, oldest first: a conversation is read
+    #: forward, where the thread above it runs backwards.
+    comments: list[SignedComment] = field(default_factory=list)
 
 
 class UpdateGestureUseCase:
@@ -260,38 +298,59 @@ class WithdrawReactionUseCase:
 
 
 class ListProjectUpdatesUseCase:
-    """A mission's thread, every update signed and its answers counted."""
+    """A mission's thread, every message signed and its answers counted.
+
+    Everything the panel draws is read in one pass: the updates, what was
+    answered under each of them, and the signs left on either. A screen that
+    asked for a conversation as it unfolded one would cost a round trip per
+    line, and the thread is what one opens the tab for.
+    """
 
     def __init__(
         self,
         updates: ProjectUpdateRepository,
         users: UserRepository,
         reactions: UpdateReactionRepository,
+        comments: UpdateCommentRepository,
+        comment_reactions: CommentReactionRepository,
     ) -> None:
         self._updates = updates
         self._users = users
         self._reactions = reactions
+        self._comments = comments
+        self._comment_reactions = comment_reactions
 
     async def execute(self, project_id: int) -> list[SignedUpdate]:
         users = {u.id: u for u in await self._users.list_all(True)}
         thread = await self._updates.list_for_project(project_id)
-        left = await self._reactions.list_for_updates(
-            [update.id for update in thread if update.id is not None]
+        ids = [update.id for update in thread if update.id is not None]
+
+        left = await self._reactions.list_for_updates(ids)
+        answered = await self._comments.list_for_updates(ids)
+        signed_on = await self._comment_reactions.list_for_comments(
+            [
+                comment.id
+                for replies in answered.values()
+                for comment in replies
+                if comment.id is not None
+            ]
         )
+
         return [
             SignedUpdate(
                 update=update,
                 author=users[update.author_id],
-                reactions=[
-                    SignedReaction(
-                        reaction=one.reaction,
-                        people=tuple(
-                            users[who] for who in one.user_ids if who in users
-                        ),
-                    )
-                    for one in tally(left.get(update.id or 0, []))
-                ],
+                reactions=_signed(left.get(update.id or 0, []), users),
                 raised_by=(users.get(update.flagged_by) if update.is_flagged else None),
+                comments=[
+                    SignedComment(
+                        comment=comment,
+                        author=users[comment.author_id],
+                        reactions=_signed(signed_on.get(comment.id or 0, []), users),
+                    )
+                    for comment in answered.get(update.id or 0, [])
+                    if comment.author_id in users
+                ],
             )
             for update in thread
             if update.author_id in users

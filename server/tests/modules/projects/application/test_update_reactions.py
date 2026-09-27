@@ -18,7 +18,9 @@ from src.shared.exceptions.domain_exceptions import (
     ForbiddenActionError,
 )
 from tests.helpers.in_memory_repositories import (
+    InMemoryCommentReactionRepository,
     InMemoryProjectUpdateRepository,
+    InMemoryUpdateCommentRepository,
     InMemoryUpdateReactionRepository,
     InMemoryUserRepository,
 )
@@ -59,7 +61,13 @@ async def build():
         reactions,
         ReactToUpdateUseCase(updates, reactions),
         WithdrawReactionUseCase(reactions),
-        ListProjectUpdatesUseCase(updates, users, reactions),
+        ListProjectUpdatesUseCase(
+            updates,
+            users,
+            reactions,
+            InMemoryUpdateCommentRepository(updates),
+            InMemoryCommentReactionRepository(),
+        ),
     )
 
 

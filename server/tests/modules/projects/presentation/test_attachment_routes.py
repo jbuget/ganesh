@@ -36,6 +36,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryProjectAttachmentRepository,
     InMemoryProjectRepository,
     InMemoryProjectUpdateRepository,
+    InMemoryUpdateCommentRepository,
     InMemoryUserRepository,
 )
 
@@ -94,7 +95,10 @@ def sign_in() -> tuple[
     )
     app.dependency_overrides[get_list_attachments_use_case] = (
         lambda: ListProjectAttachmentsUseCase(
-            attachments=files, updates=updates, users=users
+            attachments=files,
+            updates=updates,
+            comments=InMemoryUpdateCommentRepository(updates),
+            users=users,
         )
     )
     app.dependency_overrides[get_rename_attachment_use_case] = (
