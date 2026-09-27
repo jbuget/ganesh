@@ -4,14 +4,6 @@ import type {
   ProjectResponse,
 } from "@/lib/api/generated/model";
 
-/** Missions on offer for adding, sorted by nature. */
-export interface AvailableMissions {
-  /** What one contributes to: offered first, before the whole reference list. */
-  mine: ProjectResponse[];
-  projectMissions: ProjectResponse[];
-  offProject: ProjectResponse[];
-}
-
 /**
  * The missions someone is a contributor on.
  *
@@ -30,41 +22,14 @@ export function assignedMissionIds(
 }
 
 /**
- * The order a French reader looks a mission up in.
+ * The order a French reader looks a label up in.
  *
  * The database sorts under its own collation, which files « Évènementiel »
  * after « Support » — past the end of the list, where nobody looks for it. The
  * order is therefore settled here, where the language is known.
  */
-function byLabel(a: ProjectResponse, b: ProjectResponse): number {
-  return a.label.localeCompare(b.label, "fr");
-}
-
-/**
- * Missions a user can still add to their grid.
- *
- * Those already there are ruled out: no two rows for the same mission. Those
- * one contributes to come apart from the rest: the reference list runs to
- * dozens of missions, and the handful one works on should not have to be found
- * among them. A mission belongs to one group only — offered twice, it would
- * read as two.
- *
- * This logic lives outside the component so it can be tested without depending
- * on how a menu renders.
- */
-export function availableMissions(
-  projects: ProjectResponse[],
-  excludedIds: number[],
-  assignedIds: number[],
-): AvailableMissions {
-  const available = projects.filter((p) => !excludedIds.includes(p.id));
-  const mine = available.filter((p) => assignedIds.includes(p.id));
-  const rest = available.filter((p) => !assignedIds.includes(p.id));
-  return {
-    mine: [...mine].sort(byLabel),
-    projectMissions: rest.filter((p) => p.kind !== "off_project").sort(byLabel),
-    offProject: rest.filter((p) => p.kind === "off_project").sort(byLabel),
-  };
+function byLabel(a: string, b: string): number {
+  return a.localeCompare(b, "fr");
 }
 
 /**
@@ -168,7 +133,7 @@ export function offeredMissions(
           !displayedRowKeys.includes(rowKey(project.id, activity.id)),
       )
       .map((activity) => ({ id: activity.id, label: activity.label }))
-      .sort((a, b) => a.label.localeCompare(b.label));
+      .sort((a, b) => byLabel(a.label, b.label));
 
     if (free.length === 0) continue;
 
@@ -180,7 +145,7 @@ export function offeredMissions(
     });
   }
 
-  return offered.sort((a, b) => a.projectLabel.localeCompare(b.projectLabel));
+  return offered.sort((a, b) => byLabel(a.projectLabel, b.projectLabel));
 }
 
 /** Whether a mission answers what is being typed, without case or accents. */

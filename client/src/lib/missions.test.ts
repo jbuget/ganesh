@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   assignedMissionIds,
-  availableMissions,
   missionsToDeclare,
   missionAnswers,
   offeredMissions,
@@ -31,61 +30,6 @@ const PROJECTS = [
   project(2, "Absences", "off_project"),
   project(3, "Lot 1", "work_package"),
 ];
-
-describe("availableMissions", () => {
-  /**
-   * The database sorts under its own collation, which files « Évènementiel »
-   * after « Support » — a French reader finds it nowhere near where they look.
-   */
-  it("orders each group as French reads, accents included", () => {
-    const accented = [
-      project(1, "Support", "off_project"),
-      project(2, "Évènementiel / communication", "off_project"),
-      project(3, "Absences", "off_project"),
-      project(4, "Étude d'implantation", "project"),
-      project(5, "Formation", "project"),
-    ];
-
-    const { projectMissions, offProject } = availableMissions(accented, [], []);
-
-    expect(offProject.map((m) => m.label)).toEqual([
-      "Absences",
-      "Évènementiel / communication",
-      "Support",
-    ]);
-    expect(projectMissions.map((m) => m.label)).toEqual([
-      "Étude d'implantation",
-      "Formation",
-    ]);
-  });
-
-  it("separates projects and work packages from off-project work", () => {
-    const { projectMissions, offProject } = availableMissions(PROJECTS, [], []);
-
-    expect(projectMissions.map((p) => p.label)).toEqual(["Lot 1", "Portail bailleurs"]);
-    expect(offProject.map((p) => p.label)).toEqual(["Absences"]);
-  });
-
-  it("rules out missions already in the grid", () => {
-    const { projectMissions } = availableMissions(PROJECTS, [1], []);
-
-    expect(projectMissions.map((p) => p.label)).toEqual(["Lot 1"]);
-  });
-
-  it("may have nothing left to offer", () => {
-    const { projectMissions, offProject } = availableMissions(PROJECTS, [1, 2, 3], []);
-
-    expect(projectMissions).toEqual([]);
-    expect(offProject).toEqual([]);
-  });
-
-  it("does not change the list received", () => {
-    const copy = [...PROJECTS];
-    availableMissions(PROJECTS, [1], []);
-
-    expect(PROJECTS).toEqual(copy);
-  });
-});
 
 const listed = (
   project: ProjectResponse,
@@ -135,27 +79,6 @@ describe("assignedMissionIds", () => {
 
   it("has nothing to say about nobody", () => {
     expect(assignedMissionIds(MISSIONS, null)).toEqual([]);
-  });
-});
-
-describe("availableMissions", () => {
-  it("puts the missions one contributes to in a group of their own", () => {
-    const { mine, projectMissions, offProject } = availableMissions(
-      PROJECTS,
-      [],
-      [1, 2],
-    );
-
-    expect(mine.map((p) => p.label)).toEqual(["Absences", "Portail bailleurs"]);
-    // A mission belongs to one group only: offered twice, it would read as two.
-    expect(projectMissions.map((p) => p.label)).toEqual(["Lot 1"]);
-    expect(offProject).toEqual([]);
-  });
-
-  it("still rules out what the grid already carries, assigned or not", () => {
-    const { mine } = availableMissions(PROJECTS, [1], [1, 3]);
-
-    expect(mine.map((p) => p.label)).toEqual(["Lot 1"]);
   });
 });
 
@@ -252,6 +175,24 @@ describe("what the selector offers", () => {
     } as unknown as ProjectListItemResponse;
 
     expect(offeredMissions([archived], [])).toEqual([]);
+  });
+
+  /**
+   * The database sorts under its own collation, which files « Évènementiel »
+   * after « Support » — a French reader finds it nowhere near where they look.
+   */
+  it("orders the missions as French reads, accents included", () => {
+    const accented = [
+      listed(project(1, "Support", "project"), []),
+      listed(project(2, "Évènementiel / communication", "project"), []),
+      listed(project(3, "Absences", "project"), []),
+    ];
+
+    expect(offeredMissions(accented, []).map((m) => m.projectLabel)).toEqual([
+      "Absences",
+      "Évènementiel / communication",
+      "Support",
+    ]);
   });
 
   it("leaves an archived trade out", () => {
