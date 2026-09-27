@@ -323,6 +323,8 @@ class ProjectDetailResponse(BaseModel):
     links: list[ProjectLinkResponse]
     phases: list[PhaseReachedResponse]
     leads: list[BoardMemberResponse]
+    #: Who to call when the service breaks, whoever is on it this week.
+    tech_leads: list[BoardMemberResponse]
     contributors: list[BoardMemberResponse]
     consumed_days: float
     contributions: list[ProjectContributionResponse]

@@ -43,6 +43,8 @@ class ProjectDetail:
     links: list[ProjectLink]
     phases_reached: dict[ProjectStatus, date]
     leads: list[User]
+    #: Who to call when the service breaks, on it this week or not.
+    tech_leads: list[User]
     contributors: list[User]
     consumed_days: float
     #: Time declared by each person, largest contributor first.
@@ -157,6 +159,7 @@ class GetProjectDetailUseCase:
             links=await self._details.list_links(project_id),
             phases_reached=await self._details.list_phases_reached(project_id),
             leads=await people(ProjectRole.LEAD),
+            tech_leads=await people(ProjectRole.TECH_LEAD),
             contributors=await people(ProjectRole.CONTRIBUTOR),
             consumed_days=round(sum(float(e.value) for e in entries), 2),
             contributions=contributions,

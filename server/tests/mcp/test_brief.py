@@ -76,6 +76,7 @@ def a_detail(project: Project, **fields: object) -> ProjectDetail:
         links=[],
         phases_reached=fields.get("phases_reached", {}),  # type: ignore[arg-type]
         leads=fields.get("leads", []),  # type: ignore[arg-type]
+        tech_leads=fields.get("tech_leads", []),  # type: ignore[arg-type]
         contributors=fields.get("contributors", []),  # type: ignore[arg-type]
         consumed_days=fields.get("consumed_days", 0.0),  # type: ignore[arg-type]
         contributions=fields.get("contributions", []),  # type: ignore[arg-type]

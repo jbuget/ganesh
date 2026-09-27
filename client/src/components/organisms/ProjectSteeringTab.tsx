@@ -164,11 +164,28 @@ export function ProjectSteeringTab({
             />
           </SheetRow>
 
-          <SheetRow title="Intervenants">
+          {/* Who to call when it breaks, whoever happens to be on it this
+              week: a developer who left the mission a year ago is still the
+              one who knows why it was built that way. */}
+          <SheetRow title="Référents techniques">
+            <ContributorsPicker
+              projectId={project.id}
+              contributors={detail.tech_leads}
+              role="tech_lead"
+              label="Référents techniques"
+              editable={editable}
+              onChange={onChange}
+            />
+          </SheetRow>
+
+          {/* « actuels » is the whole of it: the list is reworked twice a
+              week and says who has their hands in it now, never who ever
+              did. The consumption below answers that one. */}
+          <SheetRow title="Intervenants actuels">
             <ContributorsPicker
               projectId={project.id}
               contributors={detail.contributors}
-              label="Intervenants"
+              label="Intervenants actuels"
               editable={editable}
               onChange={onChange}
             />

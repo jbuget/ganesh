@@ -209,6 +209,7 @@ def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
             if status in detail.phases_reached
         ],
         leads=[to_member(u) for u in detail.leads],
+        tech_leads=[to_member(u) for u in detail.tech_leads],
         contributors=[to_member(u) for u in detail.contributors],
         consumed_days=detail.consumed_days,
         contributions=[

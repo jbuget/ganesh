@@ -118,6 +118,27 @@ in at all is `AppFrame`'s: it draws nothing until it knows who is there, since
 a sidebar shown for a moment and taken back would be a list of doors somebody
 was never meant to see.
 
+### Who is on a mission
+
+Three lists, read one under the other on « Pilotage », and three because they
+answer three questions:
+
+- **Référents projet** answer for the choices and the contacts, throughout.
+- **Référents techniques** are who to call when the service breaks. The point
+  of the title is that it outlives the work: a developer who left the mission
+  a year ago is still the one who knows why it was built that way, and a list
+  that only ever held this week's people would send a bug to nobody.
+- **Intervenants actuels** have their hands in it now or shortly. The list is
+  reworked twice a week and says the present, never a history — who ever
+  declared time on it is read off the consumption below, which is a fact
+  nobody has to maintain.
+
+The same person often holds several titles, and `ProjectRole` ranks none of
+them: a role is what somebody is asked for, not how much they may do. Everyone
+declared at whichever title is told when the mission moves, goes, or gets an
+update — `people_on` sees to it, and a title nobody hears from would be a
+title nobody keeps up to date.
+
 ### Business invariants
 
 These rules are tested **at the domain level**, independently of the API and of
@@ -707,8 +728,8 @@ to publish a service, not to admire a sheet.
 
 The line between the two tabs of a mission is what one is doing there:
 **Pilotage steers the mission, Catalogue publishes the service.** Phase,
-priority, departments, contributors and cost steer; address, summary, links,
-stack and criticality publish. A field belongs to one side or the other, never
+priority, departments, the people on it and cost steer; address, summary,
+links, stack and criticality publish. A field belongs to one side or the other, never
 to both. Inside the tab, « Rattachement » gathers what the service hangs from
 — its team, its channel, its tags — and no section repeats the tab's own name.
 

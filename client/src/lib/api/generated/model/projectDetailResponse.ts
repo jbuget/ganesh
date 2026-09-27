@@ -22,6 +22,7 @@ export interface ProjectDetailResponse {
   links: ProjectLinkResponse[];
   phases: PhaseReachedResponse[];
   leads: BoardMemberResponse[];
+  tech_leads: BoardMemberResponse[];
   contributors: BoardMemberResponse[];
   consumed_days: number;
   contributions: ProjectContributionResponse[];

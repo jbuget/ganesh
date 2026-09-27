@@ -148,6 +148,19 @@ async def test_leads_and_contributors_are_told_apart() -> None:
     assert [u.display_name for u in detail.contributors] == ["N. Garo"]
 
 
+async def test_technical_leads_are_read_apart_from_the_people_on_it_now() -> None:
+    """Who to call when it breaks is not who is on it this week."""
+    detail = await build(
+        assignments={
+            (10, ProjectRole.TECH_LEAD): [1],
+            (10, ProjectRole.CONTRIBUTOR): [2],
+        }
+    ).execute(10)
+
+    assert [u.display_name for u in detail.tech_leads] == ["L. Chen"]
+    assert [u.display_name for u in detail.contributors] == ["N. Garo"]
+
+
 async def test_a_mission_without_children_has_no_sub_project() -> None:
     detail = await build().execute(10)
 

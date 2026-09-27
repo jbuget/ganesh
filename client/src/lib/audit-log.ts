@@ -241,6 +241,10 @@ function fieldSentence(entry: AuditLogEntryResponse): AuditSentence {
 const ROLES: Record<string, { joined: string; left: string }> = {
   contributor: { joined: "aux intervenants", left: "des intervenants" },
   lead: { joined: "comme référent", left: "de son rôle de référent" },
+  tech_lead: {
+    joined: "comme référent technique",
+    left: "de son rôle de référent technique",
+  },
 };
 
 function role(raw: string | null, side: "joined" | "left"): string {
