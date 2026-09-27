@@ -273,6 +273,52 @@ async def test_a_removed_update_no_longer_counts() -> None:
     assert board.columns[1].cards[0].comments == 0
 
 
+async def test_a_card_says_what_is_waiting_to_be_discussed() -> None:
+    """Derived, never declared: the card reads the marks left on the thread.
+
+    A flag carried by the mission itself would stay true until somebody
+    unticked it, and nothing ever obliges anybody to.
+    """
+    updates = InMemoryProjectUpdateRepository()
+    for project_id in (1, 1, 2):
+        await updates.add(
+            ProjectUpdate(
+                id=None,
+                project_id=project_id,
+                author_id=1,
+                body="Le sponsor relance.",
+                published_at=datetime(2026, 9, 10, 9, 0),
+            )
+        )
+    raised = await updates.list_for_project(1)
+    raised[0].flag(by=2, at=datetime(2026, 9, 12, 9, 0))
+
+    board = await build([card(1), card(2)], updates=updates).execute(today=TODAY)
+
+    by_mission = {c.project.id: c for c in board.columns[1].cards}
+    assert by_mission[1].flagged_updates == 1
+    assert by_mission[2].flagged_updates == 0
+
+
+async def test_a_card_forgets_what_the_revue_has_read() -> None:
+    updates = InMemoryProjectUpdateRepository()
+    update = await updates.add(
+        ProjectUpdate(
+            id=None,
+            project_id=1,
+            author_id=1,
+            body="Le sponsor relance.",
+            published_at=datetime(2026, 9, 10, 9, 0),
+        )
+    )
+    update.flag(by=2, at=datetime(2026, 9, 12, 9, 0))
+    update.clear(by=2, at=datetime(2026, 9, 13, 9, 0))
+
+    board = await build([card(1)], updates=updates).execute(today=TODAY)
+
+    assert board.columns[1].cards[0].flagged_updates == 0
+
+
 async def test_a_card_counts_its_sub_projects() -> None:
     board = await build(
         [

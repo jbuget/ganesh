@@ -142,6 +142,8 @@ class ProjectListItemResponse(BaseModel):
     departments: list[Department]
     #: Live updates in the follow-up thread.
     comments: int
+    #: How many of them are waiting to be discussed at the next revue.
+    flagged_updates: int = 0
     #: The latest of them, absent while there is nothing to read.
     latest_update: LastUpdateResponse | None
 
@@ -236,6 +238,8 @@ class BoardCardResponse(BaseModel):
     build_days: float
     contributors: list[BoardMemberResponse]
     comments: int
+    #: How many of them are waiting to be discussed at the next revue.
+    flagged_updates: int = 0
     #: The latest message of the thread, absent while there is nothing to read.
     latest_update: LastUpdateResponse | None
     #: The departments the mission serves. No card draws them: the filter bar
@@ -383,6 +387,29 @@ class ProjectUpdateResponse(BaseModel):
     #: True if the current reader may correct or withdraw it.
     is_mine: bool
     reactions: list[UpdateReactionResponse] = []
+    #: Whether it is waiting to be discussed at the next revue.
+    is_flagged: bool = False
+    #: Who put it on the agenda, named as the thread names an author. None
+    #: while nothing is waiting.
+    flagged_by: str | None = None
+    flagged_at: datetime | None = None
+
+
+class FlaggedUpdateResponse(BaseModel):
+    """One line of the agenda of the next revue.
+
+    Flat, and it carries no reaction: one reads it to know which project to
+    open and whom to ask, and the thread is where the rest is read.
+    """
+
+    update_id: int
+    project_id: int
+    project_label: str
+    body: str
+    author: BoardMemberResponse
+    published_at: datetime
+    raised_by: BoardMemberResponse
+    flagged_at: datetime
 
 
 class PostUpdateRequest(BaseModel):

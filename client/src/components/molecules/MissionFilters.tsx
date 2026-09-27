@@ -18,10 +18,12 @@ import {
   EVERY_CRITERION,
   MISSION_STATES,
   MISSION_KINDS,
+  DISCUSSION_STATES,
   PUBLICATION_STATES,
   type Criterion,
   type MissionFilters as Criteria,
   type MissionState,
+  type DiscussionState,
   type PublicationState,
 } from "@/lib/mission-filters";
 
@@ -187,6 +189,19 @@ export function MissionFilters({
             values={filters.publications}
             onChange={(values) =>
               onChange({ publications: values as PublicationState[] })
+            }
+          />
+        )}
+
+        {/* Ce qui attend d'être dit en revue, et son envers : les projets
+            dont personne n'a rien dit. */}
+        {shows("discussions") && (
+          <FilterSelect
+            label="Revue"
+            options={DISCUSSION_STATES.map(({ value, label }) => ({ value, label }))}
+            values={filters.discussions}
+            onChange={(values) =>
+              onChange({ discussions: values as DiscussionState[] })
             }
           />
         )}

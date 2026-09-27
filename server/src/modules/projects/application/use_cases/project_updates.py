@@ -58,10 +58,56 @@ class SignedUpdate:
     update: ProjectUpdate
     author: User
     reactions: list[SignedReaction] = field(default_factory=list)
+    #: Who put it on the agenda of the next revue, while it is waiting there.
+    raised_by: User | None = None
 
 
-class _UpdateUseCase:
-    """What the three thread writes share."""
+class UpdateGestureUseCase:
+    """What every gesture on an update shares: loading it, and tracing it.
+
+    Public because the thread is not the only place one is made: putting an
+    update on the agenda of a revue is a gesture on the same words, written
+    into the same register, and it lives in its own module.
+    """
+
+    def __init__(
+        self,
+        updates: ProjectUpdateRepository,
+        audit_logs: AuditLogRepository,
+    ) -> None:
+        self._updates = updates
+        self._audit_logs = audit_logs
+
+    async def _load(self, update_id: int) -> ProjectUpdate:
+        update = await self._updates.get(update_id)
+        if update is None:
+            raise EntityNotFoundError("Unknown update.")
+        return update
+
+    async def _trace(
+        self, action: AuditAction, actor_id: int, update: ProjectUpdate
+    ) -> None:
+        """The mission is read off the update rather than passed in again.
+
+        One argument fewer is one chance fewer of tracing a gesture against
+        the wrong project.
+        """
+        await self._audit_logs.add(
+            AuditLog(
+                action=action,
+                actor_id=actor_id,
+                project_id=update.project_id,
+                payload={"update_id": update.id},
+            )
+        )
+
+
+class _UpdateUseCase(UpdateGestureUseCase):
+    """What the three thread writes share, on top of the gesture.
+
+    A write on the thread tells people about itself, where flagging one does
+    not: the audience and the delivery are what this layer adds.
+    """
 
     def __init__(
         self,
@@ -72,30 +118,11 @@ class _UpdateUseCase:
         assignees: ProjectAssigneeRepository,
         notifications: NotificationDelivery,
     ) -> None:
+        super().__init__(updates=updates, audit_logs=audit_logs)
         self._users = users
         self._projects = projects
-        self._updates = updates
-        self._audit_logs = audit_logs
         self._assignees = assignees
         self._notifications = notifications
-
-    async def _trace(
-        self, action: AuditAction, actor_id: int, project_id: int, update_id: int
-    ) -> None:
-        await self._audit_logs.add(
-            AuditLog(
-                action=action,
-                actor_id=actor_id,
-                project_id=project_id,
-                payload={"update_id": update_id},
-            )
-        )
-
-    async def _load(self, update_id: int) -> ProjectUpdate:
-        update = await self._updates.get(update_id)
-        if update is None:
-            raise EntityNotFoundError("Unknown update.")
-        return update
 
 
 class PostProjectUpdateUseCase(_UpdateUseCase):
@@ -119,9 +146,7 @@ class PostProjectUpdateUseCase(_UpdateUseCase):
             )
         )
         assert update.id is not None
-        await self._trace(
-            AuditAction.UPDATE_POST, command.actor_id, command.project_id, update.id
-        )
+        await self._trace(AuditAction.UPDATE_POST, command.actor_id, update)
         await self._tell_the_thread(command, update)
         return update
 
@@ -176,12 +201,7 @@ class EditProjectUpdateUseCase(_UpdateUseCase):
         update = await self._load(command.update_id)
         update.rewrite(command.body, by=command.actor_id, at=now or clock.now())
         await self._updates.update(update)
-        await self._trace(
-            AuditAction.UPDATE_EDIT,
-            command.actor_id,
-            update.project_id,
-            command.update_id,
-        )
+        await self._trace(AuditAction.UPDATE_EDIT, command.actor_id, update)
         return update
 
 
@@ -194,12 +214,7 @@ class RemoveProjectUpdateUseCase(_UpdateUseCase):
         update = await self._load(command.update_id)
         update.remove(by=command.actor_id, at=now or clock.now())
         await self._updates.update(update)
-        await self._trace(
-            AuditAction.UPDATE_REMOVE,
-            command.actor_id,
-            update.project_id,
-            command.update_id,
-        )
+        await self._trace(AuditAction.UPDATE_REMOVE, command.actor_id, update)
 
 
 class ReactToUpdateUseCase:
@@ -276,6 +291,7 @@ class ListProjectUpdatesUseCase:
                     )
                     for one in tally(left.get(update.id or 0, []))
                 ],
+                raised_by=(users.get(update.flagged_by) if update.is_flagged else None),
             )
             for update in thread
             if update.author_id in users

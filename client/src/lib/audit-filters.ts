@@ -92,6 +92,8 @@ export const ACTION_FAMILIES: ActionFamily[] = [
       { value: "update.post", label: "Mise à jour publiée" },
       { value: "update.edit", label: "Mise à jour modifiée" },
       { value: "update.remove", label: "Mise à jour supprimée" },
+      { value: "update.flag", label: "Signalée à discuter en revue" },
+      { value: "update.clear", label: "Retirée de l'ordre du jour" },
       { value: "attachment.add", label: "Fichier ajouté" },
       { value: "attachment.rename", label: "Fichier renommé" },
       { value: "attachment.remove", label: "Fichier supprimé" },

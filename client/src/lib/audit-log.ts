@@ -460,6 +460,15 @@ export function auditSentence(
     case "update.remove":
       return { action: "a supprimé une mise à jour" };
 
+    // Ce qu'on a demandé à voir en revue, et ce que la revue a lu. Le geste
+    // est nommé, pas décrit : « flagged_at : null → … » ne dirait rien de ce
+    // qui s'est passé ce jour-là.
+    case "update.flag":
+      return { action: "a signalé une mise à jour à discuter en revue" };
+
+    case "update.clear":
+      return { action: "a retiré une mise à jour de l'ordre du jour" };
+
     // The file is named rather than counted: « a ajouté un fichier » on a
     // project that carries a dozen says nothing one came to the Journal for.
     // The name travels on the line — by now the file may be gone.

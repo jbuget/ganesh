@@ -44,6 +44,11 @@ from src.modules.projects.application.use_cases.delete_project import (
 from src.modules.projects.application.use_cases.export_catalog import (
     ExportCatalogUseCase,
 )
+from src.modules.projects.application.use_cases.flagged_updates import (
+    ClearUpdateFlagUseCase,
+    FlagUpdateUseCase,
+    ListFlaggedUpdatesUseCase,
+)
 from src.modules.projects.application.use_cases.get_board import GetBoardUseCase
 from src.modules.projects.application.use_cases.get_project_detail import (
     GetProjectDetailUseCase,
@@ -490,6 +495,28 @@ def get_withdraw_reaction_use_case(
     reactions: UpdateReactionRepository = Depends(get_update_reaction_repository),
 ) -> WithdrawReactionUseCase:
     return WithdrawReactionUseCase(reactions=reactions)
+
+
+def get_flag_update_use_case(
+    updates: ProjectUpdateRepository = Depends(get_project_update_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> FlagUpdateUseCase:
+    return FlagUpdateUseCase(updates=updates, audit_logs=audit_logs)
+
+
+def get_clear_update_flag_use_case(
+    updates: ProjectUpdateRepository = Depends(get_project_update_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> ClearUpdateFlagUseCase:
+    return ClearUpdateFlagUseCase(updates=updates, audit_logs=audit_logs)
+
+
+def get_list_flagged_updates_use_case(
+    updates: ProjectUpdateRepository = Depends(get_project_update_repository),
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+) -> ListFlaggedUpdatesUseCase:
+    return ListFlaggedUpdatesUseCase(updates=updates, users=users, projects=projects)
 
 
 def get_upload_attachment_use_case(

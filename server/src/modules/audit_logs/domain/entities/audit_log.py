@@ -36,6 +36,8 @@ class AuditAction(StrEnum):
     UPDATE_POST = "update.post"
     UPDATE_EDIT = "update.edit"
     UPDATE_REMOVE = "update.remove"
+    UPDATE_FLAG = "update.flag"
+    UPDATE_CLEAR = "update.clear"
     ATTACHMENT_ADD = "attachment.add"
     ATTACHMENT_RENAME = "attachment.rename"
     ATTACHMENT_REMOVE = "attachment.remove"

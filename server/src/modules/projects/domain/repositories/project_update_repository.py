@@ -46,6 +46,26 @@ class ProjectUpdateRepository(ABC):
         ...
 
     @abstractmethod
+    async def flagged_count_by_project(self) -> dict[int, int]:
+        """How many lines of each mission are waiting to be discussed.
+
+        Derived rather than declared: a flag carried by the mission itself
+        would stay true until somebody unticked it, and nothing ever obliges
+        anybody to. Read off the thread, it empties itself as the revue reads
+        it.
+        """
+        ...
+
+    @abstractmethod
+    async def list_flagged(self) -> list[ProjectUpdate]:
+        """Everything waiting to be discussed, the longest wait first.
+
+        Across every mission: a revue opens one list, not one thread per
+        project. Withdrawn messages carry no mark — removing one lowers it.
+        """
+        ...
+
+    @abstractmethod
     async def add(self, update: ProjectUpdate) -> ProjectUpdate: ...
 
     @abstractmethod

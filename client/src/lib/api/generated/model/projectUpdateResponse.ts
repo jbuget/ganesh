@@ -19,4 +19,7 @@ export interface ProjectUpdateResponse {
   is_deleted: boolean;
   is_mine: boolean;
   reactions?: UpdateReactionResponse[];
+  is_flagged?: boolean;
+  flagged_by?: string | null;
+  flagged_at?: string | null;
 }

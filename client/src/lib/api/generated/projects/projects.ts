@@ -34,6 +34,7 @@ import type {
   CreateActivityRequest,
   CreateProjectRequest,
   DownloadProjectAttachmentParams,
+  FlaggedUpdateResponse,
   GetBoardParams,
   HTTPValidationError,
   ImportProjectsRequest,
@@ -1518,6 +1519,158 @@ export function useExportCatalog<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getExportCatalogQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listFlaggedUpdatesResponse200 = {
+  data: FlaggedUpdateResponse[];
+  status: 200;
+};
+
+export type listFlaggedUpdatesResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listFlaggedUpdatesResponseSuccess = listFlaggedUpdatesResponse200 & {
+  headers: Headers;
+};
+export type listFlaggedUpdatesResponseError = listFlaggedUpdatesResponse422 & {
+  headers: Headers;
+};
+
+export type listFlaggedUpdatesResponse =
+  listFlaggedUpdatesResponseSuccess | listFlaggedUpdatesResponseError;
+
+export const getListFlaggedUpdatesUrl = () => {
+  return `/api/v1/projects/flagged-updates`;
+};
+
+/**
+ * What the next revue has to discuss, the longest wait first.
+ *
+ * Across every mission, and flat: one opens a revue on one list, and
+ * gathering a project's lines under its name is the screen's business.
+ * @summary List Flagged Updates
+ */
+export const listFlaggedUpdates = async (
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listFlaggedUpdatesResponse> => {
+  return bffFetcher<listFlaggedUpdatesResponse>(getListFlaggedUpdatesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListFlaggedUpdatesQueryKey = () => {
+  return [`/api/v1/projects/flagged-updates`] as const;
+};
+
+export const getListFlaggedUpdatesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listFlaggedUpdates>>,
+  TError = HTTPValidationError,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof listFlaggedUpdates>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListFlaggedUpdatesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listFlaggedUpdates>>> = ({
+    signal,
+  }) => listFlaggedUpdates({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listFlaggedUpdates>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListFlaggedUpdatesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listFlaggedUpdates>>
+>;
+export type ListFlaggedUpdatesQueryError = HTTPValidationError;
+
+export function useListFlaggedUpdates<
+  TData = Awaited<ReturnType<typeof listFlaggedUpdates>>,
+  TError = HTTPValidationError,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listFlaggedUpdates>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFlaggedUpdates>>,
+          TError,
+          Awaited<ReturnType<typeof listFlaggedUpdates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListFlaggedUpdates<
+  TData = Awaited<ReturnType<typeof listFlaggedUpdates>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listFlaggedUpdates>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFlaggedUpdates>>,
+          TError,
+          Awaited<ReturnType<typeof listFlaggedUpdates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListFlaggedUpdates<
+  TData = Awaited<ReturnType<typeof listFlaggedUpdates>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listFlaggedUpdates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Flagged Updates
+ */
+
+export function useListFlaggedUpdates<
+  TData = Awaited<ReturnType<typeof listFlaggedUpdates>>,
+  TError = HTTPValidationError,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listFlaggedUpdates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListFlaggedUpdatesQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -3655,6 +3808,245 @@ export const useRemoveProjectUpdate = <
   TContext
 > => {
   return useMutation(getRemoveProjectUpdateMutationOptions(options), queryClient);
+};
+export type flagProjectUpdateResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type flagProjectUpdateResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type flagProjectUpdateResponseSuccess = flagProjectUpdateResponse204 & {
+  headers: Headers;
+};
+export type flagProjectUpdateResponseError = flagProjectUpdateResponse422 & {
+  headers: Headers;
+};
+
+export type flagProjectUpdateResponse =
+  flagProjectUpdateResponseSuccess | flagProjectUpdateResponseError;
+
+export const getFlagProjectUpdateUrl = (projectId: number, updateId: number) => {
+  return `/api/v1/projects/${projectId}/updates/${updateId}/flag`;
+};
+
+/**
+ * Puts an update on the agenda of the next revue.
+ *
+ * Anybody on the team may, the author included: it is a reader noticing
+ * that something has to be said out loud. Raising it twice changes nothing.
+ * @summary Flag Project Update
+ */
+export const flagProjectUpdate = async (
+  projectId: number,
+  updateId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<flagProjectUpdateResponse> => {
+  return bffFetcher<flagProjectUpdateResponse>(
+    getFlagProjectUpdateUrl(projectId, updateId),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getFlagProjectUpdateMutationKey = () => ["flagProjectUpdate"] as const;
+
+export const getFlagProjectUpdateMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof flagProjectUpdate>>,
+    TError,
+    FlagProjectUpdateMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof flagProjectUpdate>>,
+  TError,
+  FlagProjectUpdateMutationVariables,
+  TContext
+> => {
+  const mutationKey = getFlagProjectUpdateMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof flagProjectUpdate>>,
+    FlagProjectUpdateMutationVariables
+  > = (props) => {
+    const { projectId, updateId } = props ?? {};
+
+    return flagProjectUpdate(projectId, updateId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FlagProjectUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof flagProjectUpdate>>
+>;
+
+export type FlagProjectUpdateMutationError = HTTPValidationError;
+export type FlagProjectUpdateMutationVariables = {
+  projectId: number;
+  updateId: number;
+};
+
+/**
+ * @summary Flag Project Update
+ */
+export const useFlagProjectUpdate = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof flagProjectUpdate>>,
+      TError,
+      FlagProjectUpdateMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof flagProjectUpdate>>,
+  TError,
+  FlagProjectUpdateMutationVariables,
+  TContext
+> => {
+  return useMutation(getFlagProjectUpdateMutationOptions(options), queryClient);
+};
+export type clearProjectUpdateFlagResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type clearProjectUpdateFlagResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type clearProjectUpdateFlagResponseSuccess =
+  clearProjectUpdateFlagResponse204 & {
+    headers: Headers;
+  };
+export type clearProjectUpdateFlagResponseError = clearProjectUpdateFlagResponse422 & {
+  headers: Headers;
+};
+
+export type clearProjectUpdateFlagResponse =
+  clearProjectUpdateFlagResponseSuccess | clearProjectUpdateFlagResponseError;
+
+export const getClearProjectUpdateFlagUrl = (projectId: number, updateId: number) => {
+  return `/api/v1/projects/${projectId}/updates/${updateId}/flag`;
+};
+
+/**
+ * Takes it off the agenda, the revue having read it.
+ *
+ * A gesture of the meeting rather than of whoever raised it, so anybody may.
+ * Lowering what was never raised changes nothing.
+ * @summary Clear Project Update Flag
+ */
+export const clearProjectUpdateFlag = async (
+  projectId: number,
+  updateId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<clearProjectUpdateFlagResponse> => {
+  return bffFetcher<clearProjectUpdateFlagResponse>(
+    getClearProjectUpdateFlagUrl(projectId, updateId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getClearProjectUpdateFlagMutationKey = () =>
+  ["clearProjectUpdateFlag"] as const;
+
+export const getClearProjectUpdateFlagMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clearProjectUpdateFlag>>,
+    TError,
+    ClearProjectUpdateFlagMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof clearProjectUpdateFlag>>,
+  TError,
+  ClearProjectUpdateFlagMutationVariables,
+  TContext
+> => {
+  const mutationKey = getClearProjectUpdateFlagMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof clearProjectUpdateFlag>>,
+    ClearProjectUpdateFlagMutationVariables
+  > = (props) => {
+    const { projectId, updateId } = props ?? {};
+
+    return clearProjectUpdateFlag(projectId, updateId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClearProjectUpdateFlagMutationResult = NonNullable<
+  Awaited<ReturnType<typeof clearProjectUpdateFlag>>
+>;
+
+export type ClearProjectUpdateFlagMutationError = HTTPValidationError;
+export type ClearProjectUpdateFlagMutationVariables = {
+  projectId: number;
+  updateId: number;
+};
+
+/**
+ * @summary Clear Project Update Flag
+ */
+export const useClearProjectUpdateFlag = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof clearProjectUpdateFlag>>,
+      TError,
+      ClearProjectUpdateFlagMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof clearProjectUpdateFlag>>,
+  TError,
+  ClearProjectUpdateFlagMutationVariables,
+  TContext
+> => {
+  return useMutation(getClearProjectUpdateFlagMutationOptions(options), queryClient);
 };
 export type reactToProjectUpdateResponse204 = {
   data: void;

@@ -1,4 +1,5 @@
 import type { PlanBlocker } from "@/lib/api/generated/model";
+import { plural } from "@/lib/plurals";
 
 /**
  * Horizons on offer.
@@ -63,9 +64,9 @@ export function slippage(days: number | null | undefined, isLate: boolean): Slip
 /** « 5 jours de retard », « 3 jours d'avance », « dans les temps ». */
 export function slippageLabel(days: number, isLate: boolean): string {
   const count = Math.abs(days);
-  const plural = count > 1 ? "jours" : "jour";
-  if (isLate) return `${count} ${plural} de retard`;
-  if (days < 0) return `${count} ${plural} d'avance`;
+  const unit = plural(count, "jour");
+  if (isLate) return `${count} ${unit} de retard`;
+  if (days < 0) return `${count} ${unit} d'avance`;
   return "Dans les temps";
 }
 

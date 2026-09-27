@@ -711,6 +711,19 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
             latest[update.project_id] = update
         return latest
 
+    async def flagged_count_by_project(self) -> dict[int, int]:
+        counts: dict[int, int] = {}
+        for update in self._updates:
+            if update.is_flagged:
+                counts[update.project_id] = counts.get(update.project_id, 0) + 1
+        return counts
+
+    async def list_flagged(self) -> list[ProjectUpdate]:
+        return sorted(
+            (u for u in self._updates if u.is_flagged),
+            key=lambda u: (u.flagged_at or datetime.min, u.id or 0),
+        )
+
     async def update(self, update: ProjectUpdate) -> ProjectUpdate:
         return update
 

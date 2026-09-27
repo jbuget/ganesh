@@ -25,6 +25,8 @@ function renderCard(
   over: Partial<ProjectUpdateResponse> = {},
   onRemove = vi.fn(),
   aimed = false,
+  onFlag = vi.fn(),
+  editable = true,
 ) {
   render(
     <ProjectUpdateCard
@@ -34,6 +36,8 @@ function renderCard(
       onEdit={vi.fn()}
       onRemove={onRemove}
       onReact={vi.fn()}
+      onFlag={onFlag}
+      editable={editable}
     />,
   );
   return onRemove;
@@ -106,5 +110,64 @@ describe("ProjectUpdateCard", () => {
       screen.queryByRole("button", { name: "Supprimer la mise à jour" }),
     ).not.toBeInTheDocument();
     expect(screen.getByText("Message supprimé")).toBeInTheDocument();
+  });
+
+  describe("mise à l'ordre du jour de la revue", () => {
+    it("offers to raise an update nobody has raised", async () => {
+      const onFlag = vi.fn();
+      renderCard({}, vi.fn(), false, onFlag);
+
+      await userEvent.click(
+        screen.getByRole("button", { name: /à discuter en revue/i }),
+      );
+
+      expect(onFlag).toHaveBeenCalledWith(true);
+    });
+
+    it("says who raised it, and offers to lower it", async () => {
+      const onFlag = vi.fn();
+      renderCard(
+        { is_flagged: true, flagged_by: "N. Garo", flagged_at: "2026-09-23T09:30:00Z" },
+        vi.fn(),
+        false,
+        onFlag,
+      );
+
+      expect(screen.getByText(/à discuter en revue/i)).toBeInTheDocument();
+      expect(screen.getByText(/N. Garo/)).toBeInTheDocument();
+
+      await userEvent.click(
+        screen.getByRole("button", { name: /retirer de l'ordre du jour/i }),
+      );
+
+      expect(onFlag).toHaveBeenCalledWith(false);
+    });
+
+    it("offers the gesture to anybody, not only to the author", async () => {
+      const onFlag = vi.fn();
+      renderCard({ is_mine: false }, vi.fn(), false, onFlag);
+
+      await userEvent.click(
+        screen.getByRole("button", { name: /à discuter en revue/i }),
+      );
+
+      expect(onFlag).toHaveBeenCalledWith(true);
+    });
+
+    it("offers nothing to a reader who may not write", () => {
+      renderCard({}, vi.fn(), false, vi.fn(), false);
+
+      expect(
+        screen.queryByRole("button", { name: /à discuter en revue/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("says nothing of a withdrawn update: there is nothing left to discuss", () => {
+      renderCard({ is_deleted: true });
+
+      expect(
+        screen.queryByRole("button", { name: /à discuter en revue/i }),
+      ).not.toBeInTheDocument();
+    });
   });
 });
