@@ -12,6 +12,7 @@ import { MissionDepartments } from "@/components/atoms/MissionDepartments";
 import { PriorityMark } from "@/components/atoms/PriorityMark";
 import { PublishedMark } from "@/components/atoms/PublishedMark";
 import { RunCost } from "@/components/atoms/RunCost";
+import { ReviewFlag } from "@/components/atoms/ReviewFlag";
 import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
@@ -284,6 +285,9 @@ export function MissionRow({
       <TableCell
         className={[THREAD_COLUMN, STRONG_SEPARATOR, pinned, "text-right"].join(" ")}
       >
+        {/* Beside the count, in the same cell: both read the same thread,
+            and the mark is why one would open it. */}
+        <ReviewFlag count={mission.flagged_updates ?? 0} onOpen={onOpenThread} />
         <UpdatesCounter
           count={mission.comments}
           preview={preview}

@@ -19,6 +19,7 @@ export interface BoardCardResponse {
   build_days: number;
   contributors: BoardMemberResponse[];
   comments: number;
+  flagged_updates?: number;
   latest_update: LastUpdateResponse | null;
   departments: Department[];
   sub_projects: number;

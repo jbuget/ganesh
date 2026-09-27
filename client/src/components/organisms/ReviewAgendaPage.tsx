@@ -1,13 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo } from "react";
 
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { AgendaItemCard } from "@/components/molecules/AgendaItemCard";
 import { PageLayout } from "@/components/organisms/PageLayout";
+import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { useTeammates } from "@/lib/api/queries";
 import { plural } from "@/lib/plurals";
+import { useOpenedMission } from "@/lib/opened-mission";
 import { useMayWrite } from "@/lib/use-may-write";
 import { useReviewAgenda } from "@/lib/use-review-agenda";
 
@@ -25,7 +26,8 @@ import { useReviewAgenda } from "@/lib/use-review-agenda";
  * times over, and the meeting opens its thread three times.
  */
 export function ReviewAgendaPage() {
-  const { chapters, waiting, clear } = useReviewAgenda();
+  const { chapters, waiting, clear, reload } = useReviewAgenda();
+  const panel = useOpenedMission();
   const mayWrite = useMayWrite();
   const { teammates } = useTeammates();
   // Freezes the reference time for the whole screen: every « il y a trois
@@ -67,12 +69,16 @@ export function ReviewAgendaPage() {
             <section key={chapter.projectId} className="space-y-2">
               {/* The heading names the project, so the lines under it do not. */}
               <h2 className="flex items-baseline gap-2 border-b border-slate-300 pb-1">
-                <Link
-                  href={`/projects/${chapter.projectId}`}
+                {/* Le panneau plutôt que la page : on prépare une revue en
+                    parcourant la liste, et quitter l'écran pour chaque projet
+                    ferait perdre à chaque fois où l'on en était. */}
+                <button
+                  type="button"
+                  onClick={() => panel.open(chapter.projectId)}
                   className="cursor-pointer text-sm font-medium text-slate-900 hover:underline"
                 >
                   {chapter.label}
-                </Link>
+                </button>
                 <span className="text-xs text-slate-500">
                   {`${chapter.items.length} ${plural(chapter.items.length, "mise")} à jour`}
                 </span>
@@ -94,6 +100,19 @@ export function ReviewAgendaPage() {
             </section>
           ))}
         </div>
+      )}
+      {panel.openedMission && (
+        <ProjectPanel
+          key={panel.openedMission}
+          projectId={panel.openedMission}
+          tab={panel.openTab}
+          aimedAt={panel.aimedAt}
+          onClose={panel.close}
+          // Une marque levée depuis le fil vide sa ligne ici : l'ordre du
+          // jour derrière le panneau doit suivre.
+          onMissionChanged={reload}
+          onOpenMission={(projectId) => panel.open(projectId)}
+        />
       )}
     </PageLayout>
   );

@@ -37,6 +37,9 @@ export function useReviewAgenda() {
   return {
     chapters,
 
+    /** Relit l'ordre du jour : une marque peut être levée depuis le panneau. */
+    reload,
+
     /** How many lines are waiting, across every project. */
     waiting: chapters === null ? 0 : countWaiting(chapters),
 

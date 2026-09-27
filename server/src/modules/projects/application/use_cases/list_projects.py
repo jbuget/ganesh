@@ -67,6 +67,8 @@ class ListedProject:
     activities: list[Activity] = field(default_factory=list)
     #: Live updates in the follow-up thread.
     comments: int = 0
+    #: How many of them are waiting to be discussed at the next revue.
+    flagged_updates: int = 0
     #: The latest of them, to announce the thread without opening it.
     latest_update: LastUpdate | None = None
 
@@ -105,6 +107,7 @@ class ListProjectsUseCase:
         entries = await self._entries.count_by_project()
         delivered = await self._entries.sum_realised_by_project(day)
         comments = await self._updates.count_by_project()
+        flagged = await self._updates.flagged_count_by_project()
         latest_by_project = await self._updates.latest_by_project()
         links = await self._details.list_links_by_project()
         departments = await self._details.list_departments_by_project()
@@ -165,6 +168,7 @@ class ListProjectsUseCase:
                 cost=costs.own.get(mission.id or 0, NO_COST),
                 tree_cost=costs.tree.get(mission.id or 0, NO_COST),
                 comments=comments.get(mission.id or 0, 0),
+                flagged_updates=flagged.get(mission.id or 0, 0),
                 latest_update=latest(mission.id or 0),
             )
             for mission in missions

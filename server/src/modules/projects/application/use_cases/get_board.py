@@ -39,6 +39,9 @@ class BoardCard:
     build_days: float = 0.0
     #: Live updates in the follow-up thread.
     comments: int = 0
+    #: How many of them are waiting to be discussed at the next revue. Read
+    #: off the thread rather than carried by the mission: see the port.
+    flagged_updates: int = 0
     #: Work packages attached to the mission.
     sub_projects: int = 0
     #: The project the mission belongs to, when it is a work package. It may
@@ -113,6 +116,7 @@ class GetBoardUseCase:
         users = {u.id: u for u in await self._users.list_all(True)}
         assignments = await self._assignees.list_all(ProjectRole.CONTRIBUTOR)
         comments = await self._updates.count_by_project()
+        flagged = await self._updates.flagged_count_by_project()
         latest_by_project = await self._updates.latest_by_project()
         departments = await self._details.list_departments_by_project()
 
@@ -173,6 +177,7 @@ class GetBoardUseCase:
                     build_days=cost.build_days,
                     contributors=[users[uid] for uid in contributors if uid in users],
                     comments=comments.get(mission.id, 0),
+                    flagged_updates=flagged.get(mission.id, 0),
                     latest_update=latest(mission.id),
                     departments=departments.get(mission.id, []),
                     sub_projects=work_package_counts.get(mission.id, 0),

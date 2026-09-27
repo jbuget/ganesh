@@ -21,6 +21,17 @@ vi.mock("@/lib/use-may-write", () => ({ useMayWrite: () => mayWrite.value }));
 
 vi.mock("@/lib/api/queries", () => ({ useTeammates: () => ({ teammates: [] }) }));
 
+// The panel is its own organism, with its own tests: here only the gesture
+// that opens it is under test.
+const panel = vi.hoisted(() => ({
+  openedMission: null as number | null,
+  openTab: null,
+  aimedAt: null,
+  open: vi.fn(),
+  close: vi.fn(),
+}));
+vi.mock("@/lib/opened-mission", () => ({ useOpenedMission: () => panel }));
+
 function raised(over: Partial<FlaggedUpdateResponse> = {}): FlaggedUpdateResponse {
   return {
     update_id: 1,
@@ -44,6 +55,8 @@ describe("ReviewAgendaPage", () => {
     agenda.chapters = null;
     agenda.waiting = 0;
     agenda.clear = vi.fn();
+    panel.openedMission = null;
+    panel.open = vi.fn();
     mayWrite.value = true;
   });
 
@@ -67,10 +80,22 @@ describe("ReviewAgendaPage", () => {
     expect(
       screen.getByText("3 mises à jour à discuter, sur 2 projets."),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Portail" })).toHaveAttribute(
-      "href",
-      "/projects/10",
-    );
+    expect(screen.getByRole("button", { name: "Portail" })).toBeInTheDocument();
+  });
+
+  /**
+   * Beside the list, not instead of it: one prepares a revue by going down
+   * the agenda, and leaving the screen for each project would lose the place
+   * every time.
+   */
+  it("opens the project beside the agenda, without leaving it", async () => {
+    agenda.chapters = [chapter()];
+    agenda.waiting = 1;
+
+    render(<ReviewAgendaPage />);
+    await userEvent.click(screen.getByRole("button", { name: "Portail" }));
+
+    expect(panel.open).toHaveBeenCalledWith(10);
   });
 
   it("agrees in the singular on one line and one project", () => {

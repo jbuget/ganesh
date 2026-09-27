@@ -77,15 +77,17 @@ export function useProjectUpdates(
     /**
      * Puts an update on the agenda of the next revue, or takes it off.
      *
-     * The thread alone is read back: the mark changes no count and no latest
-     * message. The agenda screen reads it from the server, which is where the
-     * order of the list is decided.
+     * The screen one came from is told, as it is after any other write: the
+     * kanban card and the reference list row derive their mark from the
+     * thread, and would otherwise sit on what they knew when the panel
+     * opened.
      */
     async flag(updateId: number, raising: boolean) {
       await (raising
         ? flagProjectUpdate(projectId, updateId)
         : clearProjectUpdateFlag(projectId, updateId));
       await reload();
+      await onWrite?.();
     },
 
     async react(updateId: number, reaction: Reaction, leaving: boolean) {

@@ -141,6 +141,7 @@ def to_listed_project_response(
         tree_cost=to_cost_response(listed.tree_cost, day),
         links=[to_link_response(link) for link in listed.links if link.id is not None],
         comments=listed.comments,
+        flagged_updates=listed.flagged_updates,
         latest_update=to_latest_update(listed.latest_update),
         departments=listed.departments,
         activities=[to_activity_response(a) for a in listed.activities],
@@ -166,6 +167,7 @@ def to_board_response(board: Board) -> BoardResponse:
                             for membre in card.contributors
                         ],
                         comments=card.comments,
+                        flagged_updates=card.flagged_updates,
                         latest_update=to_latest_update(card.latest_update),
                         departments=card.departments,
                         sub_projects=card.sub_projects,

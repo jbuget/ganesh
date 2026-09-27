@@ -75,6 +75,20 @@ class SqlProjectUpdateRepository(ProjectUpdateRepository):
         result = await self._session.execute(live)
         return {model.project_id: _to_entity(model) for model in result.scalars().all()}
 
+    async def flagged_count_by_project(self) -> dict[int, int]:
+        result = await self._session.execute(
+            select(
+                ProjectUpdateModel.project_id,
+                func.count(ProjectUpdateModel.id),
+            )
+            .where(
+                ProjectUpdateModel.flagged_at.is_not(None),
+                ProjectUpdateModel.cleared_at.is_(None),
+            )
+            .group_by(ProjectUpdateModel.project_id)
+        )
+        return dict(result.tuples().all())
+
     async def list_flagged(self) -> list[ProjectUpdate]:
         # Raised and not yet lowered. Nothing filters out withdrawn messages:
         # removing one lowers its mark, so the entity has already answered.

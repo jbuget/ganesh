@@ -30,6 +30,17 @@ export type MissionState = "active" | "archived";
 export type PublicationState = "published" | "unpublished";
 
 /**
+ * Whether anything on the mission is waiting to be discussed at a revue.
+ *
+ * Derived from the marks left on its thread, never declared on the mission:
+ * a flag it carried itself would stay true until somebody unticked it. Both
+ * sides are worth asking — « to_discuss » is what a backlog review opens on,
+ * and « quiet » finds the projects nobody has said anything about, which is
+ * the same blind spot read the other way.
+ */
+export type DiscussionState = "to_discuss" | "quiet";
+
+/**
  * Everything that gets filtered: a mission, and who looks after it.
  *
  * The shape covers a kanban card as well as a reference list row. Both screens
@@ -40,6 +51,8 @@ export interface FilterableMission {
   project: ProjectResponse;
   contributors: BoardMemberResponse[];
   departments: Department[];
+  /** How many of its updates are waiting to be discussed. Absent counts as none. */
+  flagged_updates?: number;
 }
 
 /** What the screen is asked to show. */
@@ -53,6 +66,7 @@ export interface MissionFilters {
   types: ProjectKind[];
   states: MissionState[];
   publications: PublicationState[];
+  discussions: DiscussionState[];
 }
 
 /**
@@ -75,6 +89,7 @@ export const EVERY_CRITERION: Criterion[] = [
   "contributors",
   "types",
   "publications",
+  "discussions",
   "states",
 ];
 
@@ -88,6 +103,7 @@ const IS_SET: Record<Criterion, (filters: MissionFilters) => boolean> = {
   contributors: (filters) => filters.contributors.length > 0,
   types: (filters) => filters.types.length > 0,
   publications: (filters) => filters.publications.length > 0,
+  discussions: (filters) => filters.discussions.length > 0,
   states: (filters) => filters.states.length > 0,
 };
 
@@ -102,6 +118,7 @@ export const NO_FILTER: MissionFilters = {
   types: [],
   states: [],
   publications: [],
+  discussions: [],
 };
 
 /**
@@ -137,6 +154,17 @@ export const MISSION_STATES: { value: MissionState; label: string }[] = [
 export const PUBLICATION_STATES: { value: PublicationState; label: string }[] = [
   { value: "published", label: "Publiées" },
   { value: "unpublished", label: "Non publiées" },
+];
+
+/**
+ * The two sides of the revue.
+ *
+ * Empty takes nothing away: one steers the missions whether or not anybody
+ * has something to say about them, and only asks when preparing a revue.
+ */
+export const DISCUSSION_STATES: { value: DiscussionState; label: string }[] = [
+  { value: "to_discuss", label: "À discuter" },
+  { value: "quiet", label: "Rien à discuter" },
 ];
 
 /**
@@ -205,6 +233,12 @@ function kept(mission: FilterableMission, filters: MissionFilters): boolean {
     }
   }
 
+  if (filters.discussions.length > 0) {
+    const waiting: DiscussionState =
+      (mission.flagged_updates ?? 0) > 0 ? "to_discuss" : "quiet";
+    if (!filters.discussions.includes(waiting)) return false;
+  }
+
   if (filters.publications.length > 0) {
     const catalogued: PublicationState = mission.project.is_published
       ? "published"
@@ -242,6 +276,7 @@ const PARAMETERS = {
   type: "type",
   state: "state",
   publication: "publication",
+  discussion: "discussion",
 } as const;
 
 const KNOWN_PHASES = new Set<string>(PHASES.map((p) => p.status));
@@ -249,6 +284,7 @@ const KNOWN_CATEGORIES = new Set<string>(CATEGORIES.map((c) => c.value));
 const KNOWN_PRIORITIES = new Set<string>(PRIORITIES.map((p) => p.value));
 const KNOWN_KINDS = new Set<string>(MISSION_KINDS.map((t) => t.value));
 const KNOWN_STATES = new Set<string>(MISSION_STATES.map((e) => e.value));
+const KNOWN_DISCUSSIONS = new Set<string>(DISCUSSION_STATES.map((d) => d.value));
 const KNOWN_DEPARTMENTS = new Set<string>(DEPARTMENTS.map((d) => d.value));
 const KNOWN_PUBLICATIONS = new Set<string>(PUBLICATION_STATES.map((p) => p.value));
 
@@ -310,6 +346,11 @@ function readEveryFilter(params: URLSearchParams): MissionFilters {
       KNOWN_DEPARTMENTS,
     ),
     types: knownValues<ProjectKind>(params, PARAMETERS.type, KNOWN_KINDS),
+    discussions: knownValues<DiscussionState>(
+      params,
+      PARAMETERS.discussion,
+      KNOWN_DISCUSSIONS,
+    ),
     states: knownValues<MissionState>(params, PARAMETERS.state, KNOWN_STATES),
     publications: knownValues<PublicationState>(
       params,
@@ -337,5 +378,8 @@ export function writeFilters(params: URLSearchParams, filters: MissionFilters): 
   filters.states.forEach((state) => params.append(PARAMETERS.state, state));
   filters.publications.forEach((publication) =>
     params.append(PARAMETERS.publication, publication),
+  );
+  filters.discussions.forEach((discussion) =>
+    params.append(PARAMETERS.discussion, discussion),
   );
 }

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { CardCounter } from "@/components/atoms/CardCounter";
+import { ReviewFlag } from "@/components/atoms/ReviewFlag";
 import { ContributorsPicker } from "@/components/atoms/ContributorsPicker";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
@@ -96,6 +97,7 @@ export function ProjectCard({
       ].join(" ")}
     >
       <div className="flex items-start gap-1.5">
+        <ReviewFlag count={card.flagged_updates ?? 0} />
         <h3
           className={`min-w-0 flex-1 text-sm font-medium ${
             archived ? "text-slate-500" : "text-slate-900"

@@ -365,3 +365,57 @@ describe("the new criteria in the address", () => {
     expect(hasActiveFilter(filters({ publications: ["published"] }))).toBe(true);
   });
 });
+
+describe("filtering by what is waiting to be discussed", () => {
+  /**
+   * The question a backlog review opens on: which projects carry something
+   * somebody wants said out loud.
+   */
+  it("keeps only what somebody has raised", () => {
+    const missions = [
+      card({ flagged_updates: 2, project: { id: 1 } }),
+      card({ flagged_updates: 0, project: { id: 2 } }),
+    ];
+
+    const kept = filterMissions(missions, filters({ discussions: ["to_discuss"] }));
+
+    expect(kept.map((m) => m.project.id)).toEqual([1]);
+  });
+
+  /** The other half of the same question: what nobody has said anything about. */
+  it("finds the projects nobody has raised", () => {
+    const missions = [
+      card({ flagged_updates: 2, project: { id: 1 } }),
+      card({ flagged_updates: 0, project: { id: 2 } }),
+    ];
+
+    const kept = filterMissions(missions, filters({ discussions: ["quiet"] }));
+
+    expect(kept.map((m) => m.project.id)).toEqual([2]);
+  });
+
+  it("counts a mission the server said nothing of as quiet", () => {
+    const kept = filterMissions([card()], filters({ discussions: ["quiet"] }));
+
+    expect(kept).toHaveLength(1);
+  });
+
+  it("takes nothing away while the question is not asked", () => {
+    expect(filterMissions([card()], NO_FILTER)).toHaveLength(1);
+  });
+
+  it("travels in the address, and comes back", () => {
+    const params = new URLSearchParams();
+
+    writeFilters(params, filters({ discussions: ["to_discuss"] }));
+
+    expect(params.getAll("discussion")).toEqual(["to_discuss"]);
+    expect(readFilters(params)).toEqual(filters({ discussions: ["to_discuss"] }));
+  });
+
+  it("drops a value nobody wrote", () => {
+    const params = new URLSearchParams("discussion=peut-etre");
+
+    expect(readFilters(params).discussions).toEqual([]);
+  });
+});

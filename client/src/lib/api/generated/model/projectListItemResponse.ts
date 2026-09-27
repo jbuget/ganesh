@@ -26,5 +26,6 @@ export interface ProjectListItemResponse {
   links: ProjectLinkResponse[];
   departments: Department[];
   comments: number;
+  flagged_updates?: number;
   latest_update: LastUpdateResponse | null;
 }

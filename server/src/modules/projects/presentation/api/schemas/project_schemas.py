@@ -142,6 +142,8 @@ class ProjectListItemResponse(BaseModel):
     departments: list[Department]
     #: Live updates in the follow-up thread.
     comments: int
+    #: How many of them are waiting to be discussed at the next revue.
+    flagged_updates: int = 0
     #: The latest of them, absent while there is nothing to read.
     latest_update: LastUpdateResponse | None
 
@@ -236,6 +238,8 @@ class BoardCardResponse(BaseModel):
     build_days: float
     contributors: list[BoardMemberResponse]
     comments: int
+    #: How many of them are waiting to be discussed at the next revue.
+    flagged_updates: int = 0
     #: The latest message of the thread, absent while there is nothing to read.
     latest_update: LastUpdateResponse | None
     #: The departments the mission serves. No card draws them: the filter bar
