@@ -469,6 +469,17 @@ export function auditSentence(
     case "update.clear":
       return { action: "a retiré une mise à jour de l'ordre du jour" };
 
+    // Répondre sous une mise à jour. Le geste est nommé, pas recopié : le
+    // journal dit qu'on a parlé, le fil dit ce qui a été dit.
+    case "comment.post":
+      return { action: "a répondu à une mise à jour" };
+
+    case "comment.edit":
+      return { action: "a modifié une réponse" };
+
+    case "comment.remove":
+      return { action: "a supprimé une réponse" };
+
     // The file is named rather than counted: « a ajouté un fichier » on a
     // project that carries a dozen says nothing one came to the Journal for.
     // The name travels on the line — by now the file may be gone.
