@@ -12,6 +12,7 @@ import {
   chapterLine,
   chapterTitle,
   emphasiseProjects,
+  gazetteTeaser,
   highlightSentence,
   isQuietMonth,
   missionName,
@@ -503,5 +504,45 @@ describe("what the company asked for", () => {
 
     expect(lines).toContainEqual({ label: "demandes déposées", value: 6 });
     expect(lines).toContainEqual({ label: "demande devenue un projet", value: 1 });
+  });
+});
+
+describe("gazetteTeaser", () => {
+  const digest = (over: Partial<DigestResponse>): DigestResponse =>
+    ({
+      month: "2026-09-01",
+      is_generated: false,
+      version: null,
+      generated_at: null,
+      requested_by: null,
+      prose: null,
+      prose_model: null,
+      tally: {} as DigestResponse["tally"],
+      chapters: [],
+      highlights: [],
+      versions: [],
+      ...over,
+    }) as DigestResponse;
+
+  it("hands over the chapeau when a model has written one", () => {
+    expect(gazetteTeaser(digest({ prose: "Le mois a été calme." }))).toBe(
+      "Le mois a été calme.",
+    );
+  });
+
+  it("counts the chapters when nobody has asked for a digest", () => {
+    const chapters = [{}, {}, {}] as DigestResponse["chapters"];
+
+    expect(gazetteTeaser(digest({ chapters }))).toBe("3 chapitres à lire.");
+  });
+
+  it("agrees with a single chapter", () => {
+    const chapters = [{}] as DigestResponse["chapters"];
+
+    expect(gazetteTeaser(digest({ chapters }))).toBe("Un chapitre à lire.");
+  });
+
+  it("says so rather than counting nothing, on a month that left no trace", () => {
+    expect(gazetteTeaser(digest({}))).toBe("Rien à signaler ce mois-ci.");
   });
 });

@@ -5,6 +5,7 @@ import { useMemo } from "react";
 
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { MissionCard } from "@/components/molecules/MissionCard";
+import { GazetteBand } from "@/components/atoms/GazetteBand";
 import { MonthBriefing } from "@/components/molecules/MonthBriefing";
 import { MoodCheckIn } from "@/components/molecules/MoodCheckIn";
 import { TodayPresence } from "@/components/molecules/TodayPresence";
@@ -12,6 +13,7 @@ import { UpdateFeedItem } from "@/components/molecules/UpdateFeedItem";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { UserPanel } from "@/components/organisms/UserPanel";
+import { useGazetteBand } from "@/lib/use-gazette-band";
 import { useHome } from "@/lib/use-home";
 import { useOpenedUser } from "@/lib/opened-user";
 import { useMood } from "@/lib/use-mood";
@@ -35,6 +37,11 @@ import { useOpenedMission } from "@/lib/opened-mission";
  * picker posted here would be noise every morning for a gesture made twice a
  * year.
  *
+ * La Gazette is handed over the same way, from a band above « Quoi de neuf »:
+ * the two read down as one movement, the month of the whole company and then
+ * the news of one's own projects. It reads and leads away — asking for a
+ * digest is a write, and it stays on the screen that holds the versions.
+ *
  * The mood is the one exception, and it is a deliberate one. Answering is a
  * one-second gesture on a window that closes the next working day; behind a
  * link, it would simply never be made, and a morale nobody posts measures
@@ -47,6 +54,7 @@ import { useOpenedMission } from "@/lib/opened-mission";
 export function HomePage() {
   const home = useHome();
   const mood = useMood();
+  const gazette = useGazetteBand();
   // The same hook the teammates screen uses: the home screen already reads
   // the team for the presence block, and the panel is opened from here
   // rather than reached by a screen — changing a day is not worth one.
@@ -153,6 +161,15 @@ export function HomePage() {
             meId={home.me?.id ?? null}
             onOpenMine={() => home.me && userPanel.open(home.me.id)}
           />
+
+          {/* Above « Quoi de neuf », and the two read as one movement: the
+            month of the whole company, then the news of my own projects. It is
+            off the bar for that reason — a page written once a month asked for
+            a rank beside screens one opens hourly, and reached from here it is
+            read where it is worth reading. */}
+          {gazette.digest && (
+            <GazetteBand cursor={gazette.cursor} digest={gazette.digest} />
+          )}
 
           {/* Framed like a kanban column, and tinted like one: a stack of cards
             read one after the other is the same object on both screens, and the

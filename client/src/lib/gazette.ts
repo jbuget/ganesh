@@ -335,3 +335,22 @@ export function formatGeneratedAt(iso: string): string {
     minute: "2-digit",
   });
 }
+
+/**
+ * What the band on the home screen says of the month, in one breath.
+ *
+ * The chapeau when a model has written one: two sentences over the facts is
+ * exactly what a band has room for, and it is already the month said short.
+ * Failing that the register counts its own chapters — the band says there is
+ * something to read without pretending to say what.
+ *
+ * Agreement is written out rather than computed: « chapitre » and
+ * « chapitres » are invisible to the type checker, and a test asserting on a
+ * count would never catch the wrong one.
+ */
+export function gazetteTeaser(digest: DigestResponse): string {
+  if (digest.prose) return digest.prose;
+  if (isQuietMonth(digest)) return "Rien à signaler ce mois-ci.";
+  const chapters = digest.chapters.length;
+  return chapters > 1 ? `${chapters} chapitres à lire.` : "Un chapitre à lire.";
+}
