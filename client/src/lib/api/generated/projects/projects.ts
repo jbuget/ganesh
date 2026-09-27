@@ -42,6 +42,7 @@ import type {
   ListProjectAuditLogParams,
   ListProjectsParams,
   MoveProjectRequest,
+  PostCommentRequest,
   PostUpdateRequest,
   ProjectAttachmentResponse,
   ProjectDetailResponse,
@@ -53,6 +54,7 @@ import type {
   RenameAttachmentRequest,
   UnassignMemberParams,
   UpdateActivityRequest,
+  UpdateCommentResponse,
   UpdateDescriptionRequest,
   UpdateProjectDetailRequest,
   UpdateProjectRegistryRequest,
@@ -4299,6 +4301,688 @@ export const useWithdrawProjectUpdateReaction = <
 > => {
   return useMutation(
     getWithdrawProjectUpdateReactionMutationOptions(options),
+    queryClient,
+  );
+};
+export type postUpdateCommentResponse201 = {
+  data: UpdateCommentResponse;
+  status: 201;
+};
+
+export type postUpdateCommentResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type postUpdateCommentResponseSuccess = postUpdateCommentResponse201 & {
+  headers: Headers;
+};
+export type postUpdateCommentResponseError = postUpdateCommentResponse422 & {
+  headers: Headers;
+};
+
+export type postUpdateCommentResponse =
+  postUpdateCommentResponseSuccess | postUpdateCommentResponseError;
+
+export const getPostUpdateCommentUrl = (projectId: number, updateId: number) => {
+  return `/api/v1/projects/${projectId}/updates/${updateId}/comments`;
+};
+
+/**
+ * Answers an update, under it.
+ *
+ * Human-only, where posting an update is also a machine's: a tool posts what
+ * it has to say on the mission and does not join a conversation.
+ * @summary Post Update Comment
+ */
+export const postUpdateComment = async (
+  projectId: number,
+  updateId: number,
+  postCommentRequest: PostCommentRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<postUpdateCommentResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<postUpdateCommentResponse>(
+    getPostUpdateCommentUrl(projectId, updateId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(postCommentRequest),
+    },
+  );
+};
+
+export const getPostUpdateCommentMutationKey = () => ["postUpdateComment"] as const;
+
+export const getPostUpdateCommentMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postUpdateComment>>,
+    TError,
+    PostUpdateCommentMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postUpdateComment>>,
+  TError,
+  PostUpdateCommentMutationVariables,
+  TContext
+> => {
+  const mutationKey = getPostUpdateCommentMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postUpdateComment>>,
+    PostUpdateCommentMutationVariables
+  > = (props) => {
+    const { projectId, updateId, data } = props ?? {};
+
+    return postUpdateComment(projectId, updateId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PostUpdateCommentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postUpdateComment>>
+>;
+export type PostUpdateCommentMutationBody = PostCommentRequest;
+export type PostUpdateCommentMutationError = HTTPValidationError;
+export type PostUpdateCommentMutationVariables = {
+  projectId: number;
+  updateId: number;
+  data: PostCommentRequest;
+};
+
+/**
+ * @summary Post Update Comment
+ */
+export const usePostUpdateComment = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof postUpdateComment>>,
+      TError,
+      PostUpdateCommentMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof postUpdateComment>>,
+  TError,
+  PostUpdateCommentMutationVariables,
+  TContext
+> => {
+  return useMutation(getPostUpdateCommentMutationOptions(options), queryClient);
+};
+export type editUpdateCommentResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type editUpdateCommentResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type editUpdateCommentResponseSuccess = editUpdateCommentResponse204 & {
+  headers: Headers;
+};
+export type editUpdateCommentResponseError = editUpdateCommentResponse422 & {
+  headers: Headers;
+};
+
+export type editUpdateCommentResponse =
+  editUpdateCommentResponseSuccess | editUpdateCommentResponseError;
+
+export const getEditUpdateCommentUrl = (
+  projectId: number,
+  updateId: number,
+  commentId: number,
+) => {
+  return `/api/v1/projects/${projectId}/updates/${updateId}/comments/${commentId}`;
+};
+
+/**
+ * Corrects a reply. Only its author may.
+ * @summary Edit Update Comment
+ */
+export const editUpdateComment = async (
+  projectId: number,
+  updateId: number,
+  commentId: number,
+  postCommentRequest: PostCommentRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<editUpdateCommentResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<editUpdateCommentResponse>(
+    getEditUpdateCommentUrl(projectId, updateId, commentId),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(postCommentRequest),
+    },
+  );
+};
+
+export const getEditUpdateCommentMutationKey = () => ["editUpdateComment"] as const;
+
+export const getEditUpdateCommentMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof editUpdateComment>>,
+    TError,
+    EditUpdateCommentMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof editUpdateComment>>,
+  TError,
+  EditUpdateCommentMutationVariables,
+  TContext
+> => {
+  const mutationKey = getEditUpdateCommentMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof editUpdateComment>>,
+    EditUpdateCommentMutationVariables
+  > = (props) => {
+    const { projectId, updateId, commentId, data } = props ?? {};
+
+    return editUpdateComment(projectId, updateId, commentId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type EditUpdateCommentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof editUpdateComment>>
+>;
+export type EditUpdateCommentMutationBody = PostCommentRequest;
+export type EditUpdateCommentMutationError = HTTPValidationError;
+export type EditUpdateCommentMutationVariables = {
+  projectId: number;
+  updateId: number;
+  commentId: number;
+  data: PostCommentRequest;
+};
+
+/**
+ * @summary Edit Update Comment
+ */
+export const useEditUpdateComment = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof editUpdateComment>>,
+      TError,
+      EditUpdateCommentMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof editUpdateComment>>,
+  TError,
+  EditUpdateCommentMutationVariables,
+  TContext
+> => {
+  return useMutation(getEditUpdateCommentMutationOptions(options), queryClient);
+};
+export type removeUpdateCommentResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type removeUpdateCommentResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type removeUpdateCommentResponseSuccess = removeUpdateCommentResponse204 & {
+  headers: Headers;
+};
+export type removeUpdateCommentResponseError = removeUpdateCommentResponse422 & {
+  headers: Headers;
+};
+
+export type removeUpdateCommentResponse =
+  removeUpdateCommentResponseSuccess | removeUpdateCommentResponseError;
+
+export const getRemoveUpdateCommentUrl = (
+  projectId: number,
+  updateId: number,
+  commentId: number,
+) => {
+  return `/api/v1/projects/${projectId}/updates/${updateId}/comments/${commentId}`;
+};
+
+/**
+ * Withdraws a reply. It keeps its place in the conversation.
+ * @summary Remove Update Comment
+ */
+export const removeUpdateComment = async (
+  projectId: number,
+  updateId: number,
+  commentId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<removeUpdateCommentResponse> => {
+  return bffFetcher<removeUpdateCommentResponse>(
+    getRemoveUpdateCommentUrl(projectId, updateId, commentId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getRemoveUpdateCommentMutationKey = () => ["removeUpdateComment"] as const;
+
+export const getRemoveUpdateCommentMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeUpdateComment>>,
+    TError,
+    RemoveUpdateCommentMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof removeUpdateComment>>,
+  TError,
+  RemoveUpdateCommentMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRemoveUpdateCommentMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof removeUpdateComment>>,
+    RemoveUpdateCommentMutationVariables
+  > = (props) => {
+    const { projectId, updateId, commentId } = props ?? {};
+
+    return removeUpdateComment(projectId, updateId, commentId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemoveUpdateCommentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof removeUpdateComment>>
+>;
+
+export type RemoveUpdateCommentMutationError = HTTPValidationError;
+export type RemoveUpdateCommentMutationVariables = {
+  projectId: number;
+  updateId: number;
+  commentId: number;
+};
+
+/**
+ * @summary Remove Update Comment
+ */
+export const useRemoveUpdateComment = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof removeUpdateComment>>,
+      TError,
+      RemoveUpdateCommentMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof removeUpdateComment>>,
+  TError,
+  RemoveUpdateCommentMutationVariables,
+  TContext
+> => {
+  return useMutation(getRemoveUpdateCommentMutationOptions(options), queryClient);
+};
+export type reactToUpdateCommentResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type reactToUpdateCommentResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type reactToUpdateCommentResponseSuccess = reactToUpdateCommentResponse204 & {
+  headers: Headers;
+};
+export type reactToUpdateCommentResponseError = reactToUpdateCommentResponse422 & {
+  headers: Headers;
+};
+
+export type reactToUpdateCommentResponse =
+  reactToUpdateCommentResponseSuccess | reactToUpdateCommentResponseError;
+
+export const getReactToUpdateCommentUrl = (
+  projectId: number,
+  updateId: number,
+  commentId: number,
+  reaction: Reaction,
+) => {
+  return `/api/v1/projects/${projectId}/updates/${updateId}/comments/${commentId}/reactions/${reaction}`;
+};
+
+/**
+ * Leaves a sign under a reply. Leaving it twice changes nothing.
+ * @summary React To Update Comment
+ */
+export const reactToUpdateComment = async (
+  projectId: number,
+  updateId: number,
+  commentId: number,
+  reaction: Reaction,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<reactToUpdateCommentResponse> => {
+  return bffFetcher<reactToUpdateCommentResponse>(
+    getReactToUpdateCommentUrl(projectId, updateId, commentId, reaction),
+    {
+      ...options,
+      method: "PUT",
+    },
+  );
+};
+
+export const getReactToUpdateCommentMutationKey = () =>
+  ["reactToUpdateComment"] as const;
+
+export const getReactToUpdateCommentMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reactToUpdateComment>>,
+    TError,
+    ReactToUpdateCommentMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reactToUpdateComment>>,
+  TError,
+  ReactToUpdateCommentMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReactToUpdateCommentMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reactToUpdateComment>>,
+    ReactToUpdateCommentMutationVariables
+  > = (props) => {
+    const { projectId, updateId, commentId, reaction } = props ?? {};
+
+    return reactToUpdateComment(
+      projectId,
+      updateId,
+      commentId,
+      reaction,
+      requestOptions,
+    );
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReactToUpdateCommentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reactToUpdateComment>>
+>;
+
+export type ReactToUpdateCommentMutationError = HTTPValidationError;
+export type ReactToUpdateCommentMutationVariables = {
+  projectId: number;
+  updateId: number;
+  commentId: number;
+  reaction: Reaction;
+};
+
+/**
+ * @summary React To Update Comment
+ */
+export const useReactToUpdateComment = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reactToUpdateComment>>,
+      TError,
+      ReactToUpdateCommentMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reactToUpdateComment>>,
+  TError,
+  ReactToUpdateCommentMutationVariables,
+  TContext
+> => {
+  return useMutation(getReactToUpdateCommentMutationOptions(options), queryClient);
+};
+export type withdrawUpdateCommentReactionResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type withdrawUpdateCommentReactionResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type withdrawUpdateCommentReactionResponseSuccess =
+  withdrawUpdateCommentReactionResponse204 & {
+    headers: Headers;
+  };
+export type withdrawUpdateCommentReactionResponseError =
+  withdrawUpdateCommentReactionResponse422 & {
+    headers: Headers;
+  };
+
+export type withdrawUpdateCommentReactionResponse =
+  | withdrawUpdateCommentReactionResponseSuccess
+  | withdrawUpdateCommentReactionResponseError;
+
+export const getWithdrawUpdateCommentReactionUrl = (
+  projectId: number,
+  updateId: number,
+  commentId: number,
+  reaction: Reaction,
+) => {
+  return `/api/v1/projects/${projectId}/updates/${updateId}/comments/${commentId}/reactions/${reaction}`;
+};
+
+/**
+ * Takes one's own sign back. Taking back one never left changes nothing.
+ * @summary Withdraw Update Comment Reaction
+ */
+export const withdrawUpdateCommentReaction = async (
+  projectId: number,
+  updateId: number,
+  commentId: number,
+  reaction: Reaction,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<withdrawUpdateCommentReactionResponse> => {
+  return bffFetcher<withdrawUpdateCommentReactionResponse>(
+    getWithdrawUpdateCommentReactionUrl(projectId, updateId, commentId, reaction),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getWithdrawUpdateCommentReactionMutationKey = () =>
+  ["withdrawUpdateCommentReaction"] as const;
+
+export const getWithdrawUpdateCommentReactionMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof withdrawUpdateCommentReaction>>,
+    TError,
+    WithdrawUpdateCommentReactionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof withdrawUpdateCommentReaction>>,
+  TError,
+  WithdrawUpdateCommentReactionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getWithdrawUpdateCommentReactionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof withdrawUpdateCommentReaction>>,
+    WithdrawUpdateCommentReactionMutationVariables
+  > = (props) => {
+    const { projectId, updateId, commentId, reaction } = props ?? {};
+
+    return withdrawUpdateCommentReaction(
+      projectId,
+      updateId,
+      commentId,
+      reaction,
+      requestOptions,
+    );
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type WithdrawUpdateCommentReactionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof withdrawUpdateCommentReaction>>
+>;
+
+export type WithdrawUpdateCommentReactionMutationError = HTTPValidationError;
+export type WithdrawUpdateCommentReactionMutationVariables = {
+  projectId: number;
+  updateId: number;
+  commentId: number;
+  reaction: Reaction;
+};
+
+/**
+ * @summary Withdraw Update Comment Reaction
+ */
+export const useWithdrawUpdateCommentReaction = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof withdrawUpdateCommentReaction>>,
+      TError,
+      WithdrawUpdateCommentReactionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof withdrawUpdateCommentReaction>>,
+  TError,
+  WithdrawUpdateCommentReactionMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getWithdrawUpdateCommentReactionMutationOptions(options),
     queryClient,
   );
 };
