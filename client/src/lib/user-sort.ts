@@ -1,4 +1,5 @@
 import type { UserResponse } from "@/lib/api/generated/model";
+import { orgLevelRank } from "@/lib/org-levels";
 import { roleRank } from "@/lib/roles";
 import {
   NO_COLUMN_SORT,
@@ -10,7 +11,8 @@ import {
 } from "@/lib/table-sort";
 
 /** The team list columns the list can be ordered by. */
-export type UserSortColumn = "name" | "email" | "github" | "role" | "login" | "status";
+export type UserSortColumn =
+  "name" | "email" | "github" | "level" | "role" | "login" | "status";
 
 /** The column asked for, or `null` for the team list's own order. */
 export type UserSort = ColumnSort<UserSortColumn>;
@@ -21,6 +23,7 @@ const COLUMNS: UserSortColumn[] = [
   "name",
   "email",
   "github",
+  "level",
   "role",
   "login",
   "status",
@@ -39,6 +42,10 @@ const VALUES: Record<UserSortColumn, (user: UserResponse) => string | number | n
   name: (user) => user.display_name,
   email: (user) => user.email,
   github: (user) => user.github_username ?? null,
+  // From the top of the company down, as `ORG_LEVELS` declares them —
+  // never the alphabet, which would file the COMEX between the COMOP and
+  // the rest. Nobody placed is `null`, and lands at the end.
+  level: (user) => (user.org_level ? orgLevelRank(user.org_level) : null),
   // From the least to the most empowered, as the ladder declares them.
   role: (user) => roleRank(user.role),
   login: (user) => (user.last_login_at ? new Date(user.last_login_at).getTime() : null),

@@ -5,6 +5,7 @@ import { UserAvatar } from "@/components/atoms/UserAvatar";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { UserResponse } from "@/lib/api/generated/model";
 import { formatParisDateTime } from "@/lib/instants";
+import { orgLevelLabel } from "@/lib/org-levels";
 import { since } from "@/lib/relative-dates";
 import { roleLabel } from "@/lib/roles";
 import { NAMING_BUTTON, NAMING_CELL, NAMING_CONTENT } from "@/lib/table-frame";
@@ -63,6 +64,17 @@ export function UserRow({ user, now, onOpen }: UserRowProps) {
         {/* The handle alone, as it is stored: the row compares the team, it
             does not walk off to GitHub. */}
         {user.github_username ?? <span className="text-slate-400">—</span>}
+      </TableCell>
+
+      <TableCell className="py-2 text-slate-500">
+        {/* Left blank for most, and that is what it means: nobody had a
+            reason to place them. It is not « Collaborateur » by default —
+            that is a level somebody chose. */}
+        {user.org_level ? (
+          orgLevelLabel(user.org_level)
+        ) : (
+          <span className="text-slate-400">—</span>
+        )}
       </TableCell>
 
       <TableCell className="py-2 text-slate-600">{roleLabel(user.role)}</TableCell>

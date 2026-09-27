@@ -73,6 +73,11 @@ vi.mock("@/lib/api/queries", () => ({
     isLoading: false,
   }),
 }));
+// « Lire comme » asks who is reading before deciding whether to show at all,
+// which is its own test's business.
+vi.mock("@/components/organisms/ReadAsAccount", () => ({
+  ReadAsAccount: () => null,
+}));
 vi.mock("@/lib/opened-user", () => ({ useOpenedUser: () => panel }));
 vi.mock("@/lib/use-user-filters", () => ({ useUserFilters: () => criteria }));
 vi.mock("@/lib/use-user-sort", () => ({ useUserSort: () => order }));

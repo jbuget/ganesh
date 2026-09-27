@@ -81,6 +81,75 @@ def local_token_service(settings: Settings) -> LocalTokenService:
     )
 
 
+#: The header a borrowed session travels under.
+#:
+#: It is written by the BFF, out of a sealed cookie the browser cannot read,
+#: and never by a page. Not that it would help: what it opens is read below
+#: off the account the token names, so a header sent by hand opens exactly
+#: what the person sending it already held — nothing, unless they administrate
+#: the platform.
+IMPERSONATION_HEADER = "X-Impersonate-User-Id"
+
+
+async def read_as(borrower: User, target_id: int, users: SqlUserRepository) -> User:
+    """Hands back the account `borrower` is reading, marked as borrowed.
+
+    An administrator may look at Ganesh through a teammate's eyes — that a
+    guest reaches nothing, that a month closes, that a screen says what it
+    was meant to say. Three things are refused rather than tolerated:
+
+    - anybody who does not administrate the platform, which is the whole
+      door — a manager reads the team's screens, not from inside somebody's
+      account;
+    - an account whose access has been cut off, which sees a closed door and
+      nothing else: there is no screen behind it to go and look at;
+    - one's own, which is not borrowing: it would draw a band saying somebody
+      else is reading, over what one reads every day.
+
+    What comes back writes nothing: `impersonated_by` is what `can_act()`
+    reads, so every door that guards a gesture refuses on its own.
+    """
+    if not borrower.can_administrate():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only an administrator may read Ganesh as a teammate.",
+        )
+    if target_id == borrower.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="One does not borrow one's own account.",
+        )
+
+    target = await users.get_by_id(target_id)
+    if target is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This teammate does not exist.",
+        )
+    if not target.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account is deactivated: there is nothing to read.",
+        )
+
+    target.impersonated_by = borrower
+    return target
+
+
+def borrowed_id(header: str | None) -> int | None:
+    """The account a request asks to be read as, if it asks at all.
+
+    Anything that is not a number is nobody: a header the BFF did not write
+    is answered by ignoring it rather than by a 422 on every screen at once.
+    """
+    if not header:
+        return None
+    try:
+        return int(header)
+    except ValueError:
+        return None
+
+
 def admit(user: User) -> User:
     """The door: who walks into the application, and who is turned away.
 
@@ -107,6 +176,7 @@ def admit(user: User) -> User:
 
 async def get_signed_in_user(
     authorization: str | None = Header(default=None),
+    impersonate_user_id: str | None = Header(default=None, alias=IMPERSONATION_HEADER),
     session: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> User:
@@ -146,7 +216,7 @@ async def get_signed_in_user(
             dev_identity(settings.dev_email), first_role=Role.ADMIN
         )
         await session.commit()
-        return user
+        return await _read_as_asked(user, impersonate_user_id, session)
 
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(
@@ -176,7 +246,21 @@ async def get_signed_in_user(
 
     user = await provision.execute(identity)
     await session.commit()
-    return user
+    return await _read_as_asked(user, impersonate_user_id, session)
+
+
+async def _read_as_asked(user: User, header: str | None, session: AsyncSession) -> User:
+    """Whoever is actually being read: the signed-in account, or a borrowed one.
+
+    Both doors come through here rather than one of them: a laptop with
+    authentication switched off is where one tries a screen out as somebody
+    else, and leaving it out would be leaving the feature out of the one place
+    it is used most.
+    """
+    target_id = borrowed_id(header)
+    if target_id is None:
+        return user
+    return await read_as(user, target_id, SqlUserRepository(session))
 
 
 async def get_current_user(
@@ -207,6 +291,28 @@ async def get_asker(
     return user
 
 
+async def get_writing_asker(
+    user: User = Depends(get_asker),
+) -> User:
+    """The recueil's other half: the door a route that *writes* a need hangs off.
+
+    `get_asker` lets a guest read their own sheet, and a borrowed session read
+    it with them; this one is what the seven gestures of the recueil ask for,
+    and it is in `WRITE_DOORS` for the reason the other three are — a route
+    added without one fails the reading rather than production.
+
+    What it holds back is the borrowed session: a need filed, handed over or
+    weighed under somebody else's name is a need the register would file
+    against whoever did not file it.
+    """
+    if not user.can_act():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="A borrowed session reads Ganesh, it does not write into it.",
+        )
+    return user
+
+
 async def get_contributor(
     user: User = Depends(get_current_user),
 ) -> User:
@@ -226,7 +332,11 @@ async def get_contributor(
     if not user.can_write():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="This account may read Ganesh, not write into it.",
+            detail=(
+                "A borrowed session reads Ganesh, it does not write into it."
+                if user.is_impersonated
+                else "This account may read Ganesh, not write into it."
+            ),
         )
     return user
 

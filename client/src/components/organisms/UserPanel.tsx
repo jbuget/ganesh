@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { SidePanel } from "@/components/atoms/SidePanel";
 import { UserAvatar } from "@/components/atoms/UserAvatar";
+import { ReadAsAccount } from "@/components/organisms/ReadAsAccount";
 import { UserActivityTab } from "@/components/organisms/UserActivityTab";
 import { UserAuditTab } from "@/components/organisms/UserAuditTab";
 import { UserIdentityTab } from "@/components/organisms/UserIdentityTab";
@@ -131,6 +132,13 @@ export function UserPanel({
               onDeclarePresence={onDeclarePresence}
               now={now}
             />
+
+            {/* Last of the sheet, and only for an administrator: it is the one
+                thing here that changes what *the reader* sees rather than
+                what the account is. It decides on its own whether to show —
+                the conditions are the API's, and a panel repeating them would
+                be a second place for them to drift. */}
+            <ReadAsAccount user={user} />
           </TabsContent>
 
           <TabsContent value="activity">

@@ -17,6 +17,11 @@ vi.mock("@/components/organisms/UserActivityTab", () => ({
 vi.mock("@/components/organisms/UserAuditTab", () => ({
   UserAuditTab: ({ userId }: { userId: number }) => <div>Journal de {userId}</div>,
 }));
+// It asks who is reading before deciding whether to show at all, which is its
+// own test's business, not this one's.
+vi.mock("@/components/organisms/ReadAsAccount", () => ({
+  ReadAsAccount: () => null,
+}));
 
 const jeremy: UserResponse = {
   id: 1,

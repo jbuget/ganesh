@@ -23,7 +23,11 @@ from src.modules.audit_logs.presentation.api.mappers.audit_log_mapper import (
 from src.modules.audit_logs.presentation.api.schemas.audit_log_schemas import (
     AuditLogPageResponse,
 )
-from src.modules.auth.presentation.dependencies import get_asker, get_current_user
+from src.modules.auth.presentation.dependencies import (
+    get_asker,
+    get_current_user,
+    get_writing_asker,
+)
 from src.modules.requests.application.dtos.request_dto import (
     ConvertRequestCommand,
     DecideRequestCommand,
@@ -94,7 +98,7 @@ router = APIRouter(prefix="/requests", tags=["requests"])
 )
 async def file_request(
     payload: FileRequestRequest,
-    current_user: User = Depends(get_asker),
+    current_user: User = Depends(get_writing_asker),
     use_case: FileRequestUseCase = Depends(get_file_request_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> RequestResponse:
@@ -172,7 +176,7 @@ async def get_request(
 async def fill_in_request(
     request_id: int,
     payload: FillInRequestRequest,
-    current_user: User = Depends(get_asker),
+    current_user: User = Depends(get_writing_asker),
     use_case: FillInRequestUseCase = Depends(get_fill_in_request_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> RequestResponse:
@@ -204,7 +208,7 @@ async def fill_in_request(
 )
 async def submit_request(
     request_id: int,
-    current_user: User = Depends(get_asker),
+    current_user: User = Depends(get_writing_asker),
     use_case: SubmitRequestUseCase = Depends(get_submit_request_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> RequestResponse:
@@ -222,7 +226,7 @@ async def submit_request(
 )
 async def withdraw_request(
     request_id: int,
-    current_user: User = Depends(get_asker),
+    current_user: User = Depends(get_writing_asker),
     use_case: WithdrawRequestUseCase = Depends(get_withdraw_request_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> RequestResponse:
@@ -240,7 +244,7 @@ async def withdraw_request(
 )
 async def delete_request(
     request_id: int,
-    current_user: User = Depends(get_asker),
+    current_user: User = Depends(get_writing_asker),
     use_case: DeleteRequestUseCase = Depends(get_delete_request_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -259,7 +263,7 @@ async def delete_request(
 async def decide_request(
     request_id: int,
     payload: DecideRequestRequest,
-    current_user: User = Depends(get_asker),
+    current_user: User = Depends(get_writing_asker),
     use_case: DecideRequestUseCase = Depends(get_decide_request_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> RequestResponse:
@@ -285,7 +289,7 @@ async def decide_request(
 async def convert_request(
     request_id: int,
     payload: ConvertRequestRequest,
-    current_user: User = Depends(get_asker),
+    current_user: User = Depends(get_writing_asker),
     use_case: ConvertRequestUseCase = Depends(get_convert_request_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> RequestResponse:

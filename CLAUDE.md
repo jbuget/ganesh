@@ -96,6 +96,45 @@ To read the application as the other audience — somebody who only ever comes t
 ask for something — move that account with `make grant-role EMAIL=… ROLE=GUEST`;
 the same command brings it back.
 
+### Lire Ganesh comme un collègue
+
+« Ça ne marche pas chez moi » is answered by going and looking. An
+administrator borrows a teammate's account, reads the application through
+their eyes, and gives it back — a guest's « Mes demandes » and nothing else,
+a manager's board, a month that closed.
+
+- **A borrowed session reads, and never writes.** Not a rule on top of the
+  feature: `impersonated_by` on the entity is what `can_act()` reads, and
+  every `can_…` below it goes through that one line. A day declared, a month
+  reopened or a role handed out under a borrowed name would reach `audit_log`
+  bearing a name that did not make it — and the register has no way of saying
+  « signed by somebody standing behind them ». It costs one thing, knowingly:
+  reading as another administrator does not open « Administration ». The
+  borrower still holds it in their own name.
+- **The recueil is where that could have slipped through**, being the one
+  thing a guest writes. `get_asker` lets a guest read their sheet and a
+  borrowed session read it with them; `get_writing_asker` is what the seven
+  gestures hang off, and it is in `WRITE_DOORS` for the reason the other three
+  are — a route added without one fails `test_write_doors` rather than
+  production.
+- **Only an administrator borrows**, never a manager: a manager reads the
+  team's screens, not from inside somebody's account. A deactivated account is
+  refused — behind a closed door there is no screen to go and look at — and so
+  is one's own, and a second borrowing on top of a first.
+- **What carries it is a sealed cookie, and the BFF alone writes it.** The
+  relay *deletes* `X-Impersonate-User-Id` off every incoming request before
+  setting it from that cookie: it would open nothing either way — the API
+  reads it off the account the token names — but a header a page can steer is
+  a header somebody will one day trust. Starting a borrowing asks
+  `GET /users/me` first and writes nothing if the API says no, so a refusal
+  never leaves a session every request of which is 403.
+- **The band is drawn on both frames**, the team's and the guest's, sticks to
+  the top and names both people. `GET /users/me` is what it is read from —
+  the one route that answers for the session rather than for a teammate — so
+  what the application refuses and what the band announces come from the same
+  answer. The borrowing goes with the session that opened it: signing out
+  takes it, and so does a 401.
+
 **Two bounds hold every role change**, and they live on the entity: nobody
 hands out a role above their own, and nobody moves somebody who stands above
 them. A manager therefore promotes up to manager and leaves an admin alone —

@@ -5,6 +5,7 @@ import { useEffect } from "react";
 
 import { AppSidebar } from "@/components/organisms/AppSidebar";
 import { CommandPalette } from "@/components/organisms/CommandPalette";
+import { ImpersonationBanner } from "@/components/organisms/ImpersonationBanner";
 import { MoodReminder } from "@/components/organisms/MoodReminder";
 import { ReadOnlyBanner } from "@/components/organisms/ReadOnlyBanner";
 import { useCurrentUser } from "@/lib/api/queries";
@@ -24,6 +25,12 @@ const REQUESTS = "/requests";
  *
  * Nothing is drawn until we know who is there: a sidebar shown for a moment
  * and taken back would be a list of doors somebody was never meant to see.
+ *
+ * Who is there may be an account an administrator has borrowed, and the frame
+ * is then drawn for the *borrowed* role: a borrowed guest gets the guest's
+ * frame, which is the whole reason one borrows one. The band saying so is
+ * drawn on both sides, and is the one thing the guest's frame carries beside
+ * the screen itself.
  */
 export function AppFrame({ children }: Readonly<{ children: React.ReactNode }>) {
   const { user, isLoading } = useCurrentUser();
@@ -41,13 +48,22 @@ export function AppFrame({ children }: Readonly<{ children: React.ReactNode }>) 
   if (isLoading || !user) return null;
 
   if (isGuest) {
-    return <div className="min-h-screen">{astray ? null : children}</div>;
+    return (
+      <div className="min-h-screen">
+        <ImpersonationBanner />
+        {astray ? null : children}
+      </div>
+    );
   }
 
   return (
     <div className="flex min-h-screen">
       <AppSidebar />
       <div className="min-w-0 flex-1">
+        {/* An administrator reading as somebody else is told so above
+            everything, and given the way back there: what the band says stops
+            being true the moment it is forgotten. */}
+        <ImpersonationBanner />
         {/* Whoever may not write reads the band once, here, rather than a
             dozen times over — and never a guest, who never comes this far. */}
         <ReadOnlyBanner />

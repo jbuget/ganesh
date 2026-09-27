@@ -20,7 +20,13 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 
+import { upstream } from "@/lib/api/upstream";
 import { needsRefresh, refreshTokens } from "@/lib/auth/entra";
+import {
+  IMPERSONATION_HEADER,
+  borrowedUserIdFrom,
+  returnedCookie,
+} from "@/lib/auth/impersonation";
 import {
   clearedSessionCookies,
   currentSession,
@@ -28,12 +34,6 @@ import {
   sessionCookies,
   type Session,
 } from "@/lib/auth/session";
-
-const API_URL = process.env.API_URL ?? "http://localhost:8000";
-// `||` rather than `??`: an API_PREFIX left empty in the environment is a
-// variable nobody filled in, not a deliberate empty prefix — and `??`
-// would take it for one, relaying to an address without /api/v1.
-const API_PREFIX = process.env.API_PREFIX || "/api/v1";
 
 const HOP_BY_HOP = new Set(["connection", "keep-alive", "transfer-encoding", "host"]);
 
@@ -91,12 +91,24 @@ async function freshSession(): Promise<{ session: Session | null; renewed: boole
 async function proxy(request: NextRequest): Promise<NextResponse> {
   const incoming = new URL(request.url);
   const suffix = incoming.pathname.replace(/^\/api\/v1/, "");
-  const target = `${API_URL}${API_PREFIX}${suffix}${incoming.search}`;
+  const target = upstream(`${suffix}${incoming.search}`);
 
   const headers = new Headers();
   request.headers.forEach((value, key) => {
     if (!HOP_BY_HOP.has(key.toLowerCase())) headers.set(key, value);
   });
+  // Taken away before anything is put back: the relay copies what the browser
+  // sent, and this header says which account the API is to answer as. A page
+  // that could set it would be a page naming its own reader. It is written
+  // here alone, out of a sealed cookie no script on the page can reach.
+  //
+  // It would open nothing either way — the API reads it off the account the
+  // token names, and refuses anybody who does not administrate the platform —
+  // but a header the browser can steer is a header somebody will one day
+  // trust.
+  headers.delete(IMPERSONATION_HEADER);
+  const readAs = await borrowedUserIdFrom((name) => request.cookies.get(name)?.value);
+  if (readAs !== null) headers.set(IMPERSONATION_HEADER, String(readAs));
 
   const { session, renewed } = await freshSession();
   if (session) headers.set("Authorization", `Bearer ${session.idToken}`);
@@ -144,6 +156,9 @@ async function proxy(request: NextRequest): Promise<NextResponse> {
   const carried = request.cookies.getAll().map((cookie) => cookie.name);
   if (response.status === 401) {
     for (const cookie of clearedSessionCookies(carried)) relayed.cookies.set(cookie);
+    // And the borrowing with it, for the reason signing out takes it: it was
+    // opened under a session that is over.
+    relayed.cookies.set(returnedCookie());
   } else if (renewed && session) {
     for (const cookie of sessionCookies(await sealSession(session), carried)) {
       relayed.cookies.set(cookie);

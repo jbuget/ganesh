@@ -42,9 +42,10 @@ export function UsersTable({ users, sorted, onSort, now, onOpen }: UsersTablePro
       <Table className={`border-separate border-spacing-0 ${TABLE_FRAME}`}>
         <TableHeader className={TABLE_HEADER}>
           <TableRow>
-            {/* Every column sorts: each of the six carries an order the
-                reader already has in mind — the alphabet, the ladder of roles,
-                how long ago someone came by, whether the access is open. */}
+            {/* Every column sorts: each of the seven carries an order the
+                reader already has in mind — the alphabet, the company from
+                the top down, the ladder of roles, how long ago someone came
+                by, whether the access is open. */}
             <SortableColumnHeader
               column="name"
               label="Collaborateur"
@@ -61,6 +62,17 @@ export function UsersTable({ users, sorted, onSort, now, onOpen }: UsersTablePro
             <SortableColumnHeader
               column="github"
               label="GitHub"
+              sorted={sorted}
+              onToggle={onSort}
+            />
+            {/* Beside the role, and never merged with it: one says where
+                somebody sits in the company, the other what they may do
+                here, and the two never agree. Which member of the COMEX a
+                need may be carried to was read nowhere but the panel until
+                now, one account at a time. */}
+            <SortableColumnHeader
+              column="level"
+              label="Niveau"
               sorted={sorted}
               onToggle={onSort}
             />

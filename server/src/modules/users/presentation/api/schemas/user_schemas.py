@@ -84,6 +84,30 @@ class UserResponse(BaseModel):
     reminder_cadence: ReminderCadence
 
 
+class ImpersonatorResponse(BaseModel):
+    """Whoever is reading an account without being it."""
+
+    id: int
+    #: The name the band says out loud, so that nobody reads a screen as
+    #: somebody else without knowing whose screen it is.
+    display_name: str
+    initials: str
+
+
+class SignedInUserResponse(UserResponse):
+    """The account being read, and who is reading it.
+
+    One route answers this and no other: `GET /users/me`. The extra field
+    belongs to the session rather than to the teammate, and putting it on
+    `UserResponse` would have the team list carry, on three hundred rows, a
+    fact about one of them.
+    """
+
+    #: Null almost always. Filled when an administrator is reading this
+    #: account: the screen then draws the band, and offers the way back.
+    impersonated_by: ImpersonatorResponse | None = None
+
+
 class ChangeRoleRequest(BaseModel):
     """Promoting or demoting a teammate."""
 

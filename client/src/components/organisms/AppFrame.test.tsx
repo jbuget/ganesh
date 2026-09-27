@@ -33,6 +33,10 @@ vi.mock("@/components/organisms/ReadOnlyBanner", () => ({
   ReadOnlyBanner: () => null,
 }));
 
+vi.mock("@/components/organisms/ImpersonationBanner", () => ({
+  ImpersonationBanner: () => null,
+}));
+
 vi.mock("@/components/organisms/MoodReminder", () => ({
   MoodReminder: () => <p>Le rappel du moral</p>,
 }));

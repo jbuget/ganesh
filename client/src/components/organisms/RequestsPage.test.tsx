@@ -41,6 +41,10 @@ const state = vi.hoisted(() => ({
   opened: null as number | null,
 }));
 
+// The recueil now asks whether the account is being borrowed. Whether the
+// band is there is `ImpersonationBanner`'s test; here the reader is always
+// the account's own owner.
+vi.mock("@/lib/use-may-write", () => ({ useIsBorrowing: () => false }));
 vi.mock("@/lib/use-requests", () => ({
   useRequestsScreen: () => ({
     requests: state.requests,

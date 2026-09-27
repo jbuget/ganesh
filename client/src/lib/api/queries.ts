@@ -23,6 +23,7 @@ import type {
   ProjectListItemResponse,
   RequestPersonResponse,
   RequestResponse,
+  SignedInUserResponse,
   StatisticsResponse,
   TeamMoodsResponse,
   TouchedProjectResponse,
@@ -65,10 +66,17 @@ export function usePlatform() {
   return { ...query, platform: successOf<PlatformResponse>(query.data) };
 }
 
-/** The current user. */
+/**
+ * The current user — and, when an administrator is borrowing this account,
+ * who is actually reading it.
+ *
+ * `SignedInUserResponse` rather than `UserResponse`: `GET /users/me` is the
+ * one route that answers for the session rather than for a teammate, and the
+ * band every screen draws is read from here.
+ */
 export function useCurrentUser() {
   const query = useGetMe();
-  return { ...query, user: successOf<UserResponse>(query.data) };
+  return { ...query, user: successOf<SignedInUserResponse>(query.data) };
 }
 
 /**

@@ -26,6 +26,8 @@ vi.mock("@/lib/auth/entra", () => ({
 }));
 
 const { GET, POST } = await import("./route");
+const { IMPERSONATION_COOKIE, borrowingCookie } =
+  await import("@/lib/auth/impersonation");
 
 const PNG = new Uint8Array([
   0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0xff, 0x00,
@@ -233,5 +235,48 @@ describe("the BFF relay", () => {
 
     expect(response.status).toBe(403);
     expect(response.cookies.get("timesheet_token.0")).toBeUndefined();
+  });
+});
+
+describe("the borrowed account, on the way past", () => {
+  it("names the teammate the sealed cookie says, and nobody else", async () => {
+    process.env.SESSION_SECRET = "a development session key, long enough";
+    const sealed = await borrowingCookie(42);
+    upstream(new Response("{}"));
+
+    await GET(
+      new NextRequest("http://localhost:3000/api/v1/users/me", {
+        headers: { cookie: `${IMPERSONATION_COOKIE}=${sealed.value}` },
+      }),
+    );
+
+    expect(new Headers(called().headers).get("x-impersonate-user-id")).toBe("42");
+  });
+
+  /**
+   * The one thing the relay must not do. It copies what the browser sent,
+   * and this header says which account the API answers as: a page that could
+   * set it would be a page naming its own reader.
+   */
+  it("throws away a header the page sent itself", async () => {
+    upstream(new Response("{}"));
+
+    await GET(
+      new NextRequest("http://localhost:3000/api/v1/users/me", {
+        headers: { "x-impersonate-user-id": "7" },
+      }),
+    );
+
+    expect(new Headers(called().headers).has("x-impersonate-user-id")).toBe(false);
+  });
+
+  it("takes the borrowing away with the session the API turns down", async () => {
+    upstream(new Response("{}", { status: 401 }));
+
+    const response = await GET(
+      signedInRequest("http://localhost:3000/api/v1/users/me"),
+    );
+
+    expect(response.cookies.get(IMPERSONATION_COOKIE)?.value).toBe("");
   });
 });

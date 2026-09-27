@@ -7,6 +7,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 
+import { returnedCookie } from "@/lib/auth/impersonation";
 import { clearedSessionCookies } from "@/lib/auth/session";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -18,5 +19,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   )) {
     response.cookies.set(cookie);
   }
+  // A borrowing goes with the session that opened it. Left behind, it would
+  // hand whoever signs in next on this browser somebody else's screens —
+  // refused by the API, which reads it off the new token, but refused is a
+  // blank page rather than a sign-in.
+  response.cookies.set(returnedCookie());
   return response;
 }

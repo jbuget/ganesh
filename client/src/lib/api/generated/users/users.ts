@@ -29,6 +29,7 @@ import type {
   ListUserAuditLogParams,
   ListUsersParams,
   SetActiveRequest,
+  SignedInUserResponse,
   UpdateUserIdentityRequest,
   UserRecordResponse,
   UserResponse,
@@ -57,7 +58,7 @@ const withQueryKey = <T extends object, K>(
 };
 
 export type getMeResponse200 = {
-  data: UserResponse;
+  data: SignedInUserResponse;
   status: 200;
 };
 
@@ -86,6 +87,12 @@ export const getGetMeUrl = () => {
  * how the screen learns whose account it is drawing, and somebody who could
  * not read their own name would be shown a blank page rather than their
  * needs. It hands back that account and never another.
+ *
+ * It is also the one route that says when an account is being *borrowed* —
+ * read by an administrator rather than by its owner. The band every screen
+ * draws is read from here, which is why it is said by the API and not by
+ * the BFF that carries the borrowing: what the application refuses and what
+ * the band announces must come from the same answer.
  * @summary Get Me
  */
 export const getMe = async (

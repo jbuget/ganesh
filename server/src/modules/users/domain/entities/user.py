@@ -102,6 +102,17 @@ class User:
     #: does — and a letter that failed leaves it where it was, so the next run
     #: considers the same window again. That is the only retry there is.
     reminder_sent_at: datetime | None = None
+    #: Who is reading this account without being it.
+    #:
+    #: `None` for everybody, almost always: an account is normally read by
+    #: the person it belongs to. An administrator may borrow one to see what
+    #: it sees, and then this names the administrator — never persisted, since
+    #: it describes the request rather than the record.
+    #:
+    #: It is what makes a borrowed session read-only, through `can_act()`
+    #: below: a gesture made under a borrowed name is a gesture the register
+    #: could only file under somebody who did not make it.
+    impersonated_by: "User | None" = None
 
     def __post_init__(self) -> None:
         self.email = self.email.strip().lower()
@@ -157,6 +168,29 @@ class User:
         """Whether this account stands at `role` on the ladder, or above."""
         return RANK[self.role] >= RANK[role]
 
+    @property
+    def is_impersonated(self) -> bool:
+        """Whether somebody else is reading this account rather than its owner."""
+        return self.impersonated_by is not None
+
+    def can_act(self) -> bool:
+        """Whether any gesture at all may be made in this account's name.
+
+        Two accounts make none: one whose access has been cut off, and one
+        being read by somebody who is not it. Asked here, once, rather than in
+        each `can_…` below — there are a dozen of them, and the one that
+        forgot would be the one that mattered.
+
+        Borrowing therefore reads and never writes, and that is the whole
+        reason it is safe to offer: a declared day, a reopened month or a
+        handed-out role bears a name in the register, and the register has no
+        way of saying « signed by somebody standing behind them ». It costs
+        one thing, and knowingly: reading as another administrator does not
+        open « Administration ». The borrower still holds it in their own
+        name, which is where it belongs.
+        """
+        return self.is_active and not self.is_impersonated
+
     def can_write(self) -> bool:
         """Whether this account may enter anything at all.
 
@@ -165,11 +199,11 @@ class User:
         that every use case that writes asks the same question, and the day a
         role is added nobody has to remember which side of it it falls on.
         """
-        return self.is_active and not self.is_guest
+        return self.can_act() and not self.is_guest
 
     def can_administrate(self) -> bool:
         """Only an admin opens the administration of the platform."""
-        return self.is_active and self.is_admin
+        return self.can_act() and self.is_admin
 
     @property
     def is_guest(self) -> bool:
@@ -182,11 +216,11 @@ class User:
 
     def can_reopen_month(self) -> bool:
         """Only a manager can reopen a validated month."""
-        return self.is_active and self.is_manager
+        return self.can_act() and self.is_manager
 
     def can_manage_teammates(self) -> bool:
         """Managing teammates is reserved for managers."""
-        return self.is_active and self.is_manager
+        return self.can_act() and self.is_manager
 
     def can_arbitrate_requests(self) -> bool:
         """Weighing what the company asks for is reserved for managers.
@@ -195,7 +229,7 @@ class User:
         another question, and the request answers it: nobody arbitrates what
         they asked for or what they carry.
         """
-        return self.is_active and self.is_manager
+        return self.can_act() and self.is_manager
 
     def can_change_role_of(self, target: "User", role: Role) -> bool:
         """Tells whether this user may move `target` to `role`.
@@ -274,7 +308,7 @@ class User:
         be able to make by wandering into a screen — and the one reason it
         exists is to repair a morning the clock got wrong.
         """
-        return self.is_active and self.is_manager
+        return self.can_act() and self.is_manager
 
     def can_deactivate(self, target: "User") -> bool:
         """Tells whether this manager may cut `target` off.

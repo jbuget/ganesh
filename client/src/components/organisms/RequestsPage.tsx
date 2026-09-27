@@ -16,6 +16,7 @@ import type { RequestState } from "@/lib/api/generated/model";
 import { useOpenedRequest } from "@/lib/opened-request";
 import { mayArbitrate } from "@/lib/requests";
 import { useRequestFilters } from "@/lib/use-request-filters";
+import { useIsBorrowing } from "@/lib/use-may-write";
 import { useRequestsScreen } from "@/lib/use-requests";
 
 /**
@@ -44,7 +45,11 @@ export function RequestsPage() {
   const [converting, setConverting] = useState(false);
 
   const opened = panel.openedRequest ? screen.find(panel.openedRequest) : null;
-  const mine = opened?.requester.id === screen.user?.id;
+  // The recueil is the one thing a guest writes, so `useMayWrite` says nothing
+  // useful here. A borrowed session still writes nothing — neither its own
+  // sheet nor an arbitration, which the API refuses on its side.
+  const borrowing = useIsBorrowing();
+  const mine = opened?.requester.id === screen.user?.id && !borrowing;
 
   return (
     <PageLayout
@@ -54,9 +59,11 @@ export function RequestsPage() {
             title="Demandes"
             subtitle="Ce que l'entreprise demande, et ce qu'on en a décidé."
             actions={
-              <Button className="cursor-pointer" onClick={() => setFiling(true)}>
-                Nouvelle demande
-              </Button>
+              borrowing ? null : (
+                <Button className="cursor-pointer" onClick={() => setFiling(true)}>
+                  Nouvelle demande
+                </Button>
+              )
             }
           />
 
@@ -109,7 +116,7 @@ export function RequestsPage() {
           onClose={panel.close}
           journal={<RequestAuditSection requestId={opened.id} />}
           footer={
-            mayArbitrate(opened, screen.user) ? (
+            !borrowing && mayArbitrate(opened, screen.user) ? (
               <footer className="shrink-0 space-y-2 border-t border-slate-200 px-5 py-4">
                 <p className="text-xs text-slate-500">
                   {opened.state === "submitted"

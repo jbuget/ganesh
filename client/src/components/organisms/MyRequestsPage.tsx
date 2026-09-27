@@ -12,6 +12,7 @@ import { departmentLabel } from "@/lib/departments";
 import { useOpenedRequest } from "@/lib/opened-request";
 import { formatParisDateTime } from "@/lib/instants";
 import { STRONG_RULE } from "@/lib/table-frame";
+import { useIsBorrowing } from "@/lib/use-may-write";
 import { useMyRequestsScreen } from "@/lib/use-my-requests";
 
 /**
@@ -28,6 +29,11 @@ import { useMyRequestsScreen } from "@/lib/use-my-requests";
  */
 export function MyRequestsPage() {
   const screen = useMyRequestsScreen();
+  // The recueil is the one thing a guest writes, and therefore the one place
+  // `useMayWrite` says nothing useful. A borrowed session still writes
+  // nothing: the API refuses on its side, and a gesture offered here would be
+  // a click made on a refusal.
+  const borrowing = useIsBorrowing();
   // Held by the URL, as on the team's list: a need opened is a need one can
   // send to somebody, and going back closes it.
   const panel = useOpenedRequest();
@@ -39,9 +45,11 @@ export function MyRequestsPage() {
       title="Mes demandes"
       subtitle="Ce que vous avez demandé, et où cela en est."
       actions={
-        <Button className="cursor-pointer" onClick={() => setFiling(true)}>
-          Nouvelle demande
-        </Button>
+        borrowing ? null : (
+          <Button className="cursor-pointer" onClick={() => setFiling(true)}>
+            Nouvelle demande
+          </Button>
+        )
       }
     />
   );
@@ -95,7 +103,9 @@ export function MyRequestsPage() {
       {opened && (
         <RequestPanel
           request={opened}
-          mine
+          // A borrowed session reads somebody's need, and reading it is all
+          // it does: `mine` is what opens the author's own gestures.
+          mine={!borrowing}
           onChange={(change) => screen.fillIn(opened, change)}
           onSubmit={() => screen.submit(opened.id)}
           onWithdraw={() => screen.withdraw(opened.id)}

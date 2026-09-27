@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { UserResponse } from "@/lib/api/generated/model";
@@ -21,6 +21,7 @@ const TEAM: UserResponse[] = [
     is_active: true,
     last_login_at: "2026-09-17T07:00:00Z",
     github_username: "jbuget",
+    org_level: "comex",
   },
   {
     id: 2,
@@ -64,6 +65,7 @@ describe("UsersTable", () => {
       "Collaborateur",
       "Email",
       "GitHub",
+      "Niveau",
       "Rôle",
       "Dernière connexion",
       "Statut",
@@ -83,7 +85,18 @@ describe("UsersTable", () => {
     renderTable();
 
     expect(screen.getByText("jbuget")).toBeInTheDocument();
-    expect(screen.getByText("—")).toBeInTheDocument();
+    // L. Chen has neither a handle nor a level: two columns say so on that
+    // row, which is why this asks the row rather than the whole table.
+    const chen = screen.getByText("L. Chen").closest("tr");
+    expect(chen).not.toBeNull();
+    expect(within(chen!).getAllByText("—")).toHaveLength(2);
+  });
+
+  it("says where somebody sits in the company, blank for whoever was not placed", () => {
+    // Blank is not « Collaborateur »: that is a level somebody chose.
+    renderTable();
+
+    expect(screen.getByText("COMEX")).toBeInTheDocument();
   });
 
   it("opens the teammate a row names", async () => {

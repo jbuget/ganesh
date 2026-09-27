@@ -485,3 +485,58 @@ def test_a_teammate_does_not_send_the_round_by_hand() -> None:
 
 def test_a_deactivated_manager_sends_nothing() -> None:
     assert make_user(Role.MANAGER, is_active=False).can_run_reminders() is False
+
+
+def borrowed(role: Role = Role.ADMIN) -> User:
+    """An account of `role`, read by an administrator rather than by its owner."""
+    target = make_user(role)
+    target.impersonated_by = make_user(Role.ADMIN)
+    return target
+
+
+def test_an_account_nobody_is_borrowing_acts_in_its_own_name() -> None:
+    assert make_user().can_act() is True
+    assert make_user().is_impersonated is False
+
+
+@pytest.mark.parametrize(
+    "gesture",
+    [
+        "can_write",
+        "can_administrate",
+        "can_reopen_month",
+        "can_manage_teammates",
+        "can_arbitrate_requests",
+        "can_edit_open_months",
+        "can_declare_own_presence",
+        "can_choose_own_reminder",
+        "can_run_reminders",
+    ],
+)
+def test_a_borrowed_account_makes_no_gesture_at_all(gesture: str) -> None:
+    """The one rule the whole feature rests on.
+
+    An administrator reading as somebody else is reading: a day declared, a
+    month reopened or a role handed out under a borrowed name would reach the
+    register under a name that did not make it. The most empowered account
+    there is — an administrator borrowed by another — still writes nothing.
+    """
+    assert getattr(borrowed(), gesture)() is False
+
+
+def test_a_borrowed_account_is_still_read_for_what_it_is() -> None:
+    """What is refused is the gesture, never the reading: the role stands.
+
+    It is what the screens are drawn from — a borrowed guest reaches « Mes
+    demandes » and nothing else, which is the whole point of going to look.
+    """
+    assert borrowed(Role.GUEST).is_guest is True
+    assert borrowed(Role.MANAGER).is_manager is True
+
+
+def test_a_borrowed_account_is_never_written_to() -> None:
+    """The letter goes to its owner's mailbox, and its owner asked for nothing."""
+    target = make_user(cadence=ReminderCadence.DAILY)
+    target.impersonated_by = make_user(Role.ADMIN)
+
+    assert target.is_written_to() is False

@@ -2,6 +2,8 @@
 
 from src.modules.users.domain.entities.user import User
 from src.modules.users.presentation.api.schemas.user_schemas import (
+    ImpersonatorResponse,
+    SignedInUserResponse,
     UserResponse,
     to_presence_response,
 )
@@ -25,4 +27,21 @@ def to_user_response(user: User) -> UserResponse:
         org_level=user.org_level,
         presence=to_presence_response(user.presence),
         reminder_cadence=user.reminder_cadence,
+    )
+
+
+def to_signed_in_user_response(user: User) -> SignedInUserResponse:
+    """The account being read, saying so when somebody else is reading it."""
+    borrower = user.impersonated_by
+    return SignedInUserResponse(
+        **to_user_response(user).model_dump(),
+        impersonated_by=(
+            None
+            if borrower is None or borrower.id is None
+            else ImpersonatorResponse(
+                id=borrower.id,
+                display_name=borrower.label,
+                initials=initials(borrower.label),
+            )
+        ),
     )

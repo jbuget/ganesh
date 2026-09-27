@@ -46,7 +46,10 @@ from src.modules.users.application.use_cases.update_user_identity import (
     UpdateUserIdentityUseCase,
 )
 from src.modules.users.domain.entities.user import User
-from src.modules.users.presentation.api.mappers.user_mapper import to_user_response
+from src.modules.users.presentation.api.mappers.user_mapper import (
+    to_signed_in_user_response,
+    to_user_response,
+)
 from src.modules.users.presentation.api.mappers.user_record_mapper import (
     to_user_record_response,
 )
@@ -58,6 +61,7 @@ from src.modules.users.presentation.api.schemas.user_schemas import (
     ChooseReminderCadenceRequest,
     DeclarePresenceRequest,
     SetActiveRequest,
+    SignedInUserResponse,
     UpdateUserIdentityRequest,
     UserResponse,
 )
@@ -79,16 +83,24 @@ router = APIRouter(prefix="/users", tags=["users"])
 directory_reader = open_to_machines(ApiKeyScope.USERS_READ)
 
 
-@router.get("/me", response_model=UserResponse, operation_id="getMe")
-async def get_me(current_user: User = Depends(get_signed_in_user)) -> UserResponse:
+@router.get("/me", response_model=SignedInUserResponse, operation_id="getMe")
+async def get_me(
+    current_user: User = Depends(get_signed_in_user),
+) -> SignedInUserResponse:
     """Who is signed in, as provisioned from Entra.
 
     The one route of this module open to a guest, and it has to be: it is
     how the screen learns whose account it is drawing, and somebody who could
     not read their own name would be shown a blank page rather than their
     needs. It hands back that account and never another.
+
+    It is also the one route that says when an account is being *borrowed* —
+    read by an administrator rather than by its owner. The band every screen
+    draws is read from here, which is why it is said by the API and not by
+    the BFF that carries the borrowing: what the application refuses and what
+    the band announces must come from the same answer.
     """
-    return to_user_response(current_user)
+    return to_signed_in_user_response(current_user)
 
 
 @router.get("", response_model=list[UserResponse], operation_id="listUsers")

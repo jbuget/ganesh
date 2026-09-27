@@ -23,11 +23,17 @@ from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 #: rather than left to `get_signed_in_user`, and the machine door, checked
 #: further below: it is only a door for a write when the scope it asks for is
 #: a write scope.
+#:
+#: The recueil's is `get_writing_asker` and not `get_asker`: the second lets a
+#: guest — and an administrator borrowing their account — read a sheet, the
+#: first is what a gesture hangs off. A route that wrote through the reading
+#: one would let a borrowed session file a need under somebody else's name,
+#: and it fails here.
 WRITE_DOORS = {
     "get_contributor",
     "get_current_manager",
     "get_admin",
-    "get_asker",
+    "get_writing_asker",
 }
 MACHINE_DOOR = "teammate_or_machine"
 

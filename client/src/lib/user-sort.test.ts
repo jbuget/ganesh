@@ -108,6 +108,36 @@ describe("sortUsers", () => {
     ]);
   });
 
+  it("orders by level, from the top of the company down", () => {
+    // Never the alphabet, which would file the COMEX between « Collaborateur »
+    // and the COMOP and say nothing anybody is looking for.
+    const team = [
+      teammate("Base", { org_level: "collaborator" }),
+      teammate("Sommet", { org_level: "comex" }),
+      teammate("Milieu", { org_level: "comop" }),
+    ];
+
+    expect(names(sortUsers(team, { column: "level", direction: "asc" }))).toEqual([
+      "Sommet",
+      "Milieu",
+      "Base",
+    ]);
+  });
+
+  it("leaves whoever was never placed at the end, either way round", () => {
+    // Blank is not a level: it is nobody having had a reason to place them.
+    const team = [teammate("Nulle part"), teammate("Placée", { org_level: "comop" })];
+
+    expect(names(sortUsers(team, { column: "level", direction: "asc" }))).toEqual([
+      "Placée",
+      "Nulle part",
+    ]);
+    expect(names(sortUsers(team, { column: "level", direction: "desc" }))).toEqual([
+      "Placée",
+      "Nulle part",
+    ]);
+  });
+
   it("orders by status, open access first", () => {
     const team = [teammate("Partie", { is_active: false }), teammate("Présente")];
 

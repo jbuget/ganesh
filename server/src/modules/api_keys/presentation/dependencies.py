@@ -44,7 +44,11 @@ from src.modules.api_keys.infrastructure.rate_limit.in_memory_rate_limit_store i
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
-from src.modules.auth.presentation.dependencies import admit, get_signed_in_user
+from src.modules.auth.presentation.dependencies import (
+    IMPERSONATION_HEADER,
+    admit,
+    get_signed_in_user,
+)
 
 # Declared once, in the entries module, and imported from there by projects and
 # users alike: one provider per repository, whatever module asks for it.
@@ -257,6 +261,7 @@ def require_scope(
 
 async def teammate_or_machine(
     authorization: str | None = Header(default=None),
+    impersonate_user_id: str | None = Header(default=None, alias=IMPERSONATION_HEADER),
     session: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> User | None:
@@ -275,11 +280,24 @@ async def teammate_or_machine(
     Called in two steps, exactly as `get_current_user` declares them: whoever
     signed in is resolved, then admitted — a guest is turned away here as
     everywhere else, and a route open to machines stays the team's.
+
+    A borrowed session comes through here too, and has to: `GET /users` and
+    the mission reference list are read through this door, and a screen drawn
+    from somebody else's list is not their screen. It is declared rather than
+    left out because the call below is by keyword — an argument forgotten here
+    is a header silently dropped on a third of the reads.
     """
     token = bearer_token(authorization)
     if token is not None and key_material.looks_like_ours(token):
         return None
-    return admit(await get_signed_in_user(authorization, session, settings))
+    return admit(
+        await get_signed_in_user(
+            authorization=authorization,
+            impersonate_user_id=impersonate_user_id,
+            session=session,
+            settings=settings,
+        )
+    )
 
 
 def open_to_machines(
