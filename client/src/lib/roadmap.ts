@@ -18,6 +18,7 @@ import type {
   RoadmapSummaryResponse,
   SegmentKind,
 } from "@/lib/api/generated/model";
+import { plural, s } from "@/lib/plurals";
 
 const MS_PER_DAY = 86_400_000;
 
@@ -333,14 +334,6 @@ export function roadmapNotice(summary: RoadmapSummaryResponse): string {
   if (summary.undated > 0) parts.push(`${summary.undated} sans date`);
   if (summary.unestimated > 0) parts.push(`${summary.unestimated} sans estimation`);
   return parts.join(" · ");
-}
-
-function plural(count: number, word: string): string {
-  return count > 1 ? `${word}s` : word;
-}
-
-function s(count: number): string {
-  return count > 1 ? "s" : "";
 }
 
 /** How a segment is drawn, and what that drawing claims. */

@@ -51,6 +51,13 @@ interface ProjectUpdateCardProps {
 /** How long a thread is given to settle before the reader is left to scroll. */
 const SETTLES_IN = 2000;
 
+/** Ce que fait le drapeau, selon ce qu'il porte déjà. */
+function flagGesture(flagged: boolean | undefined): string {
+  return flagged
+    ? "Retirer de l'ordre du jour de la revue"
+    : "Signaler à discuter en revue";
+}
+
 /**
  * One update from the thread.
  *
@@ -135,16 +142,10 @@ export function ProjectUpdateCard({
             {onFlag && editable && (
               <button
                 type="button"
-                aria-label={
-                  update.is_flagged
-                    ? "Retirer de l'ordre du jour de la revue"
-                    : "Signaler à discuter en revue"
-                }
-                title={
-                  update.is_flagged
-                    ? "Retirer de l'ordre du jour de la revue"
-                    : "Signaler à discuter en revue"
-                }
+                // Le même mot à l'oreille et à l'œil : ce que lit un lecteur
+                // d'écran est ce qu'affiche l'infobulle.
+                aria-label={flagGesture(update.is_flagged)}
+                title={flagGesture(update.is_flagged)}
                 onClick={() => void onFlag(!update.is_flagged)}
                 className={`cursor-pointer rounded p-1 transition-colors ${
                   update.is_flagged

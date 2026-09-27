@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { FlaggedUpdateResponse } from "@/lib/api/generated/model";
-import { groupByProject } from "@/lib/review-agenda";
+import { countWaiting, groupByProject } from "@/lib/review-agenda";
 
 function raised(over: Partial<FlaggedUpdateResponse> = {}): FlaggedUpdateResponse {
   return {
@@ -61,5 +61,21 @@ describe("groupByProject", () => {
 
   it("answers nothing on an empty agenda", () => {
     expect(groupByProject([])).toEqual([]);
+  });
+});
+
+describe("countWaiting", () => {
+  it("counts the lines, never the projects", () => {
+    const chapters = groupByProject([
+      raised({ update_id: 1 }),
+      raised({ update_id: 2 }),
+      raised({ project_id: 11, project_label: "Atlas", update_id: 3 }),
+    ]);
+
+    expect(countWaiting(chapters)).toBe(3);
+  });
+
+  it("counts nothing on an empty agenda", () => {
+    expect(countWaiting([])).toBe(0);
   });
 });

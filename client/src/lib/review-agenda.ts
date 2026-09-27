@@ -34,3 +34,13 @@ export function groupByProject(
   }
   return [...chapters.values()];
 }
+
+/**
+ * How many lines are waiting, across every project.
+ *
+ * Its own function rather than a reduce inside the screen: the component
+ * carries the rendering alone, and a total is a reading of the data.
+ */
+export function countWaiting(chapters: readonly AgendaChapter[]): number {
+  return chapters.reduce((total, one) => total + one.items.length, 0);
+}

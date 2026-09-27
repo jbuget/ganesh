@@ -14,11 +14,11 @@ the bell, it is a decision, not an oversight.
 from dataclasses import dataclass
 from datetime import datetime
 
-from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
-from src.modules.audit_logs.domain.repositories.audit_log_repository import (
-    AuditLogRepository,
-)
+from src.modules.audit_logs.domain.entities.audit_log import AuditAction
 from src.modules.projects.application.dtos.update_dto import FlagUpdateCommand
+from src.modules.projects.application.use_cases.project_updates import (
+    UpdateGestureUseCase,
+)
 from src.modules.projects.domain.entities.project import Project
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.projects.domain.repositories.project_repository import (
@@ -29,7 +29,6 @@ from src.modules.projects.domain.repositories.project_update_repository import (
 )
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
-from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 from src.shared.utils import clock
 
 
@@ -47,35 +46,7 @@ class FlaggedUpdate:
     raised_by: User
 
 
-class _FlagUseCase:
-    """What raising and lowering share."""
-
-    def __init__(
-        self, updates: ProjectUpdateRepository, audit_logs: AuditLogRepository
-    ) -> None:
-        self._updates = updates
-        self._audit_logs = audit_logs
-
-    async def _load(self, update_id: int) -> ProjectUpdate:
-        update = await self._updates.get(update_id)
-        if update is None:
-            raise EntityNotFoundError("Unknown update.")
-        return update
-
-    async def _trace(
-        self, action: AuditAction, actor_id: int, update: ProjectUpdate
-    ) -> None:
-        await self._audit_logs.add(
-            AuditLog(
-                action=action,
-                actor_id=actor_id,
-                project_id=update.project_id,
-                payload={"update_id": update.id},
-            )
-        )
-
-
-class FlagUpdateUseCase(_FlagUseCase):
+class FlagUpdateUseCase(UpdateGestureUseCase):
     """Puts an update on the agenda of the next revue."""
 
     async def execute(
@@ -88,7 +59,7 @@ class FlagUpdateUseCase(_FlagUseCase):
         return update
 
 
-class ClearUpdateFlagUseCase(_FlagUseCase):
+class ClearUpdateFlagUseCase(UpdateGestureUseCase):
     """Takes an update off the agenda, the revue having read it."""
 
     async def execute(

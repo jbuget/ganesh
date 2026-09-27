@@ -6,8 +6,11 @@ import { ReviewAgendaPage } from "./ReviewAgendaPage";
 import type { FlaggedUpdateResponse } from "@/lib/api/generated/model";
 import type { AgendaChapter } from "@/lib/review-agenda";
 
+// The total is its own pure function, with its own tests: here it is given,
+// so that what is under test stays what the file says it is.
 const agenda = vi.hoisted(() => ({
   chapters: null as AgendaChapter[] | null,
+  waiting: 0,
   clear: vi.fn(),
 }));
 vi.mock("@/lib/use-review-agenda", () => ({ useReviewAgenda: () => agenda }));
@@ -39,6 +42,7 @@ function chapter(over: Partial<AgendaChapter> = {}): AgendaChapter {
 describe("ReviewAgendaPage", () => {
   beforeEach(() => {
     agenda.chapters = null;
+    agenda.waiting = 0;
     agenda.clear = vi.fn();
     mayWrite.value = true;
   });
@@ -56,6 +60,7 @@ describe("ReviewAgendaPage", () => {
       chapter({ items: [raised(), raised({ update_id: 2 })] }),
       chapter({ projectId: 11, label: "Atlas", items: [raised({ update_id: 3 })] }),
     ];
+    agenda.waiting = 3;
 
     render(<ReviewAgendaPage />);
 
@@ -70,6 +75,7 @@ describe("ReviewAgendaPage", () => {
 
   it("agrees in the singular on one line and one project", () => {
     agenda.chapters = [chapter()];
+    agenda.waiting = 1;
 
     render(<ReviewAgendaPage />);
 

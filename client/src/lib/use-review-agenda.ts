@@ -7,7 +7,7 @@ import {
   clearProjectUpdateFlag,
   listFlaggedUpdates,
 } from "@/lib/api/generated/projects/projects";
-import { type AgendaChapter, groupByProject } from "@/lib/review-agenda";
+import { type AgendaChapter, countWaiting, groupByProject } from "@/lib/review-agenda";
 
 /**
  * What the next revue has to discuss.
@@ -36,6 +36,9 @@ export function useReviewAgenda() {
 
   return {
     chapters,
+
+    /** How many lines are waiting, across every project. */
+    waiting: chapters === null ? 0 : countWaiting(chapters),
 
     /** Takes a line off the agenda, the revue having read it. */
     async clear(projectId: number, updateId: number) {

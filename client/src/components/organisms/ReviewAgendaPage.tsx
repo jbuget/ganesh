@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/atoms/PageHeader";
 import { AgendaItemCard } from "@/components/molecules/AgendaItemCard";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { useTeammates } from "@/lib/api/queries";
+import { plural } from "@/lib/plurals";
 import { useMayWrite } from "@/lib/use-may-write";
 import { useReviewAgenda } from "@/lib/use-review-agenda";
 
@@ -24,14 +25,17 @@ import { useReviewAgenda } from "@/lib/use-review-agenda";
  * times over, and the meeting opens its thread three times.
  */
 export function ReviewAgendaPage() {
-  const { chapters, clear } = useReviewAgenda();
+  const { chapters, waiting, clear } = useReviewAgenda();
   const mayWrite = useMayWrite();
   const { teammates } = useTeammates();
   // Freezes the reference time for the whole screen: every « il y a trois
   // jours » on it must be counted from the same instant.
   const now = useMemo(() => new Date(), []);
-
-  const waiting = chapters?.reduce((total, one) => total + one.items.length, 0) ?? 0;
+  // Composée d'un seul tenant : une phrase française découpée en morceaux de
+  // JSX s'accorde de travers sans que rien ne le voie.
+  const summary =
+    `${waiting} ${plural(waiting, "mise")} à jour à discuter, ` +
+    `sur ${chapters?.length ?? 0} ${plural(chapters?.length ?? 0, "projet")}.`;
 
   return (
     <PageLayout
@@ -42,17 +46,22 @@ export function ReviewAgendaPage() {
         />
       }
     >
-      {chapters === null ? null : chapters.length === 0 ? (
+      {/* Both branches read « chapters » once it is there: while it is being
+          loaded neither is met, and nothing is drawn. An « aucune » shown for
+          a moment and taken back would announce an empty revue to somebody
+          who came to prepare one. */}
+      {chapters?.length === 0 && (
         <p className="text-sm text-slate-500">
           Rien n&apos;attend d&apos;être discuté. Une mise à jour se signale depuis
           l&apos;onglet « Mises à jour » d&apos;un projet.
         </p>
-      ) : (
+      )}
+
+      {chapters !== null && chapters.length > 0 && (
         <div className="space-y-6">
-          <p className="text-sm text-slate-500">
-            {waiting} mise{waiting > 1 ? "s" : ""} à jour à discuter, sur{" "}
-            {chapters.length} projet{chapters.length > 1 ? "s" : ""}.
-          </p>
+          {/* Composée d'un seul tenant : une phrase française découpée en
+              morceaux de JSX s'accorde de travers sans que rien ne le voie. */}
+          <p className="text-sm text-slate-500">{summary}</p>
 
           {chapters.map((chapter) => (
             <section key={chapter.projectId} className="space-y-2">
@@ -65,8 +74,7 @@ export function ReviewAgendaPage() {
                   {chapter.label}
                 </Link>
                 <span className="text-xs text-slate-500">
-                  {chapter.items.length} mise{chapter.items.length > 1 ? "s" : ""} à
-                  jour
+                  {`${chapter.items.length} ${plural(chapter.items.length, "mise")} à jour`}
                 </span>
               </h2>
 
