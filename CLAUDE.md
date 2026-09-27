@@ -205,6 +205,48 @@ say, and the rules that keep it cheap.
 - One takes back one's own sign and nobody else's — the command names its
   actor and there is no id to pass for somebody else.
 
+### Answering a mise à jour
+
+A thread where one can only ever post beside somebody rather than under them
+turns a question into a new subject. A mise à jour therefore carries
+comments, and a comment carries none: depth one, and no way to make it
+deeper.
+
+- **A reply is an entity of its own, in a table of its own.** It carries no
+  flag for the revue, no place in the count the board announces, nothing the
+  reference list or the Gazette reads — and an entity defined by what it does
+  not carry is in the wrong place. Written as a `parent_id` on
+  `project_updates` instead, every existing reading — the counter, the latest
+  message, the agenda, the chronicle — would have had to say whether it wants
+  the replies, and one of them would have forgotten to.
+- **The depth is carried by the schema, never by a rule.** The foreign key
+  points at an update and there is no column that could point at a comment.
+  A conversation three levels down is one nobody reads to the end, and the
+  thread of a mission is read to know where it stands.
+- **What the two share is written once.** `ThreadMessage` holds what words
+  somebody signed are, and the two gestures only their author makes: « only
+  the author rewrites or withdraws » is one rule, and written twice it is two
+  chances to fix it once. What is not shared stays on each — an update goes
+  on the agenda of a revue, a reply does not.
+- **A reply tells the conversation, never the mission.** Whoever wrote the
+  update and whoever has already answered under it hear
+  `UPDATE_REPLIED`; everybody else on the mission was told when the update
+  went up and does not need a line for every « ok » written beneath it.
+  Being named still comes first, as it does above: somebody who is both
+  mentioned and in the conversation gets the one line that says they were
+  spoken to.
+- **A withdrawn update refuses a reply and keeps the ones it drew.** There is
+  nothing left to answer, and what was already said keeps its context. A
+  withdrawn reply keeps its place and its signature too; only its text goes.
+- **The register holds it, the gazette does not.** `comment.post` and its two
+  siblings are traced against the mission the update belongs to — words said
+  on a project are what the « Journal » tab exists for. The gazette goes on
+  telling the month in mises à jour: a chronicle that recounted every reply
+  would bury the ones that steered something.
+- The signs are the same eight, and the composer is the same one: correcting
+  an update, answering it and correcting one's answer are one gesture with
+  one keyboard shortcut, so `MessageComposer` draws all three.
+
 ### The trades a mission is cut into
 
 An estimate is counted in build days. The moment a chef de projet books
