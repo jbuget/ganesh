@@ -247,10 +247,10 @@ DEV = Activity(
     nature=WorkNature.DEVELOPMENT,
     estimated_days=15.0,
 )
-CHEFFERIE = Activity(
+PILOTAGE = Activity(
     id=101,
     project_id=10,
-    label="Chefferie de projet",
+    label="Pilotage",
     nature=WorkNature.PROJECT_MANAGEMENT,
     estimated_days=5.0,
 )
@@ -266,7 +266,7 @@ def cut_up_build(
         entries=InMemoryEntryRepository(entries or []),
         months=InMemoryMonthRepository([]),
         user_missions=InMemoryUserMissionRepository(declared or []),
-        activities=InMemoryActivityRepository([DEV, CHEFFERIE]),
+        activities=InMemoryActivityRepository([DEV, PILOTAGE]),
     )
 
 
@@ -288,9 +288,10 @@ class TestTheGridReadsByActivity:
             GetMonthGridQuery(user_id=1, month=date(2026, 9, 1), today=TODAY)
         )
 
+        # Read in label order: « Développement » before « Pilotage ».
         assert [(row.project_id, row.activity_id) for row in grid.rows] == [
-            (10, 101),
             (10, 100),
+            (10, 101),
         ]
 
     async def test_a_row_is_named_after_its_activity(self) -> None:
@@ -351,7 +352,7 @@ class TestTheGridReadsByActivity:
             GetMonthGridQuery(user_id=1, month=date(2026, 9, 1), today=TODAY)
         )
 
-        assert grid.rows[0].label == "Chefferie de projet"
+        assert grid.rows[0].label == "Pilotage"
         assert grid.rows[0].values == {}
 
     async def test_a_row_naming_an_activity_that_no_longer_answers_is_dropped(

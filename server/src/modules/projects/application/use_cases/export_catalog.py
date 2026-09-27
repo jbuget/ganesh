@@ -108,6 +108,7 @@ class ExportCatalogUseCase:
             user.id: user.display_name for user in await self._users.list_all(True)
         }
         leads = await self._assignees.list_all(ProjectRole.LEAD)
+        tech_leads = await self._assignees.list_all(ProjectRole.TECH_LEAD)
         contributors = await self._assignees.list_all(ProjectRole.CONTRIBUTOR)
 
         reached = {
@@ -116,7 +117,9 @@ class ExportCatalogUseCase:
         }
 
         entries = [
-            await self._entry(mission, addresses, names, leads, contributors, reached)
+            await self._entry(
+                mission, addresses, names, leads, tech_leads, contributors, reached
+            )
             for mission in published
         ]
         return sorted(entries, key=lambda entry: entry.name.lower())
@@ -127,6 +130,7 @@ class ExportCatalogUseCase:
         addresses: dict[int | None, str],
         names: dict[int | None, str],
         leads: dict[int, list[int]],
+        tech_leads: dict[int, list[int]],
         contributors: dict[int, list[int]],
         reached: dict[ProjectStatus, dict[int, date]],
     ) -> CatalogEntry:
@@ -160,7 +164,9 @@ class ExportCatalogUseCase:
             slack_channel=mission.slack_channel,
             hosting=mission.hosting,
             has_microsoft_entra=mission.has_microsoft_entra,
-            contributors=self._handles(mission.id, names, leads, contributors),
+            contributors=self._handles(
+                mission.id, names, leads, tech_leads, contributors
+            ),
             stack=await self._details.list_stack(mission.id),
             tags=await self._details.list_tags(mission.id),
             depends_on=sorted(
@@ -187,14 +193,20 @@ class ExportCatalogUseCase:
         project_id: int,
         names: dict[int | None, str],
         leads: dict[int, list[int]],
+        tech_leads: dict[int, list[int]],
         contributors: dict[int, list[int]],
     ) -> list[str]:
         """Everyone attached to the mission, leads first, named by handle.
 
-        The catalogue makes no difference between leading and contributing: it
-        lists who is behind the service. Holding both roles still lists one.
+        The catalogue makes no difference between leading, answering for the
+        code and contributing: it lists who is behind the service. Holding
+        several titles still lists one.
         """
-        ordered = leads.get(project_id, []) + contributors.get(project_id, [])
+        ordered = (
+            leads.get(project_id, [])
+            + tech_leads.get(project_id, [])
+            + contributors.get(project_id, [])
+        )
         handles = [
             slugify(names[user_id])
             for user_id in dict.fromkeys(ordered)

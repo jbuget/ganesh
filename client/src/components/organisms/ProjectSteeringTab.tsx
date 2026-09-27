@@ -12,6 +12,7 @@ import { PhasePicker } from "@/components/atoms/PhasePicker";
 import { PriorityPicker } from "@/components/atoms/PriorityPicker";
 import { SheetRow } from "@/components/atoms/SheetRow";
 import { SheetSectionTitle } from "@/components/atoms/SheetSectionTitle";
+import { TargetDateField } from "@/components/atoms/TargetDateField";
 import { ProjectActivities } from "@/components/molecules/ProjectActivities";
 import { useProjectActivities } from "@/lib/use-project-activities";
 import { ProjectContributions } from "@/components/molecules/ProjectContributions";
@@ -44,6 +45,7 @@ interface ProjectSteeringTabProps {
     category?: ProjectCategory | null;
     priority?: ProjectPriority | null;
     estimated_days?: number | null;
+    go_live_date?: string | null;
   }) => Promise<void>;
   addSubProject: (label: string) => Promise<void>;
 }
@@ -122,6 +124,19 @@ export function ProjectSteeringTab({
             />
           </SheetRow>
 
+          {/* Read under the phase, and posted here as well as on the
+              roadmap: the day one moves a mission into « Recette » is the day
+              one knows when it goes live, and the two gestures belong to the
+              same minute. */}
+          <SheetRow title="Mise en service">
+            <TargetDateField
+              value={project.go_live_date ?? null}
+              missionLabel={project.label}
+              editable={editable}
+              onChange={(go_live_date) => updateFields({ go_live_date })}
+            />
+          </SheetRow>
+
           <SheetRow title="Priorité">
             <PriorityPicker
               value={project.priority}
@@ -164,11 +179,28 @@ export function ProjectSteeringTab({
             />
           </SheetRow>
 
-          <SheetRow title="Intervenants">
+          {/* Who to call when it breaks, whoever happens to be on it this
+              week: a developer who left the mission a year ago is still the
+              one who knows why it was built that way. */}
+          <SheetRow title="Référents techniques">
+            <ContributorsPicker
+              projectId={project.id}
+              contributors={detail.tech_leads}
+              role="tech_lead"
+              label="Référents techniques"
+              editable={editable}
+              onChange={onChange}
+            />
+          </SheetRow>
+
+          {/* « actuels » is the whole of it: the list is reworked twice a
+              week and says who has their hands in it now, never who ever
+              did. The consumption below answers that one. */}
+          <SheetRow title="Intervenants actuels">
             <ContributorsPicker
               projectId={project.id}
               contributors={detail.contributors}
-              label="Intervenants"
+              label="Intervenants actuels"
               editable={editable}
               onChange={onChange}
             />

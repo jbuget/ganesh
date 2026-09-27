@@ -89,15 +89,15 @@ describe("useTimesheetMonth", () => {
   it("puts a freshly declared project on the month right away", async () => {
     const screen = month();
 
-    await screen.current.declareProject("Portail", "delivery");
+    await screen.current.declareProject("Portail", "project_management");
 
     expect(projects.createProject).toHaveBeenCalled();
     // Cut into the trade that was asked for, and the row points at it: a
     // mission carrying none is a row the API refuses every write on, which
     // is exactly what declaring from one's own month exists to avoid.
     expect(projects.createProjectActivity).toHaveBeenCalledWith(42, {
-      label: "Delivery",
-      nature: "delivery",
+      label: "Pilotage",
+      nature: "project_management",
       estimated_days: null,
     });
     expect(entries.addMissionToMonth).toHaveBeenCalledWith(

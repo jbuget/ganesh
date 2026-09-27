@@ -10,14 +10,27 @@ interface TargetDateFieldProps {
   /** What the field is for, read out to whoever cannot see the row. */
   missionLabel: string;
   onChange: (value: string | null) => void | Promise<void>;
+  /**
+   * Whether the reader may post a date.
+   *
+   * Editable by default: a field one cannot change is the exception, and it
+   * is the screen holding the field that knows.
+   */
+  editable?: boolean;
+  /**
+   * Set in a table, where a row holds a dozen figures and the date is one
+   * of them. A sheet reads its values at the size of its other values.
+   */
+  dense?: boolean;
 }
 
 /**
  * The date a mission is announced for, posted where it is read.
  *
- * The one thing this screen writes. Posting a date while looking at every
- * other date is the whole reason it belongs here rather than on a form: a
- * commitment is taken against the others, not in isolation.
+ * Read and written in two places, and the same field in both: on the roadmap,
+ * where a commitment is taken against every other date rather than in
+ * isolation, and on the mission's own sheet, where one is already changing
+ * its phase and its priority.
  *
  * Every change is traced — the reference list records it — which is what
  * eventually makes « annoncée trois fois » a thing one can read.
@@ -26,8 +39,11 @@ export function TargetDateField({
   value,
   missionLabel,
   onChange,
+  editable = true,
+  dense = false,
 }: TargetDateFieldProps) {
   const [entry, setEntry] = useState<string | null>(null);
+  const size = dense ? "text-xs" : "text-sm";
 
   function validate(next: string) {
     setEntry(null);
@@ -51,7 +67,7 @@ export function TargetDateField({
             setEntry(null);
           }
         }}
-        className="w-32 cursor-pointer rounded border border-slate-400 px-1 py-0.5 text-xs focus:outline-none"
+        className={`w-36 cursor-pointer rounded border border-slate-400 px-1 py-0.5 ${size} focus:outline-none`}
       />
     );
   }
@@ -61,8 +77,11 @@ export function TargetDateField({
       <button
         type="button"
         aria-label={`Date annoncée pour ${missionLabel}`}
+        disabled={!editable}
         onClick={() => setEntry(value ?? "")}
-        className="-mx-1 cursor-pointer rounded px-1 py-0.5 text-xs whitespace-nowrap transition-colors hover:bg-slate-100"
+        className={`-mx-1 rounded px-1 py-0.5 ${size} whitespace-nowrap transition-colors ${
+          editable ? "cursor-pointer hover:bg-slate-100" : ""
+        }`}
       >
         {value ? (
           <span className="text-slate-600 tabular-nums">
@@ -76,7 +95,7 @@ export function TargetDateField({
         )}
       </button>
 
-      {value && (
+      {value && editable && (
         <button
           type="button"
           aria-label={`Retirer la date annoncée pour ${missionLabel}`}

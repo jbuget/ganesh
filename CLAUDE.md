@@ -118,6 +118,27 @@ in at all is `AppFrame`'s: it draws nothing until it knows who is there, since
 a sidebar shown for a moment and taken back would be a list of doors somebody
 was never meant to see.
 
+### Who is on a mission
+
+Three lists, read one under the other on « Pilotage », and three because they
+answer three questions:
+
+- **Référents projet** answer for the choices and the contacts, throughout.
+- **Référents techniques** are who to call when the service breaks. The point
+  of the title is that it outlives the work: a developer who left the mission
+  a year ago is still the one who knows why it was built that way, and a list
+  that only ever held this week's people would send a bug to nobody.
+- **Intervenants actuels** have their hands in it now or shortly. The list is
+  reworked twice a week and says the present, never a history — who ever
+  declared time on it is read off the consumption below, which is a fact
+  nobody has to maintain.
+
+The same person often holds several titles, and `ProjectRole` ranks none of
+them: a role is what somebody is asked for, not how much they may do. Everyone
+declared at whichever title is told when the mission moves, goes, or gets an
+update — `people_on` sees to it, and a title nobody hears from would be a
+title nobody keeps up to date.
+
 ### Business invariants
 
 These rules are tested **at the domain level**, independently of the API and of
@@ -289,9 +310,13 @@ each carries the budget for its own.
   trade would bury the dozen that decide something. The reference list is
   where a mission is unfolded into its trades.
 - **`WorkNature` is closed, and it names a hat rather than an act** —
-  développement, design, chefferie de projet, delivery. Here a developer also
-  does the ops and a designer does both UX and UI: naming the act would leave
-  a developer's day on Terraform undecidable. It answers « en tant que quoi »,
+  développement, design, pilotage. Here a developer also does the ops, a
+  designer does both UX and UI, and whoever steers carries the chefferie, the
+  delivery and the coaching at once: naming the act would leave a developer's
+  day on Terraform undecidable. « Chefferie de projet » and « Delivery » were
+  two of them until it became plain that the same people wore both: they are
+  one trade now, « Pilotage », and the days booked under either were merged
+  onto it. It answers « en tant que quoi »,
   never « sur quoi », and nothing in the domain branches on it — it is read,
   never computed with. Adding one is a decision about the organisation, so it
   lives in the domain beside `Department` rather than in a table somebody can
@@ -652,7 +677,12 @@ and saves the question as a simulation. Services in operations are out of it —
 portfolio, delivered services included, over a rolling window. It is shown
 rather than arbitrated: to a committee, to a department. Where the plan reads
 `go_live_date` only to work out a delay, the roadmap makes the announced date
-its subject — and is the one place it can be posted.
+its subject — and is the one place it can be *posted against the others*, a
+commitment being taken next to every other commitment rather than alone. The
+day itself is also read and changed on the mission's own sheet, under its
+phase: moving a mission into « Recette » and knowing when it goes live are one
+minute's work, and sending somebody to another screen for the second half of
+it is how a date stops being posted at all.
 
 The window rolls rather than following the calendar, and that is a decision
 about where the width of the screen goes. A civil year read in September
@@ -689,9 +719,11 @@ Three rules the drawing rests on:
   time declared — that is the line steering has to see, and the tally above
   says how many there are before anybody reads a bar.
 
-Gestures do not cross: reordering and staffing belong to Planification,
-posting a date belongs to the roadmap. Two screens answering the same gesture
-end up contradicting each other.
+Gestures do not cross: reordering and staffing belong to Planification, and
+the roadmap is the only place a date is arbitrated against the rest of the
+portfolio. Two screens answering the same gesture end up contradicting each
+other — which is why the mission's sheet writes the same field rather than a
+second one of its own.
 
 ## The service catalogue
 
@@ -702,9 +734,9 @@ named after what it feeds rather than after the form it shows: one goes there
 to publish a service, not to admire a sheet.
 
 The line between the two tabs of a mission is what one is doing there:
-**Pilotage steers the mission, Catalogue publishes the service.** Phase,
-priority, departments, contributors and cost steer; address, summary, links,
-stack and criticality publish. A field belongs to one side or the other, never
+**Pilotage steers the mission, Catalogue publishes the service.** Phase, day
+of go-live, priority, departments, the people on it and cost steer; address,
+summary, links, stack and criticality publish. A field belongs to one side or the other, never
 to both. Inside the tab, « Rattachement » gathers what the service hangs from
 — its team, its channel, its tags — and no section repeats the tab's own name.
 

@@ -324,6 +324,14 @@ describe("auditSentence", () => {
         ).action,
       ).toBe("a retiré Nino Garo des intervenants");
     });
+
+    it("tells a technical lead from the people on it this week", () => {
+      expect(
+        auditSentence(
+          entry("project.assign", { target_user: NINO, new_value: "tech_lead" }),
+        ).action,
+      ).toBe("a ajouté Nino Garo comme référent technique");
+    });
   });
 
   describe("the follow-up thread", () => {

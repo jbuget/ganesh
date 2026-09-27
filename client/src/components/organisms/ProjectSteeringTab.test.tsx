@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import { ProjectSteeringTab } from "./ProjectSteeringTab";
 import type {
@@ -43,18 +44,24 @@ const detail = (
       priority: null,
       business_contacts: null,
       description: null,
+      go_live_date: null,
     },
     departments: [],
     links: [],
     phases: [],
     leads: [],
+    tech_leads: [],
     contributors: [],
     consumed_days: 0,
     contributions: [],
     sub_projects: [],
   }) as unknown as ProjectDetailResponse;
 
-const steering = (kind: ProjectKind, category: ProjectCategory | null = null) =>
+const steering = (
+  kind: ProjectKind,
+  category: ProjectCategory | null = null,
+  updateFields = vi.fn(),
+) =>
   render(
     <ProjectSteeringTab
       editable
@@ -62,7 +69,7 @@ const steering = (kind: ProjectKind, category: ProjectCategory | null = null) =>
       onChange={vi.fn()}
       saveSheet={vi.fn()}
       changePhase={vi.fn()}
-      updateFields={vi.fn()}
+      updateFields={updateFields}
       addSubProject={vi.fn()}
     />,
   );
@@ -126,5 +133,39 @@ describe("the strategic axis of a mission", () => {
     expect(
       screen.getByRole("link", { name: "À définir sur le projet" }),
     ).toHaveAttribute("href", "/projects/9");
+  });
+});
+
+/**
+ * Who is on the mission this week and who answers for its code are two
+ * questions, and the sheet asks them one under the other rather than folding
+ * them into one list.
+ */
+describe("who is on a mission", () => {
+  it("asks for the people on it now and for the ones who answer for it", () => {
+    steering("project");
+
+    expect(
+      screen.getByRole("button", { name: "Modifier les référents techniques" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Modifier les intervenants actuels" }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("the day a mission goes live", () => {
+  it("is posted from the sheet, under the phase", async () => {
+    const updateFields = vi.fn();
+    steering("project", null, updateFields);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Date annoncée pour Portail" }),
+    );
+    const field = screen.getByLabelText("Date annoncée pour Portail");
+    await userEvent.type(field, "2026-11-15");
+    fireEvent.blur(field);
+
+    expect(updateFields).toHaveBeenCalledWith({ go_live_date: "2026-11-15" });
   });
 });

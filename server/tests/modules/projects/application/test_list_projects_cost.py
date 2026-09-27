@@ -217,7 +217,7 @@ class TestTheEstimateIsReadFromTheTrades:
         par_id = await listed(
             [],
             missions=[replace(PORTAIL, estimated_days=None)],
-            activities=[a_trade(15.0), a_trade(5.0, label="Chefferie de projet")],
+            activities=[a_trade(15.0), a_trade(5.0, label="Pilotage")],
         )
 
         assert par_id[10].cost.estimated_days == 20.0
@@ -230,7 +230,7 @@ class TestTheEstimateIsReadFromTheTrades:
         par_id = await listed(
             [],
             missions=[replace(PORTAIL, estimated_days=None)],
-            activities=[a_trade(15.0), a_trade(None, label="Chefferie de projet")],
+            activities=[a_trade(15.0), a_trade(None, label="Pilotage")],
         )
 
         assert par_id[10].cost.estimated_days is None

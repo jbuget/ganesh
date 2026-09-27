@@ -23,7 +23,7 @@ class WorkNature(StrEnum):
     DEVELOPMENT = "development"
     #: The designer, UX and UI being one and the same person.
     DESIGN = "design"
-    #: The project manager, who also carries the product.
+    #: Whoever steers the mission — chefferie de projet, delivery, coaching:
+    #: one hat, because the same person here wears all three, and two trades
+    #: nobody can tell apart split a budget across two lines.
     PROJECT_MANAGEMENT = "project_management"
-    #: The delivery manager, who also coaches.
-    DELIVERY = "delivery"

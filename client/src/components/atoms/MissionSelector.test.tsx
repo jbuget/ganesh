@@ -37,9 +37,9 @@ const mission = (
 
 const MISSIONS: ProjectListItemResponse[] = [
   mission(1, "Sitetracker - GMAO", [
-    { id: 10, label: "Delivery" },
+    { id: 10, label: "Design" },
     { id: 11, label: "Développement" },
-    { id: 12, label: "Chefferie de projet" },
+    { id: 12, label: "Pilotage" },
   ]),
   mission(2, "Portail bailleurs", [{ id: 20, label: "Développement" }]),
   mission(3, "Absences", [], "off_project"),
@@ -90,7 +90,7 @@ describe("MissionSelector", () => {
     expect(await screen.findByText("Sous quelle activité ?")).toBeInTheDocument();
     expect(onSelect).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole("button", { name: "Delivery" }));
+    await user.click(screen.getByRole("button", { name: "Design" }));
 
     expect(onSelect).toHaveBeenCalledWith(1, 10);
   });
@@ -109,7 +109,7 @@ describe("MissionSelector", () => {
       screen.queryByRole("button", { name: "Développement" }),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Delivery" }));
+    await user.click(screen.getByRole("button", { name: "Design" }));
 
     expect(onSelect).toHaveBeenCalledWith(1, 10);
   });

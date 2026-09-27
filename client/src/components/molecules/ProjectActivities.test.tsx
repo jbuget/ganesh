@@ -55,15 +55,10 @@ describe("ProjectActivities", () => {
     expect(screen.getByText(/le projet n'affiche pas de ratio/)).toBeInTheDocument();
   });
 
-  it("offers the four trades, each named as the team names it", () => {
+  it("offers the three trades, each named as the team names it", () => {
     render(<ProjectActivities {...baseProps} activities={[]} />);
 
-    for (const trade of [
-      "Développement",
-      "Design",
-      "Chefferie de projet",
-      "Delivery",
-    ]) {
+    for (const trade of ["Développement", "Design", "Pilotage"]) {
       expect(screen.getByRole("button", { name: trade })).toBeInTheDocument();
     }
   });
@@ -72,9 +67,9 @@ describe("ProjectActivities", () => {
     const onAdd = vi.fn();
     render(<ProjectActivities {...baseProps} onAdd={onAdd} activities={[]} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Delivery" }));
+    await userEvent.click(screen.getByRole("button", { name: "Pilotage" }));
 
-    expect(onAdd).toHaveBeenCalledWith("Delivery", "delivery");
+    expect(onAdd).toHaveBeenCalledWith("Pilotage", "project_management");
   });
 
   it("says what withdrawing a trade would leave behind", () => {

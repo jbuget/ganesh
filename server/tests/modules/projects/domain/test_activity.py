@@ -19,7 +19,7 @@ def an_activity(**overrides: object) -> Activity:
     fields: dict[str, object] = {
         "id": 1,
         "project_id": 10,
-        "label": "Chefferie de projet",
+        "label": "Pilotage",
         "nature": WorkNature.PROJECT_MANAGEMENT,
     }
     fields.update(overrides)

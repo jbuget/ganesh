@@ -1,6 +1,6 @@
 """The activity: what a day of work is actually booked against.
 
-« Chefferie de projet » under « Edit V2 », « Développement » under « Edit ».
+« Pilotage » under « Edit V2 », « Développement » under « Edit ».
 A mission says what is being built; an activity says under which trade the
 days are spent on it, and carries the estimate for that trade alone. That is
 the whole of it — a phase, an urgency, a strategic axis or a catalogue entry
