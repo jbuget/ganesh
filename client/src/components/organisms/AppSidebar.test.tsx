@@ -109,13 +109,12 @@ describe("AppSidebar", () => {
     expect(labels.at(-1)).toMatch(/API \/ MCP/);
   });
 
-  // The bar lists what the team opens; two screens are read from where they
-  // belong instead, and the palette is what still leads to them.
-  it("leaves La Gazette and « Moral » off the bar", () => {
+  // The bar lists what the team opens; La Gazette is read from the home
+  // screen instead, and the palette is what still leads to it.
+  it("leaves La Gazette off the bar", () => {
     render(<AppSidebar />);
 
     expect(screen.queryByRole("link", { name: /La Gazette/ })).toBeNull();
-    expect(screen.queryByRole("link", { name: /Moral/ })).toBeNull();
   });
 
   it("opens the navigation with « Accueil », which holds the root", () => {

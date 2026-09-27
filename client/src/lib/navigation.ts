@@ -31,8 +31,8 @@ import { holds } from "@/lib/roles";
  *
  * `"aside"` is the one that is not a band: the screen exists, the palette
  * leads to it, the bar does not list it. It is for what is reached from where
- * it is read — La Gazette from the home screen, « Moral » from the tab that
- * holds it — and it is a decision each time, never a place to put what did not
+ * it is read — La Gazette, from the band above « Quoi de neuf » on the home
+ * screen — and it is a decision each time, never a place to put what did not
  * fit.
  */
 export type Band = "work" | "portfolio" | "steering" | "team" | "platform" | "aside";
@@ -111,13 +111,15 @@ export const SCREENS: readonly Screen[] = [
   // opens hourly asked for a rank it never earned.
   { href: "/gazette", label: "La Gazette", Icon: Newspaper, band: "aside" },
 
+  // The mirror before the list: the band opens on how the team is, and then
+  // says who it is made of. A screen of its own rather than a tab of the one
+  // below — it reads and never writes, where « Utilisateurs » is where a role
+  // is given away, and an entry in the bar has to lead to a screen rather than
+  // to somebody else's tab.
+  { href: "/mood", label: "Moral", Icon: Smile, band: "team" },
   // Shown to everyone, as « API / MCP » is: the navigation says what exists,
   // and the permission lives on the actions.
   { href: "/users", label: "Utilisateurs", Icon: Users, band: "team" },
-  // A tab of « Utilisateurs », not a screen of its own: it reads the same
-  // people the other two tabs read. Kept here so the palette still leads to
-  // it — « Moral » is a word one searches for, and the tab it opens is not.
-  { href: "/users?vue=moral", label: "Moral", Icon: Smile, band: "aside" },
 
   // The register read across, where a mission's « Journal » tab reads one
   // mission's. Same word for the same thing, and the only screen a deleted

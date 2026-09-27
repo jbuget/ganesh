@@ -69,11 +69,11 @@ describe("bandsFor", () => {
     expect(hrefs("ADMIN")).toContain("/gazette");
   });
 
-  it("leads to « Moral » through the tab that holds it", () => {
-    const moral = SCREENS.find((screen) => screen.label === "Moral");
+  it("opens the team band on the mirror, before the list", () => {
+    const team = bandsFor("MANAGER").find((band) => band.band === "team");
 
-    expect(moral?.href).toBe("/users?vue=moral");
-    expect(moral?.band).toBe("aside");
+    // How the team is, and then who it is made of.
+    expect(team?.screens.map((screen) => screen.href)).toEqual(["/mood", "/users"]);
   });
 
   it("shows the administration to nobody else, in the band that holds it", () => {
