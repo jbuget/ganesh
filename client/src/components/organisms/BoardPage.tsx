@@ -158,6 +158,7 @@ export function BoardPage() {
                   now={now}
                   onContributorsChange={board.reload}
                   onOpen={panel.open}
+                  onOpenThread={(projectId) => panel.open(projectId, "updates")}
                   // Filtered, the board reads without arranging; a guest
                   // reads it the same way, and for the same reason — a card
                   // that moved back would be the screen's fault.
@@ -186,8 +187,11 @@ export function BoardPage() {
 
       {panel.openedMission && (
         <ProjectPanel
-          key={panel.openedMission}
+          // The tab is part of the key: reopening the same mission on its
+          // thread must remount the panel, which picks its tab on opening.
+          key={`${panel.openedMission}:${panel.openTab ?? ""}`}
           projectId={panel.openedMission}
+          tab={panel.openTab}
           onClose={panel.close}
           onMissionChanged={board.reload}
           onOpenMission={(projectId) => panel.open(projectId)}
