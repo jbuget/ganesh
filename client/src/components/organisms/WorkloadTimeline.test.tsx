@@ -49,6 +49,7 @@ const NOTHING = {
   onUp: vi.fn(),
   onDown: vi.fn(),
   onStaff: vi.fn(),
+  onOpen: vi.fn(),
 };
 
 function draw(missions: PlannedMissionResponse[], handlers = {}) {
@@ -188,5 +189,14 @@ describe("WorkloadTimeline", () => {
     draw([]);
 
     expect(screen.getByText(/Aucun projet à planifier/)).toBeInTheDocument();
+  });
+
+  it("opens the project panel on the mission a row names", async () => {
+    const onOpen = vi.fn();
+    draw([aMission()], { onOpen });
+
+    await userEvent.click(screen.getByRole("button", { name: "Portail bailleurs" }));
+
+    expect(onOpen).toHaveBeenCalledWith(10);
   });
 });

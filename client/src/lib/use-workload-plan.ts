@@ -156,6 +156,9 @@ export function useWorkloadPlanScreen() {
         staffing: { ...current.staffing, [projectId]: userIds },
       })),
 
+    /** Re-fetches the plan: a new object reference is what retriggers it. */
+    refresh: () => setScenario((current) => ({ ...current })),
+
     /** Drops every hypothesis, keeping how far ahead one is looking. */
     reset: () => {
       setScenario((current) => ({

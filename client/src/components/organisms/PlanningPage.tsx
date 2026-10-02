@@ -9,9 +9,11 @@ import { PlanSummaryBar } from "@/components/atoms/PlanSummaryBar";
 import { SimulationBar } from "@/components/molecules/SimulationBar";
 import { CapacityTimeline } from "@/components/organisms/CapacityTimeline";
 import { PageLayout } from "@/components/organisms/PageLayout";
+import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { WorkloadTimeline } from "@/components/organisms/WorkloadTimeline";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatShortDate } from "@/lib/dates";
+import { useOpenedMission } from "@/lib/opened-mission";
 import { scenarioNotice } from "@/lib/planning";
 import { useMayWrite } from "@/lib/use-may-write";
 import { useUnsavedChangesGuard } from "@/lib/use-unsaved-changes-guard";
@@ -53,10 +55,12 @@ export function PlanningPage() {
     saveAs,
     saveOver,
     remove,
+    refresh,
   } = useWorkloadPlanScreen();
   const [tab, setTab] = useState("missions");
 
   const guard = useUnsavedChangesGuard(hasWorkToLose);
+  const panel = useOpenedMission();
 
   const mayKeep = useMayWrite();
   const weeks = plan?.weeks ?? [];
@@ -153,6 +157,7 @@ export function PlanningPage() {
                   onUp={moveUp}
                   onDown={moveDown}
                   onStaff={staff}
+                  onOpen={(projectId) => panel.open(projectId)}
                 />
               </TabsContent>
 
@@ -163,6 +168,19 @@ export function PlanningPage() {
           )}
         </Tabs>
       </div>
+
+      {panel.openedMission && (
+        <ProjectPanel
+          // The tab is part of the key: reopening the same mission on its
+          // thread must remount the panel, which picks its tab on opening.
+          key={`${panel.openedMission}:${panel.openTab ?? ""}`}
+          projectId={panel.openedMission}
+          tab={panel.openTab}
+          onClose={panel.close}
+          onMissionChanged={refresh}
+          onOpenMission={(projectId) => panel.open(projectId)}
+        />
+      )}
     </PageLayout>
   );
 }
