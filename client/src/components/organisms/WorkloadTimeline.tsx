@@ -50,6 +50,8 @@ interface WorkloadTimelineProps {
   onDown: (projectId: number) => void;
   /** Supposes a mission is carried by these people, and nobody else. */
   onStaff: (projectId: number, userIds: number[]) => void;
+  /** Opens the project panel on the mission behind a row. */
+  onOpen: (projectId: number) => void;
 }
 
 /**
@@ -71,6 +73,7 @@ export function WorkloadTimeline({
   onUp,
   onDown,
   onStaff,
+  onOpen,
 }: WorkloadTimelineProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -153,6 +156,7 @@ export function WorkloadTimeline({
                     onUp={onUp}
                     onDown={onDown}
                     onStaff={onStaff}
+                    onOpen={onOpen}
                   />
                 ))}
               </SortableContext>

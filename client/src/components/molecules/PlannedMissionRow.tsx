@@ -32,6 +32,8 @@ interface PlannedMissionRowProps {
   onUp: (projectId: number) => void;
   onDown: (projectId: number) => void;
   onStaff: (projectId: number, userIds: number[]) => void;
+  /** Opens the project panel on the mission behind the row. */
+  onOpen: (projectId: number) => void;
 }
 
 /**
@@ -52,6 +54,7 @@ export function PlannedMissionRow({
   onUp,
   onDown,
   onStaff,
+  onOpen,
 }: PlannedMissionRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: mission.project_id });
@@ -112,12 +115,17 @@ export function PlannedMissionRow({
 
           {/* `min-w-0` is what lets the truncation happen: a flex child
               refuses to shrink below its content without it. */}
-          <span
-            className="min-w-0 flex-1 truncate text-sm text-slate-800"
+          <button
+            type="button"
             title={mission.label}
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpen(mission.project_id);
+            }}
+            className="min-w-0 flex-1 cursor-pointer truncate text-left text-sm text-slate-800"
           >
             {mission.label}
-          </span>
+          </button>
 
           <span className="shrink-0">
             <PriorityMark value={mission.priority} />
