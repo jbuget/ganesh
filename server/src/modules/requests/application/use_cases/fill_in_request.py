@@ -6,7 +6,7 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 )
 from src.modules.requests.application.dtos.request_detail import RequestDetail
 from src.modules.requests.application.dtos.request_dto import FillInRequestCommand
-from src.modules.requests.application.use_cases.people import describe, gather_sponsors
+from src.modules.requests.application.services.people import describe, gather_sponsors
 from src.modules.requests.domain.repositories.request_repository import (
     RequestRepository,
 )

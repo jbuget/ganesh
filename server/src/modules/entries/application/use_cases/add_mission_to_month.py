@@ -5,7 +5,7 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
 from src.modules.entries.application.dtos.set_entry_dto import AddMissionCommand
-from src.modules.entries.application.use_cases.timesheet_notice import tell_the_owner
+from src.modules.entries.application.services.timesheet_notice import tell_the_owner
 from src.modules.entries.domain.repositories.user_mission_repository import (
     UserMissionRepository,
 )

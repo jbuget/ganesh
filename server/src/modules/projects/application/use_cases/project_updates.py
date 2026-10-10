@@ -17,7 +17,7 @@ from src.modules.projects.application.dtos.update_dto import (
     ReactCommand,
     RemoveUpdateCommand,
 )
-from src.modules.projects.application.use_cases.project_audience import people_on
+from src.modules.projects.application.services.project_audience import people_on
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.projects.domain.entities.update_comment import UpdateComment
 from src.modules.projects.domain.entities.update_reaction import Reaction

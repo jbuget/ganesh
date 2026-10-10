@@ -14,7 +14,7 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.domain.services.hierarchy import ensure_can_be_parent
 from src.modules.requests.application.dtos.request_detail import RequestDetail
 from src.modules.requests.application.dtos.request_dto import ConvertRequestCommand
-from src.modules.requests.application.use_cases.people import describe
+from src.modules.requests.application.services.people import describe
 from src.modules.requests.domain.repositories.request_repository import (
     RequestRepository,
 )

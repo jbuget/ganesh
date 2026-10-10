@@ -6,7 +6,7 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 )
 from src.modules.requests.application.dtos.request_detail import RequestDetail
 from src.modules.requests.application.dtos.request_dto import DecideRequestCommand
-from src.modules.requests.application.use_cases.people import describe
+from src.modules.requests.application.services.people import describe
 from src.modules.requests.domain.repositories.request_repository import (
     RequestRepository,
 )
