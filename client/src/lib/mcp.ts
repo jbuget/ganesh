@@ -195,6 +195,12 @@ export const MCP_TOOLS: McpTool[] = [
     scope: "audit:read",
   },
   {
+    name: "gazette",
+    answers:
+      "Dit ce qui s'est passé un mois donné : ce que la Gazette compte (projets créés et archivés, changements de phase, mises à jour, besoins déposés), ce qui ressort et ce qui doit inquiéter — toujours à propos d'un projet, jamais d'une personne. Un mois déjà généré rend aussi son éditorial, annoncé comme rédigé par un modèle. Ne génère rien.",
+    scope: "audit:read",
+  },
+  {
     name: "portfolio_status",
     answers:
       "Dit où en est le portefeuille : ce qui est en retard et de combien, ce qui a été mis en service, et les projets que la projection n'a pas pu placer.",
