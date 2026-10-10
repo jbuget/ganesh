@@ -3,9 +3,9 @@
 import { ChevronLeft, ChevronRight, History } from "lucide-react";
 import { useState } from "react";
 
-import { AssignedMissionsCallout } from "@/components/atoms/AssignedMissionsCallout";
+import { AssignedMissionsCallout } from "@/components/molecules/AssignedMissionsCallout";
 import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
-import { MissionSelector } from "@/components/atoms/MissionSelector";
+import { MissionSelector } from "@/components/molecules/MissionSelector";
 import { MonthAuditDialog } from "@/components/organisms/MonthAuditDialog";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { PageLayout } from "@/components/organisms/PageLayout";

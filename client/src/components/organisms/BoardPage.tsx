@@ -18,7 +18,7 @@ import { useMemo } from "react";
 
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { PageLayout } from "@/components/organisms/PageLayout";
-import { BoardColumn } from "@/components/molecules/BoardColumn";
+import { BoardColumn } from "@/components/organisms/BoardColumn";
 import { MissionFilters } from "@/components/molecules/MissionFilters";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { ProjectCard } from "@/components/molecules/ProjectCard";

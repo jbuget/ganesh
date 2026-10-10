@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { CreateApiKeyDialog } from "@/components/molecules/CreateApiKeyDialog";
+import { CreateApiKeyDialog } from "@/components/organisms/CreateApiKeyDialog";
 import type { UserResponse } from "@/lib/api/generated/model";
 
 const TEAM = [

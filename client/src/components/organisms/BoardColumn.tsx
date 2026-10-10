@@ -3,7 +3,7 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
-import { SortableProjectCard } from "@/components/molecules/SortableProjectCard";
+import { SortableProjectCard } from "@/components/organisms/SortableProjectCard";
 import type { BoardCardResponse, ProjectStatus } from "@/lib/api/generated/model";
 import { phaseLabel, phaseDot } from "@/lib/board";
 
