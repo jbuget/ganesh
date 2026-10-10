@@ -13,15 +13,34 @@ from src.core.database import get_db
 from src.modules.assistant.application.use_cases.admit_question import (
     AdmitQuestionUseCase,
 )
+from src.modules.assistant.application.use_cases.annotate_exchange import (
+    AnnotateExchangeUseCase,
+)
+from src.modules.assistant.application.use_cases.export_exchanges import (
+    ExportExchangesUseCase,
+)
 from src.modules.assistant.application.use_cases.judge_answer import JudgeAnswerUseCase
+from src.modules.assistant.application.use_cases.list_conversations import (
+    ListConversationsUseCase,
+)
 from src.modules.assistant.application.use_cases.read_assistant import (
     ReadAssistantUseCase,
+)
+from src.modules.assistant.application.use_cases.read_conversation import (
+    ReadConversationUseCase,
+)
+from src.modules.assistant.application.use_cases.read_indicators import (
+    ReadIndicatorsUseCase,
 )
 from src.modules.assistant.application.use_cases.record_exchange import (
     RecordExchangeUseCase,
 )
+from src.modules.assistant.domain.repositories.exchange_archive import ExchangeArchive
 from src.modules.assistant.domain.repositories.exchange_repository import (
     ExchangeRepository,
+)
+from src.modules.assistant.infrastructure.database.repositories.exchange_archive_impl import (
+    SqlExchangeArchive,
 )
 from src.modules.assistant.infrastructure.database.repositories.exchange_repository_impl import (
     SqlExchangeRepository,
@@ -32,12 +51,28 @@ from src.modules.projects.domain.repositories.project_repository import (
 from src.modules.projects.infrastructure.database.repositories.project_repository_impl import (
     SqlProjectRepository,
 )
+from src.modules.users.domain.repositories.user_repository import UserRepository
+from src.modules.users.infrastructure.database.repositories.user_repository_impl import (
+    SqlUserRepository,
+)
 
 
 def get_exchange_repository(
     session: AsyncSession = Depends(get_db),
 ) -> ExchangeRepository:
     return SqlExchangeRepository(session)
+
+
+def get_exchange_archive(
+    session: AsyncSession = Depends(get_db),
+) -> ExchangeArchive:
+    return SqlExchangeArchive(session)
+
+
+def get_user_repository(
+    session: AsyncSession = Depends(get_db),
+) -> UserRepository:
+    return SqlUserRepository(session)
 
 
 def get_project_repository(
@@ -70,3 +105,34 @@ def get_judge_answer_use_case(
     exchanges: ExchangeRepository = Depends(get_exchange_repository),
 ) -> JudgeAnswerUseCase:
     return JudgeAnswerUseCase(exchanges)
+
+
+def get_list_conversations_use_case(
+    archive: ExchangeArchive = Depends(get_exchange_archive),
+) -> ListConversationsUseCase:
+    return ListConversationsUseCase(archive)
+
+
+def get_read_conversation_use_case(
+    archive: ExchangeArchive = Depends(get_exchange_archive),
+) -> ReadConversationUseCase:
+    return ReadConversationUseCase(archive)
+
+
+def get_read_indicators_use_case(
+    archive: ExchangeArchive = Depends(get_exchange_archive),
+) -> ReadIndicatorsUseCase:
+    return ReadIndicatorsUseCase(archive)
+
+
+def get_export_exchanges_use_case(
+    archive: ExchangeArchive = Depends(get_exchange_archive),
+    users: UserRepository = Depends(get_user_repository),
+) -> ExportExchangesUseCase:
+    return ExportExchangesUseCase(archive, users)
+
+
+def get_annotate_exchange_use_case(
+    archive: ExchangeArchive = Depends(get_exchange_archive),
+) -> AnnotateExchangeUseCase:
+    return AnnotateExchangeUseCase(archive)

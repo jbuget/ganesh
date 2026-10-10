@@ -221,7 +221,9 @@ the question one opens it with. Length is met by paging, never by filtering.
   felt what is not a log. So are the questions asked of the assistant and
   the thumbs given under its answers: a question is a reading, not a gesture
   on a project, and every exchange is already kept whole in
-  `assistant_exchanges`.
+  `assistant_exchanges`. The annotation an administrator leaves under an
+  answer stays out with them: it is a reading of a reading, stamped on the
+  row it reads.
 - Deleting a project sets its lines' `project_id` to `NULL`: the log survives,
   the tab it was read in does not. That is right — there is no project left to
   open.
@@ -1114,7 +1116,7 @@ it together:
 A panel on the right, opened with ⌘J (Ctrl+J away from a Mac), that answers
 questions about a project — « où en est le projet X ? », asked by somebody who
 is not on it. Nothing in the sidebar announces it yet: whoever knows the
-shortcut reaches it, a guest never does. Eight rules hold it together:
+shortcut reaches it, a guest never does. Nine rules hold it together:
 
 - **« Où en est X ? » is read in the sheet and in the thread.** `project_brief`
   for the state — lots, budget, who is on it — and `project_news` for what the
@@ -1154,6 +1156,18 @@ shortcut reaches it, a guest never does. Eight rules hold it together:
   « Où en est-il ? » from WAATcher's sheet is about WAATcher; « et sur
   Ganesh ? » from the same sheet is about Ganesh, the project — the
   application shares its name, and a name is looked up before anything else.
+- **The exchanges are studied in the administration, by an administrator
+  alone.** « Assistant IA », beside « Plateforme »: figures, conversations,
+  and one opened whole with what every tool read back. `ExchangeArchive` reads
+  everybody's and `ExchangeRepository` only the asker's — two ports, so that
+  the panel's rule is never one forgotten argument away. Nobody is
+  anonymised. An answer carries one **annotation**: a cause from a closed list
+  (`Cause` — lecture fausse, phrase fausse, hors champ, bonne réponse) and a
+  note; telling a wrong reading from a wrong sentence is the whole study. The
+  asker's verdict stays theirs beside it. The export, CSV or JSON, saves
+  exactly what the criteria keep. **Nothing is purged yet**, and the screen
+  says how far back it goes; the day a retention is decided, mind that the
+  clock of `src/scheduler/` does not start without `SMTP_HOST`.
 - **Same model as the gazette**, `GEMINI_MODEL` and `GEMINI_API_KEY`, and the
   same contract: without a key the panel says it is not configured and nothing
   breaks. The model is asked not to reason before answering — measured, the

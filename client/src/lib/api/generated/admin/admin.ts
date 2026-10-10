@@ -4,20 +4,34 @@
  * Ganesh API
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HTTPValidationError, PlatformResponse } from "../model";
+import type {
+  AnnotateRequest,
+  AssistantIndicatorsResponse,
+  ConversationDetailResponse,
+  ConversationPageResponse,
+  ExportAssistantExchangesParams,
+  HTTPValidationError,
+  ListAssistantConversationsParams,
+  PlatformResponse,
+  ReadAssistantIndicatorsParams,
+  StudiedExchangeResponse,
+} from "../model";
 
 import { bffFetcher } from "../../fetcher";
 
@@ -189,3 +203,931 @@ export function useReadPlatform<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type listAssistantConversationsResponse200 = {
+  data: ConversationPageResponse;
+  status: 200;
+};
+
+export type listAssistantConversationsResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listAssistantConversationsResponseSuccess =
+  listAssistantConversationsResponse200 & {
+    headers: Headers;
+  };
+export type listAssistantConversationsResponseError =
+  listAssistantConversationsResponse422 & {
+    headers: Headers;
+  };
+
+export type listAssistantConversationsResponse =
+  listAssistantConversationsResponseSuccess | listAssistantConversationsResponseError;
+
+export const getListAssistantConversationsUrl = (
+  params?: ListAssistantConversationsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/admin/assistant/conversations?${stringifiedParams}`
+    : `/api/v1/admin/assistant/conversations`;
+};
+
+/**
+ * The conversations holding an exchange the filter keeps, latest first.
+ * @summary List Conversations
+ */
+export const listAssistantConversations = async (
+  params?: ListAssistantConversationsParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listAssistantConversationsResponse> => {
+  return bffFetcher<listAssistantConversationsResponse>(
+    getListAssistantConversationsUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListAssistantConversationsQueryKey = (
+  params?: ListAssistantConversationsParams,
+) => {
+  return [
+    `/api/v1/admin/assistant/conversations`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListAssistantConversationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAssistantConversations>>,
+  TError = HTTPValidationError,
+>(
+  params?: ListAssistantConversationsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof listAssistantConversations>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListAssistantConversationsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listAssistantConversations>>
+  > = ({ signal }) => listAssistantConversations(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAssistantConversations>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListAssistantConversationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAssistantConversations>>
+>;
+export type ListAssistantConversationsQueryError = HTTPValidationError;
+
+export function useListAssistantConversations<
+  TData = Awaited<ReturnType<typeof listAssistantConversations>>,
+  TError = HTTPValidationError,
+>(
+  params: undefined | ListAssistantConversationsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof listAssistantConversations>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAssistantConversations>>,
+          TError,
+          Awaited<ReturnType<typeof listAssistantConversations>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListAssistantConversations<
+  TData = Awaited<ReturnType<typeof listAssistantConversations>>,
+  TError = HTTPValidationError,
+>(
+  params?: ListAssistantConversationsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof listAssistantConversations>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAssistantConversations>>,
+          TError,
+          Awaited<ReturnType<typeof listAssistantConversations>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAssistantConversations<
+  TData = Awaited<ReturnType<typeof listAssistantConversations>>,
+  TError = HTTPValidationError,
+>(
+  params?: ListAssistantConversationsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof listAssistantConversations>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Conversations
+ */
+
+export function useListAssistantConversations<
+  TData = Awaited<ReturnType<typeof listAssistantConversations>>,
+  TError = HTTPValidationError,
+>(
+  params?: ListAssistantConversationsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof listAssistantConversations>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAssistantConversationsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type readAssistantConversationResponse200 = {
+  data: ConversationDetailResponse;
+  status: 200;
+};
+
+export type readAssistantConversationResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type readAssistantConversationResponseSuccess =
+  readAssistantConversationResponse200 & {
+    headers: Headers;
+  };
+export type readAssistantConversationResponseError =
+  readAssistantConversationResponse422 & {
+    headers: Headers;
+  };
+
+export type readAssistantConversationResponse =
+  readAssistantConversationResponseSuccess | readAssistantConversationResponseError;
+
+export const getReadAssistantConversationUrl = (conversationId: string) => {
+  return `/api/v1/admin/assistant/conversations/${conversationId}`;
+};
+
+/**
+ * A conversation whole, with what every tool read back.
+ * @summary Read Conversation
+ */
+export const readAssistantConversation = async (
+  conversationId: string,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<readAssistantConversationResponse> => {
+  return bffFetcher<readAssistantConversationResponse>(
+    getReadAssistantConversationUrl(conversationId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getReadAssistantConversationQueryKey = (conversationId: string) => {
+  return [`/api/v1/admin/assistant/conversations/${conversationId}`] as const;
+};
+
+export const getReadAssistantConversationQueryOptions = <
+  TData = Awaited<ReturnType<typeof readAssistantConversation>>,
+  TError = HTTPValidationError,
+>(
+  conversationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof readAssistantConversation>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getReadAssistantConversationQueryKey(conversationId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof readAssistantConversation>>
+  > = ({ signal }) =>
+    readAssistantConversation(conversationId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: conversationId !== null && conversationId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof readAssistantConversation>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ReadAssistantConversationQueryResult = NonNullable<
+  Awaited<ReturnType<typeof readAssistantConversation>>
+>;
+export type ReadAssistantConversationQueryError = HTTPValidationError;
+
+export function useReadAssistantConversation<
+  TData = Awaited<ReturnType<typeof readAssistantConversation>>,
+  TError = HTTPValidationError,
+>(
+  conversationId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof readAssistantConversation>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof readAssistantConversation>>,
+          TError,
+          Awaited<ReturnType<typeof readAssistantConversation>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useReadAssistantConversation<
+  TData = Awaited<ReturnType<typeof readAssistantConversation>>,
+  TError = HTTPValidationError,
+>(
+  conversationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof readAssistantConversation>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof readAssistantConversation>>,
+          TError,
+          Awaited<ReturnType<typeof readAssistantConversation>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReadAssistantConversation<
+  TData = Awaited<ReturnType<typeof readAssistantConversation>>,
+  TError = HTTPValidationError,
+>(
+  conversationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof readAssistantConversation>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read Conversation
+ */
+
+export function useReadAssistantConversation<
+  TData = Awaited<ReturnType<typeof readAssistantConversation>>,
+  TError = HTTPValidationError,
+>(
+  conversationId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof readAssistantConversation>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getReadAssistantConversationQueryOptions(
+    conversationId,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type readAssistantIndicatorsResponse200 = {
+  data: AssistantIndicatorsResponse;
+  status: 200;
+};
+
+export type readAssistantIndicatorsResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type readAssistantIndicatorsResponseSuccess =
+  readAssistantIndicatorsResponse200 & {
+    headers: Headers;
+  };
+export type readAssistantIndicatorsResponseError =
+  readAssistantIndicatorsResponse422 & {
+    headers: Headers;
+  };
+
+export type readAssistantIndicatorsResponse =
+  readAssistantIndicatorsResponseSuccess | readAssistantIndicatorsResponseError;
+
+export const getReadAssistantIndicatorsUrl = (
+  params?: ReadAssistantIndicatorsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/admin/assistant/indicators?${stringifiedParams}`
+    : `/api/v1/admin/assistant/indicators`;
+};
+
+/**
+ * What the exchanges the filter keeps say about the assistant.
+ * @summary Read Indicators
+ */
+export const readAssistantIndicators = async (
+  params?: ReadAssistantIndicatorsParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<readAssistantIndicatorsResponse> => {
+  return bffFetcher<readAssistantIndicatorsResponse>(
+    getReadAssistantIndicatorsUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getReadAssistantIndicatorsQueryKey = (
+  params?: ReadAssistantIndicatorsParams,
+) => {
+  return [`/api/v1/admin/assistant/indicators`, ...(params ? [params] : [])] as const;
+};
+
+export const getReadAssistantIndicatorsQueryOptions = <
+  TData = Awaited<ReturnType<typeof readAssistantIndicators>>,
+  TError = HTTPValidationError,
+>(
+  params?: ReadAssistantIndicatorsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof readAssistantIndicators>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getReadAssistantIndicatorsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof readAssistantIndicators>>> = ({
+    signal,
+  }) => readAssistantIndicators(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof readAssistantIndicators>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ReadAssistantIndicatorsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof readAssistantIndicators>>
+>;
+export type ReadAssistantIndicatorsQueryError = HTTPValidationError;
+
+export function useReadAssistantIndicators<
+  TData = Awaited<ReturnType<typeof readAssistantIndicators>>,
+  TError = HTTPValidationError,
+>(
+  params: undefined | ReadAssistantIndicatorsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof readAssistantIndicators>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof readAssistantIndicators>>,
+          TError,
+          Awaited<ReturnType<typeof readAssistantIndicators>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useReadAssistantIndicators<
+  TData = Awaited<ReturnType<typeof readAssistantIndicators>>,
+  TError = HTTPValidationError,
+>(
+  params?: ReadAssistantIndicatorsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof readAssistantIndicators>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof readAssistantIndicators>>,
+          TError,
+          Awaited<ReturnType<typeof readAssistantIndicators>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReadAssistantIndicators<
+  TData = Awaited<ReturnType<typeof readAssistantIndicators>>,
+  TError = HTTPValidationError,
+>(
+  params?: ReadAssistantIndicatorsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof readAssistantIndicators>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read Indicators
+ */
+
+export function useReadAssistantIndicators<
+  TData = Awaited<ReturnType<typeof readAssistantIndicators>>,
+  TError = HTTPValidationError,
+>(
+  params?: ReadAssistantIndicatorsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof readAssistantIndicators>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getReadAssistantIndicatorsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type exportAssistantExchangesResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type exportAssistantExchangesResponseError =
+  exportAssistantExchangesResponse422 & {
+    headers: Headers;
+  };
+
+export type exportAssistantExchangesResponse = exportAssistantExchangesResponseError;
+
+export const getExportAssistantExchangesUrl = (
+  params?: ExportAssistantExchangesParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/admin/assistant/exchanges/export?${stringifiedParams}`
+    : `/api/v1/admin/assistant/exchanges/export`;
+};
+
+/**
+ * Every exchange the filter keeps, oldest first, as a file.
+ * @summary Export Exchanges
+ */
+export const exportAssistantExchanges = async (
+  params?: ExportAssistantExchangesParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<exportAssistantExchangesResponse> => {
+  return bffFetcher<exportAssistantExchangesResponse>(
+    getExportAssistantExchangesUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getExportAssistantExchangesQueryKey = (
+  params?: ExportAssistantExchangesParams,
+) => {
+  return [
+    `/api/v1/admin/assistant/exchanges/export`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getExportAssistantExchangesQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportAssistantExchanges>>,
+  TError = HTTPValidationError,
+>(
+  params?: ExportAssistantExchangesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof exportAssistantExchanges>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getExportAssistantExchangesQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof exportAssistantExchanges>>
+  > = ({ signal }) => exportAssistantExchanges(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportAssistantExchanges>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ExportAssistantExchangesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportAssistantExchanges>>
+>;
+export type ExportAssistantExchangesQueryError = HTTPValidationError;
+
+export function useExportAssistantExchanges<
+  TData = Awaited<ReturnType<typeof exportAssistantExchanges>>,
+  TError = HTTPValidationError,
+>(
+  params: undefined | ExportAssistantExchangesParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof exportAssistantExchanges>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportAssistantExchanges>>,
+          TError,
+          Awaited<ReturnType<typeof exportAssistantExchanges>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useExportAssistantExchanges<
+  TData = Awaited<ReturnType<typeof exportAssistantExchanges>>,
+  TError = HTTPValidationError,
+>(
+  params?: ExportAssistantExchangesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof exportAssistantExchanges>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportAssistantExchanges>>,
+          TError,
+          Awaited<ReturnType<typeof exportAssistantExchanges>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportAssistantExchanges<
+  TData = Awaited<ReturnType<typeof exportAssistantExchanges>>,
+  TError = HTTPValidationError,
+>(
+  params?: ExportAssistantExchangesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof exportAssistantExchanges>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export Exchanges
+ */
+
+export function useExportAssistantExchanges<
+  TData = Awaited<ReturnType<typeof exportAssistantExchanges>>,
+  TError = HTTPValidationError,
+>(
+  params?: ExportAssistantExchangesParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof exportAssistantExchanges>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportAssistantExchangesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type annotateAssistantExchangeResponse200 = {
+  data: StudiedExchangeResponse;
+  status: 200;
+};
+
+export type annotateAssistantExchangeResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type annotateAssistantExchangeResponseSuccess =
+  annotateAssistantExchangeResponse200 & {
+    headers: Headers;
+  };
+export type annotateAssistantExchangeResponseError =
+  annotateAssistantExchangeResponse422 & {
+    headers: Headers;
+  };
+
+export type annotateAssistantExchangeResponse =
+  annotateAssistantExchangeResponseSuccess | annotateAssistantExchangeResponseError;
+
+export const getAnnotateAssistantExchangeUrl = (exchangeId: number) => {
+  return `/api/v1/admin/assistant/exchanges/${exchangeId}/annotation`;
+};
+
+/**
+ * Says why an answer came out as it did, replacing any earlier reading.
+ * @summary Annotate Exchange
+ */
+export const annotateAssistantExchange = async (
+  exchangeId: number,
+  annotateRequest: AnnotateRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<annotateAssistantExchangeResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<annotateAssistantExchangeResponse>(
+    getAnnotateAssistantExchangeUrl(exchangeId),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(annotateRequest),
+    },
+  );
+};
+
+export const getAnnotateAssistantExchangeMutationKey = () =>
+  ["annotateAssistantExchange"] as const;
+
+export const getAnnotateAssistantExchangeMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof annotateAssistantExchange>>,
+    TError,
+    AnnotateAssistantExchangeMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof annotateAssistantExchange>>,
+  TError,
+  AnnotateAssistantExchangeMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAnnotateAssistantExchangeMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof annotateAssistantExchange>>,
+    AnnotateAssistantExchangeMutationVariables
+  > = (props) => {
+    const { exchangeId, data } = props ?? {};
+
+    return annotateAssistantExchange(exchangeId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AnnotateAssistantExchangeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof annotateAssistantExchange>>
+>;
+export type AnnotateAssistantExchangeMutationBody = AnnotateRequest;
+export type AnnotateAssistantExchangeMutationError = HTTPValidationError;
+export type AnnotateAssistantExchangeMutationVariables = {
+  exchangeId: number;
+  data: AnnotateRequest;
+};
+
+/**
+ * @summary Annotate Exchange
+ */
+export const useAnnotateAssistantExchange = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof annotateAssistantExchange>>,
+      TError,
+      AnnotateAssistantExchangeMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof annotateAssistantExchange>>,
+  TError,
+  AnnotateAssistantExchangeMutationVariables,
+  TContext
+> => {
+  return useMutation(getAnnotateAssistantExchangeMutationOptions(options), queryClient);
+};

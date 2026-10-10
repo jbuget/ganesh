@@ -12,7 +12,13 @@ from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
-from src.shared.exceptions.domain_exceptions import ForbiddenActionError
+from src.shared.exceptions.domain_exceptions import (
+    ForbiddenActionError,
+    ValidationError,
+)
+
+#: A note says what went wrong, not a report on it.
+MAX_NOTE_LENGTH = 2000
 
 
 class Verdict(StrEnum):
@@ -20,6 +26,34 @@ class Verdict(StrEnum):
 
     HELPFUL = "helpful"
     UNHELPFUL = "unhelpful"
+
+
+class Cause(StrEnum):
+    """Why an answer came out as it did, as an administrator reads it.
+
+    The point of keeping the tools' readings is to tell the first two apart:
+    a wrong answer is fixed in a tool or in the prompt, never in both.
+    """
+
+    #: A tool read the register wrong, or read too little of it.
+    WRONG_READING = "wrong_reading"
+    #: The readings were right; the model turned them into a wrong sentence.
+    WRONG_PHRASING = "wrong_phrasing"
+    #: No tool holds what was asked.
+    OUT_OF_SCOPE = "out_of_scope"
+    #: Nothing to correct.
+    RIGHT_ANSWER = "right_answer"
+
+
+@dataclass(frozen=True)
+class Annotation:
+    """An administrator's reading of an answer, beside the asker's verdict."""
+
+    cause: Cause
+    note: str | None
+    #: Released when the account goes: the reading stays.
+    annotated_by: int | None
+    annotated_at: datetime
 
 
 @dataclass(frozen=True)
@@ -80,6 +114,7 @@ class Exchange:
     project_id: int | None
     asked_at: datetime
     verdict: Verdict | None = None
+    annotation: Annotation | None = None
     id: int | None = None
 
     def judge(self, by: int, verdict: Verdict) -> None:
@@ -91,3 +126,17 @@ class Exchange:
         if by != self.asker_id:
             raise ForbiddenActionError("Only whoever asked judges the answer.")
         self.verdict = verdict
+
+    def annotate(self, by: int, cause: Cause, note: str | None, at: datetime) -> None:
+        """Says why the answer came out as it did, replacing any earlier reading.
+
+        One reading per answer: two that disagreed would say nothing. The
+        asker's verdict is left alone — it answers another question, whether
+        the answer helped the person who needed it.
+        """
+        kept = (note or "").strip() or None
+        if kept is not None and len(kept) > MAX_NOTE_LENGTH:
+            raise ValidationError(f"A note holds at most {MAX_NOTE_LENGTH} characters.")
+        self.annotation = Annotation(
+            cause=cause, note=kept, annotated_by=by, annotated_at=at
+        )

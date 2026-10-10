@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from src.modules.assistant.domain.entities.exchange import Answer, Exchange
+from src.modules.assistant.domain.entities.exchange import Answer, Exchange, Verdict
 from src.shared.exceptions.domain_exceptions import ConflictError, ValidationError
 
 MAX_EXCHANGES = 5
@@ -37,6 +37,28 @@ class Conversation:
     @property
     def remaining(self) -> int:
         return MAX_EXCHANGES - len(self.exchanges)
+
+    @property
+    def first_question(self) -> str:
+        """What opened the conversation: what one scans a list of them for."""
+        return self.exchanges[0].question
+
+    @property
+    def started_at(self) -> datetime:
+        return self.exchanges[0].asked_at
+
+    @property
+    def last_asked_at(self) -> datetime:
+        return self.exchanges[-1].asked_at
+
+    def judged(self, verdict: Verdict) -> int:
+        """How many of its answers whoever asked judged so."""
+        return sum(exchange.verdict is verdict for exchange in self.exchanges)
+
+    @property
+    def annotated(self) -> int:
+        """How many of its answers an administrator has read and annotated."""
+        return sum(exchange.annotation is not None for exchange in self.exchanges)
 
     def admit(self, question: str) -> str:
         """The question as it will be asked, or a refusal saying why not."""

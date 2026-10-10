@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -18,6 +19,7 @@ import {
   refusalOf,
   type ConsultedProject,
 } from "@/lib/assistant";
+import { refreshStudy } from "@/lib/assistant-study";
 import { closeAssistant, useAssistantOpen } from "@/lib/assistant-store";
 import { useQueryString } from "@/lib/url-state";
 
@@ -65,6 +67,7 @@ export interface Assistant {
  * in between, but the conversation is only lost on a reload — or on purpose.
  */
 export function useAssistant(): Assistant {
+  const queryClient = useQueryClient();
   const isOpen = useAssistantOpen();
   const { status } = useAssistantStatus(isOpen);
   const { missions } = useProjects(true, isOpen);
@@ -102,6 +105,7 @@ export function useAssistant(): Assistant {
       });
       const exchange = mutationResult<ExchangeResponse>(response);
       setExchanges((held) => [...held, exchange]);
+      void refreshStudy(queryClient);
     } catch (error) {
       setRefusal(refusalOf(error));
     } finally {
@@ -128,6 +132,7 @@ export function useAssistant(): Assistant {
     mark(exchangeId, verdict);
     try {
       await judgeAnswer(exchangeId, { verdict });
+      void refreshStudy(queryClient);
     } catch {
       mark(exchangeId, before);
     }
