@@ -28,6 +28,10 @@ const eslintConfig = defineConfig([
         "error",
         {
           default: "disallow",
+          // An element is a whole level — every atom is one element. Without
+          // this, an import from one atom to another, or one molecule to
+          // another, stays inside that element and goes through unseen.
+          checkInternals: true,
           policies: [
             // npm packages stay free.
             { allow: { to: { module: { origin: "external" } } } },

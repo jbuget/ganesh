@@ -16,12 +16,12 @@ ui/          External primitives (shadcn/ui). Treated as dependencies, never
              edited by hand.
 atoms/       Building blocks, with no dependency on another local component.
              e.g. DayCell, DayHeader, DayTotalCell, TotalCell, MissionLabel,
-             MissionSelector, PriorityMark, CategoryMark, FilterSelect
+             PriorityMark, CategoryMark, FilterSelect
 molecules/   Atoms assembled into one functional unit.
-             e.g. MissionRow, MissionFilters, ProjectCard, BoardColumn
+             e.g. MissionRow, MissionFilters, ProjectCard, MissionSelector
 organisms/   Complex sections made of molecules and atoms. An organism may
              compose another: a page assembles sections.
-             e.g. TimesheetGrid, TimesheetPage, BoardPage, ProjectsPage
+             e.g. TimesheetGrid, TimesheetPage, BoardPage, BoardColumn
              (templates = Next.js layout.tsx / pages = app/)
 ```
 
@@ -40,6 +40,12 @@ organisms/   Complex sections made of molecules and atoms. An organism may
 These rules are **enforced by `eslint-plugin-boundaries`**
 (`client/eslint.config.mjs`): a violation is a lint error, not a review
 remark. Colocated test files are exempt.
+
+The plugin takes a whole level as one element — every atom is the same
+element — and by default leaves an import inside an element unchecked. That is
+how two atoms and three molecules came to import their own kind unseen.
+`checkInternals: true` is what makes « an atom never imports an atom » and « a
+molecule imports atoms only » actually hold: do not drop it.
 
 ## Components and files
 
