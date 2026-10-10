@@ -136,7 +136,7 @@ export const MCP_TOOLS: McpTool[] = [
   {
     name: "find_project",
     answers:
-      "Trouve un projet du référentiel à partir de son nom, même approximatif, et rend son identifiant, sa nature et sa phase.",
+      "Trouve des projets du référentiel, par leur nom même approximatif ou par ce qu'ils sont — phase, nature, priorité, service, suivi, archivage, personne — et rend leur identifiant, leur nature et leur phase.",
     scope: "projects:read",
   },
   {
@@ -169,6 +169,12 @@ export const MCP_TOOLS: McpTool[] = [
       "Consigne ce qui s'est dit sur un projet en revue, et sa phase si elle a bougé. La note et la phase partent ensemble, ou ne partent pas : une revue est un seul geste. Pour prévenir quelqu'un, donnez son nom dans « mentions » : il doit désigner un seul compte actif, sinon la revue est refusée.",
     scope: "updates:write",
     also: "projects:write",
+  },
+  {
+    name: "update_project_description",
+    answers:
+      "Remplace la description d'un projet, en markdown. Le texte donné devient la fiche en entier, et l'ancienne n'est pas conservée : relisez-la d'abord avec project_brief. Un texte vide est refusé.",
+    scope: "projects:write",
   },
   {
     name: "what_changed",

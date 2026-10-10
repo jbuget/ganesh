@@ -20,6 +20,7 @@ from src.mcp.server import TOOLS
 from src.mcp.tools import (
     brief,
     declaring,
+    describing,
     entries,
     mood,
     portfolio,
@@ -34,6 +35,7 @@ from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 TOOL_MODULES = (
     brief,
     declaring,
+    describing,
     entries,
     mood,
     portfolio,

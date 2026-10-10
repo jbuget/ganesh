@@ -446,3 +446,41 @@ class TestItSaysWhoIsOnItNow:
             said = await project_brief(7)
 
         assert "Personne n'y a saisi de temps depuis le 01/09/2026." in said
+
+
+class TestTheSheetIsReadOnRequest:
+    """A model rewrites the description only after having read it.
+
+    Left out of the brief by default: a sheet runs to pages, and « où en est
+    X ? » is not asked for them.
+    """
+
+    @pytest.mark.asyncio
+    async def test_the_description_is_left_out_unless_asked_for(self) -> None:
+        described = Project(
+            id=7, label="WAATcher", kind=ProjectKind.PROJECT, description="# Fiche"
+        )
+        with Wired(a_detail(described)):
+            said = await project_brief(7)
+
+        assert "# Fiche" not in said
+
+    @pytest.mark.asyncio
+    async def test_it_is_handed_over_whole_when_asked_for(self) -> None:
+        described = Project(
+            id=7,
+            label="WAATcher",
+            kind=ProjectKind.PROJECT,
+            description="# Fiche\n\nUn outil.",
+        )
+        with Wired(a_detail(described)):
+            said = await project_brief(7, include_description=True)
+
+        assert said.endswith("Description :\n# Fiche\n\nUn outil.")
+
+    @pytest.mark.asyncio
+    async def test_a_sheet_nobody_wrote_is_said(self) -> None:
+        with Wired(a_detail(WAATCHER)):
+            said = await project_brief(7, include_description=True)
+
+        assert said.endswith("Aucune description n'est renseignée.")

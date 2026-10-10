@@ -31,6 +31,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 from src.mcp.door import MachineDoor
 from src.mcp.tools.brief import project_brief
 from src.mcp.tools.declaring import declare_time
+from src.mcp.tools.describing import update_project_description
 from src.mcp.tools.entries import my_month
 from src.mcp.tools.mood import team_mood
 from src.mcp.tools.news import project_news
@@ -54,6 +55,7 @@ TOOLS = (
     team_mood,
     declare_time,
     record_review,
+    update_project_description,
 )
 
 INSTRUCTIONS = """\
