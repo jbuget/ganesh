@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { SCREENS, bandsFor, screensFor } from "@/lib/navigation";
+import {
+  SCREENS,
+  bandsFor,
+  hideableBandsFor,
+  isHideable,
+  screensFor,
+} from "@/lib/navigation";
 
 const hrefs = (role: Parameters<typeof screensFor>[0]) =>
   screensFor(role).map((screen) => screen.href);
@@ -101,5 +107,64 @@ describe("bandsFor", () => {
 
     expect(platform("MANAGER")).toEqual(["/logs", "/stats", "/api-mcp"]);
     expect(platform("ADMIN")).toEqual(["/logs", "/stats", "/api-mcp", "/admin"]);
+  });
+});
+
+describe("bandsFor, for a reader who hid some screens", () => {
+  const shown = (hidden: readonly string[]) =>
+    bandsFor("ADMIN", hidden).flatMap((band) => band.screens.map((s) => s.href));
+
+  it("leaves out the screens one keeps off one's own bar", () => {
+    expect(shown(["/logs", "/stats"])).not.toContain("/logs");
+    expect(shown(["/logs", "/stats"])).not.toContain("/stats");
+    expect(shown(["/logs", "/stats"])).toContain("/timesheet");
+  });
+
+  it("never hides the home screen, whatever the list says", () => {
+    expect(shown(["/"])).toContain("/");
+  });
+
+  it("ignores a screen that no longer exists", () => {
+    expect(shown(["/gone"])).toEqual(shown([]));
+  });
+
+  it("does not draw a heading over a band one has emptied", () => {
+    const platform = ["/logs", "/stats", "/api-mcp", "/admin"];
+
+    expect(bandsFor("ADMIN", platform).map((band) => band.band)).not.toContain(
+      "platform",
+    );
+  });
+});
+
+describe("isHideable", () => {
+  it("holds the home screen on the bar", () => {
+    expect(isHideable(SCREENS.find((screen) => screen.href === "/")!)).toBe(false);
+  });
+
+  it("does not offer what the bar never lists", () => {
+    expect(isHideable(SCREENS.find((screen) => screen.href === "/gazette")!)).toBe(
+      false,
+    );
+  });
+
+  it("offers every other screen", () => {
+    expect(isHideable(SCREENS.find((screen) => screen.href === "/logs")!)).toBe(true);
+  });
+});
+
+describe("hideableBandsFor", () => {
+  const offered = (role: Parameters<typeof hideableBandsFor>[0]) =>
+    hideableBandsFor(role).flatMap((band) => band.screens.map((s) => s.href));
+
+  it("offers what the bar would list, minus the home screen", () => {
+    expect(offered("TEAMMATE")).toContain("/timesheet");
+    expect(offered("TEAMMATE")).not.toContain("/");
+    expect(offered("TEAMMATE")).not.toContain("/gazette");
+  });
+
+  it("does not offer a screen one could never see", () => {
+    expect(offered("TEAMMATE")).not.toContain("/admin");
+    expect(offered("ADMIN")).toContain("/admin");
   });
 });

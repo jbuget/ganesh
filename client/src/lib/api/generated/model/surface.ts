@@ -31,6 +31,7 @@ export const Surface = {
   notifications: "notifications",
   reminders: "reminders",
   presence: "presence",
+  navigation: "navigation",
   team_admin: "team_admin",
   api_keys: "api_keys",
   machine_access: "machine_access",

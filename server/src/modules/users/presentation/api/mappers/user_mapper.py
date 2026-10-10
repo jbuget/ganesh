@@ -26,4 +26,5 @@ def to_user_response(user: User) -> UserResponse:
         team=user.team,
         presence=to_presence_response(user.presence),
         reminder_cadence=user.reminder_cadence,
+        hidden_screens=list(user.hidden_screens),
     )

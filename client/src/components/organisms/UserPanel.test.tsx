@@ -26,6 +26,7 @@ const jeremy: UserResponse = {
   role: "MANAGER",
   presence: A_WEEK_ON_SITE,
   reminder_cadence: "DAILY",
+  hidden_screens: [],
   is_active: true,
   last_login_at: "2026-09-17T07:00:00Z",
 };

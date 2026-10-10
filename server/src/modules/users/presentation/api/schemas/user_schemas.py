@@ -86,6 +86,9 @@ class UserResponse(BaseModel):
     #: How often the letter saying what is waiting goes out. Every day until
     #: this teammate says otherwise.
     reminder_cadence: ReminderCadence
+    #: The screens this teammate keeps off their own sidebar, by path. Nothing
+    #: until they say so.
+    hidden_screens: list[str]
 
 
 class ChangeRoleRequest(BaseModel):
@@ -119,3 +122,9 @@ class ChooseReminderCadenceRequest(BaseModel):
     """How often one wants the letter saying what is waiting."""
 
     cadence: ReminderCadence
+
+
+class ChooseHiddenScreensRequest(BaseModel):
+    """The screens one keeps off one's own sidebar, as the whole list."""
+
+    screens: list[str] = Field(max_length=32)

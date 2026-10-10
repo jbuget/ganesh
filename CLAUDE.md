@@ -1159,6 +1159,26 @@ shortcut reaches it, a guest never does. Eight rules hold it together:
   breaks. The model is asked not to reason before answering — measured, the
   same answers in a third less time.
 
+## One's own bar
+
+Everyone may take screens off their own sidebar, from « Mon profil ». Four
+rules hold it together:
+
+- **Hiding is a way of reading, never a door closed.** The palette still leads
+  to every screen and the screen still answers at its address; permissions
+  stay on the actions, as everywhere else.
+- **It follows the person**, so it lives on the account (`users.hidden_screens`,
+  `PUT /users/me/hidden-screens`) and not in `localStorage`, which is for what
+  belongs to one browser, such as the fold of the bar. The route names no
+  teammate: there is no colleague's bar to reach.
+- **The server keeps paths, not a list of screens.** The screens live once, in
+  `client/src/lib/navigation.ts`; a second list on the server would drift. The
+  entity bounds what it stores (a path, at most 32, never « / »), and a path
+  that no longer exists is ignored by the bar.
+- **« Accueil » is never hidden**, nor is what the bar never lists
+  (`isHideable`): a bar with no way back to where every sign-in lands would
+  strand whoever hid it. Choosing is traced (`user.navigation_choose`).
+
 ## Production
 
 One push to `main` deploys the API. Nothing else deploys it: no laptop builds

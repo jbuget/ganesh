@@ -20,6 +20,7 @@ const USER = {
   department: "information_systems",
   presence: A_WEEK_ON_SITE,
   reminder_cadence: "DAILY",
+  hidden_screens: [],
 } as UserResponse;
 
 function show(overrides: Record<string, unknown> = {}) {
@@ -28,6 +29,7 @@ function show(overrides: Record<string, unknown> = {}) {
     isLoading: false,
     isSaving: false,
     choose: vi.fn(),
+    chooseHiddenScreens: vi.fn(),
     ...overrides,
   };
   render(<ProfilePage />);
@@ -61,14 +63,14 @@ describe("ProfilePage", () => {
   it("shows one's team, where the pôle is cut into teams", () => {
     show({ user: { ...USER, team: "data" } });
 
-    expect(screen.getByText("Équipe")).toBeInTheDocument();
+    expect(screen.getByText("Équipe", { selector: "dt" })).toBeInTheDocument();
     expect(screen.getByText("Data")).toBeInTheDocument();
   });
 
   it("asks nothing about a team when one has none", () => {
     show({ user: { ...USER, team: null } });
 
-    expect(screen.queryByText("Équipe")).toBeNull();
+    expect(screen.queryByText("Équipe", { selector: "dt" })).toBeNull();
   });
 
   it("shows the cadence in force", () => {
@@ -97,6 +99,54 @@ describe("ProfilePage", () => {
     show({ isSaving: true });
 
     expect(screen.getByText("Enregistrement…")).toBeInTheDocument();
+  });
+
+  it("offers every screen of the bar, all shown to begin with", () => {
+    show();
+
+    expect(screen.getByRole("checkbox", { name: "Journal" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Kanban" })).toBeChecked();
+  });
+
+  it("does not offer to hide the home screen", () => {
+    show();
+
+    expect(screen.queryByRole("checkbox", { name: "Accueil" })).toBeNull();
+  });
+
+  it("does not offer what a teammate could never see", () => {
+    show();
+
+    expect(screen.queryByRole("checkbox", { name: "Administration" })).toBeNull();
+  });
+
+  it("shows unchecked the screens one has already hidden", () => {
+    show({ user: { ...USER, hidden_screens: ["/logs"] } });
+
+    expect(screen.getByRole("checkbox", { name: "Journal" })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Kanban" })).toBeChecked();
+  });
+
+  it("records the whole list when one hides a screen", async () => {
+    const state = show({ user: { ...USER, hidden_screens: ["/logs"] } });
+
+    await userEvent.click(screen.getByRole("checkbox", { name: "Statistiques" }));
+
+    expect(state.chooseHiddenScreens).toHaveBeenCalledWith(["/logs", "/stats"]);
+  });
+
+  it("records the list without a screen one brings back", async () => {
+    const state = show({ user: { ...USER, hidden_screens: ["/logs", "/stats"] } });
+
+    await userEvent.click(screen.getByRole("checkbox", { name: "Journal" }));
+
+    expect(state.chooseHiddenScreens).toHaveBeenCalledWith(["/stats"]);
+  });
+
+  it("says hiding is not closing", () => {
+    show();
+
+    expect(screen.getByText(/la recherche y mène toujours/)).toBeInTheDocument();
   });
 
   it("waits rather than showing an empty profile", () => {

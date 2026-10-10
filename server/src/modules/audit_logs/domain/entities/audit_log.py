@@ -57,6 +57,7 @@ class AuditAction(StrEnum):
     USER_IDENTITY_UPDATE = "user.identity_update"
     USER_PRESENCE_DECLARE = "user.presence_declare"
     USER_REMINDER_CHOOSE = "user.reminder_choose"
+    USER_NAVIGATION_CHOOSE = "user.navigation_choose"
     USER_DEACTIVATE = "user.deactivate"
     USER_ACTIVATE = "user.activate"
     API_KEY_CREATE = "api_key.create"

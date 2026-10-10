@@ -49,6 +49,7 @@ export const AuditAction = {
   useridentity_update: "user.identity_update",
   userpresence_declare: "user.presence_declare",
   userreminder_choose: "user.reminder_choose",
+  usernavigation_choose: "user.navigation_choose",
   userdeactivate: "user.deactivate",
   useractivate: "user.activate",
   api_keycreate: "api_key.create",

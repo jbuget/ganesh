@@ -30,6 +30,9 @@ from src.modules.projects.presentation.dependencies import (
 from src.modules.users.application.use_cases.change_user_role import (
     ChangeUserRoleUseCase,
 )
+from src.modules.users.application.use_cases.choose_own_hidden_screens import (
+    ChooseOwnHiddenScreensUseCase,
+)
 from src.modules.users.application.use_cases.choose_own_reminder_cadence import (
     ChooseOwnReminderCadenceUseCase,
 )
@@ -99,6 +102,13 @@ def get_declare_own_presence_use_case(
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
 ) -> DeclareOwnPresenceUseCase:
     return DeclareOwnPresenceUseCase(users=users, audit_logs=audit_logs)
+
+
+def get_choose_own_hidden_screens_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> ChooseOwnHiddenScreensUseCase:
+    return ChooseOwnHiddenScreensUseCase(users=users, audit_logs=audit_logs)
 
 
 def get_choose_own_reminder_cadence_use_case(

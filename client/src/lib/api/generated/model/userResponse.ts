@@ -30,4 +30,5 @@ export interface UserResponse {
   team?: Team | null;
   presence: WeekPresenceResponse;
   reminder_cadence: ReminderCadence;
+  hidden_screens: string[];
 }

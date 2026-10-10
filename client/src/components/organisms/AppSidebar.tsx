@@ -120,46 +120,50 @@ export function AppSidebar() {
             kind of thing. The heading is faint on purpose — it sorts the
             tabs, it is not one of them — and it disappears when the bar is
             folded, where a thin rule says the same in the width left. */}
-        {bandsFor(user?.role).map(({ band, label, screens }, rank) => (
-          <div key={band} className={rank === 0 ? undefined : "mt-4"}>
-            {label &&
-              (collapsed ? (
-                // Folded, the heading has no room to be read: the break itself
-                // is what carries it, and the name stays in the tree.
-                <hr aria-label={label} className="mx-2 mb-2 border-slate-200" />
-              ) : (
-                <h2 className="px-3 pb-1 text-[11px] font-medium tracking-wide text-slate-400 uppercase">
-                  {label}
-                </h2>
-              ))}
+        {bandsFor(user?.role, user?.hidden_screens).map(
+          ({ band, label, screens }, rank) => (
+            <div key={band} className={rank === 0 ? undefined : "mt-4"}>
+              {label &&
+                (collapsed ? (
+                  // Folded, the heading has no room to be read: the break itself
+                  // is what carries it, and the name stays in the tree.
+                  <hr aria-label={label} className="mx-2 mb-2 border-slate-200" />
+                ) : (
+                  <h2 className="px-3 pb-1 text-[11px] font-medium tracking-wide text-slate-400 uppercase">
+                    {label}
+                  </h2>
+                ))}
 
-            <ul className="flex flex-col gap-1">
-              {screens.map(({ href, label: name, Icon }) => {
-                const isActive = pathname === href;
-                return (
-                  <li key={href}>
-                    <Link
-                      href={href}
-                      aria-current={isActive ? "page" : undefined}
-                      title={collapsed ? name : undefined}
-                      className={[
-                        "flex items-center gap-2.5 rounded-md py-2 text-sm transition-colors",
-                        collapsed ? "justify-center px-0" : "px-3",
-                        isActive
-                          ? "bg-slate-100 font-medium text-slate-900"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
-                      ].join(" ")}
-                    >
-                      <Icon className="size-4 shrink-0" />
-                      {/* Folded, the label is still read by screen readers. */}
-                      <span className={collapsed ? "sr-only" : undefined}>{name}</span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
+              <ul className="flex flex-col gap-1">
+                {screens.map(({ href, label: name, Icon }) => {
+                  const isActive = pathname === href;
+                  return (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        aria-current={isActive ? "page" : undefined}
+                        title={collapsed ? name : undefined}
+                        className={[
+                          "flex items-center gap-2.5 rounded-md py-2 text-sm transition-colors",
+                          collapsed ? "justify-center px-0" : "px-3",
+                          isActive
+                            ? "bg-slate-100 font-medium text-slate-900"
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+                        ].join(" ")}
+                      >
+                        <Icon className="size-4 shrink-0" />
+                        {/* Folded, the label is still read by screen readers. */}
+                        <span className={collapsed ? "sr-only" : undefined}>
+                          {name}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ),
+        )}
       </nav>
 
       {/* The bell sits just above the name, where one already looks to know

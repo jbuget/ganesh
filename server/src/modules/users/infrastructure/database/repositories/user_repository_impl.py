@@ -38,6 +38,7 @@ def to_entity(model: UserModel) -> User:
         presence=_presence_of(model),
         reminder_cadence=model.reminder_cadence,
         reminder_sent_at=model.reminder_sent_at,
+        hidden_screens=tuple(model.hidden_screens),
     )
 
 
@@ -88,6 +89,7 @@ class SqlUserRepository(UserRepository):
             team=user.team,
             reminder_cadence=user.reminder_cadence,
             reminder_sent_at=user.reminder_sent_at,
+            hidden_screens=list(user.hidden_screens),
         )
         _write_presence(model, user.presence)
         self._session.add(model)
@@ -115,6 +117,7 @@ class SqlUserRepository(UserRepository):
         model.team = user.team
         model.reminder_cadence = user.reminder_cadence
         model.reminder_sent_at = user.reminder_sent_at
+        model.hidden_screens = list(user.hidden_screens)
         _write_presence(model, user.presence)
         await self._session.flush()
         return user
