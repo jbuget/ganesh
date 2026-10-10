@@ -29,6 +29,7 @@ from src.modules.users.domain.entities.user import Role, User
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryNotificationRepository,
+    InMemoryProjectRepository,
     InMemoryUserRepository,
 )
 
@@ -95,6 +96,7 @@ def stand_up(signed_in_as: str, mailer: Mailer) -> None:
         lambda: SendDueRemindersUseCase(
             users=users,
             notifications=inbox,
+            projects=InMemoryProjectRepository(),
             mailer=mailer,
             audit_logs=InMemoryAuditLogRepository(),
             web_url="https://ganesh.waat.tools",

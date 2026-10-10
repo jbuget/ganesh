@@ -1,8 +1,18 @@
 """What the letter says, in French."""
 
+import re
+
 from src.modules.notifications.domain.entities.notification import NotificationKind
-from src.modules.notifications.domain.entities.reminder import Reminder, ReminderLine
-from src.modules.notifications.domain.services.reminder_letter import WORDINGS, compose
+from src.modules.notifications.domain.entities.reminder import (
+    Reminder,
+    ReminderEntry,
+    ReminderLine,
+)
+from src.modules.notifications.domain.services.reminder_letter import (
+    MAX_LISTED,
+    WORDINGS,
+    compose,
+)
 
 WEB = "https://ganesh.waat.tools"
 
@@ -49,7 +59,7 @@ class TestWhatItSays:
         )
 
         assert "2 mentions" in composed.text
-        assert "1 mois rouvert" in composed.text
+        assert "1 feuille de temps rouverte" in composed.text
 
     def test_it_agrees_in_number(self) -> None:
         composed = letter((NotificationKind.UPDATE_MENTION, 1))
@@ -87,3 +97,147 @@ class TestWhatItSays:
 
         assert composed.to == "l.chen@waat.fr"
         assert len(composed.text.splitlines()) < 20
+
+
+def entry(
+    who: str = "Sylvain Martin",
+    what: str = "a répondu à une mise à jour sur",
+    about: str | None = "Ganesh",
+    path: str | None = "/notifications?mission=7&tab=updates&update=41",
+    repeated: int = 1,
+) -> ReminderEntry:
+    return ReminderEntry(who=who, what=what, about=about, path=path, repeated=repeated)
+
+
+def letter_with(*entries: ReminderEntry):
+    waiting = Reminder(
+        lines=(ReminderLine(kind=NotificationKind.UPDATE_REPLIED, count=len(entries)),),
+        entries=entries,
+    )
+    return compose(waiting, to="l.chen@waat.fr", web_url=WEB)
+
+
+class TestTheLinesOfTheLetter:
+    def test_each_line_names_who_did_what_on_which_project(self) -> None:
+        composed = letter_with(entry())
+
+        assert "Sylvain Martin a répondu à une mise à jour sur Ganesh" in composed.text
+        assert "Sylvain Martin a répondu à une mise à jour sur Ganesh" in composed.html
+
+    def test_each_line_leads_to_the_very_update(self) -> None:
+        composed = letter_with(entry())
+
+        address = f"{WEB}/notifications?mission=7&tab=updates&update=41"
+        assert address in composed.text
+        assert address in composed.html.replace("&amp;", "&")
+
+    def test_a_line_with_nothing_left_to_open_carries_no_link(self) -> None:
+        composed = letter_with(entry(path=None))
+
+        assert "Sylvain Martin a répondu" in composed.text
+        assert "mission=" not in composed.text
+
+    def test_a_line_folded_several_times_says_how_many(self) -> None:
+        composed = letter_with(
+            entry(
+                what="a modifié votre feuille de temps de",
+                about="septembre 2026",
+                repeated=22,
+            )
+        )
+
+        assert "22 modifications" in composed.text
+
+    def test_a_name_typed_by_hand_cannot_inject_markup(self) -> None:
+        # A project label and a display name are written by people.
+        composed = letter_with(entry(who="<b>Sylvain</b>", about='"><script>'))
+
+        assert "<b>Sylvain</b>" not in composed.html
+        assert "<script>" not in composed.html
+        assert "&lt;b&gt;Sylvain&lt;/b&gt;" in composed.html
+
+    def test_there_is_no_list_when_the_entries_were_not_given(self) -> None:
+        composed = letter((NotificationKind.UPDATE_MENTION, 2))
+
+        assert "Sylvain" not in composed.text
+        assert "Détail" not in composed.text
+
+
+class TestTheLetterStaysShort:
+    def test_it_lists_ten_lines_at_most(self) -> None:
+        entries = [entry(who=f"Personne {n}") for n in range(MAX_LISTED + 4)]
+
+        composed = letter_with(*entries)
+
+        assert composed.text.count(" a répondu à une mise à jour sur Ganesh") == (
+            MAX_LISTED
+        )
+        assert MAX_LISTED == 10
+
+    def test_it_says_how_many_it_left_out(self) -> None:
+        entries = [entry(who=f"Personne {n}") for n in range(MAX_LISTED + 4)]
+
+        composed = letter_with(*entries)
+
+        assert "et 4 autres" in composed.text
+        assert "et 4 autres" in composed.html
+
+    def test_it_says_nothing_of_the_rest_when_everything_is_listed(self) -> None:
+        composed = letter_with(*[entry() for _ in range(MAX_LISTED)])
+
+        assert "autres" not in composed.text
+
+    def test_the_first_lines_are_the_ones_it_keeps(self) -> None:
+        # The caller hands them over most recent first.
+        entries = [entry(who=f"Personne {n}") for n in range(MAX_LISTED + 2)]
+
+        composed = letter_with(*entries)
+
+        assert "Personne 0 " in composed.text
+        assert f"Personne {MAX_LISTED + 1} " not in composed.text
+
+
+class TestATimesheetIsNotCalledAMonth:
+    # « mois » is too generic for the people who fill it in: what they hand in
+    # and what a manager reopens is their feuille de temps.
+    def test_each_kind_that_speaks_of_one_says_feuille_de_temps(self) -> None:
+        for kind in (
+            NotificationKind.TIMESHEET_EDITED,
+            NotificationKind.MONTH_VALIDATED,
+            NotificationKind.MONTH_REOPENED,
+        ):
+            assert "feuille de temps" in WORDINGS[kind].one
+            assert "feuilles de temps" in WORDINGS[kind].many
+            assert "mois" not in WORDINGS[kind].one + WORDINGS[kind].many
+
+    def test_they_agree_in_gender_and_number(self) -> None:
+        composed = letter(
+            (NotificationKind.MONTH_REOPENED, 2),
+            (NotificationKind.MONTH_VALIDATED, 1),
+            (NotificationKind.TIMESHEET_EDITED, 3),
+        )
+
+        assert "2 feuilles de temps rouvertes" in composed.text
+        assert "1 feuille de temps validée" in composed.text
+        assert "3 feuilles de temps modifiées" in composed.text
+
+
+class TestTheLinksStayOutOfTheReading:
+    def test_the_html_says_a_word_and_hides_the_address_behind_it(self) -> None:
+        composed = letter_with(entry())
+
+        visible = re.sub(r"<[^>]+>", "", composed.html)
+        assert "https://" not in visible
+        assert re.search(r'<a href="[^"]*update=41"[^>]*>Voir</a>', composed.html)
+
+    def test_the_sentence_itself_is_not_a_link(self) -> None:
+        composed = letter_with(entry())
+
+        sentence = "Sylvain Martin a répondu à une mise à jour sur Ganesh"
+        assert not re.search(rf"<a [^>]*>{sentence}", composed.html)
+        assert sentence in re.sub(r"<[^>]+>", "", composed.html)
+
+    def test_a_line_with_nothing_to_open_has_no_word_to_click(self) -> None:
+        composed = letter_with(entry(path=None))
+
+        assert ">Voir<" not in composed.html

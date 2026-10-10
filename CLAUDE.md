@@ -958,9 +958,11 @@ is the brief; five rules hold it together:
   given no setting to turn a letter down with. `is_written_to()` holds both
   rules on the entity, beside the suspended account whose letter would lead
   back to a closed door.
-- **It points; it does not copy.** The letter counts by kind — « 2 mentions,
-  1 mois rouvert » — and leads back to the inbox, where the detail and the read
-  state live. **Receiving a letter is not reading an inbox**: nothing of
+- **It tells, briefly, and never what somebody wrote.** The letter counts by
+  kind — « 2 mentions, 1 feuille de temps rouverte » — then lists the ten most recent
+  things waiting, each as who did what on which project with the address that
+  opens it, and says how many it left out. The inbox is still where the read
+  state lives. **Receiving a letter is not reading an inbox**: nothing of
   `deliver()`, of the fan-out or of `read_at` is touched, and no letter ever
   clears a bell.
 - **Nothing is said twice, and nothing is said about nothing.** A letter holds

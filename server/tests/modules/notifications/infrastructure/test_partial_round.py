@@ -30,6 +30,9 @@ from src.modules.notifications.domain.repositories.mailer import (
 from src.modules.notifications.infrastructure.database.repositories.notification_repository_impl import (
     SqlNotificationRepository,
 )
+from src.modules.projects.infrastructure.database.repositories.project_repository_impl import (
+    SqlProjectRepository,
+)
 from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.modules.users.domain.entities.user import Role, User
 from src.modules.users.infrastructure.database.repositories.user_repository_impl import (
@@ -95,6 +98,7 @@ async def test_a_partial_round_keeps_the_stamps_of_the_letters_that_went_out(
     use_case = SendDueRemindersUseCase(
         users=SqlUserRepository(db_session),
         notifications=SqlNotificationRepository(db_session),
+        projects=SqlProjectRepository(db_session),
         mailer=post,
         audit_logs=SqlAuditLogRepository(db_session),
         web_url="https://ganesh.waat.tools",
