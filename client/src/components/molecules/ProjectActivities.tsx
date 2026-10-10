@@ -11,13 +11,6 @@ import { WORK_NATURES, workNatureLabel } from "@/lib/work-natures";
 
 interface ProjectActivitiesProps {
   activities: ActivityResponse[];
-  /**
-   * Whether the reader may change what the mission is cut into.
-   *
-   * When it may not, the gestures are simply not offered, the API refusing
-   * them anyway.
-   */
-  editable: boolean;
   onAdd: (label: string, nature: WorkNature | null) => void | Promise<void>;
   onChange: (
     activityId: number,
@@ -52,7 +45,6 @@ export function ProjectActivities({
   activities,
   onAdd,
   onChange,
-  editable,
   onArchive,
   onRemove,
   onUnarchive,
@@ -111,7 +103,6 @@ export function ProjectActivities({
                 type="button"
                 aria-label={`Retirer ${activity.label}`}
                 title={booked(activity)}
-                disabled={!editable}
                 onClick={() => setWithdrawing(activity)}
                 className="shrink-0 cursor-pointer rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
               >
@@ -138,7 +129,7 @@ export function ProjectActivities({
           <button
             key={nature.value}
             type="button"
-            disabled={!editable || adding !== null || taken.has(nature.value)}
+            disabled={adding !== null || taken.has(nature.value)}
             onClick={async () => {
               setAdding(nature.value);
               await onAdd(nature.label, nature.value);

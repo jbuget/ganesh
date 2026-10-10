@@ -12,7 +12,6 @@ import {
 } from "@/lib/api/generated/moods/moods";
 import { useMyMoods } from "@/lib/api/queries";
 import { todayIso } from "@/lib/dates";
-import { useMayWrite } from "@/lib/use-may-write";
 
 /**
  * What one may still answer for, and the answering itself.
@@ -28,9 +27,6 @@ import { useMayWrite } from "@/lib/use-may-write";
 export function useMood() {
   const queryClient = useQueryClient();
   const { days, isLoading } = useMyMoods();
-  // The moods are a mirror the team holds up to itself, and a guest is not
-  // yet in it: the faces show what the week held and take no answer.
-  const mayWrite = useMayWrite();
   // Which day is travelling, rather than a plain flag: two days are offered,
   // and one answer must not grey out the other.
   const [savingDay, setSavingDay] = useState<string | null>(null);
@@ -40,7 +36,6 @@ export function useMood() {
     days,
     today: todayIso(),
     savingDay,
-    mayAnswer: mayWrite,
 
     /**
      * Answers for a day, or takes the answer back.

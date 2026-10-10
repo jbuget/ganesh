@@ -28,11 +28,6 @@ import {
 } from "@/lib/service-sheet";
 
 interface ProjectSheetTabProps {
-  /**
-   * Whether the reader may publish and describe the service, or only read the
-   * sheet the catalogue will show.
-   */
-  editable: boolean;
   detail: ProjectDetailResponse;
   updateFields: (fields: SheetFields) => Promise<void>;
   saveDescription: (body: string) => Promise<void>;
@@ -93,11 +88,9 @@ function Composer({
 /** The full text of the sheet: read rendered, written on demand. */
 function Body({
   description,
-  editable,
   onSave,
 }: {
   description: string | null;
-  editable: boolean;
   onSave: (body: string) => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
@@ -117,24 +110,20 @@ function Body({
 
   return (
     <div className="space-y-3">
-      {editable && (
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className="flex cursor-pointer items-center gap-1.5 text-sm text-slate-400 transition-colors hover:text-slate-700"
-        >
-          <Pencil className="size-3.5" aria-hidden />
-          {description ? "Modifier" : "Rédiger la fiche"}
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        className="flex cursor-pointer items-center gap-1.5 text-sm text-slate-400 transition-colors hover:text-slate-700"
+      >
+        <Pencil className="size-3.5" aria-hidden />
+        {description ? "Modifier" : "Rédiger la fiche"}
+      </button>
 
       {description ? (
         <MarkdownView body={description} />
       ) : (
         <p className="text-sm text-slate-400">
-          {editable
-            ? "Aucune fiche. Décrivez le problème, la solution et ce que le service couvre."
-            : "Aucune fiche."}
+          Aucune fiche. Décrivez le problème, la solution et ce que le service couvre.
         </p>
       )}
     </div>
@@ -151,7 +140,6 @@ function Body({
  */
 export function ProjectSheetTab({
   detail,
-  editable,
   updateFields,
   saveDescription,
   saveRegistry,
@@ -191,7 +179,6 @@ export function ProjectSheetTab({
               blockedBy={
                 blockers.length > 0 ? `Il manque ${frenchList(blockers)}.` : null
               }
-              editable={editable}
               onChange={(is_published) => updateFields({ is_published })}
             />
           </SheetRow>
@@ -204,7 +191,6 @@ export function ProjectSheetTab({
               placeholder="portail-bailleurs"
               suggestion={suggested || null}
               validate={slugError}
-              editable={editable}
               onChange={(slug) => updateFields({ slug })}
             />
           </SheetRow>
@@ -214,7 +200,6 @@ export function ProjectSheetTab({
               value={project.summary}
               label="Résumé"
               placeholder="Ce que le service fait, en une phrase."
-              editable={editable}
               onChange={(summary) => updateFields({ summary })}
             />
           </SheetRow>
@@ -223,25 +208,16 @@ export function ProjectSheetTab({
 
       <section className="space-y-2">
         <SheetSectionTitle>Fiche</SheetSectionTitle>
-        <Body
-          description={project.description}
-          editable={editable}
-          onSave={saveDescription}
-        />
+        <Body description={project.description} onSave={saveDescription} />
       </section>
 
       <section className="space-y-2">
         <SheetSectionTitle>Liens</SheetSectionTitle>
-        <ServiceLinksEditor
-          project={project}
-          editable={editable}
-          onChange={updateFields}
-        />
+        <ServiceLinksEditor project={project} onChange={updateFields} />
         <div className="pt-1">
           <p className="pb-1.5 text-sm text-slate-500">Autres liens</p>
           <ProjectLinksEditor
             links={detail.links}
-            editable={editable}
             onAdd={addLink}
             onRemove={removeLink}
           />
@@ -257,7 +233,6 @@ export function ProjectSheetTab({
               value={project.service_type}
               options={SERVICE_TYPES}
               label="Type"
-              editable={editable}
               onChange={(service_type) => updateFields({ service_type })}
             />
           </SheetRow>
@@ -267,7 +242,6 @@ export function ProjectSheetTab({
               value={project.criticality}
               options={CRITICALITIES}
               label="Criticité"
-              editable={editable}
               onChange={(criticality) => updateFields({ criticality })}
             />
           </SheetRow>
@@ -277,7 +251,6 @@ export function ProjectSheetTab({
               values={detail.stack}
               label="Stack"
               placeholder="Next.js"
-              editable={editable}
               onChange={(stack) => registry({ stack })}
             />
           </SheetRow>
@@ -287,7 +260,6 @@ export function ProjectSheetTab({
               value={project.hosting}
               label="Hébergement"
               placeholder="AWS"
-              editable={editable}
               onChange={(hosting) => updateFields({ hosting })}
             />
           </SheetRow>
@@ -298,7 +270,6 @@ export function ProjectSheetTab({
               label="Authentification Entra ID"
               onText="Authentification Entra ID"
               offText="Sans Entra ID"
-              editable={editable}
               onChange={(has_microsoft_entra) => updateFields({ has_microsoft_entra })}
             />
           </SheetRow>
@@ -307,7 +278,6 @@ export function ProjectSheetTab({
             <ProjectDependencies
               projectId={project.id}
               dependencies={detail.dependencies}
-              editable={editable}
               onChange={(depends_on) => registry({ depends_on })}
             />
           </SheetRow>
@@ -323,7 +293,6 @@ export function ProjectSheetTab({
               value={project.team}
               label="Équipe"
               placeholder="Infra & Ops"
-              editable={editable}
               onChange={(team) => updateFields({ team })}
             />
           </SheetRow>
@@ -333,7 +302,6 @@ export function ProjectSheetTab({
               value={project.slack_channel}
               label="Canal Slack"
               placeholder="#team-infra"
-              editable={editable}
               onChange={(slack_channel) => updateFields({ slack_channel })}
             />
           </SheetRow>
@@ -343,7 +311,6 @@ export function ProjectSheetTab({
               values={detail.tags}
               label="Tags"
               placeholder="monitoring"
-              editable={editable}
               onChange={(tags) => registry({ tags })}
             />
           </SheetRow>

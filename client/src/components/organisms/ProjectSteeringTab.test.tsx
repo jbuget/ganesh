@@ -64,7 +64,6 @@ const steering = (
 ) =>
   render(
     <ProjectSteeringTab
-      editable
       detail={detail(kind, category)}
       onChange={vi.fn()}
       saveSheet={vi.fn()}
@@ -172,13 +171,12 @@ describe("the day a mission goes live", () => {
 });
 
 describe("following a mission from its sheet", () => {
-  const followed = (kind: ProjectKind, isFollowed: boolean, editable = true) => {
+  const followed = (kind: ProjectKind, isFollowed: boolean) => {
     const toggleFollow = vi.fn();
     const sheet = detail(kind);
     (sheet.project as { is_followed: boolean }).is_followed = isFollowed;
     render(
       <ProjectSteeringTab
-        editable={editable}
         detail={sheet}
         onChange={vi.fn()}
         saveSheet={vi.fn()}
@@ -209,13 +207,6 @@ describe("following a mission from its sheet", () => {
     );
 
     expect(toggleFollow).toHaveBeenCalledOnce();
-  });
-
-  it("only reads it to whoever may not steer", () => {
-    followed("project", true, false);
-
-    expect(screen.getByText("Projet suivi")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /suivre ce projet/i })).toBeNull();
   });
 
   /** An absence is not something anybody keeps an eye on. */

@@ -6,7 +6,6 @@ import { PageLayout } from "@/components/organisms/PageLayout";
 import { departmentLabel } from "@/lib/departments";
 import { roleLabel } from "@/lib/roles";
 import { useProfileScreen } from "@/lib/use-profile";
-import { useMayWrite } from "@/lib/use-may-write";
 
 /**
  * One's own profile: who one is, and how one wants to be written to.
@@ -22,7 +21,6 @@ import { useMayWrite } from "@/lib/use-may-write";
  * finds here.
  */
 export function ProfilePage() {
-  const mayWrite = useMayWrite();
   const { user, isLoading, isSaving, choose } = useProfileScreen();
 
   const header = (
@@ -77,30 +75,26 @@ export function ProfilePage() {
           </p>
         </section>
 
-        {/* A guest is written to about nothing, so there is no cadence to
-            choose: the section goes rather than sits there refusing. */}
-        {mayWrite && (
-          <section className="flex flex-col gap-3">
-            <div>
-              <h2 className="text-sm font-semibold">Rappels par e-mail</h2>
-              <p className="text-sm text-slate-500">
-                La cloche ne prévient que si Ganesh est ouvert. Un e-mail récapitule ce
-                qui vous attend, sans jamais reprendre ce que vous avez déjà lu. Vous
-                n&apos;en recevez aucun tant que vous ne l&apos;avez pas demandé.
-              </p>
-            </div>
-
-            <ReminderCadenceField
-              value={user.reminder_cadence}
-              onChange={(cadence) => void choose(cadence)}
-              isSaving={isSaving}
-            />
-
-            <p aria-live="polite" className="min-h-4 text-xs text-slate-500">
-              {isSaving ? "Enregistrement…" : "Votre choix est enregistré aussitôt."}
+        <section className="flex flex-col gap-3">
+          <div>
+            <h2 className="text-sm font-semibold">Rappels par e-mail</h2>
+            <p className="text-sm text-slate-500">
+              La cloche ne prévient que si Ganesh est ouvert. Un e-mail récapitule ce
+              qui vous attend, sans jamais reprendre ce que vous avez déjà lu. Vous
+              n&apos;en recevez aucun tant que vous ne l&apos;avez pas demandé.
             </p>
-          </section>
-        )}
+          </div>
+
+          <ReminderCadenceField
+            value={user.reminder_cadence}
+            onChange={(cadence) => void choose(cadence)}
+            isSaving={isSaving}
+          />
+
+          <p aria-live="polite" className="min-h-4 text-xs text-slate-500">
+            {isSaving ? "Enregistrement…" : "Votre choix est enregistré aussitôt."}
+          </p>
+        </section>
       </div>
     </PageLayout>
   );

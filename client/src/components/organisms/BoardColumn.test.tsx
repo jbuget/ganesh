@@ -32,19 +32,10 @@ const card = (id: number, label: string): BoardCardResponse =>
 const NOW = new Date("2026-09-16T11:00:00Z");
 
 /** The @dnd-kit sensors require an enclosing context. */
-const show = (
-  cards: BoardCardResponse[],
-  { readOnly = false, filtered = false } = {},
-) =>
+const show = (cards: BoardCardResponse[], { filtered = false } = {}) =>
   render(
     <DndContext>
-      <BoardColumn
-        status="development"
-        cards={cards}
-        now={NOW}
-        readOnly={readOnly}
-        filtered={filtered}
-      />
+      <BoardColumn status="development" cards={cards} now={NOW} filtered={filtered} />
     </DndContext>,
   );
 
@@ -125,19 +116,5 @@ describe("a filtered column", () => {
     show([], { filtered: true });
 
     expect(screen.getByText("Aucun projet ne répond aux filtres")).toBeInTheDocument();
-  });
-});
-
-describe("a column read by somebody who may not write", () => {
-  it("offers no handle", () => {
-    show([card(1, "Portail bailleurs")], { readOnly: true });
-
-    expect(screen.queryByRole("button", { name: /Déplacer/ })).toBeNull();
-  });
-
-  it("says a plain emptiness plainly", () => {
-    show([], { readOnly: true });
-
-    expect(screen.getByText("Aucun projet")).toBeInTheDocument();
   });
 });

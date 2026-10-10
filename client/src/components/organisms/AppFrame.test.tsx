@@ -27,12 +27,8 @@ vi.mock("@/components/organisms/CommandPalette", () => ({
   CommandPalette: () => null,
 }));
 
-// Both reach for a server of their own; what the frame is tested on is which
-// of them it hangs, not what they draw.
-vi.mock("@/components/organisms/ReadOnlyBanner", () => ({
-  ReadOnlyBanner: () => null,
-}));
-
+// It reaches for a server of its own; what the frame is tested on is whether
+// it hangs it, not what it draws.
 vi.mock("@/components/organisms/MoodReminder", () => ({
   MoodReminder: () => <p>Le rappel du moral</p>,
 }));

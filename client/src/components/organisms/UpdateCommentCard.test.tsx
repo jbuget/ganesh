@@ -107,23 +107,4 @@ describe("UpdateCommentCard", () => {
 
     expect(onReact).toHaveBeenCalledWith("thumbs_up", true);
   });
-
-  it("shows the signs already left to a reader who may not write", () => {
-    // Who answered « lu » is part of the conversation, and a guest reads it.
-    render(
-      <UpdateCommentCard
-        comment={aComment({
-          reactions: [{ reaction: "heart", people: ["L. Chen"], is_mine: false }],
-        })}
-        now={NOW}
-        editable={false}
-        onEdit={vi.fn()}
-        onRemove={vi.fn()}
-        onReact={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByRole("button", { name: /J'aime : L. Chen/ })).toBeDisabled();
-    expect(screen.queryByRole("button", { name: "Réagir" })).not.toBeInTheDocument();
-  });
 });

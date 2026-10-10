@@ -42,8 +42,8 @@ interface ProjectCardProps {
    */
   onOpenThread?: (projectId: number) => void;
   /**
-   * Raises or lowers the mark the team follows the mission by. Absent for a
-   * reader who may not write.
+   * Raises or lowers the mark the team follows the mission by. Absent on the
+   * copy that follows the pointer, which only shows the mark.
    */
   onFollowChange?: (projectId: number, following: boolean) => void;
 }

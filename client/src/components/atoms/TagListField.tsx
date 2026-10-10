@@ -8,14 +8,6 @@ interface TagListFieldProps {
   /** What the row asks for: the empty state and the accessible name. */
   label: string;
   placeholder: string;
-  /**
-   * Whether the reader may change it.
-   *
-   * Editable by default: a field one cannot change is the exception, and it
-   * is the screen holding the field that knows — a guest reads every sheet of
-   * the reference list and rewrites none.
-   */
-  editable?: boolean;
   onChange: (values: string[]) => void | Promise<void>;
 }
 
@@ -36,7 +28,6 @@ export function TagListField({
   values,
   label,
   placeholder,
-  editable = true,
   onChange,
 }: TagListFieldProps) {
   const [entry, setEntry] = useState<string | null>(null);
@@ -68,16 +59,14 @@ export function TagListField({
           className="flex items-center gap-1 rounded border border-slate-200 bg-white py-0.5 pr-1 pl-2 text-sm text-slate-700"
         >
           {value}
-          {editable && (
-            <button
-              type="button"
-              aria-label={`Retirer ${value}`}
-              onClick={() => remove(value)}
-              className="cursor-pointer rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-            >
-              <X className="size-3" aria-hidden />
-            </button>
-          )}
+          <button
+            type="button"
+            aria-label={`Retirer ${value}`}
+            onClick={() => remove(value)}
+            className="cursor-pointer rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+          >
+            <X className="size-3" aria-hidden />
+          </button>
         </span>
       ))}
 

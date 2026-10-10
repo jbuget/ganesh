@@ -144,14 +144,4 @@ describe("SortableProjectCard", () => {
 
     expect(onOpen).toHaveBeenCalledTimes(1);
   });
-
-  it("neither grabs nor offers a handle to a reader who may not write", () => {
-    const onOpen = vi.fn();
-    show({ onOpen, readOnly: true });
-
-    expect(screen.queryByRole("button", { name: /Déplacer/ })).toBeNull();
-    drag(40);
-    fireEvent.click(theCard());
-    expect(onOpen).toHaveBeenCalledTimes(1);
-  });
 });

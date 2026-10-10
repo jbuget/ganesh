@@ -58,11 +58,6 @@ export function holds(role: Role | undefined, floor: Role): boolean {
   return role !== undefined && rank(role) >= rank(floor);
 }
 
-/** A guest writes nothing into the application: the recueil aside, it is the team's. */
-export function canWrite(role: Role | undefined): boolean {
-  return role !== undefined && role !== "GUEST";
-}
-
 /** Whoever holds a role: the account reading, and the account read. */
 interface Holder {
   id: number;

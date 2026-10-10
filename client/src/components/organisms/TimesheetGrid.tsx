@@ -17,11 +17,8 @@ import type { MonthGridResponse, ProjectKind } from "@/lib/api/generated/model";
 interface TimesheetGridProps {
   grid: MonthGridResponse;
   /**
-   * Whether the grid only reads.
-   *
-   * Given rather than worked out from `is_writable`: a month can be open and
-   * still refuse the person looking at it — a guest reads every month of the
-   * team and declares on none.
+   * Whether the grid only reads: a validated month, until a manager reopens
+   * it.
    */
   readOnly: boolean;
   today: string;

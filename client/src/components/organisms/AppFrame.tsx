@@ -6,7 +6,6 @@ import { useEffect } from "react";
 import { AppSidebar } from "@/components/organisms/AppSidebar";
 import { CommandPalette } from "@/components/organisms/CommandPalette";
 import { MoodReminder } from "@/components/organisms/MoodReminder";
-import { ReadOnlyBanner } from "@/components/organisms/ReadOnlyBanner";
 import { useCurrentUser } from "@/lib/api/queries";
 
 /** The one screen a guest reaches. */
@@ -47,12 +46,7 @@ export function AppFrame({ children }: Readonly<{ children: React.ReactNode }>) 
   return (
     <div className="flex min-h-screen">
       <AppSidebar />
-      <div className="min-w-0 flex-1">
-        {/* Whoever may not write reads the band once, here, rather than a
-            dozen times over — and never a guest, who never comes this far. */}
-        <ReadOnlyBanner />
-        {children}
-      </div>
+      <div className="min-w-0 flex-1">{children}</div>
       {/* In the frame rather than on a screen: it is reached from every one of
           them, and its shortcut listens to the whole window. */}
       <CommandPalette />

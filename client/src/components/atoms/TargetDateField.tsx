@@ -11,13 +11,6 @@ interface TargetDateFieldProps {
   missionLabel: string;
   onChange: (value: string | null) => void | Promise<void>;
   /**
-   * Whether the reader may post a date.
-   *
-   * Editable by default: a field one cannot change is the exception, and it
-   * is the screen holding the field that knows.
-   */
-  editable?: boolean;
-  /**
    * Set in a table, where a row holds a dozen figures and the date is one
    * of them. A sheet reads its values at the size of its other values.
    */
@@ -39,7 +32,6 @@ export function TargetDateField({
   value,
   missionLabel,
   onChange,
-  editable = true,
   dense = false,
 }: TargetDateFieldProps) {
   const [entry, setEntry] = useState<string | null>(null);
@@ -77,11 +69,8 @@ export function TargetDateField({
       <button
         type="button"
         aria-label={`Date annoncée pour ${missionLabel}`}
-        disabled={!editable}
         onClick={() => setEntry(value ?? "")}
-        className={`-mx-1 rounded px-1 py-0.5 ${size} whitespace-nowrap transition-colors ${
-          editable ? "cursor-pointer hover:bg-slate-100" : ""
-        }`}
+        className={`-mx-1 rounded px-1 py-0.5 ${size} whitespace-nowrap transition-colors cursor-pointer hover:bg-slate-100`}
       >
         {value ? (
           <span className="text-slate-600 tabular-nums">
@@ -95,7 +84,7 @@ export function TargetDateField({
         )}
       </button>
 
-      {value && editable && (
+      {value && (
         <button
           type="button"
           aria-label={`Retirer la date annoncée pour ${missionLabel}`}

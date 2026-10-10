@@ -8,8 +8,8 @@ interface FollowMarkProps {
   /**
    * Raises or lowers the mark, in one click.
    *
-   * Absent for a reader who may not write: the mark then shows on a followed
-   * mission and nothing at all on the others — unless it is labelled.
+   * Absent where the mark is only read: it then shows on a followed mission
+   * and nothing at all on the others — unless it is labelled.
    */
   onToggle?: () => void;
   /**

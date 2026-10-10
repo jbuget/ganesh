@@ -6,12 +6,12 @@ const hrefs = (role: Parameters<typeof screensFor>[0]) =>
   screensFor(role).map((screen) => screen.href);
 
 describe("screensFor", () => {
-  it("shows every working screen to a guest", () => {
-    // The navigation says what exists, and the permission lives on the
-    // actions: a guest reads the application whole.
-    expect(hrefs("GUEST")).toContain("/timesheet");
-    expect(hrefs("GUEST")).toContain("/users");
-    expect(hrefs("GUEST")).toContain("/api-mcp");
+  it("shows every working screen to a teammate", () => {
+    // A guest never reaches the sidebar — the frame keeps them to their
+    // requests — so the first reader it is drawn for is a teammate.
+    expect(hrefs("TEAMMATE")).toContain("/timesheet");
+    expect(hrefs("TEAMMATE")).toContain("/users");
+    expect(hrefs("TEAMMATE")).toContain("/api-mcp");
   });
 
   it("keeps the administration out of everyone's way but an admin's", () => {

@@ -25,7 +25,6 @@ import { ProjectCard } from "@/components/molecules/ProjectCard";
 import { PHASES } from "@/lib/board";
 import { filterMissions, includesArchived } from "@/lib/mission-filters";
 import { useBoard } from "@/lib/use-board";
-import { useMayWrite } from "@/lib/use-may-write";
 import { useBoardDrag } from "@/lib/use-board-drag";
 import { useMissionFilters } from "@/lib/use-mission-filters";
 import { useOpenedMission } from "@/lib/opened-mission";
@@ -59,7 +58,6 @@ const collisionDetection: CollisionDetection = (args) => {
 
 /** Mission kanban, one column per phase. */
 export function BoardPage() {
-  const mayWrite = useMayWrite();
   const { filters, hasFilter, set, clear } = useMissionFilters();
 
   // The scope asked of the server follows the filter: archived missions only
@@ -152,13 +150,10 @@ export function BoardPage() {
                   onContributorsChange={board.reload}
                   onOpen={panel.open}
                   onOpenThread={(projectId) => panel.open(projectId, "updates")}
-                  onFollowChange={mayWrite ? board.changeFollow : undefined}
+                  onFollowChange={board.changeFollow}
                   // A filter narrows what is read, not what may move: a card
                   // dropped between two shown ones lands beside them in the
-                  // whole phase, the hidden ones keeping their place. A guest
-                  // reads without arranging — a card that moved back would be
-                  // the screen's fault.
-                  readOnly={!mayWrite}
+                  // whole phase, the hidden ones keeping their place.
                   filtered={hasFilter}
                 />
               ))}

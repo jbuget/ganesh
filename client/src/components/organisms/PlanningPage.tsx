@@ -15,7 +15,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatShortDate } from "@/lib/dates";
 import { useOpenedMission } from "@/lib/opened-mission";
 import { scenarioNotice } from "@/lib/planning";
-import { useMayWrite } from "@/lib/use-may-write";
 import { useUnsavedChangesGuard } from "@/lib/use-unsaved-changes-guard";
 import { useWorkloadPlanScreen } from "@/lib/use-workload-plan";
 
@@ -62,7 +61,6 @@ export function PlanningPage() {
   const guard = useUnsavedChangesGuard(hasWorkToLose);
   const panel = useOpenedMission();
 
-  const mayKeep = useMayWrite();
   const weeks = plan?.weeks ?? [];
 
   return (
@@ -84,7 +82,6 @@ export function PlanningPage() {
                 isHypothesis={isHypothesis}
                 hasUnsavedChanges={hasUnsavedChanges}
                 saveError={saveError}
-                mayKeep={mayKeep}
                 onOpen={guard.guard(open)}
                 onSaveAs={saveAs}
                 onSaveOver={saveOver}
