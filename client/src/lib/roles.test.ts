@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { assignableRoles, canWrite, holds, roleLabel } from "@/lib/roles";
+import { assignableRoles, holds, roleLabel } from "@/lib/roles";
 
 describe("roleLabel", () => {
   it("names every rung of the ladder in French", () => {
@@ -8,22 +8,6 @@ describe("roleLabel", () => {
     expect(roleLabel("TEAMMATE")).toBe("Collaborateur");
     expect(roleLabel("MANAGER")).toBe("Manager");
     expect(roleLabel("ADMIN")).toBe("Administrateur");
-  });
-});
-
-describe("canWrite", () => {
-  it("lets anybody but a guest write", () => {
-    expect(canWrite("TEAMMATE")).toBe(true);
-    expect(canWrite("MANAGER")).toBe(true);
-    expect(canWrite("ADMIN")).toBe(true);
-  });
-
-  it("turns a guest back", () => {
-    expect(canWrite("GUEST")).toBe(false);
-  });
-
-  it("turns back a role nobody has read yet", () => {
-    expect(canWrite(undefined)).toBe(false);
   });
 });
 

@@ -140,16 +140,12 @@ export function HomePage() {
           {/* First, and outside the wait the left column is held by: the mood
             carries its own query, and holding it behind four grids would close
             the window on whoever lands while they are still travelling. */}
-          {/* A guest reads the home screen and answers nothing on it: the
-            window is not shown rather than shown refusing. */}
-          {mood.mayAnswer && (
-            <MoodCheckIn
-              days={mood.days}
-              today={mood.today}
-              savingDay={mood.savingDay}
-              onPick={mood.post}
-            />
-          )}
+          <MoodCheckIn
+            days={mood.days}
+            today={mood.today}
+            savingDay={mood.savingDay}
+            onPick={mood.post}
+          />
 
           {/* Read, never written: declaring one's own week happens once and
             then almost never, and a picker posted here would be noise every

@@ -75,14 +75,10 @@ export function ProjectsPage() {
                     Importer
                   </Button>
                 )}
-                {/* Exporting stays: reading the list out is reading it. What
-                    goes is what would add to it. */}
-                {screen.mayWrite && (
-                  <Button onClick={() => setDeclaration(true)}>
-                    <Plus />
-                    Déclarer un projet
-                  </Button>
-                )}
+                <Button onClick={() => setDeclaration(true)}>
+                  <Plus />
+                  Déclarer un projet
+                </Button>
               </>
             }
           />
@@ -125,9 +121,7 @@ export function ProjectsPage() {
           <p className="py-8 text-center text-sm text-slate-500">
             {hasFilter
               ? "Aucun projet ne répond aux filtres."
-              : screen.mayWrite
-                ? "Aucun projet. Déclarez-en un ou importez votre référentiel."
-                : "Aucun projet dans le référentiel."}
+              : "Aucun projet. Déclarez-en un ou importez votre référentiel."}
           </p>
         )}
 
@@ -145,7 +139,7 @@ export function ProjectsPage() {
             // Dropped onto a project, a mission becomes one of its slices. The
             // same move is reached from the panel menu, which is where the
             // keyboard — and an explanation, when it is refused — lives.
-            onAttach={screen.mayWrite ? screen.attach : undefined}
+            onAttach={screen.attach}
           />
         )}
       </div>

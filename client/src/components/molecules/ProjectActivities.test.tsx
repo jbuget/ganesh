@@ -18,7 +18,6 @@ const activity = (fields: Partial<ActivityResponse> = {}): ActivityResponse =>
   }) as ActivityResponse;
 
 const baseProps = {
-  editable: true,
   onAdd: vi.fn(),
   onChange: vi.fn(),
   onArchive: vi.fn(),
@@ -157,18 +156,5 @@ describe("ProjectActivities", () => {
 
     expect(screen.getByText("1 activité archivée")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Rouvrir Design" })).toBeInTheDocument();
-  });
-});
-
-describe("ProjectActivities — what a guest may do", () => {
-  it("offers no gesture: a guest declares nothing into Ganesh", () => {
-    render(
-      <ProjectActivities {...baseProps} editable={false} activities={[activity()]} />,
-    );
-
-    expect(screen.getByRole("button", { name: "Design" })).toBeDisabled();
-    expect(
-      screen.getByRole("button", { name: "Retirer Développement" }),
-    ).toBeDisabled();
   });
 });

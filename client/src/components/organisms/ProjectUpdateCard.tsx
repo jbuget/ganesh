@@ -45,14 +45,6 @@ interface ProjectUpdateCardProps {
    * any other, and the « Fichiers » tab lists it beside the rest.
    */
   onImageDrop?: (file: File) => Promise<string>;
-  /**
-   * Whether the reader may answer the update.
-   *
-   * Correcting and withdrawing already hang off `is_mine` — a guest has
-   * written nothing, so they were never offered. Reacting is the one gesture
-   * the thread opens to everybody, and therefore the one to close.
-   */
-  editable?: boolean;
 }
 
 /** How long a thread is given to settle before the reader is left to scroll. */
@@ -78,7 +70,6 @@ export function ProjectUpdateCard({
   onRemoveComment,
   onReactToComment,
   onImageDrop,
-  editable = true,
 }: ProjectUpdateCardProps) {
   const [editing, setEditing] = useState(false);
   const [confirmingRemoval, setConfirmingRemoval] = useState(false);
@@ -178,7 +169,6 @@ export function ProjectUpdateCard({
           <MarkdownView body={renderMentions(update.body, people)} />
           <UpdateReactions
             reactions={update.reactions ?? []}
-            editable={editable}
             onToggle={(reaction, leaving) => void onReact(reaction, leaving)}
           />
         </>
@@ -194,7 +184,6 @@ export function ProjectUpdateCard({
               comment={comment}
               now={now}
               people={people}
-              editable={editable}
               onEdit={(body) => onEditComment(comment.id, body)}
               onRemove={() => onRemoveComment(comment.id)}
               onReact={(reaction, leaving) =>
@@ -207,7 +196,7 @@ export function ProjectUpdateCard({
 
       {/* Answering a withdrawn update is refused by the domain: there is
           nothing left to answer, and the replies already written stay. */}
-      {editable && !update.is_deleted && !editing && (
+      {!update.is_deleted && !editing && (
         // The same rule as the conversation above, drawn in nothing: what
         // one is about to write lines up with what is already there.
         <div className="mt-2 border-l-2 border-transparent pl-3">

@@ -14,13 +14,8 @@ interface SortableProjectCardProps {
   onOpen?: (projectId: number) => void;
   /** Opens the mission on its thread, with the composer ready. */
   onOpenThread?: (projectId: number) => void;
-  /**
-   * Raises or lowers the mark the team follows the mission by. Absent for a
-   * reader who may not write.
-   */
+  /** Raises or lowers the mark the team follows the mission by. */
   onFollowChange?: (projectId: number, following: boolean) => void;
-  /** The reader may not write: the card reads and opens, but does not move. */
-  readOnly?: boolean;
 }
 
 /**
@@ -46,7 +41,6 @@ export function SortableProjectCard({
   onOpen,
   onOpenThread,
   onFollowChange,
-  readOnly,
 }: SortableProjectCardProps) {
   const {
     attributes,
@@ -56,7 +50,7 @@ export function SortableProjectCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: card.project.id, disabled: readOnly });
+  } = useSortable({ id: card.project.id });
 
   return (
     <li
@@ -94,16 +88,14 @@ export function SortableProjectCard({
           onOpenThread={onOpenThread}
           onFollowChange={onFollowChange}
           handle={
-            readOnly ? null : (
-              <button
-                type="button"
-                ref={setActivatorNodeRef}
-                data-drag-handle
-                aria-label={`Déplacer ${card.project.label}`}
-                className="sr-only"
-                {...attributes}
-              />
-            )
+            <button
+              type="button"
+              ref={setActivatorNodeRef}
+              data-drag-handle
+              aria-label={`Déplacer ${card.project.label}`}
+              className="sr-only"
+              {...attributes}
+            />
           }
         />
       </div>

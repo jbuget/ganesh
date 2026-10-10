@@ -60,7 +60,6 @@ function renderCard(
   over: Partial<ProjectUpdateResponse> = {},
   onRemove = vi.fn(),
   aimed = false,
-  editable = true,
 ) {
   render(
     <ProjectUpdateCard
@@ -74,7 +73,6 @@ function renderCard(
       onEditComment={vi.fn()}
       onRemoveComment={vi.fn()}
       onReactToComment={vi.fn()}
-      editable={editable}
     />,
   );
   return onRemove;
@@ -229,27 +227,6 @@ describe("ProjectUpdateCard", () => {
       });
 
       expect(screen.getByText("Fini hier soir.")).toBeInTheDocument();
-    });
-
-    it("offers no answer to a reader who may not write", () => {
-      render(
-        <ProjectUpdateCard
-          update={anUpdate()}
-          now={NOW}
-          editable={false}
-          onEdit={vi.fn()}
-          onRemove={vi.fn()}
-          onReact={vi.fn()}
-          onReply={vi.fn()}
-          onEditComment={vi.fn()}
-          onRemoveComment={vi.fn()}
-          onReactToComment={vi.fn()}
-        />,
-      );
-
-      expect(
-        screen.queryByRole("button", { name: "Répondre" }),
-      ).not.toBeInTheDocument();
     });
 
     it("offers the withdrawal of a reply to its author alone", () => {

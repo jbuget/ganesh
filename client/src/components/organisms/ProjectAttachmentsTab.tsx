@@ -14,13 +14,6 @@ interface ProjectAttachmentsTabProps {
   projectId: number;
   /** Tells the screen one came from that the project now carries one file more. */
   onChange?: () => void | Promise<void>;
-  /**
-   * Whether the reader may add to the stock, or only read it.
-   *
-   * Opening a file stays: reading what a project carries is reading the
-   * project. What goes is dropping, renaming and withdrawing.
-   */
-  editable?: boolean;
 }
 
 /**
@@ -33,7 +26,6 @@ interface ProjectAttachmentsTabProps {
 export function ProjectAttachmentsTab({
   projectId,
   onChange,
-  editable = true,
 }: ProjectAttachmentsTabProps) {
   const store = useProjectAttachments(projectId, onChange);
   // Only what the screen itself is: which file is open, which one is being
@@ -44,7 +36,7 @@ export function ProjectAttachmentsTab({
 
   return (
     <div className="space-y-4">
-      {editable && <FileDropZone onFiles={store.uploadAll} busy={store.busy} />}
+      <FileDropZone onFiles={store.uploadAll} busy={store.busy} />
 
       {store.error && <p className="text-xs text-red-700">{store.error}</p>}
 
@@ -52,9 +44,7 @@ export function ProjectAttachmentsTab({
 
       {store.files?.length === 0 && (
         <p className="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500">
-          {editable
-            ? "Aucun fichier. Déposez une capture, une maquette, un compte rendu."
-            : "Aucun fichier."}
+          Aucun fichier. Déposez une capture, une maquette, un compte rendu.
         </p>
       )}
 
@@ -66,8 +56,8 @@ export function ProjectAttachmentsTab({
               projectId={projectId}
               file={file}
               onOpen={() => setShown(file)}
-              onRename={editable ? () => setRenamed(file) : undefined}
-              onRemove={editable ? () => setDoomed(file) : undefined}
+              onRename={() => setRenamed(file)}
+              onRemove={() => setDoomed(file)}
             />
           ))}
         </div>

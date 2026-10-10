@@ -82,7 +82,6 @@ function show(
     days: [],
     today: "2026-09-19",
     savingDay: null,
-    mayAnswer: true,
     post: vi.fn(),
     ...moodOverrides,
   };

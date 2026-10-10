@@ -7,14 +7,6 @@ import { SERVICE_LINKS, type ServiceLinkField } from "@/lib/service-sheet";
 
 interface ServiceLinksEditorProps {
   project: ProjectResponse;
-  /**
-   * Whether the reader may change it.
-   *
-   * Editable by default: a field one cannot change is the exception, and it
-   * is the screen holding the field that knows — a guest reads every sheet of
-   * the reference list and rewrites none.
-   */
-  editable?: boolean;
   onChange: (fields: Partial<Record<ServiceLinkField, string | null>>) => Promise<void>;
 }
 
@@ -25,11 +17,7 @@ interface ServiceLinksEditorProps {
  * sheet asks for them one by one under the name the catalogue will use. What
  * does not fit here goes to the secondary links underneath.
  */
-export function ServiceLinksEditor({
-  project,
-  editable = true,
-  onChange,
-}: ServiceLinksEditorProps) {
+export function ServiceLinksEditor({ project, onChange }: ServiceLinksEditorProps) {
   return (
     <div className="divide-y divide-slate-100">
       {SERVICE_LINKS.map(({ field, label }) => (
@@ -38,7 +26,6 @@ export function ServiceLinksEditor({
             value={project[field]}
             label={label}
             placeholder="https://…"
-            editable={editable}
             onChange={(url) => onChange({ [field]: url })}
           />
         </SheetRow>

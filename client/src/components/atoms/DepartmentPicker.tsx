@@ -13,8 +13,8 @@ interface DepartmentPickerProps {
    * Whether the reader may change it.
    *
    * Editable by default: a field one cannot change is the exception, and it
-   * is the screen holding the field that knows — a guest reads every sheet of
-   * the reference list and rewrites none.
+   * is the screen holding the field that knows — a request handed over is
+   * read, and no longer rewritten.
    */
   editable?: boolean;
   onChange: (values: Department[]) => void | Promise<void>;

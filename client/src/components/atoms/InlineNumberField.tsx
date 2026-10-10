@@ -9,14 +9,6 @@ interface InlineNumberFieldProps {
   value: number | null | undefined;
   suffix: string;
   label: string;
-  /**
-   * Whether the reader may change it.
-   *
-   * Editable by default: a field one cannot change is the exception, and it
-   * is the screen holding the field that knows — a guest reads every sheet of
-   * the reference list and rewrites none.
-   */
-  editable?: boolean;
   onChange: (value: number | null) => void | Promise<void>;
 }
 
@@ -30,7 +22,6 @@ export function InlineNumberField({
   value,
   suffix,
   label,
-  editable = true,
   onChange,
 }: InlineNumberFieldProps) {
   const [entry, setEntry] = useState<string | null>(null);
@@ -72,13 +63,10 @@ export function InlineNumberField({
     <button
       type="button"
       aria-label={label}
-      disabled={!editable}
       onClick={() =>
         setEntry(value === null || value === undefined ? "" : String(value))
       }
-      className={`-mx-1 rounded px-1 py-0.5 text-sm transition-colors ${
-        editable ? "cursor-pointer hover:bg-slate-100" : ""
-      }`}
+      className="-mx-1 rounded px-1 py-0.5 text-sm transition-colors cursor-pointer hover:bg-slate-100"
     >
       {value === null || value === undefined ? (
         <span className="flex items-center gap-1 text-slate-400">

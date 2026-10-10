@@ -9,23 +9,11 @@ import { CATEGORIES, category } from "@/lib/board";
 
 interface CategoryPickerProps {
   value: ProjectCategory | null | undefined;
-  /**
-   * Whether the reader may change it.
-   *
-   * Editable by default: a field one cannot change is the exception, and it
-   * is the screen holding the field that knows — a guest reads every sheet of
-   * the reference list and rewrites none.
-   */
-  editable?: boolean;
   onChange: (value: ProjectCategory | null) => void | Promise<void>;
 }
 
 /** A mission's strategic axis. One, or none. */
-export function CategoryPicker({
-  value,
-  editable = true,
-  onChange,
-}: CategoryPickerProps) {
+export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
   const [isOpen, setOpen] = useState(false);
   const axis = category(value);
 
@@ -33,8 +21,7 @@ export function CategoryPicker({
     <Popover open={isOpen} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label="Changer la catégorie"
-        disabled={!editable}
-        className={`-mx-1 flex ${editable ? "cursor-pointer" : ""} items-center rounded px-1 py-0.5 transition-colors ${editable ? "hover:bg-slate-100" : ""}`}
+        className="-mx-1 flex cursor-pointer items-center rounded px-1 py-0.5 transition-colors hover:bg-slate-100"
       >
         {axis ? (
           <span className="flex items-center gap-1.5 text-sm text-slate-700">

@@ -19,8 +19,6 @@ interface UpdateCommentCardProps {
   onEdit: (body: string) => Promise<void>;
   onRemove: () => Promise<void>;
   onReact: (reaction: Reaction, leaving: boolean) => Promise<void>;
-  /** Whether the reader may answer the reply, or only read it. */
-  editable?: boolean;
 }
 
 /**
@@ -39,7 +37,6 @@ export function UpdateCommentCard({
   onEdit,
   onRemove,
   onReact,
-  editable = true,
 }: UpdateCommentCardProps) {
   const [editing, setEditing] = useState(false);
   const [confirmingRemoval, setConfirmingRemoval] = useState(false);
@@ -103,7 +100,6 @@ export function UpdateCommentCard({
             <MarkdownView body={renderMentions(comment.body, people)} />
             <UpdateReactions
               reactions={comment.reactions ?? []}
-              editable={editable}
               onToggle={(reaction, leaving) => void onReact(reaction, leaving)}
             />
           </>

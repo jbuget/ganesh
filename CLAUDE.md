@@ -112,11 +112,11 @@ doors, a machine door counts when the scope it asks for is a write scope, and
 `test_write_doors` reads the application itself to say so. A key never reaches
 further than the person who answers for it.
 
-On the client the same reading is one hook, `useMayWrite`, and the band above
-every screen says it once rather than a dozen times over. Which screen one is
-in at all is `AppFrame`'s: it draws nothing until it knows who is there, since
-a sidebar shown for a moment and taken back would be a list of doors somebody
-was never meant to see.
+On the client the one reading is `AppFrame`'s: which screen one is in at all.
+It draws nothing until it knows who is there, since a sidebar shown for a
+moment and taken back would be a list of doors somebody was never meant to
+see. Past it, whoever reads may write, so no screen asks again: the day a rung
+reads without writing, the question comes back — on the server it never left.
 
 ### Who is on a mission
 

@@ -34,14 +34,6 @@ interface ProjectSteeringTabProps {
     businessContacts: string | null,
   ) => Promise<void>;
   changePhase: (status: ProjectStatus) => Promise<void>;
-  /**
-   * Whether the mission may be steered from here.
-   *
-   * The whole tab hangs off it rather than each field: steering is one thing
-   * one may or may not do, and a sheet half open would be a sheet nobody can
-   * read the rights of.
-   */
-  editable: boolean;
   updateFields: (fields: {
     category?: ProjectCategory | null;
     priority?: ProjectPriority | null;
@@ -100,7 +92,6 @@ export function ProjectSteeringTab({
   onChange,
   saveSheet,
   changePhase,
-  editable,
   updateFields,
   addSubProject,
   toggleFollow,
@@ -121,11 +112,7 @@ export function ProjectSteeringTab({
 
         <div className="divide-y divide-slate-100">
           <SheetRow title="Phase">
-            <PhasePicker
-              status={project.status}
-              editable={editable}
-              onChange={changePhase}
-            />
+            <PhasePicker status={project.status} onChange={changePhase} />
           </SheetRow>
 
           {/* Off-project work carries no mark: an absence is not something
@@ -135,7 +122,7 @@ export function ProjectSteeringTab({
               <FollowMark
                 followed={project.is_followed}
                 labelled
-                onToggle={editable ? () => void toggleFollow() : undefined}
+                onToggle={() => void toggleFollow()}
                 className="-ml-1"
               />
             </SheetRow>
@@ -149,7 +136,6 @@ export function ProjectSteeringTab({
             <TargetDateField
               value={project.go_live_date ?? null}
               missionLabel={project.label}
-              editable={editable}
               onChange={(go_live_date) => updateFields({ go_live_date })}
             />
           </SheetRow>
@@ -157,7 +143,6 @@ export function ProjectSteeringTab({
           <SheetRow title="Priorité">
             <PriorityPicker
               value={project.priority}
-              editable={editable}
               onChange={(priority) => updateFields({ priority })}
             />
           </SheetRow>
@@ -171,7 +156,6 @@ export function ProjectSteeringTab({
             ) : (
               <CategoryPicker
                 value={project.category}
-                editable={editable}
                 onChange={(category) => updateFields({ category })}
               />
             )}
@@ -180,7 +164,6 @@ export function ProjectSteeringTab({
           <SheetRow title="Départements">
             <DepartmentPicker
               values={detail.departments}
-              editable={editable}
               onChange={(values) => saveSheet(values, contacts.trim() || null)}
             />
           </SheetRow>
@@ -191,7 +174,6 @@ export function ProjectSteeringTab({
               contributors={detail.leads}
               role="lead"
               label="Référents"
-              editable={editable}
               onChange={onChange}
             />
           </SheetRow>
@@ -205,7 +187,6 @@ export function ProjectSteeringTab({
               contributors={detail.tech_leads}
               role="tech_lead"
               label="Référents techniques"
-              editable={editable}
               onChange={onChange}
             />
           </SheetRow>
@@ -218,7 +199,6 @@ export function ProjectSteeringTab({
               projectId={project.id}
               contributors={detail.contributors}
               label="Intervenants actuels"
-              editable={editable}
               onChange={onChange}
             />
           </SheetRow>
@@ -229,7 +209,6 @@ export function ProjectSteeringTab({
               value={contacts}
               placeholder="Qui appeler côté métier…"
               aria-label="Contacts métier"
-              readOnly={!editable}
               onChange={(event) => setDraft(event.target.value)}
               // Saved on leaving the field: nothing is written on every keystroke.
               onBlur={() => {
@@ -240,11 +219,7 @@ export function ProjectSteeringTab({
               onKeyDown={(event) => {
                 if (event.key === "Enter") event.currentTarget.blur();
               }}
-              className={`-mx-1 w-full rounded px-1 py-0.5 text-sm transition-colors focus:outline-none ${
-                editable
-                  ? "hover:bg-slate-100 focus:bg-white focus:ring-1 focus:ring-slate-400"
-                  : ""
-              }`}
+              className="-mx-1 w-full rounded px-1 py-0.5 text-sm transition-colors hover:bg-slate-100 focus:bg-white focus:ring-1 focus:ring-slate-400 focus:outline-none"
             />
           </SheetRow>
         </div>
@@ -256,10 +231,7 @@ export function ProjectSteeringTab({
       {project.kind === "project" && (
         <section className="space-y-2">
           <SheetSectionTitle>Sous-projets</SheetSectionTitle>
-          <ProjectSubProjects
-            subProjects={detail.sub_projects}
-            onAdd={editable ? addSubProject : undefined}
-          />
+          <ProjectSubProjects subProjects={detail.sub_projects} onAdd={addSubProject} />
         </section>
       )}
 
@@ -271,7 +243,6 @@ export function ProjectSteeringTab({
           <SheetSectionTitle>Activités</SheetSectionTitle>
           <ProjectActivities
             activities={activities.activities}
-            editable={editable}
             onAdd={activities.add}
             onChange={activities.change}
             onArchive={activities.archive}

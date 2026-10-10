@@ -16,13 +16,8 @@ interface BoardColumnProps {
   onOpen?: (projectId: number) => void;
   /** Opens a mission on its thread, with the composer ready. */
   onOpenThread?: (projectId: number) => void;
-  /**
-   * Raises or lowers the mark the team follows the mission by. Absent for a
-   * reader who may not write.
-   */
+  /** Raises or lowers the mark the team follows the mission by. */
   onFollowChange?: (projectId: number, following: boolean) => void;
-  /** The reader may not write: cards can be read, but not arranged. */
-  readOnly?: boolean;
   /** Some cards are hidden by a filter: an empty column says why. */
   filtered?: boolean;
 }
@@ -45,7 +40,6 @@ export function BoardColumn({
   onOpen,
   onOpenThread,
   onFollowChange,
-  readOnly,
   filtered,
 }: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
@@ -92,7 +86,6 @@ export function BoardColumn({
               onOpen={onOpen}
               onOpenThread={onOpenThread}
               onFollowChange={onFollowChange}
-              readOnly={readOnly}
             />
           ))}
         </SortableContext>
