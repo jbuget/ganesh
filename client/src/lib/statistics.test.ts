@@ -7,6 +7,9 @@ import {
   missionRows,
   phaseRows,
   formatDelay,
+  formatWait,
+  intakeRows,
+  tradeSegments,
   formatPersonDays,
   formatPoints,
   formatShare,
@@ -178,6 +181,7 @@ describe("breakdown rows", () => {
       { category: null, days: 8, share: 0.4 },
     ],
     top_missions: [{ project_id: 7, label: "Extranet", days: 12, share: 0.6 }],
+    by_nature: [],
   };
 
   it("names each phase the way the kanban does", () => {
@@ -265,5 +269,102 @@ describe("summarise and the first of the month", () => {
     });
 
     expect(said).toBe("Du 7 au 13 septembre 2026 · 5 jours ouvrés");
+  });
+});
+
+describe("formatWait", () => {
+  it("says how long a need has waited, in days", () => {
+    expect(formatWait(12)).toBe("12 j");
+  });
+
+  it("says the day itself rather than zero days", () => {
+    expect(formatWait(0)).toBe("depuis aujourd'hui");
+  });
+
+  it("says nothing rather than zero when no need waits", () => {
+    expect(formatWait(null)).toBe("—");
+  });
+});
+
+describe("tradeSegments", () => {
+  const steering = {
+    project_days: 9,
+    off_project_days: 1,
+    project_share: 0.9,
+    by_status: [],
+    by_category: [],
+    top_missions: [],
+    by_nature: [
+      { nature: "development", days: 6, share: 0.6 },
+      { nature: "design", days: 2, share: 0.2 },
+      { nature: null, days: 1, share: 0.1 },
+    ],
+  } satisfies Parameters<typeof tradeSegments>[0];
+
+  it("names every trade in French and one states none", () => {
+    expect(tradeSegments(steering).map((segment) => segment.label)).toEqual([
+      "Développement",
+      "Design",
+      "Sans métier précisé",
+    ]);
+  });
+
+  it("reads each share over the project time alone", () => {
+    // Off-project work has no trade: the bar splits project days, and a share
+    // taken over the whole would never reach a hundred.
+    expect(tradeSegments(steering).map((segment) => segment.share)).toEqual([
+      6 / 9,
+      2 / 9,
+      1 / 9,
+    ]);
+  });
+
+  it("gives a trade the same colour whatever its rank", () => {
+    // Colour follows the entity, never its rank: a quieter week must not
+    // repaint design.
+    const design = { nature: "design" as const, days: 5, share: 0.5 };
+    const swapped = tradeSegments({ ...steering, by_nature: [design] });
+
+    const before = tradeSegments(steering).find((one) => one.key === "design");
+    expect(swapped[0].colour).toBe(before?.colour);
+  });
+
+  it("draws nothing when no project time was declared", () => {
+    expect(tradeSegments({ ...steering, project_days: 0, by_nature: [] })).toEqual([]);
+  });
+});
+
+describe("intakeRows", () => {
+  const intake = {
+    submitted: 6,
+    accepted: 3,
+    rejected: 1,
+    deferred: 1,
+    converted: 2,
+    waiting: 2,
+    oldest_wait_days: 10,
+  };
+
+  it("lists what was asked, then what was answered, then what was built", () => {
+    expect(intakeRows(intake).map((row) => [row.label, row.count])).toEqual([
+      ["Déposés", 6],
+      ["Acceptés", 3],
+      ["Refusés", 1],
+      ["Reportés", 1],
+      ["Devenus des projets", 2],
+    ]);
+  });
+
+  it("draws nothing when nothing moved", () => {
+    expect(
+      intakeRows({
+        ...intake,
+        submitted: 0,
+        accepted: 0,
+        rejected: 0,
+        deferred: 0,
+        converted: 0,
+      }),
+    ).toEqual([]);
   });
 });

@@ -2,9 +2,9 @@
 
 from datetime import date
 
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import InstrumentedAttribute
+from sqlalchemy.orm import InstrumentedAttribute, aliased
 from sqlalchemy.sql.elements import ColumnElement
 
 from src.modules.api_keys.infrastructure.database.models.api_key_models import (
@@ -19,6 +19,7 @@ from src.modules.entries.infrastructure.database.models.entry_model import Entry
 from src.modules.months.domain.entities.month import MonthState
 from src.modules.months.infrastructure.database.models.month_model import MonthModel
 from src.modules.moods.infrastructure.database.models.mood_model import MoodModel
+from src.modules.notifications.domain.entities.notification import NotificationKind
 from src.modules.notifications.infrastructure.database.models.notification_model import (
     NotificationModel,
 )
@@ -27,13 +28,34 @@ from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.projects.infrastructure.database.models.activity_model import (
+    ActivityModel,
+)
+from src.modules.projects.infrastructure.database.models.project_assignee_model import (
+    ProjectAssigneeModel,
+)
 from src.modules.projects.infrastructure.database.models.project_model import (
     ProjectModel,
+)
+from src.modules.projects.infrastructure.database.models.project_update_model import (
+    ProjectUpdateModel,
+)
+from src.modules.projects.infrastructure.database.models.update_comment_model import (
+    UpdateCommentModel,
+)
+from src.modules.projects.infrastructure.database.models.update_reaction_model import (
+    UpdateReactionModel,
+)
+from src.modules.requests.domain.entities.request import RequestState
+from src.modules.requests.infrastructure.database.models.request_model import (
+    RequestModel,
 )
 from src.modules.stats.domain.entities.surface_usage import Surface, Tally, Trace
 from src.modules.stats.domain.repositories.statistics_repository import (
     StatisticsRepository,
 )
+from src.shared.enums.work_nature import WorkNature
 
 
 class SqlStatisticsRepository(StatisticsRepository):
@@ -118,6 +140,27 @@ class SqlStatisticsRepository(StatisticsRepository):
         )
         return {category: float(total) for category, total in rows.all()}
 
+    async def days_by_nature(self, period: Period) -> dict[WorkNature | None, float]:
+        """Project time per trade, the days with no activity read as none.
+
+        An outer join: what the reprise took over carries no activity at all,
+        and an inner one would drop exactly the days nobody ever placed.
+        """
+        rows = await self._session.execute(
+            select(ActivityModel.nature, func.sum(EntryModel.value))
+            .select_from(EntryModel)
+            .join(ProjectModel, ProjectModel.id == EntryModel.project_id)
+            .outerjoin(ActivityModel, ActivityModel.id == EntryModel.activity_id)
+            .where(
+                and_(
+                    self._within(period),
+                    ProjectModel.kind != ProjectKind.OFF_PROJECT,
+                )
+            )
+            .group_by(ActivityModel.nature)
+        )
+        return {nature: float(total) for nature, total in rows.all()}
+
     async def top_missions(
         self, period: Period, limit: int
     ) -> list[tuple[int, str, float]]:
@@ -180,6 +223,176 @@ class SqlStatisticsRepository(StatisticsRepository):
                     func.date(AuditLogModel.at).between(period.start, period.end),
                 )
             )
+        )
+        return int(count or 0)
+
+    def _bookable(self) -> list[ColumnElement[bool]]:
+        """Active missions that are booked against through activities."""
+        return [
+            ProjectModel.is_active.is_(True),
+            ProjectModel.kind != ProjectKind.OFF_PROJECT,
+            ~self._has_active_package(),
+        ]
+
+    @staticmethod
+    def _has_active_package() -> ColumnElement[bool]:
+        package = aliased(ProjectModel)
+        return exists().where(
+            package.parent_id == ProjectModel.id, package.is_active.is_(True)
+        )
+
+    async def missions_without_activity(self) -> int:
+        has_trade = exists().where(
+            ActivityModel.project_id == ProjectModel.id,
+            ActivityModel.is_active.is_(True),
+        )
+        return await self._count_missions(*self._bookable(), ~has_trade)
+
+    async def missions_unbudgeted(self) -> int:
+        has_unbudgeted_trade = exists().where(
+            ActivityModel.project_id == ProjectModel.id,
+            ActivityModel.is_active.is_(True),
+            ActivityModel.estimated_days.is_(None),
+        )
+        return await self._count_missions(*self._bookable(), has_unbudgeted_trade)
+
+    async def followed_missions(self) -> int:
+        return await self._count_missions(
+            ProjectModel.is_active.is_(True), ProjectModel.is_followed.is_(True)
+        )
+
+    async def published_missions(self) -> int:
+        return await self._count_missions(
+            ProjectModel.is_active.is_(True), ProjectModel.is_published.is_(True)
+        )
+
+    async def _count_missions(self, *conditions: ColumnElement[bool]) -> int:
+        count = await self._session.scalar(
+            select(func.count()).select_from(ProjectModel).where(*conditions)
+        )
+        return int(count or 0)
+
+    async def requests_submitted(self, period: Period) -> int:
+        return await self._count_requests(
+            func.date(RequestModel.submitted_at).between(period.start, period.end)
+        )
+
+    async def requests_decided(self, period: Period) -> dict[RequestState, int]:
+        rows = await self._session.execute(
+            select(RequestModel.state, func.count())
+            .where(func.date(RequestModel.decided_at).between(period.start, period.end))
+            .group_by(RequestModel.state)
+        )
+        return {state: int(count) for state, count in rows.all()}
+
+    async def requests_converted(self, period: Period) -> int:
+        return await self._count_requests(
+            func.date(RequestModel.converted_at).between(period.start, period.end)
+        )
+
+    async def requests_waiting_since(self) -> list[date]:
+        rows = await self._session.execute(
+            select(func.date(RequestModel.submitted_at)).where(
+                RequestModel.state == RequestState.SUBMITTED
+            )
+        )
+        return sorted(day for (day,) in rows.all())
+
+    async def _count_requests(self, *conditions: ColumnElement[bool]) -> int:
+        count = await self._session.scalar(
+            select(func.count()).select_from(RequestModel).where(*conditions)
+        )
+        return int(count or 0)
+
+    @staticmethod
+    def _active_project() -> list[ColumnElement[bool]]:
+        return [
+            ProjectModel.is_active.is_(True),
+            ProjectModel.kind == ProjectKind.PROJECT,
+        ]
+
+    async def active_projects(self) -> int:
+        return await self._count_missions(*self._active_project())
+
+    async def projects_without_role(self, role: ProjectRole) -> int:
+        held = exists().where(
+            ProjectAssigneeModel.project_id == ProjectModel.id,
+            ProjectAssigneeModel.role == role,
+        )
+        return await self._count_missions(*self._active_project(), ~held)
+
+    async def followed_last_news(self) -> list[date | None]:
+        rows = await self._session.execute(
+            select(func.max(func.date(ProjectUpdateModel.published_at)))
+            .select_from(ProjectModel)
+            .outerjoin(
+                ProjectUpdateModel,
+                and_(
+                    ProjectUpdateModel.project_id == ProjectModel.id,
+                    ProjectUpdateModel.deleted_at.is_(None),
+                ),
+            )
+            .where(
+                ProjectModel.is_active.is_(True),
+                ProjectModel.is_followed.is_(True),
+            )
+            .group_by(ProjectModel.id)
+        )
+        return [day for (day,) in rows.all()]
+
+    def _posted_within(self, period: Period) -> list[ColumnElement[bool]]:
+        return [
+            ProjectUpdateModel.deleted_at.is_(None),
+            func.date(ProjectUpdateModel.published_at).between(
+                period.start, period.end
+            ),
+        ]
+
+    async def updates_posted(self, period: Period) -> int:
+        count = await self._session.scalar(
+            select(func.count())
+            .select_from(ProjectUpdateModel)
+            .where(*self._posted_within(period))
+        )
+        return int(count or 0)
+
+    async def updates_answered(self, period: Period) -> int:
+        replied = exists().where(
+            UpdateCommentModel.update_id == ProjectUpdateModel.id,
+            UpdateCommentModel.author_id != ProjectUpdateModel.author_id,
+            UpdateCommentModel.deleted_at.is_(None),
+        )
+        reacted = exists().where(
+            UpdateReactionModel.update_id == ProjectUpdateModel.id,
+            UpdateReactionModel.user_id != ProjectUpdateModel.author_id,
+        )
+        count = await self._session.scalar(
+            select(func.count())
+            .select_from(ProjectUpdateModel)
+            .where(*self._posted_within(period), replied | reacted)
+        )
+        return int(count or 0)
+
+    async def notification_reading(
+        self, period: Period
+    ) -> dict[NotificationKind, tuple[int, int]]:
+        rows = await self._session.execute(
+            select(
+                NotificationModel.kind,
+                func.count(),
+                func.count(NotificationModel.read_at),
+            )
+            .where(func.date(NotificationModel.at).between(period.start, period.end))
+            .group_by(NotificationModel.kind)
+        )
+        return {kind: (int(sent), int(read)) for kind, sent, read in rows.all()}
+
+    async def unread_notifications(self, older_than: date | None = None) -> int:
+        conditions: list[ColumnElement[bool]] = [NotificationModel.read_at.is_(None)]
+        if older_than is not None:
+            conditions.append(func.date(NotificationModel.at) < older_than)
+        count = await self._session.scalar(
+            select(func.count()).select_from(NotificationModel).where(*conditions)
         )
         return int(count or 0)
 

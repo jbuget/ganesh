@@ -14,4 +14,8 @@ export interface RegistryResponse {
   missions_without_time: number;
   usage_rate: number | null;
   created: number;
+  without_activity: number;
+  unbudgeted: number;
+  followed: number;
+  published: number;
 }

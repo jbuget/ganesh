@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { notificationSentence } from "@/lib/notifications";
+import { notificationKindLabel, notificationSentence } from "@/lib/notifications";
 import { NotificationKind } from "@/lib/api/generated/model";
 import type { NotificationResponse } from "@/lib/api/generated/model";
 
@@ -168,5 +168,20 @@ describe("where a notification leads", () => {
     expect(
       notificationSentence(line("project.deleted", { project: null })).href,
     ).toBeUndefined();
+  });
+});
+
+describe("notificationKindLabel", () => {
+  it("names every kind of notification the product can send", () => {
+    // A kind added on the server without a name here would show up as a raw
+    // identifier on the dashboard.
+    for (const kind of Object.values(NotificationKind)) {
+      expect(notificationKindLabel(kind)).not.toBe(kind);
+      expect(notificationKindLabel(kind).length).toBeGreaterThan(0);
+    }
+  });
+
+  it("reads a mention as what it is", () => {
+    expect(notificationKindLabel("update.mention")).toBe("Mentions");
   });
 });

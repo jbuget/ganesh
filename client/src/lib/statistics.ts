@@ -7,11 +7,14 @@
  * is a different statement.
  */
 import type {
+  IntakeResponse,
   PeriodRange,
   PeriodResponse,
   SteeringResponse,
+  WorkNature,
 } from "@/lib/api/generated/model";
 import { category, phaseDot, phaseLabel } from "@/lib/board";
+import { workNatureLabel } from "@/lib/work-natures";
 
 /** The windows the screen offers, in the order they are shown. */
 export const RANGES: { value: PeriodRange; label: string }[] = [
@@ -58,6 +61,13 @@ export function formatPersonDays(days: number): string {
 export function formatDelay(days: number | null | undefined): string {
   if (days === null || days === undefined) return NOTHING;
   if (days === 0) return "le jour même";
+  return `${decimal(days)} j`;
+}
+
+/** How long a need has waited for an answer: « 12 j », never a bare number. */
+export function formatWait(days: number | null | undefined): string {
+  if (days === null || days === undefined) return NOTHING;
+  if (days === 0) return "depuis aujourd'hui";
   return `${decimal(days)} j`;
 }
 
@@ -201,4 +211,75 @@ export function kindRows(steering: SteeringResponse): BreakdownRow[] {
       colour: "bg-slate-300",
     },
   ];
+}
+
+/** One slice of a bar split into parts: what it is, how much, what colour. */
+export interface BarSegment {
+  key: string;
+  label: string;
+  days: number;
+  /** Share of the bar, which is the sum of its own segments. */
+  share: number;
+  /** A hex colour: the chart palette's, not a Tailwind class. */
+  colour: string;
+}
+
+/**
+ * One colour per trade, fixed.
+ *
+ * The first three slots of the chart palette, which hold together in every
+ * pair. A colour follows the trade and never its rank: a quiet week must not
+ * repaint design.
+ */
+const TRADE_COLOURS: Record<WorkNature, string> = {
+  development: "#2a78d6",
+  design: "#eb6834",
+  project_management: "#1baf7a",
+};
+
+/** What states no trade is neutral: it is a gap in the data, not a trade. */
+const NO_TRADE_COLOUR = "#94a3b8";
+
+/**
+ * Turning the project time per trade into the parts of one bar.
+ *
+ * Shares are read over the project time alone. Off-project work carries no
+ * trade, so a share taken over everything declared would never reach a
+ * hundred and the bar would end short of its frame.
+ */
+export function tradeSegments(steering: SteeringResponse): BarSegment[] {
+  if (steering.project_days === 0) return [];
+
+  return steering.by_nature.map((row) => ({
+    key: row.nature ?? "none",
+    label: workNatureLabel(row.nature) ?? "Sans métier précisé",
+    days: row.days,
+    share: row.days / steering.project_days,
+    colour: row.nature ? TRADE_COLOURS[row.nature] : NO_TRADE_COLOUR,
+  }));
+}
+
+/** One line of the recueil's movements: what it is, and how many. */
+export interface CountRow {
+  key: string;
+  label: string;
+  count: number;
+}
+
+/**
+ * What the company asked for over the window, and what became of it.
+ *
+ * Asked, then answered, then built. It is not a funnel: a need accepted today
+ * may have been handed over last month, so the lines are never read as shares
+ * of the first one.
+ */
+export function intakeRows(intake: IntakeResponse): CountRow[] {
+  const rows: CountRow[] = [
+    { key: "submitted", label: "Déposés", count: intake.submitted },
+    { key: "accepted", label: "Acceptés", count: intake.accepted },
+    { key: "rejected", label: "Refusés", count: intake.rejected },
+    { key: "deferred", label: "Reportés", count: intake.deferred },
+    { key: "converted", label: "Devenus des projets", count: intake.converted },
+  ];
+  return rows.every((row) => row.count === 0) ? [] : rows;
 }
