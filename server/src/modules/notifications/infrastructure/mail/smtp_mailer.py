@@ -26,14 +26,22 @@ from src.modules.notifications.domain.repositories.mailer import (
 
 #: What means « nowhere to post anything », as opposed to « this one letter was
 #: refused ». Authentication and connection sit on the transport, not on the
-#: envelope: every letter of the round would meet the same wall.
+#: envelope: every letter of the round would meet the same wall. So does the
+#: sender, which is the same on every letter.
 UNUSABLE = (
     aiosmtplib.SMTPAuthenticationError,
     aiosmtplib.SMTPConnectError,
     aiosmtplib.SMTPConnectTimeoutError,
     aiosmtplib.SMTPServerDisconnected,
+    aiosmtplib.SMTPSenderRefused,
     OSError,
 )
+
+#: « Service not available », RFC 5321's own answer for a server that will take
+#: nothing from us right now. It is what Mailgun says of a domain it has not
+#: verified, and it comes back after the message has been handed over, so it
+#: reads like a letter refused when it is every letter.
+SERVICE_NOT_AVAILABLE = 421
 
 
 class SmtpMailer(Mailer):
@@ -81,9 +89,16 @@ class SmtpMailer(Mailer):
                 start_tls=self._use_starttls,
             )
         except UNUSABLE as error:
-            # Nothing would get through, for anybody: a key the server refuses,
-            # a host nobody can reach. Said once and raised as such, rather
-            # than repeated to every recipient in turn.
-            raise MailerUnavailableError(
-                f"The mail server at {self._host}:{self._port} cannot be used: {error}"
-            ) from error
+            raise self._unusable(error) from error
+        except aiosmtplib.SMTPResponseException as error:
+            if error.code != SERVICE_NOT_AVAILABLE:
+                raise
+            raise self._unusable(error) from error
+
+    def _unusable(self, error: Exception) -> MailerUnavailableError:
+        """Nothing would get through, for anybody: a key the server refuses, a
+        host nobody can reach, a domain it will not send for. Said once and
+        raised as such, rather than repeated to every recipient in turn."""
+        return MailerUnavailableError(
+            f"The mail server at {self._host}:{self._port} cannot be used: {error}"
+        )
