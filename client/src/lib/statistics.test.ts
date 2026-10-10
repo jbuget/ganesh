@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   RANGES,
+  activityLevel,
+  activityMonthLabels,
+  activityWeeks,
+  formatYearShare,
   categoryRows,
   kindRows,
   missionRows,
@@ -366,5 +370,95 @@ describe("intakeRows", () => {
         converted: 0,
       }),
     ).toEqual([]);
+  });
+});
+
+describe("activityWeeks", () => {
+  const day = (iso: string, gestures = 0) => ({ day: iso, gestures });
+
+  it("lays the days out in columns of Monday to Sunday", () => {
+    // Thursday 8 to Tuesday 13 October: two weeks, the first opening on its Thursday.
+    const weeks = activityWeeks([
+      day("2026-10-08"),
+      day("2026-10-09"),
+      day("2026-10-10"),
+      day("2026-10-11"),
+      day("2026-10-12"),
+      day("2026-10-13"),
+    ]);
+
+    expect(weeks).toHaveLength(2);
+    expect(weeks[0].map((slot) => slot?.day)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      "2026-10-08",
+      "2026-10-09",
+      "2026-10-10",
+      "2026-10-11",
+    ]);
+    expect(weeks[1].map((slot) => slot?.day)).toEqual([
+      "2026-10-12",
+      "2026-10-13",
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
+  });
+
+  it("draws nothing for a window with no day", () => {
+    expect(activityWeeks([])).toEqual([]);
+  });
+});
+
+describe("activityLevel", () => {
+  it("leaves a quiet day uncoloured", () => {
+    expect(activityLevel(0, 40)).toBe(0);
+  });
+
+  it("scales the shade on the busiest day of the window", () => {
+    expect(activityLevel(40, 40)).toBe(4);
+    expect(activityLevel(20, 40)).toBe(2);
+    expect(activityLevel(11, 40)).toBe(2);
+    expect(activityLevel(10, 40)).toBe(1);
+  });
+
+  it("never reads a single gesture as nothing", () => {
+    expect(activityLevel(1, 400)).toBe(1);
+  });
+});
+
+describe("activityMonthLabels", () => {
+  const range = (from: string, count: number) =>
+    Array.from({ length: count }, (_, offset) => {
+      const date = new Date(`${from}T12:00:00`);
+      date.setDate(date.getDate() + offset);
+      return { day: date.toISOString().slice(0, 10), gestures: 0 };
+    });
+
+  it("names a month on the first column it opens in", () => {
+    // Monday 5 October to Sunday 15 November 2026: six weeks.
+    const labels = activityMonthLabels(activityWeeks(range("2026-10-05", 42)));
+
+    expect(labels).toEqual(["oct.", "", "", "", "nov.", ""]);
+  });
+
+  it("drops the label of a first column the next month crowds out", () => {
+    // Thursday 29 to Sunday 1 November: the week of the 26th carries both.
+    const labels = activityMonthLabels(activityWeeks(range("2026-10-29", 25)));
+
+    expect(labels.filter(Boolean)).toEqual(["nov."]);
+  });
+});
+
+describe("formatYearShare", () => {
+  it("reads a share of the year with one decimal, the French way", () => {
+    expect(formatYearShare(1, 7)).toBe("14,3 %");
+  });
+
+  it("leaves nothing to read when the year holds no gesture", () => {
+    expect(formatYearShare(0, 0)).toBe("—");
   });
 });

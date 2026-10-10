@@ -99,6 +99,20 @@ class CoveragePoint:
 
 
 @dataclass(frozen=True)
+class ActivityDay:
+    """How many gestures the register holds for one day.
+
+    Every gesture counts, whoever made it and whatever it was: the mosaic
+    answers « was Ganesh lived in that day », not « which function ». A day
+    nothing happened is read as zero rather than left out, since a window with
+    holes could not be drawn as a calendar.
+    """
+
+    day: date
+    gestures: int
+
+
+@dataclass(frozen=True)
 class CoverageScope:
     """Whose time the coverage is read over, said beside the figure.
 
@@ -457,6 +471,9 @@ class Statistics:
     coverage_scope: CoverageScope
     #: The weeks leading up to today, oldest first, whatever the window is.
     coverage_trend: list[CoveragePoint]
+    #: One line per day of the year ending today, oldest first, whatever the
+    #: window is.
+    activity: list[ActivityDay]
     freshness: Freshness
     month_validation: MonthValidation
     adoption: Adoption

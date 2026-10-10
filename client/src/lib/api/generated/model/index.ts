@@ -6,6 +6,7 @@
  */
 
 export * from "./accountsResponse";
+export * from "./activityDayResponse";
 export * from "./activityLineResponse";
 export * from "./activityLineResponseDaysByContributor";
 export * from "./activityLineResponseOwnDaysByContributor";

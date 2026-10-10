@@ -48,6 +48,13 @@ class CoveragePointResponse(BaseModel):
     rate: float | None
 
 
+class ActivityDayResponse(BaseModel):
+    """The gestures the register holds for one day."""
+
+    day: date
+    gestures: int
+
+
 class FreshnessResponse(BaseModel):
     """How long days waited before being declared."""
 
@@ -241,6 +248,8 @@ class StatisticsResponse(BaseModel):
     coverage: CoverageResponse
     #: The last weeks, oldest first, whatever window was asked for.
     coverage_trend: list[CoveragePointResponse]
+    #: Every day of the year ending today, oldest first, quiet ones included.
+    activity: list[ActivityDayResponse]
     freshness: FreshnessResponse
     month_validation: MonthValidationResponse
     adoption: AdoptionResponse

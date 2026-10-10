@@ -1121,6 +1121,13 @@ class InMemoryStatisticsRepository(StatisticsRepository):
             for trace in traces
         ]
 
+    async def gestures_by_day(self, period: Period) -> dict[date, int]:
+        return {
+            day: sum(trace.gestures for trace in traces)
+            for day, traces in self._traces.items()
+            if period.covers(day)
+        }
+
     async def unlogged_tallies(self, period: Period) -> dict[Surface, Tally]:
         # One day per window in a test: a second one covered by the same
         # window simply takes the place of the first.

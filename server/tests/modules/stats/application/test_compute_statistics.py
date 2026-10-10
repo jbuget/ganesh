@@ -383,6 +383,36 @@ class TestCoverageTrend:
         assert all(point.rate is None for point in stats.coverage_trend)
 
 
+class TestActivity:
+    async def test_the_mosaic_reads_the_year_whatever_the_window_is(self) -> None:
+        stats = await run()
+
+        assert stats.activity[0].day == date(2025, 9, 18)
+        assert stats.activity[-1].day == TODAY
+        assert len(stats.activity) == 365
+
+    async def test_a_day_nothing_happened_is_read_as_zero(self) -> None:
+        stats = await run()
+
+        assert all(day.gestures == 0 for day in stats.activity)
+
+    async def test_the_gestures_of_a_day_are_counted_whoever_made_them(self) -> None:
+        stats = await run(
+            traces={
+                TODAY: [
+                    Trace(action=AuditAction.UPDATE_POST, actor_id=1, gestures=2),
+                    Trace(action=AuditAction.ENTRY_SET, actor_id=2, gestures=3),
+                ],
+                date(2026, 1, 15): [
+                    Trace(action=AuditAction.ENTRY_SET, actor_id=1, gestures=1)
+                ],
+            }
+        )
+
+        counted = {day.day: day.gestures for day in stats.activity if day.gestures}
+        assert counted == {TODAY: 5, date(2026, 1, 15): 1}
+
+
 class TestAccounts:
     def account(
         self,

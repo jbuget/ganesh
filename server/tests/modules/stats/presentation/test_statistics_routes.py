@@ -267,6 +267,16 @@ async def test_the_coverage_curve_holds_twelve_weeks(client: AsyncClient) -> Non
     assert trend[0]["week_start"] < trend[-1]["week_start"]
 
 
+async def test_the_activity_holds_the_year_whatever_the_window_is(
+    client: AsyncClient,
+) -> None:
+    for window in ("today", "last_7_days"):
+        activity = (await client.get(URL, params={"range": window})).json()["activity"]
+
+        assert len(activity) in (365, 366)
+        assert activity[0]["day"] < activity[-1]["day"]
+
+
 async def test_the_accounts_are_counted_by_rung(client: AsyncClient) -> None:
     accounts = (await client.get(URL, params={"range": "today"})).json()["accounts"]
 

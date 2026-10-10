@@ -7,6 +7,7 @@ from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.requests.domain.entities.request import RequestState
 from src.modules.stats.application.dtos.statistics_dto import StatisticsQuery
 from src.modules.stats.domain.entities.statistics import (
+    ActivityDay,
     Adoption,
     Coverage,
     CoveragePoint,
@@ -29,6 +30,7 @@ from src.modules.stats.domain.repositories.statistics_repository import (
     StatisticsRepository,
 )
 from src.modules.stats.domain.services.account_census import census_of
+from src.modules.stats.domain.services.activity_calendar import activity_calendar
 from src.modules.stats.domain.services.coverage_scope import (
     coverage_scope,
     measured_by_coverage,
@@ -40,6 +42,7 @@ from src.modules.stats.domain.services.surface_reading import (
     surfaces_last_used,
 )
 from src.modules.stats.domain.services.trailing_weeks import trailing_weeks
+from src.modules.stats.domain.services.trailing_year import trailing_year
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 
@@ -72,6 +75,7 @@ class ComputeStatisticsUseCase:
             previous_coverage=await self._coverage(previous, measured),
             coverage_scope=coverage_scope(measured),
             coverage_trend=await self._trend(query, measured),
+            activity=await self._activity(query),
             freshness=Freshness(delays=await self._statistics.entry_delays(period)),
             month_validation=await self._month_validation(period, query, team),
             adoption=await self._adoption(period, measured),
@@ -108,6 +112,15 @@ class ComputeStatisticsUseCase:
                 )
             )
         return points
+
+    async def _activity(self, query: StatisticsQuery) -> list[ActivityDay]:
+        """The year ending today, whatever the window is.
+
+        A mosaic of a week would be seven cells, and the rhythm it shows is
+        only read over a year.
+        """
+        year = trailing_year(query.today)
+        return activity_calendar(year, await self._statistics.gestures_by_day(year))
 
     async def _month_validation(
         self, period: Period, query: StatisticsQuery, team: list[User]

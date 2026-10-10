@@ -199,6 +199,14 @@ class StatisticsRepository(ABC):
         ...
 
     @abstractmethod
+    async def gestures_by_day(self, period: Period) -> dict[date, int]:
+        """How many gestures the log holds for each day of the window.
+
+        Days with none are absent: filling them in is the caller's reading.
+        """
+        ...
+
+    @abstractmethod
     async def unlogged_tallies(self, period: Period) -> dict[Surface, Tally]:
         """What the functions the audit log does not carry saw."""
         ...

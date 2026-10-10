@@ -845,6 +845,23 @@ async def test_the_gestures_of_the_window_come_grouped_by_person(
     assert sorted((t.actor_id, t.gestures) for t in traces) == [(ada, 2), (grace, 1)]
 
 
+async def test_the_gestures_of_the_window_are_counted_day_by_day(
+    db_session: AsyncSession,
+) -> None:
+    ada = await a_user(db_session, "ada")
+    grace = await a_user(db_session, "grace")
+    await a_gesture(db_session, AuditAction.UPDATE_POST, ada, datetime(2026, 9, 15, 9))
+    await a_gesture(db_session, AuditAction.ENTRY_SET, ada, datetime(2026, 9, 15, 18))
+    await a_gesture(
+        db_session, AuditAction.UPDATE_POST, grace, datetime(2026, 9, 16, 10)
+    )
+    await a_gesture(db_session, AuditAction.UPDATE_POST, ada, datetime(2026, 8, 3, 9))
+
+    gestures = await SqlStatisticsRepository(db_session).gestures_by_day(WINDOW)
+
+    assert gestures == {date(2026, 9, 15): 2, date(2026, 9, 16): 1}
+
+
 async def test_a_gesture_outside_the_window_is_left_out(
     db_session: AsyncSession,
 ) -> None:
