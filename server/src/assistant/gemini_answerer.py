@@ -32,8 +32,10 @@ from src.shared.utils import clock
 
 logger = logging.getLogger(__name__)
 
-#: How many times the model may go back to the tools before it must have
-#: answered. « Où en est X ? » takes two: find the project, read its sheet.
+#: How many times the model may go back to the tools. « Où en est X ? » takes
+#: two: find the project, read its sheet. Past this, one more call is made with
+#: the tools taken away, and the model writes from what it has read — an
+#: answer that says what it could not read beats « indisponible ».
 MAX_ROUNDS = 5
 
 #: How many readings one question may cost, whatever the rounds. A round may
@@ -42,7 +44,7 @@ MAX_ROUNDS = 5
 #: whole. Past this, the model is told it has read enough, and answers.
 MAX_CONSULTATIONS = 12
 
-#: What a reading past the cap says instead.
+#: What a reading past the cap says instead, and what the closing round is told.
 ENOUGH = (
     "Assez de lectures pour une seule question : réponds avec ce qui a déjà été "
     "lu, et dis ce qui n'a pas pu l'être."
@@ -108,10 +110,11 @@ class GeminiAnswerer(Answerer):
     ) -> Answer | None:
         assert self._client is not None
         started = time.monotonic()
-        contents = [
+        asked = [
             *_history(conversation),
             _said("user", framed(question, project_id)),
         ]
+        contents = list(asked)
         consultations: list[Consultation] = []
         input_tokens = output_tokens = 0
 
@@ -124,18 +127,7 @@ class GeminiAnswerer(Answerer):
 
             calls = response.function_calls
             if not calls:
-                text = response.text
-                if not _finished(response) or not text:
-                    logger.warning("Gemini was cut short or wrote nothing.")
-                    return None
-                return Answer(
-                    text=text.strip(),
-                    consultations=tuple(consultations),
-                    model=self._model,
-                    input_tokens=input_tokens,
-                    output_tokens=output_tokens,
-                    elapsed_ms=round((time.monotonic() - started) * 1000),
-                )
+                break
 
             contents.append(_asked(response))
             readings: list[Consultation] = []
@@ -147,23 +139,50 @@ class GeminiAnswerer(Answerer):
                     readings.append(Consultation(name, arguments, ENOUGH))
             consultations.extend(readings)
             contents.append(_read(readings))
+        else:
+            logger.warning(
+                "Gemini was still asking for tools after %s rounds: made to answer.",
+                MAX_ROUNDS,
+            )
+            response = await self._client.aio.models.generate_content(
+                model=self._model,
+                contents=_closing(asked, consultations),
+                config=self._config(closing=True),
+            )
+            input_tokens += _input_tokens(response)
+            output_tokens += _output_tokens(response)
 
-        logger.warning("Gemini was still asking for tools after %s rounds.", MAX_ROUNDS)
-        return None
+        text = response.text
+        if response.function_calls or not _finished(response) or not text:
+            logger.warning("Gemini was cut short or wrote nothing.")
+            return None
+        return Answer(
+            text=text.strip(),
+            consultations=tuple(consultations),
+            model=self._model,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            elapsed_ms=round((time.monotonic() - started) * 1000),
+        )
 
-    def _config(self) -> types.GenerateContentConfig:
+    def _config(self, closing: bool = False) -> types.GenerateContentConfig:
+        """The tools on offer — none at all on the closing round."""
         return types.GenerateContentConfig(
             system_instruction=instructions(clock.today()),
-            tools=[
-                types.Tool(
-                    function_declarations=[
-                        types.FunctionDeclaration.from_callable_with_api_option(
-                            callable=tool, api_option="GEMINI_API"
-                        )
-                        for tool in self._toolbox.tools
-                    ]
-                )
-            ],
+            tools=(
+                None
+                if closing
+                else [
+                    types.Tool(
+                        function_declarations=[
+                            types.FunctionDeclaration.from_callable_with_api_option(
+                                callable=tool, api_option="GEMINI_API"
+                            )
+                            for tool in self._toolbox.tools
+                        ]
+                    )
+                ]
+            ),
             automatic_function_calling=types.AutomaticFunctionCallingConfig(
                 disable=True
             ),
@@ -182,6 +201,27 @@ def _history(conversation: Conversation) -> list[types.Content]:
         contents.append(types.Content(role="user", parts=asked))
         contents.append(_said("model", exchange.answer.text))
     return contents
+
+
+def _closing(
+    asked: list[types.Content], consultations: list[Consultation]
+) -> list[types.Content]:
+    """The question once more, with what was read as plain text, and the order to answer.
+
+    Plain text rather than the calls and their responses: shown a run of
+    calls, `gemini-3.8-flash` was measured writing one more call even with no
+    tool declared and told to call none. With nothing to imitate, it writes.
+    The same reason earlier turns go back as text — see `_history`.
+    """
+    *before, question = asked
+    read = [types.Part(text=_readings(tuple(consultations)))] if consultations else []
+    return [
+        *before,
+        types.Content(
+            role="user",
+            parts=[*(question.parts or []), *read, types.Part(text=ENOUGH)],
+        ),
+    ]
 
 
 def _readings(consultations: tuple[Consultation, ...]) -> str:

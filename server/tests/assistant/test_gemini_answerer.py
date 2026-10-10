@@ -11,7 +11,12 @@ from typing import Any
 
 from google.genai import types
 
-from src.assistant.gemini_answerer import MAX_CONSULTATIONS, MAX_ROUNDS, GeminiAnswerer
+from src.assistant.gemini_answerer import (
+    ENOUGH,
+    MAX_CONSULTATIONS,
+    MAX_ROUNDS,
+    GeminiAnswerer,
+)
 from src.assistant.toolbox import Tool, Toolbox
 from src.modules.assistant.domain.entities.conversation import Conversation
 from src.modules.assistant.domain.entities.exchange import Answer, Consultation
@@ -244,13 +249,53 @@ async def test_what_the_tools_read_earlier_goes_back_with_its_question() -> None
     assert texts(models.sent[0][1]) == ["EDIT est en service."]
 
 
-async def test_a_model_that_never_stops_asking_answers_nothing() -> None:
-    answerer, _, toolbox = an_answerer(
-        *(asking_for("project_brief", project_id=7) for _ in range(MAX_ROUNDS))
+async def test_a_model_that_keeps_asking_is_made_to_answer_with_what_it_read() -> None:
+    """Five rounds read, then one more without tools: an answer, not a 503."""
+    answerer, models, toolbox = an_answerer(
+        *(asking_for("project_brief", project_id=7) for _ in range(MAX_ROUNDS)),
+        written("WAATcher est en service ; ses lots n'ont pas pu être lus."),
+    )
+
+    answer = await answerer.answer(Conversation.opened(1), "Question ?", None)
+
+    assert answer is not None
+    assert answer.text == "WAATcher est en service ; ses lots n'ont pas pu être lus."
+    assert len(toolbox.consulted) == MAX_ROUNDS
+    assert len(answer.consultations) == MAX_ROUNDS
+
+
+async def test_the_closing_round_offers_no_tool_and_says_why() -> None:
+    """No tool to call, and no call to imitate: what was read goes back as text."""
+    answerer, models, _ = an_answerer(
+        *(asking_for("project_brief", project_id=7) for _ in range(MAX_ROUNDS)),
+        written("Réponse."),
+    )
+
+    await answerer.answer(Conversation.opened(1), "Question ?", None)
+
+    *rounds, closing = models.configs
+    assert all(config.tools for config in rounds)
+    assert closing.tools is None
+    closing_sent = models.sent[-1]
+    assert not any(
+        part.function_call or part.function_response
+        for content in closing_sent
+        for part in content.parts or []
+    )
+    last = closing_sent[-1]
+    assert last.role == "user" and last.parts
+    assert "Question ?" in (last.parts[0].text or "")
+    assert "Lecture de project_brief" in (last.parts[1].text or "")
+    assert last.parts[-1].text == ENOUGH
+
+
+async def test_a_closing_round_that_writes_nothing_answers_nothing() -> None:
+    answerer, _, _ = an_answerer(
+        *(asking_for("project_brief", project_id=7) for _ in range(MAX_ROUNDS)),
+        written(""),
     )
 
     assert await answerer.answer(Conversation.opened(1), "Question ?", None) is None
-    assert len(toolbox.consulted) == MAX_ROUNDS
 
 
 async def test_a_question_reads_no_more_than_its_share_of_the_register() -> None:

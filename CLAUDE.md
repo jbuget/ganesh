@@ -1116,7 +1116,7 @@ it together:
 A panel on the right, opened with ⌘J (Ctrl+J away from a Mac), that answers
 questions about a project — « où en est le projet X ? », asked by somebody who
 is not on it. Nothing in the sidebar announces it yet: whoever knows the
-shortcut reaches it, a guest never does. Nine rules hold it together:
+shortcut reaches it, a guest never does. Ten rules hold it together:
 
 - **« Où en est X ? » is read in the sheet and in the thread.** `project_brief`
   for the state — lots, budget, who is on it — and `project_news` for what the
@@ -1143,6 +1143,11 @@ shortcut reaches it, a guest never does. Nine rules hold it together:
   point, and it names no repository of its own. No process is added: it runs
   in the API, as `src/mcp/` does. The tools learn who they answer for through
   `Caller`: a key and its owner, or a person.
+- **A model that keeps asking is made to answer.** Five rounds of tools at
+  most; past them, one more call with no tool declared and what was read
+  handed back as plain text — shown the calls themselves, the model was
+  measured writing one more even with no tool to call. The answer says what
+  could not be read, which beats « indisponible ».
 - **Five exchanges, then a fresh conversation.** `Conversation` refuses the
   sixth, in the domain: a long thread drifts, and every turn sends the whole
   of it again. A follow-up goes with the conversation so far: each earlier
