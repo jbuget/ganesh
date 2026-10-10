@@ -6,12 +6,19 @@ from uuid import uuid4
 import pytest
 
 from src.modules.assistant.domain.entities.exchange import (
+    MAX_NOTE_LENGTH,
     Answer,
+    Cause,
     Consultation,
     Exchange,
     Verdict,
 )
-from src.shared.exceptions.domain_exceptions import ForbiddenActionError
+from src.shared.exceptions.domain_exceptions import (
+    ForbiddenActionError,
+    ValidationError,
+)
+
+ANNOTATED_AT = datetime(2026, 10, 12, 14, 0, tzinfo=UTC)
 
 
 def an_answer(*consultations: Consultation) -> Answer:
@@ -84,3 +91,58 @@ class TestVerdict:
     def test_nobody_judges_an_answer_given_to_somebody_else(self) -> None:
         with pytest.raises(ForbiddenActionError):
             an_exchange().judge(by=2, verdict=Verdict.HELPFUL)
+
+
+class TestAnnotation:
+    def test_an_annotation_says_why_the_answer_came_out_as_it_did(self) -> None:
+        exchange = an_exchange()
+
+        exchange.annotate(
+            by=9,
+            cause=Cause.WRONG_READING,
+            note="  Le brief ignore les lots.  ",
+            at=ANNOTATED_AT,
+        )
+
+        assert exchange.annotation is not None
+        assert exchange.annotation.cause is Cause.WRONG_READING
+        assert exchange.annotation.note == "Le brief ignore les lots."
+        assert exchange.annotation.annotated_by == 9
+        assert exchange.annotation.annotated_at == ANNOTATED_AT
+
+    def test_a_note_left_blank_is_no_note(self) -> None:
+        exchange = an_exchange()
+
+        exchange.annotate(by=9, cause=Cause.RIGHT_ANSWER, note="   ", at=ANNOTATED_AT)
+
+        assert exchange.annotation is not None
+        assert exchange.annotation.note is None
+
+    def test_annotating_again_replaces_the_annotation(self) -> None:
+        """One reading per answer: two that disagreed would say nothing."""
+        exchange = an_exchange()
+        exchange.annotate(by=9, cause=Cause.OUT_OF_SCOPE, note=None, at=ANNOTATED_AT)
+
+        exchange.annotate(by=4, cause=Cause.WRONG_PHRASING, note=None, at=ANNOTATED_AT)
+
+        assert exchange.annotation is not None
+        assert exchange.annotation.cause is Cause.WRONG_PHRASING
+        assert exchange.annotation.annotated_by == 4
+
+    def test_a_note_longer_than_the_limit_is_refused(self) -> None:
+        with pytest.raises(ValidationError):
+            an_exchange().annotate(
+                by=9,
+                cause=Cause.WRONG_READING,
+                note="x" * (MAX_NOTE_LENGTH + 1),
+                at=ANNOTATED_AT,
+            )
+
+    def test_annotating_leaves_the_verdict_of_whoever_asked_alone(self) -> None:
+        """The thumb is theirs; the annotation is a second reading beside it."""
+        exchange = an_exchange()
+        exchange.judge(by=1, verdict=Verdict.UNHELPFUL)
+
+        exchange.annotate(by=9, cause=Cause.RIGHT_ANSWER, note=None, at=ANNOTATED_AT)
+
+        assert exchange.verdict is Verdict.UNHELPFUL
