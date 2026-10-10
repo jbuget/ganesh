@@ -95,6 +95,22 @@ describe("MissionFilters", () => {
     expect(onChange).toHaveBeenCalledWith({ contributors: [3] });
   });
 
+  it("narrows the contributors to the name typed", () => {
+    bar();
+
+    fireEvent.click(screen.getByRole("button", { name: /Intervenant/ }));
+    expect(screen.getByLabelText("Rechercher un collaborateur")).toHaveFocus();
+    fireEvent.change(screen.getByLabelText("Rechercher un collaborateur"), {
+      target: { value: "bosc" },
+    });
+    expect(screen.getByRole("button", { name: /Nino Bosc/ })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Rechercher un collaborateur"), {
+      target: { value: "zzz" },
+    });
+    expect(screen.queryByRole("button", { name: /Nino Bosc/ })).not.toBeInTheDocument();
+  });
+
   it("tells projects from sub-projects", () => {
     const { onChange } = bar();
 
