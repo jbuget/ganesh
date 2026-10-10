@@ -79,9 +79,9 @@ def compose(reminder: Reminder, to: str, web_url: str) -> Letter:
     profile = f"{web_url}/profile"
     total = reminder.total
     subject = (
-        f"Ganesh — {total} chose vous attend"
+        f"Ganesh — {total} notification non lue"
         if total == 1
-        else f"Ganesh — {total} choses vous attendent"
+        else f"Ganesh — {total} notifications non lues"
     )
     said = [_said(line.kind, line.count) for line in reminder.lines]
 
