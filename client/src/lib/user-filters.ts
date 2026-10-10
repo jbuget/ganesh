@@ -52,7 +52,9 @@ export function hasActiveUserFilter(filters: UserFilters): boolean {
  * three hundred accounts that only ever came to file a need. Requesters are
  * shown when they are asked for, and not before.
  */
-const TEAM_ROLES: Role[] = ["TEAMMATE", "MANAGER"];
+const TEAM_ROLES: Role[] = ROLES.map((role) => role.value).filter(
+  (role) => role !== "GUEST",
+);
 
 /**
  * Does a teammate pass the criteria?
