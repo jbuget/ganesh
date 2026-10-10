@@ -22,7 +22,7 @@ interface BoardColumnProps {
    */
   onFollowChange?: (projectId: number, following: boolean) => void;
   /** The reader may not write: cards can be read, but not arranged. */
-  frozen?: boolean;
+  readOnly?: boolean;
   /** Some cards are hidden by a filter: an empty column says why. */
   filtered?: boolean;
 }
@@ -45,7 +45,7 @@ export function BoardColumn({
   onOpen,
   onOpenThread,
   onFollowChange,
-  frozen,
+  readOnly,
   filtered,
 }: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
@@ -92,7 +92,7 @@ export function BoardColumn({
               onOpen={onOpen}
               onOpenThread={onOpenThread}
               onFollowChange={onFollowChange}
-              frozen={frozen}
+              readOnly={readOnly}
             />
           ))}
         </SortableContext>

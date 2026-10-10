@@ -158,7 +158,7 @@ export function BoardPage() {
                   // whole phase, the hidden ones keeping their place. A guest
                   // reads without arranging — a card that moved back would be
                   // the screen's fault.
-                  frozen={!mayWrite}
+                  readOnly={!mayWrite}
                   filtered={hasFilter}
                 />
               ))}

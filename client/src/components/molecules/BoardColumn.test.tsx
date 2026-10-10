@@ -32,14 +32,17 @@ const card = (id: number, label: string): BoardCardResponse =>
 const NOW = new Date("2026-09-16T11:00:00Z");
 
 /** The @dnd-kit sensors require an enclosing context. */
-const show = (cards: BoardCardResponse[], { frozen = false, filtered = false } = {}) =>
+const show = (
+  cards: BoardCardResponse[],
+  { readOnly = false, filtered = false } = {},
+) =>
   render(
     <DndContext>
       <BoardColumn
         status="development"
         cards={cards}
         now={NOW}
-        frozen={frozen}
+        readOnly={readOnly}
         filtered={filtered}
       />
     </DndContext>,
@@ -127,13 +130,13 @@ describe("a filtered column", () => {
 
 describe("a column read by somebody who may not write", () => {
   it("offers no handle", () => {
-    show([card(1, "Portail bailleurs")], { frozen: true });
+    show([card(1, "Portail bailleurs")], { readOnly: true });
 
     expect(screen.queryByRole("button", { name: /Déplacer/ })).toBeNull();
   });
 
   it("says a plain emptiness plainly", () => {
-    show([], { frozen: true });
+    show([], { readOnly: true });
 
     expect(screen.getByText("Aucun projet")).toBeInTheDocument();
   });

@@ -147,7 +147,7 @@ describe("SortableProjectCard", () => {
 
   it("neither grabs nor offers a handle to a reader who may not write", () => {
     const onOpen = vi.fn();
-    show({ onOpen, frozen: true });
+    show({ onOpen, readOnly: true });
 
     expect(screen.queryByRole("button", { name: /Déplacer/ })).toBeNull();
     drag(40);

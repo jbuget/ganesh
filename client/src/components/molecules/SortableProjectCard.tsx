@@ -20,7 +20,7 @@ interface SortableProjectCardProps {
    */
   onFollowChange?: (projectId: number, following: boolean) => void;
   /** The reader may not write: the card reads and opens, but does not move. */
-  frozen?: boolean;
+  readOnly?: boolean;
 }
 
 /**
@@ -46,7 +46,7 @@ export function SortableProjectCard({
   onOpen,
   onOpenThread,
   onFollowChange,
-  frozen,
+  readOnly,
 }: SortableProjectCardProps) {
   const {
     attributes,
@@ -56,7 +56,7 @@ export function SortableProjectCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: card.project.id, disabled: frozen });
+  } = useSortable({ id: card.project.id, disabled: readOnly });
 
   return (
     <li
@@ -94,7 +94,7 @@ export function SortableProjectCard({
           onOpenThread={onOpenThread}
           onFollowChange={onFollowChange}
           handle={
-            frozen ? null : (
+            readOnly ? null : (
               <button
                 type="button"
                 ref={setActivatorNodeRef}
