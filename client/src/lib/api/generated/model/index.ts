@@ -49,6 +49,7 @@ export * from "./changeRoleRequest";
 export * from "./changeStatusRequest";
 export * from "./chapterOf";
 export * from "./chapterResponse";
+export * from "./chooseHiddenScreensRequest";
 export * from "./chooseReminderCadenceRequest";
 export * from "./clearEntryParams";
 export * from "./consultationResponse";

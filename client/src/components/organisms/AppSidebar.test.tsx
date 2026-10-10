@@ -10,6 +10,7 @@ type User = {
   email: string;
   initials: string;
   role: string;
+  hidden_screens?: string[];
 };
 
 const JEREMY: User = {
@@ -25,8 +26,7 @@ const user = vi.hoisted(() => ({
     email: "j.buget@waat.fr",
     initials: "JB",
     role: "MANAGER",
-  } as
-    { display_name: string; email: string; initials: string; role: string } | undefined,
+  } as User | undefined,
 }));
 
 vi.mock("next/navigation", () => ({ usePathname: () => pathname.value }));
@@ -51,7 +51,10 @@ vi.mock("@/lib/use-inbox", () => ({
 describe("AppSidebar", () => {
   // The fold is kept in `localStorage`, which outlives a render: without this,
   // a test that folds the bar hands the next one a bar already folded.
-  beforeEach(() => window.localStorage.clear());
+  beforeEach(() => {
+    window.localStorage.clear();
+    user.value = JEREMY;
+  });
 
   it("offers to fold the bar", () => {
     render(<AppSidebar />);
@@ -76,6 +79,15 @@ describe("AppSidebar", () => {
     expect(
       screen.getByRole("button", { name: "Déplier la barre latérale" }),
     ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("leaves out the screens one hid, and keeps the others", () => {
+    user.value = { ...JEREMY, hidden_screens: ["/logs", "/stats"] };
+    render(<AppSidebar />);
+
+    expect(screen.queryByRole("link", { name: /Journal/ })).toBeNull();
+    expect(screen.queryByRole("link", { name: /Statistiques/ })).toBeNull();
+    expect(screen.getByRole("link", { name: /Projets/ })).toBeInTheDocument();
   });
 
   it("offers every screen", () => {

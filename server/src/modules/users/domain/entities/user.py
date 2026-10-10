@@ -1,5 +1,6 @@
 """Ganesh user, and the rights that come with their role."""
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import StrEnum
@@ -25,6 +26,24 @@ def _trimmed(value: str | None) -> str | None:
         return None
     cleaned = value.strip()
     return cleaned or None
+
+
+#: A bar never lists anywhere near this many screens: the bound is there so a
+#: list cannot grow into a free-form store, wherever it comes in from.
+MAX_HIDDEN_SCREENS = 32
+MAX_SCREEN_KEY_LENGTH = 64
+
+
+def _screen_key(value: str) -> str:
+    """A screen is named by its path, and the home screen is not one to hide."""
+    key = value.strip()
+    if not key.startswith("/") or key.startswith("//"):
+        raise ValidationError("A screen is named by its path.")
+    if len(key) > MAX_SCREEN_KEY_LENGTH:
+        raise ValidationError("A screen path is too long.")
+    if key == "/":
+        raise ValidationError("The home screen cannot be hidden.")
+    return key
 
 
 def _handle(value: str | None) -> str | None:
@@ -107,6 +126,13 @@ class User:
     #: does — and a letter that failed leaves it where it was, so the next run
     #: considers the same window again. That is the only retry there is.
     reminder_sent_at: datetime | None = None
+    #: The screens this teammate has taken off their own sidebar, named by
+    #: path — the same address the navigation holds them under, which is why the
+    #: domain keeps no list of its own: two of them would drift. Nothing is
+    #: hidden until somebody says so. Hiding is a way of reading, never of
+    #: closing a door: the screen still answers, and the palette still leads
+    #: to it.
+    hidden_screens: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         self.email = self.email.strip().lower()
@@ -256,6 +282,26 @@ class User:
     def choose_reminder_cadence(self, cadence: ReminderCadence) -> None:
         """Takes down how often this teammate wants to be written to."""
         self.reminder_cadence = cadence
+
+    def can_arrange_own_navigation(self) -> bool:
+        """Everyone arranges their own bar, and nobody else's.
+
+        What one opens every morning is a fact about oneself, and no manager's
+        business.
+        """
+        return self.can_write()
+
+    def choose_hidden_screens(self, screens: Iterable[str]) -> None:
+        """Takes down which screens this teammate keeps off their sidebar.
+
+        The whole list at once, so emptying it is the same gesture as filling
+        it. A list one name of which is refused is refused whole: half a bar
+        would be a choice nobody made.
+        """
+        keys = {_screen_key(screen) for screen in screens}
+        if len(keys) > MAX_HIDDEN_SCREENS:
+            raise ValidationError("Too many screens are hidden.")
+        self.hidden_screens = tuple(sorted(keys))
 
     def is_written_to(self) -> bool:
         """Whether a letter is owed to this account at all.

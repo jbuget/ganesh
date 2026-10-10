@@ -159,6 +159,17 @@ export interface NavBand {
 }
 
 /**
+ * Whether a screen may be taken off one's own bar.
+ *
+ * Not « Accueil »: it is where every sign-in lands, and a bar with no way back
+ * to it would strand whoever hid it. Not the screens banded `"aside"` either —
+ * the bar never lists them, so there is nothing to take away.
+ */
+export function isHideable(screen: Screen): boolean {
+  return screen.href !== "/" && screen.band !== "aside";
+}
+
+/**
  * The bar a given role reads, banded.
  *
  * The tabs come from `SCREENS` rather than from a second list, so a screen can
@@ -170,16 +181,37 @@ export interface NavBand {
  * somebody adds a teammates screen at the end, and a bar with two headings of
  * the same name is a bar nobody trusts.
  *
- * A band whose every screen is out of reach — « Plateforme » would be, were
- * « Administration » alone in it — is not drawn: a heading over nothing is
- * worse than no heading.
+ * `hidden` is what the reader took off their own bar. It narrows the bar and
+ * nothing else: the palette still leads to every screen, and the screen still
+ * answers at its address — hiding is a way of reading, never a door closed.
+ * A band whose every screen is out of reach, or hidden — « Plateforme » would
+ * be, were « Administration » alone in it — is not drawn: a heading over
+ * nothing is worse than no heading.
  */
-export function bandsFor(role: Role | undefined): readonly NavBand[] {
-  const shown = screensFor(role);
+export function bandsFor(
+  role: Role | undefined,
+  hidden: readonly string[] = [],
+): readonly NavBand[] {
+  const shown = screensFor(role).filter(
+    (screen) => !isHideable(screen) || !hidden.includes(screen.href),
+  );
 
   return BANDS.map(({ band, label }) => ({
     band,
     label,
     screens: shown.filter((screen) => screen.band === band),
   })).filter((band) => band.screens.length > 0);
+}
+
+/**
+ * What a reader is offered to take off their bar, banded as the bar is.
+ *
+ * Read off `bandsFor` rather than rebuilt, so the choices and the bar they
+ * govern cannot disagree about what exists — and a role is offered nothing it
+ * could not see.
+ */
+export function hideableBandsFor(role: Role | undefined): readonly NavBand[] {
+  return bandsFor(role)
+    .map((band) => ({ ...band, screens: band.screens.filter(isHideable) }))
+    .filter((band) => band.screens.length > 0);
 }

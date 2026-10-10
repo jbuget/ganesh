@@ -380,6 +380,13 @@ export function auditSentence(
     case "user.reminder_choose":
       return { action: "a choisi sa fréquence de rappel" };
 
+    // Which screens are in the payload and read on one's own profile. The line
+    // says that somebody rearranged their bar, never what they found
+    // superfluous: a taste is not something the register should hold against
+    // a screen.
+    case "user.navigation_choose":
+      return { action: "a réglé sa barre latérale" };
+
     // A manager sending the round by hand — the morning the clock got it
     // wrong, or a first letter before trusting the whole thing to a schedule.
     // How many letters went out is in the payload, which no screen reads: the

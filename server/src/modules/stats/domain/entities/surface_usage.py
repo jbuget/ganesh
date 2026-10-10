@@ -54,6 +54,7 @@ class Surface(StrEnum):
     NOTIFICATIONS = "notifications"
     REMINDERS = "reminders"
     PRESENCE = "presence"
+    NAVIGATION = "navigation"
     TEAM_ADMIN = "team_admin"
     API_KEYS = "api_keys"
     MACHINE_ACCESS = "machine_access"
@@ -150,6 +151,10 @@ SURFACE_OF: dict[AuditAction, Surface] = {
     # a number answering neither question. Zero here is a reading too — it
     # says the default is what everybody is still on.
     AuditAction.USER_REMINDER_CHOOSE: Surface.REMINDERS,
+    # Taking screens off one's own sidebar. A line of its own, beside the
+    # presence: both are what one says about oneself, and neither is a gesture
+    # on the team's work. Zero here says nobody has found the setting.
+    AuditAction.USER_NAVIGATION_CHOOSE: Surface.NAVIGATION,
     # A manager sending the round by hand. Beside the cadence rather than on a
     # line of its own: both are gestures on the same channel, and a surface
     # split in two would read as two functions where there is one.

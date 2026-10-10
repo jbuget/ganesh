@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, Integer, String
+from sqlalchemy import JSON, Boolean, DateTime, Enum, Integer, String, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
@@ -62,6 +62,14 @@ class UserModel(Base):
         Enum(ReminderCadence, name="reminder_cadence", native_enum=False, length=8),
         nullable=False,
         server_default=ReminderCadence.NEVER.value,
+    )
+
+    # The screens this teammate keeps off their own sidebar, named by path.
+    # Kept as a list rather than a column per screen: the screens live in the
+    # client's navigation, and a column each would mean a migration every time
+    # one is added.
+    hidden_screens: Mapped[list[str]] = mapped_column(
+        JSON, nullable=False, server_default=text("'[]'")
     )
 
     # When the last letter went out. Nullable: nobody has been written to

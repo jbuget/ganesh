@@ -21,6 +21,7 @@ function aUser(
     is_active: true,
     presence,
     reminder_cadence: "DAILY",
+    hidden_screens: [],
   };
 }
 

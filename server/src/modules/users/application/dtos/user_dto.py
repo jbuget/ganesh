@@ -77,3 +77,15 @@ class ChooseOwnReminderCadenceCommand:
 
     actor_id: int
     cadence: ReminderCadence
+
+
+@dataclass(frozen=True)
+class ChooseOwnHiddenScreensCommand:
+    """The screens one keeps off one's own sidebar, as the whole list.
+
+    No target here either: one arranges one's own bar, and there is no
+    colleague's it could reach.
+    """
+
+    actor_id: int
+    screens: list[str]

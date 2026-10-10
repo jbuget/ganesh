@@ -59,6 +59,7 @@ const WORDINGS: Record<Surface, SurfaceWording> = {
     counted: "cadences choisies et envois déclenchés",
   },
   presence: { label: "Présence", counted: "semaines déclarées" },
+  navigation: { label: "Barre latérale", counted: "réglages enregistrés" },
   team_admin: { label: "Gestion de l'équipe" },
   api_keys: { label: "Clés API", counted: "créations, modifications, révocations" },
   machine_access: {

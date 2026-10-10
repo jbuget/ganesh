@@ -19,6 +19,7 @@ const teammate = (
   role: "TEAMMATE",
   presence: A_WEEK_ON_SITE,
   reminder_cadence: "DAILY",
+  hidden_screens: [],
   is_active: true,
   last_login_at: null,
   ...fields,

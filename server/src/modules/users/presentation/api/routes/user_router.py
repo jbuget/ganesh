@@ -24,6 +24,7 @@ from src.modules.auth.presentation.dependencies import (
 )
 from src.modules.users.application.dtos.user_dto import (
     ChangeRoleCommand,
+    ChooseOwnHiddenScreensCommand,
     ChooseOwnReminderCadenceCommand,
     DeclareOwnPresenceCommand,
     SetUserActiveCommand,
@@ -32,6 +33,9 @@ from src.modules.users.application.dtos.user_dto import (
 from src.modules.users.application.dtos.user_record_dto import GetUserRecordQuery
 from src.modules.users.application.use_cases.change_user_role import (
     ChangeUserRoleUseCase,
+)
+from src.modules.users.application.use_cases.choose_own_hidden_screens import (
+    ChooseOwnHiddenScreensUseCase,
 )
 from src.modules.users.application.use_cases.choose_own_reminder_cadence import (
     ChooseOwnReminderCadenceUseCase,
@@ -55,6 +59,7 @@ from src.modules.users.presentation.api.schemas.user_record_schemas import (
 )
 from src.modules.users.presentation.api.schemas.user_schemas import (
     ChangeRoleRequest,
+    ChooseHiddenScreensRequest,
     ChooseReminderCadenceRequest,
     DeclarePresenceRequest,
     SetActiveRequest,
@@ -63,6 +68,7 @@ from src.modules.users.presentation.api.schemas.user_schemas import (
 )
 from src.modules.users.presentation.dependencies import (
     get_change_role_use_case,
+    get_choose_own_hidden_screens_use_case,
     get_choose_own_reminder_cadence_use_case,
     get_declare_own_presence_use_case,
     get_list_users_use_case,
@@ -266,6 +272,33 @@ async def choose_own_reminder_cadence(
         ChooseOwnReminderCadenceCommand(
             actor_id=current_user.id, cadence=payload.cadence
         )
+    )
+    await session.commit()
+    return to_user_response(user)
+
+
+@router.put(
+    "/me/hidden-screens",
+    response_model=UserResponse,
+    operation_id="chooseOwnHiddenScreens",
+)
+async def choose_own_hidden_screens(
+    payload: ChooseHiddenScreensRequest,
+    current_user: User = Depends(get_contributor),
+    use_case: ChooseOwnHiddenScreensUseCase = Depends(
+        get_choose_own_hidden_screens_use_case
+    ),
+    session: AsyncSession = Depends(get_db),
+) -> UserResponse:
+    """Says which screens one keeps off one's own sidebar, as the whole list.
+
+    The address carries no teammate, as `/me/presence` does not: there is no
+    colleague's bar this route could reach. Hiding is a way of reading and
+    closes nothing — every screen still answers.
+    """
+    assert current_user.id is not None
+    user = await use_case.execute(
+        ChooseOwnHiddenScreensCommand(actor_id=current_user.id, screens=payload.screens)
     )
     await session.commit()
     return to_user_response(user)

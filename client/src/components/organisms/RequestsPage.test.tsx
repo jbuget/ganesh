@@ -17,6 +17,7 @@ const MANAGER: UserResponse = {
   is_active: true,
   presence: A_WEEK_ON_SITE,
   reminder_cadence: "DAILY",
+  hidden_screens: [],
 };
 
 const HANDED: RequestResponse = {

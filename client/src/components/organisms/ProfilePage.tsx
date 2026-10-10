@@ -2,8 +2,10 @@
 
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { ReminderCadenceField } from "@/components/atoms/ReminderCadenceField";
+import { ScreenVisibilityField } from "@/components/atoms/ScreenVisibilityField";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { departmentLabel } from "@/lib/departments";
+import { hideableBandsFor } from "@/lib/navigation";
 import { teamLabel } from "@/lib/teams";
 import { roleLabel } from "@/lib/roles";
 import { useProfileScreen } from "@/lib/use-profile";
@@ -22,7 +24,7 @@ import { useProfileScreen } from "@/lib/use-profile";
  * finds here.
  */
 export function ProfilePage() {
-  const { user, isLoading, isSaving, choose } = useProfileScreen();
+  const { user, isLoading, isSaving, choose, chooseHiddenScreens } = useProfileScreen();
 
   const header = (
     <PageHeader
@@ -103,6 +105,24 @@ export function ProfilePage() {
           <p aria-live="polite" className="min-h-4 text-xs text-slate-500">
             {isSaving ? "Enregistrement…" : "Votre choix est enregistré aussitôt."}
           </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <div>
+            <h2 className="text-sm font-semibold">Barre latérale</h2>
+            <p className="text-sm text-slate-500">
+              Décochez les pages que vous n&apos;ouvrez jamais pour alléger votre barre.
+              Masquer ne ferme rien : la recherche y mène toujours, et la page répond à
+              son adresse. L&apos;accueil reste toujours affiché.
+            </p>
+          </div>
+
+          <ScreenVisibilityField
+            bands={hideableBandsFor(user.role)}
+            hidden={user.hidden_screens}
+            onChange={(hidden) => void chooseHiddenScreens(hidden)}
+            isSaving={isSaving}
+          />
         </section>
       </div>
     </PageLayout>

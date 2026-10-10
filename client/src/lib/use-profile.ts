@@ -4,7 +4,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import type { ReminderCadence } from "@/lib/api/generated/model";
-import { chooseOwnReminderCadence } from "@/lib/api/generated/users/users";
+import {
+  chooseOwnHiddenScreens,
+  chooseOwnReminderCadence,
+} from "@/lib/api/generated/users/users";
 import { useCurrentUser } from "@/lib/api/queries";
 
 /**
@@ -37,6 +40,24 @@ export function useProfileScreen() {
       setSaving(true);
       try {
         await chooseOwnReminderCadence({ cadence });
+        await queryClient.invalidateQueries();
+      } finally {
+        setSaving(false);
+      }
+    },
+
+    /**
+     * Says which screens one keeps off one's own bar, as the whole list.
+     *
+     * The route carries no teammate either — `PUT /users/me/hidden-screens` —
+     * and the whole cache is refreshed for the same reason as above: the bar
+     * reads the list off `UserResponse`, from a component this screen never
+     * touches.
+     */
+    async chooseHiddenScreens(screens: string[]) {
+      setSaving(true);
+      try {
+        await chooseOwnHiddenScreens({ screens });
         await queryClient.invalidateQueries();
       } finally {
         setSaving(false);

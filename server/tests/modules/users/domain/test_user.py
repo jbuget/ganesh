@@ -426,6 +426,79 @@ def test_every_cadence_but_never_is_owed_a_letter(cadence: ReminderCadence) -> N
     assert cadence.wants_mail is True
 
 
+# --- The screens one keeps off one's own bar --------------------------------
+
+
+def test_nothing_is_hidden_until_somebody_hides_it() -> None:
+    assert make_user().hidden_screens == ()
+
+
+def test_a_teammate_hides_the_screens_they_never_open() -> None:
+    user = make_user()
+
+    user.choose_hidden_screens(["/logs", "/stats"])
+
+    assert user.hidden_screens == ("/logs", "/stats")
+
+
+def test_the_same_screen_said_twice_is_hidden_once() -> None:
+    user = make_user()
+
+    user.choose_hidden_screens(["/stats", " /logs ", "/stats"])
+
+    assert user.hidden_screens == ("/logs", "/stats")
+
+
+def test_the_choice_is_the_whole_list_so_it_can_be_emptied() -> None:
+    user = make_user()
+    user.choose_hidden_screens(["/logs"])
+
+    user.choose_hidden_screens([])
+
+    assert user.hidden_screens == ()
+
+
+def test_the_home_screen_is_never_hidden() -> None:
+    # It is where one lands after signing in: hiding it would leave a bar with
+    # no way back to the place every sign-in leads to.
+    with pytest.raises(ValidationError):
+        make_user().choose_hidden_screens(["/"])
+
+
+@pytest.mark.parametrize("key", ["", "logs", "https://elsewhere.example/logs"])
+def test_a_screen_is_named_by_its_path(key: str) -> None:
+    with pytest.raises(ValidationError):
+        make_user().choose_hidden_screens([key])
+
+
+def test_a_refused_list_leaves_the_previous_one_untouched() -> None:
+    user = make_user()
+    user.choose_hidden_screens(["/logs"])
+
+    with pytest.raises(ValidationError):
+        user.choose_hidden_screens(["/stats", "/"])
+
+    assert user.hidden_screens == ("/logs",)
+
+
+def test_a_path_too_long_to_be_a_screen_is_refused() -> None:
+    with pytest.raises(ValidationError):
+        make_user().choose_hidden_screens(["/" + "a" * 64])
+
+
+def test_a_list_longer_than_any_bar_is_refused() -> None:
+    with pytest.raises(ValidationError):
+        make_user().choose_hidden_screens([f"/screen-{n}" for n in range(33)])
+
+
+def test_everyone_arranges_their_own_bar() -> None:
+    assert make_user().can_arrange_own_navigation() is True
+
+
+def test_a_deactivated_account_arranges_nothing() -> None:
+    assert make_user(is_active=False).can_arrange_own_navigation() is False
+
+
 # --- The ladder of roles -----------------------------------------------------
 
 
