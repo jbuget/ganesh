@@ -1,4 +1,4 @@
-.PHONY: install lint format test test-cov archi check-schema migration migrate seed grant-role dump catalog run
+.PHONY: install lint format test test-cov archi check-schema migration migrate seed grant-role place-in-team dump catalog run
 
 # Taken from the root .env when entering through `make -C server`: the
 # instance's ports stay described in a single place.
@@ -63,6 +63,10 @@ seed:
 ROLE ?= ADMIN
 grant-role:
 	$(PY) -m scripts.grant_role $(EMAIL) $(ROLE)
+
+# make place-in-team TEAM=ENGINEERING EMAILS="a@waat.fr b@waat.fr"
+place-in-team:
+	$(PY) -m scripts.place_in_team $(TEAM) $(EMAILS)
 
 # Writes the reference data — the team and the missions, never what people have
 # done with them — ready to be loaded into staging or production.
