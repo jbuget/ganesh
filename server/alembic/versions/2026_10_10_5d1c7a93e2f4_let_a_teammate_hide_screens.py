@@ -1,7 +1,7 @@
 """let a teammate hide screens
 
 Revision ID: 5d1c7a93e2f4
-Revises: b77b2972aba6
+Revises: 7b04116a0fcf
 Create Date: 2026-10-10 18:40:00.000000
 
 The screens a teammate keeps off their own sidebar, named by path.
@@ -17,7 +17,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "5d1c7a93e2f4"
-down_revision: str | None = "b77b2972aba6"
+down_revision: str | None = "7b04116a0fcf"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
