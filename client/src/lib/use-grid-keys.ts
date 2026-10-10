@@ -20,9 +20,10 @@ export type WriteCell = (cell: GridCell, value: DayValue) => void;
  * Everything the keys do to the entry grid: move the focus, and write.
  *
  * Both live here rather than half here and half in the component, because
- * they are one decision taken on one key press — an hour writes, an arrow
- * moves, anything else is left to the browser — and splitting that decision
- * across two files is how a key ends up doing both or neither.
+ * they are one decision taken on one key press — an hour writes and moves on
+ * to the next open day, an arrow moves, anything else is left to the browser —
+ * and splitting that decision across two files is how a key ends up doing both
+ * or neither.
  *
  * **One handler on the table, not one per cell.** A month with a dozen
  * missions on it is a few hundred cells; hanging a handler and a ref on each
@@ -64,6 +65,9 @@ export function useGridKeys(grid: NavigableGrid, write: WriteCell) {
       if (!held.current.isOpen(from)) return;
       event.preventDefault();
       writing.current(from, typed);
+      // The hand moves on with the hour, as it would in a spreadsheet: at the
+      // edge of the row there is nowhere to go and the focus stays.
+      moveTo(event.currentTarget, nextCell(held.current, from, "ArrowRight"));
       return;
     }
 
@@ -75,12 +79,7 @@ export function useGridKeys(grid: NavigableGrid, write: WriteCell) {
     // Taken only once there is somewhere to go: at the edge of the grid the
     // key is left alone, so Home still reaches the top of a long page.
     event.preventDefault();
-
-    const landing = event.currentTarget.querySelector<HTMLElement>(
-      `[data-cell="${cellId(to)}"]`,
-    );
-    landing?.focus();
-    if (landing) reveal(landing);
+    moveTo(event.currentTarget, to);
   }, []);
 
   /**
@@ -103,6 +102,14 @@ export function useGridKeys(grid: NavigableGrid, write: WriteCell) {
     isTabStop: (cell: GridCell) =>
       stop !== null && stop.projectId === cell.projectId && stop.day === cell.day,
   };
+}
+
+/** Puts the focus on a cell of the grid, and does nothing when there is none. */
+function moveTo(grid: HTMLElement, cell: GridCell | null): void {
+  if (!cell) return;
+  const landing = grid.querySelector<HTMLElement>(`[data-cell="${cellId(cell)}"]`);
+  landing?.focus();
+  if (landing) reveal(landing);
 }
 
 /**

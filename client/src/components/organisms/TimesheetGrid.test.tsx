@@ -509,6 +509,46 @@ describe("TimesheetGrid, entered from the keyboard", () => {
     expect(onSetValue).toHaveBeenCalledWith(10, 100, "2026-09-14", value);
   });
 
+  it("moves on to the next day once an hour is written", async () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    cell("Portail bailleurs — Développement", "2026-09-14").focus();
+    await userEvent.keyboard("4");
+
+    expect(cell("Portail bailleurs — Développement", "2026-09-15")).toHaveFocus();
+  });
+
+  it("steps over a non-working day after an hour, as the arrow does", async () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    cell("Portail bailleurs — Développement", "2026-09-16").focus();
+    await userEvent.keyboard("8");
+
+    expect(cell("Portail bailleurs — Développement", "2026-09-25")).toHaveFocus();
+  });
+
+  it("stays on the last cell of the row after an hour: the grid does not wrap", async () => {
+    const onSetValue = vi.fn();
+    render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
+
+    const last = cell("Portail bailleurs — Développement", "2026-09-25");
+    last.focus();
+    await userEvent.keyboard("4");
+
+    expect(onSetValue).toHaveBeenCalledWith(10, 100, "2026-09-25", 0.5);
+    expect(last).toHaveFocus();
+  });
+
+  it("stays put when the hour is refused", async () => {
+    render(<TimesheetGrid {...baseProps} grid={makeGrid()} />);
+
+    const first = cell("Portail bailleurs — Développement", "2026-09-14");
+    first.focus();
+    await userEvent.keyboard("3");
+
+    expect(first).toHaveFocus();
+  });
+
   it("empties the cell on a zero", async () => {
     const onSetValue = vi.fn();
     render(<TimesheetGrid {...baseProps} onSetValue={onSetValue} grid={makeGrid()} />);
