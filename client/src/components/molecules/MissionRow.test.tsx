@@ -3,7 +3,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import { MissionRow } from "./MissionRow";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
-import { hiddenColumns } from "@/lib/mission-columns";
 
 const NOW = new Date("2026-09-17T12:00:00Z");
 
@@ -690,26 +689,12 @@ describe("MissionRow — the service catalogue", () => {
   });
 });
 
-/** The mark the team follows a mission by, raised and lowered from the row. */
+/**
+ * The mark reads at the end of the name, and is only read here: it is raised
+ * and lowered on the mission's sheet.
+ */
 describe("MissionRow — the follow mark", () => {
-  it("offers to follow a mission nobody follows", () => {
-    const onToggleFollow = vi.fn();
-    line(
-      <MissionRow
-        mission={mission({ is_followed: false })}
-        now={NOW}
-        onOpen={() => {}}
-        onOpenThread={() => {}}
-        onToggleFollow={onToggleFollow}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "Suivre ce projet" }));
-
-    expect(onToggleFollow).toHaveBeenCalledOnce();
-  });
-
-  it("only shows the mark to a reader who may not write", () => {
+  it("shows a followed mission as followed, without offering to change it", () => {
     line(
       <MissionRow
         mission={mission({ is_followed: true })}
@@ -723,14 +708,13 @@ describe("MissionRow — the follow mark", () => {
     expect(screen.queryByRole("button", { name: /suivre/i })).toBeNull();
   });
 
-  it("puts the mark away with its column", () => {
+  it("says nothing of a mission nobody follows", () => {
     line(
       <MissionRow
-        mission={mission({ is_followed: true })}
+        mission={mission({ is_followed: false })}
         now={NOW}
         onOpen={() => {}}
         onOpenThread={() => {}}
-        hidden={hiddenColumns(["followed"])}
       />,
     );
 

@@ -9,9 +9,14 @@ interface FollowMarkProps {
    * Raises or lowers the mark, in one click.
    *
    * Absent for a reader who may not write: the mark then shows on a followed
-   * mission and nothing at all on the others.
+   * mission and nothing at all on the others — unless it is labelled.
    */
   onToggle?: () => void;
+  /**
+   * Writes the state beside the flag. A sheet reads it as a value, where a
+   * row or a card only needs the flag.
+   */
+  labelled?: boolean;
   className?: string;
 }
 
@@ -23,16 +28,35 @@ interface FollowMarkProps {
  * le porte pour lui seul. Il sert de filtre — « Suivis » dans la liste comme
  * sur le tableau.
  */
-export function FollowMark({ followed, onToggle, className = "" }: FollowMarkProps) {
+export function FollowMark({
+  followed,
+  onToggle,
+  labelled = false,
+  className = "",
+}: FollowMarkProps) {
+  const state = followed ? "Projet suivi" : "Non suivi";
+  const flag = (
+    <Flag
+      className={`size-3.5 shrink-0 ${followed ? "fill-current" : ""}`}
+      aria-hidden
+    />
+  );
+  const words = labelled && (
+    <span className={followed ? "text-slate-800" : "text-slate-500"}>{state}</span>
+  );
+
   if (!onToggle) {
-    if (!followed) return null;
+    if (!followed && !labelled) return null;
     return (
       <span
-        aria-label="Projet suivi"
-        title="Projet suivi"
-        className={`inline-flex items-center rounded px-1 py-0.5 text-amber-600 ${className}`}
+        aria-label={labelled ? undefined : state}
+        title={state}
+        className={`inline-flex items-center gap-1.5 rounded py-0.5 text-sm ${
+          followed ? "text-amber-600" : "text-slate-300"
+        } ${labelled ? "" : "px-1"} ${className}`}
       >
-        <Flag className="size-3.5 shrink-0 fill-current" aria-hidden />
+        {flag}
+        {words}
       </span>
     );
   }
@@ -50,16 +74,14 @@ export function FollowMark({ followed, onToggle, className = "" }: FollowMarkPro
         event.stopPropagation();
         onToggle();
       }}
-      className={`inline-flex cursor-pointer items-center rounded px-1 py-0.5 transition-colors hover:bg-amber-50 ${
+      className={`inline-flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-sm transition-colors hover:bg-amber-50 ${
         followed
           ? "text-amber-600 hover:text-amber-800"
           : "text-slate-300 hover:text-amber-700"
       } ${className}`}
     >
-      <Flag
-        className={`size-3.5 shrink-0 ${followed ? "fill-current" : ""}`}
-        aria-hidden
-      />
+      {flag}
+      {words}
     </button>
   );
 }

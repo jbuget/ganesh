@@ -114,22 +114,6 @@ export function ProjectCard({
       ].join(" ")}
     >
       <div className="flex items-start gap-1.5">
-        {/* Followed, the mark stays; otherwise it only comes up under the
-            cursor — a board of thirty cards each carrying an empty flag would
-            read as thirty marks. */}
-        <FollowMark
-          followed={project.is_followed}
-          onToggle={
-            onToggleFollow && !isDragging
-              ? () => onToggleFollow(project.id, !project.is_followed)
-              : undefined
-          }
-          className={
-            project.is_followed
-              ? ""
-              : "opacity-0 group-hover:opacity-100 focus:opacity-100"
-          }
-        />
         <h3
           className={`min-w-0 flex-1 text-sm font-medium ${
             archived ? "text-slate-500" : "text-slate-900"
@@ -151,6 +135,23 @@ export function ProjectCard({
               {project.label}
             </button>
           )}
+          {/* Small, at the end of the title: the name is what a card is read
+              by. Followed, the mark stays; otherwise it only comes up under
+              the cursor — a board of thirty cards each carrying an empty flag
+              would read as thirty marks. */}
+          <FollowMark
+            followed={project.is_followed}
+            onToggle={
+              onToggleFollow && !isDragging
+                ? () => onToggleFollow(project.id, !project.is_followed)
+                : undefined
+            }
+            className={`ml-1 px-0.5 align-middle [&_svg]:size-3 ${
+              project.is_followed
+                ? ""
+                : "opacity-0 group-hover:opacity-100 focus:opacity-100"
+            }`}
+          />
         </h3>
         {handle === undefined ? (
           <GripVertical className="size-4 shrink-0 text-slate-300" aria-hidden />

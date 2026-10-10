@@ -45,8 +45,6 @@ interface MissionRowProps {
   onOpen: () => void;
   /** Opens the mission on its thread, where the preview stops. */
   onOpenThread: () => void;
-  /** Raises or lowers the mark. Absent for a reader who may not write. */
-  onToggleFollow?: () => void;
   /** The columns put away. Nothing put away shows the whole panorama. */
   hidden?: HiddenColumns;
   /**
@@ -78,7 +76,6 @@ export function MissionRow({
   now,
   onOpen,
   onOpenThread,
-  onToggleFollow,
   hidden = NO_HIDDEN_COLUMN,
   movable,
   receiving = false,
@@ -278,6 +275,9 @@ export function MissionRow({
           >
             {project.label}
           </button>
+          {/* Read, not changed, here: the mark is raised and lowered on the
+              mission's sheet, under « Informations ». */}
+          <FollowMark followed={project.is_followed} className="shrink-0" />
         </span>
       </TableCell>
 
@@ -294,12 +294,6 @@ export function MissionRow({
           onOpen={onOpenThread}
         />
       </TableCell>
-
-      {shows("followed") && (
-        <TableCell>
-          <FollowMark followed={project.is_followed} onToggle={onToggleFollow} />
-        </TableCell>
-      )}
 
       {shows("phase") && (
         <TableCell>

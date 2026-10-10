@@ -65,6 +65,8 @@ interface ProjectTabsProps {
    */
   archive: (subProjects?: SubProjectPolicy) => Promise<void>;
   unarchive: () => Promise<void>;
+  /** Raises the mark the team follows the mission by, or lowers it. */
+  toggleFollow: () => Promise<void>;
   /**
    * Deletes the mission for good, once confirmed.
    *
@@ -97,6 +99,7 @@ export function ProjectTabs({
   detach,
   archive,
   unarchive,
+  toggleFollow,
   deleteMission,
 }: ProjectTabsProps) {
   // Freezes the reference time for the duration of the visit: « il y a 3
@@ -236,6 +239,7 @@ export function ProjectTabs({
           changePhase={changePhase}
           updateFields={updateFields}
           addSubProject={addSubProject}
+          toggleFollow={toggleFollow}
         />
       </TabsContent>
 

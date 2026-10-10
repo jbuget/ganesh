@@ -15,7 +15,6 @@ const params = (query: string) => new URLSearchParams(query);
 describe("hideable columns", () => {
   it("offers every column but the two the row is read by", () => {
     expect(HIDEABLE_COLUMNS.map((column) => column.key)).toEqual([
-      "followed",
       "phase",
       "priority",
       "category",
@@ -76,13 +75,13 @@ describe("writeHiddenColumns", () => {
 
 describe("tableWidth", () => {
   it("spans the full reference list when every column shows", () => {
-    expect(tableWidth(NO_HIDDEN_COLUMN)).toBe(2104);
+    expect(tableWidth(NO_HIDDEN_COLUMN)).toBe(2024);
   });
 
   it("gives back exactly what a column put away was taking", () => {
     const category = HIDEABLE_COLUMNS.find((column) => column.key === "category");
 
-    expect(tableWidth(hiddenColumns(["category"]))).toBe(2104 - category!.width);
+    expect(tableWidth(hiddenColumns(["category"]))).toBe(2024 - category!.width);
   });
 
   /** Nothing left but the name and its thread: the row still reads. */

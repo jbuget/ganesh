@@ -53,4 +53,11 @@ describe("FollowMark", () => {
 
     expect(rowClicked).not.toHaveBeenCalled();
   });
+
+  /** On a sheet, the mark reads as a value: it says what it is, in words. */
+  it("says it in words when asked to", () => {
+    render(<FollowMark followed={false} labelled />);
+
+    expect(screen.getByText("Non suivi")).toBeInTheDocument();
+  });
 });

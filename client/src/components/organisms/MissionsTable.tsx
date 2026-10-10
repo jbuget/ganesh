@@ -25,7 +25,6 @@ import {
   NO_HIDDEN_COLUMN,
   PHASE_COLUMN,
   PRIORITY_COLUMN,
-  FOLLOW_COLUMN,
   STRONG_SEPARATOR,
   THREAD_COLUMN,
   tableWidth,
@@ -50,11 +49,6 @@ interface MissionsTableProps {
   onOpen: (projectId: number) => void;
   /** Opens a mission on its thread, where the preview stops. */
   onOpenThread: (projectId: number) => void;
-  /**
-   * Raises or lowers the mark the team follows a mission by. Absent for a
-   * reader who may not write: the column then only shows the marks.
-   */
-  onToggleFollow?: (projectId: number, following: boolean) => void;
   /** The columns put away. Nothing put away shows the whole panorama. */
   hidden?: HiddenColumns;
   /**
@@ -85,7 +79,6 @@ export function MissionsTable({
   now,
   onOpen,
   onOpenThread,
-  onToggleFollow,
   hidden = NO_HIDDEN_COLUMN,
   onAttach,
 }: MissionsTableProps) {
@@ -140,12 +133,6 @@ export function MissionsTable({
                 left-hand one separates two columns, and so starts below their
                 titles. */}
               <TableHead className={`${THREAD_COLUMN} ${STRONG_SEPARATOR}`} />
-              {/* The mark does not sort: the « Suivi » filter already keeps
-                those rows alone, and an order on a column of marks would say
-                no more than it does. */}
-              {shows("followed") && (
-                <TableHead className={FOLLOW_COLUMN}>Suivi</TableHead>
-              )}
               {shows("phase") && (
                 <SortableColumnHeader
                   column="phase"
@@ -260,14 +247,6 @@ export function MissionsTable({
                     now={now}
                     onOpen={() => onOpen(mission.project.id)}
                     onOpenThread={() => onOpenThread(mission.project.id)}
-                    onToggleFollow={
-                      onToggleFollow &&
-                      (() =>
-                        onToggleFollow(
-                          mission.project.id,
-                          !mission.project.is_followed,
-                        ))
-                    }
                     hidden={hidden}
                   />
                   {expanded &&
@@ -280,14 +259,6 @@ export function MissionsTable({
                         now={now}
                         onOpen={() => onOpen(workPackage.project.id)}
                         onOpenThread={() => onOpenThread(workPackage.project.id)}
-                        onToggleFollow={
-                          onToggleFollow &&
-                          (() =>
-                            onToggleFollow(
-                              workPackage.project.id,
-                              !workPackage.project.is_followed,
-                            ))
-                        }
                         hidden={hidden}
                       />
                     ))}

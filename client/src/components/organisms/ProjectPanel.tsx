@@ -4,11 +4,9 @@ import { Maximize2, X } from "lucide-react";
 import Link from "next/link";
 
 import { EditableTitle } from "@/components/atoms/EditableTitle";
-import { FollowMark } from "@/components/atoms/FollowMark";
 import { ParentMissionLink } from "@/components/atoms/ParentMissionLink";
 import { SidePanel } from "@/components/atoms/SidePanel";
 import { ProjectTabs } from "@/components/organisms/ProjectTabs";
-import { useMayWrite } from "@/lib/use-may-write";
 import { useProjectDetail } from "@/lib/use-project-detail";
 
 interface ProjectPanelProps {
@@ -44,7 +42,6 @@ export function ProjectPanel({
 }: ProjectPanelProps) {
   const sheet = useProjectDetail(projectId, onMissionChanged);
   const detail = sheet.detail;
-  const mayWrite = useMayWrite();
 
   return (
     <SidePanel label={detail ? detail.project.label : "Projet"} onClose={onClose}>
@@ -61,15 +58,6 @@ export function ProjectPanel({
             hint="Renommer le projet"
             onRename={detail ? sheet.rename : undefined}
           />
-
-          {/* Off-project work carries no mark: an absence is not something
-              anybody keeps an eye on. */}
-          {detail && detail.project.kind !== "off_project" && (
-            <FollowMark
-              followed={detail.project.is_followed}
-              onToggle={mayWrite ? sheet.toggleFollow : undefined}
-            />
-          )}
 
           <Link
             href={`/projects/${projectId}`}
@@ -122,6 +110,7 @@ export function ProjectPanel({
               onClose();
             }}
             unarchive={sheet.unarchive}
+            toggleFollow={sheet.toggleFollow}
           />
         )}
       </div>

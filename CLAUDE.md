@@ -146,7 +146,8 @@ being built, delivered a few days ago, or just asked about — and reads back as
 a filter, « Suivi », on the reference list and on the board.
 
 - **The mission carries it, `is_followed`**, raised and lowered in one click
-  from the row, the card or the sheet. It used to be read off the thread, as
+  under « Informations » on the Pilotage tab, or on a Kanban card. The
+  reference list only reads it, at the end of the name. It used to be read off the thread, as
   updates marked « à discuter »; a mark on the words left nothing to filter
   the missions by, and that was the question.
 - **A project and its work packages each say it for themselves.** Nothing is

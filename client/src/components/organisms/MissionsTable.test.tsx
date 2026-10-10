@@ -72,7 +72,6 @@ describe("MissionsTable", () => {
 
     for (const title of [
       "Projet",
-      "Suivi",
       "Phase",
       "Priorité",
       "Catégorie",

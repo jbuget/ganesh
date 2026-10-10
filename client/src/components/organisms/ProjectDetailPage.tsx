@@ -14,7 +14,6 @@ import { ProjectTabs } from "@/components/organisms/ProjectTabs";
 import { phaseLabel, phaseDot } from "@/lib/board";
 import { formatDecimalDays } from "@/lib/dates";
 import { useWayBack, type WayBack } from "@/lib/navigation-trail";
-import { useMayWrite } from "@/lib/use-may-write";
 import { useProjectDetail } from "@/lib/use-project-detail";
 
 interface ProjectDetailPageProps {
@@ -70,7 +69,6 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
   // still be in the reference list on the way back.
   const forgetCache = useCallback(() => queryClient.invalidateQueries(), [queryClient]);
   const sheet = useProjectDetail(projectId, forgetCache);
-  const mayWrite = useMayWrite();
   const detail = sheet.detail;
 
   if (sheet.notFound) {
@@ -113,12 +111,8 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
                   level={1}
                 />
               </div>
-              {project.kind !== "off_project" && (
-                <FollowMark
-                  followed={project.is_followed}
-                  onToggle={mayWrite ? sheet.toggleFollow : undefined}
-                />
-              )}
+              {/* Read here, changed under « Informations » in the tab below. */}
+              <FollowMark followed={project.is_followed} />
             </div>
             <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
               {project.status && (
@@ -165,6 +159,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
             router.push("/kanban");
           }}
           unarchive={sheet.unarchive}
+          toggleFollow={sheet.toggleFollow}
         />
       </div>
     </PageLayout>

@@ -76,6 +76,7 @@ function tabs(project: Sheet) {
       detach={vi.fn()}
       archive={archive}
       unarchive={vi.fn()}
+      toggleFollow={vi.fn()}
       deleteMission={deleteMission}
     />,
   );

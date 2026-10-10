@@ -78,14 +78,6 @@ export { STRONG_SEPARATOR } from "@/lib/table-frame";
  * The last one gets none: it absorbs what remains when the screen is wider
  * than the table, so that no fixed column stretches.
  */
-/**
- * Whether the team follows the mission, in a column of its own.
- *
- * It stays first of the columns that scroll: at the far end it would be off
- * screen, which is no place for the mark one scans the list by — and the
- * place one clicks to raise it.
- */
-export const FOLLOW_COLUMN = "w-[80px]";
 export const PHASE_COLUMN = "w-[150px]";
 export const PRIORITY_COLUMN = "w-[120px]";
 export const CATEGORY_COLUMN = "w-[210px]";
@@ -109,7 +101,6 @@ export const LAST_UPDATE_COLUMN = "w-[180px]";
  * together, and change together.
  */
 export type ColumnKey =
-  | "followed"
   | "phase"
   | "priority"
   | "category"
@@ -129,7 +120,6 @@ export interface HideableColumn {
 }
 
 export const HIDEABLE_COLUMNS: readonly HideableColumn[] = [
-  { key: "followed", label: "Suivi", width: 80 },
   { key: "phase", label: "Phase", width: 150 },
   { key: "priority", label: "Priorité", width: 120 },
   { key: "category", label: "Catégorie", width: 210 },
