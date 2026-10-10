@@ -11,6 +11,7 @@ import { DigestChapters } from "@/components/molecules/DigestChapters";
 import { DigestNarrative } from "@/components/molecules/DigestNarrative";
 import { DigestTally } from "@/components/molecules/DigestTally";
 import { PageLayout } from "@/components/organisms/PageLayout";
+import { SharePanel } from "@/components/organisms/SharePanel";
 import { Button } from "@/components/ui/button";
 import { formatMonth } from "@/lib/dates";
 import { formatGeneratedAt, isQuietMonth, namesToSetApart } from "@/lib/gazette";
@@ -47,6 +48,9 @@ export function GazettePage() {
               current={digest.version}
               onOpen={gazette.openVersion}
             />
+          )}
+          {digest?.is_generated && digest.version !== null && (
+            <SharePanel month={digest.month} version={digest.version} />
           )}
           <Button
             className="cursor-pointer"

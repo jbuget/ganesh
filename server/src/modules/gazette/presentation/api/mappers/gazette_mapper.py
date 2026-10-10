@@ -30,7 +30,7 @@ def to_digest_response(view: DigestView) -> DigestResponse:
         prose=view.prose.text if view.prose else None,
         prose_model=_model_of(view),
         spotlights=_to_spotlights(view),
-        tally=_to_tally(view.brief.tally),
+        tally=to_tally(view.brief.tally),
         chapters=[
             _to_chapter(chapter) for chapter in into_chapters(view.brief.movements)
         ],
@@ -50,13 +50,13 @@ def _to_spotlights(view: DigestView) -> list[SpotlightResponse]:
     """Each spotlight with the figures of its project, from the same brief."""
     focus = {one.project_id: one for one in view.brief.focus}
     return [
-        _to_spotlight(spotlight, focus[spotlight.project_id])
+        to_spotlight(spotlight, focus[spotlight.project_id])
         for spotlight in view.spotlights
         if spotlight.project_id in focus
     ]
 
 
-def _to_spotlight(spotlight: Spotlight, focus: ProjectFocus) -> SpotlightResponse:
+def to_spotlight(spotlight: Spotlight, focus: ProjectFocus) -> SpotlightResponse:
     return SpotlightResponse(
         project_id=spotlight.project_id,
         label=spotlight.label,
@@ -69,7 +69,7 @@ def _to_spotlight(spotlight: Spotlight, focus: ProjectFocus) -> SpotlightRespons
     )
 
 
-def _to_tally(tally: Tally) -> TallyResponse:
+def to_tally(tally: Tally) -> TallyResponse:
     return TallyResponse(
         projects_created=tally.projects_created,
         projects_archived=tally.projects_archived,

@@ -127,3 +127,44 @@ class GenerateDigestRequest(BaseModel):
     """Asks for a digest of a month. Any day of it names the month."""
 
     month: date = Field(description="Any day of the month asked for")
+
+
+class ShareLinkResponse(BaseModel):
+    """A link as the team reads it."""
+
+    id: int
+    #: What goes after the address of the public page. Read by anybody holding
+    #: it, so it is only ever handed to the team.
+    token: str
+    #: Who opened it, as the team names them. Null once they are no longer
+    #: listed.
+    created_by: str | None
+    created_at: datetime
+
+
+class ShareDigestRequest(BaseModel):
+    """Opens a link on one version of a month."""
+
+    month: date = Field(description="Any day of the month")
+    version: int = Field(ge=1, description="Which generation to share")
+
+
+class PublicDigestResponse(BaseModel):
+    """What somebody outside the company reads: a narrative, and no register.
+
+    There is no chronicle, no point d'attention, nobody who asked for it and no
+    teammate arriving or leaving: this type has no field for any of them.
+    """
+
+    month: date
+    version: int
+    generated_at: datetime
+    prose: str | None
+    prose_model: str | None
+    spotlights: list[SpotlightResponse]
+    tally: TallyResponse
+    #: What reached operations, by name. A delay is internal.
+    went_live: list[str]
+    #: The projects and people the text names, to be set in bold. Only those
+    #: the text says, never the ones the register knows and it left out.
+    names: list[str]

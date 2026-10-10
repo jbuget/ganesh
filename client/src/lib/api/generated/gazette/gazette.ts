@@ -25,6 +25,10 @@ import type {
   GenerateDigestRequest,
   GetDigestParams,
   HTTPValidationError,
+  ListShareLinksParams,
+  PublicDigestResponse,
+  ShareDigestRequest,
+  ShareLinkResponse,
 } from "../model";
 
 import { bffFetcher } from "../../fetcher";
@@ -347,3 +351,568 @@ export const useGenerateDigest = <TError = HTTPValidationError, TContext = unkno
 > => {
   return useMutation(getGenerateDigestMutationOptions(options), queryClient);
 };
+export type createShareLinkResponse201 = {
+  data: ShareLinkResponse;
+  status: 201;
+};
+
+export type createShareLinkResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type createShareLinkResponseSuccess = createShareLinkResponse201 & {
+  headers: Headers;
+};
+export type createShareLinkResponseError = createShareLinkResponse422 & {
+  headers: Headers;
+};
+
+export type createShareLinkResponse =
+  createShareLinkResponseSuccess | createShareLinkResponseError;
+
+export const getCreateShareLinkUrl = () => {
+  return `/api/v1/gazette/share-links`;
+};
+
+/**
+ * Opens a link on one version of a digest: its narrative, read-only.
+ * @summary Create Share Link
+ */
+export const createShareLink = async (
+  shareDigestRequest: ShareDigestRequest,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<createShareLinkResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(
+      h,
+    )) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return bffFetcher<createShareLinkResponse>(getCreateShareLinkUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(shareDigestRequest),
+  });
+};
+
+export const getCreateShareLinkMutationKey = () => ["createShareLink"] as const;
+
+export const getCreateShareLinkMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createShareLink>>,
+    TError,
+    CreateShareLinkMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createShareLink>>,
+  TError,
+  CreateShareLinkMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateShareLinkMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createShareLink>>,
+    CreateShareLinkMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createShareLink(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateShareLinkMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createShareLink>>
+>;
+export type CreateShareLinkMutationBody = ShareDigestRequest;
+export type CreateShareLinkMutationError = HTTPValidationError;
+export type CreateShareLinkMutationVariables = { data: ShareDigestRequest };
+
+/**
+ * @summary Create Share Link
+ */
+export const useCreateShareLink = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createShareLink>>,
+      TError,
+      CreateShareLinkMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createShareLink>>,
+  TError,
+  CreateShareLinkMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateShareLinkMutationOptions(options), queryClient);
+};
+export type listShareLinksResponse200 = {
+  data: ShareLinkResponse[];
+  status: 200;
+};
+
+export type listShareLinksResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listShareLinksResponseSuccess = listShareLinksResponse200 & {
+  headers: Headers;
+};
+export type listShareLinksResponseError = listShareLinksResponse422 & {
+  headers: Headers;
+};
+
+export type listShareLinksResponse =
+  listShareLinksResponseSuccess | listShareLinksResponseError;
+
+export const getListShareLinksUrl = (params: ListShareLinksParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/gazette/share-links?${stringifiedParams}`
+    : `/api/v1/gazette/share-links`;
+};
+
+/**
+ * The links still open on a version, for the whole team to see.
+ * @summary List Share Links
+ */
+export const listShareLinks = async (
+  params: ListShareLinksParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listShareLinksResponse> => {
+  return bffFetcher<listShareLinksResponse>(getListShareLinksUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListShareLinksQueryKey = (params?: ListShareLinksParams) => {
+  return [`/api/v1/gazette/share-links`, ...(params ? [params] : [])] as const;
+};
+
+export const getListShareLinksQueryOptions = <
+  TData = Awaited<ReturnType<typeof listShareLinks>>,
+  TError = HTTPValidationError,
+>(
+  params: ListShareLinksParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listShareLinks>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListShareLinksQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listShareLinks>>> = ({
+    signal,
+  }) => listShareLinks(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listShareLinks>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListShareLinksQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listShareLinks>>
+>;
+export type ListShareLinksQueryError = HTTPValidationError;
+
+export function useListShareLinks<
+  TData = Awaited<ReturnType<typeof listShareLinks>>,
+  TError = HTTPValidationError,
+>(
+  params: ListShareLinksParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listShareLinks>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listShareLinks>>,
+          TError,
+          Awaited<ReturnType<typeof listShareLinks>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListShareLinks<
+  TData = Awaited<ReturnType<typeof listShareLinks>>,
+  TError = HTTPValidationError,
+>(
+  params: ListShareLinksParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listShareLinks>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listShareLinks>>,
+          TError,
+          Awaited<ReturnType<typeof listShareLinks>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListShareLinks<
+  TData = Awaited<ReturnType<typeof listShareLinks>>,
+  TError = HTTPValidationError,
+>(
+  params: ListShareLinksParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listShareLinks>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Share Links
+ */
+
+export function useListShareLinks<
+  TData = Awaited<ReturnType<typeof listShareLinks>>,
+  TError = HTTPValidationError,
+>(
+  params: ListShareLinksParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listShareLinks>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListShareLinksQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type revokeShareLinkResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type revokeShareLinkResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type revokeShareLinkResponseSuccess = revokeShareLinkResponse204 & {
+  headers: Headers;
+};
+export type revokeShareLinkResponseError = revokeShareLinkResponse422 & {
+  headers: Headers;
+};
+
+export type revokeShareLinkResponse =
+  revokeShareLinkResponseSuccess | revokeShareLinkResponseError;
+
+export const getRevokeShareLinkUrl = (linkId: number) => {
+  return `/api/v1/gazette/share-links/${linkId}`;
+};
+
+/**
+ * Closes a link. Anyone on the team may, whoever opened it.
+ * @summary Revoke Share Link
+ */
+export const revokeShareLink = async (
+  linkId: number,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<revokeShareLinkResponse> => {
+  return bffFetcher<revokeShareLinkResponse>(getRevokeShareLinkUrl(linkId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRevokeShareLinkMutationKey = () => ["revokeShareLink"] as const;
+
+export const getRevokeShareLinkMutationOptions = <
+  TError = HTTPValidationError,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof revokeShareLink>>,
+    TError,
+    RevokeShareLinkMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof bffFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof revokeShareLink>>,
+  TError,
+  RevokeShareLinkMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRevokeShareLinkMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof revokeShareLink>>,
+    RevokeShareLinkMutationVariables
+  > = (props) => {
+    const { linkId } = props ?? {};
+
+    return revokeShareLink(linkId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RevokeShareLinkMutationResult = NonNullable<
+  Awaited<ReturnType<typeof revokeShareLink>>
+>;
+
+export type RevokeShareLinkMutationError = HTTPValidationError;
+export type RevokeShareLinkMutationVariables = { linkId: number };
+
+/**
+ * @summary Revoke Share Link
+ */
+export const useRevokeShareLink = <TError = HTTPValidationError, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof revokeShareLink>>,
+      TError,
+      RevokeShareLinkMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof revokeShareLink>>,
+  TError,
+  RevokeShareLinkMutationVariables,
+  TContext
+> => {
+  return useMutation(getRevokeShareLinkMutationOptions(options), queryClient);
+};
+export type readSharedDigestResponse200 = {
+  data: PublicDigestResponse;
+  status: 200;
+};
+
+export type readSharedDigestResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type readSharedDigestResponseSuccess = readSharedDigestResponse200 & {
+  headers: Headers;
+};
+export type readSharedDigestResponseError = readSharedDigestResponse422 & {
+  headers: Headers;
+};
+
+export type readSharedDigestResponse =
+  readSharedDigestResponseSuccess | readSharedDigestResponseError;
+
+export const getReadSharedDigestUrl = (token: string) => {
+  return `/api/v1/gazette/shared/${token}`;
+};
+
+/**
+ * What a link opens. No sign-in: the token is the whole of the right.
+ * @summary Read Shared Digest
+ */
+export const readSharedDigest = async (
+  token: string,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<readSharedDigestResponse> => {
+  return bffFetcher<readSharedDigestResponse>(getReadSharedDigestUrl(token), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getReadSharedDigestQueryKey = (token: string) => {
+  return [`/api/v1/gazette/shared/${token}`] as const;
+};
+
+export const getReadSharedDigestQueryOptions = <
+  TData = Awaited<ReturnType<typeof readSharedDigest>>,
+  TError = HTTPValidationError,
+>(
+  token: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof readSharedDigest>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getReadSharedDigestQueryKey(token);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof readSharedDigest>>> = ({
+    signal,
+  }) => readSharedDigest(token, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: token !== null && token !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof readSharedDigest>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ReadSharedDigestQueryResult = NonNullable<
+  Awaited<ReturnType<typeof readSharedDigest>>
+>;
+export type ReadSharedDigestQueryError = HTTPValidationError;
+
+export function useReadSharedDigest<
+  TData = Awaited<ReturnType<typeof readSharedDigest>>,
+  TError = HTTPValidationError,
+>(
+  token: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof readSharedDigest>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof readSharedDigest>>,
+          TError,
+          Awaited<ReturnType<typeof readSharedDigest>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useReadSharedDigest<
+  TData = Awaited<ReturnType<typeof readSharedDigest>>,
+  TError = HTTPValidationError,
+>(
+  token: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof readSharedDigest>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof readSharedDigest>>,
+          TError,
+          Awaited<ReturnType<typeof readSharedDigest>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReadSharedDigest<
+  TData = Awaited<ReturnType<typeof readSharedDigest>>,
+  TError = HTTPValidationError,
+>(
+  token: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof readSharedDigest>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read Shared Digest
+ */
+
+export function useReadSharedDigest<
+  TData = Awaited<ReturnType<typeof readSharedDigest>>,
+  TError = HTTPValidationError,
+>(
+  token: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof readSharedDigest>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getReadSharedDigestQueryOptions(token, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}

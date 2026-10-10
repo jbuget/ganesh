@@ -9,6 +9,18 @@ describe("the open addresses", () => {
     expect(isOpenPath("/api/auth/callback/azure-ad")).toBe(true);
   });
 
+  it("lets a shared digest through, and the one route it reads", () => {
+    expect(isOpenPath("/p/gazette/abc123")).toBe(true);
+    expect(isOpenPath("/api/v1/gazette/shared/abc123")).toBe(true);
+  });
+
+  it("opens nothing beside it: not the team's gazette, not the links' management", () => {
+    expect(isOpenPath("/gazette")).toBe(false);
+    expect(isOpenPath("/p/other")).toBe(false);
+    expect(isOpenPath("/api/v1/gazette")).toBe(false);
+    expect(isOpenPath("/api/v1/gazette/share-links")).toBe(false);
+  });
+
   /** What is not named is closed: forgetting a screen protects it. */
   it("closes everything else, the API included", () => {
     expect(isOpenPath("/")).toBe(false);

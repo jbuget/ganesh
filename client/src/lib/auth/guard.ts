@@ -6,7 +6,17 @@
  * rather than opens it.
  */
 const OPEN_PATHS = ["/sign-in"];
-const OPEN_PREFIXES = ["/api/auth/", "/_next/", "/favicon", "/icon"];
+const OPEN_PREFIXES = [
+  "/api/auth/",
+  "/_next/",
+  "/favicon",
+  "/icon",
+  // A shared digest: the page, and the one route of the API it reads. The
+  // token in the address is the whole of the right, and nothing else of the
+  // API is opened alongside it.
+  "/p/gazette/",
+  "/api/v1/gazette/shared/",
+];
 
 export function isOpenPath(pathname: string): boolean {
   if (OPEN_PATHS.includes(pathname)) return true;

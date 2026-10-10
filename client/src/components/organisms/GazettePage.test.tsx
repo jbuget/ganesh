@@ -19,6 +19,11 @@ const gazette = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/use-gazette", () => ({ useGazette: () => gazette }));
+vi.mock("@/components/organisms/SharePanel", () => ({
+  SharePanel: ({ version }: { version: number }) => (
+    <button type="button">Partager la version {version}</button>
+  ),
+}));
 
 function aDigest(over: Partial<DigestResponse> = {}): DigestResponse {
   return {
@@ -82,6 +87,20 @@ beforeEach(() => {
 });
 
 describe("GazettePage", () => {
+  it("offers to share the version on screen", () => {
+    render(<GazettePage />);
+
+    expect(screen.getByRole("button", { name: "Partager la version 1" })).toBeVisible();
+  });
+
+  it("offers nothing to share on a month nobody has generated", () => {
+    gazette.digest = aDigest({ is_generated: false, version: null });
+
+    render(<GazettePage />);
+
+    expect(screen.queryByRole("button", { name: /Partager/ })).toBeNull();
+  });
+
   it("names the month it is reading", () => {
     render(<GazettePage />);
 

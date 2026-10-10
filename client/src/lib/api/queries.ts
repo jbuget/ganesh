@@ -12,7 +12,11 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { useGetAssistant } from "@/lib/api/generated/assistant/assistant";
 import { useGetMonthGrid } from "@/lib/api/generated/entries/entries";
 import { useListTouchedProjects } from "@/lib/api/generated/audit-logs/audit-logs";
-import { useGetDigest } from "@/lib/api/generated/gazette/gazette";
+import {
+  useGetDigest,
+  useListShareLinks,
+  useReadSharedDigest,
+} from "@/lib/api/generated/gazette/gazette";
 import type {
   ActivitySummaryResponse,
   AssistantIndicatorsResponse,
@@ -24,6 +28,8 @@ import type {
   ReadAssistantIndicatorsParams,
   UnansweredPageResponse,
   DigestResponse,
+  PublicDigestResponse,
+  ShareLinkResponse,
   MonthGridResponse,
   MyMoodsResponse,
   NotificationFeedResponse,
@@ -286,6 +292,26 @@ export function useNotifications(
 export function useDigest(month: string, version: number | null) {
   const query = useGetDigest({ month, ...(version === null ? {} : { version }) });
   return { ...query, digest: successOf<DigestResponse>(query.data) };
+}
+
+/**
+ * What a link opens, read by somebody who has not signed in.
+ *
+ * Never retried: a link that opens nothing is a link that was closed, and
+ * asking again would only make the reader wait to be told so.
+ */
+export function useSharedDigest(token: string) {
+  const query = useReadSharedDigest(token, { query: { retry: false } });
+  return { ...query, digest: successOf<PublicDigestResponse>(query.data) };
+}
+
+/** The links still open on one version of a digest. */
+export function useShareLinks(month: string, version: number | null) {
+  const query = useListShareLinks(
+    { month, version: version ?? 1 },
+    { query: { enabled: version !== null } },
+  );
+  return { ...query, links: successOf<ShareLinkResponse[]>(query.data) ?? [] };
 }
 
 /**

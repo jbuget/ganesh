@@ -22,6 +22,7 @@ from src.modules.projects.domain.entities.project import (
 )
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.users.domain.entities.user import Role, User
+from src.shared.enums.team import Team
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
@@ -88,11 +89,13 @@ def a_use_case(
     projects_in_the_list: list[Project] | None = None,
     updates: InMemoryProjectUpdateRepository | None = None,
     entries: InMemoryEntryRepository | None = None,
+    users: InMemoryUserRepository | None = None,
 ) -> tuple[GenerateDigestUseCase, InMemoryDigestRepository, InMemoryAuditLogRepository]:
     audit_logs = InMemoryAuditLogRepository()
     digests = InMemoryDigestRepository()
     use_case = GenerateDigestUseCase(
-        users=InMemoryUserRepository([a_teammate(), a_teammate(2, "Sam Okafor")]),
+        users=users
+        or InMemoryUserRepository([a_teammate(), a_teammate(2, "Sam Okafor")]),
         projects=InMemoryProjectRepository(projects_in_the_list or [a_project()]),
         audit_logs=audit_logs,
         digests=digests,
@@ -542,3 +545,66 @@ class TestNoise:
             MovementKind.PROJECT_ARCHIVED,
         }
         assert writer.dossiers[0].quiet == {8}
+
+
+class TestWhoseComingAndGoingIsTold:
+    @staticmethod
+    def newcomer(user_id: int, name: str, team: Team | None) -> User:
+        return User(
+            id=user_id,
+            entra_oid=f"oid-{user_id}",
+            email=f"user{user_id}@waat.fr",
+            display_name=name,
+            role=Role.TEAMMATE,
+            department=team.department if team else None,
+            team=team,
+        )
+
+    async def run(self, *teams: Team | None):
+        writer = StubProseWriter()
+        users = InMemoryUserRepository(
+            [a_teammate()]
+            + [
+                self.newcomer(10 + i, f"Recrue {i}", team)
+                for i, team in enumerate(teams)
+            ]
+        )
+        use_case, _, audit_logs = a_use_case(writer, users=users)
+        for i, _ in enumerate(teams):
+            await audit_logs.add(
+                AuditLog(
+                    action=AuditAction.USER_CREATE,
+                    actor_id=1,
+                    target_user_id=10 + i,
+                    at=paris(2026, 9, 3, 9),
+                )
+            )
+        digest = await use_case.execute(
+            GenerateDigestCommand(month=MONTH, actor_id=1), at=GENERATED_AT
+        )
+        return digest, writer
+
+    @pytest.mark.asyncio
+    async def test_an_engineer_who_joined_is_named(self) -> None:
+        digest, _ = await self.run(Team.ENGINEERING)
+
+        assert [m.subject for m in digest.brief.movements] == ["Recrue 0"]
+
+    @pytest.mark.asyncio
+    async def test_somebody_from_another_team_who_joined_is_not_named(self) -> None:
+        digest, _ = await self.run(Team.ENGINEERING, Team.DATA, None)
+
+        assert [m.subject for m in digest.brief.movements] == ["Recrue 0"]
+
+    @pytest.mark.asyncio
+    async def test_nor_in_what_stands_out(self) -> None:
+        digest, _ = await self.run(Team.DATA)
+
+        assert digest.brief.highlights == []
+
+    @pytest.mark.asyncio
+    async def test_nor_in_what_the_model_is_handed(self) -> None:
+        _, writer = await self.run(Team.DATA)
+
+        facts = writer.dossiers[0].brief.movements
+        assert facts == []

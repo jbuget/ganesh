@@ -64,6 +64,8 @@ class AuditAction(StrEnum):
     API_KEY_UPDATE = "api_key.update"
     API_KEY_REVOKE = "api_key.revoke"
     GAZETTE_GENERATE = "gazette.generate"
+    GAZETTE_SHARE = "gazette.share"
+    GAZETTE_UNSHARE = "gazette.unshare"
     REQUEST_CREATE = "request.create"
     REQUEST_UPDATE = "request.update"
     REQUEST_SUBMIT = "request.submit"

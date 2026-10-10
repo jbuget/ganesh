@@ -30,6 +30,8 @@ from src.modules.projects.domain.entities.project import (
 )
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.users.domain.entities.user import Role, User
+from src.shared.enums.department import Department
+from src.shared.enums.team import Team
 from src.shared.exceptions.domain_exceptions import ConflictError
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
@@ -48,6 +50,8 @@ LEA = User(
     email="l.chen@waat.fr",
     display_name="L. Chen",
     role=Role.TEAMMATE,
+    department=Department.INFORMATION_SYSTEMS,
+    team=Team.ENGINEERING,
 )
 GANESH = Project(
     id=7, label="Ganesh", kind=ProjectKind.PROJECT, status=ProjectStatus.DEVELOPMENT

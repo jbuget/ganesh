@@ -929,8 +929,12 @@ Two things it will not do, and adding either would be a decision:
   point d'attention is about a mission, never about a person** — `Highlight`
   refuses the combination rather than trusting whoever adds the next rule. An
   arrival, a return or a departure does name the person, plainly: that is a
-  fact of the month, not a reproach. A gazette that said who was late would be
-  read as a list of names, whatever else it said.
+  fact of the month, not a reproach. Only the engineering team's, though
+  (`is_told`): the gazette is read across the company and speaks for that team,
+  so somebody in another team — or whose team nobody has said — is not
+  announced, neither in the facts, nor in what stands out, nor in what the model
+  is handed. A gazette that said who was late would be read as a list of names,
+  whatever else it said.
 - **Tell its own story.** Generating a digest is traced like any other gesture
   and left out of the next one, or the gazette would fill up with itself.
 

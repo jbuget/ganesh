@@ -141,6 +141,8 @@ SURFACE_OF: dict[AuditAction, Surface] = {
     AuditAction.SIMULATION_DELETE: Surface.PLANNING,
     # Reading the month back.
     AuditAction.GAZETTE_GENERATE: Surface.GAZETTE,
+    AuditAction.GAZETTE_SHARE: Surface.GAZETTE,
+    AuditAction.GAZETTE_UNSHARE: Surface.GAZETTE,
     # Saying which days one works, and from where. A line of its own: it is
     # declared by everyone for themselves, and folded into team
     # administration it would read as a busy month at the manager's desk.

@@ -24,6 +24,7 @@ import {
   namesToSetApart,
   paragraphsOf,
   projectLabels,
+  sharedAddress,
   spotlightFigures,
   tallyLines,
   versionLabel,
@@ -710,5 +711,13 @@ describe("gazetteTeaser", () => {
 
   it("says so rather than counting nothing, on a month that left no trace", () => {
     expect(gazetteTeaser(digest({}))).toBe("Rien à signaler ce mois-ci.");
+  });
+});
+
+describe("sharedAddress", () => {
+  it("puts the token after the public page", () => {
+    expect(sharedAddress("https://ganesh.waat.tools", "abc")).toBe(
+      "https://ganesh.waat.tools/p/gazette/abc",
+    );
   });
 });
