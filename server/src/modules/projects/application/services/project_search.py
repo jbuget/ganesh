@@ -14,6 +14,7 @@ from src.modules.projects.domain.entities.project import (
     ProjectPriority,
     ProjectStatus,
 )
+from src.modules.users.domain.services.user_lookup import designates
 from src.shared.enums.department import Department
 
 
@@ -34,7 +35,7 @@ class ProjectCriteria:
     department: Department | None = None
     is_followed: bool | None = None
     is_archived: bool | None = None
-    #: A part of the name of someone who answers for the project or works on it.
+    #: A part of the name of someone declared on the project, at any title.
     person: str | None = None
 
 
@@ -63,9 +64,8 @@ def _keeps(mission: ListedProject, criteria: ProjectCriteria) -> bool:
 
 
 def _has_person(mission: ListedProject, person: str) -> bool:
-    return any(
-        _contains(who.label, person) for who in mission.leads + mission.contributors
-    )
+    on_it = mission.leads + mission.tech_leads + mission.contributors
+    return any(designates(who, person) for who in on_it)
 
 
 def _contains(text: str, part: str) -> bool:

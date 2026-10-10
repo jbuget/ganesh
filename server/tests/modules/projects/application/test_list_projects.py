@@ -120,6 +120,14 @@ async def test_leads_and_contributors_are_told_apart() -> None:
     assert [u.display_name for u in listed[0].contributors] == ["N. Garo"]
 
 
+async def test_technical_leads_are_listed_apart_from_the_others() -> None:
+    listed = await build({(10, ProjectRole.TECH_LEAD): [2]}).execute()
+
+    assert [u.display_name for u in listed[0].tech_leads] == ["N. Garo"]
+    assert listed[0].leads == []
+    assert listed[0].contributors == []
+
+
 async def test_the_assigned_are_listed_in_alphabetical_order() -> None:
     """The list is scanned by eye: two columns must line up."""
     listed = await build({(10, ProjectRole.CONTRIBUTOR): [2, 1]}).execute()

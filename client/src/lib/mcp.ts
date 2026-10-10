@@ -140,6 +140,12 @@ export const MCP_TOOLS: McpTool[] = [
     scope: "projects:read",
   },
   {
+    name: "person_projects",
+    answers:
+      "Dit sur quels projets est une personne, et à quel titre : référent projet, référent technique ou intervenant actuel. Le nom peut être approximatif ; plusieurs personnes qui correspondent sont toutes lues.",
+    scope: "projects:read",
+  },
+  {
     name: "project_brief",
     answers:
       "Dit où en est un projet : sa phase et depuis quand, ce qui a été consommé face à l'estimation, la date annoncée, qui le porte et les lots rattachés.",

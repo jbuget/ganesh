@@ -4,7 +4,9 @@ from src.modules.users.domain.entities.user import Role, User
 from src.modules.users.domain.services.user_lookup import (
     AmbiguousUserError,
     NoSuchUserError,
+    designates,
     find_one,
+    matching,
 )
 
 
@@ -60,3 +62,28 @@ def test_find_one_several_matches_are_listed_not_guessed() -> None:
         find_one([NINO, NINO_TWIN], "Nino Garo")
 
     assert raised.value.candidates == [NINO, NINO_TWIN]
+
+
+def test_designates_a_part_of_a_name_is_enough_whatever_its_case_and_accents() -> None:
+    assert designates(LEA, " CHE ")
+    assert designates(LEA, "lea")
+
+
+def test_designates_nobody_with_a_blank_name() -> None:
+    assert not designates(LEA, "   ")
+
+
+def test_designates_another_name_does_not_match() -> None:
+    assert not designates(LEA, "Garo")
+
+
+def test_matching_returns_every_account_a_part_of_the_name_designates() -> None:
+    assert matching([LEA, LEA_LONGER, NINO], "léa") == [LEA, LEA_LONGER]
+
+
+def test_matching_an_exact_name_wins_over_a_longer_one() -> None:
+    assert matching([LEA, LEA_LONGER], "Léa Chen") == [LEA]
+
+
+def test_matching_nobody_is_an_empty_list_rather_than_an_error() -> None:
+    assert matching([LEA, NINO], "Zoé") == []

@@ -26,6 +26,7 @@ from src.mcp.tools import (
     portfolio,
     projects,
     reviewing,
+    staffing,
     updates,
 )
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
@@ -41,6 +42,7 @@ TOOL_MODULES = (
     portfolio,
     projects,
     reviewing,
+    staffing,
     updates,
 )
 

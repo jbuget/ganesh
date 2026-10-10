@@ -30,6 +30,7 @@ def a_user(user_id: int, name: str) -> User:
 def listed(label: str, **fields: object) -> ListedProject:
     leads = fields.pop("leads", [])
     contributors = fields.pop("contributors", [])
+    tech_leads = fields.pop("tech_leads", [])
     departments = fields.pop("departments", [])
     project = Project(
         id=abs(hash(label)) % 1000,
@@ -42,6 +43,7 @@ def listed(label: str, **fields: object) -> ListedProject:
         entries=0,
         sub_projects=0,
         leads=leads,  # type: ignore[arg-type]
+        tech_leads=tech_leads,  # type: ignore[arg-type]
         contributors=contributors,  # type: ignore[arg-type]
         departments=departments,  # type: ignore[arg-type]
     )
@@ -125,6 +127,12 @@ class TestByPerson:
     def test_a_person_matches_who_answers_for_it_or_works_on_it(self) -> None:
         found = matching(ALL, ProjectCriteria(person="léa"))
         assert labels(found) == ["WAATcher", "Nomad"]
+
+    def test_a_technical_lead_counts_as_being_on_the_project(self) -> None:
+        on_call = listed("Intranet", tech_leads=[a_user(3, "Zoé Brun")])
+        assert labels(matching([on_call, NOMAD], ProjectCriteria(person="zoe"))) == [
+            "Intranet"
+        ]
 
     def test_a_person_matches_nobody_when_nobody_is_on_it(self) -> None:
         assert matching(ALL, ProjectCriteria(person="Zoé")) == []
