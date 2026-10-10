@@ -1,9 +1,10 @@
 """What one person is owed by letter: what is waiting, and how much of it.
 
-The bell carries the detail and the read state. A letter carries neither — it
-says how much is waiting and of what kind, and leads back to the inbox. It
-points; it does not copy. That is what lets it stay three lines long, and what
-stops two places from disagreeing about what somebody has seen.
+The bell carries the detail and the read state. A letter carries the count of
+what is waiting by kind, and — for the few most recent — who did what on which
+project, with the address that opens it. Never what somebody *wrote*: a letter
+is read on a lock screen and over a shoulder. The read state stays in the
+inbox, which stops two places from disagreeing about what somebody has seen.
 """
 
 from dataclasses import dataclass
@@ -21,6 +22,22 @@ class ReminderLine:
 
 
 @dataclass(frozen=True)
+class ReminderEntry:
+    """One thing waiting, said as a line: who did what, on what, and where.
+
+    `path` is an address on the client, never a full URL — the letter is what
+    knows where the client lives. It is `None` when there is nothing left to
+    open: a link to a 404 is worse than none.
+    """
+
+    who: str
+    what: str
+    about: str | None = None
+    path: str | None = None
+    repeated: int = 1
+
+
+@dataclass(frozen=True)
 class Reminder:
     """What one reader is owed, gathered by kind.
 
@@ -30,6 +47,9 @@ class Reminder:
     """
 
     lines: tuple[ReminderLine, ...]
+    #: The things waiting, most recent first. Empty is allowed: the counts
+    #: above are what a letter cannot do without, the lines are what it adds.
+    entries: tuple[ReminderEntry, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.lines:

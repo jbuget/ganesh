@@ -17,6 +17,11 @@ from src.modules.notifications.domain.repositories.mailer import (
     Mailer,
     MailerUnavailableError,
 )
+from src.modules.projects.domain.entities.project import (
+    Project,
+    ProjectKind,
+    ProjectStatus,
+)
 from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import (
@@ -26,6 +31,7 @@ from src.shared.exceptions.domain_exceptions import (
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryNotificationRepository,
+    InMemoryProjectRepository,
     InMemoryUserRepository,
 )
 
@@ -103,8 +109,20 @@ def waiting_for(recipient_id: int, at: datetime = TUESDAY) -> Notification:
     )
 
 
+def a_project(project_id: int = 42, label: str = "Refonte du site") -> Project:
+    return Project(
+        id=project_id,
+        label=label,
+        kind=ProjectKind.PROJECT,
+        status=ProjectStatus.DEVELOPMENT,
+    )
+
+
 def build(
-    readers: list[User], waiting: list[Notification], mailer: Mailer | None = None
+    readers: list[User],
+    waiting: list[Notification],
+    mailer: Mailer | None = None,
+    projects: list[Project] | None = None,
 ):
     people = InMemoryUserRepository(readers)
     inbox = InMemoryNotificationRepository()
@@ -116,6 +134,7 @@ def build(
     use_case = SendDueRemindersUseCase(
         users=people,
         notifications=inbox,
+        projects=InMemoryProjectRepository(projects or []),
         mailer=post,
         audit_logs=audit,
         web_url=WEB,
@@ -397,3 +416,46 @@ class TestWhoMayAskForARound:
 
         assert await use_case.execute(ReminderCadence.DAILY, now=WEDNESDAY) == 1
         assert isinstance(post, CollectingMailer) and len(post.sent) == 1
+
+
+class TestWhatTheLetterSays:
+    async def test_a_letter_names_who_replied_and_leads_to_the_update(self) -> None:
+        colleague = a_reader(5, "s.martin@waat.fr")
+        colleague.display_name = "Sylvain Martin"
+        reply = Notification(
+            recipient_id=2,
+            kind=NotificationKind.UPDATE_REPLIED,
+            actor_id=5,
+            at=TUESDAY,
+            project_id=42,
+            payload={"update_id": 11},
+        )
+        use_case, _, post, _, _ = build(
+            [a_reader(2, "l.chen@waat.fr"), colleague], [reply], projects=[a_project()]
+        )
+
+        await use_case.execute(ReminderCadence.DAILY, now=WEDNESDAY)
+
+        assert isinstance(post, CollectingMailer)
+        letter = post.sent[0]
+        assert "Sylvain Martin a répondu à une mise à jour sur Refonte du site" in (
+            letter.text
+        )
+        assert f"{WEB}/notifications?mission=42&tab=updates&update=11" in letter.text
+
+    async def test_a_gone_project_still_gets_its_line_without_a_link(self) -> None:
+        reply = Notification(
+            recipient_id=2,
+            kind=NotificationKind.UPDATE_REPLIED,
+            actor_id=5,
+            at=TUESDAY,
+            project_id=42,
+            payload={"project_label": "Ancien site", "update_id": 11},
+        )
+        use_case, _, post, _, _ = build([a_reader(2, "l.chen@waat.fr")], [reply])
+
+        await use_case.execute(ReminderCadence.DAILY, now=WEDNESDAY)
+
+        assert isinstance(post, CollectingMailer)
+        assert "Ancien site" in post.sent[0].text
+        assert "mission=42" not in post.sent[0].text

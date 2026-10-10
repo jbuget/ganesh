@@ -106,6 +106,7 @@ def build_send_due_reminders_use_case(
     return SendDueRemindersUseCase(
         users=SqlUserRepository(session),
         notifications=SqlNotificationRepository(session),
+        projects=SqlProjectRepository(session),
         mailer=get_mailer(),
         audit_logs=SqlAuditLogRepository(session),
         web_url=get_settings().web_url,

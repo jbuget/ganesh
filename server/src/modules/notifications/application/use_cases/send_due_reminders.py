@@ -1,6 +1,7 @@
 """Writing to everybody on one cadence who has something waiting."""
 
 import logging
+from dataclasses import dataclass, replace
 from datetime import datetime
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
@@ -14,8 +15,12 @@ from src.modules.notifications.domain.repositories.mailer import (
 from src.modules.notifications.domain.repositories.notification_repository import (
     NotificationRepository,
 )
+from src.modules.notifications.domain.services.reminder_entries import describe_all
 from src.modules.notifications.domain.services.reminder_letter import compose
 from src.modules.notifications.domain.services.roundup import roundup
+from src.modules.projects.domain.repositories.project_repository import (
+    ProjectRepository,
+)
 from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
@@ -26,6 +31,14 @@ from src.shared.exceptions.domain_exceptions import (
 from src.shared.utils import clock
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class _Names:
+    """The two directories a round names its lines from."""
+
+    people: dict[int, str]
+    projects: dict[int, str]
 
 
 class SendDueRemindersUseCase:
@@ -44,12 +57,14 @@ class SendDueRemindersUseCase:
         self,
         users: UserRepository,
         notifications: NotificationRepository,
+        projects: ProjectRepository,
         mailer: Mailer,
         audit_logs: AuditLogRepository,
         web_url: str,
     ) -> None:
         self._users = users
         self._notifications = notifications
+        self._projects = projects
         self._mailer = mailer
         self._audit_logs = audit_logs
         self._web_url = web_url
@@ -89,13 +104,18 @@ class SendDueRemindersUseCase:
             return 0
 
         sent = 0
+        names: _Names | None = None
         try:
             for reader in await self._users.list_all():
                 if reader.id is None or not reader.is_written_to():
                     continue
                 if reader.reminder_cadence is not cadence:
                     continue
-                if await self._write_to(reader, now):
+                # Read once for the whole round, and only if somebody is owed
+                # a letter: the lines of every letter name from the same two
+                # directories.
+                names = names or await self._read_names()
+                if await self._write_to(reader, now, names):
                     sent += 1
         finally:
             # Traced even when the round died halfway: « j'ai lancé la campagne
@@ -125,7 +145,26 @@ class SendDueRemindersUseCase:
             )
         )
 
-    async def _write_to(self, reader: User, now: datetime) -> bool:
+    async def _read_names(self) -> "_Names":
+        """Who and which project a line may name, gone ones included.
+
+        Someone who has left still signs what they did while they were here,
+        and an archived project still names the line that speaks of it.
+        """
+        return _Names(
+            people={
+                person.id: person.label
+                for person in await self._users.list_all(include_inactive=True)
+                if person.id is not None
+            },
+            projects={
+                project.id: project.label
+                for project in await self._projects.list_all(include_inactive=True)
+                if project.id is not None
+            },
+        )
+
+    async def _write_to(self, reader: User, now: datetime, names: "_Names") -> bool:
         """One reader's letter. Tells whether it actually went out."""
         assert reader.id is not None
         waiting = await self._notifications.list_waiting_since(
@@ -135,6 +174,10 @@ class SendDueRemindersUseCase:
         if reminder is None:
             return False
 
+        reminder = replace(
+            reminder,
+            entries=describe_all(waiting, names.people, names.projects),
+        )
         letter = compose(reminder, to=reader.email, web_url=self._web_url)
         try:
             await self._mailer.send(letter)

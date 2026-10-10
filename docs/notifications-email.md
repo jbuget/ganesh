@@ -50,9 +50,13 @@ So the letter is rare, short, and **never empty**. A letter that arrives
 saying nothing teaches the reader that it can be ignored, and the next one is
 too.
 
-Its job is not to carry the news. Its job is to get somebody to open the
-inbox, where the news already is and where the read state lives. **It points;
-it does not copy.** That is what lets it stay three lines long.
+Its job is to get somebody to open the inbox, where the news already is and
+where the read state lives. It does so by counting, and by listing **the ten
+most recent things waiting**, each as *who did what on which project* with the
+address that opens it. It never carries **what somebody wrote**: a letter is
+read on a lock screen and over a shoulder. Past ten it says how many it left
+out and leads to the inbox — a long list is what makes somebody filter the one
+letter that mattered.
 
 ## Where it lives
 
@@ -86,22 +90,40 @@ Everywhere else, what the reader reads is composed by the interface:
 sentence, and it is under test because a notification nobody can read is not
 one. A letter has no browser in the loop, so that table cannot serve it.
 
-The resolution is not to copy the sentences but to **need much less of them**.
-The letter groups by kind and counts:
+The letter groups by kind and counts, then lists the most recent lines:
 
 ```
 Objet : Ganesh — 3 notifications non lues
 
-  2 mentions
-  1 mois rouvert
+  - 1 mois rouvert
+  - 2 réponses
 
-  Ouvrir : https://ganesh.waat.tools/notifications
+Détail, du plus récent au plus ancien :
+
+  - Sylvain Martin a répondu à une mise à jour sur Ganesh
+    https://ganesh.waat.tools/notifications?mission=7&tab=updates&update=478
+  - Gaëlle Belhadj a rouvert votre feuille de temps de septembre 2026
+    https://ganesh.waat.tools/timesheet?month=2026-09
+
+Tout lire : https://ganesh.waat.tools/notifications
 ```
 
-One French noun per kind, singular and plural, and nothing composed. It lives
-in `domain/services/reminder_letter.py`, and a test asserts that **every
-`NotificationKind` has one** — a kind added tomorrow cannot silently render a
-blank line. The same discipline as the wording table it does not share.
+Two tables, both under test: one French noun per kind for the counts
+(`domain/services/reminder_letter.py`), and one sentence per kind plus the
+address it leads to (`domain/services/reminder_entries.py`). A test asserts
+that **every `NotificationKind` has both** — a kind added tomorrow cannot
+silently render a blank line. The sentences and addresses mirror
+`client/src/lib/notifications.ts`, which is the interface's own table: the
+letter has no browser in the loop, so it cannot reuse it. Two places say the
+same thing; what keeps them from drifting is that each is a table a kind must
+appear in.
+
+The names — the person who acted, the project — are read **once per round**
+from the whole directories, former colleagues and archived projects included:
+somebody who has left still signs what they did. A project that no longer
+exists keeps the name the line carried and leads nowhere, because a link to a
+404 is worse than none. Both are typed by people, so the HTML part escapes
+every one of them.
 
 The letter goes out as `multipart/alternative`: a text part that says all of
 the above, and an HTML part that says it again with a link. Plain on purpose —
