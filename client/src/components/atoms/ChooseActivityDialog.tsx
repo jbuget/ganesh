@@ -22,9 +22,9 @@ interface ChooseActivityDialogProps {
 /**
  * Which trade a mission is about to be declared under.
  *
- * Only ever opened when there is a choice to make: a mission carrying a
- * single trade is added without asking, because a dialog offering one button
- * is a click taken from the reader for nothing.
+ * Opened even when a single trade is left: a row added without a word is a
+ * row one has to go looking for. The sentence then stops speaking of a choice
+ * and says where the days will go.
  *
  * The trade is asked rather than guessed. It could be read off the person —
  * a developer declares development — but that is exactly what falls apart
@@ -44,8 +44,9 @@ export function ChooseActivityDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Sous quelle activité ?</AlertDialogTitle>
           <AlertDialogDescription>
-            « {mission} » est découpé en plusieurs activités. Choisissez celle sous
-            laquelle vous allez déclarer votre temps.
+            {activities.length > 1
+              ? `« ${mission} » est découpé en plusieurs activités. Choisissez celle sous laquelle vous allez déclarer votre temps.`
+              : `Votre temps sur « ${mission} » sera déclaré sous cette activité.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
 

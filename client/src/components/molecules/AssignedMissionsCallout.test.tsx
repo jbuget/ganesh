@@ -30,14 +30,15 @@ describe("AssignedMissionsCallout", () => {
     );
   });
 
-  it("adds the mission one picks", async () => {
+  it("asks which trade even when the mission carries a single one", async () => {
     const onAdd = vi.fn();
     render(<AssignedMissionsCallout missions={MISSIONS} onAdd={onAdd} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Ajouter Lot 1" }));
+    expect(onAdd).not.toHaveBeenCalled();
 
-    // A single trade is added straight away: a dialog offering one button
-    // takes a click from the reader for nothing.
+    await userEvent.click(screen.getByRole("button", { name: "Développement" }));
+
     expect(onAdd).toHaveBeenCalledWith(3, 300);
   });
 

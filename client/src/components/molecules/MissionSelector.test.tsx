@@ -114,13 +114,22 @@ describe("MissionSelector", () => {
     expect(onSelect).toHaveBeenCalledWith(1, 10);
   });
 
-  it("adds a mission carrying a single trade without asking", async () => {
+  /**
+   * A row added without being seen is a row one has to go looking for: the
+   * dialog says which trade the days will be booked under, even when there
+   * is only one left.
+   */
+  it("still asks when a single trade is left", async () => {
     const { onSelect, user } = open();
 
     await user.click(screen.getByRole("combobox", { name: "Ajouter un projet" }));
     await user.click(await screen.findByText("Portail bailleurs"));
 
-    expect(screen.queryByText("Sous quelle activité ?")).not.toBeInTheDocument();
+    expect(await screen.findByText("Sous quelle activité ?")).toBeInTheDocument();
+    expect(onSelect).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Développement" }));
+
     expect(onSelect).toHaveBeenCalledWith(2, 20);
   });
 

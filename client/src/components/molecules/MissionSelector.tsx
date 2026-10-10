@@ -55,8 +55,9 @@ const asItems = (missions: OfferedMission[]): MissionItem[] =>
  * asks it in.** A panel hanging off the popup went with it: choosing a mission
  * closes the list, and anything the list carried was swept away before the
  * click on a trade could land — which is how one ended up unable to add a
- * second trade on a mission at all. A mission carrying a single free trade is
- * added by clicking it, there being nothing to ask.
+ * second trade on a mission at all. It is asked even when a single trade is
+ * left: a row added without a word is a row one has to go looking for, and
+ * the dialog says which trade the days will be booked under.
  *
  * What is already on the month is out of the list: no two rows for the same
  * mission and trade, and a mission whose every trade is taken drops out.
@@ -97,7 +98,7 @@ export function MissionSelector({
   }
 
   /**
-   * Adds the mission, or asks which trade when there is a choice.
+   * Asks which trade, or adds the mission when it carries none.
    *
    * Off-project work is declared on directly and carries none, so it is added
    * as itself.
@@ -106,10 +107,6 @@ export function MissionSelector({
     setOpen(false);
     if (mission.activities.length === 0) {
       onSelect(mission.projectId, null);
-      return;
-    }
-    if (mission.activities.length === 1) {
-      onSelect(mission.projectId, mission.activities[0].id);
       return;
     }
     setAsking(mission);
@@ -155,7 +152,7 @@ export function MissionSelector({
                           falls to the next line: the row lays itself out. */}
                       <span className="flex w-full items-center gap-1.5">
                         <span className="min-w-0 flex-1 truncate">{mission.label}</span>
-                        {mission.value.activities.length > 1 && (
+                        {mission.value.activities.length > 0 && (
                           // The application's own mark for « ceci ouvre une
                           // question » — the same one the two buttons of this
                           // selector carry. A chevron would promise a submenu
