@@ -29,6 +29,7 @@ def allowed_figures(brief: Brief) -> frozenset[str]:
         tally.requests_filed,
         tally.requests_converted,
     ]
+    figures.append(brief.went_live_count)
     for focus in brief.focus:
         figures += [
             focus.phase_moves,

@@ -18,6 +18,8 @@ import {
   gazetteTeaser,
   highlightSentence,
   isQuietMonth,
+  lateVersion,
+  mayHaveFinishedAnyway,
   missionName,
   movementPredicate,
   movementSentence,
@@ -520,6 +522,30 @@ describe("namesToSetApart", () => {
       "NOMAD",
       "Sam Okafor",
     ]);
+  });
+});
+
+describe("mayHaveFinishedAnyway", () => {
+  it("does not, when the server refused", () => {
+    expect(mayHaveFinishedAnyway(new ApiError(409, "conflict"))).toBe(false);
+    expect(mayHaveFinishedAnyway(new ApiError(422, "invalid"))).toBe(false);
+  });
+
+  it("may, when the host in front of the API gave up", () => {
+    expect(mayHaveFinishedAnyway(new ApiError(504, "timeout"))).toBe(true);
+    expect(mayHaveFinishedAnyway(new ApiError(500, "oops"))).toBe(true);
+  });
+
+  it("may, when no answer came back at all", () => {
+    expect(mayHaveFinishedAnyway(new TypeError("Failed to fetch"))).toBe(true);
+  });
+});
+
+describe("lateVersion", () => {
+  it("says the version that appeared", () => {
+    expect(lateVersion(5)).toBe(
+      "La génération a pris plus de temps que prévu : voici la version 5.",
+    );
   });
 });
 

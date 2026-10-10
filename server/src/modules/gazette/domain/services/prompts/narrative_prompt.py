@@ -171,6 +171,11 @@ def _figures(brief: Brief) -> str:
                 tally.phase_changes, "changement de phase", "changements de phase"
             ),
             _counted(tally.news_posted, "mise à jour publiée", "mises à jour publiées"),
+            _counted(
+                brief.went_live_count,
+                "projet mis en exploitation",
+                "projets mis en exploitation",
+            ),
             _counted(tally.months_validated, "mois validé", "mois validés"),
             _counted(tally.requests_filed, "demande déposée", "demandes déposées"),
             _counted(
