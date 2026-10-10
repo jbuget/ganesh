@@ -1,3 +1,5 @@
+import type { QueryClient } from "@tanstack/react-query";
+
 import type {
   Cause,
   Judgement,
@@ -106,4 +108,22 @@ const THOUSANDS = new Intl.NumberFormat("fr-FR");
 /** « 12 480 », spaced the French way. */
 export function count(value: number): string {
   return THOUSANDS.format(value);
+}
+
+/** Where every reading of the study is asked for: the list, a conversation, the figures. */
+const STUDY_PATH = "/api/v1/admin/assistant/";
+
+/**
+ * Reads the study again wherever it is on screen.
+ *
+ * A question asked or a thumb given from the panel moves what the
+ * administration shows — the panel opens on that screen too — and a figure
+ * that waited for a reload to move would read as a vote nobody kept. Only the
+ * readings on screen are asked for again: for anybody else, nothing is.
+ */
+export function refreshStudy(queryClient: QueryClient): Promise<void> {
+  return queryClient.invalidateQueries({
+    predicate: (query) =>
+      typeof query.queryKey[0] === "string" && query.queryKey[0].startsWith(STUDY_PATH),
+  });
 }

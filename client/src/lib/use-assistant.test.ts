@@ -8,6 +8,9 @@ import { useAssistant } from "./use-assistant";
 
 const api = vi.hoisted(() => ({ askAssistant: vi.fn(), judgeAnswer: vi.fn() }));
 const where = vi.hoisted(() => ({ pathname: "/timesheet" }));
+const cache = vi.hoisted(() => ({ invalidateQueries: vi.fn() }));
+
+vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => cache }));
 
 vi.mock("@/lib/api/generated/assistant/assistant", () => api);
 vi.mock("next/navigation", () => ({ usePathname: () => where.pathname }));
@@ -154,6 +157,27 @@ describe("useAssistant", () => {
 
     expect(api.judgeAnswer).toHaveBeenCalledWith(1, { verdict: "helpful" });
     expect(result.current.turns[0].verdict).toBe("helpful");
+  });
+
+  it("reads the administration's study again once a verdict is kept", async () => {
+    const { result } = renderHook(() => useAssistant());
+    await act(() => result.current.ask("Où en est WAATcher ?"));
+    cache.invalidateQueries.mockClear();
+
+    await act(() => result.current.judge(1, "helpful"));
+
+    expect(cache.invalidateQueries).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves the study alone when the verdict was not kept", async () => {
+    api.judgeAnswer.mockRejectedValue(new Error("network"));
+    const { result } = renderHook(() => useAssistant());
+    await act(() => result.current.ask("Où en est WAATcher ?"));
+    cache.invalidateQueries.mockClear();
+
+    await act(() => result.current.judge(1, "helpful"));
+
+    expect(cache.invalidateQueries).not.toHaveBeenCalled();
   });
 
   it("shows the verdict before the server has kept it", async () => {

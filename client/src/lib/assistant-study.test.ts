@@ -1,3 +1,4 @@
+import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -6,6 +7,7 @@ import {
   asStudyQuery,
   causeLabel,
   hasStudyFilter,
+  refreshStudy,
   seconds,
   share,
 } from "@/lib/assistant-study";
@@ -55,5 +57,29 @@ describe("the figures", () => {
   it("says a share as a whole percentage, and nothing of nothing", () => {
     expect(share(1, 3)).toBe("33 %");
     expect(share(0, 0)).toBe("—");
+  });
+});
+
+describe("reading the study again", () => {
+  it("marks every reading of the study stale, and nothing else", async () => {
+    const queryClient = new QueryClient();
+    const keys = [
+      ["/api/v1/admin/assistant/conversations", { limit: 50 }],
+      ["/api/v1/admin/assistant/conversations/c0nv"],
+      ["/api/v1/admin/assistant/indicators", {}],
+      ["/api/v1/admin/platform"],
+      ["/api/v1/assistant"],
+    ];
+    for (const key of keys) queryClient.setQueryData(key, {});
+
+    await refreshStudy(queryClient);
+
+    expect(keys.map((key) => queryClient.getQueryState(key)?.isInvalidated)).toEqual([
+      true,
+      true,
+      true,
+      false,
+      false,
+    ]);
   });
 });
