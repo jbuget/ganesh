@@ -15,7 +15,12 @@ import { useListTouchedProjects } from "@/lib/api/generated/audit-logs/audit-log
 import { useGetDigest } from "@/lib/api/generated/gazette/gazette";
 import type {
   ActivitySummaryResponse,
+  AssistantIndicatorsResponse,
   AssistantStatusResponse,
+  ConversationDetailResponse,
+  ConversationPageResponse,
+  ListAssistantConversationsParams,
+  ReadAssistantIndicatorsParams,
   DigestResponse,
   MonthGridResponse,
   MyMoodsResponse,
@@ -35,7 +40,12 @@ import { useGetMyMoods, useGetTeamMoods } from "@/lib/api/generated/moods/moods"
 import { useListNotifications } from "@/lib/api/generated/notifications/notifications";
 import type { NotificationFilter } from "@/lib/api/generated/model";
 import { useGetActivitySummary } from "@/lib/api/generated/activity-summary/activity-summary";
-import { useReadPlatform } from "@/lib/api/generated/admin/admin";
+import {
+  useListAssistantConversations,
+  useReadAssistantConversation,
+  useReadAssistantIndicators,
+  useReadPlatform,
+} from "@/lib/api/generated/admin/admin";
 import { useGetStatistics } from "@/lib/api/generated/stats/stats";
 import { useListProjects } from "@/lib/api/generated/projects/projects";
 import {
@@ -65,6 +75,41 @@ export function mutationResult<T>(response: { data: unknown }): T {
 export function usePlatform() {
   const query = useReadPlatform();
   return { ...query, platform: successOf<PlatformResponse>(query.data) };
+}
+
+/**
+ * Everybody's conversations with the assistant, for an administrator to study.
+ *
+ * The previous answer stays on screen while the next is read: asking for more
+ * rows, or for another criterion, must not empty the table for a frame.
+ */
+export function useAssistantConversations(params: ListAssistantConversationsParams) {
+  const query = useListAssistantConversations(params, {
+    query: { placeholderData: keepPreviousData },
+  });
+  return { ...query, page: successOf<ConversationPageResponse>(query.data) };
+}
+
+/** One conversation whole, with what every tool read back. */
+export function useAssistantConversation(conversationId: string | null) {
+  const query = useReadAssistantConversation(conversationId ?? "", {
+    query: { enabled: conversationId !== null },
+  });
+  return {
+    ...query,
+    conversation: successOf<ConversationDetailResponse>(query.data),
+  };
+}
+
+/** What the exchanges kept say about the assistant, under the same criteria. */
+export function useAssistantIndicators(params: ReadAssistantIndicatorsParams) {
+  const query = useReadAssistantIndicators(params, {
+    query: { placeholderData: keepPreviousData },
+  });
+  return {
+    ...query,
+    indicators: successOf<AssistantIndicatorsResponse>(query.data),
+  };
 }
 
 /**

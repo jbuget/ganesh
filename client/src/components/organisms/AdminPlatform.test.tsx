@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-import { AdminPage } from "./AdminPage";
+import { AdminPlatform } from "./AdminPlatform";
 
 const platform = vi.hoisted(() => ({
   state: {
@@ -21,35 +21,35 @@ const platform = vi.hoisted(() => ({
 
 vi.mock("@/lib/api/queries", () => ({ usePlatform: () => platform.state }));
 
-describe("AdminPage", () => {
+describe("AdminPlatform", () => {
   it("says which door signs people in", () => {
-    render(<AdminPage />);
+    render(<AdminPlatform />);
 
     expect(screen.getByText(/Microsoft Entra ID —/)).toBeInTheDocument();
   });
 
   it("tells a service that is wired from one that is not", () => {
-    render(<AdminPage />);
+    render(<AdminPlatform />);
 
     expect(screen.getAllByText("Câblé").length).toBe(3);
     expect(screen.getByText("Non câblé")).toBeInTheDocument();
   });
 
   it("says what a missing service costs rather than leaving it at a fault", () => {
-    render(<AdminPage />);
+    render(<AdminPlatform />);
 
     expect(screen.getByText(/sans chapeau/)).toBeInTheDocument();
   });
 
   it("offers nothing to change: the platform is read here, not steered", () => {
-    render(<AdminPage />);
+    render(<AdminPlatform />);
 
     expect(screen.queryAllByRole("button")).toHaveLength(0);
     expect(screen.queryAllByRole("textbox")).toHaveLength(0);
   });
 
   it("says where the roles are handed out rather than handing them out", () => {
-    render(<AdminPage />);
+    render(<AdminPlatform />);
 
     expect(screen.getByText(/écran « Utilisateurs »/)).toBeInTheDocument();
   });
