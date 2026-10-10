@@ -7,7 +7,12 @@ suite. In French the plural starts at two: « 1,5 jour », « 2 jours ».
 
 from datetime import date
 
+import pytest
+
+from mcp.server.mcpserver.exceptions import ToolError
 from src.mcp.tools import say
+from src.modules.projects.domain.entities.project import ProjectStatus
+from src.shared.enums.department import Department
 
 
 class TestDays:
@@ -109,3 +114,24 @@ class TestAsGiven:
 
     def test_a_half_reads_as_one(self) -> None:
         assert say.as_given(0.5) == "0,5"
+
+
+class TestHeard:
+    """A criterion comes in as a French word and goes back to the domain's."""
+
+    def test_a_phase_is_heard_whatever_its_case(self) -> None:
+        assert say.heard(say.STATUSES, " Construction ", "la phase") is (
+            ProjectStatus.DEVELOPMENT
+        )
+
+    def test_a_department_is_heard_by_its_label(self) -> None:
+        assert say.heard(say.DEPARTMENTS, "service client", "le service") is (
+            Department.CUSTOMER_SERVICE
+        )
+
+    def test_an_unknown_word_refuses_and_offers_the_ones_that_exist(self) -> None:
+        with pytest.raises(ToolError) as refused:
+            say.heard(say.PRIORITIES, "urgente", "la priorité")
+
+        assert "« urgente »" in str(refused.value)
+        assert "critique, haute, normale et basse" in str(refused.value)
