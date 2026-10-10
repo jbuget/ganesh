@@ -23,7 +23,11 @@ import { MissionFilters } from "@/components/molecules/MissionFilters";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { ProjectCard } from "@/components/molecules/ProjectCard";
 import { PHASES } from "@/lib/board";
-import { filterMissions, includesArchived } from "@/lib/mission-filters";
+import {
+  BOARD_CRITERIA,
+  filterMissions,
+  includesArchived,
+} from "@/lib/mission-filters";
 import { useBoard } from "@/lib/use-board";
 import { useBoardDrag } from "@/lib/use-board-drag";
 import { useMissionFilters } from "@/lib/use-mission-filters";
@@ -58,7 +62,7 @@ const collisionDetection: CollisionDetection = (args) => {
 
 /** Mission kanban, one column per phase. */
 export function BoardPage() {
-  const { filters, hasFilter, set, clear } = useMissionFilters();
+  const { filters, hasFilter, set, clear } = useMissionFilters(BOARD_CRITERIA);
 
   // The scope asked of the server follows the filter: archived missions only
   // arrive when called for, and the board reloads itself as soon as that
@@ -115,6 +119,7 @@ export function BoardPage() {
     >
       <div className="flex h-full flex-col">
         <MissionFilters
+          criteria={BOARD_CRITERIA}
           filters={filters}
           hasFilter={hasFilter}
           onChange={set}

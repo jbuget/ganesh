@@ -192,4 +192,18 @@ describe("MissionFilters", () => {
       screen.getByRole("search", { name: "Filtrer les projets" }),
     ).toBeInTheDocument();
   });
+
+  describe("Suivi", () => {
+    it("keeps only the followed missions when the switch is turned on", () => {
+      const { onChange } = bar();
+      fireEvent.click(screen.getByRole("switch", { name: "Suivis uniquement" }));
+      expect(onChange).toHaveBeenCalledWith({ follows: ["followed"] });
+    });
+
+    it("lifts the filter when the switch is turned off", () => {
+      const { onChange } = bar({ follows: ["followed"] });
+      fireEvent.click(screen.getByRole("switch", { name: "Suivis uniquement" }));
+      expect(onChange).toHaveBeenCalledWith({ follows: [] });
+    });
+  });
 });
