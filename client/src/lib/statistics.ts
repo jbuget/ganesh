@@ -15,7 +15,7 @@ import type {
   WorkNature,
 } from "@/lib/api/generated/model";
 import { category, phaseDot, phaseLabel } from "@/lib/board";
-import { workNatureLabel } from "@/lib/work-natures";
+import { WORK_NATURES, workNatureLabel } from "@/lib/work-natures";
 
 /** The windows the screen offers, in the order they are shown. */
 export const RANGES: { value: PeriodRange; label: string }[] = [
@@ -228,15 +228,24 @@ export interface BarSegment {
 /**
  * One colour per trade, fixed.
  *
- * The first three slots of the chart palette, which hold together in every
- * pair. A colour follows the trade and never its rank: a quiet week must not
- * repaint design.
+ * The first seven slots of the chart palette, in their own order. A colour
+ * follows the trade and never its rank: a quiet week must not repaint design.
  */
 const TRADE_COLOURS: Record<WorkNature, string> = {
   development: "#2a78d6",
   design: "#eb6834",
   project_management: "#1baf7a",
+  data: "#eda100",
+  configuration: "#e87ba4",
+  user_enablement: "#008300",
+  coaching: "#4a3aa7",
 };
+
+/** Where a trade is drawn, what states none coming last. */
+function tradeRank(nature: WorkNature | null | undefined): number {
+  const rank = WORK_NATURES.findIndex((one) => one.value === nature);
+  return rank === -1 ? WORK_NATURES.length : rank;
+}
 
 /** What states no trade is neutral: it is a gap in the data, not a trade. */
 const NO_TRADE_COLOUR = "#94a3b8";
@@ -247,11 +256,19 @@ const NO_TRADE_COLOUR = "#94a3b8";
  * Shares are read over the project time alone. Off-project work carries no
  * trade, so a share taken over everything declared would never reach a
  * hundred and the bar would end short of its frame.
+ *
+ * The parts keep the trades' own order rather than their size. Seven colours
+ * cannot all be told apart side by side — orange beside magenta, or beside
+ * green for whoever confuses red and green — and the palette's order is the
+ * one whose neighbours can. The size is read in the legend's figures.
  */
 export function tradeSegments(steering: SteeringResponse): BarSegment[] {
   if (steering.project_days === 0) return [];
 
-  return steering.by_nature.map((row) => ({
+  const inOrder = [...steering.by_nature].sort(
+    (one, other) => tradeRank(one.nature) - tradeRank(other.nature),
+  );
+  return inOrder.map((row) => ({
     key: row.nature ?? "none",
     label: workNatureLabel(row.nature) ?? "Sans métier précisé",
     days: row.days,

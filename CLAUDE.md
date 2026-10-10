@@ -336,17 +336,29 @@ each carries the budget for its own.
   trade would bury the dozen that decide something. The reference list is
   where a mission is unfolded into its trades.
 - **`WorkNature` is closed, and it names a hat rather than an act** —
-  développement, design, pilotage. Here a developer also does the ops, a
-  designer does both UX and UI, and whoever steers carries the chefferie, the
-  delivery and the coaching at once: naming the act would leave a developer's
-  day on Terraform undecidable. « Chefferie de projet » and « Delivery » were
-  two of them until it became plain that the same people wore both: they are
-  one trade now, « Pilotage », and the days booked under either were merged
-  onto it. It answers « en tant que quoi »,
-  never « sur quoi », and nothing in the domain branches on it — it is read,
-  never computed with. Adding one is a decision about the organisation, so it
-  lives in the domain beside `Department` rather than in a table somebody can
-  extend between two meetings.
+  développement, design, pilotage, data, paramétrage, accompagnement,
+  coaching. Here a developer also does the ops, a designer does both UX and
+  UI, and whoever steers carries the chefferie and the delivery at once:
+  naming the act would leave a developer's day on Terraform undecidable.
+  « Chefferie de projet » and « Delivery » were two of them until it became
+  plain that the same people wore both: they are one trade now, « Pilotage »,
+  and the days booked under either were merged onto it. It answers « en tant
+  que quoi », never « sur quoi », and nothing in the domain branches on it —
+  it is read, never computed with. Adding one is a decision about the
+  organisation, so it lives in the domain beside `Department` rather than in a
+  table somebody can extend between two meetings.
+- **A trade earns its place** when somebody wears it without wearing the
+  others, or when its days are a budget worth reading apart from one project
+  to the next. Coaching left « Pilotage » for the first reason: whoever coaches
+  a team is not whoever steers its mission, and one line would have held two
+  people's days under one budget. « Paramétrage » takes the day a developer
+  spends configuring a tool bought rather than built — otherwise a mission
+  with hardly any code reads as a development budget. « Accompagnement » is
+  for the users — training, support, their documentation — and coaching for
+  the team.
+- **What the phase already says is never a trade.** Cadrage, recette, mise en
+  production and run are read off `status_at_entry`; a trade saying the same
+  would count those days twice, and the two answers would end up disagreeing.
 - What the reprise took over carries no trade: nobody ever declared which one
   those days were spent under, and filling one in would invent it.
 
