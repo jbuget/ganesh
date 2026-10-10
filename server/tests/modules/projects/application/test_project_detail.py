@@ -8,6 +8,7 @@ from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.projects.application.use_cases.get_project_detail import (
     GetProjectDetailUseCase,
 )
+from src.modules.projects.domain.entities.activity import Activity
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectCategory,
@@ -18,6 +19,7 @@ from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 from tests.helpers.in_memory_repositories import (
+    InMemoryActivityRepository,
     InMemoryEntryRepository,
     InMemoryProjectAssigneeRepository,
     InMemoryProjectDetailRepository,
@@ -71,6 +73,7 @@ def build(
     assignments=None,
     work_packages: list[Project] | None = None,
     parent: Project | None = None,
+    activities: list[Activity] | None = None,
 ):
     return GetProjectDetailUseCase(
         projects=InMemoryProjectRepository([parent or PROJECT, *(work_packages or [])]),
@@ -78,6 +81,7 @@ def build(
         assignees=InMemoryProjectAssigneeRepository(assignments or {}),
         entries=InMemoryEntryRepository(entries or []),
         users=InMemoryUserRepository([ALICE, NINO]),
+        activities=InMemoryActivityRepository(activities or []),
     )
 
 
@@ -246,3 +250,26 @@ async def test_a_mission_carrying_a_work_package_does_not_read_as_deletable() ->
     detail = await build(work_packages=[work_package(11, "Lot API")]).execute(10)
 
     assert not detail.is_deletable
+
+
+async def test_the_estimate_is_the_sum_of_what_its_trades_are_budgeted_at() -> None:
+    """The estimate lives on the activities; the column on the mission is the old one."""
+    sheet = await build(
+        activities=[
+            Activity(id=None, project_id=10, label="Développement", estimated_days=270),
+            Activity(id=None, project_id=10, label="Design", estimated_days=30),
+        ]
+    ).execute(10)
+
+    assert sheet.estimated_days == 300
+
+
+async def test_a_mission_with_an_unbudgeted_trade_reads_no_estimate() -> None:
+    sheet = await build(
+        activities=[
+            Activity(id=None, project_id=10, label="Développement", estimated_days=270),
+            Activity(id=None, project_id=10, label="Design"),
+        ]
+    ).execute(10)
+
+    assert sheet.estimated_days is None

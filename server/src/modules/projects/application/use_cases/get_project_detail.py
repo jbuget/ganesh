@@ -7,6 +7,9 @@ from src.modules.entries.domain.repositories.entry_repository import EntryReposi
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.projects.domain.repositories.activity_repository import (
+    ActivityRepository,
+)
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -17,6 +20,7 @@ from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
 from src.modules.projects.domain.services.deletion import can_be_deleted
+from src.modules.projects.domain.services.estimates import estimate_of
 from src.modules.projects.domain.services.hierarchy import with_resolved_category
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
@@ -61,6 +65,10 @@ class ProjectDetail:
     is_deletable: bool
     #: The project a work package belongs to. A project has none.
     parent: Project | None = None
+    #: What the mission is estimated at, read off the trades it is cut into —
+    #: never `project.estimated_days`, which only holds for a mission nobody
+    #: has cut up yet. See `estimate_of`.
+    estimated_days: float | None = None
 
 
 class GetProjectDetailUseCase:
@@ -73,8 +81,10 @@ class GetProjectDetailUseCase:
         assignees: ProjectAssigneeRepository,
         entries: EntryRepository,
         users: UserRepository,
+        activities: ActivityRepository,
     ) -> None:
         self._projects = projects
+        self._activities = activities
         self._details = details
         self._assignees = assignees
         self._entries = entries
@@ -169,4 +179,8 @@ class GetProjectDetailUseCase:
             dependencies=await self._dependencies(project_id),
             is_deletable=can_be_deleted(mission, len(entries), len(sub_projects)),
             parent=parent,
+            estimated_days=estimate_of(
+                await self._activities.list_for_project(project_id),
+                own=mission.estimated_days,
+            ),
         )
