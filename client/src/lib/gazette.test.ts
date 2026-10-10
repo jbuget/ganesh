@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 
+import { ApiError } from "@/lib/api/fetcher";
 import type {
   ChapterResponse,
   DigestResponse,
   HighlightResponse,
   MovementResponse,
+  SpotlightResponse,
   TallyResponse,
 } from "@/lib/api/generated/model";
 import {
@@ -12,13 +14,17 @@ import {
   chapterLine,
   chapterTitle,
   emphasiseProjects,
+  generationRefusal,
   gazetteTeaser,
   highlightSentence,
   isQuietMonth,
   missionName,
   movementPredicate,
   movementSentence,
+  namesToSetApart,
+  paragraphsOf,
   projectLabels,
+  spotlightFigures,
   tallyLines,
   versionLabel,
 } from "@/lib/gazette";
@@ -237,6 +243,7 @@ describe("isQuietMonth", () => {
     requested_by: null,
     prose: null,
     prose_model: null,
+    spotlights: [],
     tally: NOTHING,
     chapters: [],
     highlights: [],
@@ -269,6 +276,7 @@ describe("projectLabels", () => {
     requested_by: "Léa Chen",
     prose: null,
     prose_model: null,
+    spotlights: [],
     tally: NOTHING,
     chapters: [
       chapter({
@@ -293,30 +301,82 @@ describe("projectLabels", () => {
   });
 });
 
+describe("paragraphsOf", () => {
+  it("cuts a text on its blank lines", () => {
+    expect(paragraphsOf("Premier.\n\nSecond.\n  \nTroisième.")).toEqual([
+      "Premier.",
+      "Second.",
+      "Troisième.",
+    ]);
+  });
+
+  it("keeps a single paragraph whole", () => {
+    expect(paragraphsOf("Un seul.\nSur deux lignes.")).toEqual([
+      "Un seul.\nSur deux lignes.",
+    ]);
+  });
+});
+
+describe("spotlightFigures", () => {
+  const spotlight = (over: Partial<SpotlightResponse>): SpotlightResponse => ({
+    project_id: 7,
+    label: "Ganesh",
+    text: "Un projet.",
+    status: "development",
+    went_live: false,
+    updates_posted: 12,
+    days_declared: 18.5,
+    contributors: 4,
+    ...over,
+  });
+
+  it("says what the project amounted to, in French", () => {
+    expect(spotlightFigures(spotlight({}))).toEqual([
+      "12 mises à jour",
+      "18,5 jours déclarés",
+      "4 personnes",
+    ]);
+  });
+
+  it("agrees with a single one", () => {
+    expect(
+      spotlightFigures(
+        spotlight({ updates_posted: 1, days_declared: 1, contributors: 1 }),
+      ),
+    ).toEqual(["1 mise à jour", "1 jour déclaré", "1 personne"]);
+  });
+
+  it("leaves out what is at zero", () => {
+    expect(
+      spotlightFigures(spotlight({ updates_posted: 0, days_declared: 0 })),
+    ).toEqual(["4 personnes"]);
+  });
+});
+
 describe("emphasiseProjects", () => {
   it("sets apart a project the prose names", () => {
     expect(emphasiseProjects("Ganesh est passé en exploitation.", ["Ganesh"])).toEqual([
-      { text: "Ganesh", isProject: true },
-      { text: " est passé en exploitation.", isProject: false },
+      { text: "Ganesh", isName: true },
+      { text: " est passé en exploitation.", isName: false },
     ]);
   });
 
   it("leaves prose naming nothing in one piece", () => {
     expect(emphasiseProjects("Un mois de cadrage.", ["Ganesh"])).toEqual([
-      { text: "Un mois de cadrage.", isProject: false },
+      { text: "Un mois de cadrage.", isName: false },
     ]);
   });
 
   it("leaves prose alone when the digest names no project", () => {
     expect(emphasiseProjects("Un mois calme.", [])).toEqual([
-      { text: "Un mois calme.", isProject: false },
+      { text: "Un mois calme.", isName: false },
     ]);
   });
 
   it("sets apart every mention, not only the first", () => {
     const segments = emphasiseProjects("Ganesh avance, et Ganesh livre.", ["Ganesh"]);
 
-    expect(segments.filter((piece) => piece.isProject)).toHaveLength(2);
+    expect(segments.filter((piece) => piece.isName)).toHaveLength(2);
   });
 
   it("reads a name whatever case the model gave it", () => {
@@ -327,7 +387,7 @@ describe("emphasiseProjects", () => {
 
     expect(segments[1]).toEqual({
       text: "Amélioration des algorithmes",
-      isProject: true,
+      isName: true,
     });
   });
 
@@ -337,7 +397,7 @@ describe("emphasiseProjects", () => {
 
     expect(emphasiseProjects(`Puis ${label}.`, [label])[1]).toEqual({
       text: label,
-      isProject: true,
+      isName: true,
     });
   });
 
@@ -349,7 +409,7 @@ describe("emphasiseProjects", () => {
 
     expect(segments[0]).toEqual({
       text: "RAGGAE- AssistantStudio",
-      isProject: true,
+      isName: true,
     });
   });
 
@@ -361,17 +421,116 @@ describe("emphasiseProjects", () => {
 
     expect(segments[0]).toEqual({
       text: "Lecture des fichiers tableurs",
-      isProject: true,
+      isName: true,
     });
   });
 
   it("leaves a rearranged name plain rather than guessing", () => {
     /* Emphasis is a claim that this is the project. A claim is not guessed. */
-    const segments = emphasiseProjects("le SFTP de WAAT / Suez a été livré.", [
+    const segments = emphasiseProjects("le SFTP de Suez a été livré.", [
       "WAAT / Suez - SFTP",
     ]);
 
-    expect(segments.some((piece) => piece.isProject)).toBe(false);
+    expect(segments.some((piece) => piece.isName)).toBe(false);
+  });
+});
+
+describe("emphasiseProjects, names said short", () => {
+  const NOMAD = "NOMAD - Formulaire en ligne de normalisation documentaire";
+
+  it("sets apart a project called by its short name", () => {
+    const segments = emphasiseProjects("Sur NOMAD, la recette avance.", [NOMAD]);
+
+    expect(segments[1]).toEqual({ text: "NOMAD", isName: true });
+  });
+
+  it("sets apart a person without the note after their name", () => {
+    const segments = emphasiseProjects("L'équipe accueille Romain GILLET.", [
+      "Romain GILLET (EXT)",
+    ]);
+
+    expect(segments[1]).toEqual({ text: "Romain GILLET", isName: true });
+  });
+
+  it("reads a short name as written, never as a common word", () => {
+    const segments = emphasiseProjects("Un bon edit et un good résultat.", [
+      "EDIT",
+      "GOOD - Liasses",
+    ]);
+
+    expect(segments.some((piece) => piece.isName)).toBe(false);
+  });
+
+  it("takes a short name for a whole word only", () => {
+    const segments = emphasiseProjects("Une vie nomade.", [NOMAD]);
+
+    expect(segments.some((piece) => piece.isName)).toBe(false);
+  });
+
+  it("leaves a very short form alone, which would match too much", () => {
+    const segments = emphasiseProjects("Une API de plus.", ["API - Éligibilité"]);
+
+    expect(segments.some((piece) => piece.isName)).toBe(false);
+  });
+
+  it("sets apart the full label and the short one in the same sentence", () => {
+    const segments = emphasiseProjects(`${NOMAD} avance, NOMAD aussi.`, [NOMAD]);
+
+    expect(segments.filter((piece) => piece.isName).map((p) => p.text)).toEqual([
+      NOMAD,
+      "NOMAD",
+    ]);
+  });
+});
+
+describe("namesToSetApart", () => {
+  const digest = {
+    month: "2026-09-01",
+    is_generated: true,
+    version: 1,
+    generated_at: "2026-10-02T09:00:00",
+    requested_by: "Léa Chen",
+    prose: null,
+    prose_model: null,
+    spotlights: [],
+    tally: NOTHING,
+    chapters: [
+      chapter({ label: "Ganesh", movements: [] }),
+      chapter({
+        of: "team",
+        project_id: null,
+        label: null,
+        movements: [
+          movement({
+            kind: "teammate_joined",
+            subject: "Sam Okafor",
+            project_id: null,
+          }),
+        ],
+      }),
+    ],
+    highlights: [],
+    versions: [],
+  } satisfies DigestResponse;
+
+  it("gathers the projects of the digest, those of the list, and the people", () => {
+    expect(namesToSetApart(digest, ["NOMAD", "Ganesh"])).toEqual([
+      "Ganesh",
+      "NOMAD",
+      "Sam Okafor",
+    ]);
+  });
+});
+
+describe("generationRefusal", () => {
+  it("says somebody got there first on a conflict", () => {
+    expect(generationRefusal(new ApiError(409, "conflict"))).toMatch(
+      /Quelqu'un vient de générer/,
+    );
+  });
+
+  it("says plainly that it failed otherwise", () => {
+    expect(generationRefusal(new Error("boom"))).toMatch(/n'a pas pu être généré/);
   });
 });
 
@@ -517,6 +676,7 @@ describe("gazetteTeaser", () => {
       requested_by: null,
       prose: null,
       prose_model: null,
+      spotlights: [],
       tally: {} as DigestResponse["tally"],
       chapters: [],
       highlights: [],
@@ -528,6 +688,12 @@ describe("gazetteTeaser", () => {
     expect(gazetteTeaser(digest({ prose: "Le mois a été calme." }))).toBe(
       "Le mois a été calme.",
     );
+  });
+
+  it("hands over only the first paragraph of the editorial", () => {
+    expect(
+      gazetteTeaser(digest({ prose: "Le mois a été calme.\n\nPuis plus rien." })),
+    ).toBe("Le mois a été calme.");
   });
 
   it("counts the chapters when nobody has asked for a digest", () => {

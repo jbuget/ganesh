@@ -13,6 +13,7 @@ const digest = (over: Partial<DigestResponse>): DigestResponse =>
     requested_by: null,
     prose: null,
     prose_model: null,
+    spotlights: [],
     tally: {},
     chapters: [],
     highlights: [],

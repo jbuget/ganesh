@@ -213,6 +213,7 @@ export * from "./setReadStateRequest";
 export * from "./signedMoodResponse";
 export * from "./simulationResponse";
 export * from "./simulationResponseStaffing";
+export * from "./spotlightResponse";
 export * from "./statisticsResponse";
 export * from "./statusShareResponse";
 export * from "./steeringResponse";

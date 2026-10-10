@@ -4,8 +4,10 @@ from src.modules.gazette.application.dtos.gazette_dtos import DigestView
 from src.modules.gazette.domain.entities.brief import Tally
 from src.modules.gazette.domain.entities.chapter import Chapter
 from src.modules.gazette.domain.entities.digest import DigestVersion
+from src.modules.gazette.domain.entities.focus import ProjectFocus
 from src.modules.gazette.domain.entities.highlight import Highlight
 from src.modules.gazette.domain.entities.movement import Movement
+from src.modules.gazette.domain.entities.spotlight import Spotlight
 from src.modules.gazette.domain.services.chaptering import into_chapters
 from src.modules.gazette.presentation.api.schemas.gazette_schemas import (
     ChapterResponse,
@@ -13,6 +15,7 @@ from src.modules.gazette.presentation.api.schemas.gazette_schemas import (
     DigestVersionResponse,
     HighlightResponse,
     MovementResponse,
+    SpotlightResponse,
     TallyResponse,
 )
 
@@ -25,13 +28,44 @@ def to_digest_response(view: DigestView) -> DigestResponse:
         generated_at=view.generated_at,
         requested_by=view.requested_by,
         prose=view.prose.text if view.prose else None,
-        prose_model=view.prose.model if view.prose else None,
+        prose_model=_model_of(view),
+        spotlights=_to_spotlights(view),
         tally=_to_tally(view.brief.tally),
         chapters=[
             _to_chapter(chapter) for chapter in into_chapters(view.brief.movements)
         ],
         highlights=[_to_highlight(highlight) for highlight in view.brief.highlights],
         versions=[_to_version(version) for version in view.versions],
+    )
+
+
+def _model_of(view: DigestView) -> str | None:
+    """Which model wrote what is shown: the editorial's, else a spotlight's."""
+    if view.prose:
+        return view.prose.model
+    return view.spotlights[0].model if view.spotlights else None
+
+
+def _to_spotlights(view: DigestView) -> list[SpotlightResponse]:
+    """Each spotlight with the figures of its project, from the same brief."""
+    focus = {one.project_id: one for one in view.brief.focus}
+    return [
+        _to_spotlight(spotlight, focus[spotlight.project_id])
+        for spotlight in view.spotlights
+        if spotlight.project_id in focus
+    ]
+
+
+def _to_spotlight(spotlight: Spotlight, focus: ProjectFocus) -> SpotlightResponse:
+    return SpotlightResponse(
+        project_id=spotlight.project_id,
+        label=spotlight.label,
+        text=spotlight.text,
+        status=focus.status,
+        went_live=focus.went_live,
+        updates_posted=focus.updates_posted,
+        days_declared=focus.days_declared,
+        contributors=focus.contributors,
     )
 
 

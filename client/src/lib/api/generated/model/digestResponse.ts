@@ -7,6 +7,7 @@
 import type { ChapterResponse } from "./chapterResponse";
 import type { DigestVersionResponse } from "./digestVersionResponse";
 import type { HighlightResponse } from "./highlightResponse";
+import type { SpotlightResponse } from "./spotlightResponse";
 import type { TallyResponse } from "./tallyResponse";
 
 /**
@@ -20,6 +21,7 @@ export interface DigestResponse {
   requested_by: string | null;
   prose: string | null;
   prose_model: string | null;
+  spotlights: SpotlightResponse[];
   tally: TallyResponse;
   chapters: ChapterResponse[];
   highlights: HighlightResponse[];

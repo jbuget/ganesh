@@ -11,6 +11,7 @@ from datetime import date, datetime
 from typing import Any
 
 from src.modules.gazette.domain.entities.brief import Brief, Tally
+from src.modules.gazette.domain.entities.focus import ProjectFocus
 from src.modules.gazette.domain.entities.highlight import Highlight, HighlightKind
 from src.modules.gazette.domain.entities.movement import Movement, MovementKind
 from src.modules.projects.domain.entities.project import ProjectStatus
@@ -53,6 +54,19 @@ def to_json(brief: Brief) -> dict[str, Any]:
             }
             for highlight in brief.highlights
         ],
+        "focus": [
+            {
+                "project_id": focus.project_id,
+                "label": focus.label,
+                "status": _phase(focus.status),
+                "went_live": focus.went_live,
+                "phase_moves": focus.phase_moves,
+                "updates_posted": focus.updates_posted,
+                "days_declared": focus.days_declared,
+                "contributors": focus.contributors,
+            }
+            for focus in brief.focus
+        ],
     }
 
 
@@ -75,6 +89,9 @@ def from_json(month: date, payload: dict[str, Any]) -> Brief:
         ),
         movements=[_movement(row) for row in payload.get("movements") or []],
         highlights=[_highlight(row) for row in payload.get("highlights") or []],
+        # A numéro written before the projects of the month were chosen has
+        # none, and reads back as one that told none — which it did.
+        focus=[_focus(row) for row in payload.get("focus") or []],
     )
 
 
@@ -104,4 +121,17 @@ def _highlight(row: dict[str, Any]) -> Highlight:
         kind=HighlightKind(row["kind"]),
         project_id=row["project_id"],
         label=row["label"],
+    )
+
+
+def _focus(row: dict[str, Any]) -> ProjectFocus:
+    return ProjectFocus(
+        project_id=row["project_id"],
+        label=row["label"],
+        status=_read_phase(row.get("status")),
+        went_live=row.get("went_live", False),
+        phase_moves=row.get("phase_moves", 0),
+        updates_posted=row.get("updates_posted", 0),
+        days_declared=row.get("days_declared", 0.0),
+        contributors=row.get("contributors", 0),
     )

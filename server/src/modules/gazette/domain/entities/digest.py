@@ -11,6 +11,7 @@ from datetime import date, datetime
 
 from src.modules.gazette.domain.entities.brief import Brief
 from src.modules.gazette.domain.entities.prose import Prose
+from src.modules.gazette.domain.entities.spotlight import Spotlight
 from src.shared.exceptions.domain_exceptions import ValidationError
 
 #: What the first generation of a month is numbered.
@@ -32,6 +33,9 @@ class Digest:
     #: What a model wrote over the facts, when it wrote something that held.
     #: A digest without it is a digest all the same.
     prose: Prose | None = None
+    #: What a model wrote about the projects of the month, one per project the
+    #: brief chose to tell it through.
+    spotlights: tuple[Spotlight, ...] = ()
     id: int | None = None
 
     def __post_init__(self) -> None:

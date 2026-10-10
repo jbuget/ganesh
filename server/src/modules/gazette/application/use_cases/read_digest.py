@@ -57,6 +57,7 @@ class ReadDigestUseCase:
             return DigestView(
                 brief=digest.brief,
                 prose=digest.prose,
+                spotlights=digest.spotlights,
                 version=digest.version,
                 generated_at=digest.generated_at,
                 requested_by=digest.requested_by,
@@ -66,7 +67,7 @@ class ReadDigestUseCase:
         if query.version is not None:
             raise EntityNotFoundError("This version of the digest cannot be found.")
 
-        # No chapeau is asked for here: a model would be paid for on every
+        # No text is asked for here: a model would be paid for on every
         # page load, and its prose kept by nobody.
         return DigestView(
             brief=await gather_brief(

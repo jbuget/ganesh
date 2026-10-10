@@ -7,6 +7,7 @@ it afterwards, and may fail to be: the numéro is the brief, never the prose.
 from dataclasses import dataclass, field
 from datetime import date
 
+from src.modules.gazette.domain.entities.focus import ProjectFocus
 from src.modules.gazette.domain.entities.highlight import Highlight
 from src.modules.gazette.domain.entities.movement import Movement
 
@@ -40,3 +41,7 @@ class Brief:
     tally: Tally
     movements: list[Movement] = field(default_factory=list)
     highlights: list[Highlight] = field(default_factory=list)
+    #: What each project that moved or was written about amounted to. Kept
+    #: with the facts: the figures a spotlight quotes must still be here the
+    #: day the digest is read back.
+    focus: list[ProjectFocus] = field(default_factory=list)

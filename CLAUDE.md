@@ -854,17 +854,40 @@ on, given up on, and who joined or left.
 **The register counts, the model only turns the phrase.** That division is the
 whole design, and it is enforced rather than asked for politely:
 
-- Every fact and every figure is computed by the domain from `audit_log` and
-  from the reference list. The model is handed them and writes two or three
-  sentences over the top.
-- **`Prose` refuses any text carrying a figure**, in digits or written out.
-  Not a rule in the prompt — a rule in the entity, so no adapter can widen it.
-  A chapeau that counted is dropped and the digest goes out on its facts.
+- Every fact and every figure is computed by the domain from `audit_log`, from
+  the updates posted that month and from the declared time. The model is handed
+  them, and the material the team wrote, and turns them into a few paragraphs
+  of editorial and a spotlight on each of the month's projects — written for
+  readers outside the team, who do not know the jargon.
+- **`Prose` refuses any figure the register did not give.** A text may quote
+  one it was handed — « 12 mises à jour » when the register says 12 — and none
+  other, in digits or written out. The figures allowed are computed from the
+  brief alone (`allowed_figures`), so a digest read back years later is checked
+  against the facts it was stored with. Not a rule in the prompt — a rule in
+  the entity, so no adapter can widen it. Each paragraph and each spotlight is
+  held alone (`hold_narrative`): a stray figure costs that piece, never the
+  month.
+- **The projects of the month are chosen by rule** (`pick_focus`): went live,
+  then most written on, then most worked on, three at most, and only a project
+  with something written on it or that went live — declared time alone gives
+  a model nothing to tell, only to invent. A work package is told inside its
+  project. The model only tells the winners; it is never asked to pick, and it
+  is never allowed a spotlight on a project the brief did not choose.
+- **The team's words are cleaned before they reach the model** (`excerpting`):
+  a mention becomes « un collègue », images and addresses go. The prompt also
+  forbids repeating any name found in an update and any intention or cause no
+  update states (« afin de », « visent à »). The updates are the author's view
+  on their day, and are reported as such.
+- **What the model reads beyond the three spotlights is not kept.** The other
+  projects that moved go over as background for the editorial, with no figure
+  of their own; the digest stores the brief, the text and the spotlights, and
+  the updates are still in the thread.
 - **Saliency is a set of business rules**, tested like any other. A model asked
   to underline what stands out underlines something even the month nothing
   happened.
 - **Nothing is invented.** A log line whose mission was deleted cannot be named
-  and is not printed. A phase the register never recorded is not supplied.
+  and is not printed. A phase the register never recorded is not supplied. A
+  project with no service sheet is not given a purpose the model made up.
 
 **What the company asked for has a chapter of its own.** A need is not a
 mission — the whole recueil rests on not confusing the two — so its month is

@@ -3,18 +3,17 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
-import { DigestChapeau } from "@/components/atoms/DigestChapeau";
-
 import { DigestVersionPicker } from "@/components/atoms/DigestVersionPicker";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { RegenerateDigestDialog } from "@/components/atoms/RegenerateDigestDialog";
 import { DigestHighlights } from "@/components/molecules/DigestHighlights";
 import { DigestChapters } from "@/components/molecules/DigestChapters";
+import { DigestNarrative } from "@/components/molecules/DigestNarrative";
 import { DigestTally } from "@/components/molecules/DigestTally";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { Button } from "@/components/ui/button";
 import { formatMonth } from "@/lib/dates";
-import { formatGeneratedAt, isQuietMonth, projectLabels } from "@/lib/gazette";
+import { formatGeneratedAt, isQuietMonth, namesToSetApart } from "@/lib/gazette";
 import { useGazette } from "@/lib/use-gazette";
 
 /**
@@ -26,8 +25,8 @@ import { useGazette } from "@/lib/use-gazette";
  *
  * Two things are told apart on purpose, and the whole screen rests on it: the
  * facts come from the register and are counted by the application, while the
- * paragraph at the top was written by a model over those facts and carries no
- * figure. Anyone may ask for a digest, and asking again never rewrites one —
+ * paragraphs at the top were written by a model over those facts and quote
+ * only the figures the register gave. Anyone may ask for a digest, and asking again never rewrites one —
  * it writes the next version beside it.
  */
 export function GazettePage() {
@@ -83,6 +82,15 @@ export function GazettePage() {
   return (
     <PageLayout header={header}>
       <div className="flex flex-col gap-6 pb-4">
+        {gazette.refusal && (
+          <p
+            role="alert"
+            className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-center text-sm text-amber-900"
+          >
+            {gazette.refusal}
+          </p>
+        )}
+
         {/* Nothing but the month on this line, centred on it, as on the entry
             grid: the actions sit in the header, where every screen carries
             them. */}
@@ -118,7 +126,7 @@ export function GazettePage() {
         ) : (
           /* A month nobody has asked for is readable all the same: its facts
              come from a register everyone already has open. What it does not
-             carry is a chapeau, a date and a name — and the promise that it
+             carry is an editorial, a date and a name — and the promise that it
              will still say this tomorrow. */
           <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-center text-sm text-slate-600">
             Ce mois n&apos;a pas encore de digest. Vous lisez le journal tel qu&apos;il
@@ -126,11 +134,12 @@ export function GazettePage() {
           </p>
         )}
 
-        {digest.prose && digest.prose_model && (
-          <DigestChapeau
+        {(digest.prose || digest.spotlights.length > 0) && digest.prose_model && (
+          <DigestNarrative
             prose={digest.prose}
+            spotlights={digest.spotlights}
             model={digest.prose_model}
-            labels={projectLabels(digest)}
+            names={namesToSetApart(digest, gazette.referenceLabels)}
           />
         )}
 

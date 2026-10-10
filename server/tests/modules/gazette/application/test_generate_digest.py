@@ -5,25 +5,30 @@ from datetime import date
 import pytest
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
+from src.modules.entries.domain.entities.entry import Entry
 from src.modules.gazette.application.dtos.gazette_dtos import GenerateDigestCommand
 from src.modules.gazette.application.use_cases.generate_digest import (
     GenerateDigestUseCase,
 )
-from src.modules.gazette.domain.entities.brief import Brief
+from src.modules.gazette.domain.entities.dossier import Dossier
 from src.modules.gazette.domain.entities.movement import MovementKind
-from src.modules.gazette.domain.entities.prose import Prose
+from src.modules.gazette.domain.entities.narrative import Narrative
 from src.modules.gazette.domain.repositories.prose_writer import ProseWriter
+from src.modules.gazette.domain.services.narrating import hold_narrative
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectKind,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryDigestRepository,
+    InMemoryEntryRepository,
     InMemoryProjectRepository,
+    InMemoryProjectUpdateRepository,
     InMemoryRequestRepository,
     InMemoryUserRepository,
 )
@@ -36,20 +41,26 @@ GENERATED_AT = paris(2026, 10, 2, 9, 30)
 class StubProseWriter(ProseWriter):
     """A model that writes what it was told to, and remembers being asked."""
 
-    def __init__(self, text: str | None = "Un mois de cadrage.") -> None:
+    def __init__(
+        self,
+        text: str | None = "Un mois de cadrage.",
+        spotlights: dict[int, str] | None = None,
+    ) -> None:
         self._text = text
-        self.briefs: list[Brief] = []
+        self._spotlights = spotlights or {}
+        self.dossiers: list[Dossier] = []
 
-    async def write(self, brief: Brief) -> Prose | None:
-        self.briefs.append(brief)
-        return Prose.accepted(self._text, model="stub") if self._text else None
+    async def write(self, dossier: Dossier) -> Narrative:
+        self.dossiers.append(dossier)
+        editorial = [self._text] if self._text else []
+        return hold_narrative(dossier.brief, "stub", editorial, self._spotlights)
 
 
 class SilentProseWriter(ProseWriter):
     """A model that is down, or not configured, or simply says nothing."""
 
-    async def write(self, brief: Brief) -> Prose | None:
-        return None
+    async def write(self, dossier: Dossier) -> Narrative:
+        return Narrative()
 
 
 def a_teammate(user_id: int = 1, name: str = "Léa Chen") -> User:
@@ -75,6 +86,8 @@ def a_project(project_id: int = 7, label: str = "Ganesh") -> Project:
 def a_use_case(
     writer: ProseWriter | None = None,
     projects_in_the_list: list[Project] | None = None,
+    updates: InMemoryProjectUpdateRepository | None = None,
+    entries: InMemoryEntryRepository | None = None,
 ) -> tuple[GenerateDigestUseCase, InMemoryDigestRepository, InMemoryAuditLogRepository]:
     audit_logs = InMemoryAuditLogRepository()
     digests = InMemoryDigestRepository()
@@ -84,6 +97,8 @@ def a_use_case(
         audit_logs=audit_logs,
         digests=digests,
         requests=InMemoryRequestRepository(),
+        updates=updates or InMemoryProjectUpdateRepository(),
+        entries=entries or InMemoryEntryRepository(),
         writer=writer or StubProseWriter(),
     )
     return use_case, digests, audit_logs
@@ -224,7 +239,7 @@ class TestGenerateDigest:
 
         assert digest.prose is not None
         assert digest.prose.text == "Un mois de cadrage."
-        assert writer.briefs[0].month == MONTH
+        assert writer.dossiers[0].brief.month == MONTH
 
     @pytest.mark.asyncio
     async def test_a_digest_is_kept_without_a_chapeau_rather_than_not_at_all(
@@ -311,3 +326,219 @@ class TestGenerateDigest:
         )
 
         assert [m.subject for m in digest.brief.movements] == ["NOMAD"]
+
+
+class TestTheProjectsOfTheMonth:
+    """What the model is handed, and what comes back from it."""
+
+    @staticmethod
+    async def written_on(
+        updates: InMemoryProjectUpdateRepository, project_id: int = 7, day: int = 10
+    ) -> None:
+        await updates.add(
+            ProjectUpdate(
+                id=None,
+                project_id=project_id,
+                author_id=1,
+                body="On a livré la première version.",
+                published_at=paris(2026, 9, day, 10),
+            )
+        )
+
+    @pytest.mark.asyncio
+    async def test_a_project_written_on_is_chosen_and_kept_with_its_figures(
+        self,
+    ) -> None:
+        updates = InMemoryProjectUpdateRepository()
+        await self.written_on(updates)
+        entries = InMemoryEntryRepository(
+            [
+                Entry(
+                    id=None,
+                    user_id=1,
+                    project_id=7,
+                    activity_id=None,
+                    day=date(2026, 9, 10),
+                    value=1.0,  # type: ignore[arg-type]
+                )
+            ]
+        )
+        use_case, _, _ = a_use_case(updates=updates, entries=entries)
+
+        digest = await use_case.execute(
+            GenerateDigestCommand(month=MONTH, actor_id=1), at=GENERATED_AT
+        )
+
+        [focus] = digest.brief.focus
+        assert (focus.project_id, focus.updates_posted, focus.days_declared) == (
+            7,
+            1,
+            1.0,
+        )
+
+    @pytest.mark.asyncio
+    async def test_the_model_is_handed_what_the_team_wrote(self) -> None:
+        updates = InMemoryProjectUpdateRepository()
+        await self.written_on(updates)
+        writer = StubProseWriter()
+        use_case, _, _ = a_use_case(writer, updates=updates)
+
+        await use_case.execute(
+            GenerateDigestCommand(month=MONTH, actor_id=1), at=GENERATED_AT
+        )
+
+        assert writer.dossiers[0].material[7].excerpts == (
+            "On a livré la première version.",
+        )
+
+    @pytest.mark.asyncio
+    async def test_it_reads_the_updates_of_the_month_and_no_other(self) -> None:
+        updates = InMemoryProjectUpdateRepository()
+        await updates.add(
+            ProjectUpdate(
+                id=None,
+                project_id=7,
+                author_id=1,
+                body="Hors du mois.",
+                published_at=paris(2026, 10, 1, 0),
+            )
+        )
+        use_case, _, _ = a_use_case(updates=updates)
+
+        digest = await use_case.execute(
+            GenerateDigestCommand(month=MONTH, actor_id=1), at=GENERATED_AT
+        )
+
+        assert digest.brief.focus == []
+
+    @pytest.mark.asyncio
+    async def test_a_spotlight_is_kept_with_the_digest(self) -> None:
+        updates = InMemoryProjectUpdateRepository()
+        await self.written_on(updates)
+        writer = StubProseWriter(spotlights={7: "Un registre des temps."})
+        use_case, digests, _ = a_use_case(writer, updates=updates)
+
+        digest = await use_case.execute(
+            GenerateDigestCommand(month=MONTH, actor_id=1), at=GENERATED_AT
+        )
+
+        assert [(s.project_id, s.text) for s in digest.spotlights] == [
+            (7, "Un registre des temps.")
+        ]
+        stored = await digests.get_latest(MONTH)
+        assert stored is not None
+        assert stored.spotlights == digest.spotlights
+
+    @pytest.mark.asyncio
+    async def test_a_spotlight_for_a_project_not_chosen_is_not_kept(self) -> None:
+        writer = StubProseWriter(spotlights={7: "Un registre des temps."})
+        use_case, _, _ = a_use_case(writer)
+
+        digest = await use_case.execute(
+            GenerateDigestCommand(month=MONTH, actor_id=1), at=GENERATED_AT
+        )
+
+        assert digest.spotlights == ()
+
+
+class TestTheRestOfTheMonth:
+    """What the editorial leans on beyond the projects told one by one."""
+
+    @pytest.mark.asyncio
+    async def test_the_projects_after_the_first_three_are_handed_over_as_background(
+        self,
+    ) -> None:
+        projects = [a_project(id_, f"Projet {id_}") for id_ in range(1, 6)]
+        updates = InMemoryProjectUpdateRepository()
+        for project in projects:
+            await updates.add(
+                ProjectUpdate(
+                    id=None,
+                    project_id=project.id or 0,
+                    author_id=1,
+                    body=f"Nouvelles de {project.label}.",
+                    published_at=paris(2026, 9, 10, 10),
+                )
+            )
+        writer = StubProseWriter()
+        use_case, _, _ = a_use_case(
+            writer, projects_in_the_list=projects, updates=updates
+        )
+
+        digest = await use_case.execute(
+            GenerateDigestCommand(month=MONTH, actor_id=1), at=GENERATED_AT
+        )
+
+        dossier = writer.dossiers[0]
+        assert len(digest.brief.focus) == 3
+        assert len(dossier.background) == 2
+        told = {focus.project_id for focus in digest.brief.focus}
+        assert not told & {other.project_id for other in dossier.background}
+
+    @pytest.mark.asyncio
+    async def test_the_background_is_not_kept_with_the_digest(self) -> None:
+        """It is read to be written over: the thread still holds the words."""
+        projects = [a_project(id_, f"Projet {id_}") for id_ in range(1, 6)]
+        updates = InMemoryProjectUpdateRepository()
+        for project in projects:
+            await updates.add(
+                ProjectUpdate(
+                    id=None,
+                    project_id=project.id or 0,
+                    author_id=1,
+                    body="Du nouveau.",
+                    published_at=paris(2026, 9, 10, 10),
+                )
+            )
+        use_case, digests, _ = a_use_case(
+            projects_in_the_list=projects, updates=updates
+        )
+
+        await use_case.execute(
+            GenerateDigestCommand(month=MONTH, actor_id=1), at=GENERATED_AT
+        )
+
+        stored = await digests.get_latest(MONTH)
+        assert stored is not None
+        assert len(stored.brief.focus) == 3
+
+
+class TestNoise:
+    @pytest.mark.asyncio
+    async def test_a_project_opened_and_closed_for_nothing_is_kept_from_the_model(
+        self,
+    ) -> None:
+        gone = a_project(8, "Essai éphémère")
+        gone.archive()
+        writer = StubProseWriter()
+        use_case, _, audit_logs = a_use_case(writer, projects_in_the_list=[gone])
+        await audit_logs.add(
+            AuditLog(
+                action=AuditAction.PROJECT_CREATE,
+                actor_id=1,
+                project_id=8,
+                at=paris(2026, 9, 12, 14),
+            )
+        )
+        await audit_logs.add(
+            AuditLog(
+                action=AuditAction.PROJECT_UPDATE,
+                actor_id=1,
+                project_id=8,
+                old_value="True",
+                new_value="False",
+                payload={"field": "is_active"},
+                at=paris(2026, 9, 12, 15),
+            )
+        )
+
+        digest = await use_case.execute(
+            GenerateDigestCommand(month=MONTH, actor_id=1), at=GENERATED_AT
+        )
+
+        # The register keeps both movements; the model is told neither.
+        assert {m.kind for m in digest.brief.movements} == {
+            MovementKind.PROJECT_CREATED,
+            MovementKind.PROJECT_ARCHIVED,
+        }
+        assert writer.dossiers[0].quiet == {8}

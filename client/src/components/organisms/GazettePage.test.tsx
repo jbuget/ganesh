@@ -10,6 +10,8 @@ const gazette = vi.hoisted(() => ({
   digest: undefined as DigestResponse | undefined,
   isLoading: false,
   isGenerating: false,
+  referenceLabels: [] as string[],
+  refusal: null as string | null,
   goToPreviousMonth: vi.fn(),
   goToNextMonth: vi.fn(),
   openVersion: vi.fn(),
@@ -27,6 +29,7 @@ function aDigest(over: Partial<DigestResponse> = {}): DigestResponse {
     requested_by: "Léa Chen",
     prose: "Un mois de cadrage.",
     prose_model: "gemini-2.5-flash",
+    spotlights: [],
     tally: {
       projects_created: 2,
       projects_archived: 0,
@@ -74,6 +77,8 @@ beforeEach(() => {
   gazette.digest = aDigest();
   gazette.isGenerating = false;
   gazette.isLoading = false;
+  gazette.referenceLabels = [];
+  gazette.refusal = null;
 });
 
 describe("GazettePage", () => {
@@ -89,14 +94,14 @@ describe("GazettePage", () => {
     expect(screen.getByText(/Version 1, demandée par Léa Chen/)).toBeVisible();
   });
 
-  it("tells the reader the chapeau was written by a machine", () => {
+  it("tells the reader the editorial was written by a machine", () => {
     render(<GazettePage />);
 
     expect(screen.getByText("Un mois de cadrage.")).toBeVisible();
     expect(screen.getByText(/rédigé par gemini-2.5-flash/)).toBeVisible();
   });
 
-  it("sets the projects it names apart in the chapeau", () => {
+  it("sets the projects it names apart in the editorial", () => {
     /* A paragraph of prose is skimmed for what it is about. */
     gazette.digest = aDigest({
       prose: "WAATcher est passé en exploitation, et SALSA est en retard.",
@@ -111,6 +116,94 @@ describe("GazettePage", () => {
     ]);
   });
 
+  it("tells the editorial in as many paragraphs as the model wrote", () => {
+    gazette.digest = aDigest({ prose: "Premier temps.\n\nSecond temps." });
+
+    render(<GazettePage />);
+
+    expect(screen.getByText("Premier temps.")).toBeVisible();
+    expect(screen.getByText("Second temps.")).toBeVisible();
+  });
+
+  it("puts the projects of the month under the spotlight, with their figures", () => {
+    gazette.digest = aDigest({
+      spotlights: [
+        {
+          project_id: 2,
+          label: "WAATcher",
+          text: "Un outil de suivi des services.\n\nIl est entré en exploitation.",
+          status: "operations",
+          went_live: true,
+          updates_posted: 12,
+          days_declared: 18.5,
+          contributors: 4,
+        },
+      ],
+    });
+
+    render(<GazettePage />);
+
+    expect(screen.getByRole("heading", { name: "Sous le projecteur" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "WAATcher" })).toBeVisible();
+    expect(
+      screen.getByText(
+        "Mis en service ce mois-ci · 12 mises à jour · 18,5 jours déclarés · 4 personnes",
+      ),
+    ).toBeVisible();
+    expect(screen.getByText("Un outil de suivi des services.")).toBeVisible();
+    expect(screen.getByText("Il est entré en exploitation.")).toBeVisible();
+  });
+
+  it("tells the editorial and the spotlights in one frame, under one signature", () => {
+    gazette.digest = aDigest({
+      spotlights: [
+        {
+          project_id: 2,
+          label: "WAATcher",
+          text: "Un outil de suivi.",
+          status: "operations",
+          went_live: false,
+          updates_posted: 1,
+          days_declared: 0,
+          contributors: 0,
+        },
+      ],
+    });
+
+    render(<GazettePage />);
+
+    const frame = screen.getByText("Un mois de cadrage.").closest("section");
+    expect(frame).toContainElement(screen.getByText("Sous le projecteur"));
+    expect(screen.getAllByText(/rédigé par gemini/)).toHaveLength(1);
+  });
+
+  it("sets every name in bold, including a project the digest has no chapter for", () => {
+    gazette.referenceLabels = ["NOMAD - Formulaire en ligne"];
+    gazette.digest = aDigest({
+      prose: "WAATcher avance, et NOMAD recule.",
+    });
+
+    render(<GazettePage />);
+
+    const bold = [...document.querySelectorAll("strong")].map((n) => n.textContent);
+    expect(bold).toEqual(["WAATcher", "NOMAD"]);
+  });
+
+  it("says why a digest could not be generated", () => {
+    gazette.refusal =
+      "Quelqu'un vient de générer un digest de ce mois. Voici sa version.";
+
+    render(<GazettePage />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(/Quelqu'un vient de générer/);
+  });
+
+  it("shows no spotlight when the model told none", () => {
+    render(<GazettePage />);
+
+    expect(screen.queryByText("Sous le projecteur")).toBeNull();
+  });
+
   it("says where the figures come from, beside the paragraph", () => {
     /* The whole screen rests on the reader telling the two apart. */
     render(<GazettePage />);
@@ -118,7 +211,7 @@ describe("GazettePage", () => {
     expect(screen.getByText(/chiffres, eux, viennent du journal/)).toBeVisible();
   });
 
-  it("holds the facts without a chapeau when none was written", () => {
+  it("holds the facts without a editorial when none was written", () => {
     gazette.digest = aDigest({ prose: null, prose_model: null });
 
     render(<GazettePage />);

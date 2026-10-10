@@ -34,3 +34,6 @@ class GazetteDigestModel(Base):
     brief: Mapped[dict] = mapped_column(JSON)
     prose: Mapped[str | None] = mapped_column(Text, nullable=True)
     prose_model: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    #: What a model wrote about each project of the month, as
+    #: `{project_id, label, text}`. Kept whole: the project may be renamed.
+    spotlights: Mapped[list | None] = mapped_column(JSON, nullable=True)

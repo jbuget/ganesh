@@ -7,13 +7,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.gazette.domain.entities.brief import Brief, Tally
 from src.modules.gazette.domain.entities.digest import Digest
+from src.modules.gazette.domain.entities.focus import ProjectFocus
 from src.modules.gazette.domain.entities.highlight import Highlight, HighlightKind
 from src.modules.gazette.domain.entities.movement import Movement, MovementKind
 from src.modules.gazette.domain.entities.prose import Prose
+from src.modules.gazette.domain.entities.spotlight import Spotlight
 from src.modules.gazette.infrastructure.database.repositories.digest_repository_impl import (
     SqlDigestRepository,
 )
 from src.modules.projects.domain.entities.project import ProjectStatus
+from src.shared.exceptions.domain_exceptions import ConflictError
 from tests.helpers.instants import paris
 
 pytestmark = pytest.mark.db
@@ -21,7 +24,11 @@ pytestmark = pytest.mark.db
 MONTH = date(2026, 9, 1)
 
 
-def a_digest(version: int = 1, prose: Prose | None = None) -> Digest:
+def a_digest(
+    version: int = 1,
+    prose: Prose | None = None,
+    spotlights: tuple[Spotlight, ...] = (),
+) -> Digest:
     return Digest(
         month=MONTH,
         version=version,
@@ -41,10 +48,16 @@ def a_digest(version: int = 1, prose: Prose | None = None) -> Digest:
             highlights=[
                 Highlight(kind=HighlightKind.WENT_LIVE, project_id=7, label="Ganesh")
             ],
+            focus=[
+                ProjectFocus(
+                    project_id=7, label="Ganesh", updates_posted=12, days_declared=18.5
+                )
+            ],
         ),
         generated_at=paris(2026, 10, 2, 9, 30),
         requested_by="L. Chen",
         prose=prose,
+        spotlights=spotlights,
     )
 
 
@@ -72,6 +85,98 @@ async def test_a_chapeau_survives_the_trip(db_session: AsyncSession) -> None:
     assert read_back.prose is not None
     assert read_back.prose.text == "Un mois de cadrage."
     assert read_back.prose.model == "gemini-2.5-flash"
+
+
+async def test_a_text_quoting_a_figure_of_the_facts_survives_the_trip(
+    db_session: AsyncSession,
+) -> None:
+    repository = SqlDigestRepository(db_session)
+    allowed = frozenset({"12"})
+
+    await repository.add(
+        a_digest(
+            prose=Prose(
+                text="Douze mises à jour.\n\nUn second paragraphe.",
+                model="m",
+                allowed=allowed,
+            )
+        )
+    )
+
+    read_back = await repository.get_latest(MONTH)
+    assert read_back is not None
+    assert read_back.prose is not None
+    assert read_back.prose.paragraphs == [
+        "Douze mises à jour.",
+        "Un second paragraphe.",
+    ]
+
+
+async def test_a_text_quoting_a_figure_the_facts_do_not_hold_is_not_served(
+    db_session: AsyncSession,
+) -> None:
+    """Read back through the rule it was written under, against its own facts."""
+    repository = SqlDigestRepository(db_session)
+
+    await repository.add(
+        a_digest(prose=Prose(text="Sept projets.", model="m", allowed=frozenset({"7"})))
+    )
+
+    read_back = await repository.get_latest(MONTH)
+    assert read_back is not None
+    assert read_back.prose is None
+
+
+async def test_the_spotlights_survive_the_trip(db_session: AsyncSession) -> None:
+    repository = SqlDigestRepository(db_session)
+    spotlight = Spotlight(
+        project_id=7, label="Ganesh", text="Un registre des temps.", model="m"
+    )
+
+    await repository.add(a_digest(spotlights=(spotlight,)))
+
+    read_back = await repository.get_latest(MONTH)
+    assert read_back is not None
+    assert read_back.spotlights == (spotlight,)
+
+
+async def test_a_spotlight_quoting_a_figure_the_facts_do_not_hold_is_not_served(
+    db_session: AsyncSession,
+) -> None:
+    repository = SqlDigestRepository(db_session)
+    spotlight = Spotlight(project_id=7, label="Ganesh", text="Neuf jours.", model="m")
+
+    await repository.add(a_digest(spotlights=(spotlight,)))
+
+    read_back = await repository.get_latest(MONTH)
+    assert read_back is not None
+    assert read_back.spotlights == ()
+
+
+async def test_two_digests_cannot_take_the_same_version(
+    db_session: AsyncSession,
+) -> None:
+    """The second of two simultaneous requests loses the race, and is told."""
+    repository = SqlDigestRepository(db_session)
+    await repository.add(a_digest(1))
+
+    with pytest.raises(ConflictError):
+        await repository.add(a_digest(1))
+
+
+async def test_losing_the_race_leaves_the_session_usable(
+    db_session: AsyncSession,
+) -> None:
+    repository = SqlDigestRepository(db_session)
+    await repository.add(a_digest(1))
+    with pytest.raises(ConflictError):
+        await repository.add(a_digest(1))
+
+    await repository.add(a_digest(2))
+
+    latest = await repository.get_latest(MONTH)
+    assert latest is not None
+    assert latest.version == 2
 
 
 async def test_a_month_reads_as_its_highest_version(db_session: AsyncSession) -> None:
