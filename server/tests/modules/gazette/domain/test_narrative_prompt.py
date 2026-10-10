@@ -72,6 +72,23 @@ class TestFacts:
         assert "15 projets créés" in prompt
         assert "138 mises à jour publiées" in prompt
 
+    def test_how_many_went_live_is_handed_over_as_a_figure_it_may_quote(self) -> None:
+        movements = [
+            Movement(
+                kind=MovementKind.WENT_LIVE,
+                at=datetime(2026, 9, 4, 10),
+                subject=name,
+                project_id=n,
+            )
+            for n, name in enumerate(["EDIT", "Ganesh"], start=1)
+        ]
+
+        prompt = compose(
+            Dossier(brief=Brief(month=MONTH, tally=Tally(), movements=movements))
+        )
+
+        assert "2 projets mis en exploitation" in prompt
+
     def test_a_single_one_is_handed_over_agreed(self) -> None:
         """A model copying « 1 mois validés » writes it that way."""
         brief = Brief(month=MONTH, tally=Tally(months_validated=1, projects_created=1))

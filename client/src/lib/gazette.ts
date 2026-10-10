@@ -385,6 +385,22 @@ export function namesToSetApart(
   return [...new Set([...projectLabels(digest), ...referenceLabels, ...people])];
 }
 
+/**
+ * Whether a failure may only be an answer that never came back.
+ *
+ * A refusal — the server said no, with a 4xx — means nothing was written. Any
+ * other failure may mean the host in front of the API gave up while the API
+ * went on, which a generation long enough to be cut off does.
+ */
+export function mayHaveFinishedAnyway(error: unknown): boolean {
+  return !(error instanceof ApiError && error.status < 500);
+}
+
+/** What the screen says when a digest appeared after the request gave up. */
+export function lateVersion(version: number): string {
+  return `La génération a pris plus de temps que prévu : voici la version ${version}.`;
+}
+
 /** Why a digest could not be generated, in the reader's words. */
 export function generationRefusal(error: unknown): string {
   if (error instanceof ApiError && error.status === 409) {

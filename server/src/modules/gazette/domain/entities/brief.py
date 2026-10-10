@@ -9,7 +9,7 @@ from datetime import date
 
 from src.modules.gazette.domain.entities.focus import ProjectFocus
 from src.modules.gazette.domain.entities.highlight import Highlight
-from src.modules.gazette.domain.entities.movement import Movement
+from src.modules.gazette.domain.entities.movement import Movement, MovementKind
 
 
 @dataclass(frozen=True)
@@ -45,3 +45,11 @@ class Brief:
     #: with the facts: the figures a spotlight quotes must still be here the
     #: day the digest is read back.
     focus: list[ProjectFocus] = field(default_factory=list)
+
+    @property
+    def went_live_count(self) -> int:
+        """How many projects reached operations: a figure the register holds as
+        surely as the tally's, and the one an editorial opens on."""
+        return sum(
+            1 for movement in self.movements if movement.kind is MovementKind.WENT_LIVE
+        )

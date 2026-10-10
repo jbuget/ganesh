@@ -61,3 +61,20 @@ def test_nothing_else_is_allowed() -> None:
     brief = Brief(month=MONTH, tally=Tally(projects_created=15))
 
     assert "16" not in allowed_figures(brief)
+
+
+def test_how_many_projects_went_live_may_be_quoted() -> None:
+    """« Quatre outils sont passés en exploitation » is the first thing an
+    editorial says, and the register holds it as surely as the tally."""
+    went_live = [
+        Movement(
+            kind=MovementKind.WENT_LIVE,
+            at=datetime(2026, 9, 4, 10),
+            subject=f"Projet {n}",
+            project_id=n,
+        )
+        for n in (101, 102, 103, 104)
+    ]
+    brief = Brief(month=MONTH, tally=Tally(), movements=went_live)
+
+    assert "4" in allowed_figures(brief)
