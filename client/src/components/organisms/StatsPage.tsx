@@ -4,7 +4,10 @@ import { MetricTile } from "@/components/atoms/MetricTile";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { RangeSelect } from "@/components/atoms/RangeSelect";
 import { CoverageHeadline } from "@/components/molecules/CoverageHeadline";
+import { IntakeMovements } from "@/components/molecules/IntakeMovements";
+import { NotificationReadRates } from "@/components/molecules/NotificationReadRates";
 import { ShareBreakdown } from "@/components/molecules/ShareBreakdown";
+import { TradeSplit } from "@/components/molecules/TradeSplit";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { SurfaceUsageTable } from "@/components/organisms/SurfaceUsageTable";
 import {
@@ -12,11 +15,13 @@ import {
   categoryRows,
   formatDelay,
   formatShare,
+  formatWait,
   kindRows,
   missionRows,
   phaseRows,
   summarise,
 } from "@/lib/statistics";
+import { teamLabel } from "@/lib/teams";
 import { useStatisticsScreen } from "@/lib/use-statistics-screen";
 
 /**
@@ -24,9 +29,16 @@ import { useStatisticsScreen } from "@/lib/use-statistics-screen";
  *
  * The blocks are ordered as the question is answered. Coverage leads, because
  * nothing below it means anything if the data is full of holes. Reliability
- * comes next, then adoption — of the team, then of each function of the
- * product — then what the data teaches: that last floor is the only one that
- * proves the point, and it is only readable once the ones above hold.
+ * comes next, then adoption — of the team, of who has been let in, then of
+ * each function of the product and of the recueil — then what the data
+ * teaches: that floor is the only one that proves the point, and it is only
+ * readable once the ones above hold. The reference list closes the page, since
+ * it says whether the data could be declared at all.
+ *
+ * Three diagrams, no more: the coverage curve under the lead figure, the
+ * movements of the recueil, and the bar splitting the time by trade. Each one
+ * is there because a figure alone hides what it shows; everything else stays a
+ * figure, a bar or a table.
  */
 export function StatsPage() {
   const { range, setRange, statistics, isLoading, alerts } = useStatisticsScreen();
@@ -58,15 +70,24 @@ export function StatsPage() {
     freshness,
     month_validation,
     adoption,
+    accounts,
     surfaces,
     steering,
     registry,
+    intake,
+    stewardship,
+    thread,
+    notification_reading: notifications,
   } = statistics;
 
   return (
     <PageLayout header={header}>
       <div className="mx-auto flex max-w-4xl flex-col gap-8 pb-4">
-        <CoverageHeadline coverage={coverage} medianDelay={freshness.median_delay} />
+        <CoverageHeadline
+          coverage={coverage}
+          trend={statistics.coverage_trend}
+          medianDelay={freshness.median_delay}
+        />
 
         <section>
           <h2 className="mb-2 text-sm font-semibold text-slate-900">Fiabilité</h2>
@@ -116,7 +137,7 @@ export function StatsPage() {
             <MetricTile
               label="Part de l'équipe ayant saisi"
               value={formatShare(adoption.rate)}
-              hint={`${adoption.contributors} sur ${adoption.expected_contributors} collaborateurs`}
+              hint={`${adoption.contributors} sur ${adoption.expected_contributors} collaborateurs · équipe ${teamLabel(coverage.team)}`}
             />
             <MetricTile
               label="Sans aucune saisie"
@@ -127,6 +148,38 @@ export function StatsPage() {
                   : adoption.idle.map((teammate) => teammate.display_name).join(", ")
               }
               tone={alerts.idleTeammates ? "warning" : "plain"}
+            />
+          </dl>
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-slate-900">
+            Comptes et accès
+          </h2>
+          <p className="mb-3 text-sm text-slate-500">
+            Qui est entré, et jusqu&apos;où ? Un compte qui n&apos;a pas de rôle
+            n&apos;a accès qu&apos;à « Mes demandes ».
+          </p>
+          <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <MetricTile
+              label="Invités en attente d'un rôle"
+              value={String(accounts.guests)}
+              hint="ne voient que « Mes demandes »"
+            />
+            <MetricTile
+              label="Jamais connectés"
+              value={String(accounts.never_signed_in)}
+              hint="comptes ouverts d'avance, jamais utilisés"
+            />
+            <MetricTile
+              label="Reçoivent le récapitulatif"
+              value={formatShare(accounts.reminder_rate)}
+              hint={`${accounts.reminders_daily} chaque jour · ${accounts.reminders_weekly} chaque semaine · ${accounts.reminders_never} jamais`}
+            />
+            <MetricTile
+              label="Rôles de l'équipe"
+              value={String(accounts.teammates + accounts.managers + accounts.admins)}
+              hint={`${accounts.teammates} équipier${accounts.teammates > 1 ? "s" : ""} · ${accounts.managers} responsable${accounts.managers > 1 ? "s" : ""} · ${accounts.admins} administrateur${accounts.admins > 1 ? "s" : ""}`}
             />
           </dl>
         </section>
@@ -144,6 +197,104 @@ export function StatsPage() {
 
         <section>
           <h2 className="mb-2 text-sm font-semibold text-slate-900">
+            Recueil de besoins
+          </h2>
+          <p className="mb-3 text-sm text-slate-500">
+            Ce que l&apos;entreprise demande, et ce qu&apos;on en fait. Un besoin
+            n&apos;est pas un projet : il se lit à part.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <IntakeMovements intake={intake} />
+            <dl className="grid content-start gap-3">
+              <MetricTile
+                label="En attente d'une réponse"
+                value={String(intake.waiting)}
+                hint={
+                  intake.waiting === 0
+                    ? "aucun besoin en attente"
+                    : `le plus ancien attend depuis ${formatWait(intake.oldest_wait_days)}`
+                }
+              />
+            </dl>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-slate-900">Vie des projets</h2>
+          <p className="mb-3 text-sm text-slate-500">
+            Quelqu&apos;un répond-il de chaque projet, et en donne-t-on des nouvelles ?
+          </p>
+          <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <MetricTile
+              label="Sans référent technique"
+              value={String(stewardship.without_tech_lead)}
+              hint={`sur ${stewardship.active_projects} projets actifs · le prochain bug n'arriverait à personne`}
+              tone={alerts.withoutTechLead ? "warning" : "plain"}
+            />
+            <MetricTile
+              label="Sans référent projet"
+              value={String(stewardship.without_lead)}
+              hint={`sur ${stewardship.active_projects} projets actifs`}
+            />
+            <MetricTile
+              label="Suivis sans nouvelles"
+              value={String(thread.silent)}
+              hint={
+                thread.followed === 0
+                  ? "aucun projet suivi"
+                  : `sur ${thread.followed} projets suivis · rien depuis plus de 14 jours`
+              }
+              tone={alerts.silentFollowed ? "warning" : "plain"}
+            />
+            <MetricTile
+              label="Actualités qui ont reçu une réponse"
+              value={formatShare(thread.answer_rate)}
+              hint={
+                thread.posted === 0
+                  ? "aucune actualité publiée sur la période"
+                  : `${thread.answered} sur ${thread.posted} · réponse ou réaction d'un autre que l'auteur`
+              }
+            />
+          </dl>
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-slate-900">
+            Notifications lues
+          </h2>
+          <p className="mb-3 text-sm text-slate-500">
+            Ce que le produit dit est-il entendu ? Une notification jamais ouverte est
+            un message qui ne sert à personne.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <NotificationReadRates reading={notifications} />
+            <dl className="grid content-start gap-3">
+              <MetricTile
+                label="Notifications ouvertes"
+                value={formatShare(notifications.read_rate)}
+                hint={
+                  notifications.delivered === 0
+                    ? "aucune notification envoyée sur la période"
+                    : `${notifications.read} sur ${notifications.delivered} envoyées sur la période`
+                }
+              />
+              <MetricTile
+                label="En attente de lecture"
+                value={String(notifications.unread)}
+                hint="à ce jour, quelle que soit leur date"
+              />
+              <MetricTile
+                label="Laissées sans lecture"
+                value={String(notifications.ignored)}
+                hint="en attente depuis plus de 14 jours"
+                tone={notifications.ignored > 0 ? "warning" : "plain"}
+              />
+            </dl>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-slate-900">
             Valeur de pilotage
           </h2>
           <p className="mb-3 text-sm text-slate-500">
@@ -152,6 +303,7 @@ export function StatsPage() {
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             <ShareBreakdown title="Projet ou hors projet" rows={kindRows(steering)} />
+            <TradeSplit steering={steering} />
             <ShareBreakdown title="Temps par phase" rows={phaseRows(steering)} />
             <ShareBreakdown
               title="Temps par axe stratégique"
@@ -171,7 +323,7 @@ export function StatsPage() {
           <p className="mb-3 text-sm text-slate-500">
             Le référentiel de projets reflète-t-il le travail réel ?
           </p>
-          <dl className="grid gap-3 sm:grid-cols-3">
+          <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <MetricTile
               label="Projets actifs"
               value={String(registry.active_missions)}
@@ -189,7 +341,28 @@ export function StatsPage() {
             <MetricTile
               label="Projets créés"
               value={String(registry.created)}
-              hint="ajoutées au référentiel sur la période"
+              hint="ajoutés au référentiel sur la période"
+            />
+            <MetricTile
+              label="Sans activité"
+              value={String(registry.without_activity)}
+              hint="aucune saisie possible tant qu'un métier n'est pas ajouté"
+              tone={alerts.withoutActivity ? "warning" : "plain"}
+            />
+            <MetricTile
+              label="Budget incomplet"
+              value={String(registry.unbudgeted)}
+              hint="un métier sans estimation : le projet n'a pas d'estimation"
+            />
+            <MetricTile
+              label="Projets suivis"
+              value={String(registry.followed)}
+              hint="ceux que l'équipe garde à l'œil"
+            />
+            <MetricTile
+              label="Publiés au catalogue"
+              value={String(registry.published)}
+              hint="visibles sur waat.tools"
             />
           </dl>
         </section>

@@ -4,6 +4,7 @@ import { ClearFilters } from "@/components/atoms/ClearFilters";
 import { FilterSelect } from "@/components/atoms/FilterSelect";
 import { FilteredCount } from "@/components/atoms/FilteredCount";
 import { SearchField } from "@/components/atoms/SearchField";
+import { ToggleField } from "@/components/atoms/ToggleField";
 import type {
   Department,
   ProjectCategory,
@@ -16,12 +17,10 @@ import { CATEGORIES, PHASES, PRIORITIES } from "@/lib/board";
 import { DEPARTMENTS } from "@/lib/departments";
 import {
   EVERY_CRITERION,
-  FOLLOW_STATES,
   MISSION_STATES,
   MISSION_KINDS,
   PUBLICATION_STATES,
   type Criterion,
-  type FollowState,
   type MissionFilters as Criteria,
   type MissionState,
   type PublicationState,
@@ -193,23 +192,23 @@ export function MissionFilters({
           />
         )}
 
-        {/* Ce que l'équipe suit de près, et son envers : les projets que
-            personne ne suit. */}
-        {shows("follows") && (
-          <FilterSelect
-            label="Suivi"
-            options={FOLLOW_STATES.map(({ value, label }) => ({ value, label }))}
-            values={filters.follows}
-            onChange={(values) => onChange({ follows: values as FollowState[] })}
-          />
-        )}
-
         {shows("states") && (
           <FilterSelect
             label="État"
             options={MISSION_STATES.map(({ value, label }) => ({ value, label }))}
             values={filters.states}
             onChange={(values) => onChange({ states: values as MissionState[] })}
+          />
+        )}
+
+        {/* Ce que l'équipe suit de près : un geste, pas un menu à deux valeurs. */}
+        {shows("follows") && (
+          <ToggleField
+            label="Suivis uniquement"
+            onText="Suivis uniquement"
+            offText="Suivis uniquement"
+            value={filters.follows.length === 1 && filters.follows[0] === "followed"}
+            onChange={(on) => onChange({ follows: on ? ["followed"] : [] })}
           />
         )}
 

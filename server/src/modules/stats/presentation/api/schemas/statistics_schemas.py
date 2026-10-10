@@ -9,9 +9,11 @@ from datetime import date
 from pydantic import BaseModel
 
 from src.modules.calendar.domain.entities.period import PeriodRange
+from src.modules.notifications.domain.entities.notification import NotificationKind
 from src.modules.projects.domain.entities.project import ProjectCategory, ProjectStatus
 from src.modules.stats.domain.entities.surface_usage import Surface
 from src.shared.enums.team import Team
+from src.shared.enums.work_nature import WorkNature
 
 
 class PeriodResponse(BaseModel):
@@ -35,6 +37,15 @@ class CoverageResponse(BaseModel):
     team: Team
     #: How many people that team counts. None leaves nothing to read.
     people: int
+
+
+class CoveragePointResponse(BaseModel):
+    """The coverage of one week."""
+
+    week_start: date
+    declared_days: float
+    expected_days: float
+    rate: float | None
 
 
 class FreshnessResponse(BaseModel):
@@ -108,6 +119,14 @@ class CategoryShareResponse(BaseModel):
     share: float | None
 
 
+class NatureShareResponse(BaseModel):
+    """Project time booked under one trade. A null trade states none."""
+
+    nature: WorkNature | None
+    days: float
+    share: float | None
+
+
 class MissionShareResponse(BaseModel):
     """Time booked against one mission."""
 
@@ -125,6 +144,7 @@ class SteeringResponse(BaseModel):
     project_share: float | None
     by_status: list[StatusShareResponse]
     by_category: list[CategoryShareResponse]
+    by_nature: list[NatureShareResponse]
     top_missions: list[MissionShareResponse]
 
 
@@ -136,6 +156,82 @@ class RegistryResponse(BaseModel):
     missions_without_time: int
     usage_rate: float | None
     created: int
+    without_activity: int
+    unbudgeted: int
+    followed: int
+    published: int
+
+
+class IntakeResponse(BaseModel):
+    """What the company asked for over the window, and what became of it."""
+
+    submitted: int
+    accepted: int
+    rejected: int
+    deferred: int
+    converted: int
+    #: Still waiting for an answer, however long ago they were handed over.
+    waiting: int
+    #: The longest wait among them, in days. Null when none waits.
+    oldest_wait_days: int | None
+
+
+class AccountsResponse(BaseModel):
+    """Who has an account, and how far each one has been let in."""
+
+    guests: int
+    teammates: int
+    managers: int
+    admins: int
+    never_signed_in: int
+    reminders_daily: int
+    reminders_weekly: int
+    reminders_never: int
+    #: Share of the accounts a letter can reach that asked for one.
+    reminder_rate: float | None
+
+
+class StewardshipResponse(BaseModel):
+    """Whether somebody answers for each project."""
+
+    active_projects: int
+    without_lead: int
+    without_tech_lead: int
+
+
+class ThreadResponse(BaseModel):
+    """Whether the follow-up thread is a conversation or a noticeboard."""
+
+    posted: int
+    answered: int
+    #: Share of the updates somebody other than their author answered.
+    answer_rate: float | None
+    followed: int
+    #: Followed projects with no news for longer than a fortnight.
+    silent: int
+
+
+class KindReadingResponse(BaseModel):
+    """What one kind of notification sent, and how much was opened."""
+
+    kind: NotificationKind
+    delivered: int
+    read: int
+    read_rate: float | None
+
+
+class NotificationReadingResponse(BaseModel):
+    """Whether what the product says is heard."""
+
+    delivered: int
+    read: int
+    read_rate: float | None
+    #: Waiting right now, whenever they were written.
+    unread: int
+    #: Of those, left unopened for longer than a fortnight.
+    ignored: int
+    #: The least opened first.
+    kinds: list[KindReadingResponse]
 
 
 class StatisticsResponse(BaseModel):
@@ -143,9 +239,16 @@ class StatisticsResponse(BaseModel):
 
     period: PeriodResponse
     coverage: CoverageResponse
+    #: The last weeks, oldest first, whatever window was asked for.
+    coverage_trend: list[CoveragePointResponse]
     freshness: FreshnessResponse
     month_validation: MonthValidationResponse
     adoption: AdoptionResponse
     surfaces: SurfaceUsageResponse
     steering: SteeringResponse
     registry: RegistryResponse
+    intake: IntakeResponse
+    accounts: AccountsResponse
+    stewardship: StewardshipResponse
+    thread: ThreadResponse
+    notification_reading: NotificationReadingResponse

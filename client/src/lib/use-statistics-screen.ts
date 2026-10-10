@@ -18,6 +18,12 @@ export const DEFAULT_RANGE: PeriodRange = "last_30_days";
 export interface StatisticsAlerts {
   lateCatchUp: boolean;
   idleTeammates: boolean;
+  /** Projects nobody can declare on until a trade is added. */
+  withoutActivity: boolean;
+  /** Projects whose next bug would reach nobody. */
+  withoutTechLead: boolean;
+  /** Followed projects nobody has said a word about for a fortnight. */
+  silentFollowed: boolean;
 }
 
 /**
@@ -27,7 +33,15 @@ export interface StatisticsAlerts {
  * would teach the team to ignore the colour altogether.
  */
 function alertsOf(statistics: StatisticsResponse | undefined): StatisticsAlerts {
-  if (!statistics) return { lateCatchUp: false, idleTeammates: false };
+  if (!statistics) {
+    return {
+      lateCatchUp: false,
+      idleTeammates: false,
+      withoutActivity: false,
+      withoutTechLead: false,
+      silentFollowed: false,
+    };
+  }
 
   const expectsSomething = statistics.period.working_days > 0;
   const late = statistics.freshness.late_share;
@@ -35,6 +49,9 @@ function alertsOf(statistics: StatisticsResponse | undefined): StatisticsAlerts 
   return {
     lateCatchUp: late !== null && late !== undefined && late > LATE_SHARE_ALERT,
     idleTeammates: expectsSomething && statistics.adoption.idle.length > 0,
+    withoutActivity: statistics.registry.without_activity > 0,
+    withoutTechLead: statistics.stewardship.without_tech_lead > 0,
+    silentFollowed: statistics.thread.silent > 0,
   };
 }
 

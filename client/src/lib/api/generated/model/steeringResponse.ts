@@ -6,6 +6,7 @@
  */
 import type { CategoryShareResponse } from "./categoryShareResponse";
 import type { MissionShareResponse } from "./missionShareResponse";
+import type { NatureShareResponse } from "./natureShareResponse";
 import type { StatusShareResponse } from "./statusShareResponse";
 
 /**
@@ -17,5 +18,6 @@ export interface SteeringResponse {
   project_share: number | null;
   by_status: StatusShareResponse[];
   by_category: CategoryShareResponse[];
+  by_nature: NatureShareResponse[];
   top_missions: MissionShareResponse[];
 }

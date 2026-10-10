@@ -48,7 +48,6 @@ const detail = ({
 function sheet(overrides: Record<string, unknown> = {}, handlers = {}) {
   const props = {
     updateFields: vi.fn().mockResolvedValue(undefined),
-    saveDescription: vi.fn().mockResolvedValue(undefined),
     saveRegistry: vi.fn().mockResolvedValue(undefined),
     addLink: vi.fn().mockResolvedValue(undefined),
     removeLink: vi.fn().mockResolvedValue(undefined),
@@ -64,13 +63,7 @@ describe("ProjectSheetTab", () => {
 
     // No section repeats the tab's own name: the tab is « Catalogue », and
     // what the service hangs from is « Rattachement ».
-    for (const section of [
-      "Publication",
-      "Fiche",
-      "Liens",
-      "Technique",
-      "Rattachement",
-    ]) {
+    for (const section of ["Publication", "Liens", "Technique", "Rattachement"]) {
       expect(screen.getByText(section)).toBeInTheDocument();
     }
   });
@@ -197,7 +190,6 @@ describe("cancelling a field", () => {
         <ProjectSheetTab
           detail={detail()}
           updateFields={vi.fn().mockResolvedValue(undefined)}
-          saveDescription={vi.fn().mockResolvedValue(undefined)}
           saveRegistry={vi.fn().mockResolvedValue(undefined)}
           addLink={vi.fn().mockResolvedValue(undefined)}
           removeLink={vi.fn().mockResolvedValue(undefined)}

@@ -1,16 +1,22 @@
 """What the dashboard figures mean, and how they are worked out."""
 
+from datetime import date
+
 import pytest
 
+from src.modules.notifications.domain.entities.notification import NotificationKind
 from src.modules.stats.domain.entities.statistics import (
     Adoption,
     Coverage,
     Freshness,
     MissionShare,
     MonthValidation,
+    NotificationReading,
     Registry,
     Steering,
     Teammate,
+    age_in_days,
+    ignored_before,
 )
 
 
@@ -152,3 +158,47 @@ class TestRegistry:
             Registry(active_missions=0, missions_with_time=0, created=0).usage_rate
             is None
         )
+
+
+class TestAgeInDays:
+    def test_a_day_is_aged_from_the_day_it_is_read(self) -> None:
+        assert age_in_days(date(2026, 9, 7), today=date(2026, 9, 17)) == 10
+
+    def test_a_day_in_the_future_is_not_negative(self) -> None:
+        # A clock skewed by a few hours must not draw a wait of minus one day.
+        assert age_in_days(date(2026, 9, 18), today=date(2026, 9, 17)) == 0
+
+
+class TestIgnoredBefore:
+    def test_a_notification_is_left_after_a_fortnight(self) -> None:
+        assert ignored_before(date(2026, 9, 17)) == date(2026, 9, 3)
+
+
+class TestNotificationReading:
+    def test_the_least_opened_kind_comes_first(self) -> None:
+        reading = NotificationReading.of(
+            {
+                NotificationKind.UPDATE_MENTION: (4, 4),
+                NotificationKind.PROJECT_UPDATE_POSTED: (6, 2),
+            },
+            unread=0,
+            ignored=0,
+        )
+
+        assert [one.kind for one in reading.kinds] == [
+            NotificationKind.PROJECT_UPDATE_POSTED,
+            NotificationKind.UPDATE_MENTION,
+        ]
+
+    def test_two_equally_opened_kinds_put_the_bigger_one_first(self) -> None:
+        # Five unopened lines say more than one.
+        reading = NotificationReading.of(
+            {
+                NotificationKind.USER_ACTIVATED: (1, 0),
+                NotificationKind.PROJECT_ARCHIVED: (5, 0),
+            },
+            unread=0,
+            ignored=0,
+        )
+
+        assert reading.kinds[0].kind is NotificationKind.PROJECT_ARCHIVED
