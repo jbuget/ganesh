@@ -14,6 +14,7 @@ import { ProjectPanel } from "@/components/organisms/ProjectPanel";
 import { Button } from "@/components/ui/button";
 import { useOpenedMission } from "@/lib/opened-mission";
 import { useMissionColumns } from "@/lib/use-mission-columns";
+import { PROJECTS_CRITERIA } from "@/lib/mission-filters";
 import { useMissionFilters } from "@/lib/use-mission-filters";
 import { useMissionSort } from "@/lib/use-mission-sort";
 import { useProjectsScreen } from "@/lib/use-projects";
@@ -33,7 +34,7 @@ import { useProjectsScreen } from "@/lib/use-projects";
 export function ProjectsPage() {
   // The same criteria as the kanban, held by the same address: one filters from
   // one screen, opens the other, and the question asked stays the same.
-  const { filters, hasFilter, set, clear } = useMissionFilters();
+  const { filters, hasFilter, set, clear } = useMissionFilters(PROJECTS_CRITERIA);
   // Ordering follows the same path as the filters: the address carries it, and
   // the screen hook renders the tree already in the order asked for.
   const { sorted, toggle: sortBy } = useMissionSort();
@@ -87,6 +88,7 @@ export function ProjectsPage() {
               the reference list must stay readable and editable, whether one
               has gone fifty rows down or off to the right after a column. */}
           <MissionFilters
+            criteria={PROJECTS_CRITERIA}
             filters={filters}
             hasFilter={hasFilter}
             onChange={set}

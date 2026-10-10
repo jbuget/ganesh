@@ -86,8 +86,34 @@ export const EVERY_CRITERION: Criterion[] = [
   "contributors",
   "types",
   "publications",
-  "follows",
   "states",
+  "follows",
+];
+
+/**
+ * What the kanban asks. The columns already are the phase, and the board
+ * steers what runs: the catalogue, the archives and the other classifications
+ * are questions for the reference list.
+ */
+export const BOARD_CRITERIA: Criterion[] = [
+  "name",
+  "priorities",
+  "contributors",
+  "follows",
+];
+
+/**
+ * What the reference list asks. Who is on a mission and whether it is
+ * published are read on the sheet, not asked of the list.
+ */
+export const PROJECTS_CRITERIA: Criterion[] = [
+  "name",
+  "phases",
+  "categories",
+  "departments",
+  "priorities",
+  "states",
+  "follows",
 ];
 
 /** Whether a criterion is asking anything, criterion by criterion. */
