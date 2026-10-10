@@ -420,6 +420,7 @@ def get_project_detail_use_case(
     assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
     entries: EntryRepository = Depends(get_entry_repository),
     users: UserRepository = Depends(get_user_repository),
+    activities: ActivityRepository = Depends(get_activity_repository),
 ) -> GetProjectDetailUseCase:
     return GetProjectDetailUseCase(
         projects=projects,
@@ -427,6 +428,7 @@ def get_project_detail_use_case(
         assignees=assignees,
         entries=entries,
         users=users,
+        activities=activities,
     )
 
 

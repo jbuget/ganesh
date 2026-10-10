@@ -16,6 +16,8 @@ rules that bit.
 
 from datetime import date
 
+from src.modules.entries.application.use_cases.get_month_grid import GridRow
+from src.modules.planning.domain.entities.workload_plan import PlanBlocker
 from src.modules.projects.domain.entities.project import ProjectKind, ProjectStatus
 
 KINDS = {
@@ -34,6 +36,14 @@ STATUSES = {
     ProjectStatus.VALIDATION: "validation",
     ProjectStatus.DEPLOYMENT: "déploiement",
     ProjectStatus.OPERATIONS: "en service",
+}
+
+#: Why the projection placed a mission nowhere.
+BLOCKERS = {
+    PlanBlocker.NO_ESTIMATE: "personne ne l'a estimé",
+    PlanBlocker.NO_ASSIGNEE: "personne n'y est affecté",
+    PlanBlocker.NOTHING_LEFT: "l'estimation est déjà consommée",
+    PlanBlocker.BEYOND_HORIZON: "ce qui reste ne tient pas dans l'horizon",
 }
 
 
@@ -167,3 +177,20 @@ def listed(items: list[str]) -> str:
     if len(items) <= 1:
         return "".join(items)
     return f"{', '.join(items[:-1])} et {items[-1]}"
+
+
+def blocker(reason: PlanBlocker) -> str:
+    """« personne ne l'a estimé » — why a mission has no projected date."""
+    return BLOCKERS[reason]
+
+
+def grid_row(row: GridRow) -> str:
+    """What a grid row is called out loud: the mission, then the trade under it.
+
+    The trade alone would read « Développement 3 jours » on a month spread
+    over four missions, which answers nothing: every row of every mission is
+    called that. Off-project work names itself and is not repeated.
+    """
+    if row.activity_id is None:
+        return row.label
+    return f"{row.project_label} ({row.label})"

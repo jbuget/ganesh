@@ -58,4 +58,38 @@ describe("MarkdownView", () => {
       "https://waat.fr/doc",
     );
   });
+
+  it("draws its links the way it is told to", () => {
+    render(
+      <MarkdownView
+        body={"Voir [EDIT](/projects/85)."}
+        renderLink={(href, children) => <mark data-href={href}>{children}</mark>}
+      />,
+    );
+
+    expect(screen.getByText("EDIT").tagName).toBe("MARK");
+    expect(screen.getByText("EDIT")).toHaveAttribute("data-href", "/projects/85");
+  });
+
+  it("draws no image when asked not to", () => {
+    const { container } = render(
+      <MarkdownView
+        body={"Voir ![x](https://ailleurs.example/?q=secret)."}
+        images={false}
+      />,
+    );
+
+    expect(container.querySelector("img")).toBeNull();
+  });
+
+  it("hands the tree to the plugins it is given", () => {
+    const shout =
+      () => (tree: { children?: { children?: { value?: string }[] }[] }) => {
+        const text = tree.children?.[0]?.children?.[0];
+        if (text) text.value = "TOUT FORT";
+      };
+    render(<MarkdownView body="tout bas" plugins={[shout]} />);
+
+    expect(screen.getByText("TOUT FORT")).toBeInTheDocument();
+  });
 });

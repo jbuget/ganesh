@@ -37,6 +37,7 @@ from src.modules.projects.domain.entities.project import (
 from src.modules.projects.presentation.dependencies import get_project_detail_use_case
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
+from src.shared.utils import clock
 
 ANNE = User(
     id=1, entra_oid="oid-1", email="a@waat.fr", display_name="A. Ba", role=Role.TEAMMATE
@@ -86,6 +87,8 @@ def a_detail(project: Project, **fields: object) -> ProjectDetail:
         dependencies=[],
         is_deletable=False,
         parent=fields.get("parent"),  # type: ignore[arg-type]
+        # What `estimate_of` reads for a mission nobody has cut into trades.
+        estimated_days=fields.get("estimated_days", project.estimated_days),  # type: ignore[arg-type]
     )
 
 
@@ -107,14 +110,30 @@ class Stub:
         return self._answer
 
 
-class Wired:
-    """An API whose project sheet is a stub, with a machine at the door."""
+class ByProject:
+    """The sheet asked for: a package's when one is named, the mission's otherwise."""
 
-    def __init__(self, detail: object) -> None:
+    def __init__(self, detail: object, packages: dict[int | None, ProjectDetail]):
+        self._detail = detail
+        self._packages = packages
+
+    async def execute(self, project_id: int) -> object:
+        if project_id in self._packages:
+            return self._packages[project_id]
+        if isinstance(self._detail, Exception):
+            raise self._detail
+        return self._detail
+
+
+class Wired:
+    """An API whose project sheets are stubs, with a machine at the door."""
+
+    def __init__(self, detail: object, *packages: ProjectDetail) -> None:
         self.app = FastAPI()
         ToolServer().attach(self.app)
-        self.app.dependency_overrides[get_project_detail_use_case] = lambda: Stub(
-            detail
+        sheets = {package.project.id: package for package in packages}
+        self.app.dependency_overrides[get_project_detail_use_case] = lambda: ByProject(
+            detail, sheets
         )
         key = ApiKey(
             id=1,
@@ -200,6 +219,15 @@ class TestItWeighsWhatWasSpentAgainstWhatWasPlanned:
             said = await project_brief(7)
 
         assert "128 jours déclarés pour 150 estimés : il en reste 22." in said
+
+    @pytest.mark.asyncio
+    async def test_the_estimate_is_the_one_its_trades_add_up_to(self) -> None:
+        """Not the column on the mission, left behind when the trades took it over."""
+        cut_up = Project(id=7, label="WAATcher", kind=ProjectKind.PROJECT)
+        with Wired(a_detail(cut_up, consumed_days=26.75, estimated_days=270.0)):
+            said = await project_brief(7)
+
+        assert "pour 270 estimés : il en reste 243,25." in said
 
     @pytest.mark.asyncio
     async def test_an_estimate_gone_past_says_by_how_much(self) -> None:
@@ -299,21 +327,58 @@ class TestItNamesWhoCarriedItWithoutRankingThem:
 
 class TestItNamesTheWorkPackages:
     @pytest.mark.asyncio
-    async def test_the_packages_are_named_with_their_identifiers(self) -> None:
-        with Wired(a_detail(WAATCHER, sub_projects=[IMPORT, SUPERVISION])):
+    async def test_each_package_says_its_phase_and_what_was_declared_on_it(
+        self,
+    ) -> None:
+        with Wired(
+            a_detail(WAATCHER, sub_projects=[IMPORT, SUPERVISION]),
+            a_detail(IMPORT, consumed_days=3.0),
+            a_detail(SUPERVISION),
+        ):
             said = await project_brief(7)
 
         assert (
-            "2 lots rattachés : WAATcher — Import (#9) et WAATcher — Supervision (#8)."
-            in said
-        )
+            "2 lots rattachés :\n"
+            "- WAATcher — Import (#9) : cadrage, 3 jours déclarés\n"
+            "- WAATcher — Supervision (#8) : en service, aucun jour déclaré"
+        ) in said
 
     @pytest.mark.asyncio
     async def test_a_single_package_agrees_in_the_singular(self) -> None:
-        with Wired(a_detail(WAATCHER, sub_projects=[SUPERVISION])):
+        with Wired(
+            a_detail(WAATCHER, sub_projects=[SUPERVISION]), a_detail(SUPERVISION)
+        ):
             said = await project_brief(7)
 
-        assert "1 lot rattaché : WAATcher — Supervision (#8)." in said
+        assert "1 lot rattaché :" in said
+
+    @pytest.mark.asyncio
+    async def test_what_was_declared_is_added_up_with_the_packages(self) -> None:
+        """A project cut into lots is booked on its lots: its own days say little."""
+        with Wired(
+            a_detail(WAATCHER, consumed_days=1.0, sub_projects=[IMPORT, SUPERVISION]),
+            a_detail(IMPORT, consumed_days=3.0),
+            a_detail(SUPERVISION, consumed_days=2.5),
+        ):
+            said = await project_brief(7)
+
+        assert "Avec ses lots, 6,5 jours déclarés en tout." in said
+
+    @pytest.mark.asyncio
+    async def test_the_estimate_of_a_project_cut_into_lots_says_it_is_its_own(
+        self,
+    ) -> None:
+        """Read beside the total of its lots, a bare « il en reste » gets added up."""
+        with Wired(
+            a_detail(WAATCHER, consumed_days=128.0, sub_projects=[IMPORT]),
+            a_detail(IMPORT, consumed_days=3.0),
+        ):
+            said = await project_brief(7)
+
+        assert (
+            "Sur le projet seul : 128 jours déclarés pour 150 estimés : il en reste 22."
+            in said
+        )
 
     @pytest.mark.asyncio
     async def test_a_mission_with_no_package_says_nothing_of_them(self) -> None:
@@ -321,3 +386,63 @@ class TestItNamesTheWorkPackages:
             said = await project_brief(7)
 
         assert "lot" not in said
+
+
+class TestItSaysWhoIsOnItNow:
+    @pytest.mark.asyncio
+    async def test_the_people_on_it_now_are_named(self) -> None:
+        """An assignment, not a tally: naming it ranks nobody."""
+        with Wired(a_detail(WAATCHER, contributors=[ANNE, MARIE])):
+            said = await project_brief(7)
+
+        assert "Intervenants actuels : A. Ba et M. Ce." in said
+
+    @pytest.mark.asyncio
+    async def test_the_technical_leads_are_named(self) -> None:
+        with Wired(a_detail(WAATCHER, tech_leads=[MARIE])):
+            said = await project_brief(7)
+
+        assert "Référents techniques : M. Ce." in said
+
+    @pytest.mark.asyncio
+    async def test_the_last_two_months_are_counted_lots_included(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(clock, "today", lambda: date(2026, 10, 10))
+        with Wired(
+            a_detail(
+                WAATCHER,
+                sub_projects=[IMPORT],
+                contributions=[
+                    Contribution(
+                        user=ANNE,
+                        days=7.0,
+                        by_month=[(date(2026, 10, 1), 2.0), (date(2026, 7, 1), 5.0)],
+                    )
+                ],
+            ),
+            a_detail(
+                IMPORT,
+                contributions=[
+                    Contribution(
+                        user=MARIE, days=1.5, by_month=[(date(2026, 9, 1), 1.5)]
+                    )
+                ],
+            ),
+        ):
+            said = await project_brief(7)
+
+        assert (
+            "Depuis le 01/09/2026, 3,5 jours saisis par 2 personnes, lots compris "
+            "— réalisés ou pré-saisis." in said
+        )
+
+    @pytest.mark.asyncio
+    async def test_nothing_declared_lately_is_said(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(clock, "today", lambda: date(2026, 10, 10))
+        with Wired(a_detail(WAATCHER, contributions=declared_by(ANNE))):
+            said = await project_brief(7)
+
+        assert "Personne n'y a saisi de temps depuis le 01/09/2026." in said

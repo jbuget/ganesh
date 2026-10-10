@@ -33,6 +33,7 @@ from src.mcp.tools.brief import project_brief
 from src.mcp.tools.declaring import declare_time
 from src.mcp.tools.entries import my_month
 from src.mcp.tools.mood import team_mood
+from src.mcp.tools.news import project_news
 from src.mcp.tools.portfolio import portfolio_status
 from src.mcp.tools.projects import find_project
 from src.mcp.tools.reviewing import record_review
@@ -46,6 +47,7 @@ PATH = "/mcp"
 TOOLS = (
     find_project,
     project_brief,
+    project_news,
     my_month,
     what_changed,
     portfolio_status,

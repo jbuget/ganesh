@@ -133,7 +133,7 @@ became once a tool could say those refusals in words.
 
 ## The tools
 
-Eight, each `src/mcp/tools/<name>.py`, each answering in sentences built through
+Nine, each `src/mcp/tools/<name>.py`, each answering in sentences built through
 `src/mcp/tools/say.py` — « 1,5 jour », « 08/09 », « septembre 2026 ». A number
 handed over raw is a number a model words itself, and words wrong.
 
@@ -173,11 +173,35 @@ Three decisions carried in it:
 - **only `go_live_date` answers for a date.** A bar on the roadmap opens where
   the drawing needed it to, and reading that back would make a portfolio that
   announced nothing announce something.
+- **a project is read with its lots.** Each lot says its phase and its days,
+  and the time is added up with them: a project booked on its lots alone
+  answered « aucun jour déclaré ».
+- **who is on it now** is the assignments, named — intervenants actuels,
+  référents techniques — and the time declared since the first of last month,
+  counted, lots included.
 
 > WAATcher (#7) — projet, construction depuis le 08/03/2026. 128 jours déclarés
 > pour 150 estimés : il en reste 22. Mise en service annoncée le 30/11/2026.
 > Porté par A. Ba. 2 personnes y ont déclaré du temps. 1 lot rattaché :
 > WAATcher — Supervision (#8).
+
+### `project_news(project_id: int, since?: str)`
+
+**Scope** `projects:read`. `ListProjectUpdatesUseCase`, on the project and on
+each of its lots.
+
+The brief says where a project stands; the thread says what happened on it, in
+the words of the people on it. Asked « où en est X ? » by somebody who is not
+on X, the sheet alone came back too thin to be worth asking for.
+
+The most recent updates, latest first, each dated, signed, and naming the lot
+it was posted on; the rest counted. A withdrawn one is left out, the answers an
+update drew are counted. The text is the author's, with what the editor leaves
+in it taken out: a mention reads as the name it carries, an image leaves
+nothing.
+
+> Le 09/10/2026, Valentin Le Strat, sur EDIT V2 : les mini-développements sont
+> en recette chez les métiers, passage en production probable lundi. (2 réponses)
 
 ### `my_month(month?: str)`
 

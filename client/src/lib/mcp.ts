@@ -146,6 +146,12 @@ export const MCP_TOOLS: McpTool[] = [
     scope: "projects:read",
   },
   {
+    name: "project_news",
+    answers:
+      "Rend les dernières mises à jour d'un projet et de ses lots, datées et signées : avancement, difficultés, décisions, prochaines étapes.",
+    scope: "projects:read",
+  },
+  {
     name: "my_month",
     answers:
       "Dit où en est votre mois : ce qui est déclaré, ce qui manque encore, et si le mois est validé. Toujours le vôtre, jamais celui d'un collègue.",

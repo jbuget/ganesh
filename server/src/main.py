@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.assistant.router import router as asking_router
 from src.common.body_limit import BodySizeLimit
 from src.common.exception_handlers import register_domain_exception_handlers
 from src.core.config import get_settings
@@ -20,6 +21,9 @@ from src.modules.admin.presentation.api.routes.admin_router import (
 )
 from src.modules.api_keys.presentation.api.routes.api_key_router import (
     router as api_key_router,
+)
+from src.modules.assistant.presentation.api.routes.assistant_router import (
+    router as assistant_router,
 )
 from src.modules.audit_logs.presentation.api.routes.audit_log_router import (
     router as audit_log_router,
@@ -129,6 +133,10 @@ for module_router in (
     gazette_router,
     request_router,
     admin_router,
+    assistant_router,
+    # The one route that asks: in the way in the model belongs to, beside the
+    # module's own routes rather than among them.
+    asking_router,
 ):
     app.include_router(module_router, prefix=settings.api_prefix)
 

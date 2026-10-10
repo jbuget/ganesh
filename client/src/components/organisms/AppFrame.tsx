@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { AppSidebar } from "@/components/organisms/AppSidebar";
+import { AssistantPanel } from "@/components/organisms/AssistantPanel";
 import { CommandPalette } from "@/components/organisms/CommandPalette";
 import { MoodReminder } from "@/components/organisms/MoodReminder";
 import { useCurrentUser } from "@/lib/api/queries";
@@ -50,6 +51,10 @@ export function AppFrame({ children }: Readonly<{ children: React.ReactNode }>) 
       {/* In the frame rather than on a screen: it is reached from every one of
           them, and its shortcut listens to the whole window. */}
       <CommandPalette />
+      {/* In the frame as the palette is, and listening to the whole window
+          the same way — but announced nowhere: whoever knows ⌘J reaches it.
+          Never a guest, who never comes this far. */}
+      <AssistantPanel />
       {/* In the frame for the opposite reason: it is not reached at all. It
           comes to whoever is there at the end of the afternoon, whatever they
           happen to be reading — which is what spares « Moral de l'équipe »

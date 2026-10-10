@@ -111,6 +111,7 @@ source_modules =
     src.common
     src.shared
     src.mcp
+    src.assistant
 forbidden_modules =
     src.scheduler
 
@@ -129,3 +130,37 @@ forbidden_modules =
     src.modules.audit_logs.infrastructure
     src.modules.users.infrastructure
     src.modules.notifications.infrastructure
+
+# --- The assistant ------------------------------------------------------------
+# A fourth way in: it answers a question typed in the ⌘J panel by handing it to
+# a model that reads the tools. The model decides what is read, which is why
+# the loop lives here rather than in a use case — a use case never calls
+# another. Same shape as the tools and the clock, so the same two contracts.
+[importlinter:contract:assistant-is-a-leaf]
+name = Nothing imports the assistant but the entry point
+type = forbidden
+source_modules =
+    src.modules
+    src.common
+    src.shared
+    src.mcp
+    src.scheduler
+forbidden_modules =
+    src.assistant
+
+# It reaches use cases through each module's `dependencies`, and the tools
+# through `src.mcp` — never a repository of its own.
+[importlinter:contract:assistant-calls-use-cases]
+name = The assistant names no repository of its own
+type = forbidden
+allow_indirect_imports = True
+source_modules =
+    src.assistant
+forbidden_modules =
+    src.modules.assistant.infrastructure
+    src.modules.projects.infrastructure
+    src.modules.entries.infrastructure
+    src.modules.months.infrastructure
+    src.modules.audit_logs.infrastructure
+    src.modules.users.infrastructure
+    src.modules.planning.infrastructure

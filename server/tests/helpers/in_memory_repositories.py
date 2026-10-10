@@ -7,6 +7,7 @@ here passes in production, persistence aside.
 from collections.abc import Collection, Sequence
 from dataclasses import replace
 from datetime import date, datetime
+from uuid import UUID
 
 from src.modules.activity_summary.domain.repositories.activity_summary_repository import (
     ActivitySummaryRepository,
@@ -15,6 +16,11 @@ from src.modules.activity_summary.domain.repositories.activity_summary_repositor
 )
 from src.modules.api_keys.domain.entities.api_key import ApiKey
 from src.modules.api_keys.domain.repositories.api_key_repository import ApiKeyRepository
+from src.modules.assistant.domain.entities.conversation import Conversation
+from src.modules.assistant.domain.entities.exchange import Exchange
+from src.modules.assistant.domain.repositories.exchange_repository import (
+    ExchangeRepository,
+)
 from src.modules.audit_logs.domain.entities.audit_log import (
     AuditAction,
     AuditLog,
@@ -103,7 +109,7 @@ from src.modules.stats.domain.repositories.statistics_repository import (
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.enums.department import Department, in_declared_order
-from src.shared.exceptions.domain_exceptions import EntityNotFoundError
+from src.shared.exceptions.domain_exceptions import ConflictError, EntityNotFoundError
 
 
 class InMemoryUserRepository(UserRepository):
@@ -1313,3 +1319,45 @@ class InMemoryRequestRepository(RequestRepository):
 
     async def delete(self, request_id: int) -> None:
         self._requests.pop(request_id, None)
+
+
+class InMemoryExchangeRepository(ExchangeRepository):
+    def __init__(self) -> None:
+        self.exchanges: dict[int, Exchange] = {}
+        self._next_id = 1
+
+    async def get_conversation(
+        self, conversation_id: UUID, asker_id: int
+    ) -> Conversation | None:
+        held = sorted(
+            (
+                exchange
+                for exchange in self.exchanges.values()
+                if exchange.conversation_id == conversation_id
+                and exchange.asker_id == asker_id
+            ),
+            key=lambda exchange: exchange.rank,
+        )
+        if not held:
+            return None
+        return Conversation(id=conversation_id, asker_id=asker_id, exchanges=held)
+
+    async def add(self, exchange: Exchange) -> Exchange:
+        if any(
+            held.conversation_id == exchange.conversation_id
+            and held.rank == exchange.rank
+            for held in self.exchanges.values()
+        ):
+            raise ConflictError("This conversation moved on meanwhile; ask again.")
+        kept = replace(exchange, id=self._next_id)
+        self._next_id += 1
+        self.exchanges[kept.id] = kept  # type: ignore[index]
+        return kept
+
+    async def get(self, exchange_id: int, asker_id: int) -> Exchange | None:
+        held = self.exchanges.get(exchange_id)
+        return replace(held) if held and held.asker_id == asker_id else None
+
+    async def save_verdict(self, exchange: Exchange) -> None:
+        assert exchange.id is not None
+        self.exchanges[exchange.id] = replace(exchange)

@@ -9,11 +9,13 @@
  */
 import { keepPreviousData } from "@tanstack/react-query";
 
+import { useGetAssistant } from "@/lib/api/generated/assistant/assistant";
 import { useGetMonthGrid } from "@/lib/api/generated/entries/entries";
 import { useListTouchedProjects } from "@/lib/api/generated/audit-logs/audit-logs";
 import { useGetDigest } from "@/lib/api/generated/gazette/gazette";
 import type {
   ActivitySummaryResponse,
+  AssistantStatusResponse,
   DigestResponse,
   MonthGridResponse,
   MyMoodsResponse,
@@ -63,6 +65,15 @@ export function mutationResult<T>(response: { data: unknown }): T {
 export function usePlatform() {
   const query = useReadPlatform();
   return { ...query, platform: successOf<PlatformResponse>(query.data) };
+}
+
+/**
+ * Whether the assistant answers, and how long a conversation runs. Asked for
+ * once the panel is opened: it sits in the frame of every screen.
+ */
+export function useAssistantStatus(enabled: boolean) {
+  const query = useGetAssistant({ query: { enabled } });
+  return { ...query, status: successOf<AssistantStatusResponse>(query.data) };
 }
 
 /** The current user. */
