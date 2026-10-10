@@ -19,7 +19,7 @@ interface SortableProjectCardProps {
    * Raises or lowers the mark the team follows the mission by. Absent for a
    * reader who may not write.
    */
-  onToggleFollow?: (projectId: number, following: boolean) => void;
+  onFollowChange?: (projectId: number, following: boolean) => void;
   /** The board is filtered: the card reads and opens, but no longer arranges. */
   frozen?: boolean;
 }
@@ -36,7 +36,7 @@ export function SortableProjectCard({
   onContributorsChange,
   onOpen,
   onOpenThread,
-  onToggleFollow,
+  onFollowChange,
   frozen,
 }: SortableProjectCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -63,7 +63,7 @@ export function SortableProjectCard({
           onContributorsChange={onContributorsChange}
           onOpen={onOpen}
           onOpenThread={onOpenThread}
-          onToggleFollow={onToggleFollow}
+          onFollowChange={onFollowChange}
           handle={
             frozen ? null : (
               <button

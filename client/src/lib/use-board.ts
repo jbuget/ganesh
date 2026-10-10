@@ -77,7 +77,7 @@ export function useBoard(includeArchived = false) {
     reload,
 
     /** Raises or lowers the mark on a card, then reads the board again. */
-    async toggleFollow(projectId: number, following: boolean) {
+    async changeFollow(projectId: number, following: boolean) {
       await setFollowed(projectId, following);
       await reload();
     },

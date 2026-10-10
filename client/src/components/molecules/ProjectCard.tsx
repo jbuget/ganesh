@@ -50,7 +50,7 @@ interface ProjectCardProps {
    * Raises or lowers the mark the team follows the mission by. Absent for a
    * reader who may not write.
    */
-  onToggleFollow?: (projectId: number, following: boolean) => void;
+  onFollowChange?: (projectId: number, following: boolean) => void;
 }
 
 /** A mission on the board. */
@@ -62,7 +62,7 @@ export function ProjectCard({
   onContributorsChange,
   onOpen,
   onOpenThread,
-  onToggleFollow,
+  onFollowChange,
 }: ProjectCardProps) {
   const { project, parent } = card;
   const archived = !project.is_active;
@@ -135,24 +135,26 @@ export function ProjectCard({
               {project.label}
             </button>
           )}
-          {/* Small, at the end of the title: the name is what a card is read
-              by. Followed, the mark stays; otherwise it only comes up under
-              the cursor — a board of thirty cards each carrying an empty flag
-              would read as thirty marks. */}
-          <FollowMark
-            followed={project.is_followed}
-            onToggle={
-              onToggleFollow && !isDragging
-                ? () => onToggleFollow(project.id, !project.is_followed)
-                : undefined
-            }
-            className={`ml-1 px-0.5 align-middle [&_svg]:size-3 ${
-              project.is_followed
-                ? ""
-                : "opacity-0 group-hover:opacity-100 focus:opacity-100"
-            }`}
-          />
         </h3>
+        {/* Small, at the end of the title row rather than after the words: the
+            title is a button, which lays out as a block once it wraps, and a
+            mark set after it would drop to a line of its own. Followed, it
+            stays; otherwise it only comes up under the cursor — a board of
+            thirty cards each carrying an empty flag would read as thirty
+            marks. */}
+        <FollowMark
+          followed={project.is_followed}
+          onToggle={
+            onFollowChange && !isDragging
+              ? () => onFollowChange(project.id, !project.is_followed)
+              : undefined
+          }
+          className={`shrink-0 px-0.5 [&_svg]:size-3 ${
+            project.is_followed
+              ? ""
+              : "opacity-0 group-hover:opacity-100 focus:opacity-100"
+          }`}
+        />
         {handle === undefined ? (
           <GripVertical className="size-4 shrink-0 text-slate-300" aria-hidden />
         ) : (

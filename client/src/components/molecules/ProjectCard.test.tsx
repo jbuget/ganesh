@@ -289,19 +289,19 @@ describe("opening the mission", () => {
 
   it("lowers the mark on a followed mission, without opening it", () => {
     const onOpen = vi.fn();
-    const onToggleFollow = vi.fn();
+    const onFollowChange = vi.fn();
     render(
       <ProjectCard
         now={NOW}
         card={card({ project: { is_followed: true } })}
         onOpen={onOpen}
-        onToggleFollow={onToggleFollow}
+        onFollowChange={onFollowChange}
       />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Ne plus suivre ce projet" }));
 
-    expect(onToggleFollow).toHaveBeenCalledWith(1, false);
+    expect(onFollowChange).toHaveBeenCalledWith(1, false);
     expect(onOpen).not.toHaveBeenCalled();
   });
 
