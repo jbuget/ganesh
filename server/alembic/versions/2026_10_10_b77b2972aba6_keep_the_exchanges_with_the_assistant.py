@@ -1,7 +1,7 @@
 """keep the exchanges with the assistant
 
 Revision ID: b77b2972aba6
-Revises: 368f52cf0fea
+Revises: 409d8130b52f
 Create Date: 2026-10-10 12:49:43.258316
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "b77b2972aba6"
-down_revision: str | None = "368f52cf0fea"
+down_revision: str | None = "409d8130b52f"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
