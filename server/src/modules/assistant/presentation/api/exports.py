@@ -85,6 +85,6 @@ def as_csv(exchanges: list[ExportedExchangeResponse]) -> bytes:
 
 
 def written_as(
-    exchanges: list[ExportedExchangeResponse], format: ExportFormat
+    exchanges: list[ExportedExchangeResponse], written_in: ExportFormat
 ) -> bytes:
-    return as_csv(exchanges) if format is ExportFormat.CSV else as_json(exchanges)
+    return as_csv(exchanges) if written_in is ExportFormat.CSV else as_json(exchanges)

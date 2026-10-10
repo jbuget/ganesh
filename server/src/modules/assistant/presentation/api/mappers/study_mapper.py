@@ -58,17 +58,16 @@ def to_studied_exchange_response(exchange: Exchange) -> StudiedExchangeResponse:
 
 
 def _summary(conversation: Conversation) -> ConversationSummaryResponse:
-    exchanges = conversation.exchanges
     return ConversationSummaryResponse(
         id=conversation.id,
         asker_id=conversation.asker_id,
-        started_at=exchanges[0].asked_at,
-        last_asked_at=exchanges[-1].asked_at,
-        first_question=exchanges[0].question,
-        exchange_count=len(exchanges),
-        helpful=sum(held.verdict is Verdict.HELPFUL for held in exchanges),
-        unhelpful=sum(held.verdict is Verdict.UNHELPFUL for held in exchanges),
-        annotated=sum(held.annotation is not None for held in exchanges),
+        started_at=conversation.started_at,
+        last_asked_at=conversation.last_asked_at,
+        first_question=conversation.first_question,
+        exchange_count=len(conversation.exchanges),
+        helpful=conversation.judged(Verdict.HELPFUL),
+        unhelpful=conversation.judged(Verdict.UNHELPFUL),
+        annotated=conversation.annotated,
     )
 
 

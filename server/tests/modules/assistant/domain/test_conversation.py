@@ -15,7 +15,7 @@ from src.modules.assistant.domain.entities.conversation import (
     Conversation,
     ConversationOverError,
 )
-from src.modules.assistant.domain.entities.exchange import Answer
+from src.modules.assistant.domain.entities.exchange import Answer, Cause, Verdict
 from src.shared.exceptions.domain_exceptions import ConflictError, ValidationError
 
 ASKED_AT = datetime(2026, 10, 10, 9, 30, tzinfo=UTC)
@@ -106,3 +106,26 @@ class TestRecording:
             ("Question 0", ANSWER.text),
             ("Question 1", ANSWER.text),
         ]
+
+
+class TestReadingAConversation:
+    def test_it_opens_on_its_first_question_and_ends_on_its_last(self) -> None:
+        conversation = Conversation.opened(asker_id=1)
+        conversation.record("Où en est WAATcher ?", ANSWER, None, ASKED_AT)
+        later = datetime(2026, 10, 10, 9, 45, tzinfo=UTC)
+        conversation.record("Et ses lots ?", ANSWER, None, later)
+
+        assert conversation.first_question == "Où en est WAATcher ?"
+        assert conversation.started_at == ASKED_AT
+        assert conversation.last_asked_at == later
+
+    def test_it_counts_its_verdicts_and_its_annotations(self) -> None:
+        conversation = a_conversation_of(3)
+        first, second, _ = conversation.exchanges
+        first.judge(by=1, verdict=Verdict.HELPFUL)
+        second.judge(by=1, verdict=Verdict.UNHELPFUL)
+        second.annotate(by=9, cause=Cause.WRONG_READING, note=None, at=ASKED_AT)
+
+        assert conversation.judged(Verdict.HELPFUL) == 1
+        assert conversation.judged(Verdict.UNHELPFUL) == 1
+        assert conversation.annotated == 1

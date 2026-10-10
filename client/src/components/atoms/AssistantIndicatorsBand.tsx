@@ -1,6 +1,7 @@
 import type { AssistantIndicatorsResponse } from "@/lib/api/generated/model";
 import { causeLabel, count, seconds, share } from "@/lib/assistant-study";
 import { formatSpelledDate } from "@/lib/dates";
+import { plural } from "@/lib/plurals";
 import { parisDay } from "@/lib/instants";
 
 interface AssistantIndicatorsBandProps {
@@ -23,14 +24,14 @@ export function AssistantIndicatorsBand({ indicators }: AssistantIndicatorsBandP
     {
       label: "Questions",
       value: count(asked),
-      detail: `${count(indicators.conversations)} conversation${indicators.conversations > 1 ? "s" : ""}, ${count(indicators.askers)} personne${indicators.askers > 1 ? "s" : ""}`,
+      detail: `${count(indicators.conversations)} ${plural(indicators.conversations, "conversation")}, ${count(indicators.askers)} ${plural(indicators.askers, "personne")}`,
     },
     {
       label: "Jugées utiles",
       // Among the answers somebody judged: silence is not a « non », and an
       // assistant nobody has thumbed yet does not help « 0 % » of the time.
       value: share(indicators.helpful, indicators.helpful + indicators.unhelpful),
-      detail: `${count(indicators.unhelpful)} pas utile${indicators.unhelpful > 1 ? "s" : ""}, ${count(indicators.unjudged)} sans avis`,
+      detail: `${count(indicators.unhelpful)} pas ${plural(indicators.unhelpful, "utile")}, ${count(indicators.unjudged)} sans avis`,
     },
     {
       label: "Temps de réponse",

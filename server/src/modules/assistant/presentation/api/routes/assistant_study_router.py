@@ -147,7 +147,7 @@ async def read_indicators(
     },
 )
 async def export_exchanges(
-    format: ExportFormat = Query(default=ExportFormat.CSV),
+    written_in: ExportFormat = Query(default=ExportFormat.CSV, alias="format"),
     kept: ExchangeFilter = Depends(kept_by),
     _: User = Depends(get_admin),
     use_case: ExportExchangesUseCase = Depends(get_export_exchanges_use_case),
@@ -155,11 +155,11 @@ async def export_exchanges(
     """Every exchange the filter keeps, oldest first, as a file."""
     exported = to_exported_exchanges(await use_case.execute(kept))
     return Response(
-        content=written_as(exported, format),
-        media_type=MEDIA_TYPES[format],
+        content=written_as(exported, written_in),
+        media_type=MEDIA_TYPES[written_in],
         headers={
             "Content-Disposition": (
-                f'attachment; filename="assistant-{clock.today().isoformat()}.{format}"'
+                f'attachment; filename="assistant-{clock.today().isoformat()}.{written_in}"'
             )
         },
     )
