@@ -77,6 +77,30 @@ describe("NotificationItem", () => {
     expect(onFollow).toHaveBeenCalled();
   });
 
+  it("is marked as seen once followed", () => {
+    const onToggle = renderItem();
+
+    fireEvent.click(screen.getByRole("link"));
+
+    expect(onToggle).toHaveBeenCalledWith(1, true);
+  });
+
+  it("is marked as seen when opened in a tab of its own", () => {
+    const onToggle = renderItem();
+
+    fireEvent.click(screen.getByRole("link"), { metaKey: true });
+
+    expect(onToggle).toHaveBeenCalledWith(1, true);
+  });
+
+  it("leaves a line already seen as it is when followed", () => {
+    const onToggle = renderItem({ read_at: "2026-09-17T11:00:00" });
+
+    fireEvent.click(screen.getByRole("link"));
+
+    expect(onToggle).not.toHaveBeenCalled();
+  });
+
   it("leads nowhere once the subject is gone", () => {
     renderItem({ kind: "project.deleted", project: null });
 
