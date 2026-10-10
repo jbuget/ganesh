@@ -14,10 +14,15 @@ from uuid import UUID
 
 from src.modules.assistant.domain.entities.conversation import Conversation
 from src.modules.assistant.domain.entities.exchange import Exchange
+from src.modules.assistant.domain.entities.unanswered import UnansweredQuestion
 
 
 class Judgement(StrEnum):
-    """What whoever asked said of the answer, silence included."""
+    """What whoever asked said of the answer, silence included.
+
+    Only an answer is judged: a filter on a judgement keeps no question that
+    went unanswered.
+    """
 
     HELPFUL = "helpful"
     UNHELPFUL = "unhelpful"
@@ -38,6 +43,13 @@ class ExchangeFilter:
 class ConversationPage:
     conversations: list[Conversation]
     #: Every conversation the filter holds, not only the page.
+    total: int
+
+
+@dataclass(frozen=True)
+class UnansweredPage:
+    questions: list[UnansweredQuestion]
+    #: Every question the filter holds, not only the page.
     total: int
 
 
@@ -71,3 +83,14 @@ class ExchangeArchive(ABC):
 
     @abstractmethod
     async def save_annotation(self, exchange: Exchange) -> None: ...
+
+    @abstractmethod
+    async def list_unanswered(
+        self, kept: ExchangeFilter, limit: int, offset: int
+    ) -> UnansweredPage:
+        """The questions left unanswered the filter keeps, latest first.
+
+        None at all when the filter asks for a judgement: only an answer is
+        judged.
+        """
+        ...

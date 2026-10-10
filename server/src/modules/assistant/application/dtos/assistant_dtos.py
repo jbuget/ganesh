@@ -11,6 +11,7 @@ from src.modules.assistant.domain.entities.exchange import (
     Exchange,
     Verdict,
 )
+from src.modules.assistant.domain.entities.unanswered import Unanswered
 from src.modules.assistant.domain.services.indicators import Indicators
 from src.modules.users.domain.entities.user import User
 
@@ -42,6 +43,14 @@ class RecordCommand:
 
     admitted: AdmittedQuestion
     answer: Answer
+
+
+@dataclass(frozen=True)
+class RecordUnansweredCommand:
+    """An admitted question, and what came back instead of an answer."""
+
+    admitted: AdmittedQuestion
+    unanswered: Unanswered
 
 
 @dataclass(frozen=True)
@@ -79,6 +88,8 @@ class AssistantIndicators:
     indicators: Indicators
     #: When the oldest exchange still kept was asked: how far back one can look.
     kept_since: datetime | None
+    #: The questions the filter keeps that came back with no answer.
+    unanswered: int
 
 
 @dataclass(frozen=True)

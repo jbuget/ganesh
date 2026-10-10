@@ -23,6 +23,9 @@ from src.modules.assistant.application.use_cases.judge_answer import JudgeAnswer
 from src.modules.assistant.application.use_cases.list_conversations import (
     ListConversationsUseCase,
 )
+from src.modules.assistant.application.use_cases.list_unanswered import (
+    ListUnansweredUseCase,
+)
 from src.modules.assistant.application.use_cases.read_assistant import (
     ReadAssistantUseCase,
 )
@@ -35,15 +38,24 @@ from src.modules.assistant.application.use_cases.read_indicators import (
 from src.modules.assistant.application.use_cases.record_exchange import (
     RecordExchangeUseCase,
 )
+from src.modules.assistant.application.use_cases.record_unanswered import (
+    RecordUnansweredUseCase,
+)
 from src.modules.assistant.domain.repositories.exchange_archive import ExchangeArchive
 from src.modules.assistant.domain.repositories.exchange_repository import (
     ExchangeRepository,
+)
+from src.modules.assistant.domain.repositories.unanswered_question_repository import (
+    UnansweredQuestionRepository,
 )
 from src.modules.assistant.infrastructure.database.repositories.exchange_archive_impl import (
     SqlExchangeArchive,
 )
 from src.modules.assistant.infrastructure.database.repositories.exchange_repository_impl import (
     SqlExchangeRepository,
+)
+from src.modules.assistant.infrastructure.database.repositories.unanswered_question_repository_impl import (
+    SqlUnansweredQuestionRepository,
 )
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
@@ -61,6 +73,12 @@ def get_exchange_repository(
     session: AsyncSession = Depends(get_db),
 ) -> ExchangeRepository:
     return SqlExchangeRepository(session)
+
+
+def get_unanswered_question_repository(
+    session: AsyncSession = Depends(get_db),
+) -> UnansweredQuestionRepository:
+    return SqlUnansweredQuestionRepository(session)
 
 
 def get_exchange_archive(
@@ -136,3 +154,17 @@ def get_annotate_exchange_use_case(
     archive: ExchangeArchive = Depends(get_exchange_archive),
 ) -> AnnotateExchangeUseCase:
     return AnnotateExchangeUseCase(archive)
+
+
+def get_record_unanswered_use_case(
+    questions: UnansweredQuestionRepository = Depends(
+        get_unanswered_question_repository
+    ),
+) -> RecordUnansweredUseCase:
+    return RecordUnansweredUseCase(questions)
+
+
+def get_list_unanswered_use_case(
+    archive: ExchangeArchive = Depends(get_exchange_archive),
+) -> ListUnansweredUseCase:
+    return ListUnansweredUseCase(archive)

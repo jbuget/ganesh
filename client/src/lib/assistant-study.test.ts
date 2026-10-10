@@ -10,6 +10,8 @@ import {
   refreshStudy,
   seconds,
   share,
+  WHY_UNANSWERED,
+  whyUnansweredLabel,
 } from "@/lib/assistant-study";
 
 describe("the criteria of the study", () => {
@@ -45,6 +47,17 @@ describe("what a cause is called", () => {
       "right_answer",
     ]);
     expect(causeLabel("wrong_reading")).toBe("Lecture fausse");
+  });
+});
+
+describe("why a question went unanswered", () => {
+  it("names every reason the API knows, in French", () => {
+    expect(WHY_UNANSWERED.map((held) => held.value)).toEqual([
+      "provider_failed",
+      "cut_short",
+      "kept_asking",
+    ]);
+    expect(whyUnansweredLabel("kept_asking")).toBe("Lectures sans fin");
   });
 });
 

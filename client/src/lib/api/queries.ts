@@ -20,7 +20,9 @@ import type {
   ConversationDetailResponse,
   ConversationPageResponse,
   ListAssistantConversationsParams,
+  ListAssistantUnansweredParams,
   ReadAssistantIndicatorsParams,
+  UnansweredPageResponse,
   DigestResponse,
   MonthGridResponse,
   MyMoodsResponse,
@@ -42,6 +44,7 @@ import type { NotificationFilter } from "@/lib/api/generated/model";
 import { useGetActivitySummary } from "@/lib/api/generated/activity-summary/activity-summary";
 import {
   useListAssistantConversations,
+  useListAssistantUnanswered,
   useReadAssistantConversation,
   useReadAssistantIndicators,
   useReadPlatform,
@@ -88,6 +91,14 @@ export function useAssistantConversations(params: ListAssistantConversationsPara
     query: { placeholderData: keepPreviousData },
   });
   return { ...query, page: successOf<ConversationPageResponse>(query.data) };
+}
+
+/** The questions the assistant could not answer, and why. */
+export function useAssistantUnanswered(params: ListAssistantUnansweredParams) {
+  const query = useListAssistantUnanswered(params, {
+    query: { placeholderData: keepPreviousData },
+  });
+  return { ...query, page: successOf<UnansweredPageResponse>(query.data) };
 }
 
 /** One conversation whole, with what every tool read back. */

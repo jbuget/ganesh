@@ -32,7 +32,7 @@ def to_entity(model: AssistantExchangeModel) -> Exchange:
         question=model.question,
         answer=Answer(
             text=model.answer,
-            consultations=tuple(_consultation(held) for held in model.consultations),
+            consultations=tuple(consultation_of(held) for held in model.consultations),
             model=model.model,
             input_tokens=model.input_tokens,
             output_tokens=model.output_tokens,
@@ -56,13 +56,13 @@ def _annotation(model: AssistantExchangeModel) -> Annotation | None:
     )
 
 
-def _consultation(held: dict[str, Any]) -> Consultation:
+def consultation_of(held: dict[str, Any]) -> Consultation:
     return Consultation(
         tool=held["tool"], arguments=held["arguments"], result=held["result"]
     )
 
 
-def _held(consultation: Consultation) -> dict[str, Any]:
+def held_as(consultation: Consultation) -> dict[str, Any]:
     return {
         "tool": consultation.tool,
         "arguments": consultation.arguments,
@@ -98,7 +98,7 @@ class SqlExchangeRepository(ExchangeRepository):
             project_id=exchange.project_id,
             question=exchange.question,
             answer=exchange.answer.text,
-            consultations=[_held(held) for held in exchange.answer.consultations],
+            consultations=[held_as(held) for held in exchange.answer.consultations],
             model=exchange.answer.model,
             input_tokens=exchange.answer.input_tokens,
             output_tokens=exchange.answer.output_tokens,

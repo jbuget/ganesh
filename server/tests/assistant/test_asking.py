@@ -2,7 +2,8 @@
 
 Played through the real use cases on in-memory repositories, with a scripted
 model: what is under test is the order — nothing reaches the model that the
-conversation refuses, and nothing is kept that the model did not answer.
+conversation refuses, and what the model could not answer is kept apart from
+the exchanges, with why.
 """
 
 from uuid import uuid4
@@ -18,9 +19,16 @@ from src.modules.assistant.application.use_cases.admit_question import (
 from src.modules.assistant.application.use_cases.record_exchange import (
     RecordExchangeUseCase,
 )
+from src.modules.assistant.application.use_cases.record_unanswered import (
+    RecordUnansweredUseCase,
+)
 from src.modules.assistant.domain.entities.conversation import (
     MAX_EXCHANGES,
     ConversationOverError,
+)
+from src.modules.assistant.domain.entities.unanswered import (
+    UnansweredQuestion,
+    WhyUnanswered,
 )
 from src.modules.projects.domain.entities.project import Project, ProjectKind
 from src.shared.exceptions.domain_exceptions import (
@@ -28,10 +36,11 @@ from src.shared.exceptions.domain_exceptions import (
     ServiceUnavailableError,
     ValidationError,
 )
-from tests.helpers.assistant import ANSWER, ScriptedAnswerer
+from tests.helpers.assistant import ANSWER, UNANSWERED, ScriptedAnswerer
 from tests.helpers.in_memory_repositories import (
     InMemoryExchangeRepository,
     InMemoryProjectRepository,
+    InMemoryUnansweredQuestionRepository,
 )
 
 WAATCHER = Project(id=7, label="WAATcher", kind=ProjectKind.PROJECT)
@@ -45,12 +54,23 @@ class Asking:
             exchanges=exchanges, projects=InMemoryProjectRepository([WAATCHER])
         )
         self._record = RecordExchangeUseCase(exchanges)
+        self.unanswered = InMemoryUnansweredQuestionRepository()
+        self._record_unanswered = RecordUnansweredUseCase(self.unanswered)
         self._answerer = answerer
 
-    async def execute(self, command: AskCommand) -> AskResult:
+    async def attempt(self, command: AskCommand) -> AskResult | UnansweredQuestion:
         return await ask(
-            command, admit=self._admit, answerer=self._answerer, record=self._record
+            command,
+            admit=self._admit,
+            answerer=self._answerer,
+            record=self._record,
+            record_unanswered=self._record_unanswered,
         )
+
+    async def execute(self, command: AskCommand) -> AskResult:
+        asked = await self.attempt(command)
+        assert isinstance(asked, AskResult)
+        return asked
 
 
 def ask_with(exchanges: InMemoryExchangeRepository, answerer: Answerer) -> Asking:
@@ -169,14 +189,20 @@ async def test_without_a_model_the_assistant_says_it_is_unavailable(
         await use_case.execute(asking())
 
 
-async def test_a_model_that_answered_nothing_leaves_nothing_kept(
+async def test_a_question_left_unanswered_is_kept_apart_with_why(
     exchanges: InMemoryExchangeRepository,
 ) -> None:
-    use_case = ask_with(exchanges, ScriptedAnswerer(answer=None))
+    """Kept to study it, and taking no place among the exchanges."""
+    use_case = ask_with(exchanges, ScriptedAnswerer(answer=UNANSWERED))
 
-    with pytest.raises(ServiceUnavailableError):
-        await use_case.execute(asking())
+    missed = await use_case.attempt(asking("Qui fait quoi ?", project_id=7))
+
+    assert isinstance(missed, UnansweredQuestion)
     assert exchanges.exchanges == {}
+    [kept] = use_case.unanswered.questions.values()
+    assert (kept.question, kept.project_id) == ("Qui fait quoi ?", 7)
+    assert kept.unanswered.reason is WhyUnanswered.KEPT_ASKING
+    assert kept.unanswered.consultations == UNANSWERED.consultations
 
 
 async def test_a_project_that_does_not_exist_is_not_taken_for_the_one_in_view(

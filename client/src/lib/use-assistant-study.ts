@@ -3,10 +3,14 @@
 import { useCallback, useState } from "react";
 
 import { getExportAssistantExchangesUrl } from "@/lib/api/generated/admin/admin";
-import type { ExportFormat } from "@/lib/api/generated/model";
+import type {
+  ExportFormat,
+  UnansweredQuestionResponse,
+} from "@/lib/api/generated/model";
 import {
   useAssistantConversations,
   useAssistantIndicators,
+  useAssistantUnanswered,
   useProjects,
   useTeammates,
 } from "@/lib/api/queries";
@@ -41,6 +45,15 @@ export function useAssistantStudy() {
     offset: pageIndex * STUDY_PAGE,
   });
   const { indicators } = useAssistantIndicators(criteria);
+  // The latest page alone: they are read to see what fails, not counted
+  // through — the count is in the indicators.
+  const { page: unansweredPage } = useAssistantUnanswered({
+    ...criteria,
+    limit: STUDY_PAGE,
+    offset: 0,
+  });
+  const [openedUnanswered, setOpenedUnanswered] = useState<number | null>(null);
+  const unanswered = unansweredPage?.questions ?? [];
   // Deactivated accounts and archived projects included: they asked, and were
   // asked about, while they were here.
   const { teammates } = useTeammates(true);
@@ -64,6 +77,14 @@ export function useAssistantStudy() {
     clear,
     isLoading,
     conversations: page?.conversations ?? [],
+    unanswered,
+    unansweredTotal: unansweredPage?.total ?? 0,
+    openedUnanswered:
+      unanswered.find(
+        (held): held is UnansweredQuestionResponse => held.id === openedUnanswered,
+      ) ?? null,
+    openUnanswered: setOpenedUnanswered,
+    closeUnanswered: () => setOpenedUnanswered(null),
     indicators,
     total,
     firstShown: total === 0 ? 0 : pageIndex * STUDY_PAGE + 1,

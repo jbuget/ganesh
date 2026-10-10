@@ -13,15 +13,23 @@ from src.modules.assistant.domain.repositories.exchange_archive import (
     ExchangeArchive,
     ExchangeFilter,
     Judgement,
+    UnansweredPage,
 )
 from src.modules.assistant.infrastructure.database.models.assistant_exchange_model import (
     AssistantExchangeModel,
 )
+from src.modules.assistant.infrastructure.database.models.assistant_unanswered_question_model import (
+    AssistantUnansweredQuestionModel,
+)
 from src.modules.assistant.infrastructure.database.repositories.exchange_repository_impl import (
     to_entity,
 )
+from src.modules.assistant.infrastructure.database.repositories.unanswered_question_repository_impl import (
+    to_unanswered_entity,
+)
 
 Held = AssistantExchangeModel
+Missed = AssistantUnansweredQuestionModel
 
 
 def _where(kept: ExchangeFilter) -> list[ColumnElement[bool]]:
@@ -115,3 +123,29 @@ class SqlExchangeArchive(ExchangeArchive):
         model.annotated_by = annotation.annotated_by if annotation else None
         model.annotated_at = annotation.annotated_at if annotation else None
         await self._session.flush()
+
+    async def list_unanswered(
+        self, kept: ExchangeFilter, limit: int, offset: int
+    ) -> UnansweredPage:
+        if kept.judgement is not None:
+            return UnansweredPage(questions=[], total=0)
+        conditions: list[ColumnElement[bool]] = []
+        if kept.since is not None:
+            conditions.append(Missed.asked_at >= kept.since)
+        if kept.until is not None:
+            conditions.append(Missed.asked_at <= kept.until)
+        if kept.asker_id is not None:
+            conditions.append(Missed.asker_id == kept.asker_id)
+        total = await self._session.scalar(
+            select(func.count()).select_from(Missed).where(*conditions)
+        )
+        rows = await self._session.scalars(
+            select(Missed)
+            .where(*conditions)
+            .order_by(Missed.asked_at.desc(), Missed.id.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return UnansweredPage(
+            questions=[to_unanswered_entity(row) for row in rows], total=total or 0
+        )

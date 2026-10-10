@@ -6,7 +6,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.assistant.domain.entities.conversation import Conversation
-from src.modules.assistant.domain.entities.exchange import Cause, Verdict
+from src.modules.assistant.domain.entities.exchange import Cause, Consultation, Verdict
+from src.modules.assistant.domain.entities.unanswered import Unanswered, WhyUnanswered
 from src.modules.assistant.domain.repositories.exchange_archive import (
     ExchangeFilter,
     Judgement,
@@ -16,6 +17,9 @@ from src.modules.assistant.infrastructure.database.repositories.exchange_archive
 )
 from src.modules.assistant.infrastructure.database.repositories.exchange_repository_impl import (
     SqlExchangeRepository,
+)
+from src.modules.assistant.infrastructure.database.repositories.unanswered_question_repository_impl import (
+    SqlUnansweredQuestionRepository,
 )
 from tests.modules.assistant.infrastructure.test_exchange_repository import (
     ANSWER,
@@ -142,3 +146,42 @@ async def test_the_archive_says_how_far_back_it_goes(db_session: AsyncSession) -
     await a_conversation(db_session, await a_person(db_session), later(3), later(4))
 
     assert await archive.kept_since() == later(3)
+
+
+UNANSWERED = Unanswered(
+    reason=WhyUnanswered.PROVIDER_FAILED,
+    consultations=(Consultation("find_project", {"query": "EDIT"}, "EDIT (#4)"),),
+    model="gemini-test",
+    input_tokens=300,
+    output_tokens=0,
+    elapsed_ms=30000,
+)
+
+
+async def test_a_question_left_unanswered_is_kept_and_read_back_latest_first(
+    db_session: AsyncSession,
+) -> None:
+    asker_id = await a_person(db_session, 1)
+    other_id = await a_person(db_session, 2)
+    questions = SqlUnansweredQuestionRepository(db_session)
+    first = await questions.add(
+        Conversation.opened(asker_id).missed("Qui ?", UNANSWERED, None, later(0))
+    )
+    await questions.add(
+        Conversation.opened(other_id).missed("Quoi ?", UNANSWERED, None, later(2))
+    )
+    archive = SqlExchangeArchive(db_session)
+
+    everybody = await archive.list_unanswered(ExchangeFilter(), limit=20, offset=0)
+    theirs = await archive.list_unanswered(
+        ExchangeFilter(asker_id=asker_id), limit=20, offset=0
+    )
+    judged = await archive.list_unanswered(
+        ExchangeFilter(judgement=Judgement.UNJUDGED), limit=20, offset=0
+    )
+
+    assert [held.question for held in everybody.questions] == ["Quoi ?", "Qui ?"]
+    assert everybody.total == 2
+    assert theirs.questions == [first]
+    assert first.unanswered == UNANSWERED
+    assert judged.total == 0

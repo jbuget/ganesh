@@ -28,9 +28,11 @@ import type {
   ExportAssistantExchangesParams,
   HTTPValidationError,
   ListAssistantConversationsParams,
+  ListAssistantUnansweredParams,
   PlatformResponse,
   ReadAssistantIndicatorsParams,
   StudiedExchangeResponse,
+  UnansweredPageResponse,
 } from "../model";
 
 import { bffFetcher } from "../../fetcher";
@@ -590,6 +592,206 @@ export function useReadAssistantConversation<
     conversationId,
     options,
   );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listAssistantUnansweredResponse200 = {
+  data: UnansweredPageResponse;
+  status: 200;
+};
+
+export type listAssistantUnansweredResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listAssistantUnansweredResponseSuccess =
+  listAssistantUnansweredResponse200 & {
+    headers: Headers;
+  };
+export type listAssistantUnansweredResponseError =
+  listAssistantUnansweredResponse422 & {
+    headers: Headers;
+  };
+
+export type listAssistantUnansweredResponse =
+  listAssistantUnansweredResponseSuccess | listAssistantUnansweredResponseError;
+
+export const getListAssistantUnansweredUrl = (
+  params?: ListAssistantUnansweredParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/admin/assistant/unanswered?${stringifiedParams}`
+    : `/api/v1/admin/assistant/unanswered`;
+};
+
+/**
+ * The questions that came back with no answer, latest first, and why.
+ *
+ * None while a judgement is asked for: only an answer is judged.
+ * @summary List Unanswered
+ */
+export const listAssistantUnanswered = async (
+  params?: ListAssistantUnansweredParams,
+  options?: Parameters<typeof bffFetcher>[1],
+): Promise<listAssistantUnansweredResponse> => {
+  return bffFetcher<listAssistantUnansweredResponse>(
+    getListAssistantUnansweredUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListAssistantUnansweredQueryKey = (
+  params?: ListAssistantUnansweredParams,
+) => {
+  return [`/api/v1/admin/assistant/unanswered`, ...(params ? [params] : [])] as const;
+};
+
+export const getListAssistantUnansweredQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAssistantUnanswered>>,
+  TError = HTTPValidationError,
+>(
+  params?: ListAssistantUnansweredParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof listAssistantUnanswered>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAssistantUnansweredQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAssistantUnanswered>>> = ({
+    signal,
+  }) => listAssistantUnanswered(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAssistantUnanswered>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListAssistantUnansweredQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAssistantUnanswered>>
+>;
+export type ListAssistantUnansweredQueryError = HTTPValidationError;
+
+export function useListAssistantUnanswered<
+  TData = Awaited<ReturnType<typeof listAssistantUnanswered>>,
+  TError = HTTPValidationError,
+>(
+  params: undefined | ListAssistantUnansweredParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof listAssistantUnanswered>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAssistantUnanswered>>,
+          TError,
+          Awaited<ReturnType<typeof listAssistantUnanswered>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListAssistantUnanswered<
+  TData = Awaited<ReturnType<typeof listAssistantUnanswered>>,
+  TError = HTTPValidationError,
+>(
+  params?: ListAssistantUnansweredParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof listAssistantUnanswered>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAssistantUnanswered>>,
+          TError,
+          Awaited<ReturnType<typeof listAssistantUnanswered>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListAssistantUnanswered<
+  TData = Awaited<ReturnType<typeof listAssistantUnanswered>>,
+  TError = HTTPValidationError,
+>(
+  params?: ListAssistantUnansweredParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof listAssistantUnanswered>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Unanswered
+ */
+
+export function useListAssistantUnanswered<
+  TData = Awaited<ReturnType<typeof listAssistantUnanswered>>,
+  TError = HTTPValidationError,
+>(
+  params?: ListAssistantUnansweredParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof listAssistantUnanswered>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof bffFetcher>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListAssistantUnansweredQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

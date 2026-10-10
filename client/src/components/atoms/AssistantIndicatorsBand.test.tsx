@@ -8,6 +8,7 @@ import { AssistantIndicatorsBand } from "./AssistantIndicatorsBand";
 const NOBODY_ASKED: AssistantIndicatorsResponse = {
   kept_since: null,
   questions: 0,
+  unanswered: 0,
   conversations: 0,
   askers: 0,
   helpful: 0,
@@ -60,6 +61,16 @@ describe("AssistantIndicatorsBand", () => {
     );
 
     expect(screen.queryByText("0 %")).not.toBeInTheDocument();
+  });
+
+  it("counts the questions left unanswered out of everything asked", () => {
+    render(
+      <AssistantIndicatorsBand
+        indicators={{ ...NOBODY_ASKED, questions: 3, unanswered: 1 }}
+      />,
+    );
+
+    expect(screen.getByText("25 % des questions posées")).toBeInTheDocument();
   });
 
   it("names every cause, even the ones nobody picked", () => {

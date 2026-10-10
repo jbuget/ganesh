@@ -25,6 +25,9 @@ from src.modules.assistant.application.use_cases.read_assistant import (
 from src.modules.assistant.application.use_cases.record_exchange import (
     RecordExchangeUseCase,
 )
+from src.modules.assistant.application.use_cases.record_unanswered import (
+    RecordUnansweredUseCase,
+)
 from src.modules.assistant.domain.entities.conversation import MAX_EXCHANGES
 from src.modules.assistant.domain.entities.exchange import Verdict
 from src.modules.assistant.presentation.dependencies import (
@@ -32,14 +35,16 @@ from src.modules.assistant.presentation.dependencies import (
     get_judge_answer_use_case,
     get_read_assistant_use_case,
     get_record_exchange_use_case,
+    get_record_unanswered_use_case,
 )
 from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.projects.domain.entities.project import Project, ProjectKind
 from src.modules.users.domain.entities.user import Role, User
-from tests.helpers.assistant import ANSWER, ScriptedAnswerer
+from tests.helpers.assistant import ANSWER, UNANSWERED, ScriptedAnswerer
 from tests.helpers.in_memory_repositories import (
     InMemoryExchangeRepository,
     InMemoryProjectRepository,
+    InMemoryUnansweredQuestionRepository,
 )
 
 SYLVAIN = User(
@@ -56,6 +61,7 @@ ASSISTANT = f"{get_settings().api_prefix}/assistant"
 class Panel:
     client: AsyncClient
     exchanges: InMemoryExchangeRepository
+    unanswered: InMemoryUnansweredQuestionRepository
 
     async def ask(
         self, question: str = "Où en est WAATcher ?", **fields: object
@@ -89,6 +95,10 @@ def open_panel(
     app.dependency_overrides[get_record_exchange_use_case] = (
         lambda: RecordExchangeUseCase(exchanges)
     )
+    unanswered = InMemoryUnansweredQuestionRepository()
+    app.dependency_overrides[get_record_unanswered_use_case] = (
+        lambda: RecordUnansweredUseCase(unanswered)
+    )
     app.dependency_overrides[get_answerer] = lambda: answerer
     app.dependency_overrides[get_judge_answer_use_case] = lambda: JudgeAnswerUseCase(
         exchanges
@@ -96,6 +106,7 @@ def open_panel(
     return Panel(
         client=AsyncClient(transport=ASGITransport(app=app), base_url="http://test"),
         exchanges=exchanges,
+        unanswered=unanswered,
     )
 
 
@@ -148,6 +159,18 @@ async def test_a_sixth_question_is_a_conflict() -> None:
     response = await panel.ask(conversation_id=opened)
 
     assert response.status_code == 409
+
+
+async def test_a_question_left_unanswered_is_kept_and_told_as_unavailable() -> None:
+    """The panel says « indisponible » as before; the question is kept to study."""
+    panel = open_panel(answerer=ScriptedAnswerer(answer=UNANSWERED))
+
+    response = await panel.ask()
+
+    assert response.status_code == 503
+    assert panel.exchanges.exchanges == {}
+    [kept] = panel.unanswered.questions.values()
+    assert kept.question == "Où en est WAATcher ?"
 
 
 async def test_without_a_model_the_question_is_turned_away_as_unavailable() -> None:

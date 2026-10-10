@@ -12,6 +12,10 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 from src.modules.assistant.domain.entities.exchange import Answer, Exchange, Verdict
+from src.modules.assistant.domain.entities.unanswered import (
+    Unanswered,
+    UnansweredQuestion,
+)
 from src.shared.exceptions.domain_exceptions import ConflictError, ValidationError
 
 MAX_EXCHANGES = 5
@@ -93,3 +97,24 @@ class Conversation:
         )
         self.exchanges.append(exchange)
         return exchange
+
+    def missed(
+        self,
+        question: str,
+        unanswered: Unanswered,
+        project_id: int | None,
+        asked_at: datetime,
+    ) -> UnansweredQuestion:
+        """A question put in this conversation that came back with no answer.
+
+        It takes no place in the conversation: asked again, it is the same
+        question, and the five places are for answers.
+        """
+        return UnansweredQuestion(
+            conversation_id=self.id,
+            asker_id=self.asker_id,
+            question=question,
+            unanswered=unanswered,
+            project_id=project_id,
+            asked_at=asked_at,
+        )
