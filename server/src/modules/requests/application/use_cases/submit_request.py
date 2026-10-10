@@ -12,7 +12,7 @@ from src.modules.notifications.domain.entities.notification import (
 )
 from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.requests.application.dtos.request_detail import RequestDetail
-from src.modules.requests.application.use_cases.people import describe
+from src.modules.requests.application.services.people import describe
 from src.modules.requests.domain.entities.request import Request
 from src.modules.requests.domain.repositories.request_repository import (
     RequestRepository,

@@ -7,7 +7,7 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
 from src.modules.entries.application.dtos.set_entry_dto import SetEntryCommand
-from src.modules.entries.application.use_cases.timesheet_notice import tell_the_owner
+from src.modules.entries.application.services.timesheet_notice import tell_the_owner
 from src.modules.entries.domain.entities.entry import DayValue, Entry
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.entries.domain.services.entry_rules import (

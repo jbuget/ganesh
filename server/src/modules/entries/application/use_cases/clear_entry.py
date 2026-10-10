@@ -5,7 +5,7 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
 from src.modules.entries.application.dtos.set_entry_dto import ClearEntryCommand
-from src.modules.entries.application.use_cases.timesheet_notice import tell_the_owner
+from src.modules.entries.application.services.timesheet_notice import tell_the_owner
 from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.months.domain.repositories.month_repository import MonthRepository
 from src.modules.months.domain.services.month_rules import ensure_month_is_open

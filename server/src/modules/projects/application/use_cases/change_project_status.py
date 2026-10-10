@@ -10,7 +10,7 @@ from src.modules.notifications.domain.entities.notification import NotificationK
 from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.notifications.domain.services.fan_out import notify
 from src.modules.projects.application.dtos.project_dto import ChangeProjectStatusCommand
-from src.modules.projects.application.use_cases.project_audience import people_on
+from src.modules.projects.application.services.project_audience import people_on
 from src.modules.projects.domain.entities.project import Project
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,

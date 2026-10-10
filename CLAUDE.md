@@ -467,7 +467,10 @@ Modules: `users`, `projects`, `entries`, `months`, `calendar`, `audit_logs`.
 - Repositories are interfaces (ABC) in the domain, implemented in the
   infrastructure.
 - **A use case may never call another use case.** Extract shared logic into a
-  domain service. When something has to string several use cases together —
+  domain service, or — when it reads a repository — into an application
+  service under `application/services/`, never into a file of `use_cases/`:
+  everything there is a use case, and the `use-cases-are-independent`
+  contract refuses any import between two of them. When something has to string several use cases together —
   a model choosing which tools to read — it is a way in, not a use case:
   `src/mcp/`, `src/scheduler/` and `src/assistant/` each orchestrate from
   outside the modules, and `import-linter` keeps every one of them a leaf.

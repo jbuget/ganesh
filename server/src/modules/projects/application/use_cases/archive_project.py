@@ -11,7 +11,7 @@ from src.modules.projects.application.dtos.project_dto import (
     ArchiveProjectCommand,
     UnarchiveProjectCommand,
 )
-from src.modules.projects.application.use_cases.project_audience import people_on
+from src.modules.projects.application.services.project_audience import people_on
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectCategory,
