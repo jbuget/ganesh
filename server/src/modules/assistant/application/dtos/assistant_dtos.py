@@ -1,10 +1,18 @@
 """What the assistant is asked, and what it hands back."""
 
 from dataclasses import dataclass
+from datetime import datetime
 from uuid import UUID
 
 from src.modules.assistant.domain.entities.conversation import Conversation
-from src.modules.assistant.domain.entities.exchange import Answer, Exchange, Verdict
+from src.modules.assistant.domain.entities.exchange import (
+    Answer,
+    Cause,
+    Exchange,
+    Verdict,
+)
+from src.modules.assistant.domain.services.indicators import Indicators
+from src.modules.users.domain.entities.user import User
 
 
 @dataclass(frozen=True)
@@ -56,3 +64,25 @@ class AssistantStatus:
 
     is_available: bool
     max_exchanges: int
+
+
+@dataclass(frozen=True)
+class AnnotateCommand:
+    exchange_id: int
+    annotator_id: int
+    cause: Cause
+    note: str | None
+
+
+@dataclass(frozen=True)
+class AssistantIndicators:
+    indicators: Indicators
+    #: When the oldest exchange still kept was asked: how far back one can look.
+    kept_since: datetime | None
+
+
+@dataclass(frozen=True)
+class ExchangeExport:
+    exchanges: list[Exchange]
+    #: Whoever asked each exchange, by id. An account gone takes its rows with it.
+    askers: dict[int, User]

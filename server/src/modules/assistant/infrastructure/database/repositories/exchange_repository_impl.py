@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.assistant.domain.entities.conversation import Conversation
 from src.modules.assistant.domain.entities.exchange import (
+    Annotation,
     Answer,
     Consultation,
     Exchange,
@@ -40,6 +41,18 @@ def to_entity(model: AssistantExchangeModel) -> Exchange:
         project_id=model.project_id,
         asked_at=model.asked_at,
         verdict=model.verdict,
+        annotation=_annotation(model),
+    )
+
+
+def _annotation(model: AssistantExchangeModel) -> Annotation | None:
+    if model.annotation_cause is None or model.annotated_at is None:
+        return None
+    return Annotation(
+        cause=model.annotation_cause,
+        note=model.annotation_note,
+        annotated_by=model.annotated_by,
+        annotated_at=model.annotated_at,
     )
 
 

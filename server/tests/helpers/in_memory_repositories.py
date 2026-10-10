@@ -17,7 +17,13 @@ from src.modules.activity_summary.domain.repositories.activity_summary_repositor
 from src.modules.api_keys.domain.entities.api_key import ApiKey
 from src.modules.api_keys.domain.repositories.api_key_repository import ApiKeyRepository
 from src.modules.assistant.domain.entities.conversation import Conversation
-from src.modules.assistant.domain.entities.exchange import Exchange
+from src.modules.assistant.domain.entities.exchange import Exchange, Verdict
+from src.modules.assistant.domain.repositories.exchange_archive import (
+    ConversationPage,
+    ExchangeArchive,
+    ExchangeFilter,
+    Judgement,
+)
 from src.modules.assistant.domain.repositories.exchange_repository import (
     ExchangeRepository,
 )
@@ -1361,3 +1367,77 @@ class InMemoryExchangeRepository(ExchangeRepository):
     async def save_verdict(self, exchange: Exchange) -> None:
         assert exchange.id is not None
         self.exchanges[exchange.id] = replace(exchange)
+
+
+class InMemoryExchangeArchive(ExchangeArchive):
+    """Reads the exchanges an `InMemoryExchangeRepository` keeps, whoever asked."""
+
+    def __init__(self, store: InMemoryExchangeRepository) -> None:
+        self._store = store
+
+    def _kept(self, kept: ExchangeFilter) -> list[Exchange]:
+        verdict = {
+            None: None,
+            Judgement.HELPFUL: Verdict.HELPFUL,
+            Judgement.UNHELPFUL: Verdict.UNHELPFUL,
+            Judgement.UNJUDGED: None,
+        }[kept.judgement]
+        return sorted(
+            (
+                replace(exchange)
+                for exchange in self._store.exchanges.values()
+                if (kept.since is None or exchange.asked_at >= kept.since)
+                and (kept.until is None or exchange.asked_at <= kept.until)
+                and (kept.asker_id is None or exchange.asker_id == kept.asker_id)
+                and (kept.judgement is None or exchange.verdict == verdict)
+            ),
+            key=lambda exchange: (exchange.asked_at, exchange.rank),
+        )
+
+    async def list_conversations(
+        self, kept: ExchangeFilter, limit: int, offset: int
+    ) -> ConversationPage:
+        latest: dict[UUID, datetime] = {}
+        for exchange in self._kept(kept):
+            latest[exchange.conversation_id] = exchange.asked_at
+        ordered = sorted(latest, key=lambda held: latest[held], reverse=True)
+        conversations = [
+            await self.read_conversation(held)
+            for held in ordered[offset : offset + limit]
+        ]
+        return ConversationPage(
+            conversations=[held for held in conversations if held is not None],
+            total=len(ordered),
+        )
+
+    async def read_conversation(self, conversation_id: UUID) -> Conversation | None:
+        held = sorted(
+            (
+                replace(exchange)
+                for exchange in self._store.exchanges.values()
+                if exchange.conversation_id == conversation_id
+            ),
+            key=lambda exchange: exchange.rank,
+        )
+        if not held:
+            return None
+        return Conversation(
+            id=conversation_id, asker_id=held[0].asker_id, exchanges=held
+        )
+
+    async def list_exchanges(self, kept: ExchangeFilter) -> list[Exchange]:
+        return self._kept(kept)
+
+    async def read_exchange(self, exchange_id: int) -> Exchange | None:
+        held = self._store.exchanges.get(exchange_id)
+        return replace(held) if held else None
+
+    async def kept_since(self) -> datetime | None:
+        return min(
+            (exchange.asked_at for exchange in self._store.exchanges.values()),
+            default=None,
+        )
+
+    async def save_annotation(self, exchange: Exchange) -> None:
+        assert exchange.id is not None
+        self._store.exchanges[exchange.id] = replace(exchange)

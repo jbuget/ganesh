@@ -5,6 +5,7 @@ from uuid import UUID
 
 from sqlalchemy import (
     JSON,
+    CheckConstraint,
     DateTime,
     Enum,
     ForeignKey,
@@ -18,7 +19,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database import Base
-from src.modules.assistant.domain.entities.exchange import Verdict
+from src.modules.assistant.domain.entities.exchange import Cause, Verdict
 
 
 class AssistantExchangeModel(Base):
@@ -32,6 +33,11 @@ class AssistantExchangeModel(Base):
     __tablename__ = "assistant_exchanges"
     __table_args__ = (
         UniqueConstraint("conversation_id", "rank", name="uq_assistant_exchange_rank"),
+        # An annotation is a cause and a moment, or nothing: never half of one.
+        CheckConstraint(
+            "(annotation_cause IS NULL) = (annotated_at IS NULL)",
+            name="ck_assistant_exchange_annotation_whole",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -58,3 +64,15 @@ class AssistantExchangeModel(Base):
         nullable=True,
     )
     asked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    annotation_cause: Mapped[Cause | None] = mapped_column(
+        Enum(Cause, name="assistant_cause", native_enum=False, length=32),
+        nullable=True,
+    )
+    annotation_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: Released when the account goes: the reading stays.
+    annotated_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    annotated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
