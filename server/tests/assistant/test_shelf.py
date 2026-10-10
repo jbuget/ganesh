@@ -13,7 +13,7 @@ from src.assistant.shelf import SHELF, PersonCaller, Shelf
 from src.mcp.server import TOOLS
 from src.mcp.tools.declaring import declare_time
 from src.mcp.tools.mood import team_mood
-from src.mcp.tools.plan import person_plan
+from src.mcp.tools.plan import person_plan, team_availability
 from src.mcp.tools.reviewing import record_review
 from src.mcp.wiring import Provider
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
@@ -81,11 +81,12 @@ class TestWhatIsOnTheShelf:
             "what_changed",
             "portfolio_status",
             "person_plan",
+            "team_availability",
         ]
 
     def test_every_argument_is_one_the_shelf_knows_how_to_check(self) -> None:
         """A tool taking a float would see every call refused, and nobody told."""
-        checked = {int, str, int | None, str | None}
+        checked = {int, str, bool, bool | None, int | None, str | None}
         for tool in SHELF:
             for parameter in inspect.signature(tool).parameters.values():
                 assert parameter.annotation in checked, (tool.__name__, parameter)
@@ -98,6 +99,8 @@ class TestWhatIsOnTheShelf:
     def test_a_person_s_plan_is_read_by_the_assistant_and_by_no_key(self) -> None:
         """The projection is an arbitration: `roadmap:read` leaves it shut."""
         assert person_plan in SHELF
+        assert team_availability in SHELF
+        assert team_availability not in TOOLS
         assert person_plan not in TOOLS
 
     def test_the_moods_are_not_on_it(self) -> None:
@@ -186,6 +189,26 @@ class TestConsulting:
         reading = await shelf.consult("find_project", {"query": "waat"})
 
         assert reading.result == "Refusé."
+
+    async def test_a_yes_or_no_is_read_as_one_and_nothing_else_is(self) -> None:
+        """`followed` is a criterion: true narrows the list, « true » as text is
+        a reading the model corrects."""
+        shelf = a_shelf({get_list_projects_use_case: lambda: Stub([])})
+
+        reading = await shelf.consult("find_project", {"followed": True})
+        refused = await shelf.consult("find_project", {"followed": "true"})
+
+        assert reading.arguments == {"followed": True}
+        assert refused.result == (
+            "« find_project » ne prend pas ces paramètres : followed=« true »."
+        )
+
+    async def test_a_yes_or_no_is_not_taken_for_an_identifier(self) -> None:
+        reading = await a_shelf().consult("project_brief", {"project_id": True})
+
+        assert reading.result == (
+            "« project_brief » ne prend pas ces paramètres : project_id=« True »."
+        )
 
     async def test_an_identifier_written_as_a_whole_float_is_read_as_an_integer(
         self,

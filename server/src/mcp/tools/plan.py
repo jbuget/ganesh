@@ -20,13 +20,18 @@ the roadmap to machines and leaves « Planification » shut on purpose. The tool
 is on the assistant's shelf alone, for a person who may already open that
 screen; `ROADMAP_READ` is the scope it checks, not a door it opens.
 
+`team_availability` is the same projection read across the team for one week:
+« qui est libre la semaine du 19 ? ». Whoever is free is listed alphabetically
+and never by how much room they have — a list sorted by free days is a list of
+who is idle. Those with none are counted, not named.
+
 The workload is read as it is on the planning screen, week by week, already
 less the half day held back each week. Nothing is computed here that the
 domain does not already compute.
 """
 
 import unicodedata
-from datetime import date
+from datetime import date, timedelta
 
 from src.mcp.door import Machine, answers, current_machine
 from src.mcp.tools import say
@@ -102,6 +107,87 @@ async def person_plan(person: str) -> str:
             *_carried(someone, carried),
         ]
     )
+
+
+@answers(SCOPE)
+async def team_availability(week: str | None = None) -> str:
+    """Dit qui a de la place une semaine donnée dans le plan de charge.
+
+    Rend les personnes de l'équipe qui ont de la place cette semaine-là, par
+    ordre alphabétique et avec le nombre de jours libres, puis combien n'en
+    ont pas. La place se lit après ce qui est pré-saisi et ce que le plan
+    projette, une demi-journée par semaine étant gardée en réserve : c'est une
+    projection, pas un engagement. La semaine se donne par n'importe lequel de
+    ses jours au format AAAA-MM-JJ ; sans rien, c'est la semaine en cours.
+    """
+    monday = _monday_of(week)
+    if monday is None:
+        return (
+            f"« {week} » ne se lit pas comme une date. "
+            "Le format est AAAA-MM-JJ, « 2026-10-19 » par exemple."
+        )
+
+    reading: WorkloadReading = await (
+        await current_machine().resolve(get_workload_plan_use_case)
+    ).execute()
+    heading = f"Semaine du {say.dated(monday)}"
+    if monday + timedelta(days=6) < reading.from_day or monday > reading.to_day:
+        return (
+            f"{heading} : le plan de charge ne couvre pas cette semaine-là, "
+            f"il va du {say.dated(reading.from_day)} au {say.dated(reading.to_day)}."
+        )
+
+    team = [row for row in reading.people if not row.user.is_guest]
+    free = sorted(
+        (
+            (row.user, load.free)
+            for row in team
+            for load in row.load.weeks
+            if load.week == monday and load.free > 0
+        ),
+        key=lambda found: found[0].label,
+    )
+    full = len(team) - len(free)
+
+    caveat = (
+        "(projection, pas un engagement : le pré-saisi et le projeté sont déduits, "
+        "une demi-journée par semaine est gardée en réserve)"
+    )
+    if not free:
+        return f"{heading} : Personne n'a de place. {caveat}"
+    lines = [
+        f"{heading} : {say.people(len(free))} {_have(len(free))} de la place {caveat} :",
+        *(
+            f"- {user.label} — {say.days(days)} {say.agreed('libre', days)}"
+            for user, days in free
+        ),
+    ]
+    if full:
+        lines.append(
+            f"{full} {_others(full)} n'{'ont' if full > 1 else 'a'} pas de place "
+            "cette semaine-là."
+        )
+    return "\n".join(lines)
+
+
+def _have(count: int) -> str:
+    return "ont" if count > 1 else "a"
+
+
+def _others(count: int) -> str:
+    return "autres" if count > 1 else "autre"
+
+
+def _monday_of(asked: str | None) -> date | None:
+    """The Monday of the week a day belongs to. Nothing asked is the week running."""
+    if asked is None:
+        day = clock.today()
+    else:
+        try:
+            day = date.fromisoformat(asked.strip())
+        except ValueError:
+            return None
+    return day - timedelta(days=day.weekday())
 
 
 async def _found(machine: Machine, asked: str) -> list[User]:

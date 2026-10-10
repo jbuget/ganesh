@@ -45,6 +45,12 @@ class TestInstructions:
 
         assert "`person_plan`" in said
 
+    def test_whom_the_team_has_room_for_is_read_across_the_week(self) -> None:
+        said = " ".join(instructions(date(2026, 10, 10)).split())
+
+        assert "`team_availability`" in said
+        assert "ne les classe pas" in said
+
     def test_what_was_entered_is_never_told_as_what_was_projected(self) -> None:
         """A projection read as a commitment is what the planning screen prevents."""
         said = " ".join(instructions(date(2026, 10, 10)).split())
