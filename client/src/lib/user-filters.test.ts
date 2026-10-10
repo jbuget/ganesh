@@ -3,8 +3,6 @@ import { describe, expect, it } from "vitest";
 import type { UserResponse } from "@/lib/api/generated/model";
 import {
   NO_USER_FILTER,
-  hiddenGuests,
-  withRequesters,
   filterUsers,
   hasActiveUserFilter,
   readUserFilters,
@@ -73,36 +71,16 @@ describe("filterUsers", () => {
     );
   });
 
-  it("leaves out whoever only ever came to file a need", () => {
-    const team = [
-      teammate("Chef", { role: "MANAGER" }),
-      teammate("Métier", {
-        role: "GUEST",
-      }),
-    ];
-
-    expect(names(filterUsers(team, NO_USER_FILTER))).toEqual(["Chef"]);
-  });
-
-  it("shows the administrators with the rest of the team", () => {
+  it("shows everybody, requesters included, when no role is asked for", () => {
     const team = [
       teammate("Admin", { role: "ADMIN" }),
       teammate("Chef", { role: "MANAGER" }),
       teammate("Métier", { role: "GUEST" }),
     ];
 
-    expect(names(filterUsers(team, NO_USER_FILTER))).toEqual(["Admin", "Chef"]);
-  });
-
-  it("shows the requesters once they are asked for", () => {
-    const team = [
-      teammate("Chef", { role: "MANAGER" }),
-      teammate("Métier", {
-        role: "GUEST",
-      }),
-    ];
-
-    expect(names(filterUsers(team, { ...NO_USER_FILTER, roles: ["GUEST"] }))).toEqual([
+    expect(names(filterUsers(team, NO_USER_FILTER))).toEqual([
+      "Admin",
+      "Chef",
       "Métier",
     ]);
   });
@@ -171,41 +149,5 @@ describe("writeUserFilters", () => {
     writeUserFilters(params, NO_USER_FILTER);
 
     expect(params.toString()).toBe("");
-  });
-});
-
-describe("the requesters the list keeps out of sight", () => {
-  const team = [
-    teammate("Chef", { role: "MANAGER" }),
-    teammate("Métier", { role: "GUEST" }),
-    teammate("Compta", { role: "GUEST" }),
-  ];
-
-  it("counts what one more click would bring", () => {
-    expect(hiddenGuests(team, NO_USER_FILTER)).toBe(2);
-  });
-
-  it("counts nothing once they are asked for", () => {
-    expect(hiddenGuests(team, { ...NO_USER_FILTER, roles: ["GUEST"] })).toBe(0);
-  });
-
-  it("counts only those the other criteria would keep", () => {
-    // A figure promising rows a search would still hide is a figure that lies.
-    expect(hiddenGuests(team, { ...NO_USER_FILTER, name: "compta" })).toBe(1);
-  });
-
-  it("shows them beside the team rather than instead of it", () => {
-    const shown = filterUsers(team, withRequesters(NO_USER_FILTER));
-
-    expect(names(shown)).toEqual(["Chef", "Métier", "Compta"]);
-  });
-
-  it("adds them to a criterion already set", () => {
-    const shown = filterUsers(
-      team,
-      withRequesters({ ...NO_USER_FILTER, roles: ["MANAGER"] }),
-    );
-
-    expect(names(shown)).toEqual(["Chef", "Métier", "Compta"]);
   });
 });
