@@ -16,14 +16,14 @@ import { CATEGORIES, PHASES, PRIORITIES } from "@/lib/board";
 import { DEPARTMENTS } from "@/lib/departments";
 import {
   EVERY_CRITERION,
+  FOLLOW_STATES,
   MISSION_STATES,
   MISSION_KINDS,
-  DISCUSSION_STATES,
   PUBLICATION_STATES,
   type Criterion,
+  type FollowState,
   type MissionFilters as Criteria,
   type MissionState,
-  type DiscussionState,
   type PublicationState,
 } from "@/lib/mission-filters";
 
@@ -193,16 +193,14 @@ export function MissionFilters({
           />
         )}
 
-        {/* Ce qui attend d'être dit en revue, et son envers : les projets
-            dont personne n'a rien dit. */}
-        {shows("discussions") && (
+        {/* Ce que l'équipe suit de près, et son envers : les projets que
+            personne ne suit. */}
+        {shows("follows") && (
           <FilterSelect
-            label="Revue"
-            options={DISCUSSION_STATES.map(({ value, label }) => ({ value, label }))}
-            values={filters.discussions}
-            onChange={(values) =>
-              onChange({ discussions: values as DiscussionState[] })
-            }
+            label="Suivi"
+            options={FOLLOW_STATES.map(({ value, label }) => ({ value, label }))}
+            values={filters.follows}
+            onChange={(values) => onChange({ follows: values as FollowState[] })}
           />
         )}
 

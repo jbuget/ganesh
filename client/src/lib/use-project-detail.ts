@@ -27,6 +27,7 @@ import {
   updateProjectDetail,
   updateProjectRegistry,
 } from "@/lib/api/generated/projects/projects";
+import { setFollowed } from "@/lib/follow";
 import type { SheetFields } from "@/lib/service-sheet";
 
 /**
@@ -142,6 +143,13 @@ export function useProjectDetail(
      */
     async unarchive() {
       await unarchiveProject(projectId);
+      await reload();
+    },
+
+    /** Raises the mark the team follows the mission by, or lowers it. */
+    async toggleFollow() {
+      if (!detail) return;
+      await setFollowed(projectId, !detail.project.is_followed);
       await reload();
     },
 

@@ -690,41 +690,50 @@ describe("MissionRow — the service catalogue", () => {
   });
 });
 
-/**
- * What is waiting to be discussed has a column, not a corner of the thread's
- * cell: two marks squeezed into one untitled column spilled onto the phase of
- * the row, and the review is a reading one puts away like any other.
- */
-describe("MissionRow — the review mark", () => {
-  const flagged = (count: number) =>
-    ({ ...mission({}), flagged_updates: count }) as ProjectListItemResponse;
-
-  it("marks what is waiting to be discussed", () => {
+/** The mark the team follows a mission by, raised and lowered from the row. */
+describe("MissionRow — the follow mark", () => {
+  it("offers to follow a mission nobody follows", () => {
+    const onToggleFollow = vi.fn();
     line(
       <MissionRow
-        mission={flagged(2)}
+        mission={mission({ is_followed: false })}
+        now={NOW}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+        onToggleFollow={onToggleFollow}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Suivre ce projet" }));
+
+    expect(onToggleFollow).toHaveBeenCalledOnce();
+  });
+
+  it("only shows the mark to a reader who may not write", () => {
+    line(
+      <MissionRow
+        mission={mission({ is_followed: true })}
         now={NOW}
         onOpen={() => {}}
         onOpenThread={() => {}}
       />,
     );
 
-    expect(
-      screen.getByRole("button", { name: "2 mises à jour à discuter" }),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Projet suivi")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /suivre/i })).toBeNull();
   });
 
   it("puts the mark away with its column", () => {
     line(
       <MissionRow
-        mission={flagged(2)}
+        mission={mission({ is_followed: true })}
         now={NOW}
         onOpen={() => {}}
         onOpenThread={() => {}}
-        hidden={hiddenColumns(["review"])}
+        hidden={hiddenColumns(["followed"])}
       />,
     );
 
-    expect(screen.queryByRole("button", { name: /à discuter/ })).toBeNull();
+    expect(screen.queryByLabelText("Projet suivi")).toBeNull();
   });
 });

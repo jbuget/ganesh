@@ -5,6 +5,7 @@ import { ChevronRight, GripVertical } from "lucide-react";
 
 import { BuildCost } from "@/components/atoms/BuildCost";
 import { CategoryMark } from "@/components/atoms/CategoryMark";
+import { FollowMark } from "@/components/atoms/FollowMark";
 import { GoLiveDate } from "@/components/atoms/GoLiveDate";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
@@ -12,7 +13,6 @@ import { MissionDepartments } from "@/components/atoms/MissionDepartments";
 import { PriorityMark } from "@/components/atoms/PriorityMark";
 import { PublishedMark } from "@/components/atoms/PublishedMark";
 import { RunCost } from "@/components/atoms/RunCost";
-import { ReviewFlag } from "@/components/atoms/ReviewFlag";
 import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
@@ -45,6 +45,8 @@ interface MissionRowProps {
   onOpen: () => void;
   /** Opens the mission on its thread, where the preview stops. */
   onOpenThread: () => void;
+  /** Raises or lowers the mark. Absent for a reader who may not write. */
+  onToggleFollow?: () => void;
   /** The columns put away. Nothing put away shows the whole panorama. */
   hidden?: HiddenColumns;
   /**
@@ -76,6 +78,7 @@ export function MissionRow({
   now,
   onOpen,
   onOpenThread,
+  onToggleFollow,
   hidden = NO_HIDDEN_COLUMN,
   movable,
   receiving = false,
@@ -292,12 +295,9 @@ export function MissionRow({
         />
       </TableCell>
 
-      {/* What is waiting to be discussed, against the thread it is derived
-          from. It had been a second mark in the cell beside, where the two
-          spilled onto the phase and where nobody could put it away. */}
-      {shows("review") && (
+      {shows("followed") && (
         <TableCell>
-          <ReviewFlag count={mission.flagged_updates ?? 0} onOpen={onOpenThread} />
+          <FollowMark followed={project.is_followed} onToggle={onToggleFollow} />
         </TableCell>
       )}
 

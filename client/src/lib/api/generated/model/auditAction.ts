@@ -21,6 +21,8 @@ export const AuditAction = {
   projectupdate: "project.update",
   projectdelete: "project.delete",
   projectstatus_change: "project.status_change",
+  projectfollow: "project.follow",
+  projectunfollow: "project.unfollow",
   activitycreate: "activity.create",
   activityupdate: "activity.update",
   activityarchive: "activity.archive",

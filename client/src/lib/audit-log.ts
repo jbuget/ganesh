@@ -421,6 +421,13 @@ export function auditSentence(
     case "project.status_change":
       return { action: "a changé la phase", ...movement("status", before, after) };
 
+    // La marque que l'équipe pose sur ce qu'elle suit de près, et qu'elle lève.
+    case "project.follow":
+      return { action: "a suivi le projet" };
+
+    case "project.unfollow":
+      return { action: "a cessé de suivre le projet" };
+
     // What a mission is cut into. The line names the activity rather than the
     // mission, which the heading above it already says.
     case "activity.create":
@@ -464,9 +471,9 @@ export function auditSentence(
     case "update.remove":
       return { action: "a supprimé une mise à jour" };
 
-    // Ce qu'on a demandé à voir en revue, et ce que la revue a lu. Le geste
-    // est nommé, pas décrit : « flagged_at : null → … » ne dirait rien de ce
-    // qui s'est passé ce jour-là.
+    // Ce qu'on demandait à voir en revue, et ce que la revue avait lu, du temps
+    // où la marque se posait sur une mise à jour plutôt que sur le projet. Plus
+    // personne ne fait ce geste ; les lignes déjà écrites, elles, se lisent.
     case "update.flag":
       return { action: "a signalé une mise à jour à discuter en revue" };
 

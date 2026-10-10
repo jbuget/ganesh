@@ -4,11 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 
 import type { Reaction, ProjectUpdateResponse } from "@/lib/api/generated/model";
 import {
-  clearProjectUpdateFlag,
   editProjectUpdate,
   editUpdateComment,
   listProjectUpdates,
-  flagProjectUpdate,
   postProjectUpdate,
   postUpdateComment,
   reactToProjectUpdate,
@@ -79,22 +77,6 @@ export function useProjectUpdates(
      * message, so the reference list and the kanban have nothing to learn from
      * it.
      */
-    /**
-     * Puts an update on the agenda of the next revue, or takes it off.
-     *
-     * The screen one came from is told, as it is after any other write: the
-     * kanban card and the reference list row derive their mark from the
-     * thread, and would otherwise sit on what they knew when the panel
-     * opened.
-     */
-    async flag(updateId: number, raising: boolean) {
-      await (raising
-        ? flagProjectUpdate(projectId, updateId)
-        : clearProjectUpdateFlag(projectId, updateId));
-      await reload();
-      await onWrite?.();
-    },
-
     async react(updateId: number, reaction: Reaction, leaving: boolean) {
       await (leaving
         ? reactToProjectUpdate(projectId, updateId, reaction)

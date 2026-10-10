@@ -15,7 +15,7 @@ const params = (query: string) => new URLSearchParams(query);
 describe("hideable columns", () => {
   it("offers every column but the two the row is read by", () => {
     expect(HIDEABLE_COLUMNS.map((column) => column.key)).toEqual([
-      "review",
+      "followed",
       "phase",
       "priority",
       "category",

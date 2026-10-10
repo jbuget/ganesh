@@ -115,6 +115,13 @@ describe("auditSentence", () => {
       });
     });
 
+    it("names the mark raised, and the mark lowered", () => {
+      expect(auditSentence(entry("project.follow")).action).toBe("a suivi le projet");
+      expect(auditSentence(entry("project.unfollow")).action).toBe(
+        "a cessé de suivre le projet",
+      );
+    });
+
     it("reads a renaming as a renaming", () => {
       expect(
         auditSentence(

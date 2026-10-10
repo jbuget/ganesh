@@ -141,6 +141,7 @@ export function ProjectsPage() {
             now={now}
             onOpen={(projectId) => panel.open(projectId)}
             onOpenThread={(projectId) => panel.open(projectId, "updates")}
+            onToggleFollow={screen.mayWrite ? screen.toggleFollow : undefined}
             hidden={columns.hidden}
             // Dropped onto a project, a mission becomes one of its slices. The
             // same move is reached from the panel menu, which is where the

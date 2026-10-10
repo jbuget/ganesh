@@ -28,6 +28,8 @@ vi.mock("@/lib/use-project-detail", () => ({
 }));
 
 /** The four facets have their own tests: the header is what is asked here. */
+// Who may write is the session's business, not this screen's.
+vi.mock("@/lib/use-may-write", () => ({ useMayWrite: () => true }));
 vi.mock("@/components/organisms/ProjectTabs", () => ({
   ProjectTabs: () => <div />,
 }));

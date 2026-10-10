@@ -17,6 +17,7 @@ import type {
 } from "@/lib/api/generated/model";
 import { mutationResult, useCurrentUser, useProjects } from "@/lib/api/queries";
 import { parseProjectsCsv } from "@/lib/csv-import";
+import { setFollowed } from "@/lib/follow";
 import {
   NO_FILTER,
   filterMissions,
@@ -95,6 +96,12 @@ export function useProjectsScreen(
       });
       await refresh();
       return mutationResult<ProjectResponse>(created);
+    },
+
+    /** Raises or lowers the mark on a mission, then reads the list again. */
+    async toggleFollow(projectId: number, following: boolean) {
+      await setFollowed(projectId, following);
+      await refresh();
     },
 
     /** Whether the last move was refused, and the list read again as it is. */

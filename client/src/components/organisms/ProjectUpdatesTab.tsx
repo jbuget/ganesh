@@ -121,7 +121,6 @@ export function ProjectUpdatesTab({
             editable={editable}
             onEdit={(body) => thread.edit(update.id, body)}
             onRemove={() => thread.remove(update.id)}
-            onFlag={(raising) => thread.flag(update.id, raising)}
             onReact={(reaction, leaving) => thread.react(update.id, reaction, leaving)}
             onReply={(body) => thread.reply(update.id, body)}
             onEditComment={(commentId, body) =>

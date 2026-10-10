@@ -7,12 +7,14 @@ import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
 import { EditableTitle } from "@/components/atoms/EditableTitle";
+import { FollowMark } from "@/components/atoms/FollowMark";
 import { ParentMissionLink } from "@/components/atoms/ParentMissionLink";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectTabs } from "@/components/organisms/ProjectTabs";
 import { phaseLabel, phaseDot } from "@/lib/board";
 import { formatDecimalDays } from "@/lib/dates";
 import { useWayBack, type WayBack } from "@/lib/navigation-trail";
+import { useMayWrite } from "@/lib/use-may-write";
 import { useProjectDetail } from "@/lib/use-project-detail";
 
 interface ProjectDetailPageProps {
@@ -68,6 +70,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
   // still be in the reference list on the way back.
   const forgetCache = useCallback(() => queryClient.invalidateQueries(), [queryClient]);
   const sheet = useProjectDetail(projectId, forgetCache);
+  const mayWrite = useMayWrite();
   const detail = sheet.detail;
 
   if (sheet.notFound) {
@@ -99,12 +102,20 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
                 mission is a part of comes before its own name. */}
             {detail.parent && <ParentMissionLink parent={detail.parent} />}
 
-            <EditableTitle
-              label={project.label}
-              hint="Renommer le projet"
-              onRename={sheet.rename}
-              level={1}
-            />
+            <div className="flex items-center gap-2">
+              <EditableTitle
+                label={project.label}
+                hint="Renommer le projet"
+                onRename={sheet.rename}
+                level={1}
+              />
+              {project.kind !== "off_project" && (
+                <FollowMark
+                  followed={project.is_followed}
+                  onToggle={mayWrite ? sheet.toggleFollow : undefined}
+                />
+              )}
+            </div>
             <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
               {project.status && (
                 <span className="flex items-center gap-1.5">
