@@ -66,12 +66,11 @@ class ProvisionUserUseCase:
                 entra_oid=identity.oid,
                 email=identity.email,
                 display_name=identity.display_name,
-                # Somebody nobody has declared is a guest: they read the
-                # application whole and write nothing into it, until a
-                # manager says who they are on the team. The seed is the
-                # other door, and it is the one above — matching by email
-                # is what preserves a role handed out before the first
-                # sign-in.
+                # Somebody nobody has declared is a guest: they reach the
+                # recueil and nothing else, until a manager says who they
+                # are on the team. The seed is the other door, and it is
+                # the one above — matching by email is what preserves a
+                # role handed out before the first sign-in.
                 role=first_role,
                 last_login_at=now,
             )

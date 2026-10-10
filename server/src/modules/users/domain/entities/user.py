@@ -160,10 +160,11 @@ class User:
     def can_write(self) -> bool:
         """Whether this account may enter anything at all.
 
-        A guest reads the application whole and writes nothing into it: a
-        month, a project, a mise à jour, a mood. The rule is one line here so
-        that every use case that writes asks the same question, and the day a
-        role is added nobody has to remember which side of it it falls on.
+        A guest writes nothing into the application — a month, a project, a
+        mise à jour, a mood — the recueil aside, whose doors never ask. The
+        rule is one line here so that every use case that writes asks the
+        same question, and the day a role is added nobody has to remember
+        which side of it it falls on.
         """
         return self.is_active and not self.is_guest
 
