@@ -103,12 +103,16 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
             {detail.parent && <ParentMissionLink parent={detail.parent} />}
 
             <div className="flex items-center gap-2">
-              <EditableTitle
-                label={project.label}
-                hint="Renommer le projet"
-                onRename={sheet.rename}
-                level={1}
-              />
+              {/* The title takes the width of its words rather than of the
+                  row, so the mark reads beside it rather than across the page. */}
+              <div className="min-w-0">
+                <EditableTitle
+                  label={project.label}
+                  hint="Renommer le projet"
+                  onRename={sheet.rename}
+                  level={1}
+                />
+              </div>
               {project.kind !== "off_project" && (
                 <FollowMark
                   followed={project.is_followed}
