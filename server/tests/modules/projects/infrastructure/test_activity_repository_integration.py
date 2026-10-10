@@ -85,6 +85,27 @@ async def test_an_activity_is_read_back_as_it_was_written(
     assert read.project_id == edit
 
 
+@pytest.mark.parametrize(
+    "nature",
+    [
+        WorkNature.DATA,
+        WorkNature.CONFIGURATION,
+        WorkNature.USER_ENABLEMENT,
+        WorkNature.COACHING,
+    ],
+)
+async def test_a_trade_added_after_the_first_three_reads_back_as_it_was_written(
+    db_session: AsyncSession, nature: WorkNature
+) -> None:
+    edit = await _mission(db_session, "Edit")
+
+    written = await _activity(db_session, edit, "Un métier", nature=nature)
+    read = await SqlActivityRepository(db_session).get_by_id(written.id or 0)
+
+    assert read is not None
+    assert read.nature is nature
+
+
 async def test_an_activity_the_reprise_took_over_reads_back_without_a_trade(
     db_session: AsyncSession,
 ) -> None:

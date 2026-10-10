@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { WorkNature } from "@/lib/api/generated/model";
+
 import {
   RANGES,
   activityLevel,
@@ -331,6 +333,42 @@ describe("tradeSegments", () => {
 
     const before = tradeSegments(steering).find((one) => one.key === "design");
     expect(swapped[0].colour).toBe(before?.colour);
+  });
+
+  it("gives every trade a colour of its own", () => {
+    const everyTrade = Object.values(WorkNature).map((nature) => ({
+      nature,
+      days: 1,
+      share: 1 / 7,
+    }));
+    const colours = tradeSegments({
+      ...steering,
+      project_days: 7,
+      by_nature: everyTrade,
+    }).map((segment) => segment.colour);
+
+    expect(new Set(colours).size).toBe(7);
+  });
+
+  it("draws the trades in their own order whatever their size, what states none last", () => {
+    // Seven colours cannot all be told apart side by side: a fixed order keeps
+    // the neighbours that can, and the size is read in the legend's figures.
+    const bySize = tradeSegments({
+      ...steering,
+      by_nature: [
+        { nature: null, days: 4, share: 0.4 },
+        { nature: "coaching", days: 3, share: 0.3 },
+        { nature: "data", days: 2, share: 0.2 },
+        { nature: "development", days: 1, share: 0.1 },
+      ],
+    });
+
+    expect(bySize.map((segment) => segment.key)).toEqual([
+      "development",
+      "data",
+      "coaching",
+      "none",
+    ]);
   });
 
   it("draws nothing when no project time was declared", () => {

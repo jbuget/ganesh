@@ -14,6 +14,12 @@
  * act rather than the hat would leave that day undecidable, since the same
  * people here hold several trades at once.
  *
+ * A trade earns its place when somebody wears it without wearing the others,
+ * or when its days are a budget worth reading apart from one project to the
+ * next. What the phase already says — scoping, acceptance, going live, run —
+ * is never a trade: `status_at_entry` counts it, and counting it twice would
+ * give two answers that end up disagreeing.
+ *
  * The set is closed, and closed in the domain, for the reason the departments
  * are: days are only comparable across projects while everyone declares them
  * under the same names. Nothing in the domain branches on a nature — it is
@@ -26,4 +32,8 @@ export const WorkNature = {
   development: "development",
   design: "design",
   project_management: "project_management",
+  data: "data",
+  configuration: "configuration",
+  user_enablement: "user_enablement",
+  coaching: "coaching",
 } as const;
