@@ -20,6 +20,10 @@ from src.modules.assistant.application.use_cases.admit_question import (
 from src.modules.assistant.application.use_cases.record_exchange import (
     RecordExchangeUseCase,
 )
+from src.modules.assistant.application.use_cases.record_unanswered import (
+    RecordUnansweredUseCase,
+)
+from src.modules.assistant.domain.entities.unanswered import UnansweredQuestion
 from src.modules.assistant.presentation.api.mappers.assistant_mapper import (
     to_exchange_response,
 )
@@ -30,9 +34,11 @@ from src.modules.assistant.presentation.api.schemas.assistant_schemas import (
 from src.modules.assistant.presentation.dependencies import (
     get_admit_question_use_case,
     get_record_exchange_use_case,
+    get_record_unanswered_use_case,
 )
 from src.modules.auth.presentation.dependencies import get_contributor
 from src.modules.users.domain.entities.user import User
+from src.shared.exceptions.domain_exceptions import ServiceUnavailableError
 
 router = APIRouter(prefix="/assistant", tags=["assistant"])
 
@@ -49,6 +55,9 @@ async def ask_assistant(
     admit: AdmitQuestionUseCase = Depends(get_admit_question_use_case),
     answerer: Answerer = Depends(get_answerer),
     record: RecordExchangeUseCase = Depends(get_record_exchange_use_case),
+    record_unanswered: RecordUnansweredUseCase = Depends(
+        get_record_unanswered_use_case
+    ),
     session: AsyncSession = Depends(get_db),
 ) -> ExchangeResponse:
     """Asks a question. Without a conversation, it opens one."""
@@ -63,6 +72,11 @@ async def ask_assistant(
         admit=admit,
         answerer=answerer,
         record=record,
+        record_unanswered=record_unanswered,
     )
+    # Committed before anything is said: an unanswered question is kept to
+    # study it, and the refusal below must not take it with it.
     await session.commit()
+    if isinstance(asked, UnansweredQuestion):
+        raise ServiceUnavailableError("The assistant could not answer.")
     return to_exchange_response(asked)

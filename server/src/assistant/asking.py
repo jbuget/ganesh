@@ -10,6 +10,7 @@ from src.modules.assistant.application.dtos.assistant_dtos import (
     AskCommand,
     AskResult,
     RecordCommand,
+    RecordUnansweredCommand,
 )
 from src.modules.assistant.application.use_cases.admit_question import (
     AdmitQuestionUseCase,
@@ -17,6 +18,11 @@ from src.modules.assistant.application.use_cases.admit_question import (
 from src.modules.assistant.application.use_cases.record_exchange import (
     RecordExchangeUseCase,
 )
+from src.modules.assistant.application.use_cases.record_unanswered import (
+    RecordUnansweredUseCase,
+)
+from src.modules.assistant.domain.entities.exchange import Answer
+from src.modules.assistant.domain.entities.unanswered import UnansweredQuestion
 from src.shared.exceptions.domain_exceptions import ServiceUnavailableError
 
 
@@ -25,8 +31,14 @@ async def ask(
     admit: AdmitQuestionUseCase,
     answerer: Answerer,
     record: RecordExchangeUseCase,
-) -> AskResult:
-    """The answer to one question, kept — or the reason there is none."""
+    record_unanswered: RecordUnansweredUseCase,
+) -> AskResult | UnansweredQuestion:
+    """The answer to one question, kept — or the question kept, and why not.
+
+    Either is kept, and the way in commits it before saying anything: a
+    question that went unanswered must outlive the refusal that tells the
+    person so.
+    """
     if not answerer.is_available:
         raise ServiceUnavailableError("No model is configured for the assistant.")
 
@@ -34,6 +46,8 @@ async def ask(
     answer = await answerer.answer(
         admitted.conversation, admitted.question, admitted.project_id
     )
-    if answer is None:
-        raise ServiceUnavailableError("The assistant could not answer.")
-    return await record.execute(RecordCommand(admitted=admitted, answer=answer))
+    if isinstance(answer, Answer):
+        return await record.execute(RecordCommand(admitted=admitted, answer=answer))
+    return await record_unanswered.execute(
+        RecordUnansweredCommand(admitted=admitted, unanswered=answer)
+    )

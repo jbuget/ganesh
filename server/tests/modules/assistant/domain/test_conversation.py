@@ -16,6 +16,7 @@ from src.modules.assistant.domain.entities.conversation import (
     ConversationOverError,
 )
 from src.modules.assistant.domain.entities.exchange import Answer, Cause, Verdict
+from src.modules.assistant.domain.entities.unanswered import Unanswered, WhyUnanswered
 from src.shared.exceptions.domain_exceptions import ConflictError, ValidationError
 
 ASKED_AT = datetime(2026, 10, 10, 9, 30, tzinfo=UTC)
@@ -129,3 +130,20 @@ class TestReadingAConversation:
         assert conversation.judged(Verdict.HELPFUL) == 1
         assert conversation.judged(Verdict.UNHELPFUL) == 1
         assert conversation.annotated == 1
+
+
+class TestAQuestionLeftUnanswered:
+    def test_it_takes_no_place_in_the_conversation(self) -> None:
+        """Asked again, it is the same question: the five places are for answers."""
+        conversation = a_conversation_of(2)
+        unanswered = Unanswered(
+            WhyUnanswered.KEPT_ASKING, (), "gemini-test", 300, 0, 9000
+        )
+
+        missed = conversation.missed("Qui fait quoi ?", unanswered, 7, ASKED_AT)
+
+        assert conversation.remaining == MAX_EXCHANGES - 2
+        assert missed.conversation_id == conversation.id
+        assert missed.asker_id == conversation.asker_id
+        assert (missed.question, missed.project_id) == ("Qui fait quoi ?", 7)
+        assert missed.unanswered.reason is WhyUnanswered.KEPT_ASKING

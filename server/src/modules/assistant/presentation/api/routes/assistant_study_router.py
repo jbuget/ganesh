@@ -23,6 +23,9 @@ from src.modules.assistant.application.use_cases.export_exchanges import (
 from src.modules.assistant.application.use_cases.list_conversations import (
     ListConversationsUseCase,
 )
+from src.modules.assistant.application.use_cases.list_unanswered import (
+    ListUnansweredUseCase,
+)
 from src.modules.assistant.application.use_cases.read_conversation import (
     ReadConversationUseCase,
 )
@@ -44,6 +47,7 @@ from src.modules.assistant.presentation.api.mappers.study_mapper import (
     to_exported_exchanges,
     to_indicators_response,
     to_studied_exchange_response,
+    to_unanswered_page_response,
 )
 from src.modules.assistant.presentation.api.schemas.study_schemas import (
     AnnotateRequest,
@@ -51,11 +55,13 @@ from src.modules.assistant.presentation.api.schemas.study_schemas import (
     ConversationDetailResponse,
     ConversationPageResponse,
     StudiedExchangeResponse,
+    UnansweredPageResponse,
 )
 from src.modules.assistant.presentation.dependencies import (
     get_annotate_exchange_use_case,
     get_export_exchanges_use_case,
     get_list_conversations_use_case,
+    get_list_unanswered_use_case,
     get_read_conversation_use_case,
     get_read_indicators_use_case,
 )
@@ -119,6 +125,25 @@ async def read_conversation(
 ) -> ConversationDetailResponse:
     """A conversation whole, with what every tool read back."""
     return to_conversation_detail_response(await use_case.execute(conversation_id))
+
+
+@router.get(
+    "/unanswered",
+    response_model=UnansweredPageResponse,
+    operation_id="listAssistantUnanswered",
+)
+async def list_unanswered(
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    kept: ExchangeFilter = Depends(kept_by),
+    _: User = Depends(get_admin),
+    use_case: ListUnansweredUseCase = Depends(get_list_unanswered_use_case),
+) -> UnansweredPageResponse:
+    """The questions that came back with no answer, latest first, and why.
+
+    None while a judgement is asked for: only an answer is judged.
+    """
+    return to_unanswered_page_response(await use_case.execute(kept, limit, offset))
 
 
 @router.get(

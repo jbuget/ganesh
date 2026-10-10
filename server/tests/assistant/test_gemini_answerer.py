@@ -20,6 +20,7 @@ from src.assistant.gemini_answerer import (
 from src.assistant.toolbox import Tool, Toolbox
 from src.modules.assistant.domain.entities.conversation import Conversation
 from src.modules.assistant.domain.entities.exchange import Answer, Consultation
+from src.modules.assistant.domain.entities.unanswered import Unanswered, WhyUnanswered
 
 
 async def project_brief(project_id: int) -> str:
@@ -142,7 +143,8 @@ async def test_without_a_key_there_is_nothing_to_ask() -> None:
     )
 
     assert not answerer.is_available
-    assert await answerer.answer(Conversation.opened(1), "Question ?", None) is None
+    missed = await answerer.answer(Conversation.opened(1), "Question ?", None)
+    assert isinstance(missed, Unanswered)
 
 
 async def test_an_answer_written_straight_away_is_handed_back() -> None:
@@ -150,7 +152,7 @@ async def test_an_answer_written_straight_away_is_handed_back() -> None:
 
     answer = await answerer.answer(Conversation.opened(1), "Quel temps fait-il ?", None)
 
-    assert answer is not None
+    assert isinstance(answer, Answer)
     assert answer.text == "Ganesh ne parle que des projets."
     assert answer.consultations == ()
     assert answer.model == "gemini-test"
@@ -166,7 +168,7 @@ async def test_a_tool_asked_for_is_consulted_and_its_reading_handed_back() -> No
 
     answer = await answerer.answer(Conversation.opened(1), "Où en est-il ?", 7)
 
-    assert answer is not None
+    assert isinstance(answer, Answer)
     assert answer.text == "WAATcher est en développement."
     assert toolbox.consulted == [("project_brief", {"project_id": 7})]
     assert answer.consultations == (
@@ -258,7 +260,7 @@ async def test_a_model_that_keeps_asking_is_made_to_answer_with_what_it_read() -
 
     answer = await answerer.answer(Conversation.opened(1), "Question ?", None)
 
-    assert answer is not None
+    assert isinstance(answer, Answer)
     assert answer.text == "WAATcher est en service ; ses lots n'ont pas pu être lus."
     assert len(toolbox.consulted) == MAX_ROUNDS
     assert len(answer.consultations) == MAX_ROUNDS
@@ -289,13 +291,29 @@ async def test_the_closing_round_offers_no_tool_and_says_why() -> None:
     assert last.parts[-1].text == ENOUGH
 
 
-async def test_a_closing_round_that_writes_nothing_answers_nothing() -> None:
+async def test_a_closing_round_that_writes_nothing_says_it_was_cut_short() -> None:
     answerer, _, _ = an_answerer(
         *(asking_for("project_brief", project_id=7) for _ in range(MAX_ROUNDS)),
         written(""),
     )
 
-    assert await answerer.answer(Conversation.opened(1), "Question ?", None) is None
+    missed = await answerer.answer(Conversation.opened(1), "Question ?", None)
+
+    assert isinstance(missed, Unanswered)
+    assert missed.reason is WhyUnanswered.CUT_SHORT
+    assert len(missed.consultations) == MAX_ROUNDS
+
+
+async def test_a_model_asking_still_once_made_to_answer_says_so() -> None:
+    answerer, _, _ = an_answerer(
+        *(asking_for("project_brief", project_id=7) for _ in range(MAX_ROUNDS + 1)),
+    )
+
+    missed = await answerer.answer(Conversation.opened(1), "Question ?", None)
+
+    assert isinstance(missed, Unanswered)
+    assert missed.reason is WhyUnanswered.KEPT_ASKING
+    assert missed.input_tokens > 0
 
 
 async def test_a_question_reads_no_more_than_its_share_of_the_register() -> None:
@@ -307,7 +325,7 @@ async def test_a_question_reads_no_more_than_its_share_of_the_register() -> None
     answer = await answerer.answer(Conversation.opened(1), "Tous les projets ?", None)
 
     assert len(toolbox.consulted) == MAX_CONSULTATIONS
-    assert answer is not None
+    assert isinstance(answer, Answer)
     refused = [c for c in answer.consultations if c not in toolbox_readings(toolbox)]
     assert len(refused) == 5
     assert all("Assez de lectures" in c.result for c in refused)
@@ -320,10 +338,17 @@ def toolbox_readings(toolbox: RecordingToolbox) -> list[Consultation]:
     ]
 
 
-async def test_a_provider_that_fails_answers_nothing() -> None:
-    answerer, _, _ = an_answerer(RuntimeError("quota exceeded"))
+async def test_a_provider_that_fails_keeps_what_was_read_before() -> None:
+    """What the tools read before it went wrong is what explains the failure."""
+    answerer, _, _ = an_answerer(
+        asking_for("project_brief", project_id=7), RuntimeError("quota exceeded")
+    )
 
-    assert await answerer.answer(Conversation.opened(1), "Question ?", None) is None
+    missed = await answerer.answer(Conversation.opened(1), "Question ?", None)
+
+    assert isinstance(missed, Unanswered)
+    assert missed.reason is WhyUnanswered.PROVIDER_FAILED
+    assert [held.tool for held in missed.consultations] == ["project_brief"]
 
 
 async def test_an_answer_cut_short_is_not_handed_back() -> None:
@@ -332,4 +357,6 @@ async def test_an_answer_cut_short_is_not_handed_back() -> None:
     cut.candidates[0].finish_reason = types.FinishReason.MAX_TOKENS
     answerer, _, _ = an_answerer(cut)
 
-    assert await answerer.answer(Conversation.opened(1), "Question ?", None) is None
+    missed = await answerer.answer(Conversation.opened(1), "Question ?", None)
+    assert isinstance(missed, Unanswered)
+    assert missed.reason is WhyUnanswered.CUT_SHORT

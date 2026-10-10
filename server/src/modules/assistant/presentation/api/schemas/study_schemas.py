@@ -11,6 +11,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from src.modules.assistant.domain.entities.exchange import Cause, Verdict
+from src.modules.assistant.domain.entities.unanswered import WhyUnanswered
 
 
 class ConsultationResponse(BaseModel):
@@ -84,6 +85,8 @@ class AssistantIndicatorsResponse(BaseModel):
     #: When the oldest exchange still kept was asked, if any is.
     kept_since: datetime | None
     questions: int
+    #: Beside the questions answered, not among them.
+    unanswered: int
     conversations: int
     askers: int
     helpful: int
@@ -109,3 +112,24 @@ class AnnotateRequest(BaseModel):
 class ExportedExchangeResponse(StudiedExchangeResponse):
     asker_name: str | None
     asker_email: str | None
+
+
+class UnansweredQuestionResponse(BaseModel):
+    id: int
+    conversation_id: UUID
+    asker_id: int
+    project_id: int | None
+    asked_at: datetime
+    question: str
+    reason: WhyUnanswered
+    consultations: list[ConsultationResponse]
+    model: str
+    input_tokens: int
+    output_tokens: int
+    elapsed_ms: int
+
+
+class UnansweredPageResponse(BaseModel):
+    #: Every question the filter holds, not only the page.
+    total: int
+    questions: list[UnansweredQuestionResponse]

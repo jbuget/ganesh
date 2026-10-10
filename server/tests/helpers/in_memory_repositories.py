@@ -18,14 +18,19 @@ from src.modules.api_keys.domain.entities.api_key import ApiKey
 from src.modules.api_keys.domain.repositories.api_key_repository import ApiKeyRepository
 from src.modules.assistant.domain.entities.conversation import Conversation
 from src.modules.assistant.domain.entities.exchange import Exchange, Verdict
+from src.modules.assistant.domain.entities.unanswered import UnansweredQuestion
 from src.modules.assistant.domain.repositories.exchange_archive import (
     ConversationPage,
     ExchangeArchive,
     ExchangeFilter,
     Judgement,
+    UnansweredPage,
 )
 from src.modules.assistant.domain.repositories.exchange_repository import (
     ExchangeRepository,
+)
+from src.modules.assistant.domain.repositories.unanswered_question_repository import (
+    UnansweredQuestionRepository,
 )
 from src.modules.audit_logs.domain.entities.audit_log import (
     AuditAction,
@@ -1454,11 +1459,26 @@ class InMemoryExchangeRepository(ExchangeRepository):
         self.exchanges[exchange.id] = replace(exchange)
 
 
-class InMemoryExchangeArchive(ExchangeArchive):
-    """Reads the exchanges an `InMemoryExchangeRepository` keeps, whoever asked."""
+class InMemoryUnansweredQuestionRepository(UnansweredQuestionRepository):
+    def __init__(self) -> None:
+        self.questions: dict[int, UnansweredQuestion] = {}
 
-    def __init__(self, store: InMemoryExchangeRepository) -> None:
+    async def add(self, question: UnansweredQuestion) -> UnansweredQuestion:
+        kept = replace(question, id=len(self.questions) + 1)
+        self.questions[kept.id] = kept  # type: ignore[index]
+        return kept
+
+
+class InMemoryExchangeArchive(ExchangeArchive):
+    """Reads what the in-memory stores keep, whoever asked."""
+
+    def __init__(
+        self,
+        store: InMemoryExchangeRepository,
+        unanswered: InMemoryUnansweredQuestionRepository | None = None,
+    ) -> None:
         self._store = store
+        self._unanswered = unanswered or InMemoryUnansweredQuestionRepository()
 
     def _kept(self, kept: ExchangeFilter) -> list[Exchange]:
         verdict = {
@@ -1526,3 +1546,21 @@ class InMemoryExchangeArchive(ExchangeArchive):
     async def save_annotation(self, exchange: Exchange) -> None:
         assert exchange.id is not None
         self._store.exchanges[exchange.id] = replace(exchange)
+
+    async def list_unanswered(
+        self, kept: ExchangeFilter, limit: int, offset: int
+    ) -> UnansweredPage:
+        if kept.judgement is not None:
+            return UnansweredPage(questions=[], total=0)
+        held = sorted(
+            (
+                question
+                for question in self._unanswered.questions.values()
+                if (kept.since is None or question.asked_at >= kept.since)
+                and (kept.until is None or question.asked_at <= kept.until)
+                and (kept.asker_id is None or question.asker_id == kept.asker_id)
+            ),
+            key=lambda question: question.asked_at,
+            reverse=True,
+        )
+        return UnansweredPage(questions=held[offset : offset + limit], total=len(held))

@@ -22,6 +22,9 @@ from src.modules.assistant.application.use_cases.export_exchanges import (
 from src.modules.assistant.application.use_cases.list_conversations import (
     ListConversationsUseCase,
 )
+from src.modules.assistant.application.use_cases.list_unanswered import (
+    ListUnansweredUseCase,
+)
 from src.modules.assistant.application.use_cases.read_conversation import (
     ReadConversationUseCase,
 )
@@ -29,19 +32,22 @@ from src.modules.assistant.application.use_cases.read_indicators import (
     ReadIndicatorsUseCase,
 )
 from src.modules.assistant.domain.entities.exchange import Exchange, Verdict
+from src.modules.assistant.domain.entities.unanswered import UnansweredQuestion
 from src.modules.assistant.presentation.dependencies import (
     get_annotate_exchange_use_case,
     get_export_exchanges_use_case,
     get_list_conversations_use_case,
+    get_list_unanswered_use_case,
     get_read_conversation_use_case,
     get_read_indicators_use_case,
 )
 from src.modules.auth.presentation.dependencies import get_current_user
 from src.modules.users.domain.entities.user import Role, User
-from tests.helpers.assistant import ANSWER
+from tests.helpers.assistant import ANSWER, UNANSWERED
 from tests.helpers.in_memory_repositories import (
     InMemoryExchangeArchive,
     InMemoryExchangeRepository,
+    InMemoryUnansweredQuestionRepository,
     InMemoryUserRepository,
 )
 
@@ -63,11 +69,13 @@ ASKED_AT = datetime(2026, 10, 8, 9, 30, tzinfo=UTC)
 class Study:
     client: AsyncClient
     store: InMemoryExchangeRepository
+    unanswered: InMemoryUnansweredQuestionRepository
 
 
 def open_study(person: User = ADMIN) -> Study:
     store = InMemoryExchangeRepository()
-    archive = InMemoryExchangeArchive(store)
+    unanswered = InMemoryUnansweredQuestionRepository()
+    archive = InMemoryExchangeArchive(store, unanswered)
     app.dependency_overrides[get_current_user] = lambda: person
     app.dependency_overrides[get_list_conversations_use_case] = (
         lambda: ListConversationsUseCase(archive)
@@ -84,9 +92,26 @@ def open_study(person: User = ADMIN) -> Study:
     app.dependency_overrides[get_annotate_exchange_use_case] = (
         lambda: AnnotateExchangeUseCase(archive)
     )
+    app.dependency_overrides[get_list_unanswered_use_case] = (
+        lambda: ListUnansweredUseCase(archive)
+    )
     return Study(
         client=AsyncClient(transport=ASGITransport(app=app), base_url="http://test"),
         store=store,
+        unanswered=unanswered,
+    )
+
+
+async def lea_was_left_unanswered(study: Study) -> UnansweredQuestion:
+    return await study.unanswered.add(
+        UnansweredQuestion(
+            conversation_id=uuid4(),
+            asker_id=LEA.id or 0,
+            question="Qui fait quoi en ce moment ?",
+            unanswered=UNANSWERED,
+            project_id=None,
+            asked_at=ASKED_AT,
+        )
     )
 
 
@@ -226,6 +251,45 @@ async def test_the_json_export_carries_the_tools_readings_whole() -> None:
     assert exported["consultations"][0]["result"] == "WAATcher…"
 
 
+async def test_an_admin_reads_the_questions_left_unanswered_and_why() -> None:
+    study = open_study()
+    await lea_was_left_unanswered(study)
+
+    response = await study.client.get(f"{STUDY}/unanswered")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 1
+    [question] = body["questions"]
+    assert question["question"] == "Qui fait quoi en ce moment ?"
+    assert question["reason"] == "kept_asking"
+    assert question["consultations"][0]["tool"] == "find_project"
+
+
+async def test_a_judgement_keeps_no_question_left_unanswered() -> None:
+    """Only an answer is judged."""
+    study = open_study()
+    await lea_was_left_unanswered(study)
+
+    response = await study.client.get(
+        f"{STUDY}/unanswered", params={"judgement": "unjudged"}
+    )
+
+    assert response.json()["total"] == 0
+
+
+async def test_the_indicators_count_the_questions_left_unanswered_beside_the_rest() -> (
+    None
+):
+    study = open_study()
+    await lea_asked(study)
+    await lea_was_left_unanswered(study)
+
+    body = (await study.client.get(f"{STUDY}/indicators")).json()
+
+    assert (body["questions"], body["unanswered"]) == (1, 1)
+
+
 @pytest.mark.parametrize("role", [Role.GUEST, Role.TEAMMATE, Role.MANAGER])
 @pytest.mark.parametrize(
     "method, path",
@@ -233,6 +297,7 @@ async def test_the_json_export_carries_the_tools_readings_whole() -> None:
         ("GET", "/conversations"),
         ("GET", f"/conversations/{uuid4()}"),
         ("GET", "/indicators"),
+        ("GET", "/unanswered"),
         ("GET", "/exchanges/export"),
         ("PUT", "/exchanges/1/annotation"),
     ],

@@ -28,6 +28,7 @@ from src.assistant.prompt import framed, instructions
 from src.assistant.toolbox import Toolbox
 from src.modules.assistant.domain.entities.conversation import Conversation
 from src.modules.assistant.domain.entities.exchange import Answer, Consultation
+from src.modules.assistant.domain.entities.unanswered import Unanswered, WhyUnanswered
 from src.shared.utils import clock
 
 logger = logging.getLogger(__name__)
@@ -93,37 +94,39 @@ class GeminiAnswerer(Answerer):
 
     async def answer(
         self, conversation: Conversation, question: str, project_id: int | None
-    ) -> Answer | None:
+    ) -> Answer | Unanswered:
+        tally = _Tally(self._model)
         if self._client is None:
-            return None
+            return tally.unanswered(WhyUnanswered.PROVIDER_FAILED)
 
         try:
-            return await self._converse(conversation, question, project_id)
+            return await self._converse(tally, conversation, question, project_id)
         except Exception:
             # Whatever went wrong — the provider, or a bug of ours — the person
-            # is told the assistant could not answer; the trace is for us.
+            # is told the assistant could not answer; the trace is for us, and
+            # what was read before it went wrong is kept with the question.
             logger.exception("Gemini did not answer the assistant.")
-            return None
+            return tally.unanswered(WhyUnanswered.PROVIDER_FAILED)
 
     async def _converse(
-        self, conversation: Conversation, question: str, project_id: int | None
-    ) -> Answer | None:
+        self,
+        tally: "_Tally",
+        conversation: Conversation,
+        question: str,
+        project_id: int | None,
+    ) -> Answer | Unanswered:
         assert self._client is not None
-        started = time.monotonic()
         asked = [
             *_history(conversation),
             _said("user", framed(question, project_id)),
         ]
         contents = list(asked)
-        consultations: list[Consultation] = []
-        input_tokens = output_tokens = 0
 
         for _ in range(MAX_ROUNDS):
             response = await self._client.aio.models.generate_content(
                 model=self._model, contents=contents, config=self._config()
             )
-            input_tokens += _input_tokens(response)
-            output_tokens += _output_tokens(response)
+            tally.count(response)
 
             calls = response.function_calls
             if not calls:
@@ -133,11 +136,11 @@ class GeminiAnswerer(Answerer):
             readings: list[Consultation] = []
             for call in calls:
                 name, arguments = call.name or "", dict(call.args or {})
-                if len(consultations) + len(readings) < MAX_CONSULTATIONS:
+                if len(tally.consultations) + len(readings) < MAX_CONSULTATIONS:
                     readings.append(await self._toolbox.consult(name, arguments))
                 else:
                     readings.append(Consultation(name, arguments, ENOUGH))
-            consultations.extend(readings)
+            tally.consultations.extend(readings)
             contents.append(_read(readings))
         else:
             logger.warning(
@@ -146,24 +149,19 @@ class GeminiAnswerer(Answerer):
             )
             response = await self._client.aio.models.generate_content(
                 model=self._model,
-                contents=_closing(asked, consultations),
+                contents=_closing(asked, tally.consultations),
                 config=self._config(closing=True),
             )
-            input_tokens += _input_tokens(response)
-            output_tokens += _output_tokens(response)
+            tally.count(response)
 
+        if response.function_calls:
+            logger.warning("Gemini asked for tools still, made to answer.")
+            return tally.unanswered(WhyUnanswered.KEPT_ASKING)
         text = response.text
-        if response.function_calls or not _finished(response) or not text:
+        if not _finished(response) or not text:
             logger.warning("Gemini was cut short or wrote nothing.")
-            return None
-        return Answer(
-            text=text.strip(),
-            consultations=tuple(consultations),
-            model=self._model,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            elapsed_ms=round((time.monotonic() - started) * 1000),
-        )
+            return tally.unanswered(WhyUnanswered.CUT_SHORT)
+        return tally.answer(text.strip())
 
     def _config(self, closing: bool = False) -> types.GenerateContentConfig:
         """The tools on offer — none at all on the closing round."""
@@ -201,6 +199,44 @@ def _history(conversation: Conversation) -> list[types.Content]:
         contents.append(types.Content(role="user", parts=asked))
         contents.append(_said("model", exchange.answer.text))
     return contents
+
+
+class _Tally:
+    """What one question has read and cost so far, whatever comes of it."""
+
+    def __init__(self, model: str) -> None:
+        self._model = model
+        self._started = time.monotonic()
+        self.consultations: list[Consultation] = []
+        self._input_tokens = 0
+        self._output_tokens = 0
+
+    def count(self, response: types.GenerateContentResponse) -> None:
+        self._input_tokens += _input_tokens(response)
+        self._output_tokens += _output_tokens(response)
+
+    def _elapsed_ms(self) -> int:
+        return round((time.monotonic() - self._started) * 1000)
+
+    def answer(self, text: str) -> Answer:
+        return Answer(
+            text=text,
+            consultations=tuple(self.consultations),
+            model=self._model,
+            input_tokens=self._input_tokens,
+            output_tokens=self._output_tokens,
+            elapsed_ms=self._elapsed_ms(),
+        )
+
+    def unanswered(self, reason: WhyUnanswered) -> Unanswered:
+        return Unanswered(
+            reason=reason,
+            consultations=tuple(self.consultations),
+            model=self._model,
+            input_tokens=self._input_tokens,
+            output_tokens=self._output_tokens,
+            elapsed_ms=self._elapsed_ms(),
+        )
 
 
 def _closing(

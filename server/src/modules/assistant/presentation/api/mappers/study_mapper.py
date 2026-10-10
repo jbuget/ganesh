@@ -5,8 +5,16 @@ from src.modules.assistant.application.dtos.assistant_dtos import (
     ExchangeExport,
 )
 from src.modules.assistant.domain.entities.conversation import Conversation
-from src.modules.assistant.domain.entities.exchange import Exchange, Verdict
-from src.modules.assistant.domain.repositories.exchange_archive import ConversationPage
+from src.modules.assistant.domain.entities.exchange import (
+    Consultation,
+    Exchange,
+    Verdict,
+)
+from src.modules.assistant.domain.entities.unanswered import UnansweredQuestion
+from src.modules.assistant.domain.repositories.exchange_archive import (
+    ConversationPage,
+    UnansweredPage,
+)
 from src.modules.assistant.presentation.api.schemas.study_schemas import (
     AnnotationResponse,
     AssistantIndicatorsResponse,
@@ -18,7 +26,20 @@ from src.modules.assistant.presentation.api.schemas.study_schemas import (
     ExportedExchangeResponse,
     StudiedExchangeResponse,
     ToolCountResponse,
+    UnansweredPageResponse,
+    UnansweredQuestionResponse,
 )
+
+
+def _consultations(
+    consultations: tuple[Consultation, ...],
+) -> list[ConsultationResponse]:
+    return [
+        ConsultationResponse(
+            tool=held.tool, arguments=held.arguments, result=held.result
+        )
+        for held in consultations
+    ]
 
 
 def to_studied_exchange_response(exchange: Exchange) -> StudiedExchangeResponse:
@@ -33,12 +54,7 @@ def to_studied_exchange_response(exchange: Exchange) -> StudiedExchangeResponse:
         asked_at=exchange.asked_at,
         question=exchange.question,
         answer=exchange.answer.text,
-        consultations=[
-            ConsultationResponse(
-                tool=held.tool, arguments=held.arguments, result=held.result
-            )
-            for held in exchange.answer.consultations
-        ],
+        consultations=_consultations(exchange.answer.consultations),
         model=exchange.answer.model,
         input_tokens=exchange.answer.input_tokens,
         output_tokens=exchange.answer.output_tokens,
@@ -95,6 +111,7 @@ def to_indicators_response(read: AssistantIndicators) -> AssistantIndicatorsResp
     return AssistantIndicatorsResponse(
         kept_since=read.kept_since,
         questions=counted.questions,
+        unanswered=read.unanswered,
         conversations=counted.conversations,
         askers=counted.askers,
         helpful=counted.helpful,
@@ -127,3 +144,28 @@ def to_exported_exchanges(export: ExchangeExport) -> list[ExportedExchangeRespon
             )
         )
     return exported
+
+
+def _unanswered(question: UnansweredQuestion) -> UnansweredQuestionResponse:
+    assert question.id is not None
+    unanswered = question.unanswered
+    return UnansweredQuestionResponse(
+        id=question.id,
+        conversation_id=question.conversation_id,
+        asker_id=question.asker_id,
+        project_id=question.project_id,
+        asked_at=question.asked_at,
+        question=question.question,
+        reason=unanswered.reason,
+        consultations=_consultations(unanswered.consultations),
+        model=unanswered.model,
+        input_tokens=unanswered.input_tokens,
+        output_tokens=unanswered.output_tokens,
+        elapsed_ms=unanswered.elapsed_ms,
+    )
+
+
+def to_unanswered_page_response(page: UnansweredPage) -> UnansweredPageResponse:
+    return UnansweredPageResponse(
+        total=page.total, questions=[_unanswered(held) for held in page.questions]
+    )
