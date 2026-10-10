@@ -5,12 +5,16 @@ from datetime import date
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction
 from src.modules.calendar.domain.entities.period import Period
+from src.modules.notifications.domain.entities.notification import NotificationKind
 from src.modules.projects.domain.entities.project import (
     ProjectCategory,
     ProjectKind,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.requests.domain.entities.request import RequestState
 from src.modules.stats.domain.entities.surface_usage import Surface, Tally, Trace
+from src.shared.enums.work_nature import WorkNature
 
 
 class StatisticsRepository(ABC):
@@ -60,6 +64,15 @@ class StatisticsRepository(ABC):
         ...
 
     @abstractmethod
+    async def days_by_nature(self, period: Period) -> dict[WorkNature | None, float]:
+        """Declared project time per trade. None covers what states none.
+
+        Off-project work is left out: an absence is booked against itself and
+        has no trade to be read under.
+        """
+        ...
+
+    @abstractmethod
     async def top_missions(
         self, period: Period, limit: int
     ) -> list[tuple[int, str, float]]:
@@ -84,6 +97,95 @@ class StatisticsRepository(ABC):
     @abstractmethod
     async def missions_created(self, period: Period) -> int:
         """Missions added to the reference list during the window."""
+        ...
+
+    @abstractmethod
+    async def missions_without_activity(self) -> int:
+        """Active missions nothing can be declared on, for want of a trade.
+
+        Off-project work is booked against directly, and a project cut into
+        work packages is declared on through them: neither is asked for one.
+        """
+        ...
+
+    @abstractmethod
+    async def missions_unbudgeted(self) -> int:
+        """Active missions cut into trades, at least one left unbudgeted."""
+        ...
+
+    @abstractmethod
+    async def followed_missions(self) -> int:
+        """Active missions the team keeps an eye on."""
+        ...
+
+    @abstractmethod
+    async def published_missions(self) -> int:
+        """Active missions published to the catalogue."""
+        ...
+
+    @abstractmethod
+    async def requests_submitted(self, period: Period) -> int:
+        """Needs handed over to be weighed during the window."""
+        ...
+
+    @abstractmethod
+    async def requests_decided(self, period: Period) -> dict[RequestState, int]:
+        """Needs weighed during the window, by the state they are in now."""
+        ...
+
+    @abstractmethod
+    async def requests_converted(self, period: Period) -> int:
+        """Needs that became a mission during the window."""
+        ...
+
+    @abstractmethod
+    async def requests_waiting_since(self) -> list[date]:
+        """The day each need still waiting for an answer was handed over."""
+        ...
+
+    @abstractmethod
+    async def active_projects(self) -> int:
+        """Active projects proper: not work packages, not off-project work."""
+        ...
+
+    @abstractmethod
+    async def projects_without_role(self, role: ProjectRole) -> int:
+        """Active projects nobody is attached to under this role."""
+        ...
+
+    @abstractmethod
+    async def followed_last_news(self) -> list[date | None]:
+        """For each followed active project, the day of its latest update.
+
+        None where none was ever posted. A withdrawn update is not news: its
+        words are gone.
+        """
+        ...
+
+    @abstractmethod
+    async def updates_posted(self, period: Period) -> int:
+        """Updates posted during the window, withdrawn ones left out."""
+        ...
+
+    @abstractmethod
+    async def updates_answered(self, period: Period) -> int:
+        """Of those, the ones somebody other than the author answered.
+
+        A reply or a reaction both count: answering without writing is the
+        cheapest thing one can say, and it is still an answer.
+        """
+        ...
+
+    @abstractmethod
+    async def notification_reading(
+        self, period: Period
+    ) -> dict[NotificationKind, tuple[int, int]]:
+        """Per kind, notifications written during the window and opened ones."""
+        ...
+
+    @abstractmethod
+    async def unread_notifications(self, older_than: date | None = None) -> int:
+        """Notifications still waiting, optionally only those written before a day."""
         ...
 
     @abstractmethod

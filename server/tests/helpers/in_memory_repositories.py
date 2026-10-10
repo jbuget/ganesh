@@ -98,7 +98,7 @@ from src.modules.projects.domain.repositories.update_comment_repository import (
 from src.modules.projects.domain.repositories.update_reaction_repository import (
     UpdateReactionRepository,
 )
-from src.modules.requests.domain.entities.request import Request
+from src.modules.requests.domain.entities.request import Request, RequestState
 from src.modules.requests.domain.repositories.request_repository import (
     RequestRepository,
 )
@@ -109,6 +109,7 @@ from src.modules.stats.domain.repositories.statistics_repository import (
 from src.modules.users.domain.entities.user import User
 from src.modules.users.domain.repositories.user_repository import UserRepository
 from src.shared.enums.department import Department, in_declared_order
+from src.shared.enums.work_nature import WorkNature
 from src.shared.exceptions.domain_exceptions import ConflictError, EntityNotFoundError
 
 
@@ -948,11 +949,28 @@ class InMemoryStatisticsRepository(StatisticsRepository):
         by_kind: dict[ProjectKind, float] | None = None,
         by_status: dict[ProjectStatus, float] | None = None,
         by_category: dict[ProjectCategory | None, float] | None = None,
+        by_nature: dict[WorkNature | None, float] | None = None,
         missions: list[tuple[int, str, float]] | None = None,
         validated_months: int = 0,
         active_missions: int = 0,
         missions_with_time: int = 0,
         created: int = 0,
+        submitted_requests: int = 0,
+        decided_requests: dict[RequestState, int] | None = None,
+        converted_requests: int = 0,
+        waiting_since: list[date] | None = None,
+        active_projects: int = 0,
+        without_role: dict[ProjectRole, int] | None = None,
+        followed_last_news: list[date | None] | None = None,
+        posted_updates: int = 0,
+        answered_updates: int = 0,
+        notification_reading: dict[NotificationKind, tuple[int, int]] | None = None,
+        unread: int = 0,
+        ignored: int = 0,
+        without_activity: int = 0,
+        unbudgeted: int = 0,
+        followed: int = 0,
+        published: int = 0,
         traces: dict[date, list[Trace]] | None = None,
         tallies: dict[date, dict[Surface, Tally]] | None = None,
         last_gestures: dict[AuditAction, date] | None = None,
@@ -964,11 +982,28 @@ class InMemoryStatisticsRepository(StatisticsRepository):
         self._by_kind = by_kind or {}
         self._by_status = by_status or {}
         self._by_category = by_category or {}
+        self._by_nature = by_nature or {}
         self._missions = missions or []
         self._validated_months = validated_months
         self._active_missions = active_missions
         self._missions_with_time = missions_with_time
         self._created = created
+        self._submitted_requests = submitted_requests
+        self._decided_requests = decided_requests or {}
+        self._converted_requests = converted_requests
+        self._waiting_since = waiting_since or []
+        self._active_projects = active_projects
+        self._without_role = without_role or {}
+        self._followed_last_news = followed_last_news or []
+        self._posted_updates = posted_updates
+        self._answered_updates = answered_updates
+        self._notification_reading = notification_reading or {}
+        self._unread = unread
+        self._ignored = ignored
+        self._without_activity = without_activity
+        self._unbudgeted = unbudgeted
+        self._followed = followed
+        self._published = published
         self._traces = traces or {}
         self._tallies = tallies or {}
         self._last_gestures = last_gestures or {}
@@ -1000,6 +1035,9 @@ class InMemoryStatisticsRepository(StatisticsRepository):
     ) -> dict[ProjectCategory | None, float]:
         return self._by_category
 
+    async def days_by_nature(self, period: Period) -> dict[WorkNature | None, float]:
+        return self._by_nature
+
     async def top_missions(
         self, period: Period, limit: int
     ) -> list[tuple[int, str, float]]:
@@ -1016,6 +1054,53 @@ class InMemoryStatisticsRepository(StatisticsRepository):
 
     async def missions_created(self, period: Period) -> int:
         return self._created
+
+    async def requests_submitted(self, period: Period) -> int:
+        return self._submitted_requests
+
+    async def requests_decided(self, period: Period) -> dict[RequestState, int]:
+        return self._decided_requests
+
+    async def requests_converted(self, period: Period) -> int:
+        return self._converted_requests
+
+    async def requests_waiting_since(self) -> list[date]:
+        return self._waiting_since
+
+    async def active_projects(self) -> int:
+        return self._active_projects
+
+    async def projects_without_role(self, role: ProjectRole) -> int:
+        return self._without_role.get(role, 0)
+
+    async def followed_last_news(self) -> list[date | None]:
+        return self._followed_last_news
+
+    async def updates_posted(self, period: Period) -> int:
+        return self._posted_updates
+
+    async def updates_answered(self, period: Period) -> int:
+        return self._answered_updates
+
+    async def notification_reading(
+        self, period: Period
+    ) -> dict[NotificationKind, tuple[int, int]]:
+        return self._notification_reading
+
+    async def unread_notifications(self, older_than: date | None = None) -> int:
+        return self._unread if older_than is None else self._ignored
+
+    async def missions_without_activity(self) -> int:
+        return self._without_activity
+
+    async def missions_unbudgeted(self) -> int:
+        return self._unbudgeted
+
+    async def followed_missions(self) -> int:
+        return self._followed
+
+    async def published_missions(self) -> int:
+        return self._published
 
     async def surface_traces(self, period: Period) -> list[Trace]:
         return [

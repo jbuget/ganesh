@@ -4,14 +4,20 @@
  * Ganesh API
  * OpenAPI spec version: 0.1.0
  */
+import type { AccountsResponse } from "./accountsResponse";
 import type { AdoptionResponse } from "./adoptionResponse";
+import type { CoveragePointResponse } from "./coveragePointResponse";
 import type { CoverageResponse } from "./coverageResponse";
 import type { FreshnessResponse } from "./freshnessResponse";
+import type { IntakeResponse } from "./intakeResponse";
 import type { MonthValidationResponse } from "./monthValidationResponse";
+import type { NotificationReadingResponse } from "./notificationReadingResponse";
 import type { PeriodResponse } from "./periodResponse";
 import type { RegistryResponse } from "./registryResponse";
 import type { SteeringResponse } from "./steeringResponse";
+import type { StewardshipResponse } from "./stewardshipResponse";
 import type { SurfaceUsageResponse } from "./surfaceUsageResponse";
+import type { ThreadResponse } from "./threadResponse";
 
 /**
  * Everything the dashboard shows for one window.
@@ -19,10 +25,16 @@ import type { SurfaceUsageResponse } from "./surfaceUsageResponse";
 export interface StatisticsResponse {
   period: PeriodResponse;
   coverage: CoverageResponse;
+  coverage_trend: CoveragePointResponse[];
   freshness: FreshnessResponse;
   month_validation: MonthValidationResponse;
   adoption: AdoptionResponse;
   surfaces: SurfaceUsageResponse;
   steering: SteeringResponse;
   registry: RegistryResponse;
+  intake: IntakeResponse;
+  accounts: AccountsResponse;
+  stewardship: StewardshipResponse;
+  thread: ThreadResponse;
+  notification_reading: NotificationReadingResponse;
 }

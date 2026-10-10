@@ -3,20 +3,28 @@
 from src.modules.calendar.domain.entities.period import PeriodRange
 from src.modules.stats.domain.entities.statistics import Statistics
 from src.modules.stats.presentation.api.schemas.statistics_schemas import (
+    AccountsResponse,
     AdoptionResponse,
     CategoryShareResponse,
+    CoveragePointResponse,
     CoverageResponse,
     FreshnessResponse,
+    IntakeResponse,
+    KindReadingResponse,
     MissionShareResponse,
     MonthValidationResponse,
+    NatureShareResponse,
+    NotificationReadingResponse,
     PeriodResponse,
     RegistryResponse,
     StatisticsResponse,
     StatusShareResponse,
     SteeringResponse,
+    StewardshipResponse,
     SurfaceActivityResponse,
     SurfaceUsageResponse,
     TeammateResponse,
+    ThreadResponse,
 )
 
 
@@ -42,6 +50,15 @@ def to_statistics_response(
             team=statistics.coverage_scope.team,
             people=statistics.coverage_scope.people,
         ),
+        coverage_trend=[
+            CoveragePointResponse(
+                week_start=point.week_start,
+                declared_days=point.declared_days,
+                expected_days=point.expected_days,
+                rate=point.rate,
+            )
+            for point in statistics.coverage_trend
+        ],
         freshness=FreshnessResponse(
             entries=statistics.freshness.entries,
             median_delay=statistics.freshness.median_delay,
@@ -98,6 +115,14 @@ def to_statistics_response(
                     steering.by_category.items(), key=lambda item: -item[1]
                 )
             ],
+            by_nature=[
+                NatureShareResponse(
+                    nature=nature, days=days, share=steering.share_of(days)
+                )
+                for nature, days in sorted(
+                    steering.by_nature.items(), key=lambda item: -item[1]
+                )
+            ],
             top_missions=[
                 MissionShareResponse(
                     project_id=mission.project_id,
@@ -114,5 +139,57 @@ def to_statistics_response(
             missions_without_time=statistics.registry.missions_without_time,
             usage_rate=statistics.registry.usage_rate,
             created=statistics.registry.created,
+            without_activity=statistics.registry.without_activity,
+            unbudgeted=statistics.registry.unbudgeted,
+            followed=statistics.registry.followed,
+            published=statistics.registry.published,
+        ),
+        stewardship=StewardshipResponse(
+            active_projects=statistics.stewardship.active_projects,
+            without_lead=statistics.stewardship.without_lead,
+            without_tech_lead=statistics.stewardship.without_tech_lead,
+        ),
+        thread=ThreadResponse(
+            posted=statistics.thread.posted,
+            answered=statistics.thread.answered,
+            answer_rate=statistics.thread.answer_rate,
+            followed=statistics.thread.followed,
+            silent=statistics.thread.silent,
+        ),
+        notification_reading=NotificationReadingResponse(
+            delivered=statistics.notification_reading.delivered,
+            read=statistics.notification_reading.read,
+            read_rate=statistics.notification_reading.read_rate,
+            unread=statistics.notification_reading.unread,
+            ignored=statistics.notification_reading.ignored,
+            kinds=[
+                KindReadingResponse(
+                    kind=one.kind,
+                    delivered=one.delivered,
+                    read=one.read,
+                    read_rate=one.read_rate,
+                )
+                for one in statistics.notification_reading.kinds
+            ],
+        ),
+        accounts=AccountsResponse(
+            guests=statistics.accounts.guests,
+            teammates=statistics.accounts.teammates,
+            managers=statistics.accounts.managers,
+            admins=statistics.accounts.admins,
+            never_signed_in=statistics.accounts.never_signed_in,
+            reminders_daily=statistics.accounts.reminders_daily,
+            reminders_weekly=statistics.accounts.reminders_weekly,
+            reminders_never=statistics.accounts.reminders_never,
+            reminder_rate=statistics.accounts.reminder_rate,
+        ),
+        intake=IntakeResponse(
+            submitted=statistics.intake.submitted,
+            accepted=statistics.intake.accepted,
+            rejected=statistics.intake.rejected,
+            deferred=statistics.intake.deferred,
+            converted=statistics.intake.converted,
+            waiting=statistics.intake.waiting,
+            oldest_wait_days=statistics.intake.oldest_wait_days,
         ),
     )

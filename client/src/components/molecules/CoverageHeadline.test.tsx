@@ -14,15 +14,30 @@ const COVERAGE: CoverageResponse = {
   people: 15,
 };
 
+const TREND = [
+  { week_start: "2026-09-07", declared_days: 12, expected_days: 15, rate: 0.8 },
+  { week_start: "2026-09-14", declared_days: 14, expected_days: 15, rate: 14 / 15 },
+];
+
 describe("CoverageHeadline", () => {
+  it("draws the same figure week by week under the lead rate", () => {
+    render(<CoverageHeadline trend={TREND} coverage={COVERAGE} medianDelay={1.5} />);
+
+    expect(
+      screen.getByRole("img", {
+        name: "Couverture par semaine sur 2 semaines : de 80 % à 93 %",
+      }),
+    ).toBeInTheDocument();
+  });
+
   it("shows the coverage rate as the lead figure", () => {
-    render(<CoverageHeadline coverage={COVERAGE} medianDelay={1.5} />);
+    render(<CoverageHeadline trend={TREND} coverage={COVERAGE} medianDelay={1.5} />);
 
     expect(screen.getByText("87 %")).toBeInTheDocument();
   });
 
   it("says what the rate is measured against", () => {
-    render(<CoverageHeadline coverage={COVERAGE} medianDelay={1.5} />);
+    render(<CoverageHeadline trend={TREND} coverage={COVERAGE} medianDelay={1.5} />);
 
     expect(screen.getByText(/142 \/ 163 jours-personnes/)).toBeInTheDocument();
   });
@@ -30,13 +45,13 @@ describe("CoverageHeadline", () => {
   it("carries the freshness alongside, never apart", () => {
     // A coverage read without its delay says nothing: 95 % filled in at D+25
     // is an administrative fiction.
-    render(<CoverageHeadline coverage={COVERAGE} medianDelay={1.5} />);
+    render(<CoverageHeadline trend={TREND} coverage={COVERAGE} medianDelay={1.5} />);
 
     expect(screen.getByText(/délai médian de saisie : 1,5 j/)).toBeInTheDocument();
   });
 
   it("says whose time it is read over", () => {
-    render(<CoverageHeadline coverage={COVERAGE} medianDelay={1.5} />);
+    render(<CoverageHeadline trend={TREND} coverage={COVERAGE} medianDelay={1.5} />);
 
     expect(screen.getByText("Équipe Engineering · 15 personnes")).toBeInTheDocument();
   });
@@ -44,6 +59,7 @@ describe("CoverageHeadline", () => {
   it("says why there is nothing to read while nobody is in the team", () => {
     render(
       <CoverageHeadline
+        trend={TREND}
         coverage={{ ...COVERAGE, people: 0, rate: null, expected_days: 0 }}
         medianDelay={null}
       />,
@@ -55,7 +71,7 @@ describe("CoverageHeadline", () => {
   });
 
   it("announces how the rate moved", () => {
-    render(<CoverageHeadline coverage={COVERAGE} medianDelay={1.5} />);
+    render(<CoverageHeadline trend={TREND} coverage={COVERAGE} medianDelay={1.5} />);
 
     expect(screen.getByText("+6 pts")).toBeInTheDocument();
   });
@@ -64,6 +80,7 @@ describe("CoverageHeadline", () => {
     // A weekend: no rate, and no bar either.
     render(
       <CoverageHeadline
+        trend={TREND}
         coverage={{
           declared_days: 0,
           expected_days: 0,
@@ -82,7 +99,7 @@ describe("CoverageHeadline", () => {
   });
 
   it("tells what is left to declare", () => {
-    render(<CoverageHeadline coverage={COVERAGE} medianDelay={1.5} />);
+    render(<CoverageHeadline trend={TREND} coverage={COVERAGE} medianDelay={1.5} />);
 
     expect(screen.getByText(/21 jours-personnes à déclarer/)).toBeInTheDocument();
   });
@@ -90,6 +107,7 @@ describe("CoverageHeadline", () => {
   it("says nothing is left when the period is fully declared", () => {
     render(
       <CoverageHeadline
+        trend={TREND}
         coverage={{
           declared_days: 80,
           expected_days: 80,

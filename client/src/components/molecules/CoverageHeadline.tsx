@@ -1,10 +1,16 @@
+import { CoverageCurve } from "@/components/atoms/CoverageCurve";
 import { TrendBadge } from "@/components/atoms/TrendBadge";
-import type { CoverageResponse } from "@/lib/api/generated/model";
+import type {
+  CoveragePointResponse,
+  CoverageResponse,
+} from "@/lib/api/generated/model";
 import { NOTHING, formatDelay, formatPersonDays, formatShare } from "@/lib/statistics";
 import { teamLabel } from "@/lib/teams";
 
 interface CoverageHeadlineProps {
   coverage: CoverageResponse;
+  /** The last weeks, oldest first, whatever window the screen reads. */
+  trend: CoveragePointResponse[];
   /** Median delay between a day worked and the entry declaring it. */
   medianDelay: number | null | undefined;
 }
@@ -16,8 +22,17 @@ interface CoverageHeadlineProps {
  * placement is the whole point. A coverage of 95 % filled in day to day is an
  * asset to steer on; the same 95 % caught up at month end is an administrative
  * fiction. Neither figure is worth reading without the other.
+ *
+ * The curve under it is the same figure read as moving: a rate says where the
+ * team stands, twelve weeks of it say whether it climbs, stalls or fell back.
+ * It does not follow the window — a window picks one reading, the curve
+ * always shows the quarter.
  */
-export function CoverageHeadline({ coverage, medianDelay }: CoverageHeadlineProps) {
+export function CoverageHeadline({
+  coverage,
+  trend,
+  medianDelay,
+}: CoverageHeadlineProps) {
   const rate = coverage.rate;
   const known = rate !== null && rate !== undefined;
   // An excess is reported as it stands, but the bar stops at its own width.
@@ -58,6 +73,18 @@ export function CoverageHeadline({ coverage, medianDelay }: CoverageHeadlineProp
           />
         </div>
       )}
+
+      <div className="mt-4">
+        <h3 className="mb-1 text-xs text-slate-500">Semaine par semaine</h3>
+        <CoverageCurve
+          points={trend.map((point) => ({
+            weekStart: point.week_start,
+            rate: point.rate,
+            declaredDays: point.declared_days,
+            expectedDays: point.expected_days,
+          }))}
+        />
+      </div>
 
       <dl className="mt-3 space-y-0.5 text-sm text-slate-600">
         <div>

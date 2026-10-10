@@ -57,6 +57,7 @@ function statisticsWith(
       by_status: [],
       by_category: [],
       top_missions: [],
+      by_nature: [],
     },
     registry: {
       active_missions: 30,
@@ -64,6 +65,41 @@ function statisticsWith(
       missions_without_time: 12,
       usage_rate: 0.6,
       created: 2,
+      without_activity: 0,
+      unbudgeted: 0,
+      followed: 0,
+      published: 0,
+    },
+    intake: {
+      submitted: 0,
+      accepted: 0,
+      rejected: 0,
+      deferred: 0,
+      converted: 0,
+      waiting: 0,
+      oldest_wait_days: null,
+    },
+    accounts: {
+      guests: 0,
+      teammates: 0,
+      managers: 0,
+      admins: 0,
+      never_signed_in: 0,
+      reminders_daily: 0,
+      reminders_weekly: 0,
+      reminders_never: 0,
+      reminder_rate: null,
+    },
+    coverage_trend: [],
+    stewardship: { active_projects: 20, without_lead: 0, without_tech_lead: 0 },
+    thread: { posted: 0, answered: 0, answer_rate: null, followed: 0, silent: 0 },
+    notification_reading: {
+      delivered: 0,
+      read: 0,
+      read_rate: null,
+      unread: 0,
+      ignored: 0,
+      kinds: [],
     },
     ...overrides,
   };
@@ -135,6 +171,46 @@ describe("useStatisticsScreen", () => {
     expect(result.current.alerts.idleTeammates).toBe(false);
   });
 
+  it("flags projects nothing can be declared on", () => {
+    answer.statistics = statisticsWith({
+      registry: {
+        active_missions: 30,
+        missions_with_time: 18,
+        missions_without_time: 12,
+        usage_rate: 0.6,
+        created: 2,
+        without_activity: 3,
+        unbudgeted: 0,
+        followed: 0,
+        published: 0,
+      },
+    });
+
+    const { result } = renderHook(() => useStatisticsScreen());
+
+    expect(result.current.alerts.withoutActivity).toBe(true);
+  });
+
+  it("flags projects whose next bug would reach nobody", () => {
+    answer.statistics = statisticsWith({
+      stewardship: { active_projects: 20, without_lead: 0, without_tech_lead: 4 },
+    });
+
+    const { result } = renderHook(() => useStatisticsScreen());
+
+    expect(result.current.alerts.withoutTechLead).toBe(true);
+  });
+
+  it("flags followed projects gone quiet", () => {
+    answer.statistics = statisticsWith({
+      thread: { posted: 3, answered: 1, answer_rate: 1 / 3, followed: 4, silent: 2 },
+    });
+
+    const { result } = renderHook(() => useStatisticsScreen());
+
+    expect(result.current.alerts.silentFollowed).toBe(true);
+  });
+
   it("raises no alarm while the figures are still on their way", () => {
     answer.statistics = undefined;
     answer.isLoading = true;
@@ -144,6 +220,9 @@ describe("useStatisticsScreen", () => {
     expect(result.current.alerts).toEqual({
       lateCatchUp: false,
       idleTeammates: false,
+      withoutActivity: false,
+      withoutTechLead: false,
+      silentFollowed: false,
     });
   });
 });

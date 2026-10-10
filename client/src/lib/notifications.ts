@@ -213,3 +213,33 @@ export function notificationSentence(line: NotificationResponse): NotificationSe
     href: destination(line),
   };
 }
+
+/**
+ * What each kind of notification is called when they are counted, not read.
+ *
+ * Typed over the whole set: a kind added on the server breaks the build here
+ * rather than showing up as a raw identifier on the dashboard. A plural noun,
+ * because the line says how many of them were opened.
+ */
+const KIND_LABELS: Record<NotificationKind, string> = {
+  "project.assigned": "Affectations",
+  "project.unassigned": "Retraits d'affectation",
+  "timesheet.edited": "Mois modifiés par un collègue",
+  "month.reopened": "Mois rouverts",
+  "project.update_posted": "Actualités de projet",
+  "project.status_changed": "Changements de phase",
+  "project.archived": "Projets archivés",
+  "project.deleted": "Projets supprimés",
+  "user.role_changed": "Changements de rôle",
+  "user.deactivated": "Comptes désactivés",
+  "user.activated": "Comptes réactivés",
+  "api_key.created": "Clés API créées",
+  "api_key.revoked": "Clés API révoquées",
+  "update.mention": "Mentions",
+  "update.replied": "Réponses dans une conversation",
+  "request.submitted": "Besoins déposés",
+};
+
+export function notificationKindLabel(kind: NotificationKind): string {
+  return KIND_LABELS[kind] ?? kind;
+}

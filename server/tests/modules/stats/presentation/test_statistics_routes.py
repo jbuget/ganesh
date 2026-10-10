@@ -10,11 +10,13 @@ from src.core.config import get_settings
 from src.main import app
 from src.modules.api_keys.presentation.dependencies import teammate_or_machine
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction
+from src.modules.notifications.domain.entities.notification import NotificationKind
 from src.modules.projects.domain.entities.project import (
     ProjectCategory,
     ProjectKind,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.stats.application.use_cases.compute_statistics import (
     ComputeStatisticsUseCase,
 )
@@ -23,6 +25,7 @@ from src.modules.stats.presentation.dependencies import get_compute_statistics_u
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.enums.department import Department
 from src.shared.enums.team import Team
+from src.shared.enums.work_nature import WorkNature
 from src.shared.utils import clock
 from tests.helpers.in_memory_repositories import (
     InMemoryStatisticsRepository,
@@ -46,6 +49,8 @@ TEAM = [
         email="b@waat.fr",
         display_name="B. Cy",
         role=Role.TEAMMATE,
+        department=Department.INFORMATION_SYSTEMS,
+        team=Team.ENGINEERING,
     ),
 ]
 
@@ -60,10 +65,25 @@ def use_case() -> ComputeStatisticsUseCase:
             by_kind={ProjectKind.PROJECT: 4.0, ProjectKind.OFF_PROJECT: 2.0},
             by_status={ProjectStatus.DEVELOPMENT: 3.0, ProjectStatus.SCOPING: 1.0},
             by_category={ProjectCategory.AUTOMATE: 4.0, None: 2.0},
+            by_nature={WorkNature.DEVELOPMENT: 3.0, None: 1.0},
             missions=[(7, "Extranet", 4.0), (9, "Congés", 2.0)],
             active_missions=10,
             missions_with_time=2,
             created=1,
+            without_activity=2,
+            unbudgeted=1,
+            active_projects=5,
+            without_role={ProjectRole.TECH_LEAD: 2},
+            followed_last_news=[None],
+            posted_updates=4,
+            answered_updates=1,
+            notification_reading={
+                NotificationKind.UPDATE_MENTION: (4, 4),
+                NotificationKind.PROJECT_UPDATE_POSTED: (6, 2),
+            },
+            unread=3,
+            submitted_requests=3,
+            waiting_since=[date(2026, 9, 1)],
             traces={
                 clock.today(): [
                     Trace(AuditAction.ENTRY_SET, actor_id=1, gestures=4),
@@ -131,7 +151,7 @@ async def test_coverage_comes_with_what_it_is_measured_against(
     assert "rate" in coverage
     # Whose time it is read over, so the screen can say it.
     assert coverage["team"] == "engineering"
-    assert coverage["people"] == 1
+    assert coverage["people"] == 2
 
 
 async def test_teammates_who_declared_nothing_are_named(
@@ -175,6 +195,82 @@ async def test_the_registry_reports_what_nobody_booked_against(
     registry = response.json()["registry"]
     assert registry["missions_without_time"] == 8
     assert registry["created"] == 1
+
+
+async def test_trades_are_listed_heaviest_first_and_one_states_none(
+    client: AsyncClient,
+) -> None:
+    response = await client.get(URL, params={"range": "today"})
+
+    by_nature = response.json()["steering"]["by_nature"]
+    assert [row["nature"] for row in by_nature] == ["development", None]
+    assert by_nature[0]["share"] == pytest.approx(0.5)
+
+
+async def test_the_registry_reports_what_cannot_be_declared_on(
+    client: AsyncClient,
+) -> None:
+    registry = (await client.get(URL, params={"range": "today"})).json()["registry"]
+
+    assert registry["without_activity"] == 2
+    assert registry["unbudgeted"] == 1
+
+
+async def test_the_recueil_reports_what_was_asked_and_what_still_waits(
+    client: AsyncClient,
+) -> None:
+    intake = (await client.get(URL, params={"range": "today"})).json()["intake"]
+
+    assert intake["submitted"] == 3
+    assert intake["waiting"] == 1
+    assert intake["oldest_wait_days"] >= 1
+
+
+async def test_stewardship_counts_projects_nobody_answers_for(
+    client: AsyncClient,
+) -> None:
+    stewardship = (await client.get(URL, params={"range": "today"})).json()[
+        "stewardship"
+    ]
+
+    assert stewardship["active_projects"] == 5
+    assert stewardship["without_tech_lead"] == 2
+
+
+async def test_the_thread_says_how_many_updates_were_answered(
+    client: AsyncClient,
+) -> None:
+    thread = (await client.get(URL, params={"range": "today"})).json()["thread"]
+
+    assert thread["answer_rate"] == pytest.approx(0.25)
+    assert thread["silent"] == 1
+
+
+async def test_notifications_come_least_opened_first(client: AsyncClient) -> None:
+    reading = (await client.get(URL, params={"range": "today"})).json()[
+        "notification_reading"
+    ]
+
+    assert [row["kind"] for row in reading["kinds"]] == [
+        "project.update_posted",
+        "update.mention",
+    ]
+    assert reading["read_rate"] == pytest.approx(0.6)
+    assert reading["unread"] == 3
+
+
+async def test_the_coverage_curve_holds_twelve_weeks(client: AsyncClient) -> None:
+    response = await client.get(URL, params={"range": "today"})
+
+    trend = response.json()["coverage_trend"]
+    assert len(trend) == 12
+    assert trend[0]["week_start"] < trend[-1]["week_start"]
+
+
+async def test_the_accounts_are_counted_by_rung(client: AsyncClient) -> None:
+    accounts = (await client.get(URL, params={"range": "today"})).json()["accounts"]
+
+    assert set(accounts) >= {"guests", "teammates", "managers", "admins"}
 
 
 async def test_every_function_of_the_product_is_read(client: AsyncClient) -> None:
