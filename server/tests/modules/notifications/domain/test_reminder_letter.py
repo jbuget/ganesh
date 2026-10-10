@@ -33,12 +33,12 @@ class TestTheSubject:
     def test_it_counts_what_is_waiting(self) -> None:
         composed = letter((NotificationKind.UPDATE_MENTION, 3))
 
-        assert composed.subject == "Ganesh — 3 choses vous attendent"
+        assert composed.subject == "Ganesh — 3 notifications non lues"
 
     def test_one_thing_waiting_is_said_in_the_singular(self) -> None:
         composed = letter((NotificationKind.MONTH_REOPENED, 1))
 
-        assert composed.subject == "Ganesh — 1 chose vous attend"
+        assert composed.subject == "Ganesh — 1 notification non lue"
 
 
 class TestWhatItSays:

@@ -90,7 +90,7 @@ The resolution is not to copy the sentences but to **need much less of them**.
 The letter groups by kind and counts:
 
 ```
-Objet : Ganesh — 3 choses vous attendent
+Objet : Ganesh — 3 notifications non lues
 
   2 mentions
   1 mois rouvert

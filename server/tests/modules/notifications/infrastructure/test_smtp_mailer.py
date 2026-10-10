@@ -9,7 +9,7 @@ from src.modules.notifications.infrastructure.mail.smtp_mailer import SmtpMailer
 
 A_LETTER = Letter(
     to="l.chen@waat.fr",
-    subject="Ganesh — 1 chose vous attend",
+    subject="Ganesh — 1 notification non lue",
     text="Bonjour,",
     html="<p>Bonjour,</p>",
 )
