@@ -48,6 +48,17 @@ source_modules =
 forbidden_modules =
     src.modules.*.presentation
 
+# --- Use cases --------------------------------------------------------------
+# A use case never calls another use case: what two of them share is a domain
+# service, or an application service beside them, never one of them. Written
+# down, the rule held until a helper landed in `use_cases/` and the next use
+# case imported it from there; this is what keeps it from drifting again.
+[importlinter:contract:use-cases-are-independent]
+name = A use case never imports another use case
+type = independence
+modules =
+    src.modules.*.application.use_cases.*
+
 # --- Shared code -------------------------------------------------------------
 # shared/ is a core: it knows no business module.
 [importlinter:contract:shared-purity]
