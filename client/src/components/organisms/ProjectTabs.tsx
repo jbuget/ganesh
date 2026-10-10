@@ -7,6 +7,7 @@ import { DeclareProjectDialog } from "@/components/atoms/DeclareProjectDialog";
 import { DeleteMissionDialog } from "@/components/atoms/DeleteMissionDialog";
 import { MissionMenu } from "@/components/atoms/MissionMenu";
 import { ProjectAttachmentsTab } from "@/components/organisms/ProjectAttachmentsTab";
+import { ProjectDescriptionTab } from "@/components/organisms/ProjectDescriptionTab";
 import { ProjectAuditTab } from "@/components/organisms/ProjectAuditTab";
 import { ProjectSteeringTab } from "@/components/organisms/ProjectSteeringTab";
 import { ProjectSheetTab } from "@/components/organisms/ProjectSheetTab";
@@ -26,7 +27,7 @@ import type {
 
 interface ProjectTabsProps {
   detail: ProjectDetailResponse;
-  /** Which tab to open on; steering by default. */
+  /** Which tab to open on; steering unless it names one of ours. */
   initialTab?: string | null;
   /** The update the visit was about, when a notification named one. */
   aimedAt?: number | null;
@@ -74,8 +75,11 @@ interface ProjectTabsProps {
   deleteMission: () => Promise<void>;
 }
 
+const TABS = ["description", "steering", "updates", "files", "catalog", "audit"];
+const DEFAULT_TAB = "steering";
+
 /**
- * The five facets of a mission.
+ * The six facets of a mission.
  *
  * Shared by the side panel and the full-page sheet: two arrangements of the
  * same content, so they do not drift apart.
@@ -126,7 +130,7 @@ export function ProjectTabs({
 
   return (
     <Tabs
-      defaultValue={initialTab ?? "steering"}
+      defaultValue={initialTab && TABS.includes(initialTab) ? initialTab : DEFAULT_TAB}
       className="flex min-h-0 flex-1 flex-col gap-4"
     >
       {/* Above the tabs, therefore read before them: the state of the mission
@@ -140,6 +144,7 @@ export function ProjectTabs({
           mission waits aside. */}
       <div className="flex shrink-0 items-center gap-2">
         <TabsList className="min-w-0 flex-1">
+          <TabsTrigger value="description">Description</TabsTrigger>
           <TabsTrigger value="steering">Pilotage</TabsTrigger>
           <TabsTrigger value="updates">Mises à jour</TabsTrigger>
           <TabsTrigger value="files">Fichiers</TabsTrigger>
@@ -217,6 +222,13 @@ export function ProjectTabs({
         onConfirm={deleteMission}
       />
 
+      <TabsContent value="description" className="min-h-0 flex-1">
+        <ProjectDescriptionTab
+          description={detail.project.description}
+          saveDescription={saveDescription}
+        />
+      </TabsContent>
+
       <TabsContent value="steering">
         <ProjectSteeringTab
           detail={detail}
@@ -251,7 +263,6 @@ export function ProjectTabs({
         <ProjectSheetTab
           detail={detail}
           updateFields={updateFields}
-          saveDescription={saveDescription}
           saveRegistry={saveRegistry}
           addLink={addLink}
           removeLink={removeLink}

@@ -1,12 +1,7 @@
 "use client";
 
-import { Pencil } from "lucide-react";
-import { useState } from "react";
-
 import { InlineTextField } from "@/components/atoms/InlineTextField";
-import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { OptionPicker } from "@/components/atoms/OptionPicker";
-import { RichTextEditor } from "@/components/atoms/RichTextEditor";
 import { SheetRow } from "@/components/atoms/SheetRow";
 import { SheetSectionTitle } from "@/components/atoms/SheetSectionTitle";
 import { TagListField } from "@/components/atoms/TagListField";
@@ -14,7 +9,6 @@ import { ToggleField } from "@/components/atoms/ToggleField";
 import { ProjectDependencies } from "@/components/molecules/ProjectDependencies";
 import { ProjectLinksEditor } from "@/components/molecules/ProjectLinksEditor";
 import { ServiceLinksEditor } from "@/components/molecules/ServiceLinksEditor";
-import { Button } from "@/components/ui/button";
 import type { LinkIcon, ProjectDetailResponse } from "@/lib/api/generated/model";
 import {
   CRITICALITIES,
@@ -30,7 +24,6 @@ import {
 interface ProjectSheetTabProps {
   detail: ProjectDetailResponse;
   updateFields: (fields: SheetFields) => Promise<void>;
-  saveDescription: (body: string) => Promise<void>;
   saveRegistry: (registry: {
     stack: string[];
     tags: string[];
@@ -40,108 +33,16 @@ interface ProjectSheetTabProps {
   removeLink: (linkId: number) => Promise<void>;
 }
 
-/** Writing the body of the sheet, with the headings that structure it. */
-function Composer({
-  value,
-  onSave,
-  onCancel,
-}: {
-  value: string;
-  onSave: (body: string) => Promise<void>;
-  onCancel: () => void;
-}) {
-  const [body, setBody] = useState(value);
-  const [busy, setBusy] = useState(false);
-
-  async function save() {
-    setBusy(true);
-    try {
-      await onSave(body);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="flex h-full min-h-0 flex-col gap-3">
-      <RichTextEditor
-        value={value}
-        withHeadings
-        fullHeight
-        placeholder="Le problème, la solution, ce que le service couvre…"
-        onChange={setBody}
-        onSubmit={() => void save()}
-      />
-      <div className="flex shrink-0 items-center gap-2">
-        <Button size="sm" disabled={busy} onClick={() => void save()}>
-          Enregistrer
-        </Button>
-        <Button size="sm" variant="ghost" onClick={onCancel}>
-          Annuler
-        </Button>
-        <span className="text-xs text-slate-400">⌘↵ pour enregistrer</span>
-      </div>
-    </div>
-  );
-}
-
-/** The full text of the sheet: read rendered, written on demand. */
-function Body({
-  description,
-  onSave,
-}: {
-  description: string | null;
-  onSave: (body: string) => Promise<void>;
-}) {
-  const [editing, setEditing] = useState(false);
-
-  if (editing) {
-    return (
-      <Composer
-        value={description ?? ""}
-        onCancel={() => setEditing(false)}
-        onSave={async (body) => {
-          await onSave(body);
-          setEditing(false);
-        }}
-      />
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      <button
-        type="button"
-        onClick={() => setEditing(true)}
-        className="flex cursor-pointer items-center gap-1.5 text-sm text-slate-400 transition-colors hover:text-slate-700"
-      >
-        <Pencil className="size-3.5" aria-hidden />
-        {description ? "Modifier" : "Rédiger la fiche"}
-      </button>
-
-      {description ? (
-        <MarkdownView body={description} />
-      ) : (
-        <p className="text-sm text-slate-400">
-          Aucune fiche. Décrivez le problème, la solution et ce que le service couvre.
-        </p>
-      )}
-    </div>
-  );
-}
-
 /**
  * The mission as the service catalogue will publish it.
  *
- * Everything waat.tools reads lives here and nowhere else: the pilotage tab
- * steers the mission, this one describes the service it produces. Each field
- * saves as it is left — there is no « Enregistrer » for the sheet, only for
- * the long text, which one writes in one go.
+ * What waat.tools reads beside the description lives here: the pilotage tab
+ * steers the mission, this one publishes the service it produces. Each field
+ * saves as it is left — there is no « Enregistrer » to press.
  */
 export function ProjectSheetTab({
   detail,
   updateFields,
-  saveDescription,
   saveRegistry,
   addLink,
   removeLink,
@@ -204,11 +105,6 @@ export function ProjectSheetTab({
             />
           </SheetRow>
         </div>
-      </section>
-
-      <section className="space-y-2">
-        <SheetSectionTitle>Fiche</SheetSectionTitle>
-        <Body description={project.description} onSave={saveDescription} />
       </section>
 
       <section className="space-y-2">
