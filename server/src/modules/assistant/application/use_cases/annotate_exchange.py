@@ -2,9 +2,7 @@
 
 from src.modules.assistant.application.dtos.assistant_dtos import AnnotateCommand
 from src.modules.assistant.domain.entities.exchange import Exchange
-from src.modules.assistant.domain.repositories.exchange_archive import (
-    ExchangeArchive,
-)
+from src.modules.assistant.domain.repositories.exchange_archive import ExchangeArchive
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 from src.shared.utils import clock
 

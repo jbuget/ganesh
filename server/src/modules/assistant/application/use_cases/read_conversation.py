@@ -3,9 +3,7 @@
 from uuid import UUID
 
 from src.modules.assistant.domain.entities.conversation import Conversation
-from src.modules.assistant.domain.repositories.exchange_archive import (
-    ExchangeArchive,
-)
+from src.modules.assistant.domain.repositories.exchange_archive import ExchangeArchive
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
 
 

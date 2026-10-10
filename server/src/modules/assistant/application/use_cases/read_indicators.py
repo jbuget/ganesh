@@ -1,8 +1,6 @@
 """What a period of exchanges says about the assistant."""
 
-from src.modules.assistant.application.dtos.assistant_dtos import (
-    AssistantIndicators,
-)
+from src.modules.assistant.application.dtos.assistant_dtos import AssistantIndicators
 from src.modules.assistant.domain.repositories.exchange_archive import (
     ExchangeArchive,
     ExchangeFilter,

@@ -25,6 +25,9 @@ from src.modules.api_keys.presentation.api.routes.api_key_router import (
 from src.modules.assistant.presentation.api.routes.assistant_router import (
     router as assistant_router,
 )
+from src.modules.assistant.presentation.api.routes.assistant_study_router import (
+    router as assistant_study_router,
+)
 from src.modules.audit_logs.presentation.api.routes.audit_log_router import (
     router as audit_log_router,
 )
@@ -134,6 +137,7 @@ for module_router in (
     request_router,
     admin_router,
     assistant_router,
+    assistant_study_router,
     # The one route that asks: in the way in the model belongs to, beside the
     # module's own routes rather than among them.
     asking_router,

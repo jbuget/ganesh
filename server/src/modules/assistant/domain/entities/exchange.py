@@ -127,9 +127,7 @@ class Exchange:
             raise ForbiddenActionError("Only whoever asked judges the answer.")
         self.verdict = verdict
 
-    def annotate(
-        self, by: int, cause: Cause, note: str | None, at: datetime
-    ) -> None:
+    def annotate(self, by: int, cause: Cause, note: str | None, at: datetime) -> None:
         """Says why the answer came out as it did, replacing any earlier reading.
 
         One reading per answer: two that disagreed would say nothing. The

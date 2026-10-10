@@ -54,8 +54,7 @@ class ExchangeArchive(ABC):
         ...
 
     @abstractmethod
-    async def read_conversation(self, conversation_id: UUID) -> Conversation | None:
-        ...
+    async def read_conversation(self, conversation_id: UUID) -> Conversation | None: ...
 
     @abstractmethod
     async def list_exchanges(self, kept: ExchangeFilter) -> list[Exchange]:
