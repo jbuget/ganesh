@@ -64,8 +64,15 @@ async def find_project(
       on peut encore déclarer du temps. Sans lui, tous sont rendus.
     - `person` : une partie du nom de qui porte le projet ou y intervient.
     """
-    criteria = _criteria(
-        query, phase, kind, priority, department, followed, archived, person
+    criteria = ProjectCriteria(
+        query=_spoken(query),
+        status=_heard(say.STATUSES, phase, "la phase"),
+        kind=_heard(say.KINDS, kind, "la nature"),
+        priority=_heard(say.PRIORITIES, priority, "la priorité"),
+        department=_heard(say.DEPARTMENTS, department, "le service"),
+        is_followed=followed,
+        is_archived=archived,
+        person=_spoken(person),
     )
     if criteria == ProjectCriteria():
         raise ToolError(
@@ -90,29 +97,6 @@ async def find_project(
     if len(found) > MOST:
         lines.append(f"… et {len(found) - MOST} autres qui correspondent aussi.")
     return "\n".join(lines)
-
-
-def _criteria(
-    query: str | None,
-    phase: str | None,
-    kind: str | None,
-    priority: str | None,
-    department: str | None,
-    followed: bool | None,
-    archived: bool | None,
-    person: str | None,
-) -> ProjectCriteria:
-    """What was asked, heard back into the domain's words."""
-    return ProjectCriteria(
-        query=_spoken(query),
-        status=_heard(say.STATUSES, phase, "la phase"),
-        kind=_heard(say.KINDS, kind, "la nature"),
-        priority=_heard(say.PRIORITIES, priority, "la priorité"),
-        department=_heard(say.DEPARTMENTS, department, "le service"),
-        is_followed=followed,
-        is_archived=archived,
-        person=_spoken(person),
-    )
 
 
 def _heard(vocabulary: Mapping[E, str], word: str | None, what: str) -> E | None:

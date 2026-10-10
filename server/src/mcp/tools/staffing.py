@@ -74,7 +74,7 @@ def _named(projects: list[Project]) -> str:
     named = [_label(project) for project in projects[:MOST]]
     if len(projects) > MOST:
         named.append(f"et {len(projects) - MOST} autres")
-    return say.listed(named) if len(projects) <= MOST else ", ".join(named)
+    return say.listed(named)
 
 
 def _label(project: Project) -> str:

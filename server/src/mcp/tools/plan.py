@@ -140,10 +140,9 @@ async def team_availability(week: str | None = None) -> str:
     team = [row for row in reading.people if not row.user.is_guest]
     free = sorted(
         (
-            (row.user, load.free)
+            (row.user, row.load.free_in(monday))
             for row in team
-            for load in row.load.weeks
-            if load.week == monday and load.free > 0
+            if row.load.free_in(monday) > 0
         ),
         key=lambda found: found[0].label,
     )
