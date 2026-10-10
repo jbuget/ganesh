@@ -11,6 +11,9 @@ from src.core.config import get_settings
 from src.core.database import Base
 
 # Import every model here so Alembic sees them on autogenerate.
+from src.modules.assistant.infrastructure.database.models import (  # noqa: F401, E402
+    assistant_exchange_model,
+)
 from src.modules.audit_logs.infrastructure.database.models import (  # noqa: F401, E402
     audit_log_model,
 )

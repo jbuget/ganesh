@@ -54,6 +54,8 @@ def _forget_the_overrides() -> Iterator[None]:
         ("PUT", f"{API}/users/me/presence", {}),
         ("POST", f"{API}/gazette", {}),
         ("POST", f"{API}/planning/simulations", {}),
+        ("POST", f"{API}/assistant/exchanges", {}),
+        ("PUT", f"{API}/assistant/exchanges/1/verdict", {}),
     ],
 )
 async def test_a_guest_is_turned_back_before_the_payload_is_even_read(
