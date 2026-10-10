@@ -44,10 +44,17 @@ class Wording:
 WORDINGS: dict[NotificationKind, Wording] = {
     NotificationKind.PROJECT_ASSIGNED: Wording("projet confié", "projets confiés"),
     NotificationKind.PROJECT_UNASSIGNED: Wording("projet retiré", "projets retirés"),
-    # « mois » does not move in the plural; only what qualifies it does.
-    NotificationKind.TIMESHEET_EDITED: Wording("mois modifié", "mois modifiés"),
-    NotificationKind.MONTH_VALIDATED: Wording("mois validé", "mois validés"),
-    NotificationKind.MONTH_REOPENED: Wording("mois rouvert", "mois rouverts"),
+    # A feuille de temps, never « un mois »: the people who fill it in do not
+    # call it that, and « mois » says too little about what was touched.
+    NotificationKind.TIMESHEET_EDITED: Wording(
+        "feuille de temps modifiée", "feuilles de temps modifiées"
+    ),
+    NotificationKind.MONTH_VALIDATED: Wording(
+        "feuille de temps validée", "feuilles de temps validées"
+    ),
+    NotificationKind.MONTH_REOPENED: Wording(
+        "feuille de temps rouverte", "feuilles de temps rouvertes"
+    ),
     NotificationKind.PROJECT_UPDATE_POSTED: Wording(
         "actualité de projet", "actualités de projet"
     ),
@@ -118,11 +125,15 @@ def _html_detail(shown: tuple[ReminderEntry, ...], left_out: int, web_url: str) 
     for entry in shown:
         said = escape(_sentence(entry))
         address = _address(entry, web_url)
-        items.append(
-            f'<li><a href="{escape(address)}" style="color:#0f172a">{said}</a></li>'
+        # The sentence stays plain text and one short word carries the address:
+        # a whole sentence underlined, or a bare URL, makes ten lines hard to
+        # read. The plain-text part has no such choice and shows the address.
+        link = (
+            f' — <a href="{escape(address)}" style="color:#0f172a">Voir</a>'
             if address
-            else f"<li>{said}</li>"
+            else ""
         )
+        items.append(f"<li>{said}{link}</li>")
     more = f"<li>… et {left_out} autres</li>" if left_out else ""
     return (
         "<p>Détail, du plus récent au plus ancien :</p>"

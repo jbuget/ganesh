@@ -1,5 +1,7 @@
 """What the letter says, in French."""
 
+import re
+
 from src.modules.notifications.domain.entities.notification import NotificationKind
 from src.modules.notifications.domain.entities.reminder import (
     Reminder,
@@ -57,7 +59,7 @@ class TestWhatItSays:
         )
 
         assert "2 mentions" in composed.text
-        assert "1 mois rouvert" in composed.text
+        assert "1 feuille de temps rouverte" in composed.text
 
     def test_it_agrees_in_number(self) -> None:
         composed = letter((NotificationKind.UPDATE_MENTION, 1))
@@ -193,3 +195,49 @@ class TestTheLetterStaysShort:
 
         assert "Personne 0 " in composed.text
         assert f"Personne {MAX_LISTED + 1} " not in composed.text
+
+
+class TestATimesheetIsNotCalledAMonth:
+    # « mois » is too generic for the people who fill it in: what they hand in
+    # and what a manager reopens is their feuille de temps.
+    def test_each_kind_that_speaks_of_one_says_feuille_de_temps(self) -> None:
+        for kind in (
+            NotificationKind.TIMESHEET_EDITED,
+            NotificationKind.MONTH_VALIDATED,
+            NotificationKind.MONTH_REOPENED,
+        ):
+            assert "feuille de temps" in WORDINGS[kind].one
+            assert "feuilles de temps" in WORDINGS[kind].many
+            assert "mois" not in WORDINGS[kind].one + WORDINGS[kind].many
+
+    def test_they_agree_in_gender_and_number(self) -> None:
+        composed = letter(
+            (NotificationKind.MONTH_REOPENED, 2),
+            (NotificationKind.MONTH_VALIDATED, 1),
+            (NotificationKind.TIMESHEET_EDITED, 3),
+        )
+
+        assert "2 feuilles de temps rouvertes" in composed.text
+        assert "1 feuille de temps validée" in composed.text
+        assert "3 feuilles de temps modifiées" in composed.text
+
+
+class TestTheLinksStayOutOfTheReading:
+    def test_the_html_says_a_word_and_hides_the_address_behind_it(self) -> None:
+        composed = letter_with(entry())
+
+        visible = re.sub(r"<[^>]+>", "", composed.html)
+        assert "https://" not in visible
+        assert re.search(r'<a href="[^"]*update=41"[^>]*>Voir</a>', composed.html)
+
+    def test_the_sentence_itself_is_not_a_link(self) -> None:
+        composed = letter_with(entry())
+
+        sentence = "Sylvain Martin a répondu à une mise à jour sur Ganesh"
+        assert not re.search(rf"<a [^>]*>{sentence}", composed.html)
+        assert sentence in re.sub(r"<[^>]+>", "", composed.html)
+
+    def test_a_line_with_nothing_to_open_has_no_word_to_click(self) -> None:
+        composed = letter_with(entry(path=None))
+
+        assert ">Voir<" not in composed.html

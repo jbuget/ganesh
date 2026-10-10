@@ -95,7 +95,7 @@ The letter groups by kind and counts, then lists the most recent lines:
 ```
 Objet : Ganesh — 3 notifications non lues
 
-  - 1 mois rouvert
+  - 1 feuille de temps rouverte
   - 2 réponses
 
 Détail, du plus récent au plus ancien :

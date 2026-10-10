@@ -959,7 +959,7 @@ is the brief; five rules hold it together:
   rules on the entity, beside the suspended account whose letter would lead
   back to a closed door.
 - **It tells, briefly, and never what somebody wrote.** The letter counts by
-  kind — « 2 mentions, 1 mois rouvert » — then lists the ten most recent
+  kind — « 2 mentions, 1 feuille de temps rouverte » — then lists the ten most recent
   things waiting, each as who did what on which project with the address that
   opens it, and says how many it left out. The inbox is still where the read
   state lives. **Receiving a letter is not reading an inbox**: nothing of
