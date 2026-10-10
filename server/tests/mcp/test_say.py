@@ -135,3 +135,19 @@ class TestHeard:
 
         assert "« urgente »" in str(refused.value)
         assert "critique, haute, normale et basse" in str(refused.value)
+
+
+class TestLeft:
+    """A budget is read as what is left, never as two figures to subtract."""
+
+    def test_days_to_spare_say_how_many_are_left(self) -> None:
+        assert say.left(spent=5, estimate=20) == "il en reste 15"
+
+    def test_an_overrun_says_by_how_much(self) -> None:
+        assert say.left(spent=6, estimate=5) == "1 de plus que prévu"
+
+    def test_an_estimate_reached_says_so(self) -> None:
+        assert say.left(spent=5, estimate=5) == "l'estimation est atteinte"
+
+    def test_quarters_are_said_whole(self) -> None:
+        assert say.left(spent=0.25, estimate=1) == "il en reste 0,75"

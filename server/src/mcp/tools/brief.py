@@ -165,12 +165,7 @@ def _weighed_alone(sheet: ProjectDetail) -> str:
         return f"{declared}. Aucune estimation n'est enregistrée."
 
     against = f"{declared} pour {say.agreeing(estimate, 'estimé')}"
-    left = round(estimate - spent, 2)
-    if left > 0:
-        return f"{against} : il en reste {say.number(left)}."
-    if left < 0:
-        return f"{against} : {say.number(-left)} de plus que prévu."
-    return f"{against} : l'estimation est atteinte."
+    return f"{against} : {say.left(spent, estimate)}."
 
 
 def _announced(project: Project) -> str:

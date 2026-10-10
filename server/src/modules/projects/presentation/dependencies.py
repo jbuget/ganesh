@@ -49,6 +49,9 @@ from src.modules.projects.application.use_cases.follow_project import (
     UnfollowProjectUseCase,
 )
 from src.modules.projects.application.use_cases.get_board import GetBoardUseCase
+from src.modules.projects.application.use_cases.get_project_consumption import (
+    GetProjectConsumptionUseCase,
+)
 from src.modules.projects.application.use_cases.get_project_detail import (
     GetProjectDetailUseCase,
 )
@@ -429,6 +432,16 @@ def get_project_detail_use_case(
         entries=entries,
         users=users,
         activities=activities,
+    )
+
+
+def get_project_consumption_use_case(
+    projects: ProjectRepository = Depends(get_project_repository),
+    activities: ActivityRepository = Depends(get_activity_repository),
+    entries: EntryRepository = Depends(get_entry_repository),
+) -> GetProjectConsumptionUseCase:
+    return GetProjectConsumptionUseCase(
+        projects=projects, activities=activities, entries=entries
     )
 
 

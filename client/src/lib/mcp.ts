@@ -152,6 +152,12 @@ export const MCP_TOOLS: McpTool[] = [
     scope: "projects:read",
   },
   {
+    name: "project_consumption",
+    answers:
+      "Dit ce qu'a coûté un projet, métier par métier, face à ce qui était prévu : les jours déclarés, ce qu'il en reste, et les lots lus à part. Ce qui est pré-saisi pour l'avenir est dit à côté, jamais additionné.",
+    scope: "projects:read",
+  },
+  {
     name: "project_news",
     answers:
       "Rend les dernières mises à jour d'un projet et de ses lots, datées et signées : avancement, difficultés, décisions, prochaines étapes.",

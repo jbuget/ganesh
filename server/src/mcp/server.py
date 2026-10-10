@@ -30,6 +30,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 from src.mcp.door import MachineDoor
 from src.mcp.tools.brief import project_brief
+from src.mcp.tools.consumption import project_consumption
 from src.mcp.tools.declaring import declare_time
 from src.mcp.tools.describing import update_project_description
 from src.mcp.tools.entries import my_month
@@ -50,6 +51,7 @@ TOOLS = (
     find_project,
     person_projects,
     project_brief,
+    project_consumption,
     project_news,
     my_month,
     what_changed,

@@ -157,6 +157,20 @@ def agreeing(count: float, word: str) -> str:
     return f"{written} {word}s" if count >= 2 else f"{written} {word}"
 
 
+def left(spent: float, estimate: float) -> str:
+    """What a budget has left, said as what is left.
+
+    « il en reste 15 » is the thing being asked; « 5 et 20 » is the subtraction
+    a model gets wrong often enough to matter.
+    """
+    remaining = round(estimate - spent, 2)
+    if remaining > 0:
+        return f"il en reste {number(remaining)}"
+    if remaining < 0:
+        return f"{number(-remaining)} de plus que prévu"
+    return "l'estimation est atteinte"
+
+
 def number(count: float) -> str:
     """A count on its own, quarters included: « 9 », « 1,5 », « 0,25 ».
 

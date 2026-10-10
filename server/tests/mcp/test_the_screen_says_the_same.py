@@ -19,6 +19,7 @@ import pytest
 from src.mcp.server import TOOLS
 from src.mcp.tools import (
     brief,
+    consumption,
     declaring,
     describing,
     entries,
@@ -35,6 +36,7 @@ from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 #: part of what it does needs a second one, as `ALSO`.
 TOOL_MODULES = (
     brief,
+    consumption,
     declaring,
     describing,
     entries,
