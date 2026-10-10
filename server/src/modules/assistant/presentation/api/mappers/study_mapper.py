@@ -123,7 +123,7 @@ def to_exported_exchanges(export: ExchangeExport) -> list[ExportedExchangeRespon
         exported.append(
             ExportedExchangeResponse(
                 **to_studied_exchange_response(exchange).model_dump(),
-                asker_name=asker.display_name if asker else None,
+                asker_name=asker.label if asker else None,
                 asker_email=asker.email if asker else None,
             )
         )

@@ -47,7 +47,15 @@ from tests.helpers.in_memory_repositories import (
 
 STUDY = f"{get_settings().api_prefix}/admin/assistant"
 ADMIN = User(9, "oid-9", "a.admin@waat.fr", "A. Admin", role=Role.ADMIN)
-LEA = User(1, "oid-1", "l.chen@waat.fr", "L. Chen", role=Role.TEAMMATE)
+LEA = User(
+    1,
+    "oid-1",
+    "l.chen@waat.fr",
+    "L. Chen",
+    role=Role.TEAMMATE,
+    first_name="Léa",
+    last_name="Chen",
+)
 ASKED_AT = datetime(2026, 10, 8, 9, 30, tzinfo=UTC)
 
 
@@ -189,6 +197,7 @@ async def test_an_admin_annotates_an_answer() -> None:
 
 
 async def test_the_csv_export_opens_in_a_spreadsheet_and_names_whoever_asked() -> None:
+    """Named as the application names them everywhere, not as Entra does."""
     study = open_study()
     await lea_asked(study)
 
@@ -200,7 +209,7 @@ async def test_the_csv_export_opens_in_a_spreadsheet_and_names_whoever_asked() -
     assert response.content.startswith("﻿".encode())
     rows = list(csv.DictReader(io.StringIO(response.text.lstrip("﻿")), delimiter=";"))
     assert [(row["asker_name"], row["tools"]) for row in rows] == [
-        ("L. Chen", "project_brief")
+        ("Léa Chen", "project_brief")
     ]
 
 
