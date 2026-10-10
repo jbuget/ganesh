@@ -39,10 +39,11 @@ class UpdateUserIdentityUseCase:
             department=command.department,
             github_username=command.github_username,
             org_level=command.org_level,
+            team=command.team,
         )
         await self._users.update(target)
 
-        # Five fields at once: the trace carries them as a payload rather than
+        # Six fields at once: the trace carries them as a payload rather than
         # as one before/after pair, which could only say one of them.
         await self._audit_logs.add(
             AuditLog(
@@ -57,6 +58,7 @@ class UpdateUserIdentityUseCase:
                     ),
                     "github_username": target.github_username,
                     "org_level": (target.org_level.value if target.org_level else None),
+                    "team": target.team.value if target.team else None,
                 },
             )
         )

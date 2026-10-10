@@ -10,9 +10,11 @@ from src.modules.users.application.use_cases.update_user_identity import (
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.enums.department import Department
 from src.shared.enums.org_level import OrgLevel
+from src.shared.enums.team import Team
 from src.shared.exceptions.domain_exceptions import (
     EntityNotFoundError,
     ForbiddenActionError,
+    ValidationError,
 )
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
@@ -55,6 +57,7 @@ def command(**overrides) -> UpdateUserIdentityCommand:
         "department": Department.CUSTOMER_SERVICE,
         "github_username": "lea-chen",
         "org_level": OrgLevel.COMOP,
+        "team": None,
     }
     fields.update(overrides)
     return UpdateUserIdentityCommand(**fields)
@@ -76,7 +79,12 @@ async def test_what_is_left_blank_is_emptied() -> None:
     """The sheet is written whole: an emptied field is a decision, not a gap."""
     teammate = make_teammate()
     teammate.set_identity(
-        "Léa", "Chen", Department.CUSTOMER_SERVICE, "lea-chen", OrgLevel.COMOP
+        "Léa",
+        "Chen",
+        Department.INFORMATION_SYSTEMS,
+        "lea-chen",
+        OrgLevel.COMOP,
+        Team.DATA,
     )
     use_case, repo, _ = build([make_manager(), teammate])
 
@@ -87,6 +95,7 @@ async def test_what_is_left_blank_is_emptied() -> None:
             department=None,
             github_username=None,
             org_level=None,
+            team=None,
         )
     )
 
@@ -97,6 +106,33 @@ async def test_what_is_left_blank_is_emptied() -> None:
     assert stored.department is None
     assert stored.github_username is None
     assert stored.org_level is None
+    assert stored.team is None
+
+
+async def test_a_manager_places_a_teammate_in_a_team() -> None:
+    use_case, repo, _ = build([make_manager(), make_teammate()])
+
+    await use_case.execute(
+        command(department=Department.INFORMATION_SYSTEMS, team=Team.SYSNET)
+    )
+
+    teammate = await repo.get_by_id(2)
+    assert teammate is not None
+    assert teammate.team is Team.SYSNET
+
+
+async def test_a_team_outside_the_department_is_neither_written_nor_traced() -> None:
+    use_case, repo, audit = build([make_manager(), make_teammate()])
+
+    with pytest.raises(ValidationError):
+        await use_case.execute(
+            command(department=Department.CUSTOMER_SERVICE, team=Team.DATA)
+        )
+
+    teammate = await repo.get_by_id(2)
+    assert teammate is not None
+    assert teammate.department is None
+    assert audit.logs == []
 
 
 async def test_a_teammate_cannot_rewrite_a_colleague() -> None:
@@ -123,7 +159,9 @@ async def test_an_unknown_actor_is_rejected() -> None:
 async def test_the_change_is_traced() -> None:
     use_case, _, audit = build([make_manager(), make_teammate()])
 
-    await use_case.execute(command())
+    await use_case.execute(
+        command(department=Department.INFORMATION_SYSTEMS, team=Team.DATA)
+    )
 
     trace = audit.logs[-1]
     assert trace.action is AuditAction.USER_IDENTITY_UPDATE
@@ -132,7 +170,8 @@ async def test_the_change_is_traced() -> None:
     assert trace.payload == {
         "first_name": "Léa",
         "last_name": "Chen",
-        "department": "customer_service",
+        "department": "information_systems",
         "github_username": "lea-chen",
         "org_level": "comop",
+        "team": "data",
     }

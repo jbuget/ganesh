@@ -9,6 +9,7 @@ from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.modules.users.domain.entities.user import Role
 from src.shared.enums.department import Department
 from src.shared.enums.org_level import OrgLevel
+from src.shared.enums.team import Team
 
 
 class WeekPresenceResponse(BaseModel):
@@ -77,6 +78,9 @@ class UserResponse(BaseModel):
     github_username: str | None = None
     #: Null for everyone nobody had a reason to place.
     org_level: OrgLevel | None = None
+    #: Null wherever the department is not cut into teams, or nobody has said
+    #: which one.
+    team: Team | None = None
     #: The ordinary week. On site every day until somebody says otherwise.
     presence: WeekPresenceResponse
     #: How often the letter saying what is waiting goes out. Every day until
@@ -99,7 +103,8 @@ class SetActiveRequest(BaseModel):
 class UpdateUserIdentityRequest(BaseModel):
     """Who a teammate is, where they work, and how one finds them on GitHub.
 
-    The five fields travel together: what is left out is emptied.
+    The six fields travel together: what is left out is emptied. A team
+    outside the department is refused.
     """
 
     first_name: str | None = Field(default=None, max_length=255)
@@ -107,6 +112,7 @@ class UpdateUserIdentityRequest(BaseModel):
     department: Department | None = None
     github_username: str | None = Field(default=None, max_length=255)
     org_level: OrgLevel | None = None
+    team: Team | None = None
 
 
 class ChooseReminderCadenceRequest(BaseModel):

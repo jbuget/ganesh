@@ -64,6 +64,19 @@ describe("ProfilePage", () => {
     expect(screen.getByText("Non renseigné")).toBeInTheDocument();
   });
 
+  it("shows one's team, where the pôle is cut into teams", () => {
+    show({ user: { ...USER, team: "data" } });
+
+    expect(screen.getByText("Équipe")).toBeInTheDocument();
+    expect(screen.getByText("Data")).toBeInTheDocument();
+  });
+
+  it("asks nothing about a team when one has none", () => {
+    show({ user: { ...USER, team: null } });
+
+    expect(screen.queryByText("Équipe")).toBeNull();
+  });
+
   it("shows the cadence in force", () => {
     show({ user: { ...USER, reminder_cadence: "WEEKLY" } });
 

@@ -95,6 +95,7 @@ describe("useUsersScreen", () => {
         first_name: "Adrien",
         department: "information_systems",
         org_level: "comop",
+        team: "data",
       }),
       { last_name: "Dupont" },
     );
@@ -105,6 +106,7 @@ describe("useUsersScreen", () => {
       department: "information_systems",
       github_username: null,
       org_level: "comop",
+      team: "data",
     });
   });
 });

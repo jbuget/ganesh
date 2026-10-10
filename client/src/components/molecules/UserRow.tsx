@@ -7,6 +7,7 @@ import type { UserResponse } from "@/lib/api/generated/model";
 import { formatParisDateTime } from "@/lib/instants";
 import { since } from "@/lib/relative-dates";
 import { roleLabel } from "@/lib/roles";
+import { workplaceLabel } from "@/lib/teams";
 import { NAMING_BUTTON, NAMING_CELL, NAMING_CONTENT } from "@/lib/table-frame";
 
 interface UserRowProps {
@@ -58,6 +59,12 @@ export function UserRow({ user, now, onOpen }: UserRowProps) {
       </TableCell>
 
       <TableCell className="py-2 text-slate-500">{user.email}</TableCell>
+
+      <TableCell className="py-2 text-slate-500">
+        {workplaceLabel(user.department, user.team) ?? (
+          <span className="text-slate-400">—</span>
+        )}
+      </TableCell>
 
       <TableCell className="py-2 text-slate-500">
         {/* The handle alone, as it is stored: the row compares the team, it

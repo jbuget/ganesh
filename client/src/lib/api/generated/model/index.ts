@@ -193,6 +193,7 @@ export * from "./surface";
 export * from "./surfaceActivityResponse";
 export * from "./surfaceUsageResponse";
 export * from "./tallyResponse";
+export * from "./team";
 export * from "./teammateResponse";
 export * from "./teamMoodsResponse";
 export * from "./tone";

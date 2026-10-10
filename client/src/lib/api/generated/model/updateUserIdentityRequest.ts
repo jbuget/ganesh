@@ -6,11 +6,13 @@
  */
 import type { Department } from "./department";
 import type { OrgLevel } from "./orgLevel";
+import type { Team } from "./team";
 
 /**
  * Who a teammate is, where they work, and how one finds them on GitHub.
  *
- * The five fields travel together: what is left out is emptied.
+ * The six fields travel together: what is left out is emptied. A team
+ * outside the department is refused.
  */
 export interface UpdateUserIdentityRequest {
   first_name?: string | null;
@@ -18,4 +20,5 @@ export interface UpdateUserIdentityRequest {
   department?: Department | null;
   github_username?: string | null;
   org_level?: OrgLevel | null;
+  team?: Team | null;
 }

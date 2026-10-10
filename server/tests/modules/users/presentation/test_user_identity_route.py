@@ -93,6 +93,38 @@ async def test_a_sheet_may_be_emptied(client: AsyncClient) -> None:
     assert response.json()["department"] is None
     assert response.json()["github_username"] is None
     assert response.json()["org_level"] is None
+    assert response.json()["team"] is None
+
+
+async def test_a_manager_places_a_teammate_in_a_team(client: AsyncClient) -> None:
+    response = await client.patch(
+        URL,
+        json={
+            "first_name": "Léa",
+            "last_name": "Chen",
+            "department": "information_systems",
+            "github_username": None,
+            "team": "engineering",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["team"] == "engineering"
+
+
+async def test_a_team_outside_the_department_is_refused(client: AsyncClient) -> None:
+    response = await client.patch(
+        URL,
+        json={
+            "first_name": "Léa",
+            "last_name": "Chen",
+            "department": "customer_service",
+            "github_username": None,
+            "team": "engineering",
+        },
+    )
+
+    assert response.status_code == 422
 
 
 async def test_a_department_outside_the_list_is_refused(client: AsyncClient) -> None:

@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/atoms/PageHeader";
 import { ReminderCadenceField } from "@/components/atoms/ReminderCadenceField";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { departmentLabel } from "@/lib/departments";
+import { teamLabel } from "@/lib/teams";
 import { roleLabel } from "@/lib/roles";
 import { useProfileScreen } from "@/lib/use-profile";
 import { useMayWrite } from "@/lib/use-may-write";
@@ -69,6 +70,14 @@ export function ProfilePage() {
                 )}
               </dd>
             </div>
+            {/* Only once somebody has said it: most pôles are not cut into
+                teams, and « non renseigné » would ask for what does not exist. */}
+            {user.team && (
+              <div className="flex gap-3">
+                <dt className="w-32 shrink-0 text-slate-500">Équipe</dt>
+                <dd className="min-w-0">{teamLabel(user.team)}</dd>
+              </div>
+            )}
           </dl>
 
           <p className="text-xs text-slate-500">

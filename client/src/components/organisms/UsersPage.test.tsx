@@ -189,8 +189,9 @@ describe("UsersPage", () => {
     panel.openedUser = 2;
     render(<UsersPage />);
 
-    expect(screen.getByText("Léa")).toBeInTheDocument();
-    expect(screen.getByText("Bailleurs")).toBeInTheDocument();
+    const sheet = within(screen.getByRole("complementary"));
+    expect(sheet.getByText("Léa")).toBeInTheDocument();
+    expect(sheet.getByText("Bailleurs")).toBeInTheDocument();
   });
 
   it("lets a manager change the role from the panel", () => {
