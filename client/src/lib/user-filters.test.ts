@@ -83,6 +83,16 @@ describe("filterUsers", () => {
     expect(names(filterUsers(team, NO_USER_FILTER))).toEqual(["Chef"]);
   });
 
+  it("shows the administrators with the rest of the team", () => {
+    const team = [
+      teammate("Admin", { role: "ADMIN" }),
+      teammate("Chef", { role: "MANAGER" }),
+      teammate("Métier", { role: "GUEST" }),
+    ];
+
+    expect(names(filterUsers(team, NO_USER_FILTER))).toEqual(["Admin", "Chef"]);
+  });
+
   it("shows the requesters once they are asked for", () => {
     const team = [
       teammate("Chef", { role: "MANAGER" }),
