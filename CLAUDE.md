@@ -218,7 +218,10 @@ the question one opens it with. Length is met by paging, never by filtering.
   mise à jour, which are posted by the dozen and decide nothing either — a
   journal that recorded every 👍 would stop showing what steered the project.
   Moods are outside it too — they are given in confidence, and a log of who
-  felt what is not a log.
+  felt what is not a log. So are the questions asked of the assistant and
+  the thumbs given under its answers: a question is a reading, not a gesture
+  on a project, and every exchange is already kept whole in
+  `assistant_exchanges`.
 - Deleting a project sets its lines' `project_id` to `NULL`: the log survives,
   the tab it was read in does not. That is right — there is no project left to
   open.
@@ -464,7 +467,10 @@ Modules: `users`, `projects`, `entries`, `months`, `calendar`, `audit_logs`.
 - Repositories are interfaces (ABC) in the domain, implemented in the
   infrastructure.
 - **A use case may never call another use case.** Extract shared logic into a
-  domain service.
+  domain service. When something has to string several use cases together —
+  a model choosing which tools to read — it is a way in, not a use case:
+  `src/mcp/`, `src/scheduler/` and `src/assistant/` each orchestrate from
+  outside the modules, and `import-linter` keeps every one of them a leaf.
 - **A FastAPI route reaches a use case, and nothing else.** Not a repository,
   and not a domain service either: a route that called `read_wiring` straight
   would be a route deciding what to orchestrate, and the layer that exists to
@@ -1065,7 +1071,7 @@ it together:
 
 - **A tool is a question somebody asks, never a route.** Sixty routes turned
   into sixty tools is a model chaining six calls to answer one question and
-  getting three of them wrong. `find_project`, `project_brief`, `my_month`,
+  getting three of them wrong. `find_project`, `project_brief`, `project_news`, `my_month`,
   `what_changed`, `portfolio_status`, `team_mood`, `declare_time`,
   `record_review` — and the next one earns its place by being asked for. A
   tool that is another one with a parameter left out is not a new question:
@@ -1099,6 +1105,56 @@ it together:
   and a frame changed quietly is what costs the answering rate.
 
 ---
+
+## The assistant
+
+A panel on the right, opened with ⌘J (Ctrl+J away from a Mac), that answers
+questions about a project — « où en est le projet X ? », asked by somebody who
+is not on it. Nothing in the sidebar announces it yet: whoever knows the
+shortcut reaches it, a guest never does. Eight rules hold it together:
+
+- **« Où en est X ? » is read in the sheet and in the thread.** `project_brief`
+  for the state — lots, budget, who is on it — and `project_news` for what the
+  updates say, reported as their author's view on their day. The answer comes
+  in four parts: État, Récemment, Qui y travaille, Points d'attention.
+- **« Quand sera-t-il libre ? » is read in the grid and in the plan, never
+  mixed.** `person_plan` reads what the person pre-entered — a fact — apart
+  from what the plan de charge projects — a supposition — and the first week
+  it leaves room. Time off project is said « hors projet », never by its
+  label: absences share a row with sick days. It is on the assistant's shelf
+  alone: `roadmap:read` opens the roadmap to keys and deliberately leaves
+  « Planification » — the workload projection and its simulations — shut.
+- **Its only source is the tools.** The model consults the tools of
+  `src/mcp/tools/` — the same functions, the same sentences, the same use cases
+  a terminal client reaches — in the API's own process, for the person signed
+  in. `src/assistant/shelf.py` says which: they read, and they read the projects.
+  Nothing that writes, and never the moods. No query is generated, ever.
+- **The model is a way in, not a use case.** `src/assistant/` holds the loop,
+  the prompt, the shelf and the one route that asks; it strings together
+  `AdmitQuestionUseCase`, the model and `RecordExchangeUseCase`, and none of
+  them calls another. The module `assistant` keeps what is business — the
+  conversation, the exchanges, the verdicts. Two `import-linter` contracts hold
+  it, as they hold the tools and the clock: nothing imports it but the entry
+  point, and it names no repository of its own. No process is added: it runs
+  in the API, as `src/mcp/` does. The tools learn who they answer for through
+  `Caller`: a key and its owner, or a person.
+- **Five exchanges, then a fresh conversation.** `Conversation` refuses the
+  sixth, in the domain: a long thread drifts, and every turn sends the whole
+  of it again. A follow-up goes with the conversation so far: each earlier
+  question, what the tools read for it, and its answer.
+- **Every exchange is kept**, question, answer, every tool asked and what it
+  read back, the model, the tokens, the time — in `assistant_exchanges`, to
+  study the assistant and improve it. The panel says so. A 👍/👎 under each
+  answer is what turns the table into a sample. It is not in `audit_log`: a
+  question is a reading, not a gesture.
+- **The open sheet is the subject only of a question that names none.**
+  « Où en est-il ? » from WAATcher's sheet is about WAATcher; « et sur
+  Ganesh ? » from the same sheet is about Ganesh, the project — the
+  application shares its name, and a name is looked up before anything else.
+- **Same model as the gazette**, `GEMINI_MODEL` and `GEMINI_API_KEY`, and the
+  same contract: without a key the panel says it is not configured and nothing
+  breaks. The model is asked not to reason before answering — measured, the
+  same answers in a third less time.
 
 ## Production
 
