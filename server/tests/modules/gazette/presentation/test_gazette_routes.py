@@ -15,9 +15,10 @@ from src.modules.gazette.application.use_cases.generate_digest import (
     GenerateDigestUseCase,
 )
 from src.modules.gazette.application.use_cases.read_digest import ReadDigestUseCase
-from src.modules.gazette.domain.entities.brief import Brief
-from src.modules.gazette.domain.entities.prose import Prose
+from src.modules.gazette.domain.entities.dossier import Dossier
+from src.modules.gazette.domain.entities.narrative import Narrative
 from src.modules.gazette.domain.repositories.prose_writer import ProseWriter
+from src.modules.gazette.domain.services.narrating import hold_narrative
 from src.modules.gazette.presentation.dependencies import (
     get_generate_digest_use_case,
     get_read_digest_use_case,
@@ -27,11 +28,15 @@ from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.users.domain.entities.user import Role, User
+from src.shared.exceptions.domain_exceptions import ConflictError
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryDigestRepository,
+    InMemoryEntryRepository,
     InMemoryProjectRepository,
+    InMemoryProjectUpdateRepository,
     InMemoryRequestRepository,
     InMemoryUserRepository,
 )
@@ -52,11 +57,17 @@ GAZETTE = f"{get_settings().api_prefix}/gazette"
 
 
 class StubProseWriter(ProseWriter):
-    def __init__(self, text: str | None = "Un mois de cadrage.") -> None:
+    def __init__(
+        self,
+        text: str | None = "Un mois de cadrage.",
+        spotlights: dict[int, str] | None = None,
+    ) -> None:
         self._text = text
+        self._spotlights = spotlights or {}
 
-    async def write(self, brief: Brief) -> Prose | None:
-        return Prose.accepted(self._text, model="stub") if self._text else None
+    async def write(self, dossier: Dossier) -> Narrative:
+        editorial = [self._text] if self._text else []
+        return hold_narrative(dossier.brief, "stub", editorial, self._spotlights)
 
 
 @dataclass
@@ -66,6 +77,7 @@ class Screen:
     client: AsyncClient
     digests: InMemoryDigestRepository
     audit_logs: InMemoryAuditLogRepository
+    updates: InMemoryProjectUpdateRepository
 
     async def read(self, month: date = MONTH, version: int | None = None):
         params: dict[str, object] = {"month": month.isoformat()}
@@ -80,6 +92,7 @@ class Screen:
 def sign_in(writer: ProseWriter | None = None) -> Screen:
     digests = InMemoryDigestRepository()
     audit_logs = InMemoryAuditLogRepository()
+    posted = InMemoryProjectUpdateRepository()
     users = InMemoryUserRepository([LEA])
     projects = InMemoryProjectRepository([GANESH])
 
@@ -98,6 +111,8 @@ def sign_in(writer: ProseWriter | None = None) -> Screen:
             audit_logs=audit_logs,
             digests=digests,
             requests=InMemoryRequestRepository(),
+            updates=posted,
+            entries=InMemoryEntryRepository(),
             writer=writer or StubProseWriter(),
         )
     )
@@ -105,6 +120,7 @@ def sign_in(writer: ProseWriter | None = None) -> Screen:
         client=AsyncClient(transport=ASGITransport(app=app), base_url="http://test"),
         digests=digests,
         audit_logs=audit_logs,
+        updates=posted,
     )
 
 
@@ -248,3 +264,86 @@ async def test_what_was_about_nobody_s_mission_comes_back_unnamed(
     assert body["chapters"][0]["label"] is None
     assert body["chapters"][0]["project_id"] is None
     assert [h["label"] for h in body["highlights"]] == ["L. Chen"]
+
+
+@pytest.mark.asyncio
+async def test_a_digest_carries_the_spotlights_with_the_figures_they_rest_on() -> None:
+    screen = sign_in(StubProseWriter(spotlights={7: "Le registre des temps."}))
+    await screen.updates.add(
+        ProjectUpdate(
+            id=None,
+            project_id=7,
+            author_id=1,
+            body="Première version livrée.",
+            published_at=paris(2026, 9, 10, 10),
+        )
+    )
+
+    body = (await screen.ask_for()).json()
+
+    assert body["spotlights"] == [
+        {
+            "project_id": 7,
+            "label": "Ganesh",
+            "text": "Le registre des temps.",
+            "status": "development",
+            "went_live": False,
+            "updates_posted": 1,
+            "days_declared": 0.0,
+            "contributors": 0,
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_a_month_nobody_asked_for_has_no_spotlight(screen: Screen) -> None:
+    body = (await screen.read()).json()
+
+    assert body["spotlights"] == []
+
+
+@pytest.mark.asyncio
+async def test_the_model_is_named_even_when_only_a_spotlight_held() -> None:
+    screen = sign_in(StubProseWriter(None, {7: "Le registre des temps."}))
+    await screen.updates.add(
+        ProjectUpdate(
+            id=None,
+            project_id=7,
+            author_id=1,
+            body="Première version livrée.",
+            published_at=paris(2026, 9, 10, 10),
+        )
+    )
+
+    body = (await screen.ask_for()).json()
+
+    assert body["prose"] is None
+    assert body["prose_model"] == "stub"
+
+
+class ConflictingDigests(InMemoryDigestRepository):
+    """A register where somebody else always writes the next version first."""
+
+    async def add(self, digest):
+        raise ConflictError("Somebody has just generated a digest of this month.")
+
+
+@pytest.mark.asyncio
+async def test_losing_the_race_for_a_version_answers_a_clear_conflict() -> None:
+    screen = sign_in()
+    app.dependency_overrides[get_generate_digest_use_case] = (
+        lambda: GenerateDigestUseCase(
+            users=InMemoryUserRepository([LEA]),
+            projects=InMemoryProjectRepository([GANESH]),
+            audit_logs=screen.audit_logs,
+            digests=ConflictingDigests(),
+            requests=InMemoryRequestRepository(),
+            updates=InMemoryProjectUpdateRepository(),
+            entries=InMemoryEntryRepository(),
+            writer=StubProseWriter(),
+        )
+    )
+
+    response = await screen.ask_for()
+
+    assert response.status_code == 409

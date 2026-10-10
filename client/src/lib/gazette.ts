@@ -7,16 +7,18 @@
  * wording is under test: a digest that reads « project_archived » says nothing
  * to whoever opens it.
  *
- * The chapeau is the one piece of French the API carries, because a model
- * wrote it.
+ * The editorial and the spotlights are the French the API carries, because a
+ * model wrote them.
  */
 import type {
   ChapterResponse,
   DigestResponse,
   HighlightResponse,
   MovementResponse,
+  SpotlightResponse,
   TallyResponse,
 } from "@/lib/api/generated/model";
+import { ApiError } from "@/lib/api/fetcher";
 import { phaseLabel } from "@/lib/board";
 
 /**
@@ -148,10 +150,10 @@ export function highlightSentence(highlight: HighlightResponse): string {
   }
 }
 
-/** One piece of the chapeau: a project's name, or plain prose around it. */
+/** One piece of the editorial: a name of a project or a person, or plain prose. */
 export interface ProseSegment {
   text: string;
-  isProject: boolean;
+  isName: boolean;
 }
 
 /**
@@ -200,7 +202,7 @@ export function chapterTitle(chapter: ChapterResponse): string {
 /** Every project a chapter names: its own, and those of its packages. */
 function namesIn(chapter: ChapterResponse): string[] {
   // A chapter about no project names none: what it holds are needs, or
-  // people, and neither is a mission the chapeau may lean on.
+  // people, and neither is a mission the editorial may lean on.
   if (chapter.of !== "project") return [];
   const own = chapter.label === null ? [] : [chapter.label];
   const packages = chapter.movements
@@ -227,48 +229,168 @@ export function projectLabels(digest: DigestResponse): string[] {
   ];
 }
 
-/**
- * The chapeau, cut so that the projects it names can be set apart.
- *
- * The emphasis is put on at the last moment, here, and never asked of the
- * model: a model told to write markup writes markup wherever it feels like
- * it, and the one rule the chapeau must obey — no figures — is hard enough to
- * hold without also policing asterisks.
- *
- * Only a name the digest actually carries is set apart, and only where it
- * appears word for word. A model that rearranges a label — « le SFTP de WAAT
- * / Suez » for « WAAT / Suez - SFTP » — leaves that sentence plain, which is
- * the right way round: emphasis is a claim that this is the project, and a
- * claim is not something to guess at.
- */
-export function emphasiseProjects(prose: string, labels: string[]): ProseSegment[] {
-  const names = recognisable(labels);
-  if (names.length === 0) return [{ text: prose, isProject: false }];
-
-  // Split on a capturing group: the pieces then alternate prose, name, prose.
-  const pattern = new RegExp(`(${names.map(escaped).join("|")})`, "gi");
-  return prose
-    .split(pattern)
-    .map((text, rank) => ({ text, isProject: rank % 2 === 1 }))
-    .filter((segment) => segment.text !== "");
+/** The paragraphs of a text a model wrote, set apart by a blank line. */
+export function paragraphsOf(text: string): string[] {
+  return text
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
 }
 
 /**
- * The forms of a label worth looking for, longest first.
+ * What a project amounted to, said short, for the line under its title.
+ *
+ * Agreement is written out rather than computed from the figure: invisible to
+ * the type checker, and a test asserting on a count would never catch it. A
+ * figure at zero says nothing worth a line.
+ */
+export function spotlightFigures(spotlight: SpotlightResponse): string[] {
+  const days = spotlight.days_declared;
+  return [
+    spotlight.updates_posted > 0
+      ? `${spotlight.updates_posted} ${
+          spotlight.updates_posted > 1 ? "mises à jour" : "mise à jour"
+        }`
+      : null,
+    days > 0
+      ? `${formatDays(days)} ${days > 1 ? "jours déclarés" : "jour déclaré"}`
+      : null,
+    spotlight.contributors > 0
+      ? `${spotlight.contributors} ${
+          spotlight.contributors > 1 ? "personnes" : "personne"
+        }`
+      : null,
+  ].filter((figure): figure is string => figure !== null);
+}
+
+/** « 18,5 », as French writes a half day — never « 18.5 ». */
+function formatDays(days: number): string {
+  return String(days).replace(".", ",");
+}
+
+/**
+ * The editorial, cut so that the projects and people it names can be set apart.
+ *
+ * The emphasis is put on at the last moment, here, and never asked of the
+ * model: a model told to write markup writes markup wherever it feels like
+ * it, and the one rule the text must obey — no figure the register did not
+ * give — is hard enough to hold without also policing asterisks.
+ *
+ * Only a name the digest or the reference list actually carries is set apart,
+ * as a whole word. A model that rearranges a label — « le SFTP de Suez » for
+ * « WAAT / Suez - SFTP » — leaves that sentence plain, which is the right way
+ * round: emphasis is a claim that this is the project, and a claim is not
+ * something to guess at.
+ *
+ * Two passes, because two kinds of name are not read alike. A name of several
+ * words is matched whatever the case the model gave it. A single word, and the
+ * short form a text naturally uses — « NOMAD » for « NOMAD - Formulaire en
+ * ligne… », « Romain GILLET » for « Romain GILLET (EXT) » — is matched as
+ * written, or « edit » and « good » would be set apart in the middle of a
+ * sentence.
+ */
+export function emphasiseProjects(prose: string, names: string[]): ProseSegment[] {
+  // A one-word name is as likely to be a common word — « edit », « good » —
+  // so it is read as written, like the short forms.
+  const full = fullForms(names);
+  const phrases = full.filter((form) => /\s/.test(form));
+  const asWritten = unique([...full, ...shortForms(names)]).filter(
+    (form) => !phrases.includes(form),
+  );
+
+  const afterPhrases = markNames([{ text: prose, isName: false }], phrases, "giu");
+  return markNames(afterPhrases, asWritten, "gu");
+}
+
+/** Whole words only: « GOOD » is not in « GOODWILL », nor « NOMAD » in « NOMADE ». */
+const BEFORE = "(?<![\\p{L}\\p{N}])";
+const AFTER = "(?![\\p{L}\\p{N}])";
+
+function markNames(
+  segments: ProseSegment[],
+  names: string[],
+  flags: string,
+): ProseSegment[] {
+  if (names.length === 0) return segments;
+
+  // Split on a capturing group: the pieces then alternate prose, name, prose.
+  const pattern = new RegExp(
+    `${BEFORE}(${names.map(escaped).join("|")})${AFTER}`,
+    flags,
+  );
+  return segments.flatMap((segment) => {
+    if (segment.isName) return [segment];
+    return segment.text
+      .split(pattern)
+      .map((text, rank) => ({ text, isName: rank % 2 === 1 }))
+      .filter((piece) => piece.text !== "");
+  });
+}
+
+/**
+ * The full forms of a label worth looking for, longest first.
  *
  * Longest first so that a project whose name opens another's — « RAGGAE » and
  * « RAGGAE- AssistantStudio » — does not steal the longer one's emphasis. A
  * label ending in a full stop is also looked for without it: several do, and
  * the model drops it when the sentence carries on.
  */
-function recognisable(labels: string[]): string[] {
-  return [
-    ...new Set(labels.flatMap((label) => [label, missionName(label)]).filter(Boolean)),
-  ].sort((a, b) => b.length - a.length);
+function fullForms(labels: string[]): string[] {
+  return unique(labels.flatMap((label) => [label, missionName(label)]));
+}
+
+/** What a text calls a project or a person for short, at least four characters. */
+const SHORTEST_ALIAS = 4;
+
+function shortForms(labels: string[]): string[] {
+  return unique(
+    labels.flatMap((label) => {
+      const withoutNote = label.replace(/\s*\([^)]*\)\s*$/, "");
+      const lead = withoutNote.split(/\s+[-–:]\s+/)[0];
+      return [withoutNote, lead].map(missionName);
+    }),
+  ).filter((alias) => alias.length >= SHORTEST_ALIAS);
+}
+
+function unique(forms: string[]): string[] {
+  return [...new Set(forms.filter(Boolean))].sort((a, b) => b.length - a.length);
 }
 
 function escaped(label: string): string {
   return label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Everything the text may name, to be set apart in the same weight.
+ *
+ * The projects of the digest, those of the reference list — the model also
+ * read projects that moved without a chapter of their own — and the people
+ * the register names, who are only ever teammates arriving, returning or
+ * leaving.
+ */
+export function namesToSetApart(
+  digest: DigestResponse,
+  referenceLabels: string[],
+): string[] {
+  const people = [
+    ...digest.chapters.flatMap((chapter) =>
+      chapter.of === "team"
+        ? chapter.movements.map((movement) => movement.subject)
+        : [],
+    ),
+    ...digest.highlights
+      .filter((highlight) => highlight.project_id === null)
+      .map((highlight) => highlight.label),
+  ];
+  return [...new Set([...projectLabels(digest), ...referenceLabels, ...people])];
+}
+
+/** Why a digest could not be generated, in the reader's words. */
+export function generationRefusal(error: unknown): string {
+  if (error instanceof ApiError && error.status === 409) {
+    return "Quelqu'un vient de générer un digest de ce mois. Voici sa version.";
+  }
+  return "Le digest n'a pas pu être généré. Réessayez dans un instant.";
 }
 
 /** What each side of the highlights is called on screen. */
@@ -339,8 +461,8 @@ export function formatGeneratedAt(iso: string): string {
 /**
  * What the band on the home screen says of the month, in one breath.
  *
- * The chapeau when a model has written one: two sentences over the facts is
- * exactly what a band has room for, and it is already the month said short.
+ * The editorial's opening when a model has written one: the first paragraph
+ * is the month said short, which is what a band has room for.
  * Failing that the register counts its own chapters — the band says there is
  * something to read without pretending to say what.
  *
@@ -349,7 +471,9 @@ export function formatGeneratedAt(iso: string): string {
  * count would never catch the wrong one.
  */
 export function gazetteTeaser(digest: DigestResponse): string {
-  if (digest.prose) return digest.prose;
+  // The first paragraph only: the band has room for two sentences, and the
+  // editorial now runs to several.
+  if (digest.prose) return paragraphsOf(digest.prose)[0] ?? digest.prose;
   if (isQuietMonth(digest)) return "Rien à signaler ce mois-ci.";
   const chapters = digest.chapters.length;
   return chapters > 1 ? `${chapters} chapitres à lire.` : "Un chapitre à lire.";

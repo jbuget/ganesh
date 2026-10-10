@@ -2,8 +2,8 @@
 
 The facts go over structured, never as sentences: the French of the gazette is
 written once, on the reading side, beside the vocabulary the project journal
-already uses. The one piece of French the API carries is the chapeau, because
-a model wrote it.
+already uses. The French the API carries is the editorial and the spotlights, because
+a model wrote them.
 """
 
 from datetime import date, datetime
@@ -71,6 +71,25 @@ class HighlightResponse(BaseModel):
     label: str
 
 
+class SpotlightResponse(BaseModel):
+    """One project the month is told through, with the figures it rests on.
+
+    The text is what a model wrote; the figures beside it are the register's,
+    and are drawn next to it so a reader never has to take a number from the
+    prose.
+    """
+
+    project_id: int
+    label: str
+    #: Paragraphs separated by a blank line.
+    text: str
+    status: ProjectStatus | None
+    went_live: bool
+    updates_posted: int
+    days_declared: float
+    contributors: int
+
+
 class DigestVersionResponse(BaseModel):
     """One generation of a month, as the version picker offers it."""
 
@@ -89,10 +108,12 @@ class DigestResponse(BaseModel):
     version: int | None
     generated_at: datetime | None
     requested_by: str | None
-    #: The chapeau a model wrote. Null when none was written, or when the one
-    #: written counted and was dropped.
+    #: The editorial a model wrote, paragraphs separated by a blank line. Null
+    #: when none was written, or when what was written did not hold.
     prose: str | None
     prose_model: str | None
+    #: What a model wrote about the projects of the month, most telling first.
+    spotlights: list[SpotlightResponse]
     tally: TallyResponse
     #: The month gathered under the missions it is about, in the order they
     #: first appear. A flat list would read as the log it came from.

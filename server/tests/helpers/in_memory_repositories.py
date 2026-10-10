@@ -708,6 +708,12 @@ class InMemoryProjectUpdateRepository(ProjectUpdateRepository):
         thread = [u for u in self._updates if u.project_id == project_id]
         return sorted(thread, key=lambda u: (u.published_at, u.id or 0), reverse=True)
 
+    async def list_between(self, start: datetime, end: datetime) -> list[ProjectUpdate]:
+        return sorted(
+            (u for u in self._updates if start <= u.published_at <= end),
+            key=lambda u: (u.published_at, u.id or 0),
+        )
+
     async def authors_for_project(self, project_id: int) -> set[int]:
         return {
             update.author_id

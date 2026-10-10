@@ -1,6 +1,7 @@
 """Port for the updates of a mission."""
 
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
 
@@ -14,6 +15,16 @@ class ProjectUpdateRepository(ABC):
     @abstractmethod
     async def list_for_project(self, project_id: int) -> list[ProjectUpdate]:
         """A mission's thread, from the most recent to the oldest."""
+        ...
+
+    @abstractmethod
+    async def list_between(self, start: datetime, end: datetime) -> list[ProjectUpdate]:
+        """Every update posted over a window, withdrawn ones included.
+
+        The window is read across every mission, which is what a month's
+        gazette does; callers drop what was withdrawn if they only want what
+        can still be read.
+        """
         ...
 
     @abstractmethod

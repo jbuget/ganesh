@@ -68,3 +68,42 @@ class TestProse:
 
         assert prose is not None
         assert prose.text == "Un mois de cadrage."
+
+
+class TestFiguresTheRegisterGave:
+    """A text may repeat a figure it was handed, and none it was not."""
+
+    def test_a_figure_it_was_given_may_be_quoted(self) -> None:
+        assert not carries_figures("Douze mises à jour ont été publiées.", ["12"])
+
+    def test_the_same_figure_in_digits_is_the_same_figure(self) -> None:
+        assert not carries_figures("12 mises à jour ont été publiées.", ["12"])
+
+    def test_a_figure_it_was_not_given_is_refused(self) -> None:
+        assert carries_figures("Treize mises à jour ont été publiées.", ["12"])
+
+    def test_a_decimal_is_one_figure_whichever_way_it_is_written(self) -> None:
+        assert not carries_figures("Environ 12,5 jours.", ["12.5"])
+
+    def test_a_trailing_zero_changes_nothing(self) -> None:
+        assert not carries_figures("18 jours ont été déclarés.", ["18.0"])
+
+    def test_a_figure_inside_a_decimal_is_not_given_by_its_parts(self) -> None:
+        """« 12,5 » is not « 12 » and « 5 »: handing over one is not the other."""
+        assert carries_figures("Environ 12,5 jours.", ["12", "5"])
+
+    def test_prose_holds_when_every_figure_was_given(self) -> None:
+        prose = Prose(
+            text="Cinq projets ont avancé.", model="m", allowed=frozenset({"5"})
+        )
+
+        assert prose.paragraphs == ["Cinq projets ont avancé."]
+
+    def test_accepted_checks_against_what_it_was_given(self) -> None:
+        assert Prose.accepted("Cinq projets.", "m", ["5"]) is not None
+        assert Prose.accepted("Cinq projets.", "m", ["6"]) is None
+
+    def test_paragraphs_are_split_on_the_blank_line(self) -> None:
+        prose = Prose(text="Premier.\n\nSecond.\n\n\nTroisième.", model="m")
+
+        assert prose.paragraphs == ["Premier.", "Second.", "Troisième."]

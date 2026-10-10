@@ -1,5 +1,7 @@
 """Persistence of a mission's follow-up thread."""
 
+from datetime import datetime
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,6 +43,17 @@ class SqlProjectUpdateRepository(ProjectUpdateRepository):
             .order_by(
                 ProjectUpdateModel.published_at.desc(), ProjectUpdateModel.id.desc()
             )
+        )
+        return [_to_entity(model) for model in result.scalars().all()]
+
+    async def list_between(self, start: datetime, end: datetime) -> list[ProjectUpdate]:
+        result = await self._session.execute(
+            select(ProjectUpdateModel)
+            .where(
+                ProjectUpdateModel.published_at >= start,
+                ProjectUpdateModel.published_at <= end,
+            )
+            .order_by(ProjectUpdateModel.published_at, ProjectUpdateModel.id)
         )
         return [_to_entity(model) for model in result.scalars().all()]
 

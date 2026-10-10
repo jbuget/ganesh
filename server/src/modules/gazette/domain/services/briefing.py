@@ -9,10 +9,13 @@ from collections.abc import Mapping, Sequence
 from datetime import date
 
 from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditLog
+from src.modules.entries.domain.entities.entry import Entry
 from src.modules.gazette.domain.entities.brief import Brief, Tally
 from src.modules.gazette.domain.entities.movement import Movement, MovementKind
+from src.modules.gazette.domain.services.focusing import pick_focus
 from src.modules.gazette.domain.services.saliency import find_highlights
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
+from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.requests.domain.entities.request import RequestState
 
 #: The phases in their nominal order, which is what tells a mission moving on
@@ -62,13 +65,17 @@ def build_brief(
     projects: Mapping[int, Project],
     people: Mapping[int, str],
     needs: Mapping[int, str],
+    updates: Sequence[ProjectUpdate] = (),
+    entries: Sequence[Entry] = (),
 ) -> Brief:
     """One month of the register, read back as movements, figures and facts.
 
     The logs are those of the month, in any order. The missions are the
     reference list as it stands — archived ones included, or a mission that
     left during the month could no longer be named. The needs are read the
-    same way, and for the same reason.
+    same way, and for the same reason. The updates and the declared time are
+    those of the month too: they are what the projects of the month are chosen
+    from, and what a text told over them may quote.
     """
     movements = [
         movement
@@ -80,6 +87,7 @@ def build_brief(
         tally=_count(logs, movements),
         movements=movements,
         highlights=find_highlights(month, movements, projects),
+        focus=pick_focus(movements, updates, entries, projects),
     )
 
 

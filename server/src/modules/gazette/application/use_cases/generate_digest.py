@@ -6,17 +6,21 @@ from src.modules.audit_logs.domain.entities.audit_log import AuditAction, AuditL
 from src.modules.audit_logs.domain.repositories.audit_log_repository import (
     AuditLogRepository,
 )
+from src.modules.entries.domain.repositories.entry_repository import EntryRepository
 from src.modules.gazette.application.dtos.gazette_dtos import (
     DigestView,
     GenerateDigestCommand,
 )
-from src.modules.gazette.application.gathering import gather_brief
+from src.modules.gazette.application.gathering import gather_dossier
 from src.modules.gazette.domain.entities.digest import FIRST_VERSION, Digest
 from src.modules.gazette.domain.repositories.digest_repository import DigestRepository
 from src.modules.gazette.domain.repositories.prose_writer import ProseWriter
 from src.modules.gazette.domain.services.month_window import first_day
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
+)
+from src.modules.projects.domain.repositories.project_update_repository import (
+    ProjectUpdateRepository,
 )
 from src.modules.requests.domain.repositories.request_repository import (
     RequestRepository,
@@ -30,7 +34,8 @@ class GenerateDigestUseCase:
     """Reads a month out of the register and keeps it as a new version.
 
     The facts are read and frozen first; a chapeau is asked of a model and
-    laid over them if it holds. The order matters: a model that is down, slow
+    laid over them if it holds, along with a few paragraphs on the projects of
+    the month. The order matters: a model that is down, slow
     or wrong costs the digest its prose and never its month.
 
     Anyone may ask. A digest reads a register the whole team already has open,
@@ -44,6 +49,8 @@ class GenerateDigestUseCase:
         audit_logs: AuditLogRepository,
         digests: DigestRepository,
         requests: RequestRepository,
+        updates: ProjectUpdateRepository,
+        entries: EntryRepository,
         writer: ProseWriter,
     ) -> None:
         self._users = users
@@ -51,6 +58,8 @@ class GenerateDigestUseCase:
         self._audit_logs = audit_logs
         self._digests = digests
         self._requests = requests
+        self._updates = updates
+        self._entries = entries
         self._writer = writer
 
     async def execute(
@@ -61,9 +70,17 @@ class GenerateDigestUseCase:
             raise EntityNotFoundError("The user cannot be found.")
 
         month = first_day(command.month)
-        brief = await gather_brief(
-            month, self._audit_logs, self._projects, self._users, self._requests
+        dossier = await gather_dossier(
+            month,
+            self._audit_logs,
+            self._projects,
+            self._users,
+            self._requests,
+            self._updates,
+            self._entries,
         )
+        brief = dossier.brief
+        narrative = await self._writer.write(dossier)
         generated_at = at or clock.now()
 
         digest = await self._digests.add(
@@ -73,7 +90,8 @@ class GenerateDigestUseCase:
                 brief=brief,
                 generated_at=generated_at,
                 requested_by=actor.display_name,
-                prose=await self._writer.write(brief),
+                prose=narrative.editorial,
+                spotlights=narrative.spotlights,
             )
         )
 
@@ -92,6 +110,7 @@ class GenerateDigestUseCase:
         return DigestView(
             brief=digest.brief,
             prose=digest.prose,
+            spotlights=digest.spotlights,
             version=digest.version,
             generated_at=digest.generated_at,
             requested_by=digest.requested_by,

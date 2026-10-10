@@ -11,6 +11,10 @@ from src.modules.audit_logs.domain.repositories.audit_log_repository import (
 from src.modules.audit_logs.infrastructure.database.repositories.audit_log_repository_impl import (
     SqlAuditLogRepository,
 )
+from src.modules.entries.domain.repositories.entry_repository import EntryRepository
+from src.modules.entries.infrastructure.database.repositories.entry_repository_impl import (
+    SqlEntryRepository,
+)
 from src.modules.gazette.application.use_cases.generate_digest import (
     GenerateDigestUseCase,
 )
@@ -24,8 +28,14 @@ from src.modules.gazette.infrastructure.database.repositories.digest_repository_
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.projects.domain.repositories.project_update_repository import (
+    ProjectUpdateRepository,
+)
 from src.modules.projects.infrastructure.database.repositories.project_repository_impl import (
     SqlProjectRepository,
+)
+from src.modules.projects.infrastructure.database.repositories.project_update_repository_impl import (
+    SqlProjectUpdateRepository,
 )
 from src.modules.requests.domain.repositories.request_repository import (
     RequestRepository,
@@ -62,7 +72,7 @@ def get_digest_repository(
 
 
 def get_prose_writer(settings: Settings = Depends(get_settings)) -> ProseWriter:
-    """The model that writes the chapeau, or one that never answers.
+    """The model that writes the editorial and the spotlights, or one that never answers.
 
     Built per request rather than held as a singleton: the client is a thin
     wrapper over HTTP, and a digest is asked for a few times a month.
@@ -76,6 +86,16 @@ def get_request_repository(
     session: AsyncSession = Depends(get_db),
 ) -> RequestRepository:
     return SqlRequestRepository(session)
+
+
+def get_update_repository(
+    session: AsyncSession = Depends(get_db),
+) -> ProjectUpdateRepository:
+    return SqlProjectUpdateRepository(session)
+
+
+def get_entry_repository(session: AsyncSession = Depends(get_db)) -> EntryRepository:
+    return SqlEntryRepository(session)
 
 
 def get_read_digest_use_case(
@@ -100,6 +120,8 @@ def get_generate_digest_use_case(
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
     digests: DigestRepository = Depends(get_digest_repository),
     requests: RequestRepository = Depends(get_request_repository),
+    updates: ProjectUpdateRepository = Depends(get_update_repository),
+    entries: EntryRepository = Depends(get_entry_repository),
     writer: ProseWriter = Depends(get_prose_writer),
 ) -> GenerateDigestUseCase:
     return GenerateDigestUseCase(
@@ -108,5 +130,7 @@ def get_generate_digest_use_case(
         audit_logs=audit_logs,
         digests=digests,
         requests=requests,
+        updates=updates,
+        entries=entries,
         writer=writer,
     )

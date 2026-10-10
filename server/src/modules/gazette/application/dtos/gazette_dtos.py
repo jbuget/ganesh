@@ -6,6 +6,7 @@ from datetime import date, datetime
 from src.modules.gazette.domain.entities.brief import Brief
 from src.modules.gazette.domain.entities.digest import DigestVersion
 from src.modules.gazette.domain.entities.prose import Prose
+from src.modules.gazette.domain.entities.spotlight import Spotlight
 
 
 @dataclass(frozen=True)
@@ -35,6 +36,7 @@ class DigestView:
 
     brief: Brief
     prose: Prose | None = None
+    spotlights: tuple[Spotlight, ...] = ()
     version: int | None = None
     generated_at: datetime | None = None
     requested_by: str | None = None

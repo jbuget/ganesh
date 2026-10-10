@@ -1,10 +1,11 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 import { useGenerateDigest } from "@/lib/api/generated/gazette/gazette";
 import type { DigestResponse } from "@/lib/api/generated/model";
-import { mutationResult, useDigest } from "@/lib/api/queries";
+import { mutationResult, useDigest, useProjects } from "@/lib/api/queries";
 import {
   currentMonth,
   firstDayOfMonth,
@@ -13,6 +14,7 @@ import {
   parseMonthParam,
   previousMonth,
 } from "@/lib/dates";
+import { generationRefusal } from "@/lib/gazette";
 import { useQueryString, writeUrl } from "@/lib/url-state";
 
 /**
@@ -35,6 +37,12 @@ export function useGazette() {
 
   const { digest, isLoading } = useDigest(month, asked);
   const generate = useGenerateDigest();
+  const [refusal, setRefusal] = useState<string | null>(null);
+
+  // Every project the register knows, archived ones included: the model read
+  // some that have no chapter of their own, and a name is set in bold wherever
+  // the text carries it.
+  const { projects } = useProjects(true);
 
   function goTo(next: { year: number; month: number }) {
     // The version is dropped on the way: a version number belongs to one
@@ -55,6 +63,9 @@ export function useGazette() {
     digest,
     isLoading,
     isGenerating: generate.isPending,
+    referenceLabels: projects.map((project) => project.label),
+    /** Why the last request for a digest came to nothing, until the next one. */
+    refusal,
 
     goToPreviousMonth: () => goTo(previousMonth(cursor.year, cursor.month)),
     goToNextMonth: () => goTo(nextMonth(cursor.year, cursor.month)),
@@ -67,10 +78,20 @@ export function useGazette() {
      * read: what was asked for is what should appear.
      */
     async generateDigest() {
-      const response = await generate.mutateAsync({ data: { month } });
-      const fresh = mutationResult<DigestResponse>(response);
-      await queryClient.invalidateQueries();
-      show(fresh.version ?? 1);
+      setRefusal(null);
+      try {
+        const response = await generate.mutateAsync({ data: { month } });
+        const fresh = mutationResult<DigestResponse>(response);
+        await queryClient.invalidateQueries();
+        show(fresh.version ?? 1);
+      } catch (error) {
+        // Somebody else generated the month first: what was asked for is
+        // already there, so the screen goes to the latest version rather than
+        // leaving the reader on one that is no longer the newest.
+        setRefusal(generationRefusal(error));
+        await queryClient.invalidateQueries();
+        writeUrl((params) => params.delete("version"));
+      }
     },
   };
 }

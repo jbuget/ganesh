@@ -4,6 +4,7 @@ import json
 from datetime import date, datetime
 
 from src.modules.gazette.domain.entities.brief import Brief, Tally
+from src.modules.gazette.domain.entities.focus import ProjectFocus
 from src.modules.gazette.domain.entities.highlight import Highlight, HighlightKind
 from src.modules.gazette.domain.entities.movement import Movement, MovementKind
 from src.modules.gazette.infrastructure.database.brief_json import from_json, to_json
@@ -40,6 +41,18 @@ def a_brief() -> Brief:
         highlights=[
             Highlight(kind=HighlightKind.WENT_LIVE, project_id=7, label="Ganesh")
         ],
+        focus=[
+            ProjectFocus(
+                project_id=7,
+                label="Ganesh",
+                status=ProjectStatus.OPERATIONS,
+                went_live=True,
+                phase_moves=2,
+                updates_posted=12,
+                days_declared=18.5,
+                contributors=4,
+            )
+        ],
     )
 
 
@@ -71,3 +84,11 @@ class TestBriefJson:
         assert read_back.highlights == []
         assert read_back.tally.news_posted == 0
         assert read_back.tally.projects_created == 2
+
+    def test_a_numero_written_before_the_projects_of_the_month_reads_as_having_none(
+        self,
+    ) -> None:
+        payload = to_json(a_brief())
+        del payload["focus"]
+
+        assert from_json(MONTH, payload).focus == []

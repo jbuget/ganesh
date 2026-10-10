@@ -4,38 +4,57 @@ from dataclasses import replace
 from datetime import date
 
 from sqlalchemy import and_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.gazette.domain.entities.digest import Digest, DigestVersion
 from src.modules.gazette.domain.entities.prose import Prose
+from src.modules.gazette.domain.entities.spotlight import Spotlight
 from src.modules.gazette.domain.repositories.digest_repository import DigestRepository
+from src.modules.gazette.domain.services.figures import allowed_figures
 from src.modules.gazette.infrastructure.database.brief_json import from_json, to_json
 from src.modules.gazette.infrastructure.database.models.gazette_digest_model import (
     GazetteDigestModel,
 )
+from src.shared.exceptions.domain_exceptions import ConflictError
 
 
 def to_entity(model: GazetteDigestModel) -> Digest:
+    brief = from_json(model.month, model.brief)
+    allowed = allowed_figures(brief)
     return Digest(
         id=model.id,
         month=model.month,
         version=model.version,
-        brief=from_json(model.month, model.brief),
+        brief=brief,
         generated_at=model.generated_at,
         requested_by=model.requested_by,
-        prose=_prose(model),
+        prose=_prose(model, allowed),
+        spotlights=_spotlights(model, allowed),
     )
 
 
-def _prose(model: GazetteDigestModel) -> Prose | None:
-    """The chapeau, if the digest was generated with one.
+def _prose(model: GazetteDigestModel, allowed: frozenset[str]) -> Prose | None:
+    """The editorial, if the digest was generated with one.
 
-    Read back through the same rule it was written under: a text that would
-    be refused today is not served because it was stored yesterday.
+    Read back through the same rule it was written under, against the figures
+    of the facts stored beside it: a text that would be refused today is not
+    served because it was stored yesterday.
     """
     if not model.prose or not model.prose_model:
         return None
-    return Prose.accepted(model.prose, model.prose_model)
+    return Prose.accepted(model.prose, model.prose_model, allowed)
+
+
+def _spotlights(
+    model: GazetteDigestModel, allowed: frozenset[str]
+) -> tuple[Spotlight, ...]:
+    """The spotlights, each held to the same rule as the editorial."""
+    return tuple(
+        Spotlight(row["project_id"], row["label"], row["text"], row["model"])
+        for row in model.spotlights or []
+        if Prose.accepted(row["text"], row["model"], allowed)
+    )
 
 
 class SqlDigestRepository(DigestRepository):
@@ -92,7 +111,25 @@ class SqlDigestRepository(DigestRepository):
             brief=to_json(digest.brief),
             prose=digest.prose.text if digest.prose else None,
             prose_model=digest.prose.model if digest.prose else None,
+            spotlights=[
+                {
+                    "project_id": s.project_id,
+                    "label": s.label,
+                    "text": s.text,
+                    "model": s.model,
+                }
+                for s in digest.spotlights
+            ],
         )
-        self._session.add(model)
-        await self._session.flush()
+        # In a savepoint: losing the race for a version number must not poison
+        # the whole transaction, and what comes back is a refusal that says so.
+        try:
+            async with self._session.begin_nested():
+                self._session.add(model)
+                await self._session.flush()
+        except IntegrityError as error:
+            raise ConflictError(
+                "Somebody has just generated a digest of this month: "
+                "read their version rather than writing another beside it."
+            ) from error
         return replace(digest, id=model.id)
