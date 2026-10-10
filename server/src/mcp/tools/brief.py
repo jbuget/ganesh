@@ -18,15 +18,30 @@ Three things this tool holds to, and each is a decision rather than a shape:
 - **the estimate is read as what is left**, not as two figures side by side.
   « il en reste 22 » is the thing being asked; « 128 et 150 » is the subtraction
   a model gets wrong often enough to matter.
+
+A project cut into lots is booked on its lots, so each lot is read too — its
+phase and its days — and the time declared is added up with them. Read alone,
+a project whose every lot moved answered « aucun jour déclaré ».
+
+Who is on it now is read twice: the people assigned, named, and the time
+declared over the last two months, counted. That second half is what tells a
+reader whether anybody is actually working on it.
 """
 
-from src.mcp.door import answers, current_machine
+from datetime import date
+
+from src.mcp.door import Machine, answers, current_machine
 from src.mcp.tools import say
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
-from src.modules.projects.application.use_cases.get_project_detail import ProjectDetail
+from src.modules.projects.application.use_cases.get_project_detail import (
+    GetProjectDetailUseCase,
+    ProjectDetail,
+)
 from src.modules.projects.domain.entities.project import Project
 from src.modules.projects.presentation.dependencies import get_project_detail_use_case
+from src.modules.users.domain.entities.user import User
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
+from src.shared.utils import clock
 
 SCOPE = ApiKeyScope.PROJECTS_READ
 
@@ -44,7 +59,8 @@ async def project_brief(project_id: int) -> str:
     annoncée, les lots rattachés — et dit ce qui n'est pas renseigné plutôt
     que de le passer sous silence.
     """
-    use_case = await current_machine().resolve(get_project_detail_use_case)
+    machine: Machine = current_machine()
+    use_case = await machine.resolve(get_project_detail_use_case)
     try:
         sheet = await use_case.execute(project_id)
     except EntityNotFoundError:
@@ -55,15 +71,34 @@ async def project_brief(project_id: int) -> str:
             "`find_project` le donne à partir d'un nom."
         )
 
+    packages = await _read_packages(use_case, sheet)
     return "\n".join(
         [
             _named(sheet),
-            _weighed(sheet),
+            _weighed(sheet, cut_up=bool(packages)),
+            *_added_up(sheet, packages),
             _announced(sheet.project),
             _carried(sheet),
-            *_packages(sheet),
+            *_people_on(sheet),
+            _lately(sheet, packages),
+            *_packages(packages),
         ]
     )
+
+
+async def _read_packages(
+    use_case: GetProjectDetailUseCase, sheet: ProjectDetail
+) -> list[ProjectDetail]:
+    """The sheet of every package. One gone since is passed over, not invented."""
+    read = []
+    for package in sheet.sub_projects:
+        if package.id is None:
+            continue
+        try:
+            read.append(await use_case.execute(package.id))
+        except EntityNotFoundError:
+            continue
+    return read
 
 
 def _named(sheet: ProjectDetail) -> str:
@@ -102,8 +137,17 @@ def _kind(sheet: ProjectDetail) -> str:
     return f"lot de {sheet.parent.label} (#{sheet.parent.id})"
 
 
-def _weighed(sheet: ProjectDetail) -> str:
-    """What it has cost, against what was planned — read as what is left."""
+def _weighed(sheet: ProjectDetail, cut_up: bool = False) -> str:
+    """What it has cost, against what was planned — read as what is left.
+
+    A project cut into lots weighs its own activities here, and says so: read
+    beside the total of its lots, a bare « il en reste 22 » gets added up.
+    """
+    said = _weighed_alone(sheet)
+    return f"Sur le projet seul : {said[0].lower()}{said[1:]}" if cut_up else said
+
+
+def _weighed_alone(sheet: ProjectDetail) -> str:
     spent = sheet.consumed_days
     declared = (
         "Aucun jour déclaré"
@@ -111,7 +155,7 @@ def _weighed(sheet: ProjectDetail) -> str:
         else f"{say.days(spent)} {say.agreed('déclaré', spent)}"
     )
 
-    estimate = sheet.project.estimated_days
+    estimate = sheet.estimated_days
     if estimate is None:
         return f"{declared}. Aucune estimation n'est enregistrée."
 
@@ -155,16 +199,88 @@ def _carried(sheet: ProjectDetail) -> str:
     return f"{leads} {say.people(count)} {'y ont' if count > 1 else 'y a'} déclaré du temps."
 
 
-def _packages(sheet: ProjectDetail) -> list[str]:
-    """The work packages, named — a lot is where the time actually goes."""
-    packages = sheet.sub_projects
+def _added_up(sheet: ProjectDetail, packages: list[ProjectDetail]) -> list[str]:
+    """The time declared on the project and its lots together."""
+    if not packages:
+        return []
+    total = round(sheet.consumed_days + sum(p.consumed_days for p in packages), 2)
+    return [f"Avec ses lots, {say.days(total)} {say.agreed('déclaré', total)} en tout."]
+
+
+def _people_on(sheet: ProjectDetail) -> list[str]:
+    """Who works on it now and whom to call when it breaks: assignments, named."""
+    lines = []
+    if sheet.contributors:
+        lines.append(f"Intervenants actuels : {_names(sheet.contributors)}.")
+    if sheet.tech_leads:
+        lines.append(f"Référents techniques : {_names(sheet.tech_leads)}.")
+    return lines
+
+
+def _lately(sheet: ProjectDetail, packages: list[ProjectDetail]) -> str:
+    """The time declared over the month running and the one before, counted.
+
+    Whole months, as the sheet counts them. Counted rather than listed, for the
+    reason the module's docstring gives.
+    """
+    opened = _previous_month(clock.today())
+    declared = 0.0
+    people: set[int | None] = set()
+    for read in (sheet, *packages):
+        for contribution in read.contributions:
+            days = sum(d for month, d in contribution.by_month if month >= opened)
+            if days > 0:
+                declared += days
+                people.add(contribution.user.id)
+
+    since = say.dated(opened)
+    if not people:
+        return f"Personne n'y a saisi de temps depuis le {since}."
+    declared = round(declared, 2)
+    lots = ", lots compris" if packages else ""
+    # The sheet counts by month, and the month running holds days done and
+    # days pre-entered alike: the sentence says both rather than pass the
+    # second for the first.
+    return (
+        f"Depuis le {since}, {say.days(declared)} {say.agreed('saisi', declared)} "
+        f"par {say.people(len(people))}{lots} — réalisés ou pré-saisis."
+    )
+
+
+def _packages(packages: list[ProjectDetail]) -> list[str]:
+    """Each work package, its phase and its days — a lot is where time goes."""
     if not packages:
         return []
 
-    shown = [f"{package.label} (#{package.id})" for package in packages[:MOST_PACKAGES]]
-    left = len(packages) - len(shown)
-    tail = f", et {left} autres" if left else ""
-    return [
-        f"{say.agreeing(len(packages), 'lot')} "
-        f"{say.agreed('rattaché', len(packages))} : {say.listed(shown)}{tail}."
+    lines = [
+        f"{say.agreeing(len(packages), 'lot')} {say.agreed('rattaché', len(packages))} :"
     ]
+    lines += [f"- {_package(read)}" for read in packages[:MOST_PACKAGES]]
+    left = len(packages) - MOST_PACKAGES
+    if left > 0:
+        lines.append(f"- et {left} autres")
+    return lines
+
+
+def _package(read: ProjectDetail) -> str:
+    package = read.project
+    parts = [say.phase(package.status) or "sans phase"]
+    parts.append(
+        f"{say.days(read.consumed_days)} {say.agreed('déclaré', read.consumed_days)}"
+        if read.consumed_days
+        else "aucun jour déclaré"
+    )
+    return f"{package.label} (#{package.id}) : {', '.join(parts)}"
+
+
+def _names(people: list[User]) -> str:
+    return say.listed([person.label for person in people])
+
+
+def _previous_month(today: date) -> date:
+    first = today.replace(day=1)
+    return (
+        first.replace(year=first.year - 1, month=12)
+        if first.month == 1
+        else first.replace(month=first.month - 1)
+    )
