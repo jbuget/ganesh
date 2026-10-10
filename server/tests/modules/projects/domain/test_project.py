@@ -198,3 +198,65 @@ class TestAttachment:
         package.detach()
 
         assert package.category is None
+
+
+class TestFollowing:
+    """The mark that says the team keeps an eye on a mission."""
+
+    def test_a_mission_starts_unfollowed(self) -> None:
+        assert make_project().is_followed is False
+
+    def test_following_marks_it(self) -> None:
+        project = make_project()
+
+        project.follow()
+
+        assert project.is_followed is True
+
+    def test_following_says_whether_anything_moved(self) -> None:
+        """A second click says nothing new: the log only holds what moved."""
+        project = make_project()
+
+        assert project.follow() is True
+        assert project.follow() is False
+
+    def test_unfollowing_says_whether_anything_moved(self) -> None:
+        project = make_project()
+        project.follow()
+
+        assert project.unfollow() is True
+        assert project.unfollow() is False
+
+    def test_unfollowing_lowers_the_mark(self) -> None:
+        project = make_project()
+        project.follow()
+
+        project.unfollow()
+
+        assert project.is_followed is False
+
+    def test_a_work_package_is_followed_on_its_own(self) -> None:
+        package = make_project(kind=ProjectKind.WORK_PACKAGE, parent_id=9)
+
+        package.follow()
+
+        assert package.is_followed is True
+
+    def test_off_project_work_cannot_be_followed(self) -> None:
+        """An absence is not a mission anybody keeps an eye on."""
+        absences = Project(
+            id=2, label="Absences", kind=ProjectKind.OFF_PROJECT, status=None
+        )
+
+        with pytest.raises(ValidationError):
+            absences.follow()
+
+    def test_off_project_work_cannot_be_built_followed(self) -> None:
+        with pytest.raises(ValidationError):
+            Project(
+                id=2,
+                label="Absences",
+                kind=ProjectKind.OFF_PROJECT,
+                status=None,
+                is_followed=True,
+            )

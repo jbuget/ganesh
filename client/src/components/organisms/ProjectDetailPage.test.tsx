@@ -20,6 +20,8 @@ vi.mock("@tanstack/react-query", () => ({
 // page hands the sheet is kept, to check what a write does to the cache.
 const written: { call?: () => void | Promise<void> } = {};
 
+// Who may write is the session's business, not this screen's.
+vi.mock("@/lib/use-may-write", () => ({ useMayWrite: () => true }));
 vi.mock("@/lib/use-project-detail", () => ({
   useProjectDetail: (_projectId: number, onWrite?: () => void | Promise<void>) => {
     written.call = onWrite;

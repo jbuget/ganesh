@@ -10,8 +10,7 @@ import type { UpdateReactionResponse } from "./updateReactionResponse";
 /**
  * One reply written under an update.
  *
- * Flatter than what it hangs from: a reply carries no flag for the revue
- * and nothing the board reads — those belong to the update it answers.
+ * Flatter than what it hangs from: a reply carries nothing the board reads — those belong to the update it answers.
  */
 export interface UpdateCommentResponse {
   id: number;

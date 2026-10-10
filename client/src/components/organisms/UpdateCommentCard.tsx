@@ -27,9 +27,7 @@ interface UpdateCommentCardProps {
  * One reply of a conversation.
  *
  * Lighter than the update it hangs under, and deliberately so: the card of a
- * mise à jour reads as the subject, the replies as what was said about it. No
- * flag for the revue either — one puts a subject on the agenda, not an answer
- * to it.
+ * mise à jour reads as the subject, the replies as what was said about it.
  *
  * Withdrawn, it keeps its place and its signature: the replies around it keep
  * the order they were written in. Only its text goes.

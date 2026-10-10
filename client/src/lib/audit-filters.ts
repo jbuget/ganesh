@@ -55,6 +55,8 @@ export const ACTION_FAMILIES: ActionFamily[] = [
       { value: "project.create", label: "Création" },
       { value: "project.update", label: "Modification" },
       { value: "project.status_change", label: "Changement de phase" },
+      { value: "project.follow", label: "Suivi" },
+      { value: "project.unfollow", label: "Fin du suivi" },
       { value: "project.delete", label: "Suppression" },
       { value: "project.assign", label: "Ajout d'un contributeur" },
       { value: "project.unassign", label: "Retrait d'un contributeur" },

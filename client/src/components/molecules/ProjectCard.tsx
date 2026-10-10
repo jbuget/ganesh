@@ -8,8 +8,8 @@ import {
 } from "lucide-react";
 
 import { CardCounter } from "@/components/atoms/CardCounter";
-import { ReviewFlag } from "@/components/atoms/ReviewFlag";
 import { ContributorsPicker } from "@/components/atoms/ContributorsPicker";
+import { FollowMark } from "@/components/atoms/FollowMark";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
@@ -42,11 +42,15 @@ interface ProjectCardProps {
   /**
    * Opens the mission on its thread, with the composer ready.
    *
-   * The bubble and the flag both read the thread, so both lead there: one
-   * clicks the bubble to answer, and the flag to see what is waiting. The
-   * rest of the card opens the sheet, as before.
+   * The bubble reads the thread, so it leads there: one clicks it to answer.
+   * The rest of the card opens the sheet, as before.
    */
   onOpenThread?: (projectId: number) => void;
+  /**
+   * Raises or lowers the mark the team follows the mission by. Absent for a
+   * reader who may not write.
+   */
+  onFollowChange?: (projectId: number, following: boolean) => void;
 }
 
 /** A mission on the board. */
@@ -58,6 +62,7 @@ export function ProjectCard({
   onContributorsChange,
   onOpen,
   onOpenThread,
+  onFollowChange,
 }: ProjectCardProps) {
   const { project, parent } = card;
   const archived = !project.is_active;
@@ -109,10 +114,6 @@ export function ProjectCard({
       ].join(" ")}
     >
       <div className="flex items-start gap-1.5">
-        <ReviewFlag
-          count={card.flagged_updates ?? 0}
-          onOpen={thread && (() => thread(project.id))}
-        />
         <h3
           className={`min-w-0 flex-1 text-sm font-medium ${
             archived ? "text-slate-500" : "text-slate-900"
@@ -135,6 +136,25 @@ export function ProjectCard({
             </button>
           )}
         </h3>
+        {/* Small, at the end of the title row rather than after the words: the
+            title is a button, which lays out as a block once it wraps, and a
+            mark set after it would drop to a line of its own. Followed, it
+            stays; otherwise it only comes up under the cursor — a board of
+            thirty cards each carrying an empty flag would read as thirty
+            marks. */}
+        <FollowMark
+          followed={project.is_followed}
+          onToggle={
+            onFollowChange && !isDragging
+              ? () => onFollowChange(project.id, !project.is_followed)
+              : undefined
+          }
+          className={`shrink-0 px-0.5 [&_svg]:size-3 ${
+            project.is_followed
+              ? ""
+              : "opacity-0 group-hover:opacity-100 focus:opacity-100"
+          }`}
+        />
         {handle === undefined ? (
           <GripVertical className="size-4 shrink-0 text-slate-300" aria-hidden />
         ) : (

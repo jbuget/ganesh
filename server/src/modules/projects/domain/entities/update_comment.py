@@ -18,10 +18,9 @@ class UpdateComment(ThreadMessage):
     make it deeper. A conversation three levels down is one nobody reads to
     the end, and the thread of a mission is read to know where it stands.
 
-    It carries none of what steers: no flag for the revue, no place in the
-    count the board announces, nothing the reference list reads. Those belong
-    to the update it answers — one puts a subject on the agenda, not a reply
-    to it. That is why it is an entity of its own rather than an update
+    It carries none of what steers: no place in the count the board
+    announces, nothing the reference list reads. Those belong to the update
+    it answers. That is why it is an entity of its own rather than an update
     pointing at another: an entity defined by what it does not carry is in
     the wrong place.
     """

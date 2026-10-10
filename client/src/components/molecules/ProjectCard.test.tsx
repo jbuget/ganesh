@@ -287,20 +287,22 @@ describe("opening the mission", () => {
     expect(onOpenThread).toHaveBeenCalledWith(1);
   });
 
-  it("opens the thread from the review flag too", () => {
-    const onOpenThread = vi.fn();
+  it("lowers the mark on a followed mission, without opening it", () => {
+    const onOpen = vi.fn();
+    const onFollowChange = vi.fn();
     render(
       <ProjectCard
         now={NOW}
-        card={card({ flagged_updates: 2 })}
-        onOpen={vi.fn()}
-        onOpenThread={onOpenThread}
+        card={card({ project: { is_followed: true } })}
+        onOpen={onOpen}
+        onFollowChange={onFollowChange}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "2 mises à jour à discuter" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ne plus suivre ce projet" }));
 
-    expect(onOpenThread).toHaveBeenCalledWith(1);
+    expect(onFollowChange).toHaveBeenCalledWith(1, false);
+    expect(onOpen).not.toHaveBeenCalled();
   });
 
   it("leads nowhere from a board that opens nothing", () => {

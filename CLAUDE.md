@@ -139,6 +139,26 @@ declared at whichever title is told when the mission moves, goes, or gets an
 update — `people_on` sees to it, and a title nobody hears from would be a
 title nobody keeps up to date.
 
+### Following a mission
+
+A mark the team puts on what it keeps an eye on right now — about to be built,
+being built, delivered a few days ago, or just asked about — and reads back as
+a filter, « Suivi », on the reference list and on the board.
+
+- **The mission carries it, `is_followed`**, raised and lowered in one click
+  under « Informations » on the Pilotage tab, or on a Kanban card. The
+  reference list only reads it, at the end of the name. It used to be read off the thread, as
+  updates marked « à discuter »; a mark on the words left nothing to filter
+  the missions by, and that was the question.
+- **A project and its work packages each say it for themselves.** Nothing is
+  passed down or summed up: a followed package under a project nobody follows
+  is kept alone by the filter, and its project is not.
+- **Off-project work is never followed** — the entity refuses it. An absence
+  has nothing to deliver.
+- No motive, no date and no author on the mission: `project.follow` and
+  `project.unfollow` in the log say who and when, and asking why would turn a
+  click into a form.
+
 ### Business invariants
 
 These rules are tested **at the domain level**, independently of the API and of

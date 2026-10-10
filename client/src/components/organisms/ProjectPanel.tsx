@@ -110,6 +110,7 @@ export function ProjectPanel({
               onClose();
             }}
             unarchive={sheet.unarchive}
+            toggleFollow={sheet.toggleFollow}
           />
         )}
       </div>

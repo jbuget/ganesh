@@ -7,6 +7,7 @@ import Link from "next/link";
 import { CategoryMark } from "@/components/atoms/CategoryMark";
 import { CategoryPicker } from "@/components/atoms/CategoryPicker";
 import { DepartmentPicker } from "@/components/atoms/DepartmentPicker";
+import { FollowMark } from "@/components/atoms/FollowMark";
 import { ContributorsPicker } from "@/components/atoms/ContributorsPicker";
 import { PhasePicker } from "@/components/atoms/PhasePicker";
 import { PriorityPicker } from "@/components/atoms/PriorityPicker";
@@ -48,6 +49,8 @@ interface ProjectSteeringTabProps {
     go_live_date?: string | null;
   }) => Promise<void>;
   addSubProject: (label: string) => Promise<void>;
+  /** Raises the mark the team follows the mission by, or lowers it. */
+  toggleFollow: () => Promise<void>;
 }
 
 /**
@@ -100,6 +103,7 @@ export function ProjectSteeringTab({
   editable,
   updateFields,
   addSubProject,
+  toggleFollow,
 }: ProjectSteeringTabProps) {
   // Until anything is typed, the field shows what the server says: no local
   // copy to resynchronise on every reload.
@@ -123,6 +127,19 @@ export function ProjectSteeringTab({
               onChange={changePhase}
             />
           </SheetRow>
+
+          {/* Off-project work carries no mark: an absence is not something
+              anybody keeps an eye on. */}
+          {project.kind !== "off_project" && (
+            <SheetRow title="Suivi">
+              <FollowMark
+                followed={project.is_followed}
+                labelled
+                onToggle={editable ? () => void toggleFollow() : undefined}
+                className="-ml-1"
+              />
+            </SheetRow>
+          )}
 
           {/* Read under the phase, and posted here as well as on the
               roadmap: the day one moves a mission into « Recette » is the day

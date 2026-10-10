@@ -39,6 +39,7 @@ const card = (over: Record<string, unknown> = {}): BoardCardResponse =>
       is_syncable_to_monday: false,
       is_deletable: false,
       is_published: false,
+      is_followed: false,
       ...(over.project as object),
     },
   }) as unknown as BoardCardResponse;
@@ -366,38 +367,46 @@ describe("the new criteria in the address", () => {
   });
 });
 
-describe("filtering by what is waiting to be discussed", () => {
-  /**
-   * The question a backlog review opens on: which projects carry something
-   * somebody wants said out loud.
-   */
-  it("keeps only what somebody has raised", () => {
+describe("filtering by what the team follows", () => {
+  /** What one comes to the list for: the missions somebody keeps an eye on. */
+  it("keeps only the followed missions", () => {
     const missions = [
-      card({ flagged_updates: 2, project: { id: 1 } }),
-      card({ flagged_updates: 0, project: { id: 2 } }),
+      card({ project: { id: 1, is_followed: true } }),
+      card({ project: { id: 2, is_followed: false } }),
     ];
 
-    const kept = filterMissions(missions, filters({ discussions: ["to_discuss"] }));
+    const kept = filterMissions(missions, filters({ follows: ["followed"] }));
 
     expect(kept.map((m) => m.project.id)).toEqual([1]);
   });
 
-  /** The other half of the same question: what nobody has said anything about. */
-  it("finds the projects nobody has raised", () => {
+  /** The other half of the same question: what nobody keeps an eye on. */
+  it("finds the missions nobody follows", () => {
     const missions = [
-      card({ flagged_updates: 2, project: { id: 1 } }),
-      card({ flagged_updates: 0, project: { id: 2 } }),
+      card({ project: { id: 1, is_followed: true } }),
+      card({ project: { id: 2, is_followed: false } }),
     ];
 
-    const kept = filterMissions(missions, filters({ discussions: ["quiet"] }));
+    const kept = filterMissions(missions, filters({ follows: ["unfollowed"] }));
 
     expect(kept.map((m) => m.project.id)).toEqual([2]);
   });
 
-  it("counts a mission the server said nothing of as quiet", () => {
-    const kept = filterMissions([card()], filters({ discussions: ["quiet"] }));
+  /**
+   * A work package says it for itself: followed under a project that is not,
+   * it is kept alone, and its project is not.
+   */
+  it("keeps a followed work package without its project", () => {
+    const missions = [
+      card({ project: { id: 1, is_followed: false } }),
+      card({
+        project: { id: 2, kind: "work_package", parent_id: 1, is_followed: true },
+      }),
+    ];
 
-    expect(kept).toHaveLength(1);
+    const kept = filterMissions(missions, filters({ follows: ["followed"] }));
+
+    expect(kept.map((m) => m.project.id)).toEqual([2]);
   });
 
   it("takes nothing away while the question is not asked", () => {
@@ -407,15 +416,15 @@ describe("filtering by what is waiting to be discussed", () => {
   it("travels in the address, and comes back", () => {
     const params = new URLSearchParams();
 
-    writeFilters(params, filters({ discussions: ["to_discuss"] }));
+    writeFilters(params, filters({ follows: ["followed"] }));
 
-    expect(params.getAll("discussion")).toEqual(["to_discuss"]);
-    expect(readFilters(params)).toEqual(filters({ discussions: ["to_discuss"] }));
+    expect(params.getAll("followed")).toEqual(["followed"]);
+    expect(readFilters(params)).toEqual(filters({ follows: ["followed"] }));
   });
 
   it("drops a value nobody wrote", () => {
-    const params = new URLSearchParams("discussion=peut-etre");
+    const params = new URLSearchParams("followed=peut-etre");
 
-    expect(readFilters(params).discussions).toEqual([]);
+    expect(readFilters(params).follows).toEqual([]);
   });
 });

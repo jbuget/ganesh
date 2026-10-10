@@ -21,6 +21,7 @@ def to_entity(model: ProjectModel) -> Project:
         parent_id=model.parent_id,
         is_active=model.is_active,
         archived_at=model.archived_at,
+        is_followed=model.is_followed,
         estimated_days=model.estimated_days,
         category=model.category,
         priority=model.priority,
@@ -90,6 +91,7 @@ class SqlProjectRepository(ProjectRepository):
             parent_id=project.parent_id,
             is_active=project.is_active,
             archived_at=project.archived_at,
+            is_followed=project.is_followed,
             estimated_days=project.estimated_days,
             category=project.category,
             priority=project.priority,
@@ -134,6 +136,7 @@ class SqlProjectRepository(ProjectRepository):
         model.parent_id = project.parent_id
         model.is_active = project.is_active
         model.archived_at = project.archived_at
+        model.is_followed = project.is_followed
         model.estimated_days = project.estimated_days
         model.category = project.category
         model.priority = project.priority

@@ -71,6 +71,7 @@ const steering = (
       changePhase={vi.fn()}
       updateFields={updateFields}
       addSubProject={vi.fn()}
+      toggleFollow={vi.fn()}
     />,
   );
 
@@ -167,5 +168,60 @@ describe("the day a mission goes live", () => {
     fireEvent.blur(field);
 
     expect(updateFields).toHaveBeenCalledWith({ go_live_date: "2026-11-15" });
+  });
+});
+
+describe("following a mission from its sheet", () => {
+  const followed = (kind: ProjectKind, isFollowed: boolean, editable = true) => {
+    const toggleFollow = vi.fn();
+    const sheet = detail(kind);
+    (sheet.project as { is_followed: boolean }).is_followed = isFollowed;
+    render(
+      <ProjectSteeringTab
+        editable={editable}
+        detail={sheet}
+        onChange={vi.fn()}
+        saveSheet={vi.fn()}
+        changePhase={vi.fn()}
+        updateFields={vi.fn()}
+        addSubProject={vi.fn()}
+        toggleFollow={toggleFollow}
+      />,
+    );
+    return toggleFollow;
+  };
+
+  it("raises the mark from the Informations section", async () => {
+    const toggleFollow = followed("project", false);
+
+    expect(screen.getByText("Non suivi")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Suivre ce projet" }));
+
+    expect(toggleFollow).toHaveBeenCalledOnce();
+  });
+
+  it("lowers it on a followed mission", async () => {
+    const toggleFollow = followed("work_package", true);
+
+    expect(screen.getByText("Projet suivi")).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Ne plus suivre ce projet" }),
+    );
+
+    expect(toggleFollow).toHaveBeenCalledOnce();
+  });
+
+  it("only reads it to whoever may not steer", () => {
+    followed("project", true, false);
+
+    expect(screen.getByText("Projet suivi")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /suivre ce projet/i })).toBeNull();
+  });
+
+  /** An absence is not something anybody keeps an eye on. */
+  it("says nothing of it on off-project work", () => {
+    followed("off_project", false);
+
+    expect(screen.queryByText("Non suivi")).toBeNull();
   });
 });

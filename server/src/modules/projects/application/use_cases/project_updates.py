@@ -93,28 +93,34 @@ class SignedUpdate:
     update: ProjectUpdate
     author: User
     reactions: list[SignedReaction] = field(default_factory=list)
-    #: Who put it on the agenda of the next revue, while it is waiting there.
-    raised_by: User | None = None
     #: What was answered under it, oldest first: a conversation is read
     #: forward, where the thread above it runs backwards.
     comments: list[SignedComment] = field(default_factory=list)
 
 
-class UpdateGestureUseCase:
-    """What every gesture on an update shares: loading it, and tracing it.
+class _UpdateUseCase:
+    """What the three thread writes share: loading the update, tracing the
+    gesture, and telling the people concerned.
 
-    Public because the thread is not the only place one is made: putting an
-    update on the agenda of a revue is a gesture on the same words, written
-    into the same register, and it lives in its own module.
+    A write on the thread tells people about itself: the audience and the
+    delivery are what it carries beside the register.
     """
 
     def __init__(
         self,
+        users: UserRepository,
+        projects: ProjectRepository,
         updates: ProjectUpdateRepository,
         audit_logs: AuditLogRepository,
+        assignees: ProjectAssigneeRepository,
+        notifications: NotificationDelivery,
     ) -> None:
+        self._users = users
+        self._projects = projects
         self._updates = updates
         self._audit_logs = audit_logs
+        self._assignees = assignees
+        self._notifications = notifications
 
     async def _load(self, update_id: int) -> ProjectUpdate:
         update = await self._updates.get(update_id)
@@ -138,29 +144,6 @@ class UpdateGestureUseCase:
                 payload={"update_id": update.id},
             )
         )
-
-
-class _UpdateUseCase(UpdateGestureUseCase):
-    """What the three thread writes share, on top of the gesture.
-
-    A write on the thread tells people about itself, where flagging one does
-    not: the audience and the delivery are what this layer adds.
-    """
-
-    def __init__(
-        self,
-        users: UserRepository,
-        projects: ProjectRepository,
-        updates: ProjectUpdateRepository,
-        audit_logs: AuditLogRepository,
-        assignees: ProjectAssigneeRepository,
-        notifications: NotificationDelivery,
-    ) -> None:
-        super().__init__(updates=updates, audit_logs=audit_logs)
-        self._users = users
-        self._projects = projects
-        self._assignees = assignees
-        self._notifications = notifications
 
 
 class PostProjectUpdateUseCase(_UpdateUseCase):
@@ -341,7 +324,6 @@ class ListProjectUpdatesUseCase:
                 update=update,
                 author=users[update.author_id],
                 reactions=_signed(left.get(update.id or 0, []), users),
-                raised_by=(users.get(update.flagged_by) if update.is_flagged else None),
                 comments=[
                     SignedComment(
                         comment=comment,

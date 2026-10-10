@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
 import { EditableTitle } from "@/components/atoms/EditableTitle";
+import { FollowMark } from "@/components/atoms/FollowMark";
 import { ParentMissionLink } from "@/components/atoms/ParentMissionLink";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectTabs } from "@/components/organisms/ProjectTabs";
@@ -99,12 +100,20 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
                 mission is a part of comes before its own name. */}
             {detail.parent && <ParentMissionLink parent={detail.parent} />}
 
-            <EditableTitle
-              label={project.label}
-              hint="Renommer le projet"
-              onRename={sheet.rename}
-              level={1}
-            />
+            <div className="flex items-center gap-2">
+              {/* The title takes the width of its words rather than of the
+                  row, so the mark reads beside it rather than across the page. */}
+              <div className="min-w-0">
+                <EditableTitle
+                  label={project.label}
+                  hint="Renommer le projet"
+                  onRename={sheet.rename}
+                  level={1}
+                />
+              </div>
+              {/* Read here, changed under « Informations » in the tab below. */}
+              <FollowMark followed={project.is_followed} />
+            </div>
             <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
               {project.status && (
                 <span className="flex items-center gap-1.5">
@@ -150,6 +159,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
             router.push("/kanban");
           }}
           unarchive={sheet.unarchive}
+          toggleFollow={sheet.toggleFollow}
         />
       </div>
     </PageLayout>

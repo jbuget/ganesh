@@ -57,14 +57,6 @@ describe("UpdateCommentCard", () => {
     expect(screen.getByText(/modifiée/)).toBeInTheDocument();
   });
 
-  it("carries no flag: one puts a subject on the agenda, not an answer", () => {
-    renderComment();
-
-    expect(
-      screen.queryByRole("button", { name: /à discuter en revue/i }),
-    ).not.toBeInTheDocument();
-  });
-
   it("corrects the reply in place", async () => {
     const { onEdit } = renderComment();
 

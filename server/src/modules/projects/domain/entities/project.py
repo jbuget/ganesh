@@ -102,6 +102,11 @@ class Project:
     #: When the mission left the reference list. Null while it is active: the
     #: date follows the state, and reviving an archived mission clears it.
     archived_at: datetime | None = None
+    #: Whether the team keeps an eye on it right now: about to be built, being
+    #: built, just delivered, or just asked about. Set and lowered by hand, in
+    #: one click, and read as a filter — never inherited between a project and
+    #: its packages, each saying it for itself.
+    is_followed: bool = False
 
     # --- Service sheet ------------------------------------------------------
     # What the public catalogue reads. None of it bears on filling in a month:
@@ -156,6 +161,9 @@ class Project:
 
         if self.position < 0:
             raise ValidationError("A mission rank cannot be negative.")
+
+        if self.is_followed:
+            self._ensure_followable()
 
         self._check_service_sheet()
 
@@ -266,6 +274,29 @@ class Project:
         self.kind = ProjectKind.PROJECT
         self.parent_id = None
         self.category = inherited_category
+
+    def follow(self) -> bool:
+        """Marks the mission as one the team keeps an eye on.
+
+        Says whether anything moved: a second click says nothing new, and
+        whoever records the gesture has nothing to record.
+        """
+        self._ensure_followable()
+        moved = not self.is_followed
+        self.is_followed = True
+        return moved
+
+    def unfollow(self) -> bool:
+        """Lowers the mark, saying whether there was one to lower."""
+        moved = self.is_followed
+        self.is_followed = False
+        return moved
+
+    def _ensure_followable(self) -> None:
+        # An absence or a training is not something anybody keeps an eye on:
+        # it has no phase to move through and nothing to deliver.
+        if self.is_off_project:
+            raise ValidationError("An off-project activity cannot be followed.")
 
     def change_status(self, new_status: ProjectStatus) -> None:
         """Change the project phase. Every transition is allowed."""

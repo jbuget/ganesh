@@ -159,6 +159,7 @@ export function BoardPage() {
                   onContributorsChange={board.reload}
                   onOpen={panel.open}
                   onOpenThread={(projectId) => panel.open(projectId, "updates")}
+                  onFollowChange={mayWrite ? board.changeFollow : undefined}
                   // Filtered, the board reads without arranging; a guest
                   // reads it the same way, and for the same reason — a card
                   // that moved back would be the screen's fault.

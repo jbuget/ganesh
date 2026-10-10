@@ -5,6 +5,7 @@ import { ChevronRight, GripVertical } from "lucide-react";
 
 import { BuildCost } from "@/components/atoms/BuildCost";
 import { CategoryMark } from "@/components/atoms/CategoryMark";
+import { FollowMark } from "@/components/atoms/FollowMark";
 import { GoLiveDate } from "@/components/atoms/GoLiveDate";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
@@ -12,7 +13,6 @@ import { MissionDepartments } from "@/components/atoms/MissionDepartments";
 import { PriorityMark } from "@/components/atoms/PriorityMark";
 import { PublishedMark } from "@/components/atoms/PublishedMark";
 import { RunCost } from "@/components/atoms/RunCost";
-import { ReviewFlag } from "@/components/atoms/ReviewFlag";
 import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
@@ -275,6 +275,9 @@ export function MissionRow({
           >
             {project.label}
           </button>
+          {/* Read, not changed, here: the mark is raised and lowered on the
+              mission's sheet, under « Informations ». */}
+          <FollowMark followed={project.is_followed} className="shrink-0" />
         </span>
       </TableCell>
 
@@ -291,15 +294,6 @@ export function MissionRow({
           onOpen={onOpenThread}
         />
       </TableCell>
-
-      {/* What is waiting to be discussed, against the thread it is derived
-          from. It had been a second mark in the cell beside, where the two
-          spilled onto the phase and where nobody could put it away. */}
-      {shows("review") && (
-        <TableCell>
-          <ReviewFlag count={mission.flagged_updates ?? 0} onOpen={onOpenThread} />
-        </TableCell>
-      )}
 
       {shows("phase") && (
         <TableCell>

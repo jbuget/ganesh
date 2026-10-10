@@ -171,3 +171,15 @@ class MoveProjectCommand:
     project_id: int
     status: ProjectStatus
     position: int
+
+
+@dataclass(frozen=True)
+class FollowProjectCommand:
+    """Marking a mission as followed, or lowering the mark.
+
+    The same command carries both gestures: neither asks for anything but who
+    makes it and on which mission.
+    """
+
+    actor_id: int
+    project_id: int

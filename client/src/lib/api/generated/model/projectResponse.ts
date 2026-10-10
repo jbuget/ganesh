@@ -22,6 +22,7 @@ export interface ProjectResponse {
   parent_id: number | null;
   is_active: boolean;
   archived_at: string | null;
+  is_followed: boolean;
   estimated_days: number | null;
   category: ProjectCategory | null;
   priority: ProjectPriority | null;

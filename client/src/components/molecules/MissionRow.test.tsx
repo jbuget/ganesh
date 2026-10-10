@@ -3,7 +3,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import { MissionRow } from "./MissionRow";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
-import { hiddenColumns } from "@/lib/mission-columns";
 
 const NOW = new Date("2026-09-17T12:00:00Z");
 
@@ -691,40 +690,34 @@ describe("MissionRow — the service catalogue", () => {
 });
 
 /**
- * What is waiting to be discussed has a column, not a corner of the thread's
- * cell: two marks squeezed into one untitled column spilled onto the phase of
- * the row, and the review is a reading one puts away like any other.
+ * The mark reads at the end of the name, and is only read here: it is raised
+ * and lowered on the mission's sheet.
  */
-describe("MissionRow — the review mark", () => {
-  const flagged = (count: number) =>
-    ({ ...mission({}), flagged_updates: count }) as ProjectListItemResponse;
-
-  it("marks what is waiting to be discussed", () => {
+describe("MissionRow — the follow mark", () => {
+  it("shows a followed mission as followed, without offering to change it", () => {
     line(
       <MissionRow
-        mission={flagged(2)}
+        mission={mission({ is_followed: true })}
         now={NOW}
         onOpen={() => {}}
         onOpenThread={() => {}}
       />,
     );
 
-    expect(
-      screen.getByRole("button", { name: "2 mises à jour à discuter" }),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Projet suivi")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /suivre/i })).toBeNull();
   });
 
-  it("puts the mark away with its column", () => {
+  it("says nothing of a mission nobody follows", () => {
     line(
       <MissionRow
-        mission={flagged(2)}
+        mission={mission({ is_followed: false })}
         now={NOW}
         onOpen={() => {}}
         onOpenThread={() => {}}
-        hidden={hiddenColumns(["review"])}
       />,
     );
 
-    expect(screen.queryByRole("button", { name: /à discuter/ })).toBeNull();
+    expect(screen.queryByLabelText("Projet suivi")).toBeNull();
   });
 });

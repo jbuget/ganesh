@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { getBoard, moveProject } from "@/lib/api/generated/projects/projects";
+import { setFollowed } from "@/lib/follow";
 import type {
   BoardCardResponse,
   BoardResponse,
@@ -74,6 +75,12 @@ export function useBoard(includeArchived = false) {
 
     /** Takes the server's truth back, after a change made outside a drag. */
     reload,
+
+    /** Raises or lowers the mark on a card, then reads the board again. */
+    async changeFollow(projectId: number, following: boolean) {
+      await setFollowed(projectId, following);
+      await reload();
+    },
 
     /** Applies the move on screen, then saves it. */
     async move(
