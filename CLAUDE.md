@@ -1116,7 +1116,7 @@ it together:
 A panel on the right, opened with ⌘J (Ctrl+J away from a Mac), that answers
 questions about a project — « où en est le projet X ? », asked by somebody who
 is not on it. Nothing in the sidebar announces it yet: whoever knows the
-shortcut reaches it, a guest never does. Ten rules hold it together:
+shortcut reaches it, a guest never does. Eleven rules hold it together:
 
 - **« Où en est X ? » is read in the sheet and in the thread.** `project_brief`
   for the state — lots, budget, who is on it — and `project_news` for what the
@@ -1148,6 +1148,14 @@ shortcut reaches it, a guest never does. Ten rules hold it together:
   handed back as plain text — shown the calls themselves, the model was
   measured writing one more even with no tool to call. The answer says what
   could not be read, which beats « indisponible ».
+- **A question left unanswered is kept too, apart.** In
+  `assistant_unanswered_questions`, with why (`WhyUnanswered` — the provider
+  failed, the answer was cut short, the model kept asking) and what was read
+  before it failed: the questions that fail are the ones most worth
+  studying, and the log alone never said what was asked. Apart because it
+  carries no answer, no verdict, no annotation and no rank — asked again, it
+  is the same question. It is committed before the 503 that tells the
+  person. A filter on a judgement keeps none: only an answer is judged.
 - **Five exchanges, then a fresh conversation.** `Conversation` refuses the
   sixth, in the domain: a long thread drifts, and every turn sends the whole
   of it again. A follow-up goes with the conversation so far: each earlier

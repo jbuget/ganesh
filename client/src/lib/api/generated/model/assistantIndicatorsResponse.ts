@@ -10,6 +10,7 @@ import type { ToolCountResponse } from "./toolCountResponse";
 export interface AssistantIndicatorsResponse {
   kept_since: string | null;
   questions: number;
+  unanswered: number;
   conversations: number;
   askers: number;
   helpful: number;

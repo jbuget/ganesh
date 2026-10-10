@@ -4,6 +4,7 @@ import type {
   Cause,
   Judgement,
   ReadAssistantIndicatorsParams,
+  WhyUnanswered,
 } from "@/lib/api/generated/model";
 
 /**
@@ -78,6 +79,35 @@ export const CAUSES: { value: Cause; label: string; detail: string }[] = [
 
 export function causeLabel(cause: Cause): string {
   return CAUSES.find((held) => held.value === cause)?.label ?? cause;
+}
+
+/**
+ * Why a question came back with no answer, as the study names it.
+ *
+ * The panel said « indisponible » for all three; telling them apart is the
+ * point of keeping the question.
+ */
+export const WHY_UNANSWERED: { value: WhyUnanswered; label: string; detail: string }[] =
+  [
+    {
+      value: "provider_failed",
+      label: "Fournisseur en échec",
+      detail: "Gemini a refusé ou n'a pas répondu à temps : quota, délai, erreur.",
+    },
+    {
+      value: "cut_short",
+      label: "Réponse coupée",
+      detail: "Le modèle s'est arrêté avant d'avoir fini, ou n'a rien écrit.",
+    },
+    {
+      value: "kept_asking",
+      label: "Lectures sans fin",
+      detail: "Sommé de répondre, le modèle demandait encore des outils.",
+    },
+  ];
+
+export function whyUnansweredLabel(reason: WhyUnanswered): string {
+  return WHY_UNANSWERED.find((held) => held.value === reason)?.label ?? reason;
 }
 
 export const JUDGEMENTS: { value: Judgement; label: string }[] = [

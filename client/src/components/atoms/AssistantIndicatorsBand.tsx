@@ -22,9 +22,16 @@ export function AssistantIndicatorsBand({ indicators }: AssistantIndicatorsBandP
   const asked = indicators.questions;
   const figures: { label: string; value: string; detail?: string }[] = [
     {
-      label: "Questions",
+      label: "Réponses",
       value: count(asked),
       detail: `${count(indicators.conversations)} ${plural(indicators.conversations, "conversation")}, ${count(indicators.askers)} ${plural(indicators.askers, "personne")}`,
+    },
+    {
+      label: "Sans réponse",
+      value: count(indicators.unanswered),
+      // Out of everything asked: a question left unanswered is not among the
+      // questions counted on the left, it is beside them.
+      detail: `${share(indicators.unanswered, asked + indicators.unanswered)} des questions posées`,
     },
     {
       label: "Jugées utiles",
@@ -47,7 +54,7 @@ export function AssistantIndicatorsBand({ indicators }: AssistantIndicatorsBandP
 
   return (
     <section aria-label="Indicateurs" className="space-y-4">
-      <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <dl className="grid grid-cols-2 gap-4 sm:grid-cols-5">
         {figures.map((figure) => (
           <div key={figure.label} className="space-y-0.5">
             <dt className="text-xs text-slate-500">{figure.label}</dt>

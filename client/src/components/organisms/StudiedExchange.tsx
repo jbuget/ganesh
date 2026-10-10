@@ -2,6 +2,7 @@
 
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 
+import { ConsultationReadings } from "@/components/atoms/ConsultationReadings";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { ExchangeAnnotation } from "@/components/molecules/ExchangeAnnotation";
 import type { Cause, StudiedExchangeResponse } from "@/lib/api/generated/model";
@@ -17,9 +18,6 @@ interface StudiedExchangeProps {
 
 /**
  * One question and its answer, with what the model was handed to write it.
- *
- * The readings are folded: they run to pages, and one opens the one that
- * explains the answer rather than scrolling past all of them.
  */
 export function StudiedExchange({
   exchange,
@@ -62,26 +60,7 @@ export function StudiedExchange({
         )}
       </p>
 
-      <div className="space-y-1">
-        <h3 className="text-xs font-medium text-slate-600">
-          {exchange.consultations.length === 0
-            ? "Aucun outil consulté"
-            : "Ce que les outils ont lu"}
-        </h3>
-        {exchange.consultations.map((consultation, index) => (
-          <details key={index} className="rounded border border-slate-200 text-xs">
-            <summary className="cursor-pointer px-2 py-1 text-slate-700">
-              <code>{consultation.tool}</code>{" "}
-              <span className="text-slate-500">
-                {JSON.stringify(consultation.arguments)}
-              </span>
-            </summary>
-            <pre className="max-h-80 overflow-auto border-t border-slate-200 bg-slate-50 px-2 py-1.5 whitespace-pre-wrap text-slate-700">
-              {consultation.result}
-            </pre>
-          </details>
-        ))}
-      </div>
+      <ConsultationReadings consultations={exchange.consultations} />
 
       <ExchangeAnnotation
         key={`${exchange.id}-${exchange.annotation?.annotated_at ?? ""}`}

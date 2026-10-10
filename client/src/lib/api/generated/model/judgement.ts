@@ -7,6 +7,9 @@
 
 /**
  * What whoever asked said of the answer, silence included.
+ *
+ * Only an answer is judged: a filter on a judgement keeps no question that
+ * went unanswered.
  */
 export type Judgement = (typeof Judgement)[keyof typeof Judgement];
 
