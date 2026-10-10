@@ -23,6 +23,8 @@ from src.modules.stats.domain.entities.surface_usage import (
     Trace,
 )
 from src.modules.users.domain.entities.user import Role, User
+from src.shared.enums.department import Department
+from src.shared.enums.team import Team
 from tests.helpers.in_memory_repositories import (
     InMemoryStatisticsRepository,
     InMemoryUserRepository,
@@ -41,6 +43,8 @@ TEAM = [
         email="a@waat.fr",
         display_name="A. Ba",
         role=Role.TEAMMATE,
+        department=Department.INFORMATION_SYSTEMS,
+        team=Team.ENGINEERING,
     ),
     User(
         id=2,
@@ -48,6 +52,8 @@ TEAM = [
         email="b@waat.fr",
         display_name="B. Cy",
         role=Role.TEAMMATE,
+        department=Department.INFORMATION_SYSTEMS,
+        team=Team.ENGINEERING,
     ),
     User(
         id=3,
@@ -55,6 +61,8 @@ TEAM = [
         email="c@waat.fr",
         display_name="C. De",
         role=Role.MANAGER,
+        department=Department.INFORMATION_SYSTEMS,
+        team=Team.ENGINEERING,
     ),
 ]
 
@@ -82,7 +90,7 @@ async def run(**kwargs: object):
 class TestCoverage:
     async def test_the_whole_team_is_expected_every_working_day(self) -> None:
         # Three teammates, five working days: fifteen person-days expected.
-        stats = await run(declared_by_day={TODAY: 12.0})
+        stats = await run(declared_by_day={TODAY: {1: 4.0, 2: 4.0, 3: 4.0}})
 
         assert stats.coverage.expected_days == 15
         assert stats.coverage.declared_days == 12
@@ -100,18 +108,74 @@ class TestCoverage:
                 display_name="D. Ef",
                 is_active=False,
                 role=Role.TEAMMATE,
+                department=Department.INFORMATION_SYSTEMS,
+                team=Team.ENGINEERING,
             ),
         ]
-        stats = await run(team=team, declared_by_day={TODAY: 12.0})
+        stats = await run(team=team, declared_by_day={TODAY: {1: 4.0, 2: 4.0, 3: 4.0}})
 
         assert stats.coverage.expected_days == 15
 
     async def test_the_previous_window_is_read_the_same_way(self) -> None:
         # 4 to 10 September 2026 also holds five working days.
-        stats = await run(declared_by_day={TODAY: 12.0, date(2026, 9, 10): 9.0})
+        stats = await run(
+            declared_by_day={
+                TODAY: {1: 4.0, 2: 4.0, 3: 4.0},
+                date(2026, 9, 10): {1: 3.0, 2: 3.0, 3: 3.0},
+            }
+        )
 
         assert stats.previous_coverage.expected_days == 15
         assert stats.coverage_delta_in_points == pytest.approx(20.0)
+
+    async def test_only_engineering_is_measured(self) -> None:
+        # The other teams and the other departments weigh on neither side of
+        # the ratio: what they declare is not counted, nor what they would owe.
+        team = [
+            *TEAM,
+            User(
+                id=4,
+                entra_oid="oid-4",
+                email="d@waat.fr",
+                display_name="D. Ef",
+                role=Role.TEAMMATE,
+                department=Department.INFORMATION_SYSTEMS,
+                team=Team.DATA,
+            ),
+            User(
+                id=5,
+                entra_oid="oid-5",
+                email="e@waat.fr",
+                display_name="E. Fg",
+                role=Role.TEAMMATE,
+            ),
+        ]
+        stats = await run(
+            team=team,
+            declared_by_day={TODAY: {1: 4.0, 2: 4.0, 3: 4.0, 4: 5.0, 5: 5.0}},
+        )
+
+        assert stats.coverage.expected_days == 15
+        assert stats.coverage.declared_days == 12
+        assert stats.coverage_scope.team is Team.ENGINEERING
+        assert stats.coverage_scope.people == 3
+
+    async def test_nobody_placed_in_engineering_leaves_nothing_to_read(self) -> None:
+        # No team said yet: the rate is unknown, never a zero that would read
+        # as a team that declared nothing.
+        nobody = [
+            User(
+                id=1,
+                entra_oid="oid-1",
+                email="a@waat.fr",
+                display_name="A. Ba",
+                role=Role.TEAMMATE,
+            )
+        ]
+        stats = await run(team=nobody, declared_by_day={TODAY: {1: 4.0}})
+
+        assert stats.coverage.rate is None
+        assert stats.coverage_scope.people == 0
 
 
 class TestFreshness:

@@ -33,6 +33,8 @@ function statisticsWith(
       missing_days: 21,
       rate: 0.87,
       delta_in_points: 6,
+      team: "engineering",
+      people: 15,
     },
     freshness: {
       entries: 220,

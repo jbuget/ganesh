@@ -22,8 +22,9 @@ class StatisticsRepository(ABC):
     """
 
     @abstractmethod
-    async def declared_days(self, period: Period) -> float:
-        """Person-days declared over the window, every mission together."""
+    async def declared_days(self, period: Period, user_ids: list[int]) -> float:
+        """Person-days these users declared over the window, every mission
+        together."""
         ...
 
     @abstractmethod

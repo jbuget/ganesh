@@ -1,6 +1,7 @@
 import { TrendBadge } from "@/components/atoms/TrendBadge";
 import type { CoverageResponse } from "@/lib/api/generated/model";
 import { NOTHING, formatDelay, formatPersonDays, formatShare } from "@/lib/statistics";
+import { teamLabel } from "@/lib/teams";
 
 interface CoverageHeadlineProps {
   coverage: CoverageResponse;
@@ -27,6 +28,15 @@ export function CoverageHeadline({ coverage, medianDelay }: CoverageHeadlineProp
       <h2 className="text-xs font-medium tracking-wide text-slate-500 uppercase">
         Couverture de la saisie
       </h2>
+      {/* Whose time the figure is read over, right under its name: a rate
+          measured on one team must not be read as the company's. */}
+      <p className="mt-1 text-sm text-slate-500">
+        {coverage.people > 0
+          ? `Équipe ${teamLabel(coverage.team)} · ${coverage.people} ${
+              coverage.people > 1 ? "personnes" : "personne"
+            }`
+          : `Personne n'est encore rattaché à l'équipe ${teamLabel(coverage.team)}`}
+      </p>
 
       <div className="mt-2 flex items-baseline gap-3">
         <p className="text-4xl font-semibold tabular-nums text-slate-900">

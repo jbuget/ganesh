@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from src.modules.calendar.domain.entities.period import PeriodRange
 from src.modules.projects.domain.entities.project import ProjectCategory, ProjectStatus
 from src.modules.stats.domain.entities.surface_usage import Surface
+from src.shared.enums.team import Team
 
 
 class PeriodResponse(BaseModel):
@@ -30,6 +31,10 @@ class CoverageResponse(BaseModel):
     missing_days: float
     rate: float | None
     delta_in_points: float | None
+    #: Whose time it is read over: one team, never the whole company.
+    team: Team
+    #: How many people that team counts. None leaves nothing to read.
+    people: int
 
 
 class FreshnessResponse(BaseModel):

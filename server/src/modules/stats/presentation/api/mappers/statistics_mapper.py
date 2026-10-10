@@ -39,6 +39,8 @@ def to_statistics_response(
             missing_days=statistics.coverage.missing_days,
             rate=statistics.coverage.rate,
             delta_in_points=statistics.coverage_delta_in_points,
+            team=statistics.coverage_scope.team,
+            people=statistics.coverage_scope.people,
         ),
         freshness=FreshnessResponse(
             entries=statistics.freshness.entries,

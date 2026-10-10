@@ -936,7 +936,7 @@ class InMemoryStatisticsRepository(StatisticsRepository):
 
     def __init__(
         self,
-        declared_by_day: dict[date, float] | None = None,
+        declared_by_day: dict[date, dict[int, float]] | None = None,
         contributors: set[int] | None = None,
         delays: list[int] | None = None,
         by_kind: dict[ProjectKind, float] | None = None,
@@ -968,9 +968,13 @@ class InMemoryStatisticsRepository(StatisticsRepository):
         self._last_gestures = last_gestures or {}
         self._last_unlogged_use = last_unlogged_use or {}
 
-    async def declared_days(self, period: Period) -> float:
+    async def declared_days(self, period: Period, user_ids: list[int]) -> float:
         return sum(
-            value for day, value in self._declared_by_day.items() if period.covers(day)
+            value
+            for day, by_user in self._declared_by_day.items()
+            if period.covers(day)
+            for user_id, value in by_user.items()
+            if user_id in user_ids
         )
 
     async def contributor_ids(self, period: Period) -> set[int]:
