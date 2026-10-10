@@ -243,6 +243,7 @@ export * from "./updateReactionResponse";
 export * from "./updateUserIdentityRequest";
 export * from "./userRecordResponse";
 export * from "./userResponse";
+export * from "./validateMonthParams";
 export * from "./validationError";
 export * from "./validationErrorCtx";
 export * from "./verdict";

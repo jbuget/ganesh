@@ -26,6 +26,7 @@ import type {
   ListMonthAuditLogParams,
   MonthResponse,
   ReopenMonthParams,
+  ValidateMonthParams,
 } from "../model";
 
 import { bffFetcher } from "../../fetcher";
@@ -70,19 +71,35 @@ export type validateMonthResponseError = validateMonthResponse422 & {
 export type validateMonthResponse =
   validateMonthResponseSuccess | validateMonthResponseError;
 
-export const getValidateMonthUrl = (month: string) => {
-  return `/api/v1/months/${month}/validate`;
+export const getValidateMonthUrl = (month: string, params?: ValidateMonthParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/months/${month}/validate?${stringifiedParams}`
+    : `/api/v1/months/${month}/validate`;
 };
 
 /**
- * Locks one's own month. Validation cannot be delegated.
+ * Locks a month: one's own, or anybody's when a manager.
+ *
+ * Without `user_id` it is the caller's own month; the entity says who may
+ * close somebody else's.
  * @summary Validate Month
  */
 export const validateMonth = async (
   month: string,
+  params?: ValidateMonthParams,
   options?: Parameters<typeof bffFetcher>[1],
 ): Promise<validateMonthResponse> => {
-  return bffFetcher<validateMonthResponse>(getValidateMonthUrl(month), {
+  return bffFetcher<validateMonthResponse>(getValidateMonthUrl(month, params), {
     ...options,
     method: "POST",
   });
@@ -120,9 +137,9 @@ export const getValidateMonthMutationOptions = <
     Awaited<ReturnType<typeof validateMonth>>,
     ValidateMonthMutationVariables
   > = (props) => {
-    const { month } = props ?? {};
+    const { month, params } = props ?? {};
 
-    return validateMonth(month, requestOptions);
+    return validateMonth(month, params, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -133,7 +150,10 @@ export type ValidateMonthMutationResult = NonNullable<
 >;
 
 export type ValidateMonthMutationError = HTTPValidationError;
-export type ValidateMonthMutationVariables = { month: string };
+export type ValidateMonthMutationVariables = {
+  month: string;
+  params?: ValidateMonthParams;
+};
 
 /**
  * @summary Validate Month

@@ -61,6 +61,7 @@ written down, and a rung added between two others cannot be forgotten.
 | Fill in one's own month, read and edit a colleague's open month | ❌ | ✅ | ✅ | ✅ |
 | Create / change a project, change its status | ❌ | ✅ | ✅ | ✅ |
 | Validate one's own month | ❌ | ✅ | ✅ | ✅ |
+| Validate anybody's month, as a manager reopens anybody's — the owner is told | ❌ | ❌ | ✅ | ✅ |
 | Read the needs the company expressed | ❌ | ✅ | ✅ | ✅ |
 | Arbitrate a need, and make a mission of it | ❌ | ❌ | ✅ | ✅ |
 | Reopen a validated month | ❌ | ❌ | ✅ | ✅ |

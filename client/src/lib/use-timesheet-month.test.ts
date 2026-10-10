@@ -227,9 +227,8 @@ describe("the month in the address", () => {
 
 /**
  * The matrix of the entry screen, on three dimensions: whose month is shown,
- * what the viewer's role is, and whether the month is validated. The two
- * gestures never cross — validating is about the month being one's own,
- * reopening is about being a manager — and the state is what tells them apart.
+ * what the viewer's role is, and whether the month is validated. The state is
+ * what tells the two gestures apart; a manager holds both on anybody's month.
  */
 describe("who may validate, and who may reopen", () => {
   function screenFor({
@@ -253,9 +252,13 @@ describe("who may validate, and who may reopen", () => {
     expect(screenFor({ role: "MANAGER" }).current.canValidate).toBe(true);
   });
 
-  it("never offers to validate a colleague's month: validation is not delegated", () => {
+  it("never offers a teammate to validate a colleague's month", () => {
     expect(screenFor({ viewing: 7 }).current.canValidate).toBe(false);
-    expect(screenFor({ role: "MANAGER", viewing: 7 }).current.canValidate).toBe(false);
+  });
+
+  it("lets a manager validate the month of a teammate", () => {
+    expect(screenFor({ role: "MANAGER", viewing: 7 }).current.canValidate).toBe(true);
+    expect(screenFor({ role: "ADMIN", viewing: 7 }).current.canValidate).toBe(true);
   });
 
   it("never offers to validate a month already validated", () => {
@@ -430,6 +433,20 @@ describe("entering time", () => {
     expect(entries.setEntry).toHaveBeenCalled();
     expect(entries.setEntry.mock.invocationCallOrder[0]).toBeLessThan(
       months.validateMonth.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("validates the month of the teammate the selector names, when a manager", async () => {
+    queries.me = { id: 1, role: "MANAGER" };
+    const screen = month();
+    act(() => screen.current.viewTeammate(7));
+
+    await act(async () => {
+      await screen.current.validate();
+    });
+
+    expect(months.validateMonth).toHaveBeenCalledWith(
+      expect.objectContaining({ params: { user_id: 7 } }),
     );
   });
 

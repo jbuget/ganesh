@@ -6,7 +6,7 @@ from datetime import date
 
 @dataclass(frozen=True)
 class ValidateMonthCommand:
-    """Request to validate a month. Everyone validates their own."""
+    """Request to validate a month: one's own, or anybody's for a manager."""
 
     actor_id: int
     target_user_id: int

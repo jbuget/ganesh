@@ -30,6 +30,12 @@ describe("ValidateMonthDialog", () => {
     expect(screen.getByText(/mars 2026/)).toBeInTheDocument();
   });
 
+  it("names the teammate whose month a manager validates", () => {
+    renderDialog({ teammate: "Camille Roy" });
+
+    expect(screen.getByText(/le mois de Camille Roy/)).toBeInTheDocument();
+  });
+
   it("warns about missing days without blocking validation", () => {
     renderDialog({ totalEntered: 20, workingDays: 22 });
 

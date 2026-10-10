@@ -45,15 +45,22 @@ router = APIRouter(prefix="/months", tags=["months"])
 )
 async def validate_month(
     month: date,
+    user_id: int | None = None,
     current_user: User = Depends(get_contributor),
     use_case: ValidateMonthUseCase = Depends(get_validate_month_use_case),
     session: AsyncSession = Depends(get_db),
 ) -> MonthResponse:
-    """Locks one's own month. Validation cannot be delegated."""
+    """Locks a month: one's own, or anybody's when a manager.
+
+    Without `user_id` it is the caller's own month; the entity says who may
+    close somebody else's.
+    """
     assert current_user.id is not None
     validated = await use_case.execute(
         ValidateMonthCommand(
-            actor_id=current_user.id, target_user_id=current_user.id, month=month
+            actor_id=current_user.id,
+            target_user_id=current_user.id if user_id is None else user_id,
+            month=month,
         )
     )
     await session.commit()

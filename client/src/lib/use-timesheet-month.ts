@@ -136,6 +136,8 @@ export function useTimesheetMonth() {
 
   const isOwnMonth = viewedUserId === null || viewedUserId === me?.id;
   const targetUserId = viewedUserId ?? me?.id ?? null;
+  const viewedTeammate = teammates.find((user) => user.id === viewedUserId);
+  const mayValidate = isOwnMonth || holds(me?.role, "MANAGER");
   const running = currentMonth();
   const isCurrentMonth = cursor.year === running.year && cursor.month === running.month;
 
@@ -178,22 +180,20 @@ export function useTimesheetMonth() {
     isOwnMonth,
 
     /** Whose month is shown, when it is not one's own. */
-    viewedTeammateName: isOwnMonth
-      ? null
-      : (teammates.find((user) => user.id === viewedUserId)?.display_name ?? null),
+    viewedTeammateName: isOwnMonth ? null : (viewedTeammate?.display_name ?? null),
 
     /**
      * The two gestures a month is committed or given back with.
      *
-     * They never cross, and neither depends on the dimension the other reads:
-     * validating is about the month being one's own, whatever the role;
-     * reopening is about being a manager, whoever the month belongs to. The
-     * state of the month is what tells them apart, so they never show together.
+     * Validating is for the owner, or for a manager whoever the month belongs
+     * to; reopening is about being a manager, whoever the month belongs to.
+     * The state of the month is what tells them apart, so they never show
+     * together.
      */
     /** Whether the month is still open: a validated one is read, not written. */
     writable: Boolean(grid?.is_writable),
 
-    canValidate: Boolean(grid?.is_writable) && isOwnMonth,
+    canValidate: Boolean(grid?.is_writable) && mayValidate,
     canReopen: Boolean(grid && !grid.is_writable) && holds(me?.role, "MANAGER"),
 
     /** Missions the viewer contributes to, offered first when adding a row. */
@@ -327,7 +327,10 @@ export function useTimesheetMonth() {
       // The month closes to writes: what is waiting goes out before it does,
       // or it would be refused and lost.
       await entries.flush();
-      await validateMonth.mutateAsync({ month });
+      await validateMonth.mutateAsync({
+        month,
+        params: isOwnMonth ? undefined : { user_id: targetUserId ?? undefined },
+      });
       await refresh();
     },
 

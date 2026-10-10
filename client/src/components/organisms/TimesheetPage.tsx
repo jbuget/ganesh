@@ -279,6 +279,7 @@ export function TimesheetPage() {
           month={formatMonth(cursor.year, cursor.month)}
           totalEntered={grid.actual_total + grid.forecast_total}
           workingDays={grid.working_days}
+          teammate={month.viewedTeammateName}
           onConfirm={month.validate}
         />
       )}

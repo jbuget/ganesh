@@ -44,7 +44,11 @@ class Month:
         return self.state is MonthState.OPEN
 
     def validate(self, by: User, at: datetime | None = None) -> None:
-        """Locks the month. Everyone validates their own."""
+        """Locks the month. Everyone validates their own, a manager anybody's."""
+        if not by.can_validate_month_of(self.user_id):
+            raise ForbiddenActionError(
+                "Only the owner of a month, or a manager, can validate it."
+            )
         if self.state is MonthState.VALIDATED:
             raise ForbiddenActionError("This month is already validated.")
         self.state = MonthState.VALIDATED
