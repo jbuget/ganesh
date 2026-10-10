@@ -23,3 +23,8 @@ def mentioned_ids(body: str) -> list[int]:
             seen.add(who)
             ids.append(who)
     return ids
+
+
+def mention_link(user_id: int, name: str) -> str:
+    """A mention as the thread stores it: the id decides, the name is read."""
+    return f"@[{name}](mention://user/{user_id})"

@@ -223,7 +223,7 @@ nothing at all. A promise the API does not keep is worse than a missing box.
 | `stats:read` | `GET /stats` | — |
 | `projects:read` | `GET /projects`, `/projects/{id}/detail`, `/projects/board`, the `find_project`, `project_brief` and `project_news` tools | — |
 | `projects:write` | create, correct, change phase, archive, unarchive, import | delete, attach/detach, staff, move a card, and the whole service sheet |
-| `updates:write` | `POST /projects/{id}/updates`, and the `record_review` tool | correcting and removing a post, and naming anybody: a mention is refused |
+| `updates:write` | `POST /projects/{id}/updates`, and the `record_review` tool | correcting and removing a post; `record_review` names people only through `mentions`, by name, never by a link in the note |
 | `entries:read` | `GET /entries/export` | writing time through a route |
 | `entries:write` | the `declare_time` tool, and no route | writing anybody else's month |
 | `users:read` | `GET /users` | role, activation, identity |

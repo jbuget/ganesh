@@ -308,7 +308,7 @@ the domain is even asked, the validated month and the unknown project caught by
 name. The domain stays the authority; this is its reflection, as a locked cell
 on the grid is.
 
-### `record_review(project_id: int, note: str, phase?: str)`
+### `record_review(project_id: int, note: str, phase?: str, mentions?: list[str])`
 
 **Scope** `updates:write`, and `projects:write` for the phase alone. The weekly
 kanban review, said once per project: what was told about it, and where it now
@@ -332,14 +332,19 @@ the second in hand. A word that is neither comes back with the six listed: a
 model told « invalid enum » guesses again, one handed the list picks. Off-project
 work is refused a phase in words, as the domain refuses it.
 
-**And it convokes nobody.** A mention travels as `@[Nom](mention://user/12)`
-and notifies the person it names. A model writing up a review it has just been
-told about recopies a name out of the thread and summons them for nothing — and
-a tool that quietly removed the mention would consign something other than what
-was said, which is worse: the caller would believe the person had been named.
-The note is **refused**, out loud, before the phase is even read, and the
-refusal says the thread is told anyway. A plain « @Marie » is not a mention and
-goes through untouched.
+**It convokes only whom it can name.** A mention travels as
+`@[Nom](mention://user/12)` and notifies the person it names. A model cannot be
+trusted with the identifier — recopied out of a thread it reads exactly like a
+real one — so a link written into the note is **refused**, out loud, and who is
+to be told goes apart, in `mentions`, **by name**. The server resolves each name
+to exactly one active account (case, accents and extra spaces ignored; an exact
+name wins over a longer one) and writes the link itself, as a `cc` line under
+the note. The spaces of « Prénom Nom » are therefore never parsed out of a
+sentence, and an id nobody checked never reaches the thread. A name that matches
+nobody, or several, refuses **the whole review** — nothing posted, no phase
+moved — since the wrong person summoned cannot be taken back. Deactivated
+accounts and guests are nobody. A plain « @Marie » in the note is not a mention
+and goes through untouched.
 
 > Revue consignée sur le projet #13. Phase désormais : construction.
 
