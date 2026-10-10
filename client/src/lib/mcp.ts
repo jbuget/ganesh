@@ -166,7 +166,7 @@ export const MCP_TOOLS: McpTool[] = [
   {
     name: "record_review",
     answers:
-      "Consigne ce qui s'est dit sur un projet en revue, et sa phase si elle a bougé. La note et la phase partent ensemble, ou ne partent pas : une revue est un seul geste. Une mention « @… » est refusée : une note écrite depuis un terminal ne convoque personne.",
+      "Consigne ce qui s'est dit sur un projet en revue, et sa phase si elle a bougé. La note et la phase partent ensemble, ou ne partent pas : une revue est un seul geste. Pour prévenir quelqu'un, donnez son nom dans « mentions » : il doit désigner un seul compte actif, sinon la revue est refusée.",
     scope: "updates:write",
     also: "projects:write",
   },
