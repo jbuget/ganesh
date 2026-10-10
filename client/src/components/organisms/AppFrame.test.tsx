@@ -27,8 +27,10 @@ vi.mock("@/components/organisms/CommandPalette", () => ({
   CommandPalette: () => null,
 }));
 
-// It reaches for a server of its own; what the frame is tested on is whether
-// it hangs it, not what it draws.
+vi.mock("@/components/organisms/AssistantPanel", () => ({
+  AssistantPanel: () => <p>L&apos;assistant</p>,
+}));
+
 vi.mock("@/components/organisms/MoodReminder", () => ({
   MoodReminder: () => <p>Le rappel du moral</p>,
 }));
@@ -77,6 +79,24 @@ describe("AppFrame", () => {
     draw();
 
     expect(screen.queryByText("Le rappel du moral")).toBeNull();
+  });
+
+  it("hangs the assistant for the team", () => {
+    user.current = { id: 1, role: "TEAMMATE" };
+
+    draw();
+
+    expect(screen.getByText("L'assistant")).toBeInTheDocument();
+  });
+
+  it("hangs no assistant for a guest", () => {
+    // A guest reaches « Mes demandes » and nothing else.
+    user.current = { id: 7, role: "GUEST" };
+    pathname.current = "/requests";
+
+    draw();
+
+    expect(screen.queryByText("L'assistant")).toBeNull();
   });
 
   it("sends a guest back to their own screen", () => {

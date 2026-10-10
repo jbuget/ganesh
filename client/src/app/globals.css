@@ -200,3 +200,51 @@ body {
     box-shadow: 0 0 0 3px var(--color-blue-400);
   }
 }
+
+/*
+ * A thumb given under an assistant's answer.
+ *
+ * It springs once, tilting the way it points, and a ring of its own colour
+ * spreads from it and fades: the click is heard, then the thumb rests in its
+ * colour. Once only — a verdict is acknowledged, not celebrated for as long as
+ * it is on screen.
+ *
+ * A reader who asked for no movement gets the colour alone.
+ */
+@keyframes verdict-spring {
+  0% {
+    transform: scale(1) rotate(0deg);
+    box-shadow: 0 0 0 0 var(--verdict-ring);
+  }
+  35% {
+    transform: scale(1.45) rotate(var(--verdict-tilt));
+  }
+  65% {
+    transform: scale(0.9) rotate(0deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
+/* A colour of its own rather than `currentColor`, which no browser
+   interpolates inside a keyframe: the ring would jump rather than spread. */
+.verdict-up {
+  --verdict-tilt: -14deg;
+  --verdict-ring: color-mix(in oklab, var(--color-emerald-500) 45%, transparent);
+  animation: verdict-spring 0.5s ease-out;
+}
+
+.verdict-down {
+  --verdict-tilt: 14deg;
+  --verdict-ring: color-mix(in oklab, var(--color-red-500) 45%, transparent);
+  animation: verdict-spring 0.5s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .verdict-up,
+  .verdict-down {
+    animation: none;
+  }
+}

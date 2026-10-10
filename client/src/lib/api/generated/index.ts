@@ -1,6 +1,7 @@
 export * from "./activity-summary/activity-summary";
 export * from "./admin/admin";
 export * from "./api-keys/api-keys";
+export * from "./assistant/assistant";
 export * from "./audit-logs/audit-logs";
 export * from "./auth/auth";
 export * from "./calendar/calendar";
