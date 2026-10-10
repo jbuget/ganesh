@@ -213,6 +213,20 @@ class TestFollowing:
 
         assert project.is_followed is True
 
+    def test_following_says_whether_anything_moved(self) -> None:
+        """A second click says nothing new: the log only holds what moved."""
+        project = make_project()
+
+        assert project.follow() is True
+        assert project.follow() is False
+
+    def test_unfollowing_says_whether_anything_moved(self) -> None:
+        project = make_project()
+        project.follow()
+
+        assert project.unfollow() is True
+        assert project.unfollow() is False
+
     def test_unfollowing_lowers_the_mark(self) -> None:
         project = make_project()
         project.follow()

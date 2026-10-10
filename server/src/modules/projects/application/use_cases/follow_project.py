@@ -61,11 +61,8 @@ class FollowProjectUseCase(_FollowingGesture):
 
     async def execute(self, command: FollowProjectCommand) -> Project:
         project = await self._load(command)
-        # A second click says nothing new, and the log only holds what moved.
-        if project.is_followed:
-            return project
-        project.follow()
-        await self._save(command, project, AuditAction.PROJECT_FOLLOW)
+        if project.follow():
+            await self._save(command, project, AuditAction.PROJECT_FOLLOW)
         return project
 
 
@@ -74,8 +71,6 @@ class UnfollowProjectUseCase(_FollowingGesture):
 
     async def execute(self, command: FollowProjectCommand) -> Project:
         project = await self._load(command)
-        if not project.is_followed:
-            return project
-        project.unfollow()
-        await self._save(command, project, AuditAction.PROJECT_UNFOLLOW)
+        if project.unfollow():
+            await self._save(command, project, AuditAction.PROJECT_UNFOLLOW)
         return project

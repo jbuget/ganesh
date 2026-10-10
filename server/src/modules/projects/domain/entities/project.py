@@ -275,14 +275,22 @@ class Project:
         self.parent_id = None
         self.category = inherited_category
 
-    def follow(self) -> None:
-        """Marks the mission as one the team keeps an eye on."""
-        self._ensure_followable()
-        self.is_followed = True
+    def follow(self) -> bool:
+        """Marks the mission as one the team keeps an eye on.
 
-    def unfollow(self) -> None:
-        """Lowers the mark. Lowering what was never raised changes nothing."""
+        Says whether anything moved: a second click says nothing new, and
+        whoever records the gesture has nothing to record.
+        """
+        self._ensure_followable()
+        moved = not self.is_followed
+        self.is_followed = True
+        return moved
+
+    def unfollow(self) -> bool:
+        """Lowers the mark, saying whether there was one to lower."""
+        moved = self.is_followed
         self.is_followed = False
+        return moved
 
     def _ensure_followable(self) -> None:
         # An absence or a training is not something anybody keeps an eye on:
