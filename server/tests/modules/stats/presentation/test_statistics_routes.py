@@ -21,6 +21,8 @@ from src.modules.stats.application.use_cases.compute_statistics import (
 from src.modules.stats.domain.entities.surface_usage import Surface, Tally, Trace
 from src.modules.stats.presentation.dependencies import get_compute_statistics_use_case
 from src.modules.users.domain.entities.user import Role, User
+from src.shared.enums.department import Department
+from src.shared.enums.team import Team
 from src.shared.utils import clock
 from tests.helpers.in_memory_repositories import (
     InMemoryStatisticsRepository,
@@ -33,6 +35,8 @@ READER = User(
     email="a@waat.fr",
     display_name="A. Ba",
     role=Role.TEAMMATE,
+    department=Department.INFORMATION_SYSTEMS,
+    team=Team.ENGINEERING,
 )
 TEAM = [
     READER,
@@ -50,7 +54,7 @@ def use_case() -> ComputeStatisticsUseCase:
     return ComputeStatisticsUseCase(
         users=InMemoryUserRepository(TEAM),
         statistics=InMemoryStatisticsRepository(
-            declared_by_day={clock.today(): 6.0},
+            declared_by_day={clock.today(): {1: 6.0}},
             contributors={1},
             delays=[0, 1, 30],
             by_kind={ProjectKind.PROJECT: 4.0, ProjectKind.OFF_PROJECT: 2.0},
@@ -125,6 +129,9 @@ async def test_coverage_comes_with_what_it_is_measured_against(
     assert coverage["declared_days"] == 6.0
     assert "expected_days" in coverage
     assert "rate" in coverage
+    # Whose time it is read over, so the screen can say it.
+    assert coverage["team"] == "engineering"
+    assert coverage["people"] == 1
 
 
 async def test_teammates_who_declared_nothing_are_named(

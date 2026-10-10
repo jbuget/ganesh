@@ -108,6 +108,22 @@ describe("sortUsers", () => {
     ]);
   });
 
+  it("orders by where one works, the team read under its department", () => {
+    const team = [
+      teammate("Zoé", { department: "information_systems", team: "sysnet" }),
+      teammate("Élodie", { department: "landlords" }),
+      teammate("Adrien", { department: "information_systems", team: "data" }),
+      teammate("Bruno"),
+    ];
+
+    expect(names(sortUsers(team, { column: "department", direction: "asc" }))).toEqual([
+      "Élodie",
+      "Adrien",
+      "Zoé",
+      "Bruno",
+    ]);
+  });
+
   it("orders by status, open access first", () => {
     const team = [teammate("Partie", { is_active: false }), teammate("Présente")];
 

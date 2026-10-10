@@ -1,5 +1,6 @@
 import type { UserResponse } from "@/lib/api/generated/model";
 import { roleRank } from "@/lib/roles";
+import { workplaceLabel } from "@/lib/teams";
 import {
   NO_COLUMN_SORT,
   compareValues,
@@ -10,7 +11,8 @@ import {
 } from "@/lib/table-sort";
 
 /** The team list columns the list can be ordered by. */
-export type UserSortColumn = "name" | "email" | "github" | "role" | "login" | "status";
+export type UserSortColumn =
+  "name" | "email" | "department" | "github" | "role" | "login" | "status";
 
 /** The column asked for, or `null` for the team list's own order. */
 export type UserSort = ColumnSort<UserSortColumn>;
@@ -20,6 +22,7 @@ export const NO_USER_SORT: UserSort = NO_COLUMN_SORT;
 const COLUMNS: UserSortColumn[] = [
   "name",
   "email",
+  "department",
   "github",
   "role",
   "login",
@@ -38,6 +41,8 @@ const COLUMNS: UserSortColumn[] = [
 const VALUES: Record<UserSortColumn, (user: UserResponse) => string | number | null> = {
   name: (user) => user.display_name,
   email: (user) => user.email,
+  // As the row reads it, so the teams of one department follow each other.
+  department: (user) => workplaceLabel(user.department, user.team),
   github: (user) => user.github_username ?? null,
   // From the least to the most empowered, as the ladder declares them.
   role: (user) => roleRank(user.role),

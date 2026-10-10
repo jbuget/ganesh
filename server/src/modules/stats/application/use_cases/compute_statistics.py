@@ -19,6 +19,10 @@ from src.modules.stats.domain.entities.surface_usage import SurfaceUsage, Window
 from src.modules.stats.domain.repositories.statistics_repository import (
     StatisticsRepository,
 )
+from src.modules.stats.domain.services.coverage_scope import (
+    coverage_scope,
+    measured_by_coverage,
+)
 from src.modules.stats.domain.services.month_closing import closed_months_covered_by
 from src.modules.stats.domain.services.surface_reading import (
     read_surfaces,
@@ -43,14 +47,13 @@ class ComputeStatisticsUseCase:
         period = Period.of(query.range_, query.today)
         previous = period.previous()
         team = await self._users.list_all()
-
-        coverage = await self._coverage(period, len(team))
-        previous_coverage = await self._coverage(previous, len(team))
+        measured = measured_by_coverage(team)
 
         return Statistics(
             period=period,
-            coverage=coverage,
-            previous_coverage=previous_coverage,
+            coverage=await self._coverage(period, measured),
+            previous_coverage=await self._coverage(previous, measured),
+            coverage_scope=coverage_scope(measured),
             freshness=Freshness(delays=await self._statistics.entry_delays(period)),
             month_validation=await self._month_validation(period, query, team),
             adoption=await self._adoption(period, team),
@@ -59,10 +62,11 @@ class ComputeStatisticsUseCase:
             registry=await self._registry(period),
         )
 
-    async def _coverage(self, period: Period, teammates: int) -> Coverage:
+    async def _coverage(self, period: Period, measured: list[User]) -> Coverage:
+        user_ids = [user.id for user in measured if user.id is not None]
         return Coverage(
-            declared_days=await self._statistics.declared_days(period),
-            expected_days=expected_days(period, teammates),
+            declared_days=await self._statistics.declared_days(period, user_ids),
+            expected_days=expected_days(period, len(measured)),
         )
 
     async def _month_validation(

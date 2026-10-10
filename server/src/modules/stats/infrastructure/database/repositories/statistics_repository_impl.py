@@ -49,10 +49,10 @@ class SqlStatisticsRepository(StatisticsRepository):
     def _within(self, period: Period) -> ColumnElement[bool]:
         return EntryModel.day.between(period.start, period.end)
 
-    async def declared_days(self, period: Period) -> float:
+    async def declared_days(self, period: Period, user_ids: list[int]) -> float:
         total = await self._session.scalar(
             select(func.coalesce(func.sum(EntryModel.value), 0.0)).where(
-                self._within(period)
+                self._within(period), EntryModel.user_id.in_(user_ids)
             )
         )
         return float(total or 0.0)

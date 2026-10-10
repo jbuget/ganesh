@@ -61,6 +61,7 @@ from src.modules.users.domain.entities.user import Role
 from src.modules.users.infrastructure.database.models.user_model import UserModel
 from src.shared.enums.department import Department
 from src.shared.enums.org_level import OrgLevel
+from src.shared.enums.team import Team
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("seed")
@@ -94,10 +95,21 @@ class Teammate:
     #: carried to have to be in the picker on the day the recueil opens, and
     #: an account nobody can create from a screen has to come from somewhere.
     org_level: OrgLevel | None = None
+    #: The team inside that department, for a department cut into teams.
+    team: Team | None = None
     #: Addresses this person was handed before: an account is found by its
     #: email, so a typo corrected in the list alone would create a second
     #: account beside the first rather than putting it right.
     previous_emails: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        # Said while reading the file rather than left to the database, which
+        # would take the line without a word: the screen alone refuses it.
+        if self.team is not None and self.team.department is not self.department:
+            raise ValueError(
+                f"{self.email} : l'équipe {self.team.value} n'est pas dans "
+                f"le département {self.department.value}."
+            )
 
 
 def read_data(path: pathlib.Path, what: str) -> Any:
@@ -135,6 +147,7 @@ def load_team() -> list[Teammate]:
             org_level=(
                 OrgLevel(row["org_level"]) if row.get("org_level") else None
             ),
+            team=Team(row["team"]) if row.get("team") else None,
             previous_emails=tuple(row.get("previous_emails", ())),
         )
         for row in rows
@@ -323,6 +336,7 @@ async def seed_users(team: list[Teammate]) -> tuple[int, int]:
                         department=teammate.department,
                         github_username=teammate.github_username,
                         org_level=teammate.org_level,
+                        team=teammate.team,
                     )
                 )
                 created += 1
@@ -330,9 +344,18 @@ async def seed_users(team: list[Teammate]) -> tuple[int, int]:
 
             # The role and the access are left alone: they are given out from
             # the screen, and this script has no business taking them back.
-            # The handle and the level are only ever added: a list that says
-            # nothing about someone's GitHub account, or about where they sit,
-            # does not say they have neither.
+            # The handle, the level and the team are only ever added: a list
+            # that says nothing about someone's GitHub account, where they sit
+            # or which team they are in, does not say they have none. A team
+            # the department has just left behind goes, though: it would put
+            # the person in two places at once.
+            kept_team = (
+                account.team
+                if account.team is not None
+                and account.team.department is teammate.department
+                else None
+            )
+            team = teammate.team or kept_team
             drifted = (
                 account.first_name != teammate.first_name
                 or account.last_name != teammate.last_name
@@ -345,6 +368,7 @@ async def seed_users(team: list[Teammate]) -> tuple[int, int]:
                     teammate.org_level is not None
                     and account.org_level is not teammate.org_level
                 )
+                or account.team is not team
             )
             if drifted:
                 account.first_name = teammate.first_name
@@ -354,6 +378,7 @@ async def seed_users(team: list[Teammate]) -> tuple[int, int]:
                     account.github_username = teammate.github_username
                 if teammate.org_level is not None:
                     account.org_level = teammate.org_level
+                account.team = team
                 updated += 1
 
         await session.commit()

@@ -155,6 +155,44 @@ describe("UserIdentityTab", () => {
 
     expect(onUpdateIdentity).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }), {
       department: "landlords",
+      team: null,
+    });
+  });
+
+  it("gives the team of a department cut into teams", () => {
+    openTab({ department: "information_systems", team: "data" });
+
+    expect(screen.getByText("Équipe")).toBeInTheDocument();
+    expect(screen.getByText("Data")).toBeInTheDocument();
+  });
+
+  it("asks for no team where the department is not cut into any", () => {
+    openTab({ department: "landlords" });
+
+    expect(screen.queryByText("Équipe")).toBeNull();
+  });
+
+  it("lets a manager place a teammate in a team of their department", async () => {
+    openTab({ department: "information_systems", team: null }, { editable: true });
+
+    await userEvent.click(screen.getByRole("button", { name: /équipe/i }));
+    expect(screen.queryByRole("button", { name: "Bailleurs" })).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Sysnet" }));
+
+    expect(onUpdateIdentity).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }), {
+      team: "sysnet",
+    });
+  });
+
+  it("lets go of the team when the department no longer holds it", async () => {
+    openTab({ department: "information_systems", team: "data" }, { editable: true });
+
+    await userEvent.click(screen.getByRole("button", { name: /département/i }));
+    await userEvent.click(screen.getByRole("button", { name: "Bailleurs" }));
+
+    expect(onUpdateIdentity).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }), {
+      department: "landlords",
+      team: null,
     });
   });
 

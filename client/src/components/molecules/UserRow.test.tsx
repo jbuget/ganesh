@@ -36,6 +36,18 @@ function renderRow(user: UserResponse) {
 describe("UserRow", () => {
   beforeEach(() => onOpen.mockClear());
 
+  it("shows where the teammate works, the team under its department", () => {
+    renderRow({ ...jeremy, department: "information_systems", team: "data" });
+
+    expect(screen.getByText("Système d'information · Data")).toBeInTheDocument();
+  });
+
+  it("shows a dash where nobody has said where the teammate works", () => {
+    renderRow({ ...jeremy, department: null, github_username: null });
+
+    expect(screen.getAllByText("—")).toHaveLength(2);
+  });
+
   it("shows the teammate, their email and their role", () => {
     renderRow(jeremy);
 

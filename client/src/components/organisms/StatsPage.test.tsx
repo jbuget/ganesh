@@ -33,6 +33,8 @@ const STATISTICS: StatisticsResponse = {
     missing_days: 21,
     rate: 142 / 163,
     delta_in_points: 6,
+    team: "engineering",
+    people: 15,
   },
   freshness: {
     entries: 220,

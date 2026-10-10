@@ -34,6 +34,7 @@ def to_entity(model: UserModel) -> User:
         department=model.department,
         github_username=model.github_username,
         org_level=model.org_level,
+        team=model.team,
         presence=_presence_of(model),
         reminder_cadence=model.reminder_cadence,
         reminder_sent_at=model.reminder_sent_at,
@@ -84,6 +85,7 @@ class SqlUserRepository(UserRepository):
             department=user.department,
             github_username=user.github_username,
             org_level=user.org_level,
+            team=user.team,
             reminder_cadence=user.reminder_cadence,
             reminder_sent_at=user.reminder_sent_at,
         )
@@ -110,6 +112,7 @@ class SqlUserRepository(UserRepository):
         model.department = user.department
         model.github_username = user.github_username
         model.org_level = user.org_level
+        model.team = user.team
         model.reminder_cadence = user.reminder_cadence
         model.reminder_sent_at = user.reminder_sent_at
         _write_presence(model, user.presence)

@@ -123,14 +123,34 @@ async def test_declared_days_only_sum_the_window(db_session: AsyncSession) -> No
     await an_entry(db_session, user_id, project_id, date(2026, 9, 15), value=0.5)
     await an_entry(db_session, user_id, project_id, date(2026, 9, 1))
 
-    assert await SqlStatisticsRepository(db_session).declared_days(WINDOW) == 1.5
+    assert (
+        await SqlStatisticsRepository(db_session).declared_days(WINDOW, [user_id])
+        == 1.5
+    )
+
+
+async def test_declared_days_only_sum_whoever_is_measured(
+    db_session: AsyncSession,
+) -> None:
+    ada = await a_user(db_session, "ada")
+    grace = await a_user(db_session, "grace")
+    project_id = await a_mission(db_session, "Portail")
+    await an_entry(db_session, ada, project_id, MONDAY)
+    await an_entry(db_session, grace, project_id, MONDAY, value=0.5)
+
+    assert await SqlStatisticsRepository(db_session).declared_days(WINDOW, [ada]) == 1.0
 
 
 async def test_a_window_without_an_entry_declares_nothing(
     db_session: AsyncSession,
 ) -> None:
     # Zero, not None: nothing declared is a figure, not a missing one.
-    assert await SqlStatisticsRepository(db_session).declared_days(WINDOW) == 0.0
+    user_id = await a_user(db_session, "ada")
+
+    assert (
+        await SqlStatisticsRepository(db_session).declared_days(WINDOW, [user_id])
+        == 0.0
+    )
 
 
 async def test_contributors_are_those_who_declared_over_the_window(

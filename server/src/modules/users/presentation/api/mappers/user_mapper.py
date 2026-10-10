@@ -23,6 +23,7 @@ def to_user_response(user: User) -> UserResponse:
         department=user.department,
         github_username=user.github_username,
         org_level=user.org_level,
+        team=user.team,
         presence=to_presence_response(user.presence),
         reminder_cadence=user.reminder_cadence,
     )

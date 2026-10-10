@@ -8,6 +8,8 @@ from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.enums.department import Department
 from src.shared.enums.org_level import OrgLevel
+from src.shared.enums.team import Team
+from src.shared.exceptions.domain_exceptions import ValidationError
 
 
 def make_user(
@@ -180,6 +182,7 @@ def test_a_civil_name_is_trimmed() -> None:
         department=None,
         github_username=None,
         org_level=None,
+        team=None,
     )
 
     assert user.first_name == "Léa"
@@ -195,6 +198,7 @@ def test_a_blank_name_reads_as_unknown_rather_than_empty() -> None:
         department=None,
         github_username=None,
         org_level=None,
+        team=None,
     )
 
     assert user.first_name is None
@@ -209,6 +213,7 @@ def test_a_teammate_belongs_to_one_department() -> None:
         department=Department.CUSTOMER_SERVICE,
         github_username=None,
         org_level=None,
+        team=None,
     )
 
     assert user.department is Department.CUSTOMER_SERVICE
@@ -222,6 +227,7 @@ def test_the_name_one_reads_is_the_civil_one_once_it_is_known() -> None:
         department=None,
         github_username=None,
         org_level=None,
+        team=None,
     )
 
     assert user.label == "Léa Chen"
@@ -235,6 +241,7 @@ def test_a_half_known_name_is_still_better_than_the_account_one() -> None:
         department=None,
         github_username=None,
         org_level=None,
+        team=None,
     )
 
     assert user.label == "Léa"
@@ -254,6 +261,7 @@ def test_a_github_handle_is_kept_as_the_handle_alone() -> None:
         department=None,
         github_username=" @lea-chen ",
         org_level=None,
+        team=None,
     )
 
     assert user.github_username == "lea-chen"
@@ -267,6 +275,7 @@ def test_a_blank_github_handle_reads_as_unknown() -> None:
         department=None,
         github_username="  ",
         org_level=None,
+        team=None,
     )
 
     assert user.github_username is None
@@ -280,6 +289,7 @@ def test_a_teammate_sits_somewhere_in_the_organisation() -> None:
         department=Department.CUSTOMER_SERVICE,
         github_username=None,
         org_level=OrgLevel.COMEX,
+        team=None,
     )
 
     assert user.org_level is OrgLevel.COMEX
@@ -288,6 +298,71 @@ def test_a_teammate_sits_somewhere_in_the_organisation() -> None:
 def test_a_level_nobody_has_said_reads_as_unknown() -> None:
     """Three hundred people sign in; nobody qualifies them one by one."""
     assert make_user().org_level is None
+
+
+def test_a_teammate_works_in_a_team_of_their_department() -> None:
+    user = make_user()
+    user.set_identity(
+        first_name="Léa",
+        last_name="Chen",
+        department=Department.INFORMATION_SYSTEMS,
+        github_username=None,
+        org_level=None,
+        team=Team.DATA,
+    )
+
+    assert user.team is Team.DATA
+
+
+def test_a_team_nobody_has_said_reads_as_unknown() -> None:
+    """Most departments are not cut into teams, or nobody has said how."""
+    assert make_user().team is None
+
+
+def test_a_team_outside_the_department_is_refused() -> None:
+    """« Service client · Data » would put somebody in two places at once."""
+    user = make_user()
+
+    with pytest.raises(ValidationError):
+        user.set_identity(
+            first_name="Léa",
+            last_name="Chen",
+            department=Department.CUSTOMER_SERVICE,
+            github_username=None,
+            org_level=None,
+            team=Team.DATA,
+        )
+
+
+def test_a_team_without_a_department_is_refused() -> None:
+    """A team is only ever read under its department, never on its own."""
+    user = make_user()
+
+    with pytest.raises(ValidationError):
+        user.set_identity(
+            first_name="Léa",
+            last_name="Chen",
+            department=None,
+            github_username=None,
+            org_level=None,
+            team=Team.SYSNET,
+        )
+
+
+def test_a_refused_sheet_leaves_the_previous_one_whole() -> None:
+    user = make_user()
+    user.set_identity(
+        "Léa", "Chen", Department.INFORMATION_SYSTEMS, None, None, Team.DATA
+    )
+
+    with pytest.raises(ValidationError):
+        user.set_identity(
+            "Lou", "Chen", Department.CUSTOMER_SERVICE, None, None, Team.DATA
+        )
+
+    assert user.first_name == "Léa"
+    assert user.department is Department.INFORMATION_SYSTEMS
+    assert user.team is Team.DATA
 
 
 def test_no_letter_goes_out_until_somebody_asks_for_one() -> None:

@@ -17,6 +17,7 @@ import type {
 } from "@/lib/api/generated/model";
 import { DEPARTMENTS } from "@/lib/departments";
 import { ORG_LEVELS } from "@/lib/org-levels";
+import { keptTeam, teamsOf } from "@/lib/teams";
 import { formatParisDateTime } from "@/lib/instants";
 import { type WeekPresence, weekOf } from "@/lib/presence";
 import { since } from "@/lib/relative-dates";
@@ -65,6 +66,7 @@ export function UserIdentityTab({
   now,
 }: UserIdentityTabProps) {
   const [askingDeactivation, setAskingDeactivation] = useState(false);
+  const teams = teamsOf(user.department);
 
   return (
     <div>
@@ -118,9 +120,29 @@ export function UserIdentityTab({
           options={DEPARTMENTS}
           label="Département"
           editable={editable}
-          onChange={(department) => onUpdateIdentity(user, { department })}
+          onChange={(department) =>
+            onUpdateIdentity(user, {
+              department,
+              team: keptTeam(user.team, department),
+            })
+          }
         />
       </SheetRow>
+
+      {/* Only where the department is cut into teams: most have not said
+          how they are divided, and a row offering nothing would ask for an
+          answer nobody can give. */}
+      {teams.length > 0 && (
+        <SheetRow title="Équipe">
+          <OptionPicker
+            value={user.team}
+            options={teams}
+            label="Équipe"
+            editable={editable}
+            onChange={(team) => onUpdateIdentity(user, { team })}
+          />
+        </SheetRow>
+      )}
 
       <SheetRow title="Niveau">
         {/* Where the person sits in the company, beside where they work.

@@ -11,6 +11,7 @@ from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.modules.users.domain.entities.user import Role
 from src.shared.enums.department import Department
 from src.shared.enums.org_level import OrgLevel
+from src.shared.enums.team import Team
 
 
 class UserModel(Base):
@@ -45,6 +46,12 @@ class UserModel(Base):
     # placed — a sponsor of needs, today.
     org_level: Mapped[OrgLevel | None] = mapped_column(
         Enum(OrgLevel, name="org_level", native_enum=False, length=16),
+        nullable=True,
+    )
+    # Nullable: only a department cut into teams places anybody in one, and
+    # the domain refuses a team outside the department beside it.
+    team: Mapped[Team | None] = mapped_column(
+        Enum(Team, name="team", native_enum=False, length=32),
         nullable=True,
     )
 

@@ -2,13 +2,16 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 
 import { CoverageHeadline } from "./CoverageHeadline";
+import type { CoverageResponse } from "@/lib/api/generated/model";
 
-const COVERAGE = {
+const COVERAGE: CoverageResponse = {
   declared_days: 142,
   expected_days: 163,
   missing_days: 21,
   rate: 142 / 163,
   delta_in_points: 6,
+  team: "engineering",
+  people: 15,
 };
 
 describe("CoverageHeadline", () => {
@@ -32,6 +35,25 @@ describe("CoverageHeadline", () => {
     expect(screen.getByText(/délai médian de saisie : 1,5 j/)).toBeInTheDocument();
   });
 
+  it("says whose time it is read over", () => {
+    render(<CoverageHeadline coverage={COVERAGE} medianDelay={1.5} />);
+
+    expect(screen.getByText("Équipe Engineering · 15 personnes")).toBeInTheDocument();
+  });
+
+  it("says why there is nothing to read while nobody is in the team", () => {
+    render(
+      <CoverageHeadline
+        coverage={{ ...COVERAGE, people: 0, rate: null, expected_days: 0 }}
+        medianDelay={null}
+      />,
+    );
+
+    expect(
+      screen.getByText("Personne n'est encore rattaché à l'équipe Engineering"),
+    ).toBeInTheDocument();
+  });
+
   it("announces how the rate moved", () => {
     render(<CoverageHeadline coverage={COVERAGE} medianDelay={1.5} />);
 
@@ -48,6 +70,8 @@ describe("CoverageHeadline", () => {
           missing_days: 0,
           rate: null,
           delta_in_points: null,
+          team: "engineering",
+          people: 15,
         }}
         medianDelay={null}
       />,
@@ -72,6 +96,8 @@ describe("CoverageHeadline", () => {
           missing_days: 0,
           rate: 1,
           delta_in_points: 0,
+          team: "engineering",
+          people: 15,
         }}
         medianDelay={1}
       />,

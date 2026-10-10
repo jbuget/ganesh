@@ -14,6 +14,7 @@ from statistics import median
 from src.modules.calendar.domain.entities.period import Period
 from src.modules.projects.domain.entities.project import ProjectCategory, ProjectStatus
 from src.modules.stats.domain.entities.surface_usage import SurfaceUsage
+from src.shared.enums.team import Team
 
 #: Up to this delay, an entry was still written from memory of the day itself.
 DAY_TO_DAY_DELAY = 2
@@ -54,6 +55,19 @@ class Coverage:
         if self.rate is None or previous.rate is None:
             return None
         return (self.rate - previous.rate) * 100
+
+
+@dataclass(frozen=True)
+class CoverageScope:
+    """Whose time the coverage is read over, said beside the figure.
+
+    A rate measured on one team and read as the whole company's is the
+    misreading this exists to prevent — and it explains a figure nobody can
+    read yet: nobody placed in the team leaves nothing to divide.
+    """
+
+    team: Team
+    people: int
 
 
 @dataclass(frozen=True)
@@ -213,6 +227,7 @@ class Statistics:
     period: Period
     coverage: Coverage
     previous_coverage: Coverage
+    coverage_scope: CoverageScope
     freshness: Freshness
     month_validation: MonthValidation
     adoption: Adoption

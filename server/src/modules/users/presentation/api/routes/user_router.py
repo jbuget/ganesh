@@ -212,6 +212,7 @@ async def update_identity(
             department=payload.department,
             github_username=payload.github_username,
             org_level=payload.org_level,
+            team=payload.team,
         )
     )
     await session.commit()

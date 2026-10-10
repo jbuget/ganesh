@@ -21,6 +21,8 @@ const TEAM: UserResponse[] = [
     is_active: true,
     last_login_at: "2026-09-17T07:00:00Z",
     github_username: "jbuget",
+    department: "information_systems",
+    team: "engineering",
   },
   {
     id: 2,
@@ -32,6 +34,7 @@ const TEAM: UserResponse[] = [
     reminder_cadence: "DAILY",
     is_active: true,
     last_login_at: null,
+    department: "landlords",
   },
 ];
 
@@ -84,6 +87,13 @@ describe("UsersTable", () => {
 
     expect(screen.getByText("jbuget")).toBeInTheDocument();
     expect(screen.getByText("—")).toBeInTheDocument();
+  });
+
+  it("names where each teammate works, the team under its department", () => {
+    renderTable();
+
+    expect(screen.getByText("Système d'information · Engineering")).toBeInTheDocument();
+    expect(screen.getByText("Bailleurs")).toBeInTheDocument();
   });
 
   it("opens the teammate a row names", async () => {

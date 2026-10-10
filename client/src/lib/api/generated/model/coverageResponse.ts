@@ -4,6 +4,7 @@
  * Ganesh API
  * OpenAPI spec version: 0.1.0
  */
+import type { Team } from "./team";
 
 /**
  * How much of the expected time was declared.
@@ -14,4 +15,6 @@ export interface CoverageResponse {
   missing_days: number;
   rate: number | null;
   delta_in_points: number | null;
+  team: Team;
+  people: number;
 }

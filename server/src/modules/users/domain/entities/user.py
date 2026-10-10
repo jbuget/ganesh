@@ -8,6 +8,8 @@ from src.modules.users.domain.entities.presence import WeekPresence
 from src.modules.users.domain.entities.reminder_cadence import ReminderCadence
 from src.shared.enums.department import Department
 from src.shared.enums.org_level import OrgLevel
+from src.shared.enums.team import Team
+from src.shared.exceptions.domain_exceptions import ValidationError
 
 #: Below this, a fresh login is not worth a write to the database.
 #:
@@ -87,6 +89,9 @@ class User:
     #: Where this person stands in the company. Left unsaid for most: it is
     #: filled in for whoever has to be told apart — a sponsor of needs, today.
     org_level: OrgLevel | None = None
+    #: The team inside that department, for a department cut into teams.
+    #: Nothing otherwise: most have not said how they are divided, if at all.
+    team: Team | None = None
     #: The ordinary week: which days one works, and from where. On site every
     #: day until somebody says otherwise — the arrangement the team runs on,
     #: so it is what is true of anyone who has said nothing, not a placeholder
@@ -116,17 +121,25 @@ class User:
         department: Department | None,
         github_username: str | None,
         org_level: OrgLevel | None,
+        team: Team | None,
     ) -> None:
         """Gives away who this teammate is, and where they work.
 
-        The five go together: the sheet is written as a whole, and a field
+        The six go together: the sheet is written as a whole, and a field
         left out is a field one has decided to empty.
+
+        A team is only ever read under its department: one outside it would
+        put somebody in two places at once, and is refused before anything
+        is written.
         """
+        if team is not None and team.department is not department:
+            raise ValidationError("The team does not belong to this department.")
         self.first_name = _trimmed(first_name)
         self.last_name = _trimmed(last_name)
         self.department = department
         self.github_username = _handle(github_username)
         self.org_level = org_level
+        self.team = team
 
     @property
     def label(self) -> str:
