@@ -4,6 +4,7 @@ from src.modules.calendar.domain.entities.period import PeriodRange
 from src.modules.stats.domain.entities.statistics import Statistics
 from src.modules.stats.presentation.api.schemas.statistics_schemas import (
     AccountsResponse,
+    ActivityDayResponse,
     AdoptionResponse,
     CategoryShareResponse,
     CoveragePointResponse,
@@ -58,6 +59,10 @@ def to_statistics_response(
                 rate=point.rate,
             )
             for point in statistics.coverage_trend
+        ],
+        activity=[
+            ActivityDayResponse(day=entry.day, gestures=entry.gestures)
+            for entry in statistics.activity
         ],
         freshness=FreshnessResponse(
             entries=statistics.freshness.entries,

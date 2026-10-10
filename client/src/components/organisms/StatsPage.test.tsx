@@ -138,6 +138,10 @@ const STATISTICS: StatisticsResponse = {
       { kind: "update.mention", delivered: 4, read: 4, read_rate: 1 },
     ],
   },
+  activity: [
+    { day: "2026-09-16", gestures: 3 },
+    { day: "2026-09-17", gestures: 0 },
+  ],
   coverage_trend: [
     { week_start: "2026-09-07", declared_days: 12, expected_days: 15, rate: 0.8 },
     { week_start: "2026-09-14", declared_days: 14, expected_days: 15, rate: 14 / 15 },
@@ -195,6 +199,7 @@ describe("StatsPage", () => {
       .getAllByRole("heading", { level: 2 })
       .map((heading) => heading.textContent);
     expect(headings).toEqual([
+      "Activité",
       "Couverture de la saisie",
       "Fiabilité",
       "Adoption",

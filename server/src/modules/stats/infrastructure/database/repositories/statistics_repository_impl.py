@@ -407,6 +407,15 @@ class SqlStatisticsRepository(StatisticsRepository):
             for action, actor_id, gestures in rows.all()
         ]
 
+    async def gestures_by_day(self, period: Period) -> dict[date, int]:
+        day = func.date(AuditLogModel.at)
+        rows = await self._session.execute(
+            select(day, func.count())
+            .where(day.between(period.start, period.end))
+            .group_by(day)
+        )
+        return {gestured_on: int(gestures) for gestured_on, gestures in rows.all()}
+
     async def last_gestures(self) -> dict[AuditAction, date]:
         rows = await self._session.execute(
             select(

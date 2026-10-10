@@ -3,6 +3,7 @@
 import { MetricTile } from "@/components/atoms/MetricTile";
 import { PageHeader } from "@/components/atoms/PageHeader";
 import { RangeSelect } from "@/components/atoms/RangeSelect";
+import { ActivityMosaic } from "@/components/molecules/ActivityMosaic";
 import { CoverageHeadline } from "@/components/molecules/CoverageHeadline";
 import { IntakeMovements } from "@/components/molecules/IntakeMovements";
 import { NotificationReadRates } from "@/components/molecules/NotificationReadRates";
@@ -83,6 +84,16 @@ export function StatsPage() {
   return (
     <PageLayout header={header}>
       <div className="mx-auto flex max-w-4xl flex-col gap-8 pb-4">
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-slate-900">Activité</h2>
+          <p className="mb-3 text-sm text-slate-500">
+            Le produit est-il habité tous les jours, ou par à-coups ? Chaque case est un
+            jour de l&apos;année écoulée, d&apos;autant plus foncée que le journal y
+            compte de gestes. Elle ne suit pas la période choisie.
+          </p>
+          <ActivityMosaic days={statistics.activity} />
+        </section>
+
         <CoverageHeadline
           coverage={coverage}
           trend={statistics.coverage_trend}

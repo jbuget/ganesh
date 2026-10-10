@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AccountsResponse } from "./accountsResponse";
+import type { ActivityDayResponse } from "./activityDayResponse";
 import type { AdoptionResponse } from "./adoptionResponse";
 import type { CoveragePointResponse } from "./coveragePointResponse";
 import type { CoverageResponse } from "./coverageResponse";
@@ -26,6 +27,7 @@ export interface StatisticsResponse {
   period: PeriodResponse;
   coverage: CoverageResponse;
   coverage_trend: CoveragePointResponse[];
+  activity: ActivityDayResponse[];
   freshness: FreshnessResponse;
   month_validation: MonthValidationResponse;
   adoption: AdoptionResponse;

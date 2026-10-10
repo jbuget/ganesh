@@ -90,6 +90,7 @@ function statisticsWith(
       reminders_never: 0,
       reminder_rate: null,
     },
+    activity: [],
     coverage_trend: [],
     stewardship: { active_projects: 20, without_lead: 0, without_tech_lead: 0 },
     thread: { posted: 0, answered: 0, answer_rate: null, followed: 0, silent: 0 },
