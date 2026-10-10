@@ -26,6 +26,8 @@ class AuditAction(StrEnum):
     PROJECT_UPDATE = "project.update"
     PROJECT_DELETE = "project.delete"
     PROJECT_STATUS_CHANGE = "project.status_change"
+    PROJECT_FOLLOW = "project.follow"
+    PROJECT_UNFOLLOW = "project.unfollow"
     ACTIVITY_CREATE = "activity.create"
     ACTIVITY_UPDATE = "activity.update"
     ACTIVITY_ARCHIVE = "activity.archive"
@@ -36,6 +38,9 @@ class AuditAction(StrEnum):
     UPDATE_POST = "update.post"
     UPDATE_EDIT = "update.edit"
     UPDATE_REMOVE = "update.remove"
+    #: The mark the thread carried for the revue before it moved onto the
+    #: mission. No longer written; kept so the lines already in the register
+    #: still read.
     UPDATE_FLAG = "update.flag"
     UPDATE_CLEAR = "update.clear"
     COMMENT_POST = "comment.post"

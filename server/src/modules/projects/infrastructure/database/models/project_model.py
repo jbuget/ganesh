@@ -52,6 +52,10 @@ class ProjectModel(Base):
     archived_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    #: Whether the team keeps an eye on it right now. Set by hand.
+    is_followed: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
     estimated_days: Mapped[float | None] = mapped_column(Float, nullable=True)
     category: Mapped[ProjectCategory | None] = mapped_column(
         Enum(ProjectCategory, name="project_category", native_enum=False, length=32),

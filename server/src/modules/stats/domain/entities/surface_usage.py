@@ -95,6 +95,10 @@ SURFACE_OF: dict[AuditAction, Surface] = {
     AuditAction.PROJECT_CREATE: Surface.PROJECT_REGISTRY,
     AuditAction.PROJECT_UPDATE: Surface.PROJECT_REGISTRY,
     AuditAction.PROJECT_DELETE: Surface.PROJECT_REGISTRY,
+    # Saying which missions the team keeps an eye on: a mark on the list one
+    # keeps, read back as a filter on it.
+    AuditAction.PROJECT_FOLLOW: Surface.PROJECT_REGISTRY,
+    AuditAction.PROJECT_UNFOLLOW: Surface.PROJECT_REGISTRY,
     # Cutting a mission into the trades its days are booked under. Part of
     # keeping the list rather than a surface of its own: one goes to the same
     # screen to declare a mission and to say what it is made of.
@@ -112,9 +116,9 @@ SURFACE_OF: dict[AuditAction, Surface] = {
     AuditAction.UPDATE_POST: Surface.PROJECT_UPDATES,
     AuditAction.UPDATE_EDIT: Surface.PROJECT_UPDATES,
     AuditAction.UPDATE_REMOVE: Surface.PROJECT_UPDATES,
-    # Putting what was said on the agenda of the next revue, and taking it
-    # off. The thread's surface rather than one of its own: the mark is a
-    # property of the words, and it is opened and answered where they are.
+    # The mark the thread used to carry for the revue. No longer made — the
+    # mark is on the mission now — and kept for the lines already written,
+    # which a period read back still has to place.
     AuditAction.UPDATE_FLAG: Surface.PROJECT_UPDATES,
     AuditAction.UPDATE_CLEAR: Surface.PROJECT_UPDATES,
     # Answering under an update. The thread's surface too: whether people

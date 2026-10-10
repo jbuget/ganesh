@@ -27,8 +27,8 @@ class ThreadMessage:
     required field — a mission for an update, the update for a reply —
     without it having to come first.
 
-    What is *not* shared stays on each: an update goes on the agenda of a
-    revue, and a reply does not.
+    What is *not* shared stays on each: an update is counted on the board and
+    announced on the card, and a reply is not.
     """
 
     id: int | None
