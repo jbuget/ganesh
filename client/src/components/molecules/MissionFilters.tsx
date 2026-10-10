@@ -156,6 +156,7 @@ export function MissionFilters({
         {shows("contributors") && (
           <FilterSelect
             label="Intervenant"
+            search="Rechercher un collaborateur"
             options={teammates.map((member) => ({
               value: String(member.id),
               label: member.display_name,

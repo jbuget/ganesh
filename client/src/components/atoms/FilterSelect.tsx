@@ -49,7 +49,8 @@ interface FilterSelectProps {
  * A long list scrolls inside the panel rather than growing past the top of
  * the screen, and is read under the headings its options name — thirty
  * choices in one flat column is a column abandoned at the third line. Longer
- * still, or made of names, it is searched: `search` opens the field.
+ * still, or made of names, it is searched: `search` opens the field, and the
+ * field takes focus on opening — typing three letters beats scrolling.
  *
  * Narrowing the list is a way of finding a value, never of unticking the ones
  * it hides: what was kept is kept, and the trigger goes on counting it.
@@ -116,6 +117,7 @@ export function FilterSelect({
             <Search className={SEARCH_ICON} aria-hidden />
             <Input
               type="search"
+              autoFocus
               value={typed}
               onChange={(event) => setTyped(event.target.value)}
               placeholder={search}
