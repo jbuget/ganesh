@@ -28,6 +28,10 @@ class MachineCaller:
         assert self.owner.id is not None
         return self.owner.id
 
+    def grants(self, scope: ApiKeyScope) -> bool:
+        """Whether the key carries the scope. See `ApiKey.grants`."""
+        return self.key.grants(scope)
+
     def may(self, scope: ApiKeyScope) -> bool:
         """A key never reaches further than the person who answers for it.
 

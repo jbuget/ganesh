@@ -21,7 +21,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, ParamSpec, TypeVar
+from typing import Any, ParamSpec, Protocol, TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
@@ -52,16 +52,36 @@ R = TypeVar("R")
 T = TypeVar("T")
 
 
+class Caller(Protocol):
+    """Whom a tool answers for, and how far it may reach on their behalf.
+
+    A key and its owner, for a terminal client. A person, for the assistant,
+    whose model consults the same tools in the API's own process. Either way a
+    tool asks the same three questions and never learns which it is facing.
+    """
+
+    @property
+    def actor_id(self) -> int: ...
+
+    def grants(self, scope: ApiKeyScope) -> bool:
+        """Whether what is calling was handed this scope at all."""
+        ...
+
+    def may(self, scope: ApiKeyScope) -> bool:
+        """Whether the person it answers for may do what the scope opens."""
+        ...
+
+
 @dataclass(frozen=True)
 class Machine:
-    """Who is calling, and where their tools reach a use case.
+    """The model at the door, whom it speaks for, and where it reaches a use case.
 
     `resolve` sits here rather than being imported by every tool: what a tool
     needs to know is that it asks the machine at the door for a use case, and
     that the session it reads through is the one the door opened.
     """
 
-    caller: MachineCaller
+    caller: Caller
     wiring: Wiring
 
     async def resolve(self, provider: Callable[..., T]) -> T:
@@ -122,7 +142,7 @@ def answers(
         @wraps(tool)
         async def guarded(*args: Any, **kwargs: Any) -> R:
             machine = current_machine()
-            if not machine.caller.key.grants(scope):
+            if not machine.caller.grants(scope):
                 raise ToolError(
                     f"Cette clé ne porte pas la portée « {scope.value} ». "
                     "Demandez-la à un manager, dans l'écran « API »."

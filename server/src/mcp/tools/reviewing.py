@@ -109,7 +109,7 @@ async def record_review(project_id: int, note: str, phase: str | None = None) ->
         )
 
     machine = current_machine()
-    if moving is not None and not machine.caller.key.grants(ALSO):
+    if moving is not None and not machine.caller.grants(ALSO):
         # Named rather than silently skipped: a review that posted its note
         # and left the card where it was would read as a review that landed.
         raise ToolError(
