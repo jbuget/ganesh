@@ -58,7 +58,7 @@ export function holds(role: Role | undefined, floor: Role): boolean {
   return role !== undefined && rank(role) >= rank(floor);
 }
 
-/** A guest reads the application whole and writes nothing into it. */
+/** A guest writes nothing into the application: the recueil aside, it is the team's. */
 export function canWrite(role: Role | undefined): boolean {
   return role !== undefined && role !== "GUEST";
 }

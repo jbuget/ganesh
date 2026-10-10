@@ -14,8 +14,8 @@ interface ProjectActivitiesProps {
   /**
    * Whether the reader may change what the mission is cut into.
    *
-   * A guest reads the application whole and declares nothing into it: the
-   * gestures are simply not offered, the API refusing them anyway.
+   * When it may not, the gestures are simply not offered, the API refusing
+   * them anyway.
    */
   editable: boolean;
   onAdd: (label: string, nature: WorkNature | null) => void | Promise<void>;
