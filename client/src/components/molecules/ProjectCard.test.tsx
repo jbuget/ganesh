@@ -226,8 +226,8 @@ describe("opening the mission", () => {
   });
 
   it("leaves their click to the controls the card carries", () => {
-    // The drag handle and the contributor avatars must not open the mission
-    // under the finger of whoever was aiming at them.
+    // The keyboard handle and the contributor avatars must not open the
+    // mission under the finger of whoever was aiming at them.
     const onOpen = vi.fn();
     render(
       <ProjectCard
@@ -243,11 +243,8 @@ describe("opening the mission", () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
-  it("shows no handle when the card does not move", () => {
-    const { rerender } = render(<ProjectCard now={NOW} card={card()} />);
-    expect(document.querySelector("svg.lucide-grip-vertical")).not.toBeNull();
-
-    rerender(<ProjectCard now={NOW} card={card()} handle={null} />);
+  it("draws no grip: the card is grabbed anywhere", () => {
+    render(<ProjectCard now={NOW} card={card()} />);
 
     expect(document.querySelector("svg.lucide-grip-vertical")).toBeNull();
   });
