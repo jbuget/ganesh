@@ -11,7 +11,7 @@ import { ChooseActivityDialog } from "@/components/atoms/ChooseActivityDialog";
  * One line per mission rather than per trade: the reminder says « you are on
  * this and have declared nothing », which is a fact about the mission. A
  * mission cut into three would otherwise repeat its name three times. Which
- * trade is asked at the moment of adding, and only when there is a choice.
+ * trade is asked at the moment of adding, even when only one is open.
  */
 interface AssignedMission {
   id: number;
@@ -81,16 +81,7 @@ export function AssignedMissionsCallout({
                   ? "Ce projet ne porte aucune activité : personne ne peut y déclarer de temps."
                   : undefined
               }
-              onClick={() => {
-                // Asked only when there is something to ask: a mission
-                // carrying a single trade is added straight away, because a
-                // dialog offering one button takes a click for nothing.
-                if (mission.activities.length === 1) {
-                  void onAdd(mission.id, mission.activities[0].id);
-                } else {
-                  setChoosing(mission);
-                }
-              }}
+              onClick={() => setChoosing(mission)}
               className="flex cursor-pointer items-center gap-1 rounded-md border border-amber-300 bg-white px-2 py-1 text-xs text-amber-900 transition-colors hover:border-amber-400 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus className="size-3 shrink-0 text-amber-500" aria-hidden />
