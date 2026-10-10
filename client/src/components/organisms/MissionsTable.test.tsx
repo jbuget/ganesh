@@ -60,6 +60,7 @@ function table(over: Partial<Parameters<typeof MissionsTable>[0]> = {}) {
     now: NOW,
     onOpen: vi.fn(),
     onOpenThread: vi.fn(),
+    onAttach: vi.fn(),
     ...over,
   };
   render(<MissionsTable {...props} />);
@@ -91,7 +92,7 @@ describe("MissionsTable", () => {
   it("draws the missions it is given, in the order it is given them", () => {
     table({ tree: [node(1, "Portail"), node(2, "Extranet")] });
 
-    const names = screen.getAllByRole("button", { name: /Portail|Extranet/ });
+    const names = screen.getAllByRole("button", { name: /^(Portail|Extranet)$/ });
     expect(names.map((button) => button.textContent)).toEqual(["Portail", "Extranet"]);
   });
 
@@ -200,12 +201,6 @@ describe("the columns put away", () => {
 });
 
 describe("MissionsTable — moving a mission under a project", () => {
-  it("offers no handle while the screen asks for no move", () => {
-    table();
-
-    expect(screen.queryByRole("button", { name: /Déplacer/ })).toBeNull();
-  });
-
   it("offers a handle on a mission that may become a slice of a project", () => {
     table({ onAttach: vi.fn() });
 

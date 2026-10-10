@@ -11,8 +11,7 @@ import { phaseLabel, phaseDot } from "@/lib/board";
 interface ProjectSubProjectsProps {
   subProjects: ProjectResponse[];
   /** A name is all it takes: the rest is steered from the package's own sheet. */
-  /** Left out when the packages may be read and none declared. */
-  onAdd?: (label: string) => Promise<void>;
+  onAdd: (label: string) => Promise<void>;
 }
 
 /**
@@ -68,18 +67,16 @@ export function ProjectSubProjects({ subProjects, onAdd }: ProjectSubProjectsPro
       {/* The same gesture as the one folded in the mission menu, said with
           the same words and answered by the same dialog: two ways in, and
           nothing to tell apart once the name is asked for. */}
-      {onAdd && (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="flex cursor-pointer items-center gap-1 px-1 text-sm text-slate-400 transition-colors hover:text-slate-600"
-        >
-          <Plus className="size-3.5" aria-hidden />
-          Déclarer un sous-projet…
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex cursor-pointer items-center gap-1 px-1 text-sm text-slate-400 transition-colors hover:text-slate-600"
+      >
+        <Plus className="size-3.5" aria-hidden />
+        Déclarer un sous-projet…
+      </button>
 
-      {onAdd && isOpen && (
+      {isOpen && (
         <DeclareProjectDialog
           open
           kind="work_package"

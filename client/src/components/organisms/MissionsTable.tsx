@@ -54,11 +54,10 @@ interface MissionsTableProps {
   /**
    * Makes a mission a work package of the project it is dropped onto.
    *
-   * Given, the rows carry a handle; left out, the table draws itself as it
-   * always has. The gesture is the pointer's alone — the keyboard reaches the
-   * same move through the mission panel's menu.
+   * The gesture is the pointer's alone — the keyboard reaches the same move
+   * through the mission panel's menu.
    */
-  onAttach?: (missionId: number, parentId: number) => void | Promise<void>;
+  onAttach: (missionId: number, parentId: number) => void | Promise<void>;
 }
 
 /**

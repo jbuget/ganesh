@@ -22,13 +22,10 @@ import type { ProjectNode } from "@/lib/project-tree";
  * before the server agreed would have to jump back. What the gesture changes
  * while it lasts is what it shows — the row taken hold of, the row aimed at —
  * and the list is read again once the answer is in.
- *
- * Left without an `onAttach`, the hook hands back a gesture that offers
- * nothing: the table then draws itself as it always has.
  */
 export function useMissionDrag(
   tree: ProjectNode[],
-  onAttach?: (missionId: number, parentId: number) => void | Promise<void>,
+  onAttach: (missionId: number, parentId: number) => void | Promise<void>,
 ) {
   const [dragged, setDragged] = useState<ProjectListItemResponse | null>(null);
   // A few pixels before the drag starts: a row is clickable in full, and
@@ -71,7 +68,7 @@ export function useMissionDrag(
       if (!event.over || mission === null) return;
       const target = find(Number(event.over.id));
       if (target === null || !canReceive(target, mission)) return;
-      void onAttach?.(mission.project.id, target.project.id);
+      void onAttach(mission.project.id, target.project.id);
     },
 
     onDragCancel() {
@@ -80,7 +77,6 @@ export function useMissionDrag(
 
     /** What a row may do under the gesture being made, if any. */
     gesture(mission: ProjectListItemResponse, subProjects: number) {
-      if (!onAttach) return {};
       return {
         movable: canBeAttached(mission, subProjects),
         receiving: canReceive(mission, dragged),
