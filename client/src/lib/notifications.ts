@@ -93,6 +93,10 @@ const WORDINGS: Record<
     what: "a modifié votre feuille de temps de",
     about: month(line),
   }),
+  "month.validated": (line) => ({
+    what: "a validé votre feuille de temps de",
+    about: month(line),
+  }),
   "month.reopened": (line) => ({
     what: "a rouvert votre feuille de temps de",
     about: month(line),
@@ -225,6 +229,7 @@ const KIND_LABELS: Record<NotificationKind, string> = {
   "project.assigned": "Affectations",
   "project.unassigned": "Retraits d'affectation",
   "timesheet.edited": "Mois modifiés par un collègue",
+  "month.validated": "Mois validés par un manager",
   "month.reopened": "Mois rouverts",
   "project.update_posted": "Actualités de projet",
   "project.status_changed": "Changements de phase",

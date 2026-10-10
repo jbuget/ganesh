@@ -24,8 +24,14 @@ def get_validate_month_use_case(
     users: UserRepository = Depends(get_user_repository),
     months: MonthRepository = Depends(get_month_repository),
     audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+    notifications: NotificationDelivery = Depends(get_notification_delivery),
 ) -> ValidateMonthUseCase:
-    return ValidateMonthUseCase(users=users, months=months, audit_logs=audit_logs)
+    return ValidateMonthUseCase(
+        users=users,
+        months=months,
+        audit_logs=audit_logs,
+        notifications=notifications,
+    )
 
 
 def get_reopen_month_use_case(

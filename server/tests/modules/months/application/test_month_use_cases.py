@@ -14,7 +14,10 @@ from src.modules.months.domain.entities.month import Month, MonthState
 from src.modules.notifications.domain.entities.notification import NotificationKind
 from src.modules.notifications.domain.services.delivery import NotificationDelivery
 from src.modules.users.domain.entities.user import Role, User
-from src.shared.exceptions.domain_exceptions import ForbiddenActionError
+from src.shared.exceptions.domain_exceptions import (
+    EntityNotFoundError,
+    ForbiddenActionError,
+)
 from tests.helpers.in_memory_repositories import (
     InMemoryAuditLogRepository,
     InMemoryMonthRepository,
@@ -36,17 +39,36 @@ MANAGER = User(
     display_name="J. Buget",
     role=Role.MANAGER,
 )
+OTHER_TEAMMATE = User(
+    id=3,
+    entra_oid="oid-3",
+    email="a.martin@waat.fr",
+    display_name="A. Martin",
+    role=Role.TEAMMATE,
+)
+OTHER_MANAGER = User(
+    id=4,
+    entra_oid="oid-4",
+    email="m.durand@waat.fr",
+    display_name="M. Durand",
+    role=Role.ADMIN,
+)
 MONTH = date(2026, 9, 1)
 
 
 def build(months: list[Month] | None = None):
-    users = InMemoryUserRepository([TEAMMATE, MANAGER])
+    users = InMemoryUserRepository([TEAMMATE, MANAGER, OTHER_TEAMMATE, OTHER_MANAGER])
     month_repo = InMemoryMonthRepository(months or [])
     audit = InMemoryAuditLogRepository()
     inbox = InMemoryNotificationRepository()
     delivery = NotificationDelivery(inbox)
     return (
-        ValidateMonthUseCase(users=users, months=month_repo, audit_logs=audit),
+        ValidateMonthUseCase(
+            users=users,
+            months=month_repo,
+            audit_logs=audit,
+            notifications=delivery,
+        ),
         ReopenMonthUseCase(
             users=users,
             months=month_repo,
@@ -81,13 +103,60 @@ async def test_validation_is_traced() -> None:
     assert audit.logs[-1].action.value == "month.validate"
 
 
-async def test_a_user_cannot_validate_someone_else_month() -> None:
-    """One validates one's own month: validating for someone else makes no sense."""
+async def test_a_teammate_cannot_validate_a_colleague_month() -> None:
     validate, _, _, _, _ = build()
 
     with pytest.raises(ForbiddenActionError):
         await validate.execute(
-            ValidateMonthCommand(actor_id=1, target_user_id=2, month=MONTH)
+            ValidateMonthCommand(actor_id=1, target_user_id=3, month=MONTH)
+        )
+
+
+async def test_a_manager_validates_a_teammate_month() -> None:
+    validate, _, months, audit, _ = build()
+
+    await validate.execute(
+        ValidateMonthCommand(actor_id=2, target_user_id=1, month=MONTH)
+    )
+
+    month = await months.get(1, MONTH)
+    assert month is not None
+    assert month.state is MonthState.VALIDATED
+    assert month.validated_by == 2
+    assert audit.logs[-1].actor_id == 2
+    assert audit.logs[-1].target_user_id == 1
+
+
+async def test_a_manager_validates_another_manager_month() -> None:
+    validate, _, months, _, _ = build()
+
+    await validate.execute(
+        ValidateMonthCommand(actor_id=2, target_user_id=4, month=MONTH)
+    )
+
+    month = await months.get(4, MONTH)
+    assert month is not None
+    assert month.state is MonthState.VALIDATED
+
+
+async def test_a_manager_validating_a_month_tells_whoever_it_belongs_to() -> None:
+    validate, _, _, _, inbox = build()
+
+    await validate.execute(
+        ValidateMonthCommand(actor_id=2, target_user_id=1, month=MONTH)
+    )
+
+    assert [(told.kind, told.recipient_id) for told in inbox.notifications] == [
+        (NotificationKind.MONTH_VALIDATED, 1)
+    ]
+
+
+async def test_validating_the_month_of_somebody_unknown_is_refused() -> None:
+    validate, _, _, _, _ = build()
+
+    with pytest.raises(EntityNotFoundError):
+        await validate.execute(
+            ValidateMonthCommand(actor_id=2, target_user_id=99, month=MONTH)
         )
 
 

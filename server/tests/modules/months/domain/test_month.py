@@ -87,3 +87,27 @@ def test_the_month_is_normalised_to_its_first_day() -> None:
     month = Month(user_id=1, month=date(2026, 9, 23))
 
     assert month.month == date(2026, 9, 1)
+
+
+def test_a_manager_validates_a_teammate_month() -> None:
+    month = Month(user_id=1, month=date(2026, 9, 1))
+
+    month.validate(by=make_user(Role.MANAGER))
+
+    assert month.state is MonthState.VALIDATED
+    assert month.validated_by == 2
+
+
+def test_a_teammate_cannot_validate_a_colleague_month() -> None:
+    month = Month(user_id=3, month=date(2026, 9, 1))
+
+    with pytest.raises(ForbiddenActionError):
+        month.validate(by=make_user(Role.TEAMMATE))
+
+
+def test_a_manager_validates_the_month_of_an_admin() -> None:
+    month = Month(user_id=5, month=date(2026, 9, 1))
+
+    month.validate(by=make_user(Role.MANAGER))
+
+    assert month.state is MonthState.VALIDATED

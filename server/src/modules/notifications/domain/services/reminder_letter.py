@@ -39,6 +39,7 @@ WORDINGS: dict[NotificationKind, Wording] = {
     NotificationKind.PROJECT_UNASSIGNED: Wording("projet retiré", "projets retirés"),
     # « mois » does not move in the plural; only what qualifies it does.
     NotificationKind.TIMESHEET_EDITED: Wording("mois modifié", "mois modifiés"),
+    NotificationKind.MONTH_VALIDATED: Wording("mois validé", "mois validés"),
     NotificationKind.MONTH_REOPENED: Wording("mois rouvert", "mois rouverts"),
     NotificationKind.PROJECT_UPDATE_POSTED: Wording(
         "actualité de projet", "actualités de projet"

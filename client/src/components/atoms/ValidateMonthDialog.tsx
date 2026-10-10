@@ -20,6 +20,8 @@ interface ValidateMonthDialogProps {
   month: string;
   totalEntered: number;
   workingDays: number;
+  /** Whose month it is, when it is not one's own. */
+  teammate?: string | null;
   onConfirm: () => Promise<void>;
 }
 
@@ -36,6 +38,7 @@ export function ValidateMonthDialog({
   month,
   totalEntered,
   workingDays,
+  teammate = null,
   onConfirm,
 }: ValidateMonthDialogProps) {
   const missing = Math.max(0, workingDays - totalEntered);
@@ -62,8 +65,9 @@ export function ValidateMonthDialog({
         <AlertDialogHeader>
           <AlertDialogTitle className="capitalize">Valider {month} ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Après validation, vous ne pourrez plus modifier ce mois. Seul un manager
-            pourra le rouvrir.
+            {teammate
+              ? `Après validation, le mois de ${teammate} ne pourra plus être modifié. Seul un manager pourra le rouvrir.`
+              : "Après validation, vous ne pourrez plus modifier ce mois. Seul un manager pourra le rouvrir."}
           </AlertDialogDescription>
         </AlertDialogHeader>
 

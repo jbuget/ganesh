@@ -224,6 +224,15 @@ class User:
         """Only a manager can reopen a validated month."""
         return self.is_active and self.is_manager
 
+    def can_validate_month_of(self, owner_id: int | None) -> bool:
+        """Whether this account may lock the month of the user `owner_id`.
+
+        Everyone validates their own, and a manager anybody's — the same reach
+        as reopening, so that the two gestures that lock and unlock a month
+        never disagree about whose it may be.
+        """
+        return self.is_active and (owner_id == self.id or self.is_manager)
+
     def can_manage_teammates(self) -> bool:
         """Managing teammates is reserved for managers."""
         return self.is_active and self.is_manager
