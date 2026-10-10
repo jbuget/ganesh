@@ -21,8 +21,10 @@ interface BoardColumnProps {
    * reader who may not write.
    */
   onFollowChange?: (projectId: number, following: boolean) => void;
-  /** The board is filtered: cards can be read, but no longer arranged. */
-  frozen?: boolean;
+  /** The reader may not write: cards can be read, but not arranged. */
+  readOnly?: boolean;
+  /** Some cards are hidden by a filter: an empty column says why. */
+  filtered?: boolean;
 }
 
 /**
@@ -43,7 +45,8 @@ export function BoardColumn({
   onOpen,
   onOpenThread,
   onFollowChange,
-  frozen,
+  readOnly,
+  filtered,
 }: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
@@ -89,7 +92,7 @@ export function BoardColumn({
               onOpen={onOpen}
               onOpenThread={onOpenThread}
               onFollowChange={onFollowChange}
-              frozen={frozen}
+              readOnly={readOnly}
             />
           ))}
         </SortableContext>
@@ -97,7 +100,7 @@ export function BoardColumn({
         {/* A <ul> only takes <li>: a bare <p> would break hydration. */}
         {cards.length === 0 && (
           <li className="px-1 py-6 text-center text-xs text-slate-400">
-            {frozen ? "Aucun projet ne répond aux filtres" : "Aucun projet"}
+            {filtered ? "Aucun projet ne répond aux filtres" : "Aucun projet"}
           </li>
         )}
       </ul>

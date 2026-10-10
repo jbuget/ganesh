@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  CornerDownRight,
-  GripVertical,
-  MessageCircle,
-  SquareStack,
-} from "lucide-react";
+import { CornerDownRight, MessageCircle, SquareStack } from "lucide-react";
 
 import { CardCounter } from "@/components/atoms/CardCounter";
 import { ContributorsPicker } from "@/components/atoms/ContributorsPicker";
@@ -30,10 +25,10 @@ interface ProjectCardProps {
   /** Freezes the reference time: without it, server and client would diverge. */
   now: Date;
   /**
-   * Drag handle, provided by the sorting layer. `null` shows none: a card that
-   * cannot be moved must not carry the sign of one.
+   * The keyboard's way to move the card, provided by the sorting layer. The
+   * pointer grabs the card itself, so the card draws no grip.
    */
-  handle?: React.ReactNode | null;
+  handle?: React.ReactNode;
   isDragging?: boolean;
   /** Reloads the board after a change of contributors. */
   onContributorsChange?: () => void | Promise<void>;
@@ -94,8 +89,8 @@ export function ProjectCard({
   return (
     <article
       // The whole card opens the mission, not its title alone: it is the card
-      // the eye aims at. The controls it carries — handle, contributor avatars
-      // — keep their click, hence the filter on buttons.
+      // the eye aims at. The controls it carries — title, contributor avatars,
+      // follow mark — keep their click, hence the filter on buttons.
       onClick={(event) => {
         if (!onOpen || isDragging) return;
         if ((event.target as HTMLElement).closest("button")) return;
@@ -113,6 +108,7 @@ export function ProjectCard({
           : "border-slate-300 hover:border-slate-500 hover:shadow-sm",
       ].join(" ")}
     >
+      {handle}
       <div className="flex items-start gap-1.5">
         <h3
           className={`min-w-0 flex-1 text-sm font-medium ${
@@ -120,9 +116,8 @@ export function ProjectCard({
           }`}
         >
           {/*
-            The link is on the title alone, not on the card: the card is
-            grabbed to move it, and a click released after a drag must not open
-            a sheet.
+            A button as well as the card: it is what the keyboard reaches to
+            open the mission, the card itself taking no focus.
           */}
           {isDragging || !onOpen ? (
             project.label
@@ -136,7 +131,7 @@ export function ProjectCard({
             </button>
           )}
         </h3>
-        {/* Small, at the end of the title row rather than after the words: the
+        {/* Small, in the top right corner rather than after the words: the
             title is a button, which lays out as a block once it wraps, and a
             mark set after it would drop to a line of its own. Followed, it
             stays; otherwise it only comes up under the cursor — a board of
@@ -155,11 +150,6 @@ export function ProjectCard({
               : "opacity-0 group-hover:opacity-100 focus:opacity-100"
           }`}
         />
-        {handle === undefined ? (
-          <GripVertical className="size-4 shrink-0 text-slate-300" aria-hidden />
-        ) : (
-          handle
-        )}
       </div>
 
       {/*

@@ -111,14 +111,7 @@ export function BoardPage() {
       header={
         <PageHeader
           title="Kanban"
-          subtitle={
-            // Under a filter, the list shown is no longer the list arranged: a
-            // drop would aim at a rank that does not exist. The cards freeze,
-            // and the header says why rather than leaving one to wonder.
-            hasFilter
-              ? "Tableau filtré : les cartes ne se déplacent plus. Effacez les filtres pour les réorganiser."
-              : "Où en est chaque projet, phase par phase."
-          }
+          subtitle="Où en est chaque projet, phase par phase."
         />
       }
     >
@@ -160,10 +153,13 @@ export function BoardPage() {
                   onOpen={panel.open}
                   onOpenThread={(projectId) => panel.open(projectId, "updates")}
                   onFollowChange={mayWrite ? board.changeFollow : undefined}
-                  // Filtered, the board reads without arranging; a guest
-                  // reads it the same way, and for the same reason — a card
-                  // that moved back would be the screen's fault.
-                  frozen={hasFilter || !mayWrite}
+                  // A filter narrows what is read, not what may move: a card
+                  // dropped between two shown ones lands beside them in the
+                  // whole phase, the hidden ones keeping their place. A guest
+                  // reads without arranging — a card that moved back would be
+                  // the screen's fault.
+                  readOnly={!mayWrite}
+                  filtered={hasFilter}
                 />
               ))}
             </div>
