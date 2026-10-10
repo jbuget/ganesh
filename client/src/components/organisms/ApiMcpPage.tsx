@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { PageHeader } from "@/components/atoms/PageHeader";
-import { CreateApiKeyDialog } from "@/components/molecules/CreateApiKeyDialog";
+import { CreateApiKeyDialog } from "@/components/organisms/CreateApiKeyDialog";
 import { MintedApiKeyPanel } from "@/components/molecules/MintedApiKeyPanel";
 import { ApiKeyPanel } from "@/components/organisms/ApiKeyPanel";
 import { ApiKeysTable } from "@/components/organisms/ApiKeysTable";
