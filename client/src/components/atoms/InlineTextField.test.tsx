@@ -122,6 +122,28 @@ describe("InlineTextField", () => {
     expect(screen.getByRole("textbox", { name: "Prénom" })).toHaveValue("Léa");
   });
 
+  it("tells the suggestion apart from the example the empty field shows", () => {
+    render(
+      <InlineTextField
+        value={null}
+        label="Slug"
+        prefix="waat.tools/services/"
+        placeholder="portail-bailleurs"
+        suggestion="bornes-ub-et-mi"
+        onChange={onChange}
+      />,
+    );
+
+    expect(screen.getByText("Proposé :")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "bornes-ub-et-mi" })).toBeInTheDocument();
+  });
+
+  it("proposes nothing when it has nothing to propose", () => {
+    field(null);
+
+    expect(screen.queryByText("Proposé :")).not.toBeInTheDocument();
+  });
+
   it("says a refusal of the suggestion too, where the suggestion was offered", async () => {
     onChange.mockRejectedValueOnce(new Error("409"));
     render(

@@ -132,41 +132,46 @@ export function InlineTextField({
   }
 
   return (
-    <div className="space-y-1">
-      <div className="flex min-w-0 items-center gap-2">
-        <button
-          type="button"
-          aria-label={label}
-          onClick={() => setEntry(value ?? "")}
-          className="-mx-1 min-w-0 cursor-pointer rounded px-1 py-0.5 text-left text-sm transition-colors hover:bg-slate-100"
-        >
-          {value ? (
-            <span className="block truncate text-slate-700">
-              {prefix && <span className="text-slate-400">{prefix}</span>}
-              {value}
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 text-slate-400">
-              <Plus className="size-3.5" aria-hidden />
-              {/* An empty field says what shape it expects, prefix included:
-                  that is the moment one wonders what belongs in it. */}
+    <div className="min-w-0 space-y-1">
+      <button
+        type="button"
+        aria-label={label}
+        onClick={() => setEntry(value ?? "")}
+        className="-mx-1 block max-w-full min-w-0 cursor-pointer rounded px-1 py-0.5 text-left text-sm transition-colors hover:bg-slate-100"
+      >
+        {value ? (
+          <span className="block truncate text-slate-700">
+            {prefix && <span className="text-slate-400">{prefix}</span>}
+            {value}
+          </span>
+        ) : (
+          <span className="flex min-w-0 items-center gap-1 text-slate-400">
+            <Plus className="size-3.5 shrink-0" aria-hidden />
+            {/* An empty field says what shape it expects, prefix included:
+                that is the moment one wonders what belongs in it. */}
+            <span className="truncate">
               {prefix ? `${prefix}${placeholder ?? ""}` : label}
             </span>
-          )}
-        </button>
+          </span>
+        )}
+      </button>
 
-        {/* Only while empty: once something is typed, a suggestion would be an
-            invitation to undo it. */}
-        {!value && suggestion && (
+      {/* Only while empty: once something is typed, a suggestion would be an
+          invitation to undo it. On a line of its own and named as such, so it
+          never reads as the rest of the example above it. */}
+      {!value && suggestion && (
+        <p className="flex min-w-0 items-baseline gap-1 text-xs text-slate-400">
+          <span className="shrink-0">Proposé :</span>
           <button
             type="button"
+            title={suggestion}
             onClick={() => void save(suggestion)}
-            className="shrink-0 cursor-pointer text-xs text-slate-400 underline-offset-2 transition-colors hover:text-slate-700 hover:underline"
+            className="min-w-0 cursor-pointer truncate underline-offset-2 transition-colors hover:text-slate-700 hover:underline"
           >
             {suggestion}
           </button>
-        )}
-      </div>
+        </p>
+      )}
 
       {refusal && <p className="text-xs text-red-600">{refusal}</p>}
     </div>
