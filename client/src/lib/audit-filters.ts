@@ -145,6 +145,8 @@ export const ACTION_FAMILIES: ActionFamily[] = [
       { value: "simulation.update", label: "Simulation modifiée" },
       { value: "simulation.delete", label: "Simulation supprimée" },
       { value: "gazette.generate", label: "Gazette générée" },
+      { value: "gazette.share", label: "Gazette partagée par un lien" },
+      { value: "gazette.unshare", label: "Lien de Gazette fermé" },
     ],
   },
 ];

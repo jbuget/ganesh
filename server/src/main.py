@@ -43,6 +43,9 @@ from src.modules.entries.presentation.api.routes.entry_router import (
 from src.modules.gazette.presentation.api.routes.gazette_router import (
     router as gazette_router,
 )
+from src.modules.gazette.presentation.api.routes.share_router import (
+    router as share_router,
+)
 from src.modules.months.presentation.api.routes.month_router import (
     router as month_router,
 )
@@ -134,6 +137,7 @@ for module_router in (
     activity_router,
     statistics_router,
     gazette_router,
+    share_router,
     request_router,
     admin_router,
     assistant_router,

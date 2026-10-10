@@ -6,6 +6,7 @@ from datetime import date, datetime
 from src.modules.gazette.domain.entities.brief import Brief
 from src.modules.gazette.domain.entities.digest import DigestVersion
 from src.modules.gazette.domain.entities.prose import Prose
+from src.modules.gazette.domain.entities.share_link import ShareLink
 from src.modules.gazette.domain.entities.spotlight import Spotlight
 
 
@@ -47,3 +48,47 @@ class DigestView:
     @property
     def is_generated(self) -> bool:
         return self.generated_at is not None
+
+
+@dataclass(frozen=True)
+class ShareDigestCommand:
+    """Opens a link on one version of a month."""
+
+    month: date
+    version: int
+    actor_id: int
+
+
+@dataclass(frozen=True)
+class ListShareLinksQuery:
+    """The links still open on one version of a month."""
+
+    month: date
+    version: int
+
+
+@dataclass(frozen=True)
+class RevokeShareLinkCommand:
+    """Closes a link. Anyone on the team may, whoever opened it."""
+
+    link_id: int
+    actor_id: int
+
+
+@dataclass(frozen=True)
+class ShareLinkView:
+    """A link as the team reads it: who opened it, and when.
+
+    The name rather than the identity: a link outlives the memory of who sent
+    it, and the list is how the team finds out.
+    """
+
+    link: ShareLink
+    created_by: str | None
+
+
+@dataclass(frozen=True)
+class ReadSharedDigestQuery:
+    """What anybody holding a token asks."""
+
+    token: str

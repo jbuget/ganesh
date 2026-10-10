@@ -18,12 +18,28 @@ from src.modules.entries.infrastructure.database.repositories.entry_repository_i
 from src.modules.gazette.application.use_cases.generate_digest import (
     GenerateDigestUseCase,
 )
+from src.modules.gazette.application.use_cases.list_share_links import (
+    ListShareLinksUseCase,
+)
 from src.modules.gazette.application.use_cases.read_digest import ReadDigestUseCase
+from src.modules.gazette.application.use_cases.read_shared_digest import (
+    ReadSharedDigestUseCase,
+)
+from src.modules.gazette.application.use_cases.revoke_share_link import (
+    RevokeShareLinkUseCase,
+)
+from src.modules.gazette.application.use_cases.share_digest import ShareDigestUseCase
 from src.modules.gazette.domain.repositories.digest_repository import DigestRepository
 from src.modules.gazette.domain.repositories.prose_writer import ProseWriter
+from src.modules.gazette.domain.repositories.share_link_repository import (
+    ShareLinkRepository,
+)
 from src.modules.gazette.infrastructure.ai.gemini_prose_writer import GeminiProseWriter
 from src.modules.gazette.infrastructure.database.repositories.digest_repository_impl import (
     SqlDigestRepository,
+)
+from src.modules.gazette.infrastructure.database.repositories.share_link_repository_impl import (
+    SqlShareLinkRepository,
 )
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
@@ -134,3 +150,43 @@ def get_generate_digest_use_case(
         entries=entries,
         writer=writer,
     )
+
+
+def get_share_link_repository(
+    session: AsyncSession = Depends(get_db),
+) -> ShareLinkRepository:
+    return SqlShareLinkRepository(session)
+
+
+def get_share_digest_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    digests: DigestRepository = Depends(get_digest_repository),
+    links: ShareLinkRepository = Depends(get_share_link_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> ShareDigestUseCase:
+    return ShareDigestUseCase(
+        users=users, digests=digests, links=links, audit_logs=audit_logs
+    )
+
+
+def get_revoke_share_link_use_case(
+    digests: DigestRepository = Depends(get_digest_repository),
+    links: ShareLinkRepository = Depends(get_share_link_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> RevokeShareLinkUseCase:
+    return RevokeShareLinkUseCase(digests=digests, links=links, audit_logs=audit_logs)
+
+
+def get_list_share_links_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    digests: DigestRepository = Depends(get_digest_repository),
+    links: ShareLinkRepository = Depends(get_share_link_repository),
+) -> ListShareLinksUseCase:
+    return ListShareLinksUseCase(users=users, digests=digests, links=links)
+
+
+def get_read_shared_digest_use_case(
+    digests: DigestRepository = Depends(get_digest_repository),
+    links: ShareLinkRepository = Depends(get_share_link_repository),
+) -> ReadSharedDigestUseCase:
+    return ReadSharedDigestUseCase(digests=digests, links=links)

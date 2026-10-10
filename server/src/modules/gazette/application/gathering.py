@@ -25,6 +25,7 @@ from src.modules.gazette.domain.services.focusing import (
 )
 from src.modules.gazette.domain.services.month_window import bounds, first_day, last_day
 from src.modules.gazette.domain.services.noise import short_lived_projects
+from src.modules.gazette.domain.services.telling import is_told
 from src.modules.projects.domain.entities.project import Project
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
 from src.modules.projects.domain.repositories.project_repository import (
@@ -80,7 +81,10 @@ async def _read_register(
         end=end,
         logs=logs,
         projects={p.id: p for p in missions if p.id is not None},
-        people={u.id: u.display_name for u in team if u.id is not None},
+        # Only the people whose coming and going the gazette tells: a teammate
+        # left out of this list is a movement that cannot be named, and a
+        # movement that cannot be named is not printed.
+        people={u.id: u.display_name for u in team if u.id is not None and is_told(u)},
         needs={r.id: r.title for r in needs if r.id is not None},
     )
 

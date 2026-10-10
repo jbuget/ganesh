@@ -14,6 +14,11 @@ class DigestRepository(ABC):
     """
 
     @abstractmethod
+    async def get(self, digest_id: int) -> Digest | None:
+        """One digest by its identity, which is what a share link holds."""
+        ...
+
+    @abstractmethod
     async def get_latest(self, month: date) -> Digest | None:
         """The version a month currently reads as."""
         ...

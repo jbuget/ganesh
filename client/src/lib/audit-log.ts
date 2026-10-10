@@ -414,6 +414,20 @@ export function auditSentence(
         action: `a généré La Gazette de ${entry.day ? formatMonthOf(entry.day) : "un mois"}`,
       };
 
+    case "gazette.share":
+      return {
+        action: `a partagé par un lien la version${after ? ` ${after}` : ""} de La Gazette de ${
+          entry.day ? formatMonthOf(entry.day) : "un mois"
+        }`,
+      };
+
+    case "gazette.unshare":
+      return {
+        action: `a fermé un lien vers la version${after ? ` ${after}` : ""} de La Gazette de ${
+          entry.day ? formatMonthOf(entry.day) : "un mois"
+        }`,
+      };
+
     case "project.create":
       return { action: "a créé le projet" };
 

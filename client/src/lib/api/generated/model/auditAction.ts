@@ -56,6 +56,8 @@ export const AuditAction = {
   api_keyupdate: "api_key.update",
   api_keyrevoke: "api_key.revoke",
   gazettegenerate: "gazette.generate",
+  gazetteshare: "gazette.share",
+  gazetteunshare: "gazette.unshare",
   requestcreate: "request.create",
   requestupdate: "request.update",
   requestsubmit: "request.submit",

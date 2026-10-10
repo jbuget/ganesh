@@ -63,6 +63,10 @@ class SqlDigestRepository(DigestRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    async def get(self, digest_id: int) -> Digest | None:
+        model = await self._session.get(GazetteDigestModel, digest_id)
+        return to_entity(model) if model else None
+
     async def get_latest(self, month: date) -> Digest | None:
         result = await self._session.execute(
             select(GazetteDigestModel)

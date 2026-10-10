@@ -672,6 +672,26 @@ describe("auditSentence, across the whole register", () => {
     ).toEqual({ action: "a généré La Gazette de septembre 2026" });
   });
 
+  it("says which version of which month was put behind a link", () => {
+    expect(
+      auditSentence(entry("gazette.share", { day: "2026-09-01", new_value: "5" }), {
+        read: "all",
+      }),
+    ).toEqual({
+      action: "a partagé par un lien la version 5 de La Gazette de septembre 2026",
+    });
+  });
+
+  it("says which version a closed link was opening", () => {
+    expect(
+      auditSentence(entry("gazette.unshare", { day: "2026-09-01", new_value: "5" }), {
+        read: "all",
+      }),
+    ).toEqual({
+      action: "a fermé un lien vers la version 5 de La Gazette de septembre 2026",
+    });
+  });
+
   /** Read across everything, a month gesture has to say which month. */
   it("names the month a validation locked", () => {
     expect(

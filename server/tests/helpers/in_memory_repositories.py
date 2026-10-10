@@ -47,7 +47,11 @@ from src.modules.entries.domain.repositories.user_mission_repository import (
     UserMissionRepository,
 )
 from src.modules.gazette.domain.entities.digest import Digest, DigestVersion
+from src.modules.gazette.domain.entities.share_link import ShareLink
 from src.modules.gazette.domain.repositories.digest_repository import DigestRepository
+from src.modules.gazette.domain.repositories.share_link_repository import (
+    ShareLinkRepository,
+)
 from src.modules.months.domain.entities.month import Month
 from src.modules.months.domain.repositories.month_repository import MonthRepository
 from src.modules.months.domain.services.month_period import first_day_of
@@ -1361,6 +1365,9 @@ class InMemoryDigestRepository(DigestRepository):
             reverse=True,
         )
 
+    async def get(self, digest_id: int) -> Digest | None:
+        return next((d for d in self.digests if d.id == digest_id), None)
+
     async def get_latest(self, month: date) -> Digest | None:
         found = self._for(month)
         return found[0] if found else None
@@ -1577,3 +1584,28 @@ class InMemoryExchangeArchive(ExchangeArchive):
             reverse=True,
         )
         return UnansweredPage(questions=held[offset : offset + limit], total=len(held))
+
+
+class InMemoryShareLinkRepository(ShareLinkRepository):
+    def __init__(self) -> None:
+        self.links: list[ShareLink] = []
+
+    async def add(self, link: ShareLink) -> ShareLink:
+        stored = replace(link, id=len(self.links) + 1)
+        self.links.append(stored)
+        return stored
+
+    async def get(self, link_id: int) -> ShareLink | None:
+        return next((link for link in self.links if link.id == link_id), None)
+
+    async def get_by_token(self, token: str) -> ShareLink | None:
+        return next((link for link in self.links if link.token == token), None)
+
+    async def list_open_for_digest(self, digest_id: int) -> list[ShareLink]:
+        return [
+            link for link in self.links if link.digest_id == digest_id and link.is_open
+        ]
+
+    async def update(self, link: ShareLink) -> ShareLink:
+        self.links = [link if one.id == link.id else one for one in self.links]
+        return link

@@ -478,3 +478,13 @@ export function gazetteTeaser(digest: DigestResponse): string {
   const chapters = digest.chapters.length;
   return chapters > 1 ? `${chapters} chapitres à lire.` : "Un chapitre à lire.";
 }
+
+/**
+ * Where a link is read, as it is pasted into a mail.
+ *
+ * Built here from the address the team is on, never held by the server: the
+ * API knows a token, and where Ganesh lives is the client's business.
+ */
+export function sharedAddress(origin: string, token: string): string {
+  return `${origin}/p/gazette/${token}`;
+}
