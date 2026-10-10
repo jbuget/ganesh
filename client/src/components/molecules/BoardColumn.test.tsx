@@ -32,10 +32,16 @@ const card = (id: number, label: string): BoardCardResponse =>
 const NOW = new Date("2026-09-16T11:00:00Z");
 
 /** The @dnd-kit sensors require an enclosing context. */
-const show = (cards: BoardCardResponse[], frozen = false) =>
+const show = (cards: BoardCardResponse[], { frozen = false, filtered = false } = {}) =>
   render(
     <DndContext>
-      <BoardColumn status="development" cards={cards} now={NOW} frozen={frozen} />
+      <BoardColumn
+        status="development"
+        cards={cards}
+        now={NOW}
+        frozen={frozen}
+        filtered={filtered}
+      />
     </DndContext>,
   );
 
@@ -103,15 +109,9 @@ describe("BoardColumn", () => {
   });
 });
 
-describe("a column frozen by a filter", () => {
-  it("removes the handle: a filtered card no longer arranges", () => {
-    show([card(1, "Portail bailleurs")], true);
-
-    expect(screen.queryByRole("button", { name: /Déplacer/ })).toBeNull();
-  });
-
-  it("keeps its handle when unfiltered", () => {
-    show([card(1, "Portail bailleurs")]);
+describe("a filtered column", () => {
+  it("still arranges: a filter narrows what is read, not what may move", () => {
+    show([card(1, "Portail bailleurs")], { filtered: true });
 
     expect(
       screen.getByRole("button", { name: "Déplacer Portail bailleurs" }),
@@ -119,8 +119,22 @@ describe("a column frozen by a filter", () => {
   });
 
   it("explains an emptiness caused by filters rather than a plain emptiness", () => {
-    show([], true);
+    show([], { filtered: true });
 
     expect(screen.getByText("Aucun projet ne répond aux filtres")).toBeInTheDocument();
+  });
+});
+
+describe("a column read by somebody who may not write", () => {
+  it("offers no handle", () => {
+    show([card(1, "Portail bailleurs")], { frozen: true });
+
+    expect(screen.queryByRole("button", { name: /Déplacer/ })).toBeNull();
+  });
+
+  it("says a plain emptiness plainly", () => {
+    show([], { frozen: true });
+
+    expect(screen.getByText("Aucun projet")).toBeInTheDocument();
   });
 });

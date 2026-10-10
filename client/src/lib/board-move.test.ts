@@ -98,3 +98,54 @@ describe("reorder", () => {
     expect(reorder(columns({ scoping: [1, 2, 3] }), 2, 1)).toBeNull();
   });
 });
+
+/**
+ * A filtered board shows some cards of each phase and hides the others, but
+ * the moves are computed on the whole phase: the rank saved is the one the
+ * server knows, and the hidden cards keep their place around the one moved.
+ */
+describe("on a filtered board", () => {
+  // Phase « development » holds 3, 4 (hidden), 5, 6 (hidden); only 3 and 5
+  // show.
+  const state = () => columns({ scoping: [1, 2], development: [3, 4, 5, 6] });
+
+  it("drops a card right before the shown card it was aimed at", () => {
+    const index = targetIndex(state().development, 5, false);
+
+    const after = moveToColumn(state(), 1, "development", index)!;
+
+    expect(ids(after.development)).toEqual([3, 4, 1, 5, 6]);
+  });
+
+  it("drops a card right after the shown card it went past", () => {
+    const index = targetIndex(state().development, 3, true);
+
+    const after = moveToColumn(state(), 1, "development", index)!;
+
+    expect(ids(after.development)).toEqual([3, 1, 4, 5, 6]);
+  });
+
+  it("sends a card dropped below every shown one to the end of the phase", () => {
+    const index = targetIndex(state().development, null, false);
+
+    const after = moveToColumn(state(), 1, "development", index)!;
+
+    expect(ids(after.development)).toEqual([3, 4, 5, 6, 1]);
+  });
+
+  it("lowers a card next to the shown card it was dropped on", () => {
+    const hovered = locate(state(), 5)!;
+
+    const after = reorder(state(), 3, hovered.position)!;
+
+    expect(ids(after.development)).toEqual([4, 5, 3, 6]);
+  });
+
+  it("raises a card next to the shown card it was dropped on", () => {
+    const hovered = locate(state(), 3)!;
+
+    const after = reorder(state(), 5, hovered.position)!;
+
+    expect(ids(after.development)).toEqual([5, 3, 4, 6]);
+  });
+});

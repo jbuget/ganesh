@@ -47,6 +47,10 @@ export function targetIndex(
  * Returns null when the move has no reason to happen: hovering calls this
  * function on every mouse move, and rewriting an identical state would make
  * the board flicker.
+ *
+ * The card keeps the phase it was read with until the board is read again:
+ * under a filter on its phase, rewriting it would hide the card mid-gesture,
+ * and one would no longer see where it landed.
  */
 export function moveToColumn(
   columns: Columns,
