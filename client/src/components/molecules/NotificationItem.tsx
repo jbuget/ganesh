@@ -44,6 +44,12 @@ export function NotificationItem({
   const href = said.href;
   const isRead = notification.read_at !== null;
 
+  // Following a line is reading it, in this tab or in another one: leaving it
+  // waiting would have the bell announce what was already seen.
+  function markAsSeen() {
+    if (!isRead) onToggleRead(notification.id, true);
+  }
+
   const subject: ReactNode = said.about ? (
     <span className="font-medium text-slate-900">{said.about}</span>
   ) : null;
@@ -82,6 +88,7 @@ export function NotificationItem({
           <Link
             href={href}
             onClick={(event) => {
+              markAsSeen();
               if (opensElsewhere(event)) return;
               event.preventDefault();
               onFollow?.();
