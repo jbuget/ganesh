@@ -17,7 +17,6 @@ from src.mcp.door import answers, current_machine
 from src.mcp.tools import say
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.planning.domain.entities.roadmap import Roadmap, RoadmapMission
-from src.modules.planning.domain.entities.workload_plan import PlanBlocker
 from src.modules.planning.presentation.dependencies import get_roadmap_use_case
 
 SCOPE = ApiKeyScope.ROADMAP_READ
@@ -27,13 +26,6 @@ DEFAULT_MONTHS = 6
 
 #: Past this, naming them one by one is reciting the screen again.
 MOST = 8
-
-BLOCKERS = {
-    PlanBlocker.NO_ESTIMATE: "personne ne l'a estimé",
-    PlanBlocker.NO_ASSIGNEE: "personne n'y est affecté",
-    PlanBlocker.NOTHING_LEFT: "l'estimation est déjà consommée",
-    PlanBlocker.BEYOND_HORIZON: "ce qui reste ne tient pas dans l'horizon",
-}
 
 
 @answers(SCOPE)
@@ -99,7 +91,7 @@ def _unplaceable(roadmap: Roadmap) -> list[str]:
     return _named(
         "Sans projection",
         stuck,
-        lambda mission: f"{mission.label} : {BLOCKERS[mission.blocker]}",  # type: ignore[index]
+        lambda mission: f"{mission.label} : {say.blocker(mission.blocker)}",  # type: ignore[arg-type]
     )
 
 
