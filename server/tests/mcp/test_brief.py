@@ -83,6 +83,7 @@ def a_detail(project: Project, **fields: object) -> ProjectDetail:
         contributions=fields.get("contributions", []),  # type: ignore[arg-type]
         sub_projects=fields.get("sub_projects", []),  # type: ignore[arg-type]
         stack=[],
+        catalog_tags=[],
         tags=[],
         dependencies=[],
         is_deletable=False,

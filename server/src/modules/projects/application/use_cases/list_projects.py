@@ -9,6 +9,7 @@ from src.modules.projects.domain.entities.activity import Activity
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.projects.domain.entities.tag import Tag
 from src.modules.projects.domain.repositories.activity_repository import (
     ActivityRepository,
 )
@@ -20,6 +21,9 @@ from src.modules.projects.domain.repositories.project_detail_repository import (
 )
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
+)
+from src.modules.projects.domain.repositories.project_tag_repository import (
+    ProjectTagRepository,
 )
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
@@ -67,6 +71,9 @@ class ListedProject:
     #: what carries the budget. Served with the list rather than fetched per
     #: mission: the entry grid offers them all at once.
     activities: list[Activity] = field(default_factory=list)
+    #: The tags the team put on the mission, in alphabetical order. Its own and
+    #: nobody else's: a work package does not read its project's.
+    tags: list[Tag] = field(default_factory=list)
     #: Live updates in the follow-up thread.
     comments: int = 0
     #: The latest of them, to announce the thread without opening it.
@@ -90,6 +97,7 @@ class ListProjectsUseCase:
         users: UserRepository,
         updates: ProjectUpdateRepository,
         details: ProjectDetailRepository,
+        project_tags: ProjectTagRepository,
     ) -> None:
         self._projects = projects
         self._activities = activities
@@ -98,6 +106,7 @@ class ListProjectsUseCase:
         self._users = users
         self._updates = updates
         self._details = details
+        self._project_tags = project_tags
 
     async def execute(
         self, include_inactive: bool = False, today: date | None = None
@@ -110,6 +119,7 @@ class ListProjectsUseCase:
         latest_by_project = await self._updates.latest_by_project()
         links = await self._details.list_links_by_project()
         departments = await self._details.list_departments_by_project()
+        tags = await self._project_tags.list_all()
 
         # The count is read over the whole tree, work packages a filter left
         # out included: what an evolution cost is still the cost of the service.
@@ -165,6 +175,7 @@ class ListProjectsUseCase:
                 links=links.get(mission.id or 0, []),
                 departments=departments.get(mission.id or 0, []),
                 activities=activities.get(mission.id or 0, []),
+                tags=tags.get(mission.id or 0, []),
                 cost=costs.own.get(mission.id or 0, NO_COST),
                 tree_cost=costs.tree.get(mission.id or 0, NO_COST),
                 comments=comments.get(mission.id or 0, 0),

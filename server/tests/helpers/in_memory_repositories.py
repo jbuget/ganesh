@@ -80,7 +80,7 @@ from src.modules.projects.domain.entities.project_attachment import ProjectAttac
 from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
-from src.modules.projects.domain.entities.tag import Tag, TagUsage
+from src.modules.projects.domain.entities.tag import Tag, TagColor, TagUsage
 from src.modules.projects.domain.entities.update_comment import UpdateComment
 from src.modules.projects.domain.entities.update_reaction import (
     Reaction,
@@ -656,8 +656,8 @@ class InMemoryTagRepository(TagRepository):
 
 
 class InMemoryProjectTagRepository(ProjectTagRepository):
-    def __init__(self, tags: InMemoryTagRepository) -> None:
-        self._tags = tags
+    def __init__(self, tags: InMemoryTagRepository | None = None) -> None:
+        self._tags = tags if tags is not None else InMemoryTagRepository()
 
     async def list_for_project(self, project_id: int) -> list[Tag]:
         return (await self.list_all()).get(project_id, [])
@@ -682,6 +682,21 @@ class InMemoryProjectTagRepository(ProjectTagRepository):
 
     async def detach(self, project_id: int, tag_id: int) -> None:
         self._tags.carriers.get(tag_id, set()).discard(project_id)
+
+
+async def tagged(carried: dict[int, list[str]]) -> InMemoryProjectTagRepository:
+    """Missions carrying tags, by name: what a read test needs and no more."""
+    tags = InMemoryTagRepository()
+    links = InMemoryProjectTagRepository(tags)
+    opened: dict[str, Tag] = {}
+    for project_id, names in carried.items():
+        for name in names:
+            if name not in opened:
+                opened[name] = await tags.add(
+                    Tag(id=None, name=name, color=TagColor.BLUE)
+                )
+            await links.attach(project_id, opened[name].stored_id)
+    return links
 
 
 class InMemoryProjectDetailRepository(ProjectDetailRepository):

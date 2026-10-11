@@ -59,6 +59,7 @@ from src.modules.planning.presentation.api.routes.planning_router import (
 from src.modules.projects.presentation.api.routes.project_router import (
     router as project_router,
 )
+from src.modules.projects.presentation.api.routes.tag_router import router as tag_router
 from src.modules.requests.presentation.api.routes.request_router import (
     router as request_router,
 )
@@ -127,6 +128,7 @@ for module_router in (
     user_router,
     api_key_router,
     project_router,
+    tag_router,
     entry_router,
     audit_log_router,
     month_router,
