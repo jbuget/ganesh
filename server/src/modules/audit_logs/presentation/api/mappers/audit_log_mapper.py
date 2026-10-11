@@ -34,12 +34,14 @@ def to_audit_project_response(mission: Project | None) -> AuditProjectResponse |
 def to_audit_log_entry_response(signed: SignedAuditLog) -> AuditLogEntryResponse:
     log = signed.log
     assert log.id is not None
-    # Two things are pulled out of the payload, and no more: which field moved,
-    # and why a need was arbitrated so. The rest of what a gesture stores there
+    # Three things are pulled out of the payload, and no more: which field moved,
+    # why a need was arbitrated so, and which tag a gesture on the vocabulary
+    # was about. The rest of what a gesture stores there
     # is its own business, and a screen reading it would end up depending on
     # the shape of every use case's bookkeeping.
     field = (log.payload or {}).get("field")
     note = (log.payload or {}).get("note")
+    tag = (log.payload or {}).get("tag")
     return AuditLogEntryResponse(
         id=log.id,
         at=log.at,
@@ -50,6 +52,7 @@ def to_audit_log_entry_response(signed: SignedAuditLog) -> AuditLogEntryResponse
         day=log.day,
         field=None if field is None else str(field),
         note=None if note is None else str(note),
+        tag=None if tag is None else str(tag),
         old_value=log.old_value,
         new_value=log.new_value,
     )

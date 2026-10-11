@@ -202,6 +202,8 @@ async def test_recolouring_changes_the_color_and_is_traced_for_each_mission() ->
     assert all(line.action is AuditAction.TAG_RECOLOR for line in w.audit.logs)
     assert all(line.old_value == "red" for line in w.audit.logs)
     assert all(line.new_value == "violet" for line in w.audit.logs)
+    # The colours say nothing of whose they are: the line names the tag.
+    assert all((line.payload or {}).get("tag") == "Suez" for line in w.audit.logs)
 
 
 @pytest.mark.asyncio

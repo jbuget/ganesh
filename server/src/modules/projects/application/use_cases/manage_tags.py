@@ -84,7 +84,7 @@ class _VocabularyGesture:
                 project_id=project_id,
                 old_value=old_value,
                 new_value=new_value,
-                payload={"tag_id": tag.stored_id},
+                payload={"tag_id": tag.stored_id, "tag": tag.name},
             )
         )
 
