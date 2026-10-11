@@ -51,6 +51,8 @@ from src.modules.projects.infrastructure.database.models import (  # noqa: F401,
     project_detail_models,
     project_update_model,
     project_model,
+    tag_link_model,
+    tag_model,
     update_comment_model,
     update_reaction_model,
 )
