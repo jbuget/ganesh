@@ -17,6 +17,7 @@ import { TargetDateField } from "@/components/atoms/TargetDateField";
 import { ProjectActivities } from "@/components/molecules/ProjectActivities";
 import { useProjectActivities } from "@/lib/use-project-activities";
 import { ProjectContributions } from "@/components/molecules/ProjectContributions";
+import { TagPicker } from "@/components/molecules/TagPicker";
 import { ProjectSubProjects } from "@/components/molecules/ProjectSubProjects";
 import type {
   Department,
@@ -43,6 +44,9 @@ interface ProjectSteeringTabProps {
   addSubProject: (label: string) => Promise<void>;
   /** Raises the mark the team follows the mission by, or lowers it. */
   toggleFollow: () => Promise<void>;
+  /** Puts a tag on the mission by the name typed. */
+  addTag: (name: string) => Promise<void>;
+  removeTag: (tagId: number) => Promise<void>;
 }
 
 /**
@@ -95,6 +99,8 @@ export function ProjectSteeringTab({
   updateFields,
   addSubProject,
   toggleFollow,
+  addTag,
+  removeTag,
 }: ProjectSteeringTabProps) {
   // Until anything is typed, the field shows what the server says: no local
   // copy to resynchronise on every reload.
@@ -125,6 +131,15 @@ export function ProjectSteeringTab({
                 onToggle={() => void toggleFollow()}
                 className="-ml-1"
               />
+            </SheetRow>
+          )}
+
+          {/* What the team put on the mission to find it again — a client, a
+              partner, a programme, a theme. Off-project work carries none, as
+              it carries no mark: an absence has nothing to be found by. */}
+          {project.kind !== "off_project" && (
+            <SheetRow title="Tags">
+              <TagPicker tags={detail.tags} onAdd={addTag} onRemove={removeTag} />
             </SheetRow>
           )}
 

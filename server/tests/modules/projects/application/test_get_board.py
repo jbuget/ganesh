@@ -19,8 +19,10 @@ from tests.helpers.in_memory_repositories import (
     InMemoryProjectAssigneeRepository,
     InMemoryProjectDetailRepository,
     InMemoryProjectRepository,
+    InMemoryProjectTagRepository,
     InMemoryProjectUpdateRepository,
     InMemoryUserRepository,
+    tagged,
 )
 
 ALICE = User(
@@ -75,6 +77,7 @@ def build(
     assignments: dict[int, list[int]] | None = None,
     updates: InMemoryProjectUpdateRepository | None = None,
     details: InMemoryProjectDetailRepository | None = None,
+    project_tags: InMemoryProjectTagRepository | None = None,
 ):
     return GetBoardUseCase(
         projects=InMemoryProjectRepository(projects),
@@ -88,6 +91,7 @@ def build(
         ),
         updates=updates or InMemoryProjectUpdateRepository(),
         details=details or InMemoryProjectDetailRepository(),
+        project_tags=project_tags or InMemoryProjectTagRepository(),
     )
 
 
@@ -439,3 +443,31 @@ async def test_a_card_without_a_department_carries_none() -> None:
     listed = next(c for column in board.columns for c in column.cards)
 
     assert listed.departments == []
+
+
+async def test_a_card_carries_the_tags_of_its_mission() -> None:
+    board = await build(
+        [card(1, ProjectStatus.SCOPING)],
+        project_tags=await tagged({1: ["Suez", "IA"]}),
+    ).execute(today=TODAY)
+
+    column = next(c for c in board.columns if c.status is ProjectStatus.SCOPING)
+    assert [t.name for t in column.cards[0].tags] == ["IA", "Suez"]
+
+
+async def test_a_work_package_card_does_not_carry_the_tags_of_its_project() -> None:
+    project = card(1, ProjectStatus.SCOPING)
+    package = Project(
+        id=2,
+        label="Lot",
+        kind=ProjectKind.WORK_PACKAGE,
+        status=ProjectStatus.SCOPING,
+        parent_id=1,
+    )
+    board = await build(
+        [project, package], project_tags=await tagged({1: ["Suez"]})
+    ).execute(today=TODAY)
+
+    column = next(c for c in board.columns if c.status is ProjectStatus.SCOPING)
+    by_id = {c.project.id: c for c in column.cards}
+    assert by_id[2].tags == []

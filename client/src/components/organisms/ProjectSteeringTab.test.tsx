@@ -10,7 +10,10 @@ import type {
 } from "@/lib/api/generated/model";
 
 // The pickers ask the server for the team; steering itself does not.
-vi.mock("@/lib/api/queries", () => ({ useTeammates: () => ({ teammates: [] }) }));
+vi.mock("@/lib/api/queries", () => ({
+  useTeammates: () => ({ teammates: [] }),
+  useTags: () => ({ tags: [] }),
+}));
 
 // The sheet reads what the mission is cut into as soon as it opens. Left
 // alone, the call reaches a relative URL that no test server answers — which
@@ -55,6 +58,7 @@ const detail = (
     consumed_days: 0,
     contributions: [],
     sub_projects: [],
+    tags: [],
   }) as unknown as ProjectDetailResponse;
 
 const steering = (
@@ -71,6 +75,8 @@ const steering = (
       updateFields={updateFields}
       addSubProject={vi.fn()}
       toggleFollow={vi.fn()}
+      addTag={vi.fn()}
+      removeTag={vi.fn()}
     />,
   );
 
@@ -184,6 +190,8 @@ describe("following a mission from its sheet", () => {
         updateFields={vi.fn()}
         addSubProject={vi.fn()}
         toggleFollow={toggleFollow}
+        addTag={vi.fn()}
+        removeTag={vi.fn()}
       />,
     );
     return toggleFollow;
@@ -214,5 +222,71 @@ describe("following a mission from its sheet", () => {
     followed("off_project", false);
 
     expect(screen.queryByText("Non suivi")).toBeNull();
+  });
+});
+
+describe("the tags of a mission", () => {
+  const tagged = (kind: ProjectKind, ...names: string[]) => ({
+    ...detail(kind),
+    tags: names.map((name, index) => ({ id: index + 1, name, color: "blue" })),
+  });
+
+  function sheet(
+    over: ProjectDetailResponse | ReturnType<typeof tagged>,
+    handlers = {},
+  ) {
+    const props = { addTag: vi.fn(), removeTag: vi.fn(), ...handlers };
+    render(
+      <ProjectSteeringTab
+        detail={over as unknown as ProjectDetailResponse}
+        onChange={vi.fn()}
+        saveSheet={vi.fn()}
+        changePhase={vi.fn()}
+        updateFields={vi.fn()}
+        addSubProject={vi.fn()}
+        toggleFollow={vi.fn()}
+        {...props}
+      />,
+    );
+    return props;
+  }
+
+  it("names the tags the mission carries, under « Informations »", () => {
+    sheet(tagged("project", "IA", "Chronopost"));
+
+    expect(screen.getByText("Tags")).toBeInTheDocument();
+    expect(screen.getByText("IA")).toBeInTheDocument();
+    expect(screen.getByText("Chronopost")).toBeInTheDocument();
+  });
+
+  it("takes a tag off through the sheet's own gesture", async () => {
+    const { removeTag } = sheet(tagged("project", "IA"));
+
+    await userEvent.click(screen.getByRole("button", { name: "Retirer le tag IA" }));
+
+    expect(removeTag).toHaveBeenCalledWith(1);
+  });
+
+  it("puts one on through the sheet's own gesture", async () => {
+    const { addTag } = sheet(tagged("project"));
+
+    await userEvent.click(screen.getByRole("button", { name: "Ajouter un tag" }));
+    await userEvent.type(screen.getByLabelText("Rechercher un tag"), "Frigo{Enter}");
+
+    expect(addTag).toHaveBeenCalledWith("Frigo");
+  });
+
+  it("is offered on a work package, which carries its own", () => {
+    sheet(tagged("work_package"));
+
+    expect(screen.getByRole("button", { name: "Ajouter un tag" })).toBeInTheDocument();
+  });
+
+  /** An absence has nothing to be found by: the server refuses it as well. */
+  it("is not offered on off-project work", () => {
+    sheet(tagged("off_project"));
+
+    expect(screen.queryByText("Tags")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ajouter un tag" })).toBeNull();
   });
 });

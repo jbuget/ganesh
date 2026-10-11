@@ -63,6 +63,16 @@ export const ACTION_FAMILIES: ActionFamily[] = [
     ],
   },
   {
+    label: "Tags",
+    actions: [
+      { value: "project.tag", label: "Pose d'un tag" },
+      { value: "project.untag", label: "Retrait d'un tag" },
+      { value: "tag.rename", label: "Renommage" },
+      { value: "tag.recolor", label: "Changement de couleur" },
+      { value: "tag.merge", label: "Fusion" },
+    ],
+  },
+  {
     label: "Activités",
     actions: [
       { value: "activity.create", label: "Création" },

@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import { MissionRow } from "./MissionRow";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
+import { hiddenColumns, type HiddenColumns } from "@/lib/mission-columns";
 
 const NOW = new Date("2026-09-17T12:00:00Z");
 
@@ -719,5 +720,52 @@ describe("MissionRow — the follow mark", () => {
     );
 
     expect(screen.queryByLabelText("Projet suivi")).toBeNull();
+  });
+});
+
+describe("MissionRow — the tags the team put on a mission", () => {
+  const tagged = (...names: string[]) =>
+    ({
+      ...mission({}),
+      tags: names.map((name, index) => ({ id: index + 1, name, color: "blue" })),
+    }) as unknown as ProjectListItemResponse;
+
+  function row(item: ProjectListItemResponse, hidden?: HiddenColumns) {
+    line(
+      <MissionRow
+        mission={item}
+        now={NOW}
+        hidden={hidden}
+        onOpen={() => {}}
+        onOpenThread={() => {}}
+      />,
+    );
+  }
+
+  it("names the tags, each as a mark and a label", () => {
+    row(tagged("IA", "Chronopost"));
+
+    expect(screen.getByText("IA")).toBeInTheDocument();
+    expect(screen.getByText("Chronopost")).toBeInTheDocument();
+  });
+
+  it("counts the tags the column has no room for, and names them on hover", () => {
+    row(tagged("A", "B", "C", "D", "E"));
+
+    const rest = screen.getByText("+2");
+    expect(rest).toBeInTheDocument();
+    expect(rest).toHaveAttribute("title", "D, E");
+  });
+
+  it("leaves the cell empty when the mission carries none", () => {
+    row(tagged());
+
+    expect(screen.queryByText(/^\+\d/)).not.toBeInTheDocument();
+  });
+
+  it("does not draw them once the column is put away", () => {
+    row(tagged("IA"), hiddenColumns(["tags"]));
+
+    expect(screen.queryByText("IA")).not.toBeInTheDocument();
   });
 });

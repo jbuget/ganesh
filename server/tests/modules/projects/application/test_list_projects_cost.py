@@ -23,6 +23,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryProjectAssigneeRepository,
     InMemoryProjectDetailRepository,
     InMemoryProjectRepository,
+    InMemoryProjectTagRepository,
     InMemoryProjectUpdateRepository,
     InMemoryUserRepository,
 )
@@ -89,6 +90,7 @@ async def listed(
         users=InMemoryUserRepository([]),
         updates=InMemoryProjectUpdateRepository(),
         details=details,
+        project_tags=InMemoryProjectTagRepository(),
     )
     missions_listees = await use_case.execute(today=TODAY)
     return {m.project.id: m for m in missions_listees}

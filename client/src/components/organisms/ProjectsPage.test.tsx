@@ -19,9 +19,18 @@ const state = vi.hoisted(() => ({
 
 vi.mock("@/lib/use-projects", () => ({ useProjectsScreen: () => state }));
 
-// The filter bar offers the team: it asks the server for it, the page does not.
+// The dialog that looks after the tags reads and writes them through hooks of
+// its own, and has its own tests: here only whether the page offers it.
+vi.mock("@/components/organisms/TagManagerDialog", () => ({
+  TagManagerDialog: ({ open }: { open: boolean }) =>
+    open ? <div role="dialog" aria-label="Gérer les tags" /> : null,
+}));
+
+// The filter bar offers the team and the tags: it asks the server for them, the
+// page does not.
 vi.mock("@/lib/api/queries", () => ({
   useTeammates: () => ({ teammates: [] }),
+  useTags: () => ({ tags: [] }),
 }));
 
 /**
@@ -71,6 +80,35 @@ describe("ProjectsPage", () => {
     await declare("Portail");
 
     expect(await screen.findByLabelText("Mission 42")).toBeInTheDocument();
+  });
+});
+
+describe("looking after the tags", () => {
+  afterEach(() => {
+    state.isManager = false;
+  });
+
+  /** It moves every project carrying the tag: the team's to open, a manager's to tend. */
+  it("is offered to a manager", () => {
+    state.isManager = true;
+    render(<ProjectsPage />);
+
+    expect(screen.getByRole("button", { name: "Gérer les tags" })).toBeInTheDocument();
+  });
+
+  it("is not offered to a teammate", () => {
+    render(<ProjectsPage />);
+
+    expect(screen.queryByRole("button", { name: "Gérer les tags" })).toBeNull();
+  });
+
+  it("opens the dialog that looks after them", async () => {
+    state.isManager = true;
+    render(<ProjectsPage />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Gérer les tags" }));
+
+    expect(screen.getByRole("dialog", { name: "Gérer les tags" })).toBeInTheDocument();
   });
 });
 

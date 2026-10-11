@@ -21,8 +21,10 @@ from tests.helpers.in_memory_repositories import (
     InMemoryProjectAssigneeRepository,
     InMemoryProjectDetailRepository,
     InMemoryProjectRepository,
+    InMemoryProjectTagRepository,
     InMemoryProjectUpdateRepository,
     InMemoryUserRepository,
+    tagged,
 )
 
 ALICE = User(
@@ -65,6 +67,7 @@ def build(
     updates: InMemoryProjectUpdateRepository | None = None,
     details: InMemoryProjectDetailRepository | None = None,
     projects: list[Project] | None = None,
+    project_tags: InMemoryProjectTagRepository | None = None,
 ):
     return ListProjectsUseCase(
         projects=InMemoryProjectRepository(projects or [PORTAIL]),
@@ -74,6 +77,7 @@ def build(
         users=InMemoryUserRepository([ALICE, NINO]),
         updates=updates or InMemoryProjectUpdateRepository(),
         details=details or InMemoryProjectDetailRepository(),
+        project_tags=project_tags or InMemoryProjectTagRepository(),
     )
 
 
@@ -308,3 +312,17 @@ async def test_a_work_package_is_listed_with_the_axis_of_its_project() -> None:
         ProjectCategory.INNOVATE,
         ProjectCategory.INNOVATE,
     ]
+
+
+async def test_each_mission_is_listed_with_the_tags_it_carries() -> None:
+    listed = await build(project_tags=await tagged({10: ["Suez", "Frigo"]})).execute(
+        today=TODAY
+    )
+
+    assert [t.name for t in listed[0].tags] == ["Frigo", "Suez"]
+
+
+async def test_a_mission_carrying_no_tag_is_listed_with_none() -> None:
+    listed = await build().execute(today=TODAY)
+
+    assert listed[0].tags == []

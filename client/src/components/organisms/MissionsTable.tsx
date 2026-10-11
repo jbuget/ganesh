@@ -16,6 +16,7 @@ import {
   CATEGORY_COLUMN,
   DAYS_COLUMN,
   DEPARTMENTS_COLUMN,
+  TAGS_COLUMN,
   GO_LIVE_COLUMN,
   LAST_UPDATE_COLUMN,
   LEFT_MARGIN,
@@ -166,6 +167,10 @@ export function MissionsTable({
               {shows("departments") && (
                 <TableHead className={DEPARTMENTS_COLUMN}>Départements</TableHead>
               )}
+              {/* What the team put on the mission to find it again: a client, a
+                partner, a programme. It does not sort either — words the team
+                chose have no order the reader would have in mind. */}
+              {shows("tags") && <TableHead className={TAGS_COLUMN}>Tags</TableHead>}
               {/* Build against its estimate, run apart: the two answer different
                 questions, and a single column carrying both would no longer
                 sort. */}

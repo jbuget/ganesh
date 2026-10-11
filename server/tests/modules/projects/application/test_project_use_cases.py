@@ -32,6 +32,7 @@ from tests.helpers.in_memory_repositories import (
     InMemoryProjectAssigneeRepository,
     InMemoryProjectDetailRepository,
     InMemoryProjectRepository,
+    InMemoryProjectTagRepository,
     InMemoryProjectUpdateRepository,
     InMemoryUserRepository,
 )
@@ -77,6 +78,7 @@ def build(projects: list[Project] | None = None):
             users=users,
             updates=InMemoryProjectUpdateRepository(),
             details=InMemoryProjectDetailRepository(),
+            project_tags=InMemoryProjectTagRepository(),
         ),
         repo,
         audit,

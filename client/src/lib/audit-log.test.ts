@@ -21,6 +21,7 @@ function entry(
     day: null,
     field: null,
     note: null,
+    tag: null,
     old_value: null,
     new_value: null,
     ...over,
@@ -473,6 +474,65 @@ describe("auditSentence", () => {
     );
 
     expect(unsaid).toEqual([]);
+  });
+});
+
+describe("auditSentence — tags", () => {
+  it("names the tag put on a mission", () => {
+    expect(
+      auditSentence(entry("project.tag", { new_value: "Chronopost" })).action,
+    ).toBe("a ajouté le tag « Chronopost »");
+  });
+
+  it("names the tag taken off a mission", () => {
+    expect(auditSentence(entry("project.untag", { old_value: "Suez" })).action).toBe(
+      "a retiré le tag « Suez »",
+    );
+  });
+
+  it("says the gesture even when the name is gone", () => {
+    expect(auditSentence(entry("project.tag")).action).toBe("a ajouté un tag");
+    expect(auditSentence(entry("project.untag")).action).toBe("a retiré un tag");
+  });
+
+  it("reads a renaming as a renaming", () => {
+    expect(
+      auditSentence(
+        entry("tag.rename", { old_value: "Suez Env", new_value: "Suez Group" }),
+      ),
+    ).toEqual({ action: "a renommé le tag", from: "Suez Env", to: "Suez Group" });
+  });
+
+  it("says whose colour moved, and between which", () => {
+    expect(
+      auditSentence(
+        entry("tag.recolor", { tag: "Suez", old_value: "red", new_value: "lime" }),
+      ),
+    ).toEqual({
+      action: "a changé la couleur du tag « Suez »",
+      from: "Rouge",
+      to: "Citron vert",
+    });
+  });
+
+  it("says a recolouring without the name when the line carries none", () => {
+    expect(
+      auditSentence(entry("tag.recolor", { old_value: "red", new_value: "pink" }))
+        .action,
+    ).toBe("a changé la couleur d'un tag");
+  });
+
+  it("says what a tag was folded into", () => {
+    expect(
+      auditSentence(entry("tag.merge", { old_value: "Suez Env", new_value: "Suez" }))
+        .action,
+    ).toBe("a fusionné le tag « Suez Env » dans « Suez »");
+  });
+
+  it("reads the same in the register read across", () => {
+    expect(
+      auditSentence(entry("project.tag", { new_value: "IA" }), { read: "all" }).action,
+    ).toBe("a ajouté le tag « IA »");
   });
 });
 

@@ -7,6 +7,7 @@ from src.modules.entries.domain.repositories.entry_repository import EntryReposi
 from src.modules.projects.application.dtos.last_update import LastUpdate
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.projects.domain.entities.tag import Tag
 from src.modules.projects.domain.repositories.project_assignee_repository import (
     ProjectAssigneeRepository,
 )
@@ -15,6 +16,9 @@ from src.modules.projects.domain.repositories.project_detail_repository import (
 )
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
+)
+from src.modules.projects.domain.repositories.project_tag_repository import (
+    ProjectTagRepository,
 )
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
@@ -50,6 +54,9 @@ class BoardCard:
     #: The departments the mission serves. The board does not draw them: it
     #: filters on them, under the same criteria as the reference list.
     departments: list[Department] = field(default_factory=list)
+    #: The tags the team put on the mission itself. A work package's card does
+    #: not read its project's.
+    tags: list[Tag] = field(default_factory=list)
 
 
 @dataclass
@@ -86,6 +93,7 @@ class GetBoardUseCase:
         assignees: ProjectAssigneeRepository,
         updates: ProjectUpdateRepository,
         details: ProjectDetailRepository,
+        project_tags: ProjectTagRepository,
     ) -> None:
         self._projects = projects
         self._entries = entries
@@ -93,6 +101,7 @@ class GetBoardUseCase:
         self._assignees = assignees
         self._updates = updates
         self._details = details
+        self._project_tags = project_tags
 
     async def execute(
         self, today: date | None = None, include_inactive: bool = False
@@ -115,6 +124,7 @@ class GetBoardUseCase:
         comments = await self._updates.count_by_project()
         latest_by_project = await self._updates.latest_by_project()
         departments = await self._details.list_departments_by_project()
+        tags = await self._project_tags.list_all()
 
         def latest(project_id: int) -> LastUpdate | None:
             update = latest_by_project.get(project_id)
@@ -175,6 +185,7 @@ class GetBoardUseCase:
                     comments=comments.get(mission.id, 0),
                     latest_update=latest(mission.id),
                     departments=departments.get(mission.id, []),
+                    tags=tags.get(mission.id, []),
                     sub_projects=work_package_counts.get(mission.id, 0),
                     parent=(
                         by_id.get(mission.parent_id)

@@ -48,6 +48,9 @@ class AuditLogEntryResponse(BaseModel):
     #: arbitration is played again as often as it has to be: the sheet only
     #: ever carries the last reason, and the ones before it live here.
     note: str | None
+    #: The tag a gesture on the vocabulary was about. Read back because a
+    #: recolouring carries two colours and nothing that says whose.
+    tag: str | None
     old_value: str | None
     new_value: str | None
 

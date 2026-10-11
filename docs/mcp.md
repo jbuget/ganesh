@@ -137,14 +137,14 @@ Thirteen, each `src/mcp/tools/<name>.py`, each answering in sentences built thro
 `src/mcp/tools/say.py` — « 1,5 jour », « 08/09 », « septembre 2026 ». A number
 handed over raw is a number a model words itself, and words wrong.
 
-### `find_project(query?, phase?, kind?, priority?, department?, followed?, archived?, person?)`
+### `find_project(query?, phase?, kind?, priority?, department?, followed?, archived?, person?, tag?)`
 
 **Scope** `projects:read`. The resolver the others lean on, and the reason a
 model stops inventing identifiers.
 
 Takes what a person would say — « waatcher », « le catalogue » — and returns the
-few missions that match, each with its identifier, its kind, its phase and
-whether it is still one to book against. Several matches are returned as
+few missions that match, each with its identifier, its kind, its phase, its tags
+and whether it is still one to book against. Several matches are returned as
 several; the choice is the caller's, and a tool that picked one would be
 guessing.
 
@@ -153,6 +153,14 @@ validation », « ceux de Léa au service client ». At least one criterion is
 required, and they add up. The list is read whole and narrowed by
 `ProjectCriteria` (`projects/application/services/project_search.py`), so that
 a screen and a tool cannot come to answer it differently.
+
+`tag` narrows to the missions carrying it — a client, a partner, a programme, a
+theme: « les projets Chronopost ». It stands alone, without a name, and is read
+as the team reads a tag (case, accents and hyphens do not tell two apart). A tag
+nobody carries is said, with the closest ones when there are any: an empty
+answer would read as « no such project », which is not what is known. There is
+no `list_tags` beside it: a tool that is another one with a parameter left out
+is not a new question.
 
 - **Criteria come in as the words the team says** — « construction »,
   « service client », « haute » — and are heard back into the domain's
@@ -199,6 +207,11 @@ Three decisions carried in it:
 - **who is on it now** is the assignments, named — intervenants actuels,
   référents techniques — and the time declared since the first of last month,
   counted, lots included.
+- **its tags are said, and the project's are never the lot's.** « Tags du
+  projet : IA et Chronopost », or « Aucun tag posé sur le projet » — silence is
+  where a model infers a theme. A lot says its own when it has any, and nothing
+  is passed down: a reader who found the project's under a lot would take them
+  for the lot's.
 
 > WAATcher (#7) — projet, construction depuis le 08/03/2026. 128 jours déclarés
 > pour 150 estimés : il en reste 22. Mise en service annoncée le 30/11/2026.

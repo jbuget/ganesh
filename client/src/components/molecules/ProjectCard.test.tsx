@@ -368,3 +368,34 @@ describe("opening the mission", () => {
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 });
+
+describe("ProjectCard — the tags the team put on a mission", () => {
+  const tags = (...names: string[]) =>
+    names.map((name, index) => ({ id: index + 1, name, color: "blue" }));
+
+  it("names the tags under the title", () => {
+    render(<ProjectCard now={NOW} card={card({ tags: tags("IA", "Chronopost") })} />);
+
+    expect(screen.getByText("IA")).toBeInTheDocument();
+    expect(screen.getByText("Chronopost")).toBeInTheDocument();
+  });
+
+  it("counts what the card has no room for, and names it on hover", () => {
+    render(<ProjectCard now={NOW} card={card({ tags: tags("A", "B", "C", "D") })} />);
+
+    const rest = screen.getByText("+2");
+    expect(rest).toHaveAttribute("title", "C, D");
+  });
+
+  it("draws nothing for a mission carrying none", () => {
+    render(<ProjectCard now={NOW} card={card({ tags: [] })} />);
+
+    expect(screen.queryByText(/^\+\d/)).not.toBeInTheDocument();
+  });
+
+  it("reads a card from before tags as carrying none", () => {
+    render(<ProjectCard now={NOW} card={card()} />);
+
+    expect(screen.getByRole("heading")).toBeInTheDocument();
+  });
+});

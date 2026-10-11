@@ -16,6 +16,7 @@ from src.modules.projects.domain.entities.service_registry import (
     Criticality,
     ServiceType,
 )
+from src.modules.projects.domain.entities.tag import MAX_TAG_NAME_LENGTH, TagColor
 from src.modules.projects.domain.entities.update_reaction import Reaction
 from src.modules.projects.domain.services.hierarchy import SubProjectPolicy
 from src.shared.enums.department import Department
@@ -124,6 +125,14 @@ class ProjectCostResponse(BaseModel):
     has_overrun: bool
 
 
+class TagResponse(BaseModel):
+    """A tag, as drawn beside a mission."""
+
+    id: int
+    name: str
+    color: TagColor
+
+
 class ProjectListItemResponse(BaseModel):
     """A mission from the reference list, with who looks after it."""
 
@@ -142,6 +151,8 @@ class ProjectListItemResponse(BaseModel):
     links: list["ProjectLinkResponse"]
     #: The departments the mission serves, in the order they are declared.
     departments: list[Department]
+    #: The tags the team put on the mission itself, in alphabetical order.
+    tags: list[TagResponse] = []
     #: Live updates in the follow-up thread.
     comments: int
     #: The latest of them, absent while there is nothing to read.
@@ -243,6 +254,9 @@ class BoardCardResponse(BaseModel):
     #: The departments the mission serves. No card draws them: the filter bar
     #: is shared with the reference list, and asks the board the same question.
     departments: list[Department]
+    #: The tags of the mission itself: a work package's card does not read its
+    #: project's.
+    tags: list[TagResponse] = []
     sub_projects: int
     parent: ParentResponse | None
 
@@ -329,8 +343,11 @@ class ProjectDetailResponse(BaseModel):
     sub_projects: list[ProjectResponse]
     #: Technologies the service is built on.
     stack: list[str]
-    #: Free tags the service is found by in the catalogue.
-    tags: list[str]
+    #: Free tags the service is found by in the catalogue. Not the tags of the
+    #: team: those find a mission, these publish a service.
+    catalog_tags: list[str]
+    #: The tags the team put on the mission itself, to find it again.
+    tags: list[TagResponse]
     #: Internal missions this one relies on.
     dependencies: list[MissionRefResponse]
     #: The project this one belongs to, absent when it is a project itself.
@@ -524,3 +541,32 @@ class UpdateActivityRequest(BaseModel):
     label: str | None = None
     nature: WorkNature | None = None
     estimated_days: float | None = None
+
+
+class TagUsageResponse(BaseModel):
+    """A tag, and how many missions carry it."""
+
+    id: int
+    name: str
+    color: TagColor
+    project_count: int
+
+
+class TagProjectRequest(BaseModel):
+    """Putting a tag on a mission, by the name somebody typed."""
+
+    name: str = Field(max_length=MAX_TAG_NAME_LENGTH * 2)
+
+
+class RenameTagRequest(BaseModel):
+    name: str = Field(max_length=MAX_TAG_NAME_LENGTH * 2)
+
+
+class RecolorTagRequest(BaseModel):
+    color: TagColor
+
+
+class MergeTagsRequest(BaseModel):
+    """The tag the one in the URL is folded into."""
+
+    target_id: int

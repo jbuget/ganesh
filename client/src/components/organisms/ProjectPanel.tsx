@@ -111,6 +111,8 @@ export function ProjectPanel({
             }}
             unarchive={sheet.unarchive}
             toggleFollow={sheet.toggleFollow}
+            addTag={sheet.addTag}
+            removeTag={sheet.removeTag}
           />
         )}
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 
 import type {
@@ -27,6 +28,11 @@ import {
   updateProjectDetail,
   updateProjectRegistry,
 } from "@/lib/api/generated/projects/projects";
+import {
+  getListTagsQueryKey,
+  tagProject,
+  untagProject,
+} from "@/lib/api/generated/tags/tags";
 import { setFollowed } from "@/lib/follow";
 import type { SheetFields } from "@/lib/service-sheet";
 
@@ -44,6 +50,7 @@ export function useProjectDetail(
 ) {
   const [detail, setDetail] = useState<ProjectDetailResponse | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const queryClient = useQueryClient();
 
   const reload = useCallback(async () => {
     try {
@@ -70,6 +77,16 @@ export function useProjectDetail(
       alive = false;
     };
   }, [projectId]);
+
+  /**
+   * The filter bar reads the tags in its own request: one opened or emptied
+   * here must be there the next time the list is opened, and the sheet read
+   * back like after any other write.
+   */
+  async function tagsChanged() {
+    await queryClient.invalidateQueries({ queryKey: getListTagsQueryKey() });
+    await reload();
+  }
 
   return {
     detail,
@@ -144,6 +161,21 @@ export function useProjectDetail(
     async unarchive() {
       await unarchiveProject(projectId);
       await reload();
+    },
+
+    /**
+     * Puts a tag on the mission by the name typed: the server opens it if
+     * nobody had, and a tag the mission already carries changes nothing.
+     */
+    async addTag(name: string) {
+      await tagProject(projectId, { name });
+      await tagsChanged();
+    },
+
+    /** Takes a tag off the mission. The tag itself stays for the others. */
+    async removeTag(tagId: number) {
+      await untagProject(projectId, tagId);
+      await tagsChanged();
     },
 
     /** Raises the mark the team follows the mission by, or lowers it. */

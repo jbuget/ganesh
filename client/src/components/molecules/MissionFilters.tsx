@@ -1,5 +1,7 @@
 "use client";
 
+import { Bookmark } from "lucide-react";
+
 import { ClearFilters } from "@/components/atoms/ClearFilters";
 import { FilterSelect } from "@/components/atoms/FilterSelect";
 import { FilteredCount } from "@/components/atoms/FilteredCount";
@@ -12,9 +14,10 @@ import type {
   ProjectPriority,
   ProjectStatus,
 } from "@/lib/api/generated/model";
-import { useTeammates } from "@/lib/api/queries";
+import { useTags, useTeammates } from "@/lib/api/queries";
 import { CATEGORIES, PHASES, PRIORITIES } from "@/lib/board";
 import { DEPARTMENTS } from "@/lib/departments";
+import { tagMark } from "@/lib/tag-colors";
 import {
   EVERY_CRITERION,
   MISSION_STATES,
@@ -78,6 +81,7 @@ export function MissionFilters({
   trailing,
 }: MissionFiltersProps) {
   const { teammates } = useTeammates();
+  const { tags } = useTags("", criteria.includes("tags"));
   const asked = new Set<Criterion>(criteria);
   const shows = (criterion: Criterion) => asked.has(criterion);
 
@@ -137,6 +141,27 @@ export function MissionFilters({
             options={DEPARTMENTS.map(({ value, label }) => ({ value, label }))}
             values={filters.departments}
             onChange={(values) => onChange({ departments: values as Department[] })}
+          />
+        )}
+
+        {/* What the team put on a mission to find it again: a client, a
+            partner, a programme. Several tags add up, as the departments do. */}
+        {shows("tags") && (
+          <FilterSelect
+            label="Tag"
+            search="Rechercher un tag"
+            options={tags.map((tag) => ({
+              value: String(tag.id),
+              label: tag.name,
+              thumbnail: (
+                <Bookmark
+                  className={`size-3 shrink-0 fill-current ${tagMark(tag.color)}`}
+                  aria-hidden
+                />
+              ),
+            }))}
+            values={filters.tags.map(String)}
+            onChange={(values) => onChange({ tags: values.map(Number) })}
           />
         )}
 

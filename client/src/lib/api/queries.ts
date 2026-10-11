@@ -39,6 +39,7 @@ import type {
   RequestPersonResponse,
   RequestResponse,
   StatisticsResponse,
+  TagUsageResponse,
   TeamMoodsResponse,
   TouchedProjectResponse,
   UserRecordResponse,
@@ -57,6 +58,7 @@ import {
 } from "@/lib/api/generated/admin/admin";
 import { useGetStatistics } from "@/lib/api/generated/stats/stats";
 import { useListProjects } from "@/lib/api/generated/projects/projects";
+import { useListTags } from "@/lib/api/generated/tags/tags";
 import {
   useListMyRequests,
   useListRequestSponsors,
@@ -155,6 +157,21 @@ export function useTeammates(includeInactive = false, enabled = true) {
     query: { enabled },
   });
   return { ...query, teammates: successOf<UserResponse[]>(query.data) ?? [] };
+}
+
+/**
+ * The tags in use, the closest to what was typed first.
+ *
+ * Typing nothing gives every tag, the most carried first: that is what a filter
+ * is drawn from. The previous answer stays on screen while the next is read, so
+ * that the suggestions do not blink at every keystroke.
+ */
+export function useTags(search = "", enabled = true) {
+  const typed = search.trim();
+  const query = useListTags(typed ? { search: typed } : undefined, {
+    query: { enabled, placeholderData: keepPreviousData },
+  });
+  return { ...query, tags: successOf<TagUsageResponse[]>(query.data) ?? [] };
 }
 
 /**

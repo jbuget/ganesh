@@ -66,6 +66,9 @@ interface ProjectTabsProps {
   unarchive: () => Promise<void>;
   /** Raises the mark the team follows the mission by, or lowers it. */
   toggleFollow: () => Promise<void>;
+  /** Puts a tag on the mission by the name typed. */
+  addTag: (name: string) => Promise<void>;
+  removeTag: (tagId: number) => Promise<void>;
   /**
    * Deletes the mission for good, once confirmed.
    *
@@ -102,6 +105,8 @@ export function ProjectTabs({
   archive,
   unarchive,
   toggleFollow,
+  addTag,
+  removeTag,
   deleteMission,
 }: ProjectTabsProps) {
   // Freezes the reference time for the duration of the visit: « il y a 3
@@ -238,6 +243,8 @@ export function ProjectTabs({
           updateFields={updateFields}
           addSubProject={addSubProject}
           toggleFollow={toggleFollow}
+          addTag={addTag}
+          removeTag={removeTag}
         />
       </TabsContent>
 

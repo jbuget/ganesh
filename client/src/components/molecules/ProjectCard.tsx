@@ -7,10 +7,15 @@ import { ContributorsPicker } from "@/components/atoms/ContributorsPicker";
 import { FollowMark } from "@/components/atoms/FollowMark";
 import { MarkdownView } from "@/components/atoms/MarkdownView";
 import { MemberAvatars } from "@/components/atoms/MemberAvatars";
+import { TagMark } from "@/components/atoms/TagMark";
 import type { BoardCardResponse } from "@/lib/api/generated/model";
 import { progress } from "@/lib/board";
 import { formatDecimalDays } from "@/lib/dates";
 import { since } from "@/lib/relative-dates";
+import { visibleTags } from "@/lib/tags";
+
+/** A card is narrow: the first tags are drawn, the rest is counted. */
+const TAGS_ON_A_CARD = 2;
 
 /** Shade of the consumed/estimated ratio, by how far along it is. */
 const SHADES: Record<ReturnType<typeof progress>, string> = {
@@ -65,6 +70,7 @@ export function ProjectCard({
   // years is not late because it is still running.
   const state = progress(card.build_days, project.estimated_days);
   const latest = card.latest_update;
+  const tags = visibleTags(card.tags, TAGS_ON_A_CARD);
   // Nothing opens from the copy following the cursor: a click released after
   // a drag must not open a panel.
   const thread = isDragging ? undefined : onOpenThread;
@@ -170,6 +176,22 @@ export function ProjectCard({
             >
               {parent.label}
             </button>
+          )}
+        </p>
+      )}
+
+      {tags.shown.length > 0 && (
+        <p className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs">
+          {tags.shown.map((tag) => (
+            <TagMark key={tag.id} tag={tag} />
+          ))}
+          {tags.hidden.length > 0 && (
+            <span
+              className="text-slate-500"
+              title={tags.hidden.map((tag) => tag.name).join(", ")}
+            >
+              +{tags.hidden.length}
+            </span>
           )}
         </p>
       )}

@@ -19,6 +19,7 @@ describe("hideable columns", () => {
       "priority",
       "category",
       "departments",
+      "tags",
       "build",
       "run",
       "goLive",
@@ -75,13 +76,13 @@ describe("writeHiddenColumns", () => {
 
 describe("tableWidth", () => {
   it("spans the full reference list when every column shows", () => {
-    expect(tableWidth(NO_HIDDEN_COLUMN)).toBe(2024);
+    expect(tableWidth(NO_HIDDEN_COLUMN)).toBe(2244);
   });
 
   it("gives back exactly what a column put away was taking", () => {
     const category = HIDEABLE_COLUMNS.find((column) => column.key === "category");
 
-    expect(tableWidth(hiddenColumns(["category"]))).toBe(2024 - category!.width);
+    expect(tableWidth(hiddenColumns(["category"]))).toBe(2244 - category!.width);
   });
 
   /** Nothing left but the name and its thread: the row still reads. */

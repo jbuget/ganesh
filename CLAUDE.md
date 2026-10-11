@@ -15,8 +15,8 @@ point not covered here, look at what WAATcher does rather than inventing:
 
 Ganesh lets every developer declare, in days or half days, the time spent (or
 planned) on each project or sub-project, as a `days of the month × missions`
-grid. It is named after the lord of the *gaṇa* — the troop one belongs to, and
-the count: the same root gives *gaṇita*, calculation. He is the scribe who took
+grid. It is named after the lord of the _gaṇa_ — the troop one belongs to, and
+the count: the same root gives _gaṇita_, calculation. He is the scribe who took
 down the Mahābhārata on the one condition that the dictation never stop, and the
 doorkeeper who turns back whoever has no right to pass. A register kept without
 a break, and a door that opens or holds — that is the whole product: Activité
@@ -29,7 +29,7 @@ decoration the moment it is made cute.
 
 **The product is Ganesh; the domain is still a timesheet.** `TimesheetGrid`,
 `TimesheetPage` and `useTimesheetMonth` name a monthly time sheet, which is what
-they are and what they stay. Only what names the *application* carries the
+they are and what they stay. Only what names the _application_ carries the
 product's name — what the user reads, the page title, the API's own name. Do not
 rename a domain identifier to chase the product: `GaneshGrid` would say nothing
 about what it renders.
@@ -54,21 +54,21 @@ axis on purpose: an admin holds everything a manager holds, so no screen has to
 list two roles and forget one of them. `RANK` is read off `Role` rather than
 written down, and a rung added between two others cannot be forgotten.
 
-| Action | `GUEST` | `TEAMMATE` | `MANAGER` | `ADMIN` |
-|---|---|---|---|---|
-| Express a need, and read one's own | ✅ | ✅ | ✅ | ✅ |
-| Read every other screen | ❌ | ✅ | ✅ | ✅ |
-| Fill in one's own month, read and edit a colleague's open month | ❌ | ✅ | ✅ | ✅ |
-| Create / change a project, change its status | ❌ | ✅ | ✅ | ✅ |
-| Validate one's own month | ❌ | ✅ | ✅ | ✅ |
-| Validate anybody's month, as a manager reopens anybody's — the owner is told | ❌ | ❌ | ✅ | ✅ |
-| Read the needs the company expressed | ❌ | ✅ | ✅ | ✅ |
-| Arbitrate a need, and make a mission of it | ❌ | ❌ | ✅ | ✅ |
-| Reopen a validated month | ❌ | ❌ | ✅ | ✅ |
-| Manage teammates | ❌ | ❌ | ✅ | ✅ |
-| Hand out a role, up to one's own | ❌ | ❌ | ✅ | ✅ |
-| Open the administration of the platform | ❌ | ❌ | ❌ | ✅ |
-| Sync to Monday (V1.1) | ❌ | ❌ | ✅ | ✅ |
+| Action                                                                       | `GUEST` | `TEAMMATE` | `MANAGER` | `ADMIN` |
+| ---------------------------------------------------------------------------- | ------- | ---------- | --------- | ------- |
+| Express a need, and read one's own                                           | ✅      | ✅         | ✅        | ✅      |
+| Read every other screen                                                      | ❌      | ✅         | ✅        | ✅      |
+| Fill in one's own month, read and edit a colleague's open month              | ❌      | ✅         | ✅        | ✅      |
+| Create / change a project, change its status                                 | ❌      | ✅         | ✅        | ✅      |
+| Validate one's own month                                                     | ❌      | ✅         | ✅        | ✅      |
+| Validate anybody's month, as a manager reopens anybody's — the owner is told | ❌      | ❌         | ✅        | ✅      |
+| Read the needs the company expressed                                         | ❌      | ✅         | ✅        | ✅      |
+| Arbitrate a need, and make a mission of it                                   | ❌      | ❌         | ✅        | ✅      |
+| Reopen a validated month                                                     | ❌      | ❌         | ✅        | ✅      |
+| Manage teammates                                                             | ❌      | ❌         | ✅        | ✅      |
+| Hand out a role, up to one's own                                             | ❌      | ❌         | ✅        | ✅      |
+| Open the administration of the platform                                      | ❌      | ❌         | ❌        | ✅      |
+| Sync to Monday (V1.1)                                                        | ❌      | ❌         | ✅        | ✅      |
 
 **A guest is what anybody is on their first sign-in**, and it is an answer
 rather than a placeholder: the whole company comes through the same Entra
@@ -81,7 +81,7 @@ promotes the account the day they say whose it is, which means a new teammate
 has nothing until somebody fills in their sheet, and that is deliberate. The
 seed is the other door — matching by email is what preserves a role handed out
 before anybody logged in — and `make grant-role EMAIL=… ROLE=ADMIN` is the third, from a shell on the
-host, which is the only place the *first* administrator can be made.
+host, which is the only place the _first_ administrator can be made.
 
 **Authentication switched off admits an administrator.** `REQUIRE_AUTH=false`
 provisions the identity `DEV_EMAIL` names, and it does so as an admin: with no
@@ -159,6 +159,63 @@ a filter, « Suivi », on the reference list and on the board.
 - No motive, no date and no author on the mission: `project.follow` and
   `project.unfollow` in the log say who and when, and asking why would turn a
   click into a form.
+
+### Tagging a mission
+
+A word the team puts on what it wants to find again — a theme (« IA »,
+« Frigo »), a client (« Chronopost »), a partner (« Suez »), a programme
+(« France Énergie 2030 ») — without writing another update about it. A tag
+**classes** a mission and never says where it stands: that is what the updates
+are for, and a tag that tried would be a phase nobody dated.
+
+- **Anybody opens a tag, by typing it on a mission.** One gesture, one name:
+  `POST /projects/{id}/tags`. If the tag exists the mission takes it, and if it
+  does not it is opened on the spot, with a colour nobody had to choose. The
+  picker offers the tags in use first, the closest to what is typed on top,
+  and opening a new one is an explicit line at the foot of the list — never a
+  side effect of typing, which is how « IA », « ia » and « intelligence
+  artificielle » end up three tags.
+- **The name is the identity.** `Tag.key` reads it without its case, its
+  accents or the way its words are separated: « Suez-Env », « suez env » and
+  « Suez_Env » are one tag, held by the entity and by a unique index. A second
+  « Chronopost » cannot be opened by any way in.
+- **The palette is closed**, as the signs of a reaction are: ten colours named
+  by `TagColor`, painted in `client/src/lib/tag-colors.ts`. A free hexadecimal
+  would give twenty blues nobody can tell apart. A new tag takes the colour
+  fewest tags wear. The mark is a small filled bookmark, and the name is always written beside
+  it, so the colour is never the only thing that tells two tags apart.
+- **A mission carries its own, and nobody else's.** Nothing is passed down from
+  a project to its work packages, nor summed up: a tagged package under a
+  project nobody tagged is kept alone by the filter, as with `is_followed`.
+  At most `MAX_TAGS_PER_PROJECT` (8): past that a mission is being piled on,
+  not classed. Off-project work carries none — an absence has nothing to be
+  found by — and the entity refuses it.
+- **A manager looks after the vocabulary**, because it moves every mission
+  carrying the tag at once: rename it, recolour it, and **fold a duplicate into
+  the tag it should have been**. Folding is the real answer to drift, and the
+  one gesture that cannot be taken back, so the interface asks to confirm it
+  naming both ends. Renaming into a name another tag already holds is refused
+  with a 409 — that is what folding is for.
+- **A tag nobody carries leaves the lists but not the table**: it is not a
+  suggestion any more, and typing it again finds it with its colour.
+- **Each gesture is named in the log, one line per mission.** `project.tag` and
+  `project.untag` carry the tag's name; `tag.rename`, `tag.recolor` and
+  `tag.merge` write one line on every mission carrying the tag, so each
+  journal reads the change where it was felt. A recolouring carries two
+  colours and nothing that says whose, hence the `tag` field the log reads out
+  of the payload.
+- **Nothing rings and nothing is told**: no notification, nothing in the
+  Gazette. A tag classes, it does not report.
+- **A filter, a column and a card.** « Tag » is a criterion of the reference
+  list and of the board (the ids travel in the address, so a renamed tag keeps
+  the link that carried it; several tags add up, as the departments do), « Tags »
+  is a column of the list that can be put away like the others, and a card
+  draws the first two.
+- **The Catalogue keeps its own words.** `project_tags` and the « Mots-clés »
+  row of the Catalogue tab are what waat.tools publishes — free text, per
+  service. They are not these tags, and the sheet reads them as `catalog_tags`.
+  The two may converge the day the Catalogue is rebuilt; until then a table
+  with a similar name is not the same thing.
 
 ### Business invariants
 
@@ -366,8 +423,8 @@ each carries the budget for its own.
 
 A mission that is over — delivered, abandoned, or never really started — is
 **archived**, and `ProjectStatus` will never grow a phase for it. A phase says
-*where the work stands*, archiving says *whether the mission is still one to
-book against*: an abandonment is an exit, not a step forward. Writing it as a
+_where the work stands_, archiving says _whether the mission is still one to
+book against_: an abandonment is an exit, not a step forward. Writing it as a
 phase would erase the one thing worth knowing, which is how far the project got
 before it stopped, put a column that steers nothing on a board that steers what
 runs, and cost the plan a second exception beside `OPERATIONS`. Nothing is lost
@@ -436,7 +493,7 @@ Three consequences:
   one name; the code keeps `MissionRow` and the `mission` query parameter,
   which nobody reads. The rename crosses the agreement — « Aucune mission »
   becomes « Aucun projet », `` `${n} livrée${s(n)}` `` becomes `` `${n}
-  livré${s(n)}` `` — and neither the type checker nor a test asserting on a
+livré${s(n)}` `` — and neither the type checker nor a test asserting on a
   count will catch it. See `AGENTS.md`.
 - To find what is still French, do not search with a list of words: it only
   finds what one already has in mind. Extract every identifier, split it into
@@ -447,16 +504,16 @@ Three consequences:
 
 ## Stack
 
-| Layer | Technology |
-|--------|------------|
-| Frontend | Next.js 16, TypeScript, React 19, Tailwind CSS 4 |
-| BFF | Next.js Route Handlers (`client/src/app/api/`) |
-| Backend | Python 3.12, FastAPI, async SQLAlchemy, Alembic |
-| Database | PostgreSQL 18 |
-| Authentication | Microsoft Entra ID |
-| Front-end tests | Vitest + Testing Library |
-| Back-end tests | pytest + pytest-asyncio |
-| API client | Orval (generated from OpenAPI) |
+| Layer           | Technology                                       |
+| --------------- | ------------------------------------------------ |
+| Frontend        | Next.js 16, TypeScript, React 19, Tailwind CSS 4 |
+| BFF             | Next.js Route Handlers (`client/src/app/api/`)   |
+| Backend         | Python 3.12, FastAPI, async SQLAlchemy, Alembic  |
+| Database        | PostgreSQL 18                                    |
+| Authentication  | Microsoft Entra ID                               |
+| Front-end tests | Vitest + Testing Library                         |
+| Back-end tests  | pytest + pytest-asyncio                          |
+| API client      | Orval (generated from OpenAPI)                   |
 
 ---
 
@@ -476,6 +533,7 @@ src/modules/<module>/
 Modules: `users`, `projects`, `entries`, `months`, `calendar`, `audit_logs`.
 
 **Golden rules:**
+
 - The domain knows nothing of SQLAlchemy, FastAPI, Pydantic or any framework.
   Entities are `dataclass`es.
 - Use cases orchestrate; they do not carry business logic themselves.
@@ -516,11 +574,11 @@ there is no clash, but any other local service listening on `3000` or `5432`
 must be stopped first. The ports can be overridden through `WEB_PORT`,
 `API_PORT` and `POSTGRES_PORT` in the root `.env`.
 
-| | Port | URL |
-|---|---|---|
+|                | Port   | URL                   |
+| -------------- | ------ | --------------------- |
 | Next.js client | `3000` | http://localhost:3000 |
-| FastAPI API | `8000` | http://localhost:8000 |
-| PostgreSQL | `5432` | — |
+| FastAPI API    | `8000` | http://localhost:8000 |
+| PostgreSQL     | `5432` | —                     |
 
 Same conventions as WAATcher: `API_PREFIX=/api/v1`, `AZURE_AD_*` variables,
 callback `/api/auth/callback/azure-ad`.
@@ -711,17 +769,17 @@ make migrate     # alembic upgrade head
 Two screens read the same missions and answer different questions. Keeping
 them apart is what keeps either one worth opening.
 
-**Planification** asks *what fits, and who carries it*. Week by week, over
+**Planification** asks _what fits, and who carries it_. Week by week, over
 what is left to build, on the room the diaries leave. It is arbitrated: one
 reorders the backlog and puts people on missions to see what that would cost,
 and saves the question as a simulation. Services in operations are out of it —
 `still_to_build()` drops them — and so is everything already delivered.
 
-**Feuille de route** asks *what we deliver, and when*. Over the whole
+**Feuille de route** asks _what we deliver, and when_. Over the whole
 portfolio, delivered services included, over a rolling window. It is shown
 rather than arbitrated: to a committee, to a department. Where the plan reads
 `go_live_date` only to work out a delay, the roadmap makes the announced date
-its subject — and is the one place it can be *posted against the others*, a
+its subject — and is the one place it can be _posted against the others_, a
 commitment being taken next to every other commitment rather than alone. The
 day itself is also read and changed on the mission's own sheet, under its
 phase: moving a mission into « Recette » and knowing when it goes live are one
@@ -826,7 +884,7 @@ may do, and all of which a `ProjectStatus` would have had to pretend to.
   what reopens it.
 - **Nobody weighs what they asked for, or what they carry.** The request turns
   away its author and its sponsors, managers included; the role says who may
-  arbitrate at all, and the request says which of them may arbitrate *this*.
+  arbitrate at all, and the request says which of them may arbitrate _this_.
 - **A refusal says why**, and so does a « plus tard » — a « non » with no
   reason attached comes back word for word three months later. An arbitration
   is played again as often as it has to be, until something is actually built.
@@ -1091,7 +1149,7 @@ whole design leans on, and the one to respect when adding a route:
   keys is read by the whole team to know what a key opens; a member the form
   offers and no route honours makes it say that wrong.
 - A key is used by a machine and carries a **named human owner** who answers
-  for it — a key per teammate is no anomaly. What a key never does is act *as*
+  for it — a key per teammate is no anomaly. What a key never does is act _as_
   that person. An API call records the owner as the actor and names the key in
   the payload.
 - A key never inherits its owner's role: its power comes from its scopes alone.
@@ -1120,7 +1178,10 @@ it together:
   into sixty tools is a model chaining six calls to answer one question and
   getting three of them wrong. `find_project`, `project_brief`, `project_news`, `my_month`,
   `what_changed`, `portfolio_status`, `team_mood`, `declare_time`,
-  `record_review` — and the next one earns its place by being asked for. A
+  `record_review` — and the next one earns its place by being asked for. Tags are
+  read by the tools that already answer about a project: `find_project` takes a
+  `tag` (« les projets Chronopost »), `project_brief` says the tags of the project
+  and of each lot apart. There is no `list_tags`, and no tool puts one on. A
   tool that is another one with a parameter left out is not a new question:
   `record_review` without a phase already posts on a thread, and a
   `post_update` beside it would only make a model choose between them.
@@ -1297,15 +1358,15 @@ in, then gets a 401 on every call they make.
 - **3.10+ typing syntax is mandatory** — native builtins, never the `typing`
   aliases:
 
-  | Forbidden | Required |
-  |-------------|----------------|
-  | `Optional[X]` | `X \| None` |
-  | `Union[X, Y]` | `X \| Y` |
-  | `List[X]` | `list[X]` |
-  | `Dict[X, Y]` | `dict[X, Y]` |
+  | Forbidden       | Required        |
+  | --------------- | --------------- |
+  | `Optional[X]`   | `X \| None`     |
+  | `Union[X, Y]`   | `X \| Y`        |
+  | `List[X]`       | `list[X]`       |
+  | `Dict[X, Y]`    | `dict[X, Y]`    |
   | `Tuple[X, ...]` | `tuple[X, ...]` |
-  | `Set[X]` | `set[X]` |
-  | `Type[X]` | `type[X]` |
+  | `Set[X]`        | `set[X]`        |
+  | `Type[X]`       | `type[X]`       |
 
 - No business logic in FastAPI routes.
 - Business exceptions inherit from

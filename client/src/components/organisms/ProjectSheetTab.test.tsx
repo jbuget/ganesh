@@ -40,6 +40,7 @@ const detail = ({
     },
     links: [],
     stack: [],
+    catalog_tags: [],
     tags: [],
     dependencies: [],
     ...rest,
@@ -152,10 +153,10 @@ describe("ProjectSheetTab", () => {
     });
 
     it("leaves the other lists as they were", async () => {
-      const { saveRegistry } = sheet({ stack: ["Python"], tags: ["ia"] });
+      const { saveRegistry } = sheet({ stack: ["Python"], catalog_tags: ["ia"] });
 
-      await userEvent.click(screen.getByRole("button", { name: "Tags" }));
-      await userEvent.type(screen.getByLabelText("Tags"), "monitoring");
+      await userEvent.click(screen.getByRole("button", { name: "Mots-clés" }));
+      await userEvent.type(screen.getByLabelText("Mots-clés"), "monitoring");
       await userEvent.tab();
 
       expect(saveRegistry).toHaveBeenCalledWith({

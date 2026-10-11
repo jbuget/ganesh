@@ -12,6 +12,7 @@ import type { PhaseReachedResponse } from "./phaseReachedResponse";
 import type { ProjectContributionResponse } from "./projectContributionResponse";
 import type { ProjectLinkResponse } from "./projectLinkResponse";
 import type { ProjectResponse } from "./projectResponse";
+import type { TagResponse } from "./tagResponse";
 
 /**
  * The full sheet of a mission.
@@ -28,7 +29,8 @@ export interface ProjectDetailResponse {
   contributions: ProjectContributionResponse[];
   sub_projects: ProjectResponse[];
   stack: string[];
-  tags: string[];
+  catalog_tags: string[];
+  tags: TagResponse[];
   dependencies: MissionRefResponse[];
   parent: ParentResponse | null;
 }

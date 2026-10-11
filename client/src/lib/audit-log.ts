@@ -10,6 +10,7 @@ import { formatDecimalDays, formatMonthOf, formatSpelledDate } from "@/lib/dates
 import { departmentLabel } from "@/lib/departments";
 import { parisDay } from "@/lib/instants";
 import { roleLabel } from "@/lib/roles";
+import { tagColorLabel } from "@/lib/tag-colors";
 import { CRITICALITIES, SERVICE_LINKS, SERVICE_TYPES } from "@/lib/service-sheet";
 
 /**
@@ -448,6 +449,41 @@ export function auditSentence(
 
     case "project.unfollow":
       return { action: "a cessé de suivre le projet" };
+
+    // Les mots que l'équipe pose pour retrouver un projet. The line names the
+    // tag, the heading above it already says the mission. A tag renamed,
+    // recoloured or folded into another writes one line on every mission
+    // carrying it, so each journal reads the change where it was felt.
+    case "project.tag":
+      return {
+        action:
+          before === null && after ? `a ajouté le tag « ${after} »` : "a ajouté un tag",
+      };
+
+    case "project.untag":
+      return { action: before ? `a retiré le tag « ${before} »` : "a retiré un tag" };
+
+    case "tag.rename":
+      return { action: "a renommé le tag", ...movement(null, before, after) };
+
+    // Two colours say nothing of whose they are, hence the name on the line.
+    case "tag.recolor":
+      return {
+        action: entry.tag
+          ? `a changé la couleur du tag « ${entry.tag} »`
+          : "a changé la couleur d'un tag",
+        ...(before !== null && after !== null
+          ? { from: tagColorLabel(before), to: tagColorLabel(after) }
+          : {}),
+      };
+
+    case "tag.merge":
+      return {
+        action:
+          before && after
+            ? `a fusionné le tag « ${before} » dans « ${after} »`
+            : "a fusionné deux tags",
+      };
 
     // What a mission is cut into. The line names the activity rather than the
     // mission, which the heading above it already says.

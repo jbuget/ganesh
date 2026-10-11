@@ -11,6 +11,7 @@ import type { LastUpdateResponse } from "./lastUpdateResponse";
 import type { ProjectCostResponse } from "./projectCostResponse";
 import type { ProjectLinkResponse } from "./projectLinkResponse";
 import type { ProjectResponse } from "./projectResponse";
+import type { TagResponse } from "./tagResponse";
 
 /**
  * A mission from the reference list, with who looks after it.
@@ -25,6 +26,7 @@ export interface ProjectListItemResponse {
   tree_cost: ProjectCostResponse;
   links: ProjectLinkResponse[];
   departments: Department[];
+  tags?: TagResponse[];
   comments: number;
   latest_update: LastUpdateResponse | null;
 }

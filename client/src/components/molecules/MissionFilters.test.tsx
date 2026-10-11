@@ -8,6 +8,12 @@ vi.mock("@/lib/api/queries", () => ({
   useTeammates: () => ({
     teammates: [{ id: 3, display_name: "Nino Bosc", initials: "NB" }],
   }),
+  useTags: () => ({
+    tags: [
+      { id: 7, name: "Chronopost", color: "violet", project_count: 4 },
+      { id: 8, name: "Suez", color: "red", project_count: 2 },
+    ],
+  }),
 }));
 
 const bar = (over: Partial<Criteria> = {}, props: Record<string, unknown> = {}) => {
@@ -136,6 +142,30 @@ describe("MissionFilters", () => {
     fireEvent.click(screen.getByRole("button", { name: "Copropriété" }));
 
     expect(onChange).toHaveBeenCalledWith({ departments: ["condominium"] });
+  });
+
+  it("reports a ticked tag, by its id", () => {
+    const { onChange } = bar();
+
+    fireEvent.click(screen.getByRole("button", { name: /Tag/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Chronopost" }));
+
+    expect(onChange).toHaveBeenCalledWith({ tags: [7] });
+  });
+
+  it("keeps the tags already ticked when another is added", () => {
+    const { onChange } = bar({ tags: [7] });
+
+    fireEvent.click(screen.getByRole("button", { name: /Tag/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Suez" }));
+
+    expect(onChange).toHaveBeenCalledWith({ tags: [7, 8] });
+  });
+
+  it("asks nothing about tags on a screen that does not offer the question", () => {
+    bar({}, { criteria: ["name", "phases"] });
+
+    expect(screen.queryByRole("button", { name: /Tag/ })).not.toBeInTheDocument();
   });
 
   /** Tending the catalogue: which missions still have no service sheet. */

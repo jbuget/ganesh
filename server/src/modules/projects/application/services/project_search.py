@@ -14,6 +14,7 @@ from src.modules.projects.domain.entities.project import (
     ProjectPriority,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.tag import tag_key
 from src.modules.users.domain.services.user_lookup import designates
 from src.shared.enums.department import Department
 
@@ -37,6 +38,9 @@ class ProjectCriteria:
     is_archived: bool | None = None
     #: A part of the name of someone declared on the project, at any title.
     person: str | None = None
+    #: A tag the project carries itself, read as the team reads it: case,
+    #: accents and hyphens do not tell two apart.
+    tag: str | None = None
 
 
 def matching(
@@ -59,6 +63,7 @@ def _keeps(mission: ListedProject, criteria: ProjectCriteria) -> bool:
             criteria.is_archived is None
             or (not project.is_active) is criteria.is_archived,
             criteria.person is None or _has_person(mission, criteria.person),
+            criteria.tag is None or _carries(mission, criteria.tag),
         )
     )
 
@@ -66,6 +71,10 @@ def _keeps(mission: ListedProject, criteria: ProjectCriteria) -> bool:
 def _has_person(mission: ListedProject, person: str) -> bool:
     on_it = mission.leads + mission.tech_leads + mission.contributors
     return any(designates(who, person) for who in on_it)
+
+
+def _carries(mission: ListedProject, tag: str) -> bool:
+    return tag_key(tag) in {carried.key for carried in mission.tags}
 
 
 def _contains(text: str, part: str) -> bool:

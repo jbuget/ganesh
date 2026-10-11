@@ -79,6 +79,7 @@ async def project_brief(project_id: int, include_description: bool = False) -> s
     return "\n".join(
         [
             _named(sheet),
+            _tagged(sheet),
             _weighed(sheet, cut_up=bool(packages)),
             *_added_up(sheet, packages),
             _announced(sheet.project),
@@ -129,6 +130,18 @@ def _named(sheet: ProjectDetail) -> str:
             else "archivé"
         )
     return f"{project.label} (#{project.id}) — {', '.join(parts)}."
+
+
+def _tagged(sheet: ProjectDetail) -> str:
+    """The tags the team put on this mission, and only on this one.
+
+    Said when there are none, and said as « du projet »: a lot carries its own
+    and a reader who finds the project's would take them for the lot's.
+    """
+    noun = "projet" if sheet.parent is None else "lot"
+    if not sheet.tags:
+        return f"Aucun tag posé sur le {noun}."
+    return f"Tags du {noun} : {say.listed([tag.name for tag in sheet.tags])}."
 
 
 def _kind(sheet: ProjectDetail) -> str:
@@ -270,6 +283,8 @@ def _package(read: ProjectDetail) -> str:
         if read.consumed_days
         else "aucun jour déclaré"
     )
+    if read.tags:
+        parts.append(f"tags : {say.listed([tag.name for tag in read.tags])}")
     return f"{package.label} (#{package.id}) : {', '.join(parts)}"
 
 

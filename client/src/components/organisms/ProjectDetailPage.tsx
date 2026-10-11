@@ -160,6 +160,8 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
           }}
           unarchive={sheet.unarchive}
           toggleFollow={sheet.toggleFollow}
+          addTag={sheet.addTag}
+          removeTag={sheet.removeTag}
         />
       </div>
     </PageLayout>

@@ -24,7 +24,9 @@ from tests.helpers.in_memory_repositories import (
     InMemoryProjectAssigneeRepository,
     InMemoryProjectDetailRepository,
     InMemoryProjectRepository,
+    InMemoryProjectTagRepository,
     InMemoryUserRepository,
+    tagged,
 )
 
 ALICE = User(
@@ -74,6 +76,7 @@ def build(
     work_packages: list[Project] | None = None,
     parent: Project | None = None,
     activities: list[Activity] | None = None,
+    project_tags: InMemoryProjectTagRepository | None = None,
 ):
     return GetProjectDetailUseCase(
         projects=InMemoryProjectRepository([parent or PROJECT, *(work_packages or [])]),
@@ -82,6 +85,7 @@ def build(
         entries=InMemoryEntryRepository(entries or []),
         users=InMemoryUserRepository([ALICE, NINO]),
         activities=InMemoryActivityRepository(activities or []),
+        project_tags=project_tags or InMemoryProjectTagRepository(),
     )
 
 
@@ -273,3 +277,19 @@ async def test_a_mission_with_an_unbudgeted_trade_reads_no_estimate() -> None:
     ).execute(10)
 
     assert sheet.estimated_days is None
+
+
+async def test_the_sheet_carries_the_tags_of_the_mission_alone() -> None:
+    detail = await build(
+        work_packages=[work_package(11, "Lot 1")],
+        project_tags=await tagged({10: ["Suez"], 11: ["Frigo"]}),
+    ).execute(10)
+
+    assert [t.name for t in detail.tags] == ["Suez"]
+
+
+async def test_the_sheet_keeps_the_catalogue_tags_apart_from_the_shared_ones() -> None:
+    detail = await build().execute(10)
+
+    assert detail.catalog_tags == []
+    assert detail.tags == []

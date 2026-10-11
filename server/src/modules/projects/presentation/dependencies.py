@@ -67,6 +67,12 @@ from src.modules.projects.application.use_cases.manage_activities import (
     UnarchiveActivityUseCase,
     UpdateActivityUseCase,
 )
+from src.modules.projects.application.use_cases.manage_tags import (
+    ListTagsUseCase,
+    MergeTagsUseCase,
+    RecolorTagUseCase,
+    RenameTagUseCase,
+)
 from src.modules.projects.application.use_cases.move_project import MoveProjectUseCase
 from src.modules.projects.application.use_cases.project_attachments import (
     DownloadProjectAttachmentUseCase,
@@ -82,6 +88,10 @@ from src.modules.projects.application.use_cases.project_updates import (
     ReactToUpdateUseCase,
     RemoveProjectUpdateUseCase,
     WithdrawReactionUseCase,
+)
+from src.modules.projects.application.use_cases.tag_project import (
+    TagProjectUseCase,
+    UntagProjectUseCase,
 )
 from src.modules.projects.application.use_cases.update_comments import (
     EditCommentUseCase,
@@ -121,9 +131,13 @@ from src.modules.projects.domain.repositories.project_detail_repository import (
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.projects.domain.repositories.project_tag_repository import (
+    ProjectTagRepository,
+)
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
+from src.modules.projects.domain.repositories.tag_repository import TagRepository
 from src.modules.projects.domain.repositories.update_comment_repository import (
     UpdateCommentRepository,
 )
@@ -142,8 +156,14 @@ from src.modules.projects.infrastructure.database.repositories.project_attachmen
 from src.modules.projects.infrastructure.database.repositories.project_detail_repository_impl import (
     SqlProjectDetailRepository,
 )
+from src.modules.projects.infrastructure.database.repositories.project_tag_repository_impl import (
+    SqlProjectTagRepository,
+)
 from src.modules.projects.infrastructure.database.repositories.project_update_repository_impl import (
     SqlProjectUpdateRepository,
+)
+from src.modules.projects.infrastructure.database.repositories.tag_repository_impl import (
+    SqlTagRepository,
 )
 from src.modules.projects.infrastructure.database.repositories.update_comment_repository_impl import (
     SqlUpdateCommentRepository,
@@ -167,6 +187,16 @@ def get_project_assignee_repository(
     session: AsyncSession = Depends(get_db),
 ) -> ProjectAssigneeRepository:
     return SqlProjectAssigneeRepository(session)
+
+
+def get_tag_repository(session: AsyncSession = Depends(get_db)) -> TagRepository:
+    return SqlTagRepository(session)
+
+
+def get_project_tag_repository(
+    session: AsyncSession = Depends(get_db),
+) -> ProjectTagRepository:
+    return SqlProjectTagRepository(session)
 
 
 def get_project_update_repository(
@@ -246,6 +276,7 @@ def get_list_projects_use_case(
     users: UserRepository = Depends(get_user_repository),
     updates: ProjectUpdateRepository = Depends(get_project_update_repository),
     details: ProjectDetailRepository = Depends(get_project_detail_repository),
+    project_tags: ProjectTagRepository = Depends(get_project_tag_repository),
 ) -> ListProjectsUseCase:
     return ListProjectsUseCase(
         projects=projects,
@@ -255,6 +286,7 @@ def get_list_projects_use_case(
         users=users,
         updates=updates,
         details=details,
+        project_tags=project_tags,
     )
 
 
@@ -363,6 +395,7 @@ def get_board_use_case(
     assignees: ProjectAssigneeRepository = Depends(get_project_assignee_repository),
     updates: ProjectUpdateRepository = Depends(get_project_update_repository),
     details: ProjectDetailRepository = Depends(get_project_detail_repository),
+    project_tags: ProjectTagRepository = Depends(get_project_tag_repository),
 ) -> GetBoardUseCase:
     return GetBoardUseCase(
         projects=projects,
@@ -371,6 +404,7 @@ def get_board_use_case(
         assignees=assignees,
         updates=updates,
         details=details,
+        project_tags=project_tags,
     )
 
 
@@ -424,6 +458,7 @@ def get_project_detail_use_case(
     entries: EntryRepository = Depends(get_entry_repository),
     users: UserRepository = Depends(get_user_repository),
     activities: ActivityRepository = Depends(get_activity_repository),
+    project_tags: ProjectTagRepository = Depends(get_project_tag_repository),
 ) -> GetProjectDetailUseCase:
     return GetProjectDetailUseCase(
         projects=projects,
@@ -432,6 +467,7 @@ def get_project_detail_use_case(
         entries=entries,
         users=users,
         activities=activities,
+        project_tags=project_tags,
     )
 
 
@@ -721,3 +757,56 @@ def get_list_activities_use_case(
     activities: ActivityRepository = Depends(get_activity_repository),
 ) -> ListProjectActivitiesUseCase:
     return ListProjectActivitiesUseCase(activities=activities)
+
+
+def get_list_tags_use_case(
+    tags: TagRepository = Depends(get_tag_repository),
+) -> ListTagsUseCase:
+    return ListTagsUseCase(tags=tags)
+
+
+def get_tag_project_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    tags: TagRepository = Depends(get_tag_repository),
+    links: ProjectTagRepository = Depends(get_project_tag_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> TagProjectUseCase:
+    return TagProjectUseCase(users, projects, tags, links, audit_logs)
+
+
+def get_untag_project_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    projects: ProjectRepository = Depends(get_project_repository),
+    tags: TagRepository = Depends(get_tag_repository),
+    links: ProjectTagRepository = Depends(get_project_tag_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> UntagProjectUseCase:
+    return UntagProjectUseCase(users, projects, tags, links, audit_logs)
+
+
+def get_rename_tag_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    tags: TagRepository = Depends(get_tag_repository),
+    links: ProjectTagRepository = Depends(get_project_tag_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> RenameTagUseCase:
+    return RenameTagUseCase(users, tags, links, audit_logs)
+
+
+def get_recolor_tag_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    tags: TagRepository = Depends(get_tag_repository),
+    links: ProjectTagRepository = Depends(get_project_tag_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> RecolorTagUseCase:
+    return RecolorTagUseCase(users, tags, links, audit_logs)
+
+
+def get_merge_tags_use_case(
+    users: UserRepository = Depends(get_user_repository),
+    tags: TagRepository = Depends(get_tag_repository),
+    links: ProjectTagRepository = Depends(get_project_tag_repository),
+    audit_logs: AuditLogRepository = Depends(get_audit_log_repository),
+) -> MergeTagsUseCase:
+    return MergeTagsUseCase(users, tags, links, audit_logs)

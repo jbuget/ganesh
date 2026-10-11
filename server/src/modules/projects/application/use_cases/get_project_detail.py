@@ -7,6 +7,7 @@ from src.modules.entries.domain.repositories.entry_repository import EntryReposi
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.entities.project_role import ProjectRole
+from src.modules.projects.domain.entities.tag import Tag
 from src.modules.projects.domain.repositories.activity_repository import (
     ActivityRepository,
 )
@@ -18,6 +19,9 @@ from src.modules.projects.domain.repositories.project_detail_repository import (
 )
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
+)
+from src.modules.projects.domain.repositories.project_tag_repository import (
+    ProjectTagRepository,
 )
 from src.modules.projects.domain.services.deletion import can_be_deleted
 from src.modules.projects.domain.services.estimates import estimate_of
@@ -58,7 +62,9 @@ class ProjectDetail:
     #: Technologies the service is built on, as the catalogue lists them.
     stack: list[str]
     #: Free tags the service is found by in the catalogue.
-    tags: list[str]
+    catalog_tags: list[str]
+    #: The tags the team put on the mission itself, to find it again.
+    tags: list[Tag]
     #: Internal missions this one relies on, in alphabetical order.
     dependencies: list[Project]
     #: Whether the mission never served, and may therefore be deleted outright.
@@ -82,6 +88,7 @@ class GetProjectDetailUseCase:
         entries: EntryRepository,
         users: UserRepository,
         activities: ActivityRepository,
+        project_tags: ProjectTagRepository,
     ) -> None:
         self._projects = projects
         self._activities = activities
@@ -89,6 +96,7 @@ class GetProjectDetailUseCase:
         self._assignees = assignees
         self._entries = entries
         self._users = users
+        self._project_tags = project_tags
 
     async def _dependencies(self, project_id: int) -> list[Project]:
         """The missions depended on, named rather than numbered.
@@ -175,7 +183,8 @@ class GetProjectDetailUseCase:
             contributions=contributions,
             sub_projects=sub_projects,
             stack=await self._details.list_stack(project_id),
-            tags=await self._details.list_tags(project_id),
+            catalog_tags=await self._details.list_tags(project_id),
+            tags=await self._project_tags.list_for_project(project_id),
             dependencies=await self._dependencies(project_id),
             is_deletable=can_be_deleted(mission, len(entries), len(sub_projects)),
             parent=parent,

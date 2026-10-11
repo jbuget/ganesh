@@ -80,6 +80,7 @@ from src.modules.projects.domain.entities.project_attachment import ProjectAttac
 from src.modules.projects.domain.entities.project_link import ProjectLink
 from src.modules.projects.domain.entities.project_role import ProjectRole
 from src.modules.projects.domain.entities.project_update import ProjectUpdate
+from src.modules.projects.domain.entities.tag import Tag, TagColor, TagUsage
 from src.modules.projects.domain.entities.update_comment import UpdateComment
 from src.modules.projects.domain.entities.update_reaction import (
     Reaction,
@@ -104,9 +105,13 @@ from src.modules.projects.domain.repositories.project_detail_repository import (
 from src.modules.projects.domain.repositories.project_repository import (
     ProjectRepository,
 )
+from src.modules.projects.domain.repositories.project_tag_repository import (
+    ProjectTagRepository,
+)
 from src.modules.projects.domain.repositories.project_update_repository import (
     ProjectUpdateRepository,
 )
+from src.modules.projects.domain.repositories.tag_repository import TagRepository
 from src.modules.projects.domain.repositories.update_comment_repository import (
     UpdateCommentRepository,
 )
@@ -605,6 +610,96 @@ class InMemoryProjectAssigneeRepository(ProjectAssigneeRepository):
         members = self._by_project.get((project_id, role))
         if members and user_id in members:
             members.remove(user_id)
+
+
+class InMemoryTagRepository(TagRepository):
+    def __init__(self, tags: list[Tag] | None = None) -> None:
+        #: The tags by id, shared like `carriers`.
+        self.stock: dict[int, Tag] = {}
+        self._next_id = 1
+        #: Which missions carry which tag, shared with the double that answers
+        #: for the carrying so that « in use » needs no repository of its own.
+        self.carriers: dict[int, set[int]] = {}
+        for tag in tags or []:
+            if tag.id is None:
+                tag.id = self._next_id
+            self.stock[tag.id] = tag
+            self._next_id = max(self._next_id, tag.id + 1)
+
+    async def add(self, tag: Tag) -> Tag:
+        existing = await self.get_by_key(tag.key)
+        if existing is not None:
+            return existing
+        tag.id = self._next_id
+        self._next_id += 1
+        self.stock[tag.id] = tag
+        return tag
+
+    async def get_by_id(self, tag_id: int) -> Tag | None:
+        return self.stock.get(tag_id)
+
+    async def get_by_key(self, key: str) -> Tag | None:
+        return next((t for t in self.stock.values() if t.key == key), None)
+
+    async def update(self, tag: Tag) -> Tag:
+        if tag.id is not None:
+            self.stock[tag.id] = tag
+        return tag
+
+    async def delete(self, tag_id: int) -> None:
+        self.stock.pop(tag_id, None)
+        self.carriers.pop(tag_id, None)
+
+    async def list_in_use(self) -> list[TagUsage]:
+        return [
+            TagUsage(tag, len(self.carriers[tag_id]))
+            for tag_id, tag in self.stock.items()
+            if self.carriers.get(tag_id)
+        ]
+
+
+class InMemoryProjectTagRepository(ProjectTagRepository):
+    def __init__(self, tags: InMemoryTagRepository | None = None) -> None:
+        self._tags = tags if tags is not None else InMemoryTagRepository()
+
+    async def list_for_project(self, project_id: int) -> list[Tag]:
+        return (await self.list_all()).get(project_id, [])
+
+    async def list_all(self) -> dict[int, list[Tag]]:
+        by_project: dict[int, list[Tag]] = {}
+        for tag_id, project_ids in self._tags.carriers.items():
+            tag = self._tags.stock.get(tag_id)
+            if tag is None:
+                continue
+            for project_id in project_ids:
+                by_project.setdefault(project_id, []).append(tag)
+        for carried in by_project.values():
+            carried.sort(key=lambda tag: tag.key)
+        return by_project
+
+    async def project_ids_for(self, tag_id: int) -> list[int]:
+        return sorted(self._tags.carriers.get(tag_id, set()))
+
+    async def attach(self, project_id: int, tag_id: int) -> None:
+        self._tags.carriers.setdefault(tag_id, set()).add(project_id)
+
+    async def detach(self, project_id: int, tag_id: int) -> None:
+        self._tags.carriers.get(tag_id, set()).discard(project_id)
+
+
+async def tagged(carried: dict[int, list[str]]) -> InMemoryProjectTagRepository:
+    """Missions carrying tags, by name: what a read test needs and no more."""
+    tags = InMemoryTagRepository()
+    links = InMemoryProjectTagRepository(tags)
+    opened: dict[str, Tag] = {}
+    for project_id, names in carried.items():
+        for name in names:
+            if name not in opened:
+                opened[name] = await tags.add(
+                    Tag(id=None, name=name, color=TagColor.BLUE)
+                )
+            await links.attach(project_id, opened[name].stored_id)
+    return links
 
 
 class InMemoryProjectDetailRepository(ProjectDetailRepository):

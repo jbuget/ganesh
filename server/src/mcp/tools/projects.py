@@ -23,6 +23,8 @@ from src.modules.projects.application.services.project_search import (
     matching,
 )
 from src.modules.projects.application.use_cases.list_projects import ListedProject
+from src.modules.projects.domain.entities.tag import TagUsage, tag_key
+from src.modules.projects.domain.services.tag_search import search_tags
 from src.modules.projects.presentation.dependencies import get_list_projects_use_case
 
 SCOPE = ApiKeyScope.PROJECTS_READ
@@ -32,6 +34,9 @@ E = TypeVar("E", bound=StrEnum)
 #: Beyond this, the answer stops being a list and starts being a dump. What is
 #: left out is counted rather than dropped in silence.
 MOST = 8
+
+#: How many close tags are offered when the one asked for is carried by nobody.
+MOST_NEIGHBOURS = 3
 
 
 @answers(SCOPE)
@@ -44,6 +49,7 @@ async def find_project(
     followed: bool | None = None,
     archived: bool | None = None,
     person: str | None = None,
+    tag: str | None = None,
 ) -> str:
     """Trouve des projets du référentiel, par leur nom ou par ce qu'ils sont.
 
@@ -63,6 +69,8 @@ async def find_project(
     - `archived` : vrai pour les seuls archivés, faux pour ceux sur lesquels
       on peut encore déclarer du temps. Sans lui, tous sont rendus.
     - `person` : une partie du nom de qui porte le projet ou y intervient.
+    - `tag` : un tag posé par l'équipe — un client, un partenaire, un programme,
+      un thème : « les projets Chronopost ». Un projet ne porte que les siens.
     """
     criteria = ProjectCriteria(
         query=_spoken(query),
@@ -73,11 +81,12 @@ async def find_project(
         is_followed=followed,
         is_archived=archived,
         person=_spoken(person),
+        tag=_spoken(tag),
     )
     if criteria == ProjectCriteria():
         raise ToolError(
             "Précisez au moins un critère : un nom, une phase, une nature, "
-            "une priorité, un service, le suivi, l'archivage ou une personne."
+            "une priorité, un service, le suivi, l'archivage, une personne ou un tag."
         )
 
     # The whole reference list, as the « Projets » screen reads it: there is
@@ -88,10 +97,7 @@ async def find_project(
 
     found = matching(missions, criteria)
     if not found:
-        return (
-            f"Aucun projet ne correspond à {_asked(criteria)}. "
-            "Le référentiel se lit dans l'écran « Projets »."
-        )
+        return _nothing_found(criteria, missions)
 
     lines = [_describe(mission) for mission in found[:MOST]]
     if len(found) > MOST:
@@ -128,7 +134,42 @@ def _asked(criteria: ProjectCriteria) -> str:
         parts.append("archivé" if criteria.is_archived else "non archivé")
     if criteria.person:
         parts.append(f"avec « {criteria.person} »")
+    if criteria.tag:
+        parts.append(f"tag « {criteria.tag} »")
     return ", ".join(parts)
+
+
+def _nothing_found(criteria: ProjectCriteria, missions: list[ListedProject]) -> str:
+    """An empty answer, said by what was asked.
+
+    A tag nobody carries is not the same news as a tag carried by projects the
+    other criteria rule out: the first says what exists instead, the second
+    does not pretend the tag is unknown.
+    """
+    if criteria.tag and not matching(missions, ProjectCriteria(tag=criteria.tag)):
+        said = f"Aucun projet ne porte le tag « {criteria.tag} »."
+        neighbours = [
+            usage.tag.name for usage in search_tags(criteria.tag, _in_use(missions))
+        ]
+        if neighbours:
+            said += f" Tags proches : {say.listed(neighbours[:MOST_NEIGHBOURS])}."
+        return said
+    return (
+        f"Aucun projet ne correspond à {_asked(criteria)}. "
+        "Le référentiel se lit dans l'écran « Projets »."
+    )
+
+
+def _in_use(missions: list[ListedProject]) -> list[TagUsage]:
+    """The tags the reference list carries, with how many missions carry each."""
+    counts: dict[str, TagUsage] = {}
+    for mission in missions:
+        for tag in mission.tags:
+            seen = counts.get(tag_key(tag.name))
+            counts[tag_key(tag.name)] = TagUsage(
+                tag, (seen.project_count if seen else 0) + 1
+            )
+    return list(counts.values())
 
 
 def _describe(mission: ListedProject) -> str:
@@ -148,4 +189,6 @@ def _describe(mission: ListedProject) -> str:
             if project.archived_at is not None
             else "archivé"
         )
+    if mission.tags:
+        parts.append(f"tags : {say.listed([t.name for t in mission.tags])}")
     return f"{project.label} (#{project.id}) — {', '.join(parts)}"

@@ -18,6 +18,7 @@ from src.modules.projects.application.use_cases.project_updates import (
 from src.modules.projects.domain.entities.activity import Activity
 from src.modules.projects.domain.entities.project import Project, ProjectStatus
 from src.modules.projects.domain.entities.project_link import ProjectLink
+from src.modules.projects.domain.entities.tag import Tag, TagUsage
 from src.modules.projects.domain.services.phase_history import transition_label
 from src.modules.projects.domain.services.project_cost import ProjectCost
 from src.modules.projects.presentation.api.schemas.project_schemas import (
@@ -41,6 +42,8 @@ from src.modules.projects.presentation.api.schemas.project_schemas import (
     ProjectListItemResponse,
     ProjectResponse,
     ProjectUpdateResponse,
+    TagResponse,
+    TagUsageResponse,
     UpdateCommentResponse,
     UpdateReactionResponse,
 )
@@ -90,6 +93,19 @@ def to_project_response(
         monitoring_link=project.monitoring_link,
         stats_page_link=project.stats_page_link,
         stats_api_link=project.stats_api_link,
+    )
+
+
+def to_tag_response(tag: Tag) -> TagResponse:
+    return TagResponse(id=tag.stored_id, name=tag.name, color=tag.color)
+
+
+def to_tag_usage_response(usage: TagUsage) -> TagUsageResponse:
+    return TagUsageResponse(
+        id=usage.tag.stored_id,
+        name=usage.tag.name,
+        color=usage.tag.color,
+        project_count=usage.project_count,
     )
 
 
@@ -148,6 +164,7 @@ def to_listed_project_response(
         latest_update=to_latest_update(listed.latest_update),
         departments=listed.departments,
         activities=[to_activity_response(a) for a in listed.activities],
+        tags=[to_tag_response(t) for t in listed.tags],
     )
 
 
@@ -172,6 +189,7 @@ def to_board_response(board: Board) -> BoardResponse:
                         comments=card.comments,
                         latest_update=to_latest_update(card.latest_update),
                         departments=card.departments,
+                        tags=[to_tag_response(t) for t in card.tags],
                         sub_projects=card.sub_projects,
                         parent=(
                             ParentResponse(
@@ -224,7 +242,8 @@ def to_project_detail_response(detail: ProjectDetail) -> ProjectDetailResponse:
             to_project_response(work_package) for work_package in detail.sub_projects
         ],
         stack=detail.stack,
-        tags=detail.tags,
+        catalog_tags=detail.catalog_tags,
+        tags=[to_tag_response(t) for t in detail.tags],
         dependencies=[
             MissionRefResponse(
                 id=mission.id or 0, label=mission.label, slug=mission.slug
