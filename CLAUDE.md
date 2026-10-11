@@ -160,6 +160,63 @@ a filter, « Suivi », on the reference list and on the board.
   `project.unfollow` in the log say who and when, and asking why would turn a
   click into a form.
 
+### Tagging a mission
+
+A word the team puts on what it wants to find again — a theme (« IA »,
+« Frigo »), a client (« Chronopost »), a partner (« Suez »), a programme
+(« France Énergie 2030 ») — without writing another update about it. A tag
+**classes** a mission and never says where it stands: that is what the updates
+are for, and a tag that tried would be a phase nobody dated.
+
+- **Anybody opens a tag, by typing it on a mission.** One gesture, one name:
+  `POST /projects/{id}/tags`. If the tag exists the mission takes it, and if it
+  does not it is opened on the spot, with a colour nobody had to choose. The
+  picker offers the tags in use first, the closest to what is typed on top,
+  and opening a new one is an explicit line at the foot of the list — never a
+  side effect of typing, which is how « IA », « ia » and « intelligence
+  artificielle » end up three tags.
+- **The name is the identity.** `Tag.key` reads it without its case, its
+  accents or the way its words are separated: « Suez-Env », « suez env » and
+  « Suez_Env » are one tag, held by the entity and by a unique index. A second
+  « Chronopost » cannot be opened by any way in.
+- **The palette is closed**, as the signs of a reaction are: ten colours named
+  by `TagColor`, painted in `client/src/lib/tag-colors.ts`. A free hexadecimal
+  would give twenty blues nobody can tell apart. A new tag takes the colour
+  fewest tags wear. The name is always written beside the mark, so the colour
+  is never the only thing that tells two tags apart.
+- **A mission carries its own, and nobody else's.** Nothing is passed down from
+  a project to its work packages, nor summed up: a tagged package under a
+  project nobody tagged is kept alone by the filter, as with `is_followed`.
+  At most `MAX_TAGS_PER_PROJECT` (8): past that a mission is being piled on,
+  not classed. Off-project work carries none — an absence has nothing to be
+  found by — and the entity refuses it.
+- **A manager looks after the vocabulary**, because it moves every mission
+  carrying the tag at once: rename it, recolour it, and **fold a duplicate into
+  the tag it should have been**. Folding is the real answer to drift, and the
+  one gesture that cannot be taken back, so the interface asks to confirm it
+  naming both ends. Renaming into a name another tag already holds is refused
+  with a 409 — that is what folding is for.
+- **A tag nobody carries leaves the lists but not the table**: it is not a
+  suggestion any more, and typing it again finds it with its colour.
+- **Each gesture is named in the log, one line per mission.** `project.tag` and
+  `project.untag` carry the tag's name; `tag.rename`, `tag.recolor` and
+  `tag.merge` write one line on every mission carrying the tag, so each
+  journal reads the change where it was felt. A recolouring carries two
+  colours and nothing that says whose, hence the `tag` field the log reads out
+  of the payload.
+- **Nothing rings and nothing is told**: no notification, nothing in the
+  Gazette. A tag classes, it does not report.
+- **A filter, a column and a card.** « Tag » is a criterion of the reference
+  list and of the board (the ids travel in the address, so a renamed tag keeps
+  the link that carried it; several tags add up, as the departments do), « Tags »
+  is a column of the list that can be put away like the others, and a card
+  draws the first two.
+- **The Catalogue keeps its own words.** `project_tags` and the « Mots-clés »
+  row of the Catalogue tab are what waat.tools publishes — free text, per
+  service. They are not these tags, and the sheet reads them as `catalog_tags`.
+  The two may converge the day the Catalogue is rebuilt; until then a table
+  with a similar name is not the same thing.
+
 ### Business invariants
 
 These rules are tested **at the domain level**, independently of the API and of
@@ -1120,7 +1177,10 @@ it together:
   into sixty tools is a model chaining six calls to answer one question and
   getting three of them wrong. `find_project`, `project_brief`, `project_news`, `my_month`,
   `what_changed`, `portfolio_status`, `team_mood`, `declare_time`,
-  `record_review` — and the next one earns its place by being asked for. A
+  `record_review` — and the next one earns its place by being asked for. Tags are
+  read by the tools that already answer about a project: `find_project` takes a
+  `tag` (« les projets Chronopost »), `project_brief` says the tags of the project
+  and of each lot apart. There is no `list_tags`, and no tool puts one on. A
   tool that is another one with a parameter left out is not a new question:
   `record_review` without a phase already posts on a thread, and a
   `post_update` beside it would only make a model choose between them.
