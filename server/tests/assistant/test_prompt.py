@@ -20,6 +20,17 @@ class TestInstructions:
         """« WAATcher » is WAATcher, not every lot whose name holds the word."""
         assert "exactement" in instructions(date(2026, 10, 10))
 
+    def test_a_theme_a_client_or_a_programme_is_looked_up_by_tag(self) -> None:
+        """« les projets Chronopost » is a tag, not a word in a project's name."""
+        said = " ".join(instructions(date(2026, 10, 10)).split())
+
+        assert "passe-le dans le paramètre `tag` de `find_project`" in said
+
+    def test_a_tag_is_said_to_be_a_marker_and_not_a_fact(self) -> None:
+        said = " ".join(instructions(date(2026, 10, 10)).split())
+
+        assert "un projet sans tag n'est pas pour autant étranger" in said
+
     def test_the_model_names_projects_rather_than_their_identifiers(self) -> None:
         """« (#20) » is for the tools; the reader follows the links under the answer."""
         said = " ".join(instructions(date(2026, 10, 10)).split())

@@ -13,6 +13,7 @@ from src.modules.projects.domain.entities.project import (
     ProjectPriority,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.tag import Tag, TagColor
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.enums.department import Department
 
@@ -32,6 +33,7 @@ def listed(label: str, **fields: object) -> ListedProject:
     contributors = fields.pop("contributors", [])
     tech_leads = fields.pop("tech_leads", [])
     departments = fields.pop("departments", [])
+    tags = fields.pop("tags", [])
     project = Project(
         id=abs(hash(label)) % 1000,
         label=label,
@@ -46,6 +48,7 @@ def listed(label: str, **fields: object) -> ListedProject:
         tech_leads=tech_leads,  # type: ignore[arg-type]
         contributors=contributors,  # type: ignore[arg-type]
         departments=departments,  # type: ignore[arg-type]
+        tags=tags,  # type: ignore[arg-type]
     )
 
 
@@ -149,3 +152,49 @@ class TestCriteriaAddUp:
             ),
         )
         assert labels(found) == ["WAATcher"]
+
+
+def tagged(*names: str) -> list[Tag]:
+    return [Tag(id=i, name=name, color=TagColor.BLUE) for i, name in enumerate(names)]
+
+
+def labels(found: list[ListedProject]) -> list[str]:
+    return [mission.project.label for mission in found]
+
+
+def test_a_tag_keeps_the_projects_that_carry_it() -> None:
+    missions = [
+        listed("Colis", tags=tagged("Chronopost")),
+        listed("Relais", tags=tagged("DPD")),
+        listed("Nu"),
+    ]
+
+    found = matching(missions, ProjectCriteria(tag="Chronopost"))
+
+    assert labels(found) == ["Colis"]
+
+
+def test_a_tag_is_read_as_the_team_reads_it() -> None:
+    missions = [listed("Énergie", tags=tagged("France Énergie 2030"))]
+
+    assert matching(missions, ProjectCriteria(tag="france-energie 2030"))
+
+
+def test_a_tag_carried_by_the_project_alone_is_not_lent_to_its_work_packages() -> None:
+    project = listed("Colis", tags=tagged("Chronopost"))
+    package = listed("Colis — lot 1", kind=ProjectKind.WORK_PACKAGE, parent_id=1)
+
+    assert labels(matching([project, package], ProjectCriteria(tag="chronopost"))) == [
+        "Colis"
+    ]
+
+
+def test_a_tag_stacks_with_the_other_criteria() -> None:
+    missions = [
+        listed("Colis", tags=tagged("IA"), is_followed=True),
+        listed("Relais", tags=tagged("IA")),
+    ]
+
+    found = matching(missions, ProjectCriteria(tag="IA", is_followed=True))
+
+    assert labels(found) == ["Colis"]

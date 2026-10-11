@@ -49,6 +49,7 @@ from src.modules.projects.domain.entities.project import (
     ProjectPriority,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.tag import Tag, TagColor
 from src.modules.projects.presentation.dependencies import (
     get_list_projects_use_case,
     get_project_detail_use_case,
@@ -147,8 +148,13 @@ class Wired:
         self.app.dependency_overrides.clear()
 
 
-def listed(project: Project) -> ListedProject:
-    return ListedProject(project=project, entries=0, sub_projects=0)
+def listed(project: Project, *tags: str) -> ListedProject:
+    return ListedProject(
+        project=project,
+        entries=0,
+        sub_projects=0,
+        tags=[Tag(id=i, name=name, color=TagColor.BLUE) for i, name in enumerate(tags)],
+    )
 
 
 WAATCHER = Project(
@@ -192,6 +198,65 @@ class TestFindProject:
         with Wired(projects=[listed(RETIRED)]):
             said = await find_project("V1")
         assert "archivé le 12/03/2026" in said
+
+    @pytest.mark.asyncio
+    async def test_a_project_says_the_tags_the_team_put_on_it(self) -> None:
+        with Wired(projects=[listed(WAATCHER, "IA", "Chronopost")]):
+            said = await find_project("waatcher")
+        assert said == "WAATcher (#7) — projet, construction, tags : IA et Chronopost"
+
+    @pytest.mark.asyncio
+    async def test_a_tag_alone_finds_the_projects_carrying_it(self) -> None:
+        with Wired(
+            projects=[
+                listed(WAATCHER, "Chronopost"),
+                listed(SUPERVISION, "DPD"),
+                listed(RETIRED),
+            ]
+        ):
+            said = await find_project(tag="chronopost")
+        assert said.count("\n") == 0
+        assert said.startswith("WAATcher (#7)")
+
+    @pytest.mark.asyncio
+    async def test_a_tag_is_read_without_its_case_or_its_accents(self) -> None:
+        with Wired(projects=[listed(WAATCHER, "France Énergie 2030")]):
+            said = await find_project(tag="france energie 2030")
+        assert said.startswith("WAATcher (#7)")
+
+    @pytest.mark.asyncio
+    async def test_a_name_and_a_tag_narrow_the_search_together(self) -> None:
+        with Wired(
+            projects=[
+                listed(WAATCHER, "IA"),
+                listed(SUPERVISION, "IA"),
+                listed(RETIRED),
+            ]
+        ):
+            said = await find_project("supervision", tag="IA")
+        assert said.startswith("WAATcher — Supervision")
+        assert said.count("\n") == 0
+
+    @pytest.mark.asyncio
+    async def test_a_tag_nobody_carries_is_said_with_the_closest_ones(self) -> None:
+        with Wired(projects=[listed(WAATCHER, "Chronopost")]):
+            said = await find_project(tag="chronopot")
+        assert "Aucun projet ne porte le tag « chronopot »" in said
+        assert "Chronopost" in said
+
+    @pytest.mark.asyncio
+    async def test_a_tag_with_no_neighbour_is_said_without_suggestions(self) -> None:
+        with Wired(projects=[listed(WAATCHER, "Chronopost")]):
+            said = await find_project(tag="frigo")
+        assert "Aucun projet ne porte le tag « frigo »" in said
+        assert "Chronopost" not in said
+
+    @pytest.mark.asyncio
+    async def test_a_tag_carried_but_not_by_the_name_asked_is_said_so(self) -> None:
+        with Wired(projects=[listed(WAATCHER, "IA")]):
+            said = await find_project("nomad", tag="IA")
+        assert "Aucun projet ne correspond à « nomad », tag « IA »" in said
+        assert "ne porte le tag" not in said
 
     @pytest.mark.asyncio
     async def test_nothing_matching_is_said_rather_than_left_empty(self) -> None:

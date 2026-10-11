@@ -34,6 +34,7 @@ from src.modules.projects.domain.entities.project import (
     ProjectKind,
     ProjectStatus,
 )
+from src.modules.projects.domain.entities.tag import Tag, TagColor
 from src.modules.projects.presentation.dependencies import get_project_detail_use_case
 from src.modules.users.domain.entities.user import Role, User
 from src.shared.exceptions.domain_exceptions import EntityNotFoundError
@@ -84,7 +85,7 @@ def a_detail(project: Project, **fields: object) -> ProjectDetail:
         sub_projects=fields.get("sub_projects", []),  # type: ignore[arg-type]
         stack=[],
         catalog_tags=[],
-        tags=[],
+        tags=fields.get("tags", []),  # type: ignore[arg-type]
         dependencies=[],
         is_deletable=False,
         parent=fields.get("parent"),  # type: ignore[arg-type]
@@ -485,3 +486,42 @@ class TestTheSheetIsReadOnRequest:
             said = await project_brief(7, include_description=True)
 
         assert said.endswith("Aucune description n'est renseignée.")
+
+
+def tags(*names: str) -> list[Tag]:
+    return [Tag(id=i, name=name, color=TagColor.BLUE) for i, name in enumerate(names)]
+
+
+class TestItSaysTheTagsOfTheMission:
+    @pytest.mark.asyncio
+    async def test_it_names_the_tags_the_team_put_on_the_project(self) -> None:
+        with Wired(a_detail(WAATCHER, tags=tags("IA", "Chronopost"))):
+            said = await project_brief(7)
+
+        assert "Tags du projet : IA et Chronopost." in said
+
+    @pytest.mark.asyncio
+    async def test_it_says_when_nobody_put_any_rather_than_staying_silent(self) -> None:
+        with Wired(a_detail(WAATCHER)):
+            said = await project_brief(7)
+
+        assert "Aucun tag posé sur le projet." in said
+
+    @pytest.mark.asyncio
+    async def test_a_lot_says_its_own_tags_and_none_borrowed_from_the_project(
+        self,
+    ) -> None:
+        sheet = a_detail(
+            WAATCHER, sub_projects=[SUPERVISION, IMPORT], tags=tags("Suez")
+        )
+        supervision = a_detail(SUPERVISION, parent=WAATCHER, tags=tags("Frigo"))
+        import_lot = a_detail(IMPORT, parent=WAATCHER)
+        with Wired(sheet, supervision, import_lot):
+            said = await project_brief(7)
+
+        assert "Tags du projet : Suez." in said
+        assert (
+            "WAATcher — Supervision (#8) : en service, aucun jour déclaré, tags : Frigo"
+            in said
+        )
+        assert "WAATcher — Import (#9) : cadrage, aucun jour déclaré\n" in said + "\n"
