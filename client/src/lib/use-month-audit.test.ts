@@ -20,6 +20,7 @@ function line(id: number): AuditLogEntryResponse {
     day: "2026-09-17",
     field: null,
     note: null,
+    tag: null,
     old_value: null,
     new_value: "1.0",
   };

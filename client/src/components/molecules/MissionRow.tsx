@@ -13,6 +13,7 @@ import { MissionDepartments } from "@/components/atoms/MissionDepartments";
 import { PriorityMark } from "@/components/atoms/PriorityMark";
 import { PublishedMark } from "@/components/atoms/PublishedMark";
 import { RunCost } from "@/components/atoms/RunCost";
+import { TagMark } from "@/components/atoms/TagMark";
 import { UpdatesCounter } from "@/components/atoms/UpdatesCounter";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { ProjectListItemResponse } from "@/lib/api/generated/model";
@@ -29,6 +30,10 @@ import {
 } from "@/lib/mission-columns";
 import { formatParisDateTime } from "@/lib/instants";
 import { since } from "@/lib/relative-dates";
+import { visibleTags } from "@/lib/tags";
+
+/** What the column has room for: the rest is counted, and read on hover. */
+const TAGS_IN_A_ROW = 3;
 
 interface MissionRowProps {
   mission: ProjectListItemResponse;
@@ -83,6 +88,7 @@ export function MissionRow({
   const shows = (column: ColumnKey) => !hidden.has(column);
   const { project } = mission;
   const latest = mission.latest_update;
+  const tags = visibleTags(mission.tags, TAGS_IN_A_ROW);
 
   // Both hooks are called on every row and turned off where the gesture means
   // nothing: what a row may do changes with the drag, and hooks may not.
@@ -326,6 +332,24 @@ export function MissionRow({
       {shows("departments") && (
         <TableCell>
           <MissionDepartments departments={mission.departments} />
+        </TableCell>
+      )}
+
+      {shows("tags") && (
+        <TableCell>
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
+            {tags.shown.map((tag) => (
+              <TagMark key={tag.id} tag={tag} />
+            ))}
+            {tags.hidden.length > 0 && (
+              <span
+                className="text-xs text-slate-500"
+                title={tags.hidden.map((tag) => tag.name).join(", ")}
+              >
+                +{tags.hidden.length}
+              </span>
+            )}
+          </span>
         </TableCell>
       )}
 

@@ -22,6 +22,7 @@ function declared(id: number, at: string): AuditLogEntryResponse {
     day: "2026-09-14",
     field: null,
     note: null,
+    tag: null,
     old_value: null,
     new_value: "1.0",
   };

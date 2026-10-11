@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 
+import { getListTagsQueryKey } from "@/lib/api/generated/tags/tags";
 import { useProjectDetail } from "./use-project-detail";
 
 const api = vi.hoisted(() => ({
@@ -16,11 +17,28 @@ const api = vi.hoisted(() => ({
   createProject: vi.fn(),
 }));
 
+const tagging = vi.hoisted(() => ({
+  tagProject: vi.fn(),
+  untagProject: vi.fn(),
+}));
+
+const cache = vi.hoisted(() => ({ invalidateQueries: vi.fn() }));
+
 vi.mock("@/lib/api/generated/projects/projects", () => api);
+vi.mock("@/lib/api/generated/tags/tags", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/generated/tags/tags")>()),
+  ...tagging,
+}));
+vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => cache,
+}));
 
 beforeEach(() => {
   vi.clearAllMocks();
-  for (const call of Object.values(api)) call.mockResolvedValue({ data: {} });
+  for (const call of [...Object.values(api), ...Object.values(tagging)]) {
+    call.mockResolvedValue({ data: {} });
+  }
+  cache.invalidateQueries.mockResolvedValue(undefined);
   api.getProjectDetail.mockResolvedValue({ data: { project: { id: 7 } } });
 });
 
@@ -73,6 +91,14 @@ describe("useProjectDetail", () => {
     [
       "a sub-project added",
       (s: Awaited<ReturnType<typeof sheet>>) => s.current.addSubProject("Reprise"),
+    ],
+    [
+      "a tag put on",
+      (s: Awaited<ReturnType<typeof sheet>>) => s.current.addTag("Chronopost"),
+    ],
+    [
+      "a tag taken off",
+      (s: Awaited<ReturnType<typeof sheet>>) => s.current.removeTag(4),
     ],
     ["archiving", (s: Awaited<ReturnType<typeof sheet>>) => s.current.archive()],
     ["unarchiving", (s: Awaited<ReturnType<typeof sheet>>) => s.current.unarchive()],
@@ -141,5 +167,66 @@ describe("useProjectDetail", () => {
     // Once on opening, once after the write: the screen never shows anything
     // other than what the database holds.
     expect(api.getProjectDetail).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("useProjectDetail — tags", () => {
+  it("puts a tag on the mission one is on, by the name typed", async () => {
+    const result = await sheet();
+
+    await act(async () => {
+      await result.current.addTag("Chronopost");
+    });
+
+    expect(tagging.tagProject).toHaveBeenCalledWith(7, { name: "Chronopost" });
+  });
+
+  it("takes a tag off the mission one is on", async () => {
+    const result = await sheet();
+
+    await act(async () => {
+      await result.current.removeTag(4);
+    });
+
+    expect(tagging.untagProject).toHaveBeenCalledWith(7, 4);
+  });
+
+  /**
+   * The filter bar reads the tags in its own request: a tag opened from the
+   * sheet must be there the next time the list is opened.
+   */
+  it("makes the list of tags read again once one is put on", async () => {
+    const result = await sheet();
+
+    await act(async () => {
+      await result.current.addTag("Chronopost");
+    });
+
+    expect(cache.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: getListTagsQueryKey(),
+    });
+  });
+
+  it("makes the list of tags read again once one is taken off", async () => {
+    const result = await sheet();
+
+    await act(async () => {
+      await result.current.removeTag(4);
+    });
+
+    expect(cache.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: getListTagsQueryKey(),
+    });
+  });
+
+  it("reads the mission back after a tag changed", async () => {
+    const result = await sheet();
+    api.getProjectDetail.mockClear();
+
+    await act(async () => {
+      await result.current.addTag("Chronopost");
+    });
+
+    expect(api.getProjectDetail).toHaveBeenCalledTimes(1);
   });
 });

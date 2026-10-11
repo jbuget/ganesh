@@ -15,4 +15,5 @@ export * from "./planning/planning";
 export * from "./projects/projects";
 export * from "./requests/requests";
 export * from "./stats/stats";
+export * from "./tags/tags";
 export * from "./users/users";

@@ -82,6 +82,7 @@ export const PHASE_COLUMN = "w-[150px]";
 export const PRIORITY_COLUMN = "w-[120px]";
 export const CATEGORY_COLUMN = "w-[210px]";
 export const DEPARTMENTS_COLUMN = "w-[180px]";
+export const TAGS_COLUMN = "w-[220px]";
 export const DAYS_COLUMN = "w-[100px]";
 export const GO_LIVE_COLUMN = "w-[160px]";
 export const MEMBERS_COLUMN = "w-[130px]";
@@ -105,6 +106,7 @@ export type ColumnKey =
   | "priority"
   | "category"
   | "departments"
+  | "tags"
   | "build"
   | "run"
   | "goLive"
@@ -124,6 +126,7 @@ export const HIDEABLE_COLUMNS: readonly HideableColumn[] = [
   { key: "priority", label: "Priorité", width: 120 },
   { key: "category", label: "Catégorie", width: 210 },
   { key: "departments", label: "Départements", width: 180 },
+  { key: "tags", label: "Tags", width: 220 },
   { key: "build", label: "Build", width: 100 },
   { key: "run", label: "Run", width: 100 },
   { key: "goLive", label: "Mise en service", width: 160 },

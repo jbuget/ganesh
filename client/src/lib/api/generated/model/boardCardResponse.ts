@@ -9,6 +9,7 @@ import type { Department } from "./department";
 import type { LastUpdateResponse } from "./lastUpdateResponse";
 import type { ParentResponse } from "./parentResponse";
 import type { ProjectResponse } from "./projectResponse";
+import type { TagResponse } from "./tagResponse";
 
 /**
  * A board card.
@@ -21,6 +22,7 @@ export interface BoardCardResponse {
   comments: number;
   latest_update: LastUpdateResponse | null;
   departments: Department[];
+  tags?: TagResponse[];
   sub_projects: number;
   parent: ParentResponse | null;
 }

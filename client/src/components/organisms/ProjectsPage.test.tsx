@@ -19,9 +19,11 @@ const state = vi.hoisted(() => ({
 
 vi.mock("@/lib/use-projects", () => ({ useProjectsScreen: () => state }));
 
-// The filter bar offers the team: it asks the server for it, the page does not.
+// The filter bar offers the team and the tags: it asks the server for them, the
+// page does not.
 vi.mock("@/lib/api/queries", () => ({
   useTeammates: () => ({ teammates: [] }),
+  useTags: () => ({ tags: [] }),
 }));
 
 /**

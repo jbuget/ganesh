@@ -43,6 +43,7 @@ function sheet(project: Sheet) {
     contributors: [],
     contributions: [],
     stack: [],
+    catalog_tags: [],
     tags: [],
     dependencies: [],
     departments: [],
@@ -71,6 +72,8 @@ function tabs(project: Sheet) {
       archive={archive}
       unarchive={vi.fn()}
       toggleFollow={vi.fn()}
+      addTag={vi.fn()}
+      removeTag={vi.fn()}
       deleteMission={deleteMission}
     />,
   );

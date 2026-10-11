@@ -6,6 +6,7 @@ import type {
   ProjectPriority,
   ProjectResponse,
   ProjectStatus,
+  TagResponse,
 } from "@/lib/api/generated/model";
 import { CATEGORIES, PHASES, PRIORITIES } from "@/lib/board";
 import { DEPARTMENTS } from "@/lib/departments";
@@ -50,6 +51,11 @@ export interface FilterableMission {
   project: ProjectResponse;
   contributors: BoardMemberResponse[];
   departments: Department[];
+  /**
+   * The tags the mission carries itself: a work package reads none of its
+   * project's. Absent on a shape that predates them, which reads as none.
+   */
+  tags?: TagResponse[];
 }
 
 /** What the screen is asked to show. */
@@ -64,6 +70,8 @@ export interface MissionFilters {
   states: MissionState[];
   publications: PublicationState[];
   follows: FollowState[];
+  /** Ids of the tags: a tag renamed keeps the address that carried it. */
+  tags: number[];
 }
 
 /**
@@ -88,6 +96,7 @@ export const EVERY_CRITERION: Criterion[] = [
   "publications",
   "states",
   "follows",
+  "tags",
 ];
 
 /**
@@ -100,6 +109,7 @@ export const BOARD_CRITERIA: Criterion[] = [
   "priorities",
   "contributors",
   "follows",
+  "tags",
 ];
 
 /**
@@ -114,6 +124,7 @@ export const PROJECTS_CRITERIA: Criterion[] = [
   "priorities",
   "states",
   "follows",
+  "tags",
 ];
 
 /** Whether a criterion is asking anything, criterion by criterion. */
@@ -128,6 +139,7 @@ const IS_SET: Record<Criterion, (filters: MissionFilters) => boolean> = {
   publications: (filters) => filters.publications.length > 0,
   follows: (filters) => filters.follows.length > 0,
   states: (filters) => filters.states.length > 0,
+  tags: (filters) => filters.tags.length > 0,
 };
 
 /** The whole board: no criterion set. */
@@ -142,6 +154,7 @@ export const NO_FILTER: MissionFilters = {
   states: [],
   publications: [],
   follows: [],
+  tags: [],
 };
 
 /**
@@ -264,6 +277,13 @@ function kept(mission: FilterableMission, filters: MissionFilters): boolean {
     if (!filters.follows.includes(watched)) return false;
   }
 
+  // Whoever carries any of them answers, as for the departments: the criterion
+  // asks what a mission is about, not what it is only about.
+  if (filters.tags.length > 0) {
+    const carried = (mission.tags ?? []).map((tag) => tag.id);
+    if (!filters.tags.some((id) => carried.includes(id))) return false;
+  }
+
   if (filters.publications.length > 0) {
     const catalogued: PublicationState = mission.project.is_published
       ? "published"
@@ -302,6 +322,7 @@ const PARAMETERS = {
   state: "state",
   publication: "publication",
   followed: "followed",
+  tag: "tag",
 } as const;
 
 const KNOWN_PHASES = new Set<string>(PHASES.map((p) => p.status));
@@ -320,6 +341,14 @@ function knownValues<T extends string>(
   known: Set<string>,
 ): T[] {
   return params.getAll(name).filter((value) => known.has(value)) as T[];
+}
+
+/** Keeps from a parameter only the identifiers it can be: whole and positive. */
+function positiveIntegers(params: URLSearchParams, name: string): number[] {
+  return params
+    .getAll(name)
+    .map(Number)
+    .filter((id) => Number.isInteger(id) && id > 0);
 }
 
 /**
@@ -361,10 +390,8 @@ function readEveryFilter(params: URLSearchParams): MissionFilters {
       PARAMETERS.priority,
       KNOWN_PRIORITIES,
     ),
-    contributors: params
-      .getAll(PARAMETERS.contributor)
-      .map(Number)
-      .filter((id) => Number.isInteger(id) && id > 0),
+    contributors: positiveIntegers(params, PARAMETERS.contributor),
+    tags: positiveIntegers(params, PARAMETERS.tag),
     departments: knownValues<Department>(
       params,
       PARAMETERS.department,
@@ -401,4 +428,5 @@ export function writeFilters(params: URLSearchParams, filters: MissionFilters): 
     params.append(PARAMETERS.publication, publication),
   );
   filters.follows.forEach((follow) => params.append(PARAMETERS.followed, follow));
+  filters.tags.forEach((id) => params.append(PARAMETERS.tag, String(id)));
 }

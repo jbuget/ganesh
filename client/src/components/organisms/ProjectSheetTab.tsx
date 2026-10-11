@@ -59,7 +59,7 @@ export function ProjectSheetTab({
   }) {
     return saveRegistry({
       stack: changed.stack ?? detail.stack,
-      tags: changed.tags ?? detail.tags,
+      tags: changed.tags ?? detail.catalog_tags,
       depends_on:
         changed.depends_on ?? detail.dependencies.map((mission) => mission.id),
     });
@@ -202,10 +202,10 @@ export function ProjectSheetTab({
             />
           </SheetRow>
 
-          <SheetRow title="Tags">
+          <SheetRow title="Mots-clés">
             <TagListField
-              values={detail.tags}
-              label="Tags"
+              values={detail.catalog_tags}
+              label="Mots-clés"
               placeholder="monitoring"
               onChange={(tags) => registry({ tags })}
             />

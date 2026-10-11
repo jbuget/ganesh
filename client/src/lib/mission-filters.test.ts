@@ -428,3 +428,62 @@ describe("filtering by what the team follows", () => {
     expect(readFilters(params).follows).toEqual([]);
   });
 });
+
+describe("filtering by tag", () => {
+  const tag = (id: number, name = `tag ${id}`) => ({ id, name, color: "blue" });
+  const chronopost = card({ project: { id: 1 }, tags: [tag(3, "Chronopost")] });
+  const suez = card({ project: { id: 2 }, tags: [tag(4, "Suez")] });
+  const bare = card({ project: { id: 3 }, tags: [] });
+
+  it("keeps the missions carrying any of the tags asked for", () => {
+    const kept = filterMissions([chronopost, suez, bare], filters({ tags: [3, 4] }));
+
+    expect(kept.map((c) => c.project.id)).toEqual([1, 2]);
+  });
+
+  it("drops a mission carrying none of them, and one carrying no tag at all", () => {
+    const kept = filterMissions([chronopost, suez, bare], filters({ tags: [3] }));
+
+    expect(kept.map((c) => c.project.id)).toEqual([1]);
+  });
+
+  it("takes nothing away while no tag is asked for", () => {
+    expect(filterMissions([chronopost, suez, bare], filters())).toHaveLength(3);
+  });
+
+  it("keeps a tagged work package without its project, which carries its own", () => {
+    const project = card({ project: { id: 10 }, tags: [] });
+    const lot = card({
+      project: { id: 11, kind: "work_package", parent_id: 10 },
+      tags: [tag(3)],
+    });
+
+    const kept = filterMissions([project, lot], filters({ tags: [3] }));
+
+    expect(kept.map((c) => c.project.id)).toEqual([11]);
+  });
+
+  it("reads a mission with no list of tags as one carrying none", () => {
+    const old = card({ project: { id: 5 } });
+
+    expect(filterMissions([old], filters({ tags: [3] }))).toHaveLength(0);
+  });
+
+  it("counts as a filter set", () => {
+    expect(hasActiveFilter(filters({ tags: [3] }))).toBe(true);
+  });
+
+  it("travels in the address, and comes back", () => {
+    const params = new URLSearchParams();
+    writeFilters(params, filters({ tags: [3, 7] }));
+
+    expect(params.getAll("tag")).toEqual(["3", "7"]);
+    expect(readFilters(params)).toEqual(filters({ tags: [3, 7] }));
+  });
+
+  it("drops a value nobody wrote", () => {
+    const read = readFilters(new URLSearchParams("tag=abc&tag=-2&tag=0&tag=5"));
+
+    expect(read.tags).toEqual([5]);
+  });
+});

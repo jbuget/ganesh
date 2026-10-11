@@ -27,6 +27,7 @@ function line(
     day: null,
     field: null,
     note: null,
+    tag: null,
     old_value: null,
     new_value: null,
     ...over,
