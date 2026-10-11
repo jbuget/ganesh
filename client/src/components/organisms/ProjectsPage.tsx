@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Plus, Upload } from "lucide-react";
+import { Download, Plus, Tags, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { ColumnsSelect } from "@/components/atoms/ColumnsSelect";
@@ -11,6 +11,7 @@ import { MissionFilters } from "@/components/molecules/MissionFilters";
 import { MissionsTable } from "@/components/organisms/MissionsTable";
 import { PageLayout } from "@/components/organisms/PageLayout";
 import { ProjectPanel } from "@/components/organisms/ProjectPanel";
+import { TagManagerDialog } from "@/components/organisms/TagManagerDialog";
 import { Button } from "@/components/ui/button";
 import { useOpenedMission } from "@/lib/opened-mission";
 import { useMissionColumns } from "@/lib/use-mission-columns";
@@ -50,6 +51,7 @@ export function ProjectsPage() {
   const panel = useOpenedMission();
   const [declaring, setDeclaration] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [managingTags, setManagingTags] = useState(false);
 
   return (
     <PageLayout
@@ -74,6 +76,15 @@ export function ProjectsPage() {
                   <Button variant="outline" onClick={() => setImporting(true)}>
                     <Upload />
                     Importer
+                  </Button>
+                )}
+                {/* Anybody opens a tag by typing it on a project; renaming,
+                    recolouring and folding a duplicate move every project
+                    carrying it, which is why they are a manager's. */}
+                {screen.isManager && (
+                  <Button variant="outline" onClick={() => setManagingTags(true)}>
+                    <Tags />
+                    Gérer les tags
                   </Button>
                 )}
                 <Button onClick={() => setDeclaration(true)}>
@@ -158,6 +169,8 @@ export function ProjectsPage() {
           panel.open(created.id);
         }}
       />
+
+      <TagManagerDialog open={managingTags} onOpenChange={setManagingTags} />
 
       <ImportProjectsDialog
         open={importing}
