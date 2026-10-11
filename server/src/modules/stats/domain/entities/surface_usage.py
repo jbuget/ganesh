@@ -100,6 +100,11 @@ SURFACE_OF: dict[AuditAction, Surface] = {
     # keeps, read back as a filter on it.
     AuditAction.PROJECT_FOLLOW: Surface.PROJECT_REGISTRY,
     AuditAction.PROJECT_UNFOLLOW: Surface.PROJECT_REGISTRY,
+    AuditAction.PROJECT_TAG: Surface.PROJECT_REGISTRY,
+    AuditAction.PROJECT_UNTAG: Surface.PROJECT_REGISTRY,
+    AuditAction.TAG_RENAME: Surface.PROJECT_REGISTRY,
+    AuditAction.TAG_RECOLOR: Surface.PROJECT_REGISTRY,
+    AuditAction.TAG_MERGE: Surface.PROJECT_REGISTRY,
     # Cutting a mission into the trades its days are booked under. Part of
     # keeping the list rather than a surface of its own: one goes to the same
     # screen to declare a mission and to say what it is made of.

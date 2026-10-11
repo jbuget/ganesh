@@ -87,6 +87,12 @@ class Tag:
         """
         return tag_key(self.name)
 
+    @property
+    def stored_id(self) -> int:
+        """The id of a tag read back from the repository, which always has one."""
+        assert self.id is not None
+        return self.id
+
     def rename(self, name: str) -> None:
         self.name = self._checked(name)
 
