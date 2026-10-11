@@ -158,10 +158,6 @@ def tagged(*names: str) -> list[Tag]:
     return [Tag(id=i, name=name, color=TagColor.BLUE) for i, name in enumerate(names)]
 
 
-def labels(found: list[ListedProject]) -> list[str]:
-    return [mission.project.label for mission in found]
-
-
 def test_a_tag_keeps_the_projects_that_carry_it() -> None:
     missions = [
         listed("Colis", tags=tagged("Chronopost")),
