@@ -270,3 +270,16 @@ async def test_untagging_an_unknown_tag_is_refused() -> None:
         await untag_project.execute(
             UntagProjectCommand(actor_id=2, project_id=PORTAL, tag_id=999)
         )
+
+
+@pytest.mark.asyncio
+async def test_opening_a_tag_somebody_else_just_opened_gives_back_theirs() -> None:
+    """Both found nothing; the second to open it lands on the first's tag."""
+    _, _, tags, _, _ = build()
+    first = await tags.add(Tag(id=None, name="Suez", color=TagColor.RED))
+
+    second = await tags.add(Tag(id=None, name="suez", color=TagColor.BLUE))
+
+    assert second.id == first.id
+    assert second.color is TagColor.RED
+    assert len(tags.stock) == 1

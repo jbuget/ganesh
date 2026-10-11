@@ -9,7 +9,14 @@ class TagRepository(ABC):
     """Reads and writes the tags themselves, apart from who carries them."""
 
     @abstractmethod
-    async def add(self, tag: Tag) -> Tag: ...
+    async def add(self, tag: Tag) -> Tag:
+        """Opens a tag, or gives back the one that already says the same.
+
+        Two people typing a new « Chronopost » at the same moment both find
+        nothing and both open it: the second must land on the first's tag
+        rather than on an error, so the answer is the tag that exists.
+        """
+        ...
 
     @abstractmethod
     async def get_by_id(self, tag_id: int) -> Tag | None: ...

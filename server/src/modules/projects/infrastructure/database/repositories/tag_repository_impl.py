@@ -1,6 +1,7 @@
 """Persistence of the vocabulary of tags."""
 
 from sqlalchemy import delete, func, select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.projects.domain.entities.tag import Tag, TagUsage
@@ -22,10 +23,17 @@ class SqlTagRepository(TagRepository):
         self._session = session
 
     async def add(self, tag: Tag) -> Tag:
-        model = TagModel(name=tag.name, key=tag.key, color=tag.color)
-        self._session.add(model)
-        await self._session.flush()
-        return _to_entity(model)
+        # Letting the database settle a tie is what makes it safe: checking for
+        # the key first and inserting after leaves a window two requests fall
+        # through together.
+        await self._session.execute(
+            insert(TagModel)
+            .values(name=tag.name, key=tag.key, color=tag.color)
+            .on_conflict_do_nothing(index_elements=["key"])
+        )
+        stored = await self.get_by_key(tag.key)
+        assert stored is not None
+        return stored
 
     async def get_by_id(self, tag_id: int) -> Tag | None:
         model = await self._session.get(TagModel, tag_id)

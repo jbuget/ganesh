@@ -627,6 +627,9 @@ class InMemoryTagRepository(TagRepository):
             self._next_id = max(self._next_id, tag.id + 1)
 
     async def add(self, tag: Tag) -> Tag:
+        existing = await self.get_by_key(tag.key)
+        if existing is not None:
+            return existing
         tag.id = self._next_id
         self._next_id += 1
         self.stock[tag.id] = tag

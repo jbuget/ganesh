@@ -56,11 +56,27 @@ async def test_a_tag_is_found_again_by_its_key_whatever_the_case(
     assert found.color is TagColor.BLUE
 
 
-async def test_two_tags_cannot_share_a_key(db_session: AsyncSession) -> None:
-    await a_tag(db_session, "Suez Env")
+async def test_opening_a_tag_that_says_the_same_gives_back_the_one_that_exists(
+    db_session: AsyncSession,
+) -> None:
+    """Two people typing the same new tag at once must end up with one."""
+    first = await a_tag(db_session, "Suez Env")
+
+    second = await a_tag(db_session, "suez-env")
+
+    assert second.id == first.id
+    assert second.name == "Suez Env"
+
+
+async def test_two_tags_cannot_end_up_sharing_a_key(db_session: AsyncSession) -> None:
+    tags = SqlTagRepository(db_session)
+    await a_tag(db_session, "Suez")
+    other = await a_tag(db_session, "Suez Env")
+
+    other.rename("suez")
 
     with pytest.raises(IntegrityError):
-        await a_tag(db_session, "suez-env")
+        await tags.update(other)
 
 
 async def test_updating_a_tag_moves_its_key_with_its_name(
