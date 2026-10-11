@@ -13,18 +13,25 @@ describe("TagMark", () => {
     expect(screen.getByText("Chronopost")).toBeInTheDocument();
   });
 
-  it("marks the tag with a diamond, distinct from a phase's dot and a square axis", () => {
+  it("marks the tag with a bookmark, distinct from a phase's dot and a square axis", () => {
     const { container } = render(<TagMark tag={CHRONOPOST} />);
 
-    const diamond = container.querySelector("span span");
-    expect(diamond?.getAttribute("class")).toContain("rotate-45");
+    expect(container.querySelector("svg.lucide-bookmark")).not.toBeNull();
   });
 
-  it("paints the diamond in the colour of the tag", () => {
+  it("fills the bookmark in the colour of the tag", () => {
     const { container } = render(<TagMark tag={CHRONOPOST} />);
 
-    const diamond = container.querySelector("span span");
-    expect(diamond?.getAttribute("class")).toContain("bg-violet-500");
+    const bookmark = container.querySelector("svg.lucide-bookmark");
+    expect(bookmark?.getAttribute("class")).toContain("text-violet-500");
+    expect(bookmark?.getAttribute("class")).toContain("fill-current");
+  });
+
+  /** A transform forms a stacking context, which paints over pinned columns. */
+  it("draws nothing that is rotated or transformed", () => {
+    const { container } = render(<TagMark tag={CHRONOPOST} />);
+
+    expect(container.innerHTML).not.toMatch(/rotate|translate|scale/);
   });
 
   it("offers no way to take the tag off where it is only read", () => {

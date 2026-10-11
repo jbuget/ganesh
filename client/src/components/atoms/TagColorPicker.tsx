@@ -1,5 +1,6 @@
 "use client";
 
+import { Bookmark } from "lucide-react";
 import { useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -17,7 +18,7 @@ interface TagColorPickerProps {
  * The colour of a tag, chosen from the palette.
  *
  * Ten colours and no more: the domain names them, and a free choice would give
- * twenty blues nobody can tell apart. Each is drawn as the diamond the tag
+ * twenty blues nobody can tell apart. Each is drawn as the bookmark the tag
  * wears, so the choice looks like what it changes.
  */
 export function TagColorPicker({ value, label, onChange }: TagColorPickerProps) {
@@ -29,10 +30,7 @@ export function TagColorPicker({ value, label, onChange }: TagColorPickerProps) 
         aria-label={label}
         className="flex cursor-pointer items-center rounded p-1.5 transition-colors hover:bg-slate-100"
       >
-        <span
-          className={`block size-2.5 rotate-45 rounded-[1px] ${tagMark(value)}`}
-          aria-hidden
-        />
+        <Bookmark className={`size-3.5 fill-current ${tagMark(value)}`} aria-hidden />
       </PopoverTrigger>
 
       <PopoverContent align="start" className="w-auto gap-0 p-1.5">
@@ -50,10 +48,7 @@ export function TagColorPicker({ value, label, onChange }: TagColorPickerProps) 
               }}
               className="flex cursor-pointer items-center justify-center rounded p-2 transition-colors hover:bg-slate-100 aria-pressed:bg-slate-100 aria-pressed:ring-1 aria-pressed:ring-slate-400"
             >
-              <span
-                className={`block size-3 rotate-45 rounded-[1px] ${color.mark}`}
-                aria-hidden
-              />
+              <Bookmark className={`size-4 fill-current ${color.mark}`} aria-hidden />
             </button>
           ))}
         </div>

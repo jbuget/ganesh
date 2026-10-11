@@ -1,5 +1,7 @@
 "use client";
 
+import { Bookmark } from "lucide-react";
+
 import { ClearFilters } from "@/components/atoms/ClearFilters";
 import { FilterSelect } from "@/components/atoms/FilterSelect";
 import { FilteredCount } from "@/components/atoms/FilteredCount";
@@ -152,8 +154,8 @@ export function MissionFilters({
               value: String(tag.id),
               label: tag.name,
               thumbnail: (
-                <span
-                  className={`size-2 shrink-0 rotate-45 rounded-[1px] ${tagMark(tag.color)}`}
+                <Bookmark
+                  className={`size-3 shrink-0 fill-current ${tagMark(tag.color)}`}
                   aria-hidden
                 />
               ),

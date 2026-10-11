@@ -15,15 +15,15 @@ describe("the palette of tags", () => {
   });
 
   it("spells every mark out in full, for Tailwind to find it", () => {
-    for (const { mark } of TAG_COLORS) expect(mark).toMatch(/^bg-[a-z]+-\d{3}$/);
+    for (const { mark } of TAG_COLORS) expect(mark).toMatch(/^text-[a-z]+-\d{3}$/);
   });
 
   it("reads the mark of a colour", () => {
-    expect(tagMark(TagColor.violet)).toBe("bg-violet-500");
+    expect(tagMark(TagColor.violet)).toBe("text-violet-500");
   });
 
   it("falls back to grey on a colour it does not know yet", () => {
-    expect(tagMark("chartreuse" as TagColor)).toBe("bg-slate-400");
+    expect(tagMark("chartreuse" as TagColor)).toBe("text-slate-400");
   });
 
   it("says a colour in French", () => {
