@@ -30,13 +30,17 @@ from mcp.server.mcpserver import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 from src.mcp.door import MachineDoor
 from src.mcp.tools.brief import project_brief
+from src.mcp.tools.consumption import project_consumption
 from src.mcp.tools.declaring import declare_time
+from src.mcp.tools.describing import update_project_description
 from src.mcp.tools.entries import my_month
+from src.mcp.tools.gazette import gazette
 from src.mcp.tools.mood import team_mood
 from src.mcp.tools.news import project_news
 from src.mcp.tools.portfolio import portfolio_status
 from src.mcp.tools.projects import find_project
 from src.mcp.tools.reviewing import record_review
+from src.mcp.tools.staffing import person_projects
 from src.mcp.tools.updates import what_changed
 
 #: Where the client points. Mounted at `/mcp`, so the address is `/mcp/` —
@@ -46,7 +50,10 @@ PATH = "/mcp"
 #: Every tool the server offers. A tool is a question somebody asks.
 TOOLS = (
     find_project,
+    gazette,
+    person_projects,
     project_brief,
+    project_consumption,
     project_news,
     my_month,
     what_changed,
@@ -54,6 +61,7 @@ TOOLS = (
     team_mood,
     declare_time,
     record_review,
+    update_project_description,
 )
 
 INSTRUCTIONS = """\

@@ -28,7 +28,7 @@ from src.assistant.toolbox import Tool, Toolbox
 from src.mcp.door import Machine, standing
 from src.mcp.tools.brief import project_brief
 from src.mcp.tools.news import project_news
-from src.mcp.tools.plan import person_plan
+from src.mcp.tools.plan import person_plan, team_availability
 from src.mcp.tools.portfolio import portfolio_status
 from src.mcp.tools.projects import find_project
 from src.mcp.tools.updates import what_changed
@@ -37,11 +37,11 @@ from src.modules.api_keys.domain.entities.api_key import NEVER_BROAD, ApiKeyScop
 from src.modules.assistant.domain.entities.exchange import Consultation
 from src.modules.users.domain.entities.user import User
 
-#: `person_plan` is the one tool here no key reaches: the projection of the
-#: « Planification » screen is an arbitration, and `roadmap:read` opens the
-#: roadmap to machines while deliberately leaving it shut (`docs/api-keys.md`).
-#: A person signed in reads that screen already; the assistant reads it for
-#: them, and for nobody else.
+#: `person_plan` and `team_availability` are the tools here no key reaches: the
+#: projection of the « Planification » screen is an arbitration, and
+#: `roadmap:read` opens the roadmap to machines while deliberately leaving it
+#: shut (`docs/api-keys.md`). A person signed in reads that screen already; the
+#: assistant reads it for them, and for nobody else.
 SHELF: tuple[Tool, ...] = (
     find_project,
     project_brief,
@@ -49,6 +49,7 @@ SHELF: tuple[Tool, ...] = (
     what_changed,
     portfolio_status,
     person_plan,
+    team_availability,
 )
 
 
@@ -145,6 +146,8 @@ def _as_declared(annotation: Any, value: Any) -> Any:
     if int in accepted and isinstance(value, float) and value.is_integer():
         return int(value)
     if int in accepted and isinstance(value, int) and not isinstance(value, bool):
+        return value
+    if bool in accepted and isinstance(value, bool):
         return value
     if str in accepted and isinstance(value, str):
         return value

@@ -12,13 +12,13 @@ from datetime import date
 
 from src.mcp.door import answers, current_machine
 from src.mcp.tools import say
+from src.mcp.tools.when import month_asked
 from src.modules.api_keys.domain.entities.api_key import ApiKeyScope
 from src.modules.entries.application.use_cases.get_month_grid import (
     GetMonthGridQuery,
     MonthGrid,
 )
 from src.modules.entries.presentation.dependencies import get_month_grid_use_case
-from src.shared.utils import clock
 
 SCOPE = ApiKeyScope.ENTRIES_READ
 
@@ -33,7 +33,7 @@ async def my_month(month: str | None = None) -> str:
     Le mois se donne au format AAAA-MM ; sans rien, c'est le mois courant.
     Répond pour le porteur de la clé, jamais pour quelqu'un d'autre.
     """
-    asked = _first_day_of(month)
+    asked = month_asked(month)
     if asked is None:
         return (
             f"« {month} » ne se lit pas comme un mois. "
@@ -46,19 +46,6 @@ async def my_month(month: str | None = None) -> str:
         GetMonthGridQuery(user_id=machine.caller.actor_id, month=asked)
     )
     return _read(grid, asked)
-
-
-def _first_day_of(month: str | None) -> date | None:
-    if month is None:
-        # The month it is in Paris: a call made at half past midnight asks
-        # about the month the caller is living, not the one UTC is still on.
-        today = clock.today()
-        return date(today.year, today.month, 1)
-    try:
-        year, number = month.strip().split("-")
-        return date(int(year), int(number), 1)
-    except (ValueError, TypeError):
-        return None
 
 
 def _read(grid: MonthGrid, asked: date) -> str:

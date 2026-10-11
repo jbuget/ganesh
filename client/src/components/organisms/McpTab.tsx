@@ -28,11 +28,11 @@ export function McpTab() {
           </code>
           . Une fois branché, votre terminal sait répondre à « où en est mon mois ? » ou
           « qu&apos;est-ce qui a bougé sur ce projet ? » sans quitter la ligne de
-          commande — et sait y déclarer votre temps comme y consigner une revue de
-          projet. Deux écritures, donc, et chacune reste à sa place : le temps ne touche
-          que votre mois, aucun outil n&apos;écrivant dans celui d&apos;un collègue, et
-          une revue s&apos;écrit sur un projet, que toute l&apos;équipe tient de toute
-          façon.
+          commande — et sait y déclarer votre temps, y consigner une revue de projet
+          comme y réécrire la fiche d&apos;un projet. Trois écritures, donc, et chacune
+          reste à sa place : le temps ne touche que votre mois, aucun outil
+          n&apos;écrivant dans celui d&apos;un collègue, et une revue comme une fiche
+          s&apos;écrivent sur un projet, que toute l&apos;équipe tient de toute façon.
         </p>
       </section>
 

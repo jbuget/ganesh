@@ -114,6 +114,14 @@ class PersonPlan:
     def free_days(self) -> float:
         return round(sum(week.free for week in self.weeks), 2)
 
+    def free_in(self, monday: date) -> float:
+        """The room left in the week opening on `monday`.
+
+        A week the plan does not hold leaves nothing to plan on: absent from
+        the horizon is not the same as free, and nothing is promised for it.
+        """
+        return next((week.free for week in self.weeks if week.week == monday), 0.0)
+
     @property
     def first_free_week(self) -> date | None:
         """The first week this person has any room at all.

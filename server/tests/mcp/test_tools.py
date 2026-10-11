@@ -15,6 +15,7 @@ from datetime import UTC, date, datetime
 import pytest
 from fastapi import FastAPI
 
+from mcp.server.mcpserver.exceptions import ToolError
 from src.mcp.door import Machine, standing
 from src.mcp.server import ToolServer
 from src.mcp.tools.entries import my_month
@@ -45,6 +46,7 @@ from src.modules.projects.application.use_cases.list_projects import ListedProje
 from src.modules.projects.domain.entities.project import (
     Project,
     ProjectKind,
+    ProjectPriority,
     ProjectStatus,
 )
 from src.modules.projects.presentation.dependencies import (
@@ -197,6 +199,63 @@ class TestFindProject:
             said = await find_project("nomad")
         assert "Aucun projet" in said
         assert "nomad" in said
+
+    @pytest.mark.asyncio
+    async def test_a_phase_said_in_french_narrows_the_list(self) -> None:
+        with Wired(projects=[listed(WAATCHER), listed(SUPERVISION)]):
+            said = await find_project(phase="construction")
+        assert said == "WAATcher (#7) — projet, construction"
+
+    @pytest.mark.asyncio
+    async def test_the_name_becomes_optional_once_something_else_is_asked(
+        self,
+    ) -> None:
+        with Wired(projects=[listed(WAATCHER), listed(SUPERVISION)]):
+            said = await find_project(kind="lot")
+        assert "WAATcher — Supervision (#8)" in said
+        assert "(#7)" not in said
+
+    @pytest.mark.asyncio
+    async def test_a_followed_project_says_so_and_so_does_its_urgency(self) -> None:
+        watched = Project(
+            id=10,
+            label="Nomad",
+            kind=ProjectKind.PROJECT,
+            status=ProjectStatus.VALIDATION,
+            is_followed=True,
+            priority=ProjectPriority.HIGH,
+        )
+        with Wired(projects=[listed(watched), listed(WAATCHER)]):
+            said = await find_project(followed=True)
+        assert said == "Nomad (#10) — projet, validation, priorité haute, suivi"
+
+    @pytest.mark.asyncio
+    async def test_the_archive_can_be_left_out(self) -> None:
+        with Wired(projects=[listed(WAATCHER), listed(RETIRED)]):
+            said = await find_project("waatcher", archived=False)
+        assert "V1" not in said
+
+    @pytest.mark.asyncio
+    async def test_nothing_matching_says_what_was_asked(self) -> None:
+        with Wired(projects=[listed(WAATCHER)]):
+            said = await find_project(phase="cadrage", followed=True)
+        assert "Aucun projet ne correspond" in said
+        assert "phase cadrage" in said
+        assert "suivi" in said
+
+    @pytest.mark.asyncio
+    async def test_a_phase_nobody_knows_is_refused_with_the_ones_that_exist(
+        self,
+    ) -> None:
+        with Wired(projects=[listed(WAATCHER)]), pytest.raises(ToolError) as refused:
+            await find_project(phase="recette")
+        assert "recette" in str(refused.value)
+        assert "construction" in str(refused.value)
+
+    @pytest.mark.asyncio
+    async def test_asking_for_nothing_at_all_is_refused(self) -> None:
+        with Wired(projects=[listed(WAATCHER)]), pytest.raises(ToolError):
+            await find_project()
 
 
 def a_grid(

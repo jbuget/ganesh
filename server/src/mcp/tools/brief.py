@@ -51,13 +51,17 @@ MOST_PACKAGES = 6
 
 
 @answers(SCOPE)
-async def project_brief(project_id: int) -> str:
+async def project_brief(project_id: int, include_description: bool = False) -> str:
     """Dit où en est un projet : sa phase, son estimation, qui le porte.
 
     L'identifiant se trouve avec `find_project`. Rend la fiche telle que
     l'écran la lit — ce qui a été consommé face à ce qui était prévu, la date
     annoncée, les lots rattachés — et dit ce qui n'est pas renseigné plutôt
     que de le passer sous silence.
+
+    La description du projet, en markdown, n'est rendue que si
+    `include_description` est vrai : elle peut courir sur des pages. C'est ce
+    qu'il faut lire avant de la réécrire avec `update_project_description`.
     """
     machine: Machine = current_machine()
     use_case = await machine.resolve(get_project_detail_use_case)
@@ -82,6 +86,7 @@ async def project_brief(project_id: int) -> str:
             *_people_on(sheet),
             _lately(sheet, packages),
             *_packages(packages),
+            *(_described(sheet.project) if include_description else []),
         ]
     )
 
@@ -160,12 +165,7 @@ def _weighed_alone(sheet: ProjectDetail) -> str:
         return f"{declared}. Aucune estimation n'est enregistrée."
 
     against = f"{declared} pour {say.agreeing(estimate, 'estimé')}"
-    left = round(estimate - spent, 2)
-    if left > 0:
-        return f"{against} : il en reste {say.number(left)}."
-    if left < 0:
-        return f"{against} : {say.number(-left)} de plus que prévu."
-    return f"{against} : l'estimation est atteinte."
+    return f"{against} : {say.left(spent, estimate)}."
 
 
 def _announced(project: Project) -> str:
@@ -271,6 +271,13 @@ def _package(read: ProjectDetail) -> str:
         else "aucun jour déclaré"
     )
     return f"{package.label} (#{package.id}) : {', '.join(parts)}"
+
+
+def _described(project: Project) -> list[str]:
+    """The service sheet as it was written, or the fact that nobody wrote one."""
+    if project.description is None:
+        return ["Aucune description n'est renseignée."]
+    return ["Description :", project.description]
 
 
 def _names(people: list[User]) -> str:

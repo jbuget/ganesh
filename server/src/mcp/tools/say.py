@@ -14,11 +14,22 @@ from a running API, past a green suite. `agreeing` and `of` carry the two
 rules that bit.
 """
 
+from collections.abc import Mapping
 from datetime import date
+from enum import StrEnum
+from typing import TypeVar
 
+from mcp.server.mcpserver.exceptions import ToolError
 from src.modules.entries.application.use_cases.get_month_grid import GridRow
 from src.modules.planning.domain.entities.workload_plan import PlanBlocker
-from src.modules.projects.domain.entities.project import ProjectKind, ProjectStatus
+from src.modules.projects.domain.entities.project import (
+    ProjectKind,
+    ProjectPriority,
+    ProjectStatus,
+)
+from src.shared.enums.department import Department
+
+E = TypeVar("E", bound=StrEnum)
 
 KINDS = {
     ProjectKind.PROJECT: "projet",
@@ -36,6 +47,28 @@ STATUSES = {
     ProjectStatus.VALIDATION: "validation",
     ProjectStatus.DEPLOYMENT: "déploiement",
     ProjectStatus.OPERATIONS: "en service",
+}
+
+#: The urgencies, said as the board's picker says them.
+PRIORITIES = {
+    ProjectPriority.CRITICAL: "critique",
+    ProjectPriority.HIGH: "haute",
+    ProjectPriority.NORMAL: "normale",
+    ProjectPriority.LOW: "basse",
+}
+
+#: The departments, said as `client/src/lib/departments.ts` says them.
+DEPARTMENTS = {
+    Department.FINANCE_ADMIN: "administratif & financier",
+    Department.LANDLORDS: "bailleurs",
+    Department.CONDOMINIUM: "copropriété",
+    Department.CUSTOMER_SERVICE: "service client",
+    Department.OPERATIONS: "opérations",
+    Department.INFORMATION_SYSTEMS: "système d'information",
+    Department.HUMAN_RESOURCES: "ressources humaines",
+    Department.MARKETING_COMMUNICATION_CSR: "marketing, communication & rse",
+    Department.COMMERCIAL_REAL_ESTATE: "tertiaire",
+    Department.OTHER: "autre",
 }
 
 #: Why the projection placed a mission nowhere.
@@ -61,6 +94,24 @@ def phase(status: ProjectStatus | str | None) -> str | None:
         return STATUSES[ProjectStatus(status)]
     except ValueError:
         return str(status)
+
+
+def heard(vocabulary: Mapping[E, str], word: str, what: str) -> E:
+    """The domain's word for one said in French: « construction » → `DEVELOPMENT`.
+
+    The reverse of the dictionaries above, for a criterion that comes in. A
+    word the vocabulary does not hold is refused with the ones that exist: a
+    model told only « non » guesses another, and a model told the choices
+    picks one.
+    """
+    wanted = word.strip().casefold()
+    for member, said in vocabulary.items():
+        if said.casefold() == wanted:
+            return member
+    raise ToolError(
+        f"« {word} » n'est pas une valeur reconnue pour {what}. "
+        f"Les valeurs possibles : {listed(list(vocabulary.values()))}."
+    )
 
 
 def kind(of: ProjectKind) -> str:
@@ -104,6 +155,20 @@ def agreeing(count: float, word: str) -> str:
     """
     written = number(count)
     return f"{written} {word}s" if count >= 2 else f"{written} {word}"
+
+
+def left(spent: float, estimate: float) -> str:
+    """What a budget has left, said as what is left.
+
+    « il en reste 15 » is the thing being asked; « 5 et 20 » is the subtraction
+    a model gets wrong often enough to matter.
+    """
+    remaining = round(estimate - spent, 2)
+    if remaining > 0:
+        return f"il en reste {number(remaining)}"
+    if remaining < 0:
+        return f"{number(-remaining)} de plus que prévu"
+    return "l'estimation est atteinte"
 
 
 def number(count: float) -> str:

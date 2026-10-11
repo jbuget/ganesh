@@ -136,13 +136,25 @@ export const MCP_TOOLS: McpTool[] = [
   {
     name: "find_project",
     answers:
-      "Trouve un projet du référentiel à partir de son nom, même approximatif, et rend son identifiant, sa nature et sa phase.",
+      "Trouve des projets du référentiel, par leur nom même approximatif ou par ce qu'ils sont — phase, nature, priorité, service, suivi, archivage, personne — et rend leur identifiant, leur nature et leur phase.",
+    scope: "projects:read",
+  },
+  {
+    name: "person_projects",
+    answers:
+      "Dit sur quels projets est une personne, et à quel titre : référent projet, référent technique ou intervenant actuel. Le nom peut être approximatif ; plusieurs personnes qui correspondent sont toutes lues.",
     scope: "projects:read",
   },
   {
     name: "project_brief",
     answers:
       "Dit où en est un projet : sa phase et depuis quand, ce qui a été consommé face à l'estimation, la date annoncée, qui le porte et les lots rattachés.",
+    scope: "projects:read",
+  },
+  {
+    name: "project_consumption",
+    answers:
+      "Dit ce qu'a coûté un projet, métier par métier, face à ce qui était prévu : les jours déclarés, ce qu'il en reste, et les lots lus à part. Ce qui est pré-saisi pour l'avenir est dit à côté, jamais additionné.",
     scope: "projects:read",
   },
   {
@@ -171,9 +183,21 @@ export const MCP_TOOLS: McpTool[] = [
     also: "projects:write",
   },
   {
+    name: "update_project_description",
+    answers:
+      "Remplace la description d'un projet, en markdown. Le texte donné devient la fiche en entier, et l'ancienne n'est pas conservée : relisez-la d'abord avec project_brief. Un texte vide est refusé.",
+    scope: "projects:write",
+  },
+  {
     name: "what_changed",
     answers:
       "Dit ce qui a bougé depuis une date : la phase, le temps déclaré, les mises à jour postées. Sans projet, lit tout le référentiel et répond projet par projet. Quinze jours en arrière par défaut.",
+    scope: "audit:read",
+  },
+  {
+    name: "gazette",
+    answers:
+      "Dit ce qui s'est passé un mois donné : ce que la Gazette compte (projets créés et archivés, changements de phase, mises à jour, besoins déposés), ce qui ressort et ce qui doit inquiéter — toujours à propos d'un projet, jamais d'une personne. Un mois déjà généré rend aussi son éditorial, annoncé comme rédigé par un modèle. Ne génère rien.",
     scope: "audit:read",
   },
   {

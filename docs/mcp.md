@@ -133,11 +133,11 @@ became once a tool could say those refusals in words.
 
 ## The tools
 
-Nine, each `src/mcp/tools/<name>.py`, each answering in sentences built through
+Thirteen, each `src/mcp/tools/<name>.py`, each answering in sentences built through
 `src/mcp/tools/say.py` — « 1,5 jour », « 08/09 », « septembre 2026 ». A number
 handed over raw is a number a model words itself, and words wrong.
 
-### `find_project(query: str)`
+### `find_project(query?, phase?, kind?, priority?, department?, followed?, archived?, person?)`
 
 **Scope** `projects:read`. The resolver the others lean on, and the reason a
 model stops inventing identifiers.
@@ -148,10 +148,30 @@ whether it is still one to book against. Several matches are returned as
 several; the choice is the caller's, and a tool that picked one would be
 guessing.
 
-> Trois projets portent ce nom. WAATcher (projet, en construction), WAATcher —
-> Supervision (lot de WAATcher, en service), WAATcher V1 (archivé le 12 mars).
+**It also answers the question asked without a name**: « les projets suivis en
+validation », « ceux de Léa au service client ». At least one criterion is
+required, and they add up. The list is read whole and narrowed by
+`ProjectCriteria` (`projects/application/services/project_search.py`), so that
+a screen and a tool cannot come to answer it differently.
 
-### `project_brief(project_id: int)`
+- **Criteria come in as the words the team says** — « construction »,
+  « service client », « haute » — and are heard back into the domain's
+  (`say.heard`). A word nobody knows is refused with the ones that exist: a
+  model told only « non » guesses another.
+- **`followed` and `archived` are tri-state.** `followed=false` asks for the
+  projects nobody watches, and is not the same question as not asking.
+  `archived` left out keeps every project, as the tool always did.
+- **A person matches at any title** — référent projet, référent technique or
+  intervenant — by a part of their name, whatever its case and accents
+  (`designates`).
+- **An empty answer says what was asked**, so that « aucun projet » is read as
+  an answer to a question and not as a failure.
+
+> Trois projets portent ce nom. WAATcher (projet, construction), WAATcher —
+> Supervision (lot, en service), WAATcher V1 (projet, en service, archivé le
+> 12/03/2026).
+
+### `project_brief(project_id: int, include_description?: bool)`
 
 **Scope** `projects:read`. `GetProjectDetailUseCase` — the mission's sheet, as
 the screen reads it.
@@ -279,6 +299,77 @@ projection could not place at all.
 > 64 projets sur la fenêtre, 0 en retard, aucune mise en service. À lire en
 > sachant que 53 n'ont pas de date annoncée et 27 n'ont pas d'estimation.
 
+### `project_consumption(project_id: int)`
+
+**Scope** `projects:read`. What a project has cost, **trade by trade**, against
+what each was budgeted at, and each work package on its own trades beneath it.
+`project_brief` reads the mission as a whole, which is where a build budget with
+days to spare hides a design that is already over.
+
+- **What is left is said as what is left** (`say.left`) — the same sentence the
+  brief uses, written once.
+- **A trade nobody budgeted is not compared.** A ratio against nothing is a
+  number a model invents.
+- **Delivered and forecast are never added.** What is pre-entered ahead of
+  today is said apart, and does not eat into what a trade has left.
+- **Days under no trade are what the reprise took over**, and are told as such
+  rather than folded into a trade they were not declared on.
+
+The sums live in `by_trade` (`projects/domain/services/consumption.py`), which
+reads no entry: it takes `(activity, day, value)`.
+
+> Nomad (#1) :
+> - Développement — 5 jours déclarés pour 20 estimés : il en reste 15.
+> - Design — 6 jours déclarés pour 5 estimés : 1 de plus que prévu.
+
+### `person_projects(person: str)`
+
+**Scope** `projects:read`. « Sur quoi est Léa, et à quel titre ? » —
+`find_project` can narrow the list to a person; it cannot say what they are
+there. This reads the same list from the other side, title by title: référent
+projet, référent technique, intervenant actuel.
+
+Titles are never ranked, and no sentence uses a pronoun. Only people the list
+holds can be found: somebody on no project is absent from this reading, which
+the answer says rather than calling them unknown to the company. A technical
+lead keeps a project that was archived — the title outlives the work.
+
+The reverse, « qui est sur ce projet ? », is `project_brief`'s: a second tool
+for it would be the same question with the arguments swapped.
+
+### `gazette(month?: str, version?: int)`
+
+**Scope** `audit:read`. One month of the Gazette, read and **never generated**:
+asking for a digest writes a version and costs a model call, and « et
+septembre ? » asked from a terminal has asked for neither.
+
+It says what the register counted, what stands out and what should worry, and —
+for a month already generated — the editorial and the spotlights, **announced as
+written by a model**. A month nobody generated is the facts alone, and says so;
+a generated month without an editorial says the model was not heard.
+
+The chapters, movement by movement, stay on the screen: that reading is a
+project's « Journal » and `what_changed`. It also keeps requests — which are
+not missions — out of a reading that is not about them: only the tally of what
+was asked, apart from what was built, is told.
+
+A worry is about a project, never a person (`Highlight` refuses the
+combination); a teammate arriving or leaving is a fact of the month and is named.
+
+### `update_project_description(project_id: int, description: str)`
+
+**Scope** `projects:write`. The description is the service sheet, in markdown,
+and it is **replaced**: the text handed over becomes the sheet and the old one
+is not kept — the journal says who rewrote it and when, as it does for the
+screen, and not what it said.
+
+That is why `project_brief` takes `include_description`, off by default since a
+sheet runs to pages: a model rewrites only after having read. A blank text is
+**refused out loud** — the use case would take it for « empty the sheet », which
+is what a model recopying nothing would do by accident, and emptying a sheet is
+a decision taken on a screen. As everywhere a tool writes, a refusal is raised,
+never returned.
+
 ### `team_mood()`
 
 **Scope** `moods:read`, which no breadth covers. The fortnight in figures
@@ -360,6 +451,18 @@ Three rules, carried over from what was already decided about a collector:
   a fabrication waiting to happen.
 - **No identifier a human would not use**, except the ones `find_project`
   hands over for the other tools to consume.
+
+## Left out on purpose
+
+- **A `project_history` tool.** `what_changed(project_id, since)` already reads a
+  project's journal; a second one reading it again with another page size is
+  the same question with a parameter changed.
+- **`team_availability` is not a tool here.** « Qui est libre la semaine du 19 »
+  reads the workload projection, which `roadmap:read` deliberately leaves shut:
+  Planification is arbitrated, and a machine has no arbitration to make. It is
+  on the assistant's shelf beside `person_plan`, for a person who may already
+  open that screen. Opening it to keys would be a decision about the scope, not
+  a tool.
 
 ## Deliberately out of V1
 

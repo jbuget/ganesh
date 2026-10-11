@@ -34,13 +34,28 @@ class AmbiguousUserError(DomainError):
         self.candidates = candidates
 
 
-def find_one(users: Iterable[User], name: str) -> User:
-    """The single account `name` designates among `users`."""
+def designates(user: User, name: str) -> bool:
+    """Whether a part of `name` is found in one of the names the account bears."""
+    sought = _plain(name)
+    return bool(sought) and any(sought in known for known in _names(user))
+
+
+def matching(users: Iterable[User], name: str) -> list[User]:
+    """Every account `name` designates: the exact ones if any, else the partial.
+
+    Several are handed back rather than guessed between — whoever asks decides
+    what to do about an ambiguity, and `find_one` refuses it.
+    """
     sought = _plain(name)
     pool = [(user, _names(user)) for user in users] if sought else []
     exact = [user for user, names in pool if sought in names]
     partial = [user for user, names in pool if any(sought in n for n in names)]
-    found = exact or partial
+    return exact or partial
+
+
+def find_one(users: Iterable[User], name: str) -> User:
+    """The single account `name` designates among `users`."""
+    found = matching(users, name)
     if not found:
         raise NoSuchUserError(name)
     if len(found) > 1:

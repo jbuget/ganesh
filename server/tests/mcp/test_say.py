@@ -7,7 +7,12 @@ suite. In French the plural starts at two: « 1,5 jour », « 2 jours ».
 
 from datetime import date
 
+import pytest
+
+from mcp.server.mcpserver.exceptions import ToolError
 from src.mcp.tools import say
+from src.modules.projects.domain.entities.project import ProjectStatus
+from src.shared.enums.department import Department
 
 
 class TestDays:
@@ -109,3 +114,40 @@ class TestAsGiven:
 
     def test_a_half_reads_as_one(self) -> None:
         assert say.as_given(0.5) == "0,5"
+
+
+class TestHeard:
+    """A criterion comes in as a French word and goes back to the domain's."""
+
+    def test_a_phase_is_heard_whatever_its_case(self) -> None:
+        assert say.heard(say.STATUSES, " Construction ", "la phase") is (
+            ProjectStatus.DEVELOPMENT
+        )
+
+    def test_a_department_is_heard_by_its_label(self) -> None:
+        assert say.heard(say.DEPARTMENTS, "service client", "le service") is (
+            Department.CUSTOMER_SERVICE
+        )
+
+    def test_an_unknown_word_refuses_and_offers_the_ones_that_exist(self) -> None:
+        with pytest.raises(ToolError) as refused:
+            say.heard(say.PRIORITIES, "urgente", "la priorité")
+
+        assert "« urgente »" in str(refused.value)
+        assert "critique, haute, normale et basse" in str(refused.value)
+
+
+class TestLeft:
+    """A budget is read as what is left, never as two figures to subtract."""
+
+    def test_days_to_spare_say_how_many_are_left(self) -> None:
+        assert say.left(spent=5, estimate=20) == "il en reste 15"
+
+    def test_an_overrun_says_by_how_much(self) -> None:
+        assert say.left(spent=6, estimate=5) == "1 de plus que prévu"
+
+    def test_an_estimate_reached_says_so(self) -> None:
+        assert say.left(spent=5, estimate=5) == "l'estimation est atteinte"
+
+    def test_quarters_are_said_whole(self) -> None:
+        assert say.left(spent=0.25, estimate=1) == "il en reste 0,75"

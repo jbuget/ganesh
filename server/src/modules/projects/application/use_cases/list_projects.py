@@ -49,6 +49,8 @@ class ListedProject:
     sub_projects: int
     #: Who answers for the mission, in alphabetical order.
     leads: list[User] = field(default_factory=list)
+    #: Who to call when the service breaks, in alphabetical order.
+    tech_leads: list[User] = field(default_factory=list)
     #: Who works on it, in alphabetical order.
     contributors: list[User] = field(default_factory=list)
     #: Days declared, forecast excluded.
@@ -157,6 +159,7 @@ class ListProjectsUseCase:
                 entries=entries.get(mission.id or 0, 0),
                 sub_projects=children.get(mission.id or 0, 0),
                 leads=people(mission.id or 0, ProjectRole.LEAD),
+                tech_leads=people(mission.id or 0, ProjectRole.TECH_LEAD),
                 contributors=people(mission.id or 0, ProjectRole.CONTRIBUTOR),
                 delivered_days=delivered.get(mission.id or 0, 0.0),
                 links=links.get(mission.id or 0, []),
