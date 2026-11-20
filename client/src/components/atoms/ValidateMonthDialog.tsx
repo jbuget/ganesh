@@ -73,16 +73,14 @@ export function ValidateMonthDialog({
 
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
           <dt className="text-muted-foreground">Total saisi</dt>
-          <dd className="text-right font-medium">
-            {formatTotal(totalEntered)} jour(s)
-          </dd>
+          <dd className="text-right font-medium">{formatTotal(totalEntered)} jours</dd>
           <dt className="text-muted-foreground">Jours ouvrés</dt>
           <dd className="text-right font-medium">{workingDays} jours</dd>
         </dl>
 
         {missing > 0 && (
           <p className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            Il manque {formatTotal(missing)} jour(s) pour couvrir le mois.
+            Il manque {formatTotal(missing)} jours pour couvrir le mois.
           </p>
         )}
 

@@ -41,7 +41,7 @@ export function RemoveMissionDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Retirer {label} ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Ce projet porte {formatDecimalDays(total)} jour(s) saisi(s) sur le mois. Le
+            Ce projet porte {formatDecimalDays(total)} jours saisis sur le mois. Le
             retrait est définitif.
           </AlertDialogDescription>
         </AlertDialogHeader>
