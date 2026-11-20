@@ -47,7 +47,9 @@ describe("ValidateMonthDialog", () => {
     renderDialog({ totalEntered: 20.5, workingDays: 22 });
 
     expect(screen.getByText("20,5 jours")).toBeInTheDocument();
-    expect(screen.getByText("Il manque 1,5 jours pour couvrir le mois.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Il manque 1,5 jours pour couvrir le mois."),
+    ).toBeInTheDocument();
   });
 
   it("validates the month on confirmation", async () => {
