@@ -59,8 +59,13 @@ export function SortableProjectCard({
       // An outline rather than a border: it overlays the card without adding to
       // its height, so the slot is exactly the size of the card that will come
       // to sit in it.
+      //
+      // `relative` holds the hidden handle: `sr-only` is absolutely
+      // positioned, and with no positioned ancestor every card below a
+      // column's fold placed its handle against the window, lengthening the
+      // whole page — which then scrolled under the board.
       className={[
-        "rounded-lg",
+        "relative rounded-lg",
         isDragging
           ? "bg-sky-50/70 outline-2 -outline-offset-2 outline-dashed outline-sky-400"
           : // The handle is unseen: the card shows where the focus stands.
