@@ -5,11 +5,11 @@ import { MOODS, dayLabel, mood } from "./mood";
 describe("mood", () => {
   it("offers the levels from the worst to the best: a scale climbs", () => {
     expect(MOODS.map((level) => level.value)).toEqual([
-      "bad",
       "hard",
-      "neutral",
+      "mixed",
       "good",
-      "excellent",
+      "great",
+      "exceptional",
     ]);
   });
 
@@ -20,7 +20,17 @@ describe("mood", () => {
   });
 
   it("names a level", () => {
-    expect(mood("bad")?.label).toBe("Mauvaise");
+    expect(mood("hard")?.label).toBe("Difficile");
+  });
+
+  it("centres the scale on a good day: the middle face smiles", () => {
+    expect(MOODS[Math.floor(MOODS.length / 2)].label).toBe("Bonne");
+  });
+
+  it("gives every level a face of its own, not only a shade", () => {
+    const faces = new Set(MOODS.map((level) => level.icon));
+
+    expect(faces.size).toBe(MOODS.length);
   });
 
   it("names nothing when nothing was answered", () => {

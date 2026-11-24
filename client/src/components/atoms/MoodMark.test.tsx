@@ -5,7 +5,7 @@ import { MoodMark } from "./MoodMark";
 
 describe("MoodMark", () => {
   it("names who posted it: the screen is nominative, and says so", () => {
-    render(<MoodMark level="hard" initials="LC" />);
+    render(<MoodMark level="mixed" initials="LC" />);
 
     expect(screen.getByText("LC")).toBeInTheDocument();
   });

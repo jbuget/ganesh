@@ -53,40 +53,41 @@ async def test_a_teammate_posts_the_mood_of_the_day() -> None:
     use_case, moods = build()
 
     await use_case.execute(
-        SetMoodCommand(user_id=1, day=TUESDAY, level=MoodLevel.GOOD), today=TUESDAY
+        SetMoodCommand(user_id=1, day=TUESDAY, level=MoodLevel.GREAT), today=TUESDAY
     )
 
     saved = await moods.get(1, TUESDAY)
     assert saved is not None
-    assert saved.level is MoodLevel.GOOD
+    assert saved.level is MoodLevel.GREAT
 
 
 async def test_a_teammate_answers_for_the_working_day_before() -> None:
     use_case, moods = build()
 
     await use_case.execute(
-        SetMoodCommand(user_id=1, day=MONDAY, level=MoodLevel.HARD), today=TUESDAY
+        SetMoodCommand(user_id=1, day=MONDAY, level=MoodLevel.MIXED), today=TUESDAY
     )
 
     saved = await moods.get(1, MONDAY)
     assert saved is not None
-    assert saved.level is MoodLevel.HARD
+    assert saved.level is MoodLevel.MIXED
 
 
 async def test_posting_again_changes_the_mood_rather_than_adding_one() -> None:
     use_case, moods = build()
 
     await use_case.execute(
-        SetMoodCommand(user_id=1, day=TUESDAY, level=MoodLevel.BAD), today=TUESDAY
+        SetMoodCommand(user_id=1, day=TUESDAY, level=MoodLevel.HARD), today=TUESDAY
     )
     await use_case.execute(
-        SetMoodCommand(user_id=1, day=TUESDAY, level=MoodLevel.EXCELLENT), today=TUESDAY
+        SetMoodCommand(user_id=1, day=TUESDAY, level=MoodLevel.EXCEPTIONAL),
+        today=TUESDAY,
     )
 
     assert len(await moods.list_between(TUESDAY, TUESDAY)) == 1
     saved = await moods.get(1, TUESDAY)
     assert saved is not None
-    assert saved.level is MoodLevel.EXCELLENT
+    assert saved.level is MoodLevel.EXCEPTIONAL
 
 
 async def test_a_day_further_back_is_refused() -> None:
@@ -94,7 +95,7 @@ async def test_a_day_further_back_is_refused() -> None:
 
     with pytest.raises(ValidationError):
         await use_case.execute(
-            SetMoodCommand(user_id=1, day=date(2026, 9, 11), level=MoodLevel.GOOD),
+            SetMoodCommand(user_id=1, day=date(2026, 9, 11), level=MoodLevel.GREAT),
             today=TUESDAY,
         )
 
@@ -106,7 +107,7 @@ async def test_a_day_to_come_is_refused() -> None:
 
     with pytest.raises(ValidationError):
         await use_case.execute(
-            SetMoodCommand(user_id=1, day=date(2026, 9, 16), level=MoodLevel.GOOD),
+            SetMoodCommand(user_id=1, day=date(2026, 9, 16), level=MoodLevel.GREAT),
             today=TUESDAY,
         )
 
@@ -116,7 +117,7 @@ async def test_a_deactivated_teammate_no_longer_posts() -> None:
 
     with pytest.raises(ForbiddenActionError):
         await use_case.execute(
-            SetMoodCommand(user_id=2, day=TUESDAY, level=MoodLevel.GOOD), today=TUESDAY
+            SetMoodCommand(user_id=2, day=TUESDAY, level=MoodLevel.GREAT), today=TUESDAY
         )
 
 
@@ -125,12 +126,13 @@ async def test_an_unknown_user_is_not_found() -> None:
 
     with pytest.raises(EntityNotFoundError):
         await use_case.execute(
-            SetMoodCommand(user_id=99, day=TUESDAY, level=MoodLevel.GOOD), today=TUESDAY
+            SetMoodCommand(user_id=99, day=TUESDAY, level=MoodLevel.GREAT),
+            today=TUESDAY,
         )
 
 
 async def test_a_teammate_takes_back_the_mood_of_the_day() -> None:
-    use_case, moods = build([Mood(id=1, user_id=1, day=TUESDAY, level=MoodLevel.BAD)])
+    use_case, moods = build([Mood(id=1, user_id=1, day=TUESDAY, level=MoodLevel.HARD)])
     clear = ClearMoodUseCase(users=InMemoryUserRepository([ALICE, GONE]), moods=moods)
 
     await clear.execute(ClearMoodCommand(user_id=1, day=TUESDAY), today=TUESDAY)
@@ -151,7 +153,7 @@ async def test_a_closed_day_can_no_longer_be_taken_back() -> None:
     """The window governs both ways: what one can no longer write, one can no
     longer unwrite. Otherwise a fortnight could be emptied after the fact."""
     _, moods = build(
-        [Mood(id=1, user_id=1, day=date(2026, 9, 11), level=MoodLevel.BAD)]
+        [Mood(id=1, user_id=1, day=date(2026, 9, 11), level=MoodLevel.HARD)]
     )
     clear = ClearMoodUseCase(users=InMemoryUserRepository([ALICE, GONE]), moods=moods)
 
@@ -164,7 +166,7 @@ async def test_a_closed_day_can_no_longer_be_taken_back() -> None:
 
 
 async def test_a_deactivated_teammate_takes_nothing_back() -> None:
-    _, moods = build([Mood(id=1, user_id=2, day=TUESDAY, level=MoodLevel.BAD)])
+    _, moods = build([Mood(id=1, user_id=2, day=TUESDAY, level=MoodLevel.HARD)])
     clear = ClearMoodUseCase(users=InMemoryUserRepository([ALICE, GONE]), moods=moods)
 
     with pytest.raises(ForbiddenActionError):

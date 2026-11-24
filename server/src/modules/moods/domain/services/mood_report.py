@@ -38,7 +38,7 @@ class DayMoods:
 
         It weighs the answers alone, never the silences: a day three people
         out of fifteen answered says what those three felt, and a mean that
-        counted the twelve others as neutral would invent their day.
+        counted the twelve others at the middle of the scale would invent their day.
         """
         if not self.moods:
             return None

@@ -96,15 +96,15 @@ def a_fortnight(by_day: dict[date, list[MoodLevel]], headcount: int = 12) -> Tea
     )
 
 
-GOOD = MoodLevel.GOOD
-FLAT = MoodLevel.NEUTRAL
-BAD = MoodLevel.BAD
+HIGH = MoodLevel.GREAT
+MIDDLE = MoodLevel.GOOD
+LOW = MoodLevel.HARD
 
 
 class TestNobodyCanBeReadOutOfIt:
     @pytest.mark.asyncio
     async def test_no_name_ever_comes_out(self) -> None:
-        with Wired(a_fortnight({date(2026, 9, 18): [GOOD, FLAT, BAD, GOOD]})):
+        with Wired(a_fortnight({date(2026, 9, 18): [HIGH, MIDDLE, LOW, HIGH]})):
             said = await team_mood()
 
         for person in TEAM:
@@ -113,7 +113,7 @@ class TestNobodyCanBeReadOutOfIt:
     @pytest.mark.asyncio
     async def test_no_identifier_either(self) -> None:
         """Without an identifier, nothing can be recomposed person by person."""
-        with Wired(a_fortnight({date(2026, 9, 18): [GOOD, FLAT, BAD, GOOD]})):
+        with Wired(a_fortnight({date(2026, 9, 18): [HIGH, MIDDLE, LOW, HIGH]})):
             said = await team_mood()
 
         assert "user_id" not in said
@@ -122,7 +122,7 @@ class TestNobodyCanBeReadOutOfIt:
     @pytest.mark.asyncio
     async def test_a_day_too_few_answered_is_not_averaged(self) -> None:
         """Two answers out of twelve say what two people felt, and no more."""
-        thin = {date(2026, 9, 18): [BAD] * (FLOOR - 1)}
+        thin = {date(2026, 9, 18): [LOW] * (FLOOR - 1)}
         with Wired(a_fortnight(thin)):
             said = await team_mood()
 
@@ -135,7 +135,7 @@ class TestNobodyCanBeReadOutOfIt:
         from mcp.server.mcpserver.exceptions import ToolError
 
         with (
-            Wired(a_fortnight({date(2026, 9, 18): [GOOD]}), ApiKeyScope.ALL_READ),
+            Wired(a_fortnight({date(2026, 9, 18): [HIGH]}), ApiKeyScope.ALL_READ),
             pytest.raises(ToolError, match="moods:read"),
         ):
             await team_mood()
@@ -147,8 +147,8 @@ class TestWhatItSays:
         with Wired(
             a_fortnight(
                 {
-                    date(2026, 9, 18): [GOOD, GOOD, GOOD, FLAT],
-                    date(2026, 9, 17): [GOOD, GOOD, FLAT, FLAT],
+                    date(2026, 9, 18): [HIGH, HIGH, HIGH, MIDDLE],
+                    date(2026, 9, 17): [HIGH, HIGH, MIDDLE, MIDDLE],
                 }
             )
         ):
@@ -169,8 +169,8 @@ class TestWhatItSays:
         with Wired(
             a_fortnight(
                 {
-                    date(2026, 9, 18): [BAD, BAD, BAD, BAD],
-                    date(2026, 9, 17): [GOOD, GOOD, GOOD, GOOD],
+                    date(2026, 9, 18): [LOW, LOW, LOW, LOW],
+                    date(2026, 9, 17): [HIGH, HIGH, HIGH, HIGH],
                 }
             )
         ):

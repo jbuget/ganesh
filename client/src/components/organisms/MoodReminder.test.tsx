@@ -40,9 +40,9 @@ describe("MoodReminder", () => {
   it("posts the face one picks", () => {
     render(<MoodReminder />);
 
-    fireEvent.click(screen.getByRole("radio", { name: "Bonne" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Très bonne" }));
 
-    expect(reminder.post).toHaveBeenCalledWith("good");
+    expect(reminder.post).toHaveBeenCalledWith("great");
   });
 
   it("offers the five faces on a day nobody has answered for", () => {
@@ -60,7 +60,7 @@ describe("MoodReminder", () => {
 
     render(<MoodReminder />);
 
-    expect(screen.getByRole("radio", { name: "Bonne" })).toBeDisabled();
+    expect(screen.getByRole("radio", { name: "Très bonne" })).toBeDisabled();
   });
 
   it("is turned down in one click", () => {

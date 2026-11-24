@@ -895,7 +895,7 @@ async def a_mood(
         MoodModel(
             user_id=user_id,
             day=day,
-            level=MoodLevel.GOOD,
+            level=MoodLevel.GREAT,
             created_at=posted_on,
             updated_at=posted_on,
         )

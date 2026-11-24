@@ -34,6 +34,6 @@ class MoodRepository(ABC):
         """Takes back the mood of a day. A day carrying none is left alone.
 
         A day one has taken back is a day one has not answered for, not a day
-        answered neutral: the row has to go, rather than be blanked.
+        given an empty answer: the row has to go, rather than be blanked.
         """
         ...

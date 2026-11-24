@@ -104,14 +104,14 @@ def screen() -> Screen:
 
 
 async def test_a_teammate_posts_the_mood_of_the_day(screen: Screen) -> None:
-    response = await screen.post(LATEST, "good")
+    response = await screen.post(LATEST, "great")
 
     assert response.status_code == 200
-    assert response.json() == {"day": LATEST.isoformat(), "level": "good"}
+    assert response.json() == {"day": LATEST.isoformat(), "level": "great"}
 
 
 async def test_a_mood_outside_the_window_is_refused(screen: Screen) -> None:
-    response = await screen.post(date(2020, 1, 2), "good")
+    response = await screen.post(date(2020, 1, 2), "great")
 
     assert response.status_code == 422
     assert "closed" in response.json()["detail"]
@@ -123,18 +123,18 @@ async def test_a_level_that_does_not_exist_is_refused(screen: Screen) -> None:
 
 
 async def test_the_open_days_come_back_with_what_was_posted(screen: Screen) -> None:
-    await screen.post(LATEST, "hard")
+    await screen.post(LATEST, "mixed")
 
     response = await screen.client.get(f"{MOODS}/me")
 
     assert response.status_code == 200
     days = response.json()["days"]
-    assert days[0] == {"day": LATEST.isoformat(), "level": "hard"}
+    assert days[0] == {"day": LATEST.isoformat(), "level": "mixed"}
     assert all(day["level"] is None for day in days[1:])
 
 
 async def test_the_team_window_names_who_posted() -> None:
-    screen = sign_in([Mood(id=1, user_id=1, day=LATEST, level=MoodLevel.BAD)])
+    screen = sign_in([Mood(id=1, user_id=1, day=LATEST, level=MoodLevel.HARD)])
 
     response = await screen.client.get(f"{MOODS}/team")
 
@@ -146,17 +146,17 @@ async def test_the_team_window_names_who_posted() -> None:
     assert today["moods"] == [
         {
             "author": {"id": 1, "display_name": "Léa Chen", "initials": "LC"},
-            "level": "bad",
+            "level": "hard",
         }
     ]
     assert today["participation"] == 1
     assert today["average"] == 1.0
-    assert today["counts"]["bad"] == 1
-    assert today["counts"]["excellent"] == 0
+    assert today["counts"]["hard"] == 1
+    assert today["counts"]["exceptional"] == 0
 
 
 async def test_a_teammate_takes_back_the_mood_of_the_day(screen: Screen) -> None:
-    await screen.post(LATEST, "bad")
+    await screen.post(LATEST, "hard")
 
     response = await screen.take_back(LATEST)
 

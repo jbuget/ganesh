@@ -1,108 +1,31 @@
 """What the reprise `b17c4f0a9d31` does to days nobody declared a trade for.
 
 A migration that touches everybody's declared days is worth exercising rather
-than reading: it runs once, on a register nobody can put back. The database is
-stood up at the revision just before it, filled with the shapes production
-holds, then carried one step forward — which is exactly what the deploy does.
-
-A database of its own each time, dropped at the end: the migrations here are
-run out of step with the ones the rest of the suite shares, and a session-wide
-schema taken back a revision would pull the ground from under every other test.
-
-The tests are synchronous on purpose. Alembic's `env.py` opens its own event
-loop to migrate, which it cannot do from inside one already running.
+than reading: it runs once, on a register nobody can put back.
 """
 
-import asyncio
-import os
 from collections.abc import Iterator
 from datetime import date
-from typing import Any
 
 import pytest
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine
 
-from alembic import command
-from alembic.config import Config
+from tests.helpers.migrations import database_at, fill, rows, upgrade
 
 #: The revision under test, and the one the database is stood up at.
 REPRISE = "b17c4f0a9d31"
 BEFORE = "3d593733eb0e"
 
-#: The database the suite already talks to, which says where the server is.
-SUITE_URL = os.environ.get(
-    "TEST_DATABASE_URL",
-    "postgresql+asyncpg://timesheet:timesheet@localhost:5432/timesheet_test",
-)
-SERVER = SUITE_URL.rsplit("/", 1)[0]
-DATABASE = "ganesh_reprise_test"
-
-
-async def _run(url: str, statements: str, autocommit: bool = False) -> None:
-    engine = create_async_engine(
-        url, isolation_level="AUTOCOMMIT" if autocommit else "READ COMMITTED"
-    )
-    try:
-        async with engine.begin() as connection:
-            for statement in filter(None, (s.strip() for s in statements.split(";"))):
-                await connection.execute(text(statement))
-    finally:
-        await engine.dispose()
-
-
-async def _read(url: str, query: str) -> list[tuple[Any, ...]]:
-    engine = create_async_engine(url)
-    try:
-        async with engine.connect() as connection:
-            return [tuple(row) for row in (await connection.execute(text(query))).all()]
-    finally:
-        await engine.dispose()
-
-
-def fill(url: str, statements: str) -> None:
-    asyncio.run(_run(url, statements))
-
-
-def rows(url: str, query: str) -> list[tuple[Any, ...]]:
-    return asyncio.run(_read(url, query))
-
 
 def carry_forward(url: str) -> None:
     """One step forward — what the deploy does, and nothing else."""
-    config = Config("alembic.ini")
-    config.set_main_option("sqlalchemy.url", url)
-    command.upgrade(config, REPRISE)
+    upgrade(url, REPRISE)
 
 
 @pytest.fixture
 def database() -> Iterator[str]:
     """A database of its own, at the revision just before the reprise."""
-    postgres = f"{SERVER}/postgres"
-    asyncio.run(
-        _run(
-            postgres,
-            f'DROP DATABASE IF EXISTS "{DATABASE}" WITH (FORCE); '
-            f'CREATE DATABASE "{DATABASE}"',
-            autocommit=True,
-        )
-    )
-    url = f"{SERVER}/{DATABASE}"
-
-    config = Config("alembic.ini")
-    config.set_main_option("sqlalchemy.url", url)
-    command.upgrade(config, BEFORE)
-
-    try:
+    with database_at(BEFORE, "ganesh_reprise_test") as url:
         yield url
-    finally:
-        asyncio.run(
-            _run(
-                postgres,
-                f'DROP DATABASE IF EXISTS "{DATABASE}" WITH (FORCE)',
-                autocommit=True,
-            )
-        )
 
 
 #: Somebody to declare the days, since every entry names one.

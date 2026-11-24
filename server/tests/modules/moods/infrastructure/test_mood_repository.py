@@ -50,33 +50,33 @@ async def test_a_mood_is_persisted_and_read_back(db_session: AsyncSession) -> No
     alice, _ = await seed(db_session)
     moods = SqlMoodRepository(db_session)
 
-    await moods.upsert(Mood(id=None, user_id=alice, day=TUESDAY, level=MoodLevel.GOOD))
+    await moods.upsert(Mood(id=None, user_id=alice, day=TUESDAY, level=MoodLevel.GREAT))
 
     saved = await moods.get(alice, TUESDAY)
     assert saved is not None
-    assert saved.level is MoodLevel.GOOD
+    assert saved.level is MoodLevel.GREAT
 
 
 async def test_posting_twice_keeps_a_single_row(db_session: AsyncSession) -> None:
     alice, _ = await seed(db_session)
     moods = SqlMoodRepository(db_session)
 
-    await moods.upsert(Mood(id=None, user_id=alice, day=TUESDAY, level=MoodLevel.BAD))
+    await moods.upsert(Mood(id=None, user_id=alice, day=TUESDAY, level=MoodLevel.HARD))
     await moods.upsert(
-        Mood(id=None, user_id=alice, day=TUESDAY, level=MoodLevel.EXCELLENT)
+        Mood(id=None, user_id=alice, day=TUESDAY, level=MoodLevel.EXCEPTIONAL)
     )
 
     rows = await moods.list_between(TUESDAY, TUESDAY)
     assert len(rows) == 1
-    assert rows[0].level is MoodLevel.EXCELLENT
+    assert rows[0].level is MoodLevel.EXCEPTIONAL
 
 
 async def test_the_window_holds_the_whole_team(db_session: AsyncSession) -> None:
     alice, bob = await seed(db_session)
     moods = SqlMoodRepository(db_session)
 
-    await moods.upsert(Mood(id=None, user_id=alice, day=TUESDAY, level=MoodLevel.HARD))
-    await moods.upsert(Mood(id=None, user_id=bob, day=MONDAY, level=MoodLevel.NEUTRAL))
+    await moods.upsert(Mood(id=None, user_id=alice, day=TUESDAY, level=MoodLevel.MIXED))
+    await moods.upsert(Mood(id=None, user_id=bob, day=MONDAY, level=MoodLevel.GOOD))
 
     assert len(await moods.list_between(MONDAY, TUESDAY)) == 2
     assert len(await moods.list_between(TUESDAY, TUESDAY)) == 1
@@ -88,11 +88,11 @@ async def test_ones_own_window_leaves_out_the_colleagues(
     alice, bob = await seed(db_session)
     moods = SqlMoodRepository(db_session)
 
-    await moods.upsert(Mood(id=None, user_id=alice, day=TUESDAY, level=MoodLevel.HARD))
-    await moods.upsert(Mood(id=None, user_id=bob, day=TUESDAY, level=MoodLevel.GOOD))
+    await moods.upsert(Mood(id=None, user_id=alice, day=TUESDAY, level=MoodLevel.MIXED))
+    await moods.upsert(Mood(id=None, user_id=bob, day=TUESDAY, level=MoodLevel.GREAT))
 
     mine = await moods.list_for_user_between(alice, MONDAY, TUESDAY)
-    assert [mood.level for mood in mine] == [MoodLevel.HARD]
+    assert [mood.level for mood in mine] == [MoodLevel.MIXED]
 
 
 async def test_the_level_is_stored_under_the_name_of_its_member(
@@ -101,22 +101,22 @@ async def test_the_level_is_stored_under_the_name_of_its_member(
     """`native_enum=False` stores the name: any hand-written SQL reads it."""
     alice, _ = await seed(db_session)
     await SqlMoodRepository(db_session).upsert(
-        Mood(id=None, user_id=alice, day=TUESDAY, level=MoodLevel.EXCELLENT)
+        Mood(id=None, user_id=alice, day=TUESDAY, level=MoodLevel.EXCEPTIONAL)
     )
 
     stored = await db_session.execute(
         text("SELECT level FROM moods WHERE user_id = :user_id"),
         {"user_id": alice},
     )
-    assert stored.scalar_one() == "EXCELLENT"
+    assert stored.scalar_one() == "EXCEPTIONAL"
 
 
 async def test_a_mood_taken_back_leaves_no_row(db_session: AsyncSession) -> None:
-    """A day taken back is a day one has not answered for, not a day answered
-    neutral: the row goes rather than being blanked."""
+    """A day taken back is a day one has not answered for, not a day given an
+    empty answer: the row goes rather than being blanked."""
     alice, _ = await seed(db_session)
     moods = SqlMoodRepository(db_session)
-    await moods.upsert(Mood(id=None, user_id=alice, day=TUESDAY, level=MoodLevel.BAD))
+    await moods.upsert(Mood(id=None, user_id=alice, day=TUESDAY, level=MoodLevel.HARD))
 
     await moods.delete(alice, TUESDAY)
 

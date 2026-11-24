@@ -36,7 +36,7 @@ describe("MoodPage", () => {
           moods: [
             {
               author: { id: 1, display_name: "Léa Chen", initials: "LC" },
-              level: "good",
+              level: "great",
             },
           ],
           counts: {},
@@ -66,10 +66,10 @@ describe("MoodPage", () => {
           moods: [
             {
               author: { id: 1, display_name: "Léa Chen", initials: "LC" },
-              level: "good",
+              level: "great",
             },
           ],
-          counts: { good: 1 },
+          counts: { great: 1 },
           average: 4,
           participation: 1,
         },
