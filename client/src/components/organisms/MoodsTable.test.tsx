@@ -15,7 +15,7 @@ const day = (iso: string, moods: DayMoodsResponse["moods"] = []): DayMoodsRespon
 
 const signed = (id: number, name: string, initials: string) => ({
   author: { id, display_name: name, initials },
-  level: "good" as const,
+  level: "great" as const,
 });
 
 describe("MoodsTable", () => {

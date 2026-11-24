@@ -21,13 +21,15 @@ describe("MoodBubbleChart", () => {
   it("bands the levels with the best on top", () => {
     render(<MoodBubbleChart days={[day("2026-09-18", {}, null)]} />);
 
-    const bands = screen.getAllByText(/Excellente|Bonne|Neutre|Difficile|Mauvaise/);
+    const bands = screen.getAllByText(
+      /Exceptionnelle|Très bonne|Bonne|Mitigée|Difficile/,
+    );
     expect(bands.map((band) => band.textContent)).toEqual([
-      "Excellente",
+      "Exceptionnelle",
+      "Très bonne",
       "Bonne",
-      "Neutre",
+      "Mitigée",
       "Difficile",
-      "Mauvaise",
     ]);
   });
 
@@ -47,7 +49,7 @@ describe("MoodBubbleChart", () => {
 
   it("draws one circle per level answered, and none for the rest", () => {
     const { container } = render(
-      <MoodBubbleChart days={[day("2026-09-18", { good: 3, bad: 1 }, 3.5)]} />,
+      <MoodBubbleChart days={[day("2026-09-18", { great: 3, hard: 1 }, 3.5)]} />,
     );
 
     expect(container.querySelectorAll("span[style]")).toHaveLength(2);
@@ -55,7 +57,7 @@ describe("MoodBubbleChart", () => {
 
   it("carries the mean over the bubbles it came from", () => {
     const { container } = render(
-      <MoodBubbleChart days={[day("2026-09-18", { good: 2 }, 4)]} />,
+      <MoodBubbleChart days={[day("2026-09-18", { great: 2 }, 4)]} />,
     );
 
     expect(container.querySelector("polyline")).toBeInTheDocument();

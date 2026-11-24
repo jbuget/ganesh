@@ -50,7 +50,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mood.days = [
     { day: TODAY, level: null },
-    { day: BEFORE, level: "good" },
+    { day: BEFORE, level: "great" },
   ];
   mood.savingDay = null;
   pathname.value = "/timesheet";
@@ -78,7 +78,7 @@ describe("when the reminder asks", () => {
   });
 
   it("says nothing once the day has been answered for", () => {
-    mood.days = [{ day: TODAY, level: "hard" }];
+    mood.days = [{ day: TODAY, level: "mixed" }];
 
     const { result } = ask();
 
@@ -185,9 +185,9 @@ describe("answering from the reminder", () => {
   it("posts for today, and for no other day", () => {
     const { result } = ask();
 
-    result.current.post("excellent");
+    result.current.post("exceptional");
 
-    expect(mood.post).toHaveBeenCalledWith(TODAY, "excellent");
+    expect(mood.post).toHaveBeenCalledWith(TODAY, "exceptional");
   });
 
   it("holds the faces while today's answer travels", () => {

@@ -21,20 +21,20 @@ async def test_the_open_days_come_back_empty_when_nothing_was_posted() -> None:
 async def test_a_day_already_answered_comes_back_filled_in() -> None:
     use_case = GetMyMoodsUseCase(
         moods=InMemoryMoodRepository(
-            [Mood(id=1, user_id=1, day=MONDAY, level=MoodLevel.HARD)]
+            [Mood(id=1, user_id=1, day=MONDAY, level=MoodLevel.MIXED)]
         )
     )
 
     days = await use_case.execute(user_id=1, today=TUESDAY)
 
     assert days[0].level is None
-    assert days[1].level is MoodLevel.HARD
+    assert days[1].level is MoodLevel.MIXED
 
 
 async def test_a_colleagues_mood_is_not_mine() -> None:
     use_case = GetMyMoodsUseCase(
         moods=InMemoryMoodRepository(
-            [Mood(id=1, user_id=2, day=TUESDAY, level=MoodLevel.EXCELLENT)]
+            [Mood(id=1, user_id=2, day=TUESDAY, level=MoodLevel.EXCEPTIONAL)]
         )
     )
 

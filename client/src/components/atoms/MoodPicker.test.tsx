@@ -9,7 +9,7 @@ describe("MoodPicker", () => {
 
     expect(
       screen.getAllByRole("radio").map((face) => face.getAttribute("aria-label")),
-    ).toEqual(["Mauvaise", "Difficile", "Neutre", "Bonne", "Excellente"]);
+    ).toEqual(["Difficile", "Mitigée", "Bonne", "Très bonne", "Exceptionnelle"]);
   });
 
   it("marks nothing until one answers: the screen does not answer in one's place", () => {
@@ -23,25 +23,25 @@ describe("MoodPicker", () => {
   });
 
   it("marks the level already answered, and it alone", () => {
-    render(<MoodPicker value="hard" onPick={vi.fn()} />);
+    render(<MoodPicker value="mixed" onPick={vi.fn()} />);
 
-    expect(screen.getByRole("radio", { name: /^Difficile/ })).toBeChecked();
-    expect(screen.getByRole("radio", { name: "Bonne" })).not.toBeChecked();
+    expect(screen.getByRole("radio", { name: /^Mitigée/ })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Très bonne" })).not.toBeChecked();
   });
 
   it("hands over the level that was picked", () => {
     const pick = vi.fn();
     render(<MoodPicker value={null} onPick={pick} />);
 
-    fireEvent.click(screen.getByRole("radio", { name: "Excellente" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Exceptionnelle" }));
 
-    expect(pick).toHaveBeenCalledWith("excellent");
+    expect(pick).toHaveBeenCalledWith("exceptional");
   });
 
   it("says of the face already chosen that clicking it takes the answer back", () => {
-    render(<MoodPicker value="hard" onPick={vi.fn()} />);
+    render(<MoodPicker value="mixed" onPick={vi.fn()} />);
 
-    expect(screen.getByRole("radio", { name: "Difficile — retirer" })).toHaveAttribute(
+    expect(screen.getByRole("radio", { name: "Mitigée — retirer" })).toHaveAttribute(
       "title",
       "Retirer",
     );
@@ -49,18 +49,18 @@ describe("MoodPicker", () => {
 
   it("still offers the other levels once one has answered", () => {
     const pick = vi.fn();
-    render(<MoodPicker value="good" onPick={pick} />);
+    render(<MoodPicker value="great" onPick={pick} />);
 
-    fireEvent.click(screen.getByRole("radio", { name: "Mauvaise" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Difficile" }));
 
-    expect(pick).toHaveBeenCalledWith("bad");
+    expect(pick).toHaveBeenCalledWith("hard");
   });
 
   it("refuses a second click while the answer travels", () => {
     const pick = vi.fn();
     render(<MoodPicker value={null} onPick={pick} disabled />);
 
-    fireEvent.click(screen.getByRole("radio", { name: "Bonne" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Très bonne" }));
 
     expect(pick).not.toHaveBeenCalled();
   });

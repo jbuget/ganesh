@@ -30,29 +30,29 @@ describe("useMood", () => {
   it("posts a day one has not answered for", async () => {
     const { result } = renderHook(() => useMood());
 
-    await act(() => result.current.post("2026-09-18", "good"));
+    await act(() => result.current.post("2026-09-18", "great"));
 
-    expect(moods.setMood).toHaveBeenCalledWith({ day: "2026-09-18", level: "good" });
+    expect(moods.setMood).toHaveBeenCalledWith({ day: "2026-09-18", level: "great" });
     expect(moods.clearMood).not.toHaveBeenCalled();
   });
 
   it("changes the answer when another face is picked", async () => {
-    queries.days = [{ day: "2026-09-18", level: "good" }];
+    queries.days = [{ day: "2026-09-18", level: "great" }];
     const { result } = renderHook(() => useMood());
 
-    await act(() => result.current.post("2026-09-18", "bad"));
+    await act(() => result.current.post("2026-09-18", "hard"));
 
-    expect(moods.setMood).toHaveBeenCalledWith({ day: "2026-09-18", level: "bad" });
+    expect(moods.setMood).toHaveBeenCalledWith({ day: "2026-09-18", level: "hard" });
     expect(moods.clearMood).not.toHaveBeenCalled();
   });
 
   it("takes the answer back when the face already chosen is picked again", async () => {
     // The way out is the way in: five small faces are easily mis-clicked, and
     // the whole team reads the result under one's name.
-    queries.days = [{ day: "2026-09-18", level: "good" }];
+    queries.days = [{ day: "2026-09-18", level: "great" }];
     const { result } = renderHook(() => useMood());
 
-    await act(() => result.current.post("2026-09-18", "good"));
+    await act(() => result.current.post("2026-09-18", "great"));
 
     expect(moods.clearMood).toHaveBeenCalledWith("2026-09-18");
     expect(moods.setMood).not.toHaveBeenCalled();
@@ -60,14 +60,14 @@ describe("useMood", () => {
 
   it("answers for the day it was given, not for the other open one", async () => {
     queries.days = [
-      { day: "2026-09-18", level: "good" },
+      { day: "2026-09-18", level: "great" },
       { day: "2026-09-17", level: null },
     ];
     const { result } = renderHook(() => useMood());
 
-    await act(() => result.current.post("2026-09-17", "good"));
+    await act(() => result.current.post("2026-09-17", "great"));
 
-    expect(moods.setMood).toHaveBeenCalledWith({ day: "2026-09-17", level: "good" });
+    expect(moods.setMood).toHaveBeenCalledWith({ day: "2026-09-17", level: "great" });
     expect(moods.clearMood).not.toHaveBeenCalled();
   });
 
@@ -76,7 +76,7 @@ describe("useMood", () => {
     // team screen right after answering showed the mood one had just changed.
     const { result } = renderHook(() => useMood());
 
-    await act(() => result.current.post("2026-09-18", "good"));
+    await act(() => result.current.post("2026-09-18", "great"));
 
     expect(client.invalidateQueries.mock.calls.map(([call]) => call.queryKey)).toEqual([
       ["/api/v1/moods/me"],
@@ -85,10 +85,10 @@ describe("useMood", () => {
   });
 
   it("replays both after taking an answer back as well", async () => {
-    queries.days = [{ day: "2026-09-18", level: "good" }];
+    queries.days = [{ day: "2026-09-18", level: "great" }];
     const { result } = renderHook(() => useMood());
 
-    await act(() => result.current.post("2026-09-18", "good"));
+    await act(() => result.current.post("2026-09-18", "great"));
 
     expect(client.invalidateQueries).toHaveBeenCalledTimes(2);
   });

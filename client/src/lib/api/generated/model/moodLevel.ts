@@ -12,13 +12,18 @@
  * a day's answers lay out, and the order a stacked bar is read in. A scale
  * climbs: it runs low to high, as any axis does, and having it climb in one
  * place and fall in another would make the same five faces read twice.
+ *
+ * The middle of the scale is a good day, not an indifferent one: a day at
+ * work that went well is what most days are, and answering it with a flat
+ * mouth reads as if something had gone wrong. Below the middle, a day that
+ * was mixed or hard; above it, a very good one, then one that stood out.
  */
 export type MoodLevel = (typeof MoodLevel)[keyof typeof MoodLevel];
 
 export const MoodLevel = {
-  bad: "bad",
   hard: "hard",
-  neutral: "neutral",
+  mixed: "mixed",
   good: "good",
-  excellent: "excellent",
+  great: "great",
+  exceptional: "exceptional",
 } as const;

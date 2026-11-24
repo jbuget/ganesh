@@ -61,7 +61,7 @@ async def test_someone_who_has_left_counts_on_a_window_they_answered_in() -> Non
     """Otherwise a day reads « 3 / 2 », and a share above its whole says the
     denominator is the wrong one."""
     view = await build(
-        [Mood(id=1, user_id=3, day=MONDAY, level=MoodLevel.GOOD)]
+        [Mood(id=1, user_id=3, day=MONDAY, level=MoodLevel.GREAT)]
     ).execute(today=TUESDAY)
 
     assert view.report.headcount == 3
@@ -70,7 +70,7 @@ async def test_someone_who_has_left_counts_on_a_window_they_answered_in() -> Non
 
 async def test_a_deactivated_teammate_still_carries_the_moods_they_posted() -> None:
     view = await build(
-        [Mood(id=1, user_id=3, day=MONDAY, level=MoodLevel.GOOD)]
+        [Mood(id=1, user_id=3, day=MONDAY, level=MoodLevel.GREAT)]
     ).execute(today=TUESDAY)
 
     assert view.report.days[1].moods[0].user_id == 3
@@ -79,7 +79,7 @@ async def test_a_deactivated_teammate_still_carries_the_moods_they_posted() -> N
 
 async def test_a_mood_older_than_the_window_is_left_out() -> None:
     view = await build(
-        [Mood(id=1, user_id=1, day=date(2026, 8, 20), level=MoodLevel.BAD)]
+        [Mood(id=1, user_id=1, day=date(2026, 8, 20), level=MoodLevel.HARD)]
     ).execute(today=TUESDAY)
 
     assert all(day.moods == () for day in view.report.days)

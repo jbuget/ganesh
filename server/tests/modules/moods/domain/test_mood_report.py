@@ -18,17 +18,17 @@ def test_a_day_holds_its_moods_from_the_worst_to_the_best() -> None:
     report = build_report(
         DAYS,
         [
-            mood(1, TUESDAY, MoodLevel.HARD),
-            mood(2, TUESDAY, MoodLevel.EXCELLENT),
-            mood(3, TUESDAY, MoodLevel.NEUTRAL),
+            mood(1, TUESDAY, MoodLevel.MIXED),
+            mood(2, TUESDAY, MoodLevel.EXCEPTIONAL),
+            mood(3, TUESDAY, MoodLevel.GOOD),
         ],
         headcount=3,
     )
 
     assert [signed.level for signed in report.days[0].moods] == [
-        MoodLevel.HARD,
-        MoodLevel.NEUTRAL,
-        MoodLevel.EXCELLENT,
+        MoodLevel.MIXED,
+        MoodLevel.GOOD,
+        MoodLevel.EXCEPTIONAL,
     ]
 
 
@@ -39,7 +39,7 @@ def test_the_days_are_read_from_the_most_recent() -> None:
 
 
 def test_a_day_nobody_answered_holds_nothing() -> None:
-    report = build_report(DAYS, [mood(1, TUESDAY, MoodLevel.GOOD)], headcount=3)
+    report = build_report(DAYS, [mood(1, TUESDAY, MoodLevel.GREAT)], headcount=3)
 
     assert report.days[1].moods == ()
     assert report.days[1].participation == 0
@@ -51,9 +51,9 @@ def test_the_average_weighs_the_answers_alone() -> None:
     report = build_report(
         DAYS,
         [
-            mood(1, TUESDAY, MoodLevel.EXCELLENT),
-            mood(2, TUESDAY, MoodLevel.GOOD),
-            mood(3, TUESDAY, MoodLevel.NEUTRAL),
+            mood(1, TUESDAY, MoodLevel.EXCEPTIONAL),
+            mood(2, TUESDAY, MoodLevel.GREAT),
+            mood(3, TUESDAY, MoodLevel.GOOD),
         ],
         headcount=10,
     )
@@ -67,9 +67,9 @@ def test_the_average_is_kept_to_two_decimals() -> None:
     report = build_report(
         DAYS,
         [
-            mood(1, TUESDAY, MoodLevel.EXCELLENT),
-            mood(2, TUESDAY, MoodLevel.GOOD),
-            mood(3, TUESDAY, MoodLevel.BAD),
+            mood(1, TUESDAY, MoodLevel.EXCEPTIONAL),
+            mood(2, TUESDAY, MoodLevel.GREAT),
+            mood(3, TUESDAY, MoodLevel.HARD),
         ],
         headcount=3,
     )
@@ -81,25 +81,25 @@ def test_a_day_counts_every_level_it_carries_in_the_order_of_the_scale() -> None
     report = build_report(
         DAYS,
         [
-            mood(1, TUESDAY, MoodLevel.GOOD),
-            mood(2, TUESDAY, MoodLevel.GOOD),
-            mood(3, TUESDAY, MoodLevel.BAD),
+            mood(1, TUESDAY, MoodLevel.GREAT),
+            mood(2, TUESDAY, MoodLevel.GREAT),
+            mood(3, TUESDAY, MoodLevel.HARD),
         ],
         headcount=3,
     )
 
     assert list(report.days[0].counts.items()) == [
-        (MoodLevel.BAD, 1),
-        (MoodLevel.HARD, 0),
-        (MoodLevel.NEUTRAL, 0),
-        (MoodLevel.GOOD, 2),
-        (MoodLevel.EXCELLENT, 0),
+        (MoodLevel.HARD, 1),
+        (MoodLevel.MIXED, 0),
+        (MoodLevel.GOOD, 0),
+        (MoodLevel.GREAT, 2),
+        (MoodLevel.EXCEPTIONAL, 0),
     ]
 
 
 def test_a_mood_outside_the_window_is_left_out() -> None:
     report = build_report(
-        DAYS, [mood(1, date(2026, 9, 1), MoodLevel.GOOD)], headcount=3
+        DAYS, [mood(1, date(2026, 9, 1), MoodLevel.GREAT)], headcount=3
     )
 
     assert all(day.moods == () for day in report.days)

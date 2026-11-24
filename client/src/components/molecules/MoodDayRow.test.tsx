@@ -48,8 +48,8 @@ describe("MoodDayRow", () => {
       day({
         participation: 2,
         moods: [
-          { author: author(1, "Léa Chen", "LC"), level: "bad" },
-          { author: author(2, "Gabriel Belhadj", "GB"), level: "good" },
+          { author: author(1, "Léa Chen", "LC"), level: "hard" },
+          { author: author(2, "Gabriel Belhadj", "GB"), level: "great" },
         ],
       }),
       9,

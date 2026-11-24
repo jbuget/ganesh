@@ -8,7 +8,7 @@ const TODAY = "2026-09-15";
 const BEFORE = "2026-09-14";
 
 function show(
-  days: { day: string; level: "good" | "hard" | null }[],
+  days: { day: string; level: "great" | "mixed" | null }[],
   onPick = vi.fn(),
 ) {
   render(<MoodCheckIn days={days} today={TODAY} onPick={onPick} />);
@@ -33,9 +33,9 @@ describe("MoodCheckIn", () => {
   });
 
   it("spells out the level already answered", () => {
-    show([{ day: TODAY, level: "hard" }]);
+    show([{ day: TODAY, level: "mixed" }]);
 
-    expect(screen.getByText("Difficile")).toBeInTheDocument();
+    expect(screen.getByText("Mitigée")).toBeInTheDocument();
   });
 
   it("hands over the day along with the level", () => {
@@ -44,9 +44,9 @@ describe("MoodCheckIn", () => {
       { day: BEFORE, level: null },
     ]);
 
-    fireEvent.click(screen.getAllByRole("radio", { name: "Bonne" })[1]);
+    fireEvent.click(screen.getAllByRole("radio", { name: "Très bonne" })[1]);
 
-    expect(pick).toHaveBeenCalledWith(BEFORE, "good");
+    expect(pick).toHaveBeenCalledWith(BEFORE, "great");
   });
 
   it("shows nothing at all when no day is open", () => {
